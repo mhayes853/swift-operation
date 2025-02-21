@@ -29,6 +29,10 @@ extension QueryStore {
   public var isLoading: Bool {
     self.state.isLoading
   }
+
+  public var error: (any Error)? {
+    self.state.error
+  }
 }
 
 // MARK: - Fetching
@@ -38,9 +42,14 @@ extension QueryStore {
   public func fetch() async throws -> Value {
     self.state.isLoading = true
     defer { self.state.isLoading = false }
-    let value = try await self.query.fetch(in: QueryContext())
-    self.state.value = value
-    return value
+    do {
+      let value = try await self.query.fetch(in: QueryContext())
+      self.state.value = value
+      return value
+    } catch {
+      self.state.error = error
+      throw error
+    }
   }
 }
 

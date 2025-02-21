@@ -45,3 +45,13 @@ final class SleepingQuery: QueryProtocol, @unchecked Sendable {
     return ""
   }
 }
+
+// MARK: - FailingQuery
+
+struct FailingQuery: QueryProtocol, Hashable {
+  struct SomeError: Equatable, Error {}
+
+  func fetch(in context: QueryContext) async throws -> String {
+    throw SomeError()
+  }
+}

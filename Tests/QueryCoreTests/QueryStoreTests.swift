@@ -41,4 +41,14 @@ struct QueryStoreTests {
     try await store.fetch()
     expectNoDifference(store.isLoading, false)
   }
+
+  @Test("Stores The Error When Fetching Fails")
+  func storesError() async throws {
+    let store = self.client.store(for: FailingQuery())
+    expectNoDifference(store.error as? FailingQuery.SomeError, nil)
+    let value = try? await store.fetch()
+    expectNoDifference(value, nil)
+    expectNoDifference(store.value, nil)
+    expectNoDifference(store.error as? FailingQuery.SomeError, FailingQuery.SomeError())
+  }
 }

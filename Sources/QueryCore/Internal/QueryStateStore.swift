@@ -3,6 +3,7 @@
 struct QueryState<Value: Sendable>: Sendable {
   var value: Value
   var isLoading = false
+  var error: (any Error)?
 }
 
 // MARK: - QueryStateStore
