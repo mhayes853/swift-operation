@@ -9,7 +9,8 @@ let package = Package(
   products: [.library(name: "SharingQuery", targets: ["SharingQuery"])],
   dependencies: [
     .package(url: "https://github.com/pointfreeco/swift-sharing", .upToNextMajor(from: "2.0.0")),
-    .package(url: "https://github.com/pointfreeco/swift-custom-dump", from: "1.3.3")
+    .package(url: "https://github.com/pointfreeco/swift-custom-dump", from: "1.3.3"),
+    .package(url: "https://github.com/pointfreeco/swift-clocks", from: "1.0.6")
   ],
   targets: [
     .target(
@@ -31,7 +32,8 @@ let package = Package(
       name: "QueryCoreTests",
       dependencies: [
         "QueryCore",
-        .product(name: "CustomDump", package: "swift-custom-dump")
+        .product(name: "CustomDump", package: "swift-custom-dump"),
+        .product(name: "Clocks", package: "swift-clocks")
       ]
     )
   ],

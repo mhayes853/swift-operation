@@ -19,11 +19,15 @@ public final class QueryStore<Value: Sendable>: Sendable {
   }
 }
 
-// MARK: - Current Value
+// MARK: - State
 
 extension QueryStore {
   public var value: Value {
     self.state.value ?? self.defaultValue
+  }
+
+  public var isLoading: Bool {
+    self.state.isLoading
   }
 }
 
@@ -32,6 +36,8 @@ extension QueryStore {
 extension QueryStore {
   @discardableResult
   public func fetch() async throws -> Value {
+    self.state.isLoading = true
+    defer { self.state.isLoading = false }
     let value = try await self.query.fetch(in: QueryContext())
     self.state.value = value
     return value

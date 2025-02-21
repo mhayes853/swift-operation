@@ -1,3 +1,4 @@
+import Clocks
 import CustomDump
 import QueryCore
 import Testing
@@ -25,5 +26,19 @@ struct QueryStoreTests {
     let value = try await store.fetch()
     expectNoDifference(value, TestQuery.value)
     expectNoDifference(store.value, TestQuery.value)
+  }
+
+  @Test("Is In A Loading State When Fetching")
+  func loadingState() async throws {
+    let clock = TestClock()
+    let query = SleepingQuery(clock: clock, duration: .seconds(1))
+    let store = self.client.store(for: query)
+    query.didBeginSleeping = {
+      expectNoDifference(store.isLoading, true)
+      Task { await clock.advance(by: .seconds(1)) }
+    }
+    expectNoDifference(store.isLoading, false)
+    try await store.fetch()
+    expectNoDifference(store.isLoading, false)
   }
 }
