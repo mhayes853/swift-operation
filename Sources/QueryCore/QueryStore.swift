@@ -2,16 +2,38 @@
 
 public final class QueryStore<Value: Sendable>: Sendable {
   private let query: any QueryProtocol<Value>
-  public let value: Value
+  private let state: Lock<Value>
+
+  public let defaultValue: Value
 
   init<V>(query: some QueryProtocol<V>) where Value == V? {
     self.query = ToOptionalQuery(base: query)
-    self.value = nil
+    self.state = Lock(nil)
+    self.defaultValue = nil
   }
 
   init(query: DefaultQuery<some QueryProtocol<Value>>) {
     self.query = query
-    self.value = query.defaultValue
+    self.state = Lock(query.defaultValue)
+    self.defaultValue = query.defaultValue
+  }
+}
+
+// MARK: - Current Value
+
+extension QueryStore {
+  public var value: Value {
+    self.state.withLock { $0 }
+  }
+}
+
+// MARK: - Fetching
+
+extension QueryStore {
+  public func fetch() async throws -> Value {
+    let value = try await self.query.fetch(in: QueryContext())
+    self.state.withLock { $0 = value }
+    return value
   }
 }
 

@@ -19,7 +19,13 @@ struct QueryStoreTests {
     expectNoDifference(store.value, nil)
   }
 
-  //@Test("")
+  @Test("Has Fetched Value After Fetching")
+  func fetchedValue() async throws {
+    let store = self.client.store(for: TestQuery())
+    let value = try await store.fetch()
+    expectNoDifference(value, TestQuery.value)
+    expectNoDifference(store.value, TestQuery.value)
+  }
 }
 
 private struct TestQuery: QueryProtocol {
