@@ -4,20 +4,22 @@ import Testing
 
 @Suite("QueryStore tests")
 struct QueryStoreTests {
+  private let client = QueryClient()
+
   @Test("Store Has Default Value Initially")
   func hasDefaultValue() {
-    let client = QueryClient()
     let defaultValue = TestQuery.value + 1
-    let store = client.store(for: TestQuery().withDefault(defaultValue))
+    let store = self.client.store(for: TestQuery().defaultValue(defaultValue))
     expectNoDifference(store.value, defaultValue)
   }
 
   @Test("Store Has Nil Value Initially")
   func hasNilValue() {
-    let client = QueryClient()
-    let store = client.store(for: TestQuery())
+    let store = self.client.store(for: TestQuery())
     expectNoDifference(store.value, nil)
   }
+
+  //@Test("")
 }
 
 private struct TestQuery: QueryProtocol {

@@ -1,5 +1,5 @@
 extension QueryProtocol where Self.Value: Hashable {
-  public func withDefault(_ value: Self.Value) -> DefaultQuery<Self> {
+  public func defaultValue(_ value: Self.Value) -> DefaultQuery<Self> {
     DefaultQuery(defaultValue: value, base: self)
   }
 }

@@ -1,3 +1,5 @@
+// MARK: - QueryStore
+
 public final class QueryStore<Value: Sendable>: Sendable {
   private let query: any QueryProtocol<Value>
   public let value: Value
