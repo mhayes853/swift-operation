@@ -55,3 +55,19 @@ struct FailingQuery: QueryProtocol, Hashable {
     throw SomeError()
   }
 }
+
+// MARK: - CountingQuery
+
+final actor CountingQuery: QueryProtocol {
+  var fetchCount = 0
+
+  nonisolated var id: some Hashable {
+    ObjectIdentifier(self)
+  }
+
+  func fetch(in context: QueryContext) async throws -> Int {
+    await Task.megaYield()
+    self.fetchCount += 1
+    return self.fetchCount
+  }
+}

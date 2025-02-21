@@ -4,6 +4,7 @@ struct QueryState<Value: Sendable>: Sendable {
   var value: Value
   var isLoading = false
   var error: (any Error)?
+  var fetchTask: Task<Value, any Error>?
 }
 
 // MARK: - QueryStateStore
@@ -14,6 +15,12 @@ final class QueryStateStore<Value: Sendable>: Sendable {
 
   init(initialValue: Value) {
     self.state = Lock(QueryState(value: initialValue))
+  }
+}
+
+extension QueryStateStore {
+  func update<T: Sendable>(_ fn: (inout QueryState<Value>) throws -> T) rethrows -> T {
+    try self.state.withLock { try fn(&$0) }
   }
 }
 

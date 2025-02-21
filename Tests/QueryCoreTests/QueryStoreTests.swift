@@ -51,4 +51,37 @@ struct QueryStoreTests {
     expectNoDifference(store.value, nil)
     expectNoDifference(store.error as? FailingQuery.SomeError, FailingQuery.SomeError())
   }
+
+  @Test("Deduplicates Fetches From The Same Store")
+  func deduplicatesFetchesSameStore() async throws {
+    let query = CountingQuery()
+    let store = self.client.store(for: query)
+    async let f1 = store.fetch()
+    async let f2 = store.fetch()
+    _ = try await (f1, f2)
+    let count = await query.fetchCount
+    expectNoDifference(count, 1)
+  }
+
+  @Test("Deduplicates Fetches From Different Stores")
+  func deduplicatesFetchesDifferentStores() async throws {
+    let query = CountingQuery()
+    let store = self.client.store(for: query)
+    let store2 = self.client.store(for: query)
+    async let f1 = store.fetch()
+    async let f2 = store2.fetch()
+    _ = try await (f1, f2)
+    let count = await query.fetchCount
+    expectNoDifference(count, 1)
+  }
+
+  @Test("Fetch Twice, Returns Different Values")
+  func fetchTwiceReturnsDifferentValues() async throws {
+    let query = CountingQuery()
+    let store = self.client.store(for: query)
+    let f1 = try await store.fetch()
+    let f2 = try await store.fetch()
+    expectNoDifference(f1, 1)
+    expectNoDifference(f2, 2)
+  }
 }

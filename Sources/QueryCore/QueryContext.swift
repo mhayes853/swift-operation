@@ -1,1 +1,1 @@
-public struct QueryContext {}
+public struct QueryContext: Sendable {}

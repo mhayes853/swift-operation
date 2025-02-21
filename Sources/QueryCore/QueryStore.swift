@@ -40,16 +40,33 @@ extension QueryStore {
 extension QueryStore {
   @discardableResult
   public func fetch() async throws -> Value {
-    self.state.isLoading = true
-    defer { self.state.isLoading = false }
-    do {
-      let value = try await self.query.fetch(in: QueryContext())
-      self.state.value = value
-      return value
-    } catch {
-      self.state.error = error
-      throw error
+    let task = self.state.update { state in
+      if let task = state.fetchTask {
+        return task
+      }
+      state.isLoading = true
+      let task = Task {
+        do {
+          let value = try await self.query.fetch(in: QueryContext())
+          self.state.update {
+            $0.value = value
+            $0.isLoading = false
+            $0.fetchTask = nil
+          }
+          return value as Value?
+        } catch {
+          self.state.update {
+            $0.error = error
+            $0.isLoading = false
+            $0.fetchTask = nil
+          }
+          throw error
+        }
+      }
+      state.fetchTask = task
+      return task
     }
+    return try await task.value!
   }
 }
 
