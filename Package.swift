@@ -4,21 +4,23 @@
 import PackageDescription
 
 let package = Package(
-    name: "swift-sharing-query",
-    products: [
-        // Products define the executables and libraries a package produces, making them visible to other packages.
-        .library(
-            name: "swift-sharing-query",
-            targets: ["swift-sharing-query"]),
-    ],
-    targets: [
-        // Targets are the basic building blocks of a package, defining a module or a test suite.
-        // Targets can depend on other targets in this package and products from dependencies.
-        .target(
-            name: "swift-sharing-query"),
-        .testTarget(
-            name: "swift-sharing-queryTests",
-            dependencies: ["swift-sharing-query"]
-        ),
-    ]
+  name: "swift-sharing-query",
+  platforms: [.iOS(.v13), .macOS(.v10_15), .tvOS(.v13), .watchOS(.v6)],
+  products: [.library(name: "SharingQuery", targets: ["SharingQuery"])],
+  dependencies: [
+    .package(url: "https://github.com/pointfreeco/swift-sharing", .upToNextMajor(from: "2.0.0"))
+  ],
+  targets: [
+    .target(
+      name: "SharingQuery",
+      dependencies: [
+        "QueryCore",
+        .product(name: "Sharing", package: "swift-sharing")
+      ]
+    ),
+    .testTarget(name: "SharingQueryTests", dependencies: ["SharingQuery"]),
+    .target(name: "QueryCore"),
+    .testTarget(name: "QueryCoreTests", dependencies: ["QueryCore"])
+  ],
+  swiftLanguageModes: [.v6]
 )
