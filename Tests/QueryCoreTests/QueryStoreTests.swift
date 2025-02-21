@@ -27,13 +27,3 @@ struct QueryStoreTests {
     expectNoDifference(store.value, TestQuery.value)
   }
 }
-
-private struct TestQuery: QueryProtocol {
-  static let value = 1
-
-  typealias Value = Int
-
-  func fetch(in context: QueryCore.QueryContext) async throws -> Value {
-    Self.value
-  }
-}

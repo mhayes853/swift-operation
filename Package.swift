@@ -27,7 +27,13 @@ let package = Package(
       ]
     ),
     .target(name: "QueryCore"),
-    .testTarget(name: "QueryCoreTests", dependencies: ["QueryCore"])
+    .testTarget(
+      name: "QueryCoreTests",
+      dependencies: [
+        "QueryCore",
+        .product(name: "CustomDump", package: "swift-custom-dump")
+      ]
+    )
   ],
   swiftLanguageModes: [.v6]
 )
