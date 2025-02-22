@@ -1,4 +1,5 @@
 import ConcurrencyExtras
+import Foundation
 
 // MARK: - QueryStore
 
@@ -28,12 +29,28 @@ extension QueryStore {
     self.state.value ?? self.defaultValue
   }
 
+  public var valueLastUpdatedAt: Date? {
+    self.state.valueLastUpdatedAt
+  }
+
+  public var valueUpdateCount: Int {
+    self.state.valueUpdateCount
+  }
+
   public var isLoading: Bool {
     self.state.isLoading
   }
 
   public var error: (any Error)? {
     self.state.error
+  }
+
+  public var errorLastUpdatedAt: Date? {
+    self.state.errorLastUpdatedAt
+  }
+
+  public var errorUpdateCount: Int {
+    self.state.errorUpdateCount
   }
 }
 
@@ -52,6 +69,7 @@ extension QueryStore {
           let value = try await self.query.fetch(in: QueryContext())
           self.state.update {
             $0.value = value
+            $0.valueUpdateCount += 1
             $0.isLoading = false
             $0.fetchTask = nil
           }
@@ -59,6 +77,7 @@ extension QueryStore {
         } catch {
           self.state.update {
             $0.error = error
+            $0.errorUpdateCount += 1
             $0.isLoading = false
             $0.fetchTask = nil
           }

@@ -94,4 +94,22 @@ struct QueryStoreTests {
       try await task.value
     }
   }
+
+  @Test("Increments Value Update Count With Each Fetch")
+  func incrementsValueUpdateCount() async throws {
+    let store = self.client.store(for: TestQuery())
+    expectNoDifference(store.valueUpdateCount, 0)
+    try await store.fetch()
+    try await store.fetch()
+    expectNoDifference(store.valueUpdateCount, 2)
+  }
+
+  @Test("Increments Error Update Count With Each Error")
+  func incrementsErrorUpdateCount() async throws {
+    let store = self.client.store(for: FailingQuery())
+    expectNoDifference(store.errorUpdateCount, 0)
+    _ = try? await store.fetch()
+    _ = try? await store.fetch()
+    expectNoDifference(store.errorUpdateCount, 2)
+  }
 }

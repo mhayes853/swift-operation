@@ -1,9 +1,15 @@
+import Foundation
+
 // MARK: - QueryState
 
 struct QueryState<Value: Sendable>: Sendable {
   var value: Value
+  var valueUpdateCount = 0
+  var valueLastUpdatedAt: Date?
   var isLoading = false
   var error: (any Error)?
+  var errorUpdateCount = 0
+  var errorLastUpdatedAt: Date?
   var fetchTask: Task<Value, any Error>?
 }
 
