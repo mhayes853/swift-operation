@@ -1,3 +1,4 @@
+import ConcurrencyExtras
 import QueryCore
 
 // MARK: - TestQuery
@@ -69,5 +70,14 @@ final actor CountingQuery: QueryProtocol {
     await Task.megaYield()
     self.fetchCount += 1
     return self.fetchCount
+  }
+}
+
+// MARK: - EndlesQuery
+
+struct EndlessQuery: QueryProtocol, Hashable {
+  func fetch(in context: QueryCore.QueryContext) async throws -> String {
+    try await Task.never()
+    return ""
   }
 }

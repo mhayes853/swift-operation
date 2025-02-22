@@ -84,4 +84,14 @@ struct QueryStoreTests {
     expectNoDifference(f1, 1)
     expectNoDifference(f2, 2)
   }
+
+  @Test("Fetch Cancellation")
+  func fetchCancellation() async throws {
+    let store = self.client.store(for: EndlessQuery())
+    let task = Task { try await store.fetch() }
+    task.cancel()
+    await #expect(throws: CancellationError.self) {
+      try await task.value
+    }
+  }
 }

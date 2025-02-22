@@ -1,3 +1,5 @@
+import ConcurrencyExtras
+
 // MARK: - QueryStore
 
 public final class QueryStore<Value: Sendable>: Sendable {
@@ -66,7 +68,7 @@ extension QueryStore {
       state.fetchTask = task
       return task
     }
-    return try await task.value!
+    return try await task.cancellableValue!
   }
 }
 
