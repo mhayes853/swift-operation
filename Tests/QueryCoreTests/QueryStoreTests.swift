@@ -104,6 +104,16 @@ struct QueryStoreTests {
     expectNoDifference(store.valueUpdateCount, 2)
   }
 
+  @Test("Updates Value Update Date With Each Fetch")
+  func updatesValueUpdateDate() async throws {
+    let store = self.client.store(for: TestQuery())
+    expectNoDifference(store.valueLastUpdatedAt, nil)
+    try await store.fetch()
+    let d1 = try #require(store.valueLastUpdatedAt)
+    try await store.fetch()
+    expectNoDifference(try #require(store.valueLastUpdatedAt) > d1, true)
+  }
+
   @Test("Increments Error Update Count With Each Error")
   func incrementsErrorUpdateCount() async throws {
     let store = self.client.store(for: FailingQuery())
@@ -111,5 +121,15 @@ struct QueryStoreTests {
     _ = try? await store.fetch()
     _ = try? await store.fetch()
     expectNoDifference(store.errorUpdateCount, 2)
+  }
+
+  @Test("Updates Error Update Date With Each Error")
+  func updatesErrorUpdateDate() async throws {
+    let store = self.client.store(for: FailingQuery())
+    expectNoDifference(store.errorLastUpdatedAt, nil)
+    _ = try? await store.fetch()
+    let d1 = try #require(store.errorLastUpdatedAt)
+    _ = try? await store.fetch()
+    expectNoDifference(try #require(store.errorLastUpdatedAt) > d1, true)
   }
 }

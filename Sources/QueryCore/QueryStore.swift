@@ -70,6 +70,7 @@ extension QueryStore {
           self.state.update {
             $0.value = value
             $0.valueUpdateCount += 1
+            $0.valueLastUpdatedAt = Date()
             $0.isLoading = false
             $0.fetchTask = nil
           }
@@ -78,6 +79,7 @@ extension QueryStore {
           self.state.update {
             $0.error = error
             $0.errorUpdateCount += 1
+            $0.errorLastUpdatedAt = Date()
             $0.isLoading = false
             $0.fetchTask = nil
           }
