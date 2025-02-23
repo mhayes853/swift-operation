@@ -99,8 +99,8 @@ extension QueryStore {
 private struct ToOptionalQuery<Base: QueryProtocol>: QueryProtocol {
   let base: Base
 
-  var id: Base.ID {
-    self.base.id
+  var path: QueryPath {
+    self.base.path
   }
 
   func fetch(in context: QueryContext) async throws -> Base.Value? {

@@ -36,8 +36,8 @@ final class SleepingQuery: QueryProtocol, @unchecked Sendable {
     self.duration = duration
   }
 
-  var id: some Hashable {
-    self.duration
+  var path: QueryPath {
+    ["test-sleeping", self.duration]
   }
 
   func fetch(in context: QueryContext) async throws -> String {
@@ -62,8 +62,8 @@ struct FailingQuery: QueryProtocol, Hashable {
 final actor CountingQuery: QueryProtocol {
   var fetchCount = 0
 
-  nonisolated var id: some Hashable {
-    ObjectIdentifier(self)
+  nonisolated var path: QueryPath {
+    [ObjectIdentifier(self)]
   }
 
   func fetch(in context: QueryContext) async throws -> Int {
@@ -87,8 +87,8 @@ struct EndlessQuery: QueryProtocol, Hashable {
 actor FlakeyQuery: QueryProtocol {
   private var result: String?
 
-  nonisolated var id: some Hashable {
-    ObjectIdentifier(self)
+  nonisolated var path: QueryPath {
+    [ObjectIdentifier(self)]
   }
 
   func ensureSuccess(result: String) {

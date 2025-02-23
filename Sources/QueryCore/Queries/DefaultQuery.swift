@@ -8,8 +8,8 @@ public struct DefaultQuery<Base: QueryProtocol>: QueryProtocol {
   let defaultValue: Base.Value
   let base: Base
 
-  public var id: Base.ID {
-    self.base.id
+  public var path: QueryPath {
+    self.base.path
   }
 
   public func fetch(in context: QueryContext) async throws -> Base.Value {

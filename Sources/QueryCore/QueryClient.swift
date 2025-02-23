@@ -1,7 +1,7 @@
 // MARK: - QueryClient
 
 public final class QueryClient: Sendable {
-  private let stores = Lock<[AnyHashable: Any]>([:])
+  private let stores = Lock<[QueryPath: Any]>([:])
 
   public init() {}
 }
@@ -11,12 +11,11 @@ public final class QueryClient: Sendable {
 extension QueryClient {
   public func store<Query: QueryProtocol>(for query: Query) -> QueryStore<Query.Value?> {
     self.stores.withLock { stores in
-      let key = AnyHashable(query.id)
-      if let store = stores[key] as? QueryStateStore<Query.Value?> {
+      if let store = stores[query.path] as? QueryStateStore<Query.Value?> {
         return QueryStore(query: query, state: store)
       }
       let store = QueryStateStore<Query.Value?>(initialValue: nil)
-      stores[key] = store
+      stores[query.path] = store
       return QueryStore(query: query, state: store)
     }
   }
@@ -25,12 +24,11 @@ extension QueryClient {
     for query: DefaultQuery<Query>
   ) -> QueryStore<Query.Value> {
     self.stores.withLock { stores in
-      let key = AnyHashable(query.id)
-      if let store = stores[key] as? QueryStateStore<Query.Value?> {
+      if let store = stores[query.path] as? QueryStateStore<Query.Value?> {
         return QueryStore(query: query, state: store)
       }
       let store = QueryStateStore<Query.Value?>(initialValue: query.defaultValue)
-      stores[key] = store
+      stores[query.path] = store
       return QueryStore(query: query, state: store)
     }
   }
