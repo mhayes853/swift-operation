@@ -81,3 +81,27 @@ struct EndlessQuery: QueryProtocol, Hashable {
     return ""
   }
 }
+
+// MARK: - FailableQuery
+
+actor FlakeyQuery: QueryProtocol {
+  private var result: String?
+
+  nonisolated var id: some Hashable {
+    ObjectIdentifier(self)
+  }
+
+  func ensureSuccess(result: String) {
+    self.result = result
+  }
+
+  func ensureFailure() {
+    self.result = nil
+  }
+
+  func fetch(in context: QueryContext) async throws -> String {
+    struct SomeError: Error {}
+    guard let result else { throw SomeError() }
+    return result
+  }
+}

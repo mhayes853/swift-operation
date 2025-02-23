@@ -71,6 +71,7 @@ extension QueryStore {
             $0.value = value
             $0.valueUpdateCount += 1
             $0.valueLastUpdatedAt = Date()
+            $0.error = nil
             $0.isLoading = false
             $0.fetchTask = nil
           }

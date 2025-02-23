@@ -132,4 +132,16 @@ struct QueryStoreTests {
     _ = try? await store.fetch()
     expectNoDifference(try #require(store.errorLastUpdatedAt) > d1, true)
   }
+
+  @Test("Clears Error When Fetched Successfully")
+  func clearsErrorOnSuccess() async throws {
+    let query = FlakeyQuery()
+    await query.ensureFailure()
+    let store = self.client.store(for: query)
+    _ = try? await store.fetch()
+    expectNoDifference(store.error != nil, true)
+    await query.ensureSuccess(result: "test")
+    try await store.fetch()
+    expectNoDifference(store.error == nil, true)
+  }
 }
