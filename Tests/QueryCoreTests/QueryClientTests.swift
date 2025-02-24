@@ -12,8 +12,8 @@ struct QueryClientTests {
     try await store1.fetch()
     let store2 = client.store(for: TestQuery())
 
-    expectNoDifference(store1.value, store2.value)
-    expectNoDifference(store2.value, TestQuery.value)
+    expectNoDifference(store1.currentValue, store2.currentValue)
+    expectNoDifference(store2.currentValue, TestQuery.value)
   }
 
   @Test("Reports Issue When Different Query Type Has The Same Path As Another Query")
@@ -32,7 +32,41 @@ struct QueryClientTests {
     try await store1.fetch()
     let store2 = client.store(for: TestStringQuery().defaultValue("bar"))
 
-    expectNoDifference(store1.value, TestQuery.value)
-    expectNoDifference(store2.value, "bar")
+    expectNoDifference(store1.currentValue, TestQuery.value)
+    expectNoDifference(store2.currentValue, "bar")
+  }
+
+  @Test("Loads Queries Matching Path Prefix")
+  func matchesPathPrefix() async throws {
+    let client = QueryClient()
+    let q1 = PathableQuery(value: 1, path: [1, 2])
+    let q2 = PathableQuery(value: 2, path: ["blob", "tlob"])
+    let q3 = PathableQuery(value: 3, path: [1, "blobby"])
+    _ = client.store(for: q1)
+    let store1 = client.store(for: q2)
+    let store2 = client.store(for: q3)
+    _ = try await (store1.fetch(), store2.fetch())
+
+    let stores = client.queries(matching: [1])
+    try #require(stores.count == 2)
+
+    expectNoDifference(stores[q1.path]?.currentValue as? Int, nil)
+    expectNoDifference(stores[q3.path]?.currentValue as? Int, 3)
+
+    try await stores[q1.path]?.fetch()
+    expectNoDifference(stores[q1.path]?.currentValue as? Int, 1)
+  }
+
+  @Test("Uses Default Value For AnyQueryStore")
+  func defaultAnyQueryStoreValue() async throws {
+    let client = QueryClient()
+    let q1 = PathableQuery(value: 1, path: [1, 2]).defaultValue(10)
+    _ = client.store(for: q1)
+
+    let stores = client.queries(matching: [])
+    try #require(stores.count == 1)
+
+    expectNoDifference(stores[q1.path]?.currentValue as? Int, 10)
+    expectNoDifference(stores[q1.path]?.initialValue as? Int, 10)
   }
 }

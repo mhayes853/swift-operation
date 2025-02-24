@@ -76,7 +76,7 @@ final actor CountingQuery: QueryProtocol {
 // MARK: - EndlesQuery
 
 struct EndlessQuery: QueryProtocol, Hashable {
-  func fetch(in context: QueryCore.QueryContext) async throws -> String {
+  func fetch(in context: QueryContext) async throws -> String {
     try await Task.never()
     return ""
   }
@@ -103,5 +103,16 @@ actor FlakeyQuery: QueryProtocol {
     struct SomeError: Error {}
     guard let result else { throw SomeError() }
     return result
+  }
+}
+
+// MARK: - PathableQuery
+
+struct PathableQuery: QueryProtocol {
+  let value: Int
+  let path: QueryPath
+
+  func fetch(in context: QueryContext) async throws -> Int {
+    self.value
   }
 }

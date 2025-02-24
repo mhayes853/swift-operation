@@ -11,13 +11,13 @@ struct QueryStoreTests {
   func hasDefaultValue() {
     let defaultValue = TestQuery.value + 1
     let store = self.client.store(for: TestQuery().defaultValue(defaultValue))
-    expectNoDifference(store.value, defaultValue)
+    expectNoDifference(store.currentValue, defaultValue)
   }
 
   @Test("Store Has Nil Value Initially")
   func hasNilValue() {
     let store = self.client.store(for: TestQuery())
-    expectNoDifference(store.value, nil)
+    expectNoDifference(store.currentValue, nil)
   }
 
   @Test("Has Fetched Value After Fetching")
@@ -25,7 +25,7 @@ struct QueryStoreTests {
     let store = self.client.store(for: TestQuery())
     let value = try await store.fetch()
     expectNoDifference(value, TestQuery.value)
-    expectNoDifference(store.value, TestQuery.value)
+    expectNoDifference(store.currentValue, TestQuery.value)
   }
 
   @Test("Is In A Loading State When Fetching")
@@ -48,7 +48,7 @@ struct QueryStoreTests {
     expectNoDifference(store.error as? FailingQuery.SomeError, nil)
     let value = try? await store.fetch()
     expectNoDifference(value, nil)
-    expectNoDifference(store.value, nil)
+    expectNoDifference(store.currentValue, nil)
     expectNoDifference(store.error as? FailingQuery.SomeError, FailingQuery.SomeError())
   }
 

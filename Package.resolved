@@ -1,5 +1,5 @@
 {
-  "originHash" : "f64a1a2e92983075c2616025956374f32076742b6c83fef1602ab83fc013a0ed",
+  "originHash" : "94e39d62ee2a83b4978bea83b74d19a369d199f4af749fc72b633f3a183e1474",
   "pins" : [
     {
       "identity" : "combine-schedulers",
@@ -78,8 +78,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-sharing",
       "state" : {
-        "revision" : "c9fd8da9f2683b8c3201abd849b35c307d50ab9f",
-        "version" : "2.3.1"
+        "revision" : "6060619646deff09f0a785e17448441fdf2c146c",
+        "version" : "2.3.2"
       }
     },
     {
@@ -96,8 +96,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/xctest-dynamic-overlay",
       "state" : {
-        "revision" : "b444594f79844b0d6d76d70fbfb3f7f71728f938",
-        "version" : "1.5.1"
+        "revision" : "39de59b2d47f7ef3ca88a039dff3084688fe27f4",
+        "version" : "1.5.2"
       }
     }
   ],

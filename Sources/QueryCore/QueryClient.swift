@@ -1,4 +1,5 @@
 import IssueReporting
+import OrderedCollections
 
 // MARK: - QueryClient
 
@@ -12,34 +13,45 @@ public final class QueryClient: Sendable {
 
 extension QueryClient {
   public func store<Query: QueryProtocol>(for query: Query) -> QueryStore<Query.Value?> {
-    QueryStore(query: query, state: self.queryStateStore(for: query, initialValue: nil))
+    QueryStore(Query.Value?.self, base: self.anyStore(for: query, initialValue: nil))
   }
 
   public func store<Query: QueryProtocol>(
     for query: DefaultQuery<Query>
   ) -> QueryStore<Query.Value> {
-    QueryStore(
-      query: query,
-      state: self.queryStateStore(for: query, initialValue: query.defaultValue)
-    )
+    QueryStore(Query.Value.self, base: self.anyStore(for: query, initialValue: query.defaultValue))
   }
 
-  private func queryStateStore<Query: QueryProtocol>(
+  private func anyStore<Query: QueryProtocol>(
     for query: Query,
     initialValue: Query.Value?
-  ) -> QueryStateStore<Query.Value?> {
+  ) -> AnyQueryStore {
     self.stores.withLock { stores in
-      if let entry = stores[query.path],
-        let store = entry.stateStore as? QueryStateStore<Query.Value?>
-      {
+      if let entry = stores[query.path] {
         if entry.queryType != Query.self {
           duplicatePathWarning(expectedType: entry.queryType, foundType: Query.self)
         }
-        return store
+        return entry.store
       }
-      let store = QueryStateStore<Query.Value?>(initialValue: initialValue)
-      stores[query.path] = StoreEntry(queryType: Query.self, stateStore: store)
+      let store = AnyQueryStore(query: query, initialValue: initialValue)
+      stores[query.path] = StoreEntry(queryType: Query.self, store: store)
       return store
+    }
+  }
+}
+
+// MARK: - Queries For Path
+
+extension QueryClient {
+  public func queries(matching path: QueryPath) -> [QueryPath: AnyQueryStore] {
+    self.stores.withLock {
+      var newValues = [QueryPath: AnyQueryStore]()
+      for (queryPath, entry) in $0 {
+        if path.prefixMatches(other: queryPath) {
+          newValues[queryPath] = entry.store
+        }
+      }
+      return newValues
     }
   }
 }
@@ -49,7 +61,7 @@ extension QueryClient {
 extension QueryClient {
   private struct StoreEntry {
     let queryType: Any.Type
-    let stateStore: Any
+    let store: AnyQueryStore
   }
 }
 
@@ -68,7 +80,7 @@ private func duplicatePathWarning(expectedType: Any.Type, foundType: Any.Type) {
 
     To fix this, ensure that all of your QueryProtocol conformances return unique QueryPath \
     instances. If your QueryProtocol conformance type conforms to Hashable, the default QueryPath \
-    is represented by a single element path containing the instance of the type itself.
+    is represented by a single element path containing the instance of the query itself.
     """
   )
 }

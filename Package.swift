@@ -12,6 +12,10 @@ let package = Package(
     .package(url: "https://github.com/pointfreeco/swift-custom-dump", from: "1.3.3"),
     .package(url: "https://github.com/pointfreeco/swift-clocks", from: "1.0.6"),
     .package(
+      url: "https://github.com/pointfreeco/swift-identified-collections",
+      .upToNextMajor(from: "1.1.0")
+    ),
+    .package(
       url: "https://github.com/pointfreeco/xctest-dynamic-overlay",
       .upToNextMajor(from: "1.2.2")
     )
@@ -33,7 +37,10 @@ let package = Package(
     ),
     .target(
       name: "QueryCore",
-      dependencies: [.product(name: "IssueReporting", package: "xctest-dynamic-overlay")]
+      dependencies: [
+        .product(name: "IssueReporting", package: "xctest-dynamic-overlay"),
+        .product(name: "IdentifiedCollections", package: "swift-identified-collections")
+      ]
     ),
     .testTarget(
       name: "QueryCoreTests",
