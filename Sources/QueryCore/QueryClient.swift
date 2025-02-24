@@ -30,6 +30,7 @@ extension QueryClient {
       if let entry = stores[query.path] {
         if entry.queryType != Query.self {
           duplicatePathWarning(expectedType: entry.queryType, foundType: Query.self)
+          return AnyQueryStore(query: query, initialValue: initialValue)
         }
         return entry.store
       }
@@ -75,8 +76,10 @@ private func duplicatePathWarning(expectedType: Any.Type, foundType: Any.Type) {
         Expected: \(String(reflecting: expectedType))
            Found: \(String(reflecting: foundType))
 
-    The returned QueryStore instance will use the expected QueryProtocol conformance type for \
-    data fetching.
+    A new QueryStore instance will be created for the type with the duplicate key, and this store \
+    will not be retained within the QueryClient. This means that the state will not be shared \
+    between different QueryStore instances, and you will not be able to pattern match the query \
+    when calling ``QueryClient.queries(path:)``.
 
     To fix this, ensure that all of your QueryProtocol conformances return unique QueryPath \
     instances. If your QueryProtocol conformance type conforms to Hashable, the default QueryPath \

@@ -25,6 +25,16 @@ struct QueryClientTests {
     }
   }
 
+  @Test("Does Not Crash When Duplicate Query Paths")
+  func duplicatePathsCrashPrevention() async throws {
+    let client = QueryClient()
+    _ = client.store(for: TestQuery())
+    withExpectedIssue {
+      let store = client.store(for: TestQuery().defaultValue(TestQuery.value + 10))
+      _ = store.currentValue
+    }
+  }
+
   @Test("Does Not Share States Between Different Queries")
   func doesNotShareStateBetweenDifferentQueries() async throws {
     let client = QueryClient()
