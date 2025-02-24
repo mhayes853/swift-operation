@@ -10,7 +10,11 @@ let package = Package(
   dependencies: [
     .package(url: "https://github.com/pointfreeco/swift-sharing", .upToNextMajor(from: "2.0.0")),
     .package(url: "https://github.com/pointfreeco/swift-custom-dump", from: "1.3.3"),
-    .package(url: "https://github.com/pointfreeco/swift-clocks", from: "1.0.6")
+    .package(url: "https://github.com/pointfreeco/swift-clocks", from: "1.0.6"),
+    .package(
+      url: "https://github.com/pointfreeco/xctest-dynamic-overlay",
+      .upToNextMajor(from: "1.2.2")
+    )
   ],
   targets: [
     .target(
@@ -27,7 +31,10 @@ let package = Package(
         .product(name: "CustomDump", package: "swift-custom-dump")
       ]
     ),
-    .target(name: "QueryCore"),
+    .target(
+      name: "QueryCore",
+      dependencies: [.product(name: "IssueReporting", package: "xctest-dynamic-overlay")]
+    ),
     .testTarget(
       name: "QueryCoreTests",
       dependencies: [
