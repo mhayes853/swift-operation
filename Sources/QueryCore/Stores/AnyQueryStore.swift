@@ -13,6 +13,14 @@ public final class AnyQueryStore: Sendable {
   }
 }
 
+// MARK: - Path
+
+extension AnyQueryStore {
+  public var path: QueryPath {
+    self.query.path
+  }
+}
+
 // MARK: - State
 
 extension AnyQueryStore {

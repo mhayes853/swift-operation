@@ -12,6 +12,14 @@ public final class QueryStore<Value: Sendable>: Sendable {
   }
 }
 
+// MARK: - Path
+
+extension QueryStore {
+  public var path: QueryPath {
+    self.base.path
+  }
+}
+
 // MARK: - State
 
 extension QueryStore {
