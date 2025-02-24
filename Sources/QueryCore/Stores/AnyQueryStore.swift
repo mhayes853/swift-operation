@@ -37,13 +37,13 @@ extension AnyQueryStore {
         do {
           let value = try await self.query.fetch(in: QueryContext())
           self._state.withLock { $0.endFetchTack(with: value) }
-          return value as (any Sendable)?
+          return value
         } catch {
           self._state.withLock { $0.endFetchTask(with: error) }
           throw error
         }
       }
     }
-    return try await task.cancellableValue!
+    return try await task.cancellableValue
   }
 }

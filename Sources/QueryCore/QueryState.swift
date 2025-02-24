@@ -11,7 +11,7 @@ public struct QueryState<Value: Sendable>: Sendable {
   public private(set) var error: (any Error)?
   public private(set) var errorUpdateCount = 0
   public private(set) var errorLastUpdatedAt: Date?
-  private var fetchTask: Task<Value, any Error>?
+  private var fetchTask: Task<any Sendable, any Error>?
 }
 
 extension QueryState {
@@ -25,8 +25,8 @@ extension QueryState {
 
 extension QueryState {
   mutating func startFetchTask(
-    for fn: @Sendable @escaping () async throws -> Value
-  ) -> Task<Value, any Error> {
+    for fn: @Sendable @escaping () async throws -> any Sendable
+  ) -> Task<any Sendable, any Error> {
     if let task = self.fetchTask {
       return task
     }
@@ -67,7 +67,7 @@ extension QueryState {
       error: self.error,
       errorUpdateCount: self.errorUpdateCount,
       errorLastUpdatedAt: self.errorLastUpdatedAt,
-      fetchTask: nil  // TODO: - Does this need to be converted for casting purposes?
+      fetchTask: self.fetchTask
     )
   }
 }
