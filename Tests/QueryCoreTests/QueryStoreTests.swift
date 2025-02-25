@@ -147,7 +147,7 @@ struct QueryStoreTests {
 
   @Test("Starts Fetching By Default When Query Store Subscribed To")
   func startsFetchingOnSubscription() async throws {
-    let query = TestQuery().startFetching(when: .subscribedTo)
+    let query = TestQuery().enableAutomaticFetching(when: .subscribedTo)
     let store = self.client.store(for: query)
 
   }
