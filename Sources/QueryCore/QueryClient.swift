@@ -90,7 +90,7 @@ extension QueryClient {
 extension QueryContext {
   public fileprivate(set) var queryClient: QueryClient {
     get {
-      self[QueryClientKey.self].box
+      self[QueryClientKey.self].inner
         .withLock { box in
           guard let client = box.value else {
             missingQueryClientWarning()
@@ -100,7 +100,7 @@ extension QueryContext {
         }
     }
     set {
-      self[QueryClientKey.self].box.withLock { $0.value = newValue }
+      self[QueryClientKey.self].inner.withLock { $0.value = newValue }
     }
   }
 

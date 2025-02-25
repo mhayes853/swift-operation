@@ -11,9 +11,9 @@ final class WeakBox<Value: AnyObject> {
 // MARK: - LockedWeakBox
 
 final class LockedWeakBox<Value: AnyObject>: Sendable {
-  let box: Lock<WeakBox<Value>>
+  let inner: Lock<WeakBox<Value>>
 
   init(value: sending Value?) {
-    self.box = Lock(WeakBox(value: value))
+    self.inner = Lock(WeakBox(value: value))
   }
 }
