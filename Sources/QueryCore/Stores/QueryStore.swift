@@ -42,3 +42,13 @@ extension QueryStore {
     try await self.base.fetch() as! Value
   }
 }
+
+// MARK: - Subscribe
+
+extension QueryStore {
+  public func subscribe(
+    _ fn: @escaping QueryStoreSubscriber<Value>
+  ) -> QueryStoreSubscription {
+    self.base.subscribe { _ in }
+  }
+}

@@ -61,3 +61,18 @@ extension AnyQueryStore {
     return try await task.cancellableValue
   }
 }
+
+// MARK: - Subscribe
+
+extension AnyQueryStore {
+  public func subscribe(
+    _ fn: @Sendable @escaping (QueryStoreSubscription.Event<any Sendable>) -> Void
+  ) -> QueryStoreSubscription {
+    let id = self._state.withLock { $0.addSubscriber(fn) }
+    return QueryStoreSubscription(store: self, id: id)
+  }
+
+  func unsubscribe(subscription: QueryStoreSubscription) {
+    self._state.withLock { $0.removeSubscriber(id: subscription.id) }
+  }
+}

@@ -144,4 +144,11 @@ struct QueryStoreTests {
     try await store.fetch()
     expectNoDifference(store.error == nil, true)
   }
+
+  @Test("Starts Fetching By Default When Query Store Subscribed To")
+  func startsFetchingOnSubscription() async throws {
+    let query = TestQuery().startFetching(when: .subscribedTo)
+    let store = self.client.store(for: query)
+
+  }
 }
