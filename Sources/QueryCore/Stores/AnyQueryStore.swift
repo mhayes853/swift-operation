@@ -5,10 +5,16 @@ import Foundation
 @dynamicMemberLookup
 public final class AnyQueryStore: Sendable {
   private let query: any QueryProtocol
+  public let context: QueryContext
   private let _state: Lock<QueryState<(any Sendable)?>>
 
-  init<Value>(query: some QueryProtocol<Value>, initialValue: Value?) {
+  init<Value>(
+    query: some QueryProtocol<Value>,
+    initialValue: Value?,
+    initialContext: QueryContext
+  ) {
     self.query = query
+    self.context = initialContext
     self._state = Lock(QueryState(initialValue: initialValue))
   }
 }
@@ -43,7 +49,7 @@ extension AnyQueryStore {
     let task = self._state.withLock { state in
       state.startFetchTask {
         do {
-          let value = try await self.query.fetch(in: QueryContext())
+          let value = try await self.query.fetch(in: self.context)
           self._state.withLock { $0.endFetchTack(with: value) }
           return value
         } catch {

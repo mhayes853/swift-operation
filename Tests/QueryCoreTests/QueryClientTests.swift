@@ -79,4 +79,22 @@ struct QueryClientTests {
     expectNoDifference(stores[q1.path]?.currentValue as? Int, 10)
     expectNoDifference(stores[q1.path]?.initialValue as? Int, 10)
   }
+
+  @Test("Adds Current QueryClient Instance To The QueryContext")
+  func queryClientInContext() async throws {
+    let client = QueryClient()
+    let query = ContextReadingQuery()
+    let store = client.store(for: query)
+    try await store.fetch()
+
+    let context = await query.latestContext
+    let contextClient = try #require(context?.queryClient)
+    expectNoDifference(client === contextClient, true)
+  }
+
+  @Test("Reports Issue When Accessing QueryClient In QueryContext When Detached From QueryClient")
+  func accessClientInContextWhenDetachedFromClient() async throws {
+    let context = QueryContext()
+    withExpectedIssue { _ = context.queryClient }
+  }
 }

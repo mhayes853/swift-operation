@@ -1,12 +1,27 @@
+import ConcurrencyExtras
 import IssueReporting
-import OrderedCollections
 
 // MARK: - QueryClient
 
 public final class QueryClient: Sendable {
-  private let stores = Lock<[QueryPath: StoreEntry]>([:])
+  private typealias State = (stores: [QueryPath: StoreEntry], defaultContext: QueryContext)
 
-  public init() {}
+  private let state: Lock<State>
+
+  public init(defaultContext: QueryContext = QueryContext()) {
+    self.state = Lock(([:], defaultContext))
+    self.state.withLock { $0.defaultContext.queryClient = self }
+  }
+}
+
+// MARK: - Default Context
+
+extension QueryClient {
+  public func withDefaultContext<T: Sendable>(
+    _ fn: @Sendable (inout QueryContext) throws -> T
+  ) rethrows -> T {
+    try self.state.withLock { try fn(&$0.defaultContext) }
+  }
 }
 
 // MARK: - Store
@@ -26,17 +41,21 @@ extension QueryClient {
     for query: Query,
     initialValue: Query.Value?
   ) -> AnyQueryStore {
-    self.stores.withLock { stores in
-      if let entry = stores[query.path] {
+    self.state.withLock { state in
+      let newStore = AnyQueryStore(
+        query: query,
+        initialValue: initialValue,
+        initialContext: state.defaultContext
+      )
+      if let entry = state.stores[query.path] {
         if entry.queryType != Query.self {
           duplicatePathWarning(expectedType: entry.queryType, foundType: Query.self)
-          return AnyQueryStore(query: query, initialValue: initialValue)
+          return newStore
         }
         return entry.store
       }
-      let store = AnyQueryStore(query: query, initialValue: initialValue)
-      stores[query.path] = StoreEntry(queryType: Query.self, store: store)
-      return store
+      state.stores[query.path] = StoreEntry(queryType: Query.self, store: newStore)
+      return newStore
     }
   }
 }
@@ -45,9 +64,9 @@ extension QueryClient {
 
 extension QueryClient {
   public func queries(matching path: QueryPath) -> [QueryPath: AnyQueryStore] {
-    self.stores.withLock {
+    self.state.withLock { state in
       var newValues = [QueryPath: AnyQueryStore]()
-      for (queryPath, entry) in $0 {
+      for (queryPath, entry) in state.stores {
         if path.prefixMatches(other: queryPath) {
           newValues[queryPath] = entry.store
         }
@@ -66,7 +85,33 @@ extension QueryClient {
   }
 }
 
-// MARK: - Warning
+// MARK: - QueryContext
+
+extension QueryContext {
+  public fileprivate(set) var queryClient: QueryClient {
+    get {
+      self[QueryClientKey.self].box
+        .withLock { box in
+          guard let client = box.value else {
+            missingQueryClientWarning()
+            return QueryClient()
+          }
+          return client
+        }
+    }
+    set {
+      self[QueryClientKey.self].box.withLock { $0.value = newValue }
+    }
+  }
+
+  private enum QueryClientKey: Key {
+    static var defaultValue: LockedWeakBox<QueryClient> {
+      LockedWeakBox<QueryClient>(value: nil)
+    }
+  }
+}
+
+// MARK: - Warnings
 
 private func duplicatePathWarning(expectedType: Any.Type, foundType: Any.Type) {
   reportIssue(
@@ -84,6 +129,16 @@ private func duplicatePathWarning(expectedType: Any.Type, foundType: Any.Type) {
     To fix this, ensure that all of your QueryProtocol conformances return unique QueryPath \
     instances. If your QueryProtocol conformance type conforms to Hashable, the default QueryPath \
     is represented by a single element path containing the instance of the query itself.
+    """
+  )
+}
+
+private func missingQueryClientWarning() {
+  reportIssue(
+    """
+    No QueryClient was found in the QueryContext.
+
+    Ensure that the QueryContext originates from a QueryClient instance.
     """
   )
 }

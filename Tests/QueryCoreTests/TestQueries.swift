@@ -116,3 +116,18 @@ struct PathableQuery: QueryProtocol {
     self.value
   }
 }
+
+// MARK: - ContextReadingQuery
+
+final actor ContextReadingQuery: QueryProtocol {
+  var latestContext: QueryContext?
+
+  nonisolated var path: QueryPath {
+    [ObjectIdentifier(self)]
+  }
+
+  func fetch(in context: QueryContext) async throws -> String {
+    self.latestContext = context
+    return ""
+  }
+}
