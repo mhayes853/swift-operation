@@ -49,7 +49,7 @@ extension QueryClient {
       )
       if let entry = state.stores[query.path] {
         if entry.queryType != Query.self {
-          duplicatePathWarning(expectedType: entry.queryType, foundType: Query.self)
+          reportWarning(.duplicatePath(expectedType: entry.queryType, foundType: Query.self))
           return newStore
         }
         return entry.store
@@ -93,7 +93,7 @@ extension QueryContext {
       self[QueryClientKey.self].inner
         .withLock { box in
           guard let client = box.value else {
-            missingQueryClientWarning()
+            reportWarning(.missingQueryClient)
             return QueryClient()
           }
           return client
@@ -113,8 +113,8 @@ extension QueryContext {
 
 // MARK: - Warnings
 
-private func duplicatePathWarning(expectedType: Any.Type, foundType: Any.Type) {
-  reportIssue(
+extension QueryCoreWarning {
+  public static func duplicatePath(expectedType: Any.Type, foundType: Any.Type) -> Self {
     """
     A QueryClient has detected a duplicate QueryPath used for different QueryProtocol conformances.
 
@@ -130,16 +130,14 @@ private func duplicatePathWarning(expectedType: Any.Type, foundType: Any.Type) {
     instances. If your QueryProtocol conformance type conforms to Hashable, the default QueryPath \
     is represented by a single element path containing the instance of the query itself.
     """
-  )
-}
+  }
 
-private func missingQueryClientWarning() {
-  reportIssue(
+  public static var missingQueryClient: Self {
     """
     No QueryClient was found in the QueryContext.
 
     Ensure that the QueryContext originates from a QueryClient instance. You can obtain a context \
     that originates from a QueryClient instance by calling ``QueryClient.withDefaultContext``.
     """
-  )
+  }
 }

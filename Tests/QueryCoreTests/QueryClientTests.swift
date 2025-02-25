@@ -1,6 +1,6 @@
 import CustomDump
 import IssueReporting
-import QueryCore
+@_spi(Warnings) import QueryCore
 import Testing
 
 @Suite("QueryClient tests")
@@ -20,8 +20,14 @@ struct QueryClientTests {
   func cannotHaveDuplicatePaths() async throws {
     let client = QueryClient()
     _ = client.store(for: TestQuery())
-    withExpectedIssue {
+    withKnownIssue {
       _ = client.store(for: TestQuery().defaultValue(TestQuery.value + 10))
+    } matching: {
+      $0.comments.contains(
+        .warning(
+          .duplicatePath(expectedType: TestQuery.self, foundType: DefaultQuery<TestQuery>.self)
+        )
+      )
     }
   }
 
@@ -95,6 +101,10 @@ struct QueryClientTests {
   @Test("Reports Issue When Accessing QueryClient In QueryContext When Detached From QueryClient")
   func accessClientInContextWhenDetachedFromClient() async throws {
     let context = QueryContext()
-    withExpectedIssue { _ = context.queryClient }
+    withKnownIssue {
+      _ = context.queryClient
+    } matching: {
+      $0.comments.contains(.warning(.missingQueryClient))
+    }
   }
 }
