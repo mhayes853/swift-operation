@@ -138,7 +138,8 @@ private func missingQueryClientWarning() {
     """
     No QueryClient was found in the QueryContext.
 
-    Ensure that the QueryContext originates from a QueryClient instance.
+    Ensure that the QueryContext originates from a QueryClient instance. You can obtain a context \
+    that originates from a QueryClient instance by calling ``QueryClient.withDefaultContext``.
     """
   )
 }
