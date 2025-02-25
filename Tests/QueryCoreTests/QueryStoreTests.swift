@@ -149,6 +149,13 @@ struct QueryStoreTests {
   func startsFetchingOnSubscription() async throws {
     let query = TestQuery().enableAutomaticFetching(when: .subscribedTo)
     let store = self.client.store(for: query)
+    store.subscribe { event in
+      switch event {
+      case let .fetchingEnded(result):
+        print(result)
+      default: break
+      }
+    }
 
   }
 }
