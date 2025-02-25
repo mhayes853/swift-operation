@@ -5,6 +5,8 @@ extension QueryProtocol {
 }
 
 public struct DefaultQuery<Base: QueryProtocol>: QueryProtocol {
+  public typealias _StateValue = Base.Value
+
   let defaultValue: Base.Value
   let base: Base
 

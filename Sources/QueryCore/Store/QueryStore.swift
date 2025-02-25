@@ -3,11 +3,7 @@ import Foundation
 
 // MARK: - QueryStoreOf
 
-public typealias QueryStoreOf<Query: QueryProtocol> = QueryStore<Query.Value?, Query.Value>
-
-// MARK: - DefaultQueryStoreOf
-
-public typealias DefaultQueryStoreOf<Query: QueryProtocol> = QueryStore<Query.Value, Query.Value>
+public typealias QueryStoreOf<Query: QueryProtocol> = QueryStore<Query._StateValue, Query.Value>
 
 // MARK: - QueryStore
 

@@ -28,13 +28,16 @@ extension QueryClient {
 
 extension QueryClient {
   public func store<Query: QueryProtocol>(for query: Query) -> QueryStoreOf<Query> {
-    QueryStore(Query.Value?.self, base: self.anyStore(for: query, initialValue: nil))
+    QueryStore(Query._StateValue.self, base: self.anyStore(for: query, initialValue: nil))
   }
 
   public func store<Query: QueryProtocol>(
     for query: DefaultQuery<Query>
-  ) -> DefaultQueryStoreOf<Query> {
-    QueryStore(Query.Value.self, base: self.anyStore(for: query, initialValue: query.defaultValue))
+  ) -> QueryStoreOf<Query> {
+    QueryStore(
+      Query._StateValue.self,
+      base: self.anyStore(for: query, initialValue: query.defaultValue)
+    )
   }
 
   private func anyStore<Query: QueryProtocol>(
