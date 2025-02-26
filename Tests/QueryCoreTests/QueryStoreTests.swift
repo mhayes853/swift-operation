@@ -145,6 +145,16 @@ struct QueryStoreTests {
     expectNoDifference(store.error == nil, true)
   }
 
+  @Test("Updates QueryContext")
+  func updatesQueryContext() async throws {
+    let query = ContextReadingQuery()
+    let store = self.client.store(for: query)
+    store.context.test = "blob"
+    try await store.fetch()
+    let context = await query.latestContext
+    expectNoDifference(context?.test, "blob")
+  }
+
   @Test("Starts Fetching By Default When Query Store Subscribed To")
   func startsFetchingOnSubscription() async throws {
     let query = TestQuery().enableAutomaticFetching(when: .subscribedTo)
@@ -157,5 +167,16 @@ struct QueryStoreTests {
       }
     }
 
+  }
+}
+
+extension QueryContext {
+  fileprivate var test: String {
+    get { self[TestKey.self] }
+    set { self[TestKey.self] = newValue }
+  }
+
+  private struct TestKey: Key {
+    static let defaultValue = "test"
   }
 }

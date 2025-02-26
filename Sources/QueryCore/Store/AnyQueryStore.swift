@@ -4,9 +4,10 @@ import Foundation
 
 @dynamicMemberLookup
 public final class AnyQueryStore: Sendable {
+  private typealias State = (query: QueryState<(any Sendable)?>, context: QueryContext)
+
   private let query: any QueryProtocol
-  public let context: QueryContext
-  private let _state: Lock<QueryState<(any Sendable)?>>
+  private let _state: Lock<State>
 
   init<Value>(
     query: some QueryProtocol<Value>,
@@ -14,8 +15,7 @@ public final class AnyQueryStore: Sendable {
     initialContext: QueryContext
   ) {
     self.query = query
-    self.context = initialContext
-    self._state = Lock(QueryState(initialValue: initialValue))
+    self._state = Lock((QueryState(initialValue: initialValue), initialContext))
   }
 }
 
@@ -27,11 +27,20 @@ extension AnyQueryStore {
   }
 }
 
+// MARK: - Context
+
+extension AnyQueryStore {
+  public var context: QueryContext {
+    get { self._state.withLock { $0.context } }
+    set { self._state.withLock { $0.context = newValue } }
+  }
+}
+
 // MARK: - State
 
 extension AnyQueryStore {
   public var state: QueryState<(any Sendable)?> {
-    self._state.withLock { $0 }
+    self._state.withLock { $0.query }
   }
 
   public subscript<NewValue: Sendable>(
@@ -47,13 +56,13 @@ extension AnyQueryStore {
   @discardableResult
   public func fetch() async throws -> any Sendable {
     let task = self._state.withLock { state in
-      state.startFetchTask {
+      state.query.startFetchTask { [context = state.context] in
         do {
-          let value = try await self.query.fetch(in: self.context)
-          self._state.withLock { $0.endFetchTack(with: value) }
+          let value = try await self.query.fetch(in: context)
+          self._state.withLock { $0.query.endFetchTask(with: value) }
           return value
         } catch {
-          self._state.withLock { $0.endFetchTask(with: error) }
+          self._state.withLock { $0.query.endFetchTask(with: error) }
           throw error
         }
       }
@@ -68,11 +77,11 @@ extension AnyQueryStore {
   public func subscribe(
     _ fn: @Sendable @escaping (QueryStoreSubscription.Event<any Sendable>) -> Void
   ) -> QueryStoreSubscription {
-    let id = self._state.withLock { $0.addSubscriber(fn) }
+    let id = self._state.withLock { $0.query.addSubscriber(fn) }
     return QueryStoreSubscription(store: self, id: id)
   }
 
   func unsubscribe(subscription: QueryStoreSubscription) {
-    self._state.withLock { $0.removeSubscriber(id: subscription.id) }
+    self._state.withLock { $0.query.removeSubscriber(id: subscription.id) }
   }
 }

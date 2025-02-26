@@ -16,6 +16,15 @@ public final class QueryStore<StateValue: Sendable, EventValue: Sendable>: Senda
   }
 }
 
+// MARK: - Context
+
+extension QueryStore {
+  public var context: QueryContext {
+    get { self.base.context }
+    set { self.base.context = newValue }
+  }
+}
+
 // MARK: - Path
 
 extension QueryStore {

@@ -59,7 +59,7 @@ extension QueryState {
     return task
   }
 
-  mutating func endFetchTack(with value: Value) {
+  mutating func endFetchTask(with value: Value) {
     self.currentValue = value
     self.valueUpdateCount += 1
     self.valueLastUpdatedAt = Date()
