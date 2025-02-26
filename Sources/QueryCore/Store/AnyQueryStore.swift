@@ -99,11 +99,11 @@ extension AnyQueryStore {
   public func subscribe(
     _ fn: @Sendable @escaping (QueryStoreSubscription.Event<any Sendable>) -> Void
   ) -> QueryStoreSubscription {
-    let id = self._state.withLock { $0.query.addSubscriber(fn) }
-    if self.isAutomaticFetchingEnabled {
+    let (id, isFirstSubscriber) = self._state.withLock {
+      ($0.query.addSubscriber(fn), $0.query.subscriberCount == 1)
+    }
+    if self.isAutomaticFetchingEnabled && isFirstSubscriber {
       self.beginFetchTask()
-    } else {
-      self._state.withLock { $0.query.emitEvent(.idle) }
     }
     return QueryStoreSubscription(store: self, id: id)
   }

@@ -61,13 +61,18 @@ struct FailingQuery: QueryProtocol, Hashable {
 
 final actor CountingQuery: QueryProtocol {
   var fetchCount = 0
+  private let sleep: @Sendable () async -> Void
+
+  init(sleep: @Sendable @escaping () async -> Void = { await Task.megaYield() }) {
+    self.sleep = sleep
+  }
 
   nonisolated var path: QueryPath {
     [ObjectIdentifier(self)]
   }
 
   func fetch(in context: QueryContext) async throws -> Int {
-    await Task.megaYield()
+    await self.sleep()
     self.fetchCount += 1
     return self.fetchCount
   }

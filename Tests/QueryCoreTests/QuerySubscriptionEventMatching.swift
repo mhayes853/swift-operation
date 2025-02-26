@@ -35,8 +35,6 @@ private func reportEventsDiff<Value: Sendable & Equatable>(
 extension QueryStoreSubscription.Event where Value: Equatable {
   func isMatch(with other: QueryStoreSubscription.Event<Value>) -> Bool {
     switch (self, other) {
-    case (.idle, .idle):
-      return true
     case (.fetchingStarted, .fetchingStarted):
       return true
     case (.fetchingEnded, .fetchingEnded):

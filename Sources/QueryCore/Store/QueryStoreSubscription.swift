@@ -24,7 +24,6 @@ extension QueryStoreSubscription {
 
 extension QueryStoreSubscription {
   public enum Event<Value: Sendable>: Sendable {
-    case idle
     case fetchingStarted
     case fetchingEnded
     case resultReceived(Result<Value, any Error>)
@@ -36,8 +35,6 @@ extension QueryStoreSubscription.Event {
     to type: NewValue.Type
   ) -> QueryStoreSubscription.Event<NewValue> {
     switch self {
-    case .idle:
-      return .idle
     case .fetchingStarted:
       return .fetchingStarted
     case .fetchingEnded:
