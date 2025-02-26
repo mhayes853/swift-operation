@@ -151,7 +151,7 @@ struct QueryStoreTests {
     let store = self.client.store(for: query)
     store.subscribe { event in
       switch event {
-      case let .fetchingEnded(result):
+      case let .resultReceived(result):
         print(result)
       default: break
       }

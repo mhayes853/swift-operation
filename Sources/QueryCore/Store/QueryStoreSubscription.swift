@@ -26,7 +26,8 @@ extension QueryStoreSubscription {
   public enum Event<Value: Sendable>: Sendable {
     case idle
     case fetchingStarted
-    case fetchingEnded(Result<Value, any Error>)
+    case fetchingEnded
+    case resultReceived(Result<Value, any Error>)
   }
 }
 
