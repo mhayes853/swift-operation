@@ -157,16 +157,98 @@ struct QueryStoreTests {
 
   @Test("Starts Fetching By Default When Query Store Subscribed To")
   func startsFetchingOnSubscription() async throws {
-    let query = TestQuery().enableAutomaticFetching(when: .subscribedTo)
-    let store = self.client.store(for: query)
-    store.subscribe { event in
-      switch event {
-      case let .resultReceived(result):
-        print(result)
-      default: break
-      }
+    let events = Lock([QueryStoreSubscription.Event<TestQuery.Value>]())
+    let store = self.client.store(for: TestQuery())
+    let subscription = store.subscribe { event in
+      events.withLock { $0.append(event) }
     }
+    try await store.fetch()
+    expectEventsMatch(
+      events.withLock { $0 },
+      [.fetchingStarted, .resultReceived(.success(TestQuery.value)), .fetchingEnded]
+    )
+    subscription.cancel()
+  }
 
+  @Test("Emits Error Event When Fetching Fails")
+  func emitsErrorEventWhenFetchingFails() async throws {
+    let events = Lock([QueryStoreSubscription.Event<FailingQuery.Value>]())
+    let store = self.client.store(for: FailingQuery())
+    let subscription = store.subscribe { event in
+      events.withLock { $0.append(event) }
+    }
+    _ = try? await store.fetch()
+    expectEventsMatch(
+      events.withLock { $0 },
+      [.fetchingStarted, .resultReceived(.failure(FailingQuery.SomeError())), .fetchingEnded]
+    )
+    subscription.cancel()
+  }
+
+  @Test("Starts Fetching By When Automatic Fetching Enabled On Subscription")
+  func startsFetchingOnSubscriptionWhenAutomaticFetchingEnabled() async throws {
+    let query = TestQuery().enableAutomaticFetching(when: .firstSubscribedTo)
+    let events = Lock([QueryStoreSubscription.Event<TestQuery.Value>]())
+    let store = self.client.store(for: query)
+    let subscription = store.subscribe { event in
+      events.withLock { $0.append(event) }
+    }
+    try await store.fetch()
+    expectEventsMatch(
+      events.withLock { $0 },
+      [.fetchingStarted, .resultReceived(.success(TestQuery.value)), .fetchingEnded]
+    )
+    subscription.cancel()
+  }
+
+  @Test("Emits Idle Event When Automatic Fetching Disabled On Subscription")
+  func emitsIdleEventWhenAutomaticFetchingEnabled() async throws {
+    let query = TestQuery().enableAutomaticFetching(when: .fetchManuallyCalled)
+    let events = Lock([QueryStoreSubscription.Event<TestQuery.Value>]())
+    let store = self.client.store(for: query)
+    let subscription = store.subscribe { event in
+      events.withLock { $0.append(event) }
+    }
+    expectEventsMatch(events.withLock { $0 }, [.idle])
+    subscription.cancel()
+  }
+
+  @Test("Emits Fetch Events When fetch Manually Called")
+  func emitsFetchEventsWhenFetchManuallyCalled() async throws {
+    let query = TestQuery().enableAutomaticFetching(when: .fetchManuallyCalled)
+    let events = Lock([QueryStoreSubscription.Event<TestQuery.Value>]())
+    let store = self.client.store(for: query)
+    let subscription = store.subscribe { event in
+      events.withLock { $0.append(event) }
+    }
+    try await store.fetch()
+    expectEventsMatch(
+      events.withLock { $0 },
+      [.idle, .fetchingStarted, .resultReceived(.success(TestQuery.value)), .fetchingEnded]
+    )
+    subscription.cancel()
+  }
+
+  @Test("Automatic Fetching Enabled By Default")
+  func automaticFetchingEnabledByDefault() async throws {
+    let store = self.client.store(for: TestQuery())
+    expectNoDifference(store.isAutomaticFetchingEnabled, true)
+  }
+
+  @Test("Automatic Fetching Enabled When Condition Is subscribedTo")
+  func automaticFetchingEnabledWhenSubscribedTo() async throws {
+    let store = self.client.store(
+      for: TestQuery().enableAutomaticFetching(when: .firstSubscribedTo)
+    )
+    expectNoDifference(store.isAutomaticFetchingEnabled, true)
+  }
+
+  @Test("Automatic Fetching Disabled When Condition fetchManuallyCalled")
+  func automaticFetchingDisabledWhenFetchManuallyCalled() async throws {
+    let store = self.client.store(
+      for: TestQuery().enableAutomaticFetching(when: .fetchManuallyCalled)
+    )
+    expectNoDifference(store.isAutomaticFetchingEnabled, false)
   }
 }
 

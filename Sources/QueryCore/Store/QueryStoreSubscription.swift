@@ -31,6 +31,23 @@ extension QueryStoreSubscription {
   }
 }
 
+extension QueryStoreSubscription.Event {
+  func unsafeCasted<NewValue: Sendable>(
+    to type: NewValue.Type
+  ) -> QueryStoreSubscription.Event<NewValue> {
+    switch self {
+    case .idle:
+      return .idle
+    case .fetchingStarted:
+      return .fetchingStarted
+    case .fetchingEnded:
+      return .fetchingEnded
+    case let .resultReceived(result):
+      return .resultReceived(result.map { $0 as! NewValue })
+    }
+  }
+}
+
 // MARK: - ID
 
 extension QueryStoreSubscription {

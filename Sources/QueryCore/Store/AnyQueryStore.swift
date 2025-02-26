@@ -16,6 +16,7 @@ public final class AnyQueryStore: Sendable {
   ) {
     self.query = query
     self._state = Lock((QueryState(initialValue: initialValue), initialContext))
+    self._state.withLock { query._setup(context: &$0.context) }
   }
 }
 
@@ -33,6 +34,14 @@ extension AnyQueryStore {
   public var context: QueryContext {
     get { self._state.withLock { $0.context } }
     set { self._state.withLock { $0.context = newValue } }
+  }
+}
+
+// MARK: - Automatic Fetching
+
+extension AnyQueryStore {
+  public var isAutomaticFetchingEnabled: Bool {
+    self.context.enableAutomaticFetchingCondition.isEnabledByDefault
   }
 }
 
@@ -55,19 +64,32 @@ extension AnyQueryStore {
 extension AnyQueryStore {
   @discardableResult
   public func fetch() async throws -> any Sendable {
-    let task = self._state.withLock { state in
+    let task = self.beginFetchTask()
+    return try await task.cancellableValue
+  }
+
+  @discardableResult
+  private func beginFetchTask() -> Task<any Sendable, any Error> {
+    self._state.withLock { state in
       state.query.startFetchTask { [context = state.context] in
+        self._state.withLock { $0.query.emitEvent(.fetchingStarted) }
+        defer { self._state.withLock { $0.query.emitEvent(.fetchingEnded) } }
         do {
           let value = try await self.query.fetch(in: context)
-          self._state.withLock { $0.query.endFetchTask(with: value) }
+          self._state.withLock {
+            $0.query.endFetchTask(with: value)
+            $0.query.emitEvent(.resultReceived(.success(value)))
+          }
           return value
         } catch {
-          self._state.withLock { $0.query.endFetchTask(with: error) }
+          self._state.withLock {
+            $0.query.endFetchTask(with: error)
+            $0.query.emitEvent(.resultReceived(.failure(error)))
+          }
           throw error
         }
       }
     }
-    return try await task.cancellableValue
   }
 }
 
@@ -78,6 +100,11 @@ extension AnyQueryStore {
     _ fn: @Sendable @escaping (QueryStoreSubscription.Event<any Sendable>) -> Void
   ) -> QueryStoreSubscription {
     let id = self._state.withLock { $0.query.addSubscriber(fn) }
+    if self.isAutomaticFetchingEnabled {
+      self.beginFetchTask()
+    } else {
+      self._state.withLock { $0.query.emitEvent(.idle) }
+    }
     return QueryStoreSubscription(store: self, id: id)
   }
 

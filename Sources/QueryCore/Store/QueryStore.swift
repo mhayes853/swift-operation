@@ -25,6 +25,14 @@ extension QueryStore {
   }
 }
 
+// MARK: - Automatic Fetching
+
+extension QueryStore {
+  public var isAutomaticFetchingEnabled: Bool {
+    self.base.isAutomaticFetchingEnabled
+  }
+}
+
 // MARK: - Path
 
 extension QueryStore {
@@ -62,6 +70,6 @@ extension QueryStore {
   public func subscribe(
     _ fn: @escaping QueryStoreSubscriber<EventValue>
   ) -> QueryStoreSubscription {
-    self.base.subscribe { _ in }
+    self.base.subscribe { fn($0.unsafeCasted(to: EventValue.self)) }
   }
 }

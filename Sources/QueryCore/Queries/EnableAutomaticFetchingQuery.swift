@@ -1,11 +1,6 @@
 // MARK: - QueryEnableAutomaticFetchingCondition
 
-public struct QueryEnableAutomaticFetchingCondition: Sendable {
-  private enum Storage {
-    case subscribedTo
-    case fetchManuallyCalled
-  }
-
+public struct EnableAutomaticFetchingCondition: Sendable {
   private let storage: Storage
 
   private init(_ storage: Storage) {
@@ -13,16 +8,32 @@ public struct QueryEnableAutomaticFetchingCondition: Sendable {
   }
 }
 
-extension QueryEnableAutomaticFetchingCondition {
-  public static let subscribedTo = Self(.subscribedTo)
+extension EnableAutomaticFetchingCondition {
+  public static let firstSubscribedTo = Self(.firstSubscribedTo)
   public static let fetchManuallyCalled = Self(.fetchManuallyCalled)
+}
+
+extension EnableAutomaticFetchingCondition {
+  public var isEnabledByDefault: Bool {
+    switch self.storage {
+    case .firstSubscribedTo: true
+    case .fetchManuallyCalled: false
+    }
+  }
+}
+
+extension EnableAutomaticFetchingCondition {
+  private enum Storage: Equatable {
+    case firstSubscribedTo
+    case fetchManuallyCalled
+  }
 }
 
 // MARK: - QueryProtocol
 
 extension QueryProtocol {
   public func enableAutomaticFetching(
-    when condition: QueryEnableAutomaticFetchingCondition
+    when condition: EnableAutomaticFetchingCondition
   ) -> some QueryProtocol<Value> {
     EnableAutomaticFetchingQuery(base: self, condition: condition)
   }
@@ -30,13 +41,31 @@ extension QueryProtocol {
 
 private struct EnableAutomaticFetchingQuery<Base: QueryProtocol>: QueryProtocol {
   let base: Base
-  let condition: QueryEnableAutomaticFetchingCondition
+  let condition: EnableAutomaticFetchingCondition
 
-  public var path: QueryPath {
+  var path: QueryPath {
     self.base.path
   }
 
-  public func fetch(in context: QueryContext) async throws -> Base.Value {
+  func _setup(context: inout QueryContext) {
+    context.enableAutomaticFetchingCondition = self.condition
+    self.base._setup(context: &context)
+  }
+
+  func fetch(in context: QueryContext) async throws -> Base.Value {
     try await self.base.fetch(in: context)
+  }
+}
+
+// MARK: - QueryContext
+
+extension QueryContext {
+  public fileprivate(set) var enableAutomaticFetchingCondition: EnableAutomaticFetchingCondition {
+    get { self[EnableAutomaticFetchingKey.self] }
+    set { self[EnableAutomaticFetchingKey.self] = newValue }
+  }
+
+  private enum EnableAutomaticFetchingKey: Key {
+    static let defaultValue = EnableAutomaticFetchingCondition.firstSubscribedTo
   }
 }

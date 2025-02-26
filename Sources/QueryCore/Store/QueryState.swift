@@ -42,6 +42,10 @@ extension QueryState {
   mutating func removeSubscriber(id: QueryStoreSubscription.ID) {
     self.subscribers.removeValue(forKey: id)
   }
+
+  func emitEvent(_ event: QueryStoreSubscription.Event<any Sendable>) {
+    self.subscribers.values.forEach { $0(event) }
+  }
 }
 
 // MARK: - Fetch Task

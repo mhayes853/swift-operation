@@ -5,11 +5,16 @@ public protocol QueryProtocol<Value>: Sendable {
 
   var path: QueryPath { get }
 
+  func _setup(context: inout QueryContext)
+
   func fetch(in context: QueryContext) async throws -> Value
 }
 
 extension QueryProtocol {
   public typealias _StateValue = Value?
+
+  public func _setup(context: inout QueryContext) {
+  }
 }
 
 extension QueryProtocol where Self: Hashable {

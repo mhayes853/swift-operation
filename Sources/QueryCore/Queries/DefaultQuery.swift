@@ -14,6 +14,10 @@ public struct DefaultQuery<Base: QueryProtocol>: QueryProtocol {
     self.base.path
   }
 
+  public func _setup(context: inout QueryContext) {
+    self.base._setup(context: &context)
+  }
+
   public func fetch(in context: QueryContext) async throws -> Base.Value {
     try await self.base.fetch(in: context)
   }
