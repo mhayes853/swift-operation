@@ -1,9 +1,11 @@
 import ConcurrencyExtras
 import Foundation
 
-// MARK: - QueryStoreOf
+// MARK: - Typealiases
 
-public typealias QueryStoreOf<Query: QueryProtocol> = QueryStore<Query._StateValue, Query.Value>
+public typealias QueryStoreFor<Query: QueryProtocol> = QueryStore<Query._StateValue, Query.Value>
+
+public typealias QueryStoreOf<Value: Sendable> = QueryStore<Value?, Value>
 
 public typealias AnyQueryStore = QueryStore<(any Sendable)?, any Sendable>
 
@@ -37,7 +39,7 @@ public final class QueryStore<StateValue: Sendable, QueryValue: Sendable>: Senda
     self._state.inner.withLock { query._setup(context: &$0.context) }
   }
 
-  init(base: AnyQueryStore) {
+  init(casting base: AnyQueryStore) {
     self.query = base.query
     self._state = base._state
   }
