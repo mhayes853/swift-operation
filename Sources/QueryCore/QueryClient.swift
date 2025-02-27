@@ -41,7 +41,7 @@ extension QueryClient {
     self.state.withLock { state in
       let newStore = AnyQueryStore.detached(
         query: query,
-        initialValue: initialValue as (any Sendable)?,
+        initialValue: initialValue,
         initialContext: state.defaultContext
       )
       if let entry = state.stores[query.path] {

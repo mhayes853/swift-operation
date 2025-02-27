@@ -7,7 +7,7 @@ public typealias QueryStoreFor<Query: QueryProtocol> = QueryStore<Query._StateVa
 
 public typealias QueryStoreOf<Value: Sendable> = QueryStore<Value?, Value>
 
-public typealias AnyQueryStore = QueryStore<(any Sendable)?, any Sendable>
+public typealias AnyQueryStore = QueryStoreOf<any Sendable>
 
 // MARK: - QueryStore
 
@@ -23,17 +23,7 @@ public final class QueryStore<StateValue: Sendable, QueryValue: Sendable>: Senda
     query: Query,
     initialValue: (any Sendable)?,
     initialContext: QueryContext
-  ) where StateValue == Query._StateValue, QueryValue == Query.Value {
-    self.query = query
-    self._state = LockedBox(value: (QueryState(initialValue: initialValue), initialContext))
-    self._state.inner.withLock { query._setup(context: &$0.context) }
-  }
-
-  private init<Query: QueryProtocol>(
-    query: Query,
-    initialValue: (any Sendable)?,
-    initialContext: QueryContext
-  ) where StateValue == (any Sendable)?, QueryValue == any Sendable {
+  ) {
     self.query = query
     self._state = LockedBox(value: (QueryState(initialValue: initialValue), initialContext))
     self._state.inner.withLock { query._setup(context: &$0.context) }
@@ -51,9 +41,16 @@ extension QueryStore {
   public static func detached<Query: QueryProtocol>(
     query: Query,
     initialValue: Query._StateValue,
-    initialContext: QueryContext
-  ) -> QueryStore where StateValue == Query._StateValue, QueryValue == Query.Value {
-    QueryStore(query: query, initialValue: initialValue, initialContext: initialContext)
+    initialContext: QueryContext = QueryContext()
+  ) -> QueryStoreFor<Query> {
+    QueryStoreFor<Query>(query: query, initialValue: initialValue, initialContext: initialContext)
+  }
+
+  public static func detached<Query: QueryProtocol>(
+    query: DefaultQuery<Query>,
+    initialContext: QueryContext = QueryContext()
+  ) -> QueryStoreFor<DefaultQuery<Query>> {
+    .detached(query: query, initialValue: query.defaultValue, initialContext: initialContext)
   }
 }
 
@@ -61,9 +58,16 @@ extension AnyQueryStore {
   public static func detached<Query: QueryProtocol>(
     query: Query,
     initialValue: (any Sendable)?,
-    initialContext: QueryContext
+    initialContext: QueryContext = QueryContext()
   ) -> AnyQueryStore {
-    QueryStore(query: query, initialValue: initialValue, initialContext: initialContext)
+    AnyQueryStore(query: query, initialValue: initialValue, initialContext: initialContext)
+  }
+
+  public static func detached<Query: QueryProtocol>(
+    query: DefaultQuery<Query>,
+    initialContext: QueryContext = QueryContext()
+  ) -> AnyQueryStore {
+    .detached(query: query, initialValue: query.defaultValue, initialContext: initialContext)
   }
 }
 
