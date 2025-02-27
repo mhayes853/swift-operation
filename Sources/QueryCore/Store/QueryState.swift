@@ -57,10 +57,12 @@ extension QueryState {
 // MARK: - Casting
 
 extension QueryState {
-  func unsafeCasted<V>(to type: V.Type) -> QueryState<V> {
-    QueryState<V>(
-      currentValue: self.currentValue as! V,
-      initialValue: self.initialValue as! V,
+  func casted<V>(to type: V.Type) -> QueryState<V>? {
+    guard let cv = self.currentValue as? V else { return nil }
+    guard let iv = self.initialValue as? V else { return nil }
+    return QueryState<V>(
+      currentValue: cv,
+      initialValue: iv,
       valueUpdateCount: self.valueUpdateCount,
       valueLastUpdatedAt: self.valueLastUpdatedAt,
       isLoading: self.isLoading,

@@ -29,7 +29,10 @@ public final class QueryStore<StateValue: Sendable, QueryValue: Sendable>: Senda
     self._state.inner.withLock { query._setup(context: &$0.context) }
   }
 
-  init(casting base: AnyQueryStore) {
+  public init?(casting base: AnyQueryStore) {
+    guard base._state.inner.withLock({ $0.query.casted(to: StateValue.self) }) != nil else {
+      return nil
+    }
     self.query = base.query
     self._state = base._state
   }
@@ -55,6 +58,7 @@ extension QueryStore {
 }
 
 extension AnyQueryStore {
+  @_disfavoredOverload
   public static func detached<Query: QueryProtocol>(
     query: Query,
     initialValue: (any Sendable)?,
@@ -63,6 +67,7 @@ extension AnyQueryStore {
     AnyQueryStore(query: query, initialValue: initialValue, initialContext: initialContext)
   }
 
+  @_disfavoredOverload
   public static func detached<Query: QueryProtocol>(
     query: DefaultQuery<Query>,
     initialContext: QueryContext = QueryContext()
@@ -100,7 +105,7 @@ extension QueryStore {
 
 extension QueryStore {
   public var state: QueryState<StateValue> {
-    self._state.inner.withLock { $0.query.unsafeCasted(to: StateValue.self) }
+    self._state.inner.withLock { $0.query.casted(to: StateValue.self)! }
   }
 
   public subscript<NewValue: Sendable>(
