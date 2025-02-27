@@ -117,6 +117,8 @@ extension QueryStore {
   public func fetch(
     handler: QueryStoreEventHandler<QueryValue> = QueryStoreEventHandler()
   ) async throws -> QueryValue {
+    let (subscription, _) = self.subscriptions.add(handler: handler, isTemporary: true)
+    defer { subscription.cancel() }
     let task = self.beginFetchTask()
     return try await task.cancellableValue as! QueryValue
   }

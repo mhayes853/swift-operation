@@ -284,6 +284,29 @@ struct QueryStoreTests {
     )
     expectNoDifference(store.isAutomaticFetchingEnabled, false)
   }
+
+  @Test("Handles Events When Fetching")
+  func handlesEventsWhenFetching() async throws {
+    let query = TestQuery().enableAutomaticFetching(when: .fetchManuallyCalled)
+    let collector = QueryStoreEventsCollector<TestQuery.Value>()
+    let store = self.client.store(for: query)
+    try await store.fetch(handler: collector.eventHandler)
+    collector.expectEventsMatch([
+      .fetchingStarted, .resultReceived(.success(TestQuery.value)), .fetchingEnded
+    ])
+  }
+
+  @Test("Does Not Increment Subscription Count When Fetching")
+  func doesNotIncrementSubscriptionCountWhenFetching() async throws {
+    let clock = TestClock()
+    let query = SleepingQuery(clock: clock, duration: .seconds(1))
+    let store = self.client.store(for: query)
+    query.didBeginSleeping = {
+      expectNoDifference(store.subscriberCount, 0)
+      Task { await clock.run() }
+    }
+    try await store.fetch(handler: QueryStoreEventHandler())
+  }
 }
 
 extension QueryContext {
