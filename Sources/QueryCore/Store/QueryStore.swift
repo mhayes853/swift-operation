@@ -67,9 +67,13 @@ extension QueryStore {
 // MARK: - Subscribe
 
 extension QueryStore {
+  public var subscriberCount: Int {
+    self.base.subscriberCount
+  }
+
   public func subscribe(
-    _ fn: @escaping QueryStoreSubscriber<EventValue>
+    with eventHandler: QueryStoreEventHandler<EventValue>
   ) -> QueryStoreSubscription {
-    self.base.subscribe { fn($0.unsafeCasted(to: EventValue.self)) }
+    self.base.subscribe(with: eventHandler.unsafeCasted(to: (any Sendable).self))
   }
 }

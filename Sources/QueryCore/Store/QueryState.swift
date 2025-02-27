@@ -11,9 +11,6 @@ public struct QueryState<Value: Sendable>: Sendable {
   public private(set) var error: (any Error)?
   public private(set) var errorUpdateCount = 0
   public private(set) var errorLastUpdatedAt: Date?
-
-  private var subscribers = [QueryStoreSubscription.ID: QueryStoreSubscriber<any Sendable>]()
-  private var currentSubscriptionId = 0
   private var fetchTask: Task<any Sendable, any Error>?
 }
 
@@ -21,30 +18,6 @@ extension QueryState {
   init(initialValue: Value) {
     self.currentValue = initialValue
     self.initialValue = initialValue
-  }
-}
-
-// MARK: - Subscribing
-
-extension QueryState {
-  public var subscriberCount: Int {
-    self.subscribers.count
-  }
-
-  mutating func addSubscriber(
-    _ fn: @escaping QueryStoreSubscriber<any Sendable>
-  ) -> QueryStoreSubscription.ID {
-    defer { self.currentSubscriptionId += 1 }
-    self.subscribers[self.currentSubscriptionId] = fn
-    return self.currentSubscriptionId
-  }
-
-  mutating func removeSubscriber(id: QueryStoreSubscription.ID) {
-    self.subscribers.removeValue(forKey: id)
-  }
-
-  func emitEvent(_ event: QueryStoreSubscription.Event<any Sendable>) {
-    self.subscribers.values.forEach { $0(event) }
   }
 }
 
@@ -94,8 +67,6 @@ extension QueryState {
       error: self.error,
       errorUpdateCount: self.errorUpdateCount,
       errorLastUpdatedAt: self.errorLastUpdatedAt,
-      subscribers: self.subscribers,
-      currentSubscriptionId: self.currentSubscriptionId,
       fetchTask: self.fetchTask
     )
   }

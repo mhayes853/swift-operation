@@ -20,31 +20,6 @@ extension QueryStoreSubscription {
   }
 }
 
-// MARK: - Event
-
-extension QueryStoreSubscription {
-  public enum Event<Value: Sendable>: Sendable {
-    case fetchingStarted
-    case fetchingEnded
-    case resultReceived(Result<Value, any Error>)
-  }
-}
-
-extension QueryStoreSubscription.Event {
-  func unsafeCasted<NewValue: Sendable>(
-    to type: NewValue.Type
-  ) -> QueryStoreSubscription.Event<NewValue> {
-    switch self {
-    case .fetchingStarted:
-      return .fetchingStarted
-    case .fetchingEnded:
-      return .fetchingEnded
-    case let .resultReceived(result):
-      return .resultReceived(result.map { $0 as! NewValue })
-    }
-  }
-}
-
 // MARK: - ID
 
 extension QueryStoreSubscription {

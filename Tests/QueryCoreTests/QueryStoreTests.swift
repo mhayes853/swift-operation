@@ -157,16 +157,13 @@ struct QueryStoreTests {
 
   @Test("Starts Fetching By Default When Query Store Subscribed To")
   func startsFetchingOnSubscription() async throws {
-    let events = Lock([QueryStoreSubscription.Event<TestQuery.Value>]())
+    let collector = QueryStoreEventsCollector<TestQuery.Value>()
     let store = self.client.store(for: TestQuery())
-    let subscription = store.subscribe { event in
-      events.withLock { $0.append(event) }
-    }
+    let subscription = store.subscribe(with: collector.eventHandler)
     try await store.fetch()
-    expectEventsMatch(
-      events.withLock { $0 },
-      [.fetchingStarted, .resultReceived(.success(TestQuery.value)), .fetchingEnded]
-    )
+    collector.expectEventsMatch([
+      .fetchingStarted, .resultReceived(.success(TestQuery.value)), .fetchingEnded
+    ])
     subscription.cancel()
   }
 
@@ -174,10 +171,10 @@ struct QueryStoreTests {
   func startsFetchingOnFirstSubscription() async throws {
     let query = CountingQuery {}
     let store = self.client.store(for: query)
-    let s1 = store.subscribe { _ in }
+    let s1 = store.subscribe(with: QueryStoreEventHandler())
     try await store.fetch()
-    let s2 = store.subscribe { _ in }
-    let s3 = store.subscribe { _ in }
+    let s2 = store.subscribe(with: QueryStoreEventHandler())
+    let s3 = store.subscribe(with: QueryStoreEventHandler())
     await Task.megaYield()
     let count = await query.fetchCount
     expectNoDifference(count, 1)
@@ -188,99 +185,81 @@ struct QueryStoreTests {
 
   @Test("Subscribe, Unsubscribe, Then Subscribe Again, Emits Events Both Times")
   func subscribeUnsubscribeThenSubscribeAgainEmitsEventsBothTimes() async throws {
-    let events = Lock([QueryStoreSubscription.Event<FailingQuery.Value>]())
+    let collector = QueryStoreEventsCollector<FailingQuery.Value>()
     let store = self.client.store(for: FailingQuery())
-    var subscription = store.subscribe { event in
-      events.withLock { $0.append(event) }
-    }
+    var subscription = store.subscribe(with: collector.eventHandler)
     _ = try? await store.fetch()
-    expectEventsMatch(
-      events.withLock { $0 },
-      [.fetchingStarted, .resultReceived(.failure(FailingQuery.SomeError())), .fetchingEnded]
-    )
+    collector.expectEventsMatch([
+      .fetchingStarted, .resultReceived(.failure(FailingQuery.SomeError())), .fetchingEnded
+    ])
     subscription.cancel()
-    events.withLock { $0.removeAll() }
-    subscription = store.subscribe { event in
-      events.withLock { $0.append(event) }
-    }
+    collector.reset()
+    subscription = store.subscribe(with: collector.eventHandler)
     _ = try? await store.fetch()
-    expectEventsMatch(
-      events.withLock { $0 },
-      [.fetchingStarted, .resultReceived(.failure(FailingQuery.SomeError())), .fetchingEnded]
-    )
+    collector.expectEventsMatch([
+      .fetchingStarted, .resultReceived(.failure(FailingQuery.SomeError())), .fetchingEnded
+    ])
     subscription.cancel()
   }
 
   @Test("Emits Error Event When Fetching Fails")
   func emitsErrorEventWhenFetchingFails() async throws {
-    let events = Lock([QueryStoreSubscription.Event<FailingQuery.Value>]())
+    let collector = QueryStoreEventsCollector<FailingQuery.Value>()
     let store = self.client.store(for: FailingQuery())
-    let subscription = store.subscribe { event in
-      events.withLock { $0.append(event) }
-    }
+    let subscription = store.subscribe(with: collector.eventHandler)
     _ = try? await store.fetch()
-    expectEventsMatch(
-      events.withLock { $0 },
-      [.fetchingStarted, .resultReceived(.failure(FailingQuery.SomeError())), .fetchingEnded]
-    )
+    collector.expectEventsMatch([
+      .fetchingStarted, .resultReceived(.failure(FailingQuery.SomeError())), .fetchingEnded
+    ])
     subscription.cancel()
   }
 
   @Test("Starts Fetching By When Automatic Fetching Enabled On Subscription")
   func startsFetchingOnSubscriptionWhenAutomaticFetchingEnabled() async throws {
     let query = TestQuery().enableAutomaticFetching(when: .firstSubscribedTo)
-    let events = Lock([QueryStoreSubscription.Event<TestQuery.Value>]())
+    let collector = QueryStoreEventsCollector<TestQuery.Value>()
     let store = self.client.store(for: query)
-    let subscription = store.subscribe { event in
-      events.withLock { $0.append(event) }
-    }
+    let subscription = store.subscribe(with: collector.eventHandler)
     try await store.fetch()
-    expectEventsMatch(
-      events.withLock { $0 },
-      [.fetchingStarted, .resultReceived(.success(TestQuery.value)), .fetchingEnded]
-    )
+    collector.expectEventsMatch([
+      .fetchingStarted, .resultReceived(.success(TestQuery.value)), .fetchingEnded
+    ])
     subscription.cancel()
   }
 
-  @Test("Emits Idle Event When Automatic Fetching Disabled On Subscription")
+  @Test("Emits Nothing When Automatic Fetching Disabled On Subscription")
   func emitsIdleEventWhenAutomaticFetchingEnabled() async throws {
     let query = TestQuery().enableAutomaticFetching(when: .fetchManuallyCalled)
-    let events = Lock([QueryStoreSubscription.Event<TestQuery.Value>]())
+    let collector = QueryStoreEventsCollector<TestQuery.Value>()
     let store = self.client.store(for: query)
-    let subscription = store.subscribe { event in
-      events.withLock { $0.append(event) }
-    }
-    expectEventsMatch(events.withLock { $0 }, [])
+    let subscription = store.subscribe(with: collector.eventHandler)
+    await Task.megaYield()  // NB: Give some time for any potential fetching to start.
+    collector.expectEventsMatch([])
     subscription.cancel()
   }
 
   @Test("Emits Fetch Events When fetch Manually Called")
   func emitsFetchEventsWhenFetchManuallyCalled() async throws {
+    let collector = QueryStoreEventsCollector<TestQuery.Value>()
     let query = TestQuery().enableAutomaticFetching(when: .fetchManuallyCalled)
-    let events = Lock([QueryStoreSubscription.Event<TestQuery.Value>]())
     let store = self.client.store(for: query)
-    let subscription = store.subscribe { event in
-      events.withLock { $0.append(event) }
-    }
+    let subscription = store.subscribe(with: collector.eventHandler)
     try await store.fetch()
-    expectEventsMatch(
-      events.withLock { $0 },
-      [.fetchingStarted, .resultReceived(.success(TestQuery.value)), .fetchingEnded]
-    )
+    collector.expectEventsMatch([
+      .fetchingStarted, .resultReceived(.success(TestQuery.value)), .fetchingEnded
+    ])
     subscription.cancel()
   }
 
   @Test("Does Not Receive Events When Unsubscribed")
   func doesNotReceiveEventsWhenUnsubscribed() async throws {
     let query = TestQuery().enableAutomaticFetching(when: .fetchManuallyCalled)
-    let events = Lock([QueryStoreSubscription.Event<TestQuery.Value>]())
+    let collector = QueryStoreEventsCollector<TestQuery.Value>()
     let store = self.client.store(for: query)
-    let subscription = store.subscribe { event in
-      events.withLock { $0.append(event) }
-    }
+    let subscription = store.subscribe(with: collector.eventHandler)
     subscription.cancel()
     try await store.fetch()
-    expectEventsMatch(events.withLock { $0 }, [])
+    collector.expectEventsMatch([])
     subscription.cancel()
   }
 

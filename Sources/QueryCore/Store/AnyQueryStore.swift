@@ -4,7 +4,11 @@ import Foundation
 
 @dynamicMemberLookup
 public final class AnyQueryStore: Sendable {
-  private typealias State = (query: QueryState<(any Sendable)?>, context: QueryContext)
+  private typealias State = (
+    query: QueryState<(any Sendable)?>,
+    context: QueryContext,
+    subscriptions: QueryStoreSubscriptions<any Sendable>
+  )
 
   private let query: any QueryProtocol
   private let _state: Lock<State>
@@ -15,7 +19,9 @@ public final class AnyQueryStore: Sendable {
     initialContext: QueryContext
   ) {
     self.query = query
-    self._state = Lock((QueryState(initialValue: initialValue), initialContext))
+    self._state = Lock(
+      (QueryState(initialValue: initialValue), initialContext, QueryStoreSubscriptions())
+    )
     self._state.withLock { query._setup(context: &$0.context) }
   }
 }
@@ -72,19 +78,25 @@ extension AnyQueryStore {
   private func beginFetchTask() -> Task<any Sendable, any Error> {
     self._state.withLock { state in
       state.query.startFetchTask { [context = state.context] in
-        self._state.withLock { $0.query.emitEvent(.fetchingStarted) }
-        defer { self._state.withLock { $0.query.emitEvent(.fetchingEnded) } }
+        self._state.withLock { state in
+          state.subscriptions.forEach { $0.onFetchingStarted?() }
+        }
+        defer {
+          self._state.withLock { state in
+            state.subscriptions.forEach { $0.onFetchingEnded?() }
+          }
+        }
         do {
           let value = try await self.query.fetch(in: context)
-          self._state.withLock {
-            $0.query.endFetchTask(with: value)
-            $0.query.emitEvent(.resultReceived(.success(value)))
+          self._state.withLock { state in
+            state.query.endFetchTask(with: value)
+            state.subscriptions.forEach { $0.onResultReceived?(.success(value)) }
           }
           return value
         } catch {
-          self._state.withLock {
-            $0.query.endFetchTask(with: error)
-            $0.query.emitEvent(.resultReceived(.failure(error)))
+          self._state.withLock { state in
+            state.query.endFetchTask(with: error)
+            state.subscriptions.forEach { $0.onResultReceived?(.failure(error)) }
           }
           throw error
         }
@@ -96,11 +108,15 @@ extension AnyQueryStore {
 // MARK: - Subscribe
 
 extension AnyQueryStore {
+  public var subscriberCount: Int {
+    self._state.withLock { $0.subscriptions.count }
+  }
+
   public func subscribe(
-    _ fn: @Sendable @escaping (QueryStoreSubscription.Event<any Sendable>) -> Void
+    with eventHandler: QueryStoreEventHandler<any Sendable>
   ) -> QueryStoreSubscription {
     let (id, isFirstSubscriber) = self._state.withLock {
-      ($0.query.addSubscriber(fn), $0.query.subscriberCount == 1)
+      ($0.subscriptions.add(handler: eventHandler), $0.subscriptions.count == 1)
     }
     if self.isAutomaticFetchingEnabled && isFirstSubscriber {
       self.beginFetchTask()
@@ -109,6 +125,6 @@ extension AnyQueryStore {
   }
 
   func unsubscribe(subscription: QueryStoreSubscription) {
-    self._state.withLock { $0.query.removeSubscriber(id: subscription.id) }
+    self._state.withLock { $0.subscriptions.cancel(id: subscription.id) }
   }
 }
