@@ -45,7 +45,7 @@ extension QueryState {
     self.fetchTask = nil
   }
 
-  mutating func endFetchTask(with error: any Error) {
+  mutating func finishFetchTask(with error: any Error) {
     self.error = error
     self.errorUpdateCount += 1
     self.errorLastUpdatedAt = Date()

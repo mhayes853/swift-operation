@@ -28,26 +28,23 @@ extension QueryClient {
 
 extension QueryClient {
   public func store<Query: QueryProtocol>(for query: Query) -> QueryStoreOf<Query> {
-    QueryStore(Query._StateValue.self, base: self.anyStore(for: query, initialValue: nil))
+    QueryStore(base: self.anyStore(for: query, initialValue: nil))
   }
 
   public func store<Query: QueryProtocol>(
     for query: DefaultQuery<Query>
   ) -> QueryStoreOf<Query> {
-    QueryStore(
-      Query._StateValue.self,
-      base: self.anyStore(for: query, initialValue: query.defaultValue)
-    )
+    QueryStore(base: self.anyStore(for: query, initialValue: query.defaultValue))
   }
 
   private func anyStore<Query: QueryProtocol>(
     for query: Query,
-    initialValue: Query.Value?
+    initialValue: Query._StateValue?
   ) -> AnyQueryStore {
     self.state.withLock { state in
-      let newStore = AnyQueryStore(
+      let newStore = AnyQueryStore.detached(
         query: query,
-        initialValue: initialValue,
+        initialValue: initialValue as (any Sendable)?,
         initialContext: state.defaultContext
       )
       if let entry = state.stores[query.path] {

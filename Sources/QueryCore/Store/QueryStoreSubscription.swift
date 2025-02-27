@@ -1,12 +1,10 @@
 // MARK: - QueryStoreSubscription
 
 public final class QueryStoreSubscription: Sendable {
-  let store: AnyQueryStore
-  let id: ID
+  private let onCancel: Lock<(@Sendable () -> Void)?>
 
-  init(store: AnyQueryStore, id: QueryStoreSubscription.ID) {
-    self.store = store
-    self.id = id
+  init(onCancel: @Sendable @escaping () -> Void) {
+    self.onCancel = Lock(onCancel)
   }
 
   deinit { self.cancel() }
@@ -16,12 +14,9 @@ public final class QueryStoreSubscription: Sendable {
 
 extension QueryStoreSubscription {
   public func cancel() {
-    self.store.unsubscribe(subscription: self)
+    self.onCancel.withLock { cancel in
+      defer { cancel = nil }
+      cancel?()
+    }
   }
-}
-
-// MARK: - ID
-
-extension QueryStoreSubscription {
-  typealias ID = Int
 }

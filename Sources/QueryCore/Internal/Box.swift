@@ -17,3 +17,13 @@ final class LockedWeakBox<Value: AnyObject>: Sendable {
     self.inner = Lock(WeakBox(value: value))
   }
 }
+
+// MARK: - LockedBox
+
+final class LockedBox<Value>: Sendable {
+  let inner: Lock<Value>
+
+  init(value: sending Value) {
+    self.inner = Lock(value)
+  }
+}
