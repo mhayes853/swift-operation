@@ -266,7 +266,7 @@ struct QueryStoreTests {
   @Test("Automatic Fetching Enabled By Default")
   func automaticFetchingEnabledByDefault() async throws {
     let store = self.client.store(for: TestQuery())
-    expectNoDifference(store.isAutomaticFetchingEnabled, true)
+    expectNoDifference(store.willFetchOnFirstSubscription, true)
   }
 
   @Test("Automatic Fetching Enabled When Condition Is subscribedTo")
@@ -274,7 +274,7 @@ struct QueryStoreTests {
     let store = self.client.store(
       for: TestQuery().enableAutomaticFetching(when: .firstSubscribedTo)
     )
-    expectNoDifference(store.isAutomaticFetchingEnabled, true)
+    expectNoDifference(store.willFetchOnFirstSubscription, true)
   }
 
   @Test("Automatic Fetching Disabled When Condition fetchManuallyCalled")
@@ -282,7 +282,7 @@ struct QueryStoreTests {
     let store = self.client.store(
       for: TestQuery().enableAutomaticFetching(when: .fetchManuallyCalled)
     )
-    expectNoDifference(store.isAutomaticFetchingEnabled, false)
+    expectNoDifference(store.willFetchOnFirstSubscription, false)
   }
 
   @Test("Handles Events When Fetching")

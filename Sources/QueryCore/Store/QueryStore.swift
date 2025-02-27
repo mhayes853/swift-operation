@@ -91,7 +91,7 @@ extension QueryStore {
 // MARK: - Automatic Fetching
 
 extension QueryStore {
-  public var isAutomaticFetchingEnabled: Bool {
+  public var willFetchOnFirstSubscription: Bool {
     self.context.enableAutomaticFetchingCondition.isEnabledByDefault
   }
 }
@@ -159,7 +159,7 @@ extension QueryStore {
     with eventHandler: QueryStoreEventHandler<QueryValue>
   ) -> QueryStoreSubscription {
     let (subscription, isFirstSubscriber) = self.subscriptions.add(handler: eventHandler)
-    if self.isAutomaticFetchingEnabled && isFirstSubscriber {
+    if self.willFetchOnFirstSubscription && isFirstSubscriber {
       self.beginFetchTask()
     }
     return subscription
