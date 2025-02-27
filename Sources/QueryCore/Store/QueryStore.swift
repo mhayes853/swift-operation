@@ -114,7 +114,9 @@ extension QueryStore {
 
 extension QueryStore {
   @discardableResult
-  public func fetch() async throws -> QueryValue {
+  public func fetch(
+    handler: QueryStoreEventHandler<QueryValue> = QueryStoreEventHandler()
+  ) async throws -> QueryValue {
     let task = self.beginFetchTask()
     return try await task.cancellableValue as! QueryValue
   }
