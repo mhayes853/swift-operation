@@ -97,14 +97,4 @@ struct QueryClientTests {
     let contextClient = try #require(context?.queryClient)
     expectNoDifference(client === contextClient, true)
   }
-
-  @Test("Reports Issue When Accessing QueryClient In QueryContext When Detached From QueryClient")
-  func accessClientInContextWhenDetachedFromClient() async throws {
-    let context = QueryContext()
-    withKnownIssue {
-      _ = context.queryClient
-    } matching: {
-      $0.comments.contains(.warning(.missingQueryClient))
-    }
-  }
 }

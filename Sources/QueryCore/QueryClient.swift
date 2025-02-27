@@ -17,10 +17,9 @@ public final class QueryClient: Sendable {
 // MARK: - Default Context
 
 extension QueryClient {
-  public func withDefaultContext<T: Sendable>(
-    _ fn: @Sendable (inout QueryContext) throws -> T
-  ) rethrows -> T {
-    try self.state.withLock { try fn(&$0.defaultContext) }
+  public var defaultContext: QueryContext {
+    get { self.state.withLock { $0.defaultContext } }
+    set { self.state.withLock { $0.defaultContext = newValue } }
   }
 }
 
@@ -86,20 +85,9 @@ extension QueryClient {
 // MARK: - QueryContext
 
 extension QueryContext {
-  public fileprivate(set) var queryClient: QueryClient {
-    get {
-      self[QueryClientKey.self].inner
-        .withLock { box in
-          guard let client = box.value else {
-            reportWarning(.missingQueryClient)
-            return QueryClient()
-          }
-          return client
-        }
-    }
-    set {
-      self[QueryClientKey.self].inner.withLock { $0.value = newValue }
-    }
+  public fileprivate(set) var queryClient: QueryClient? {
+    get { self[QueryClientKey.self].inner.withLock { $0.value } }
+    set { self[QueryClientKey.self].inner.withLock { $0.value = newValue } }
   }
 
   private enum QueryClientKey: Key {
@@ -127,15 +115,6 @@ extension QueryCoreWarning {
     To fix this, ensure that all of your QueryProtocol conformances return unique QueryPath \
     instances. If your QueryProtocol conformance type conforms to Hashable, the default QueryPath \
     is represented by a single element path containing the instance of the query itself.
-    """
-  }
-
-  public static var missingQueryClient: Self {
-    """
-    No QueryClient was found in the QueryContext.
-
-    Ensure that the QueryContext originates from a QueryClient instance. You can obtain a context \
-    that originates from a QueryClient instance by calling ``QueryClient.withDefaultContext``.
     """
   }
 }
