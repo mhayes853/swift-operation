@@ -6,9 +6,9 @@ import QueryCore
 struct TestQuery: QueryProtocol, Hashable {
   static let value = 1
 
-  typealias Value = Int
+  typealias PageValue = Int
 
-  func fetch(in context: QueryContext) async throws -> Value {
+  func fetch(in context: QueryContext) async throws -> PageValue {
     Self.value
   }
 }
