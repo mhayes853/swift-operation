@@ -4,11 +4,11 @@ import IdentifiedCollections
 
 public struct InfiniteQueryPage<ID: Hashable & Sendable, Value: Sendable>: Sendable, Identifiable {
   public var id: ID
-  public var values: [Value]
+  public var value: Value
 
-  public init(id: ID, values: [Value]) {
+  public init(id: ID, value: Value) {
     self.id = id
-    self.values = values
+    self.value = value
   }
 }
 
