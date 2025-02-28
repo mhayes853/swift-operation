@@ -40,7 +40,7 @@ extension QueryClient {
   ) -> AnyQueryStore {
     self.state.withLock { state in
       let newStore = AnyQueryStore.detached(
-        query: query,
+        erasing: query,
         initialValue: initialValue,
         initialContext: state.defaultContext
       )

@@ -60,21 +60,19 @@ extension QueryStore {
 }
 
 extension AnyQueryStore {
-  @_disfavoredOverload
   public static func detached<Query: QueryProtocol>(
-    query: Query,
+    erasing query: Query,
     initialValue: (any Sendable)?,
     initialContext: QueryContext = QueryContext()
   ) -> AnyQueryStore {
     AnyQueryStore(query: query, initialValue: initialValue, initialContext: initialContext)
   }
 
-  @_disfavoredOverload
   public static func detached<Query: QueryProtocol>(
-    query: DefaultQuery<Query>,
+    erasing query: DefaultQuery<Query>,
     initialContext: QueryContext = QueryContext()
   ) -> AnyQueryStore {
-    .detached(query: query, initialValue: query.defaultValue, initialContext: initialContext)
+    .detached(erasing: query, initialValue: query.defaultValue, initialContext: initialContext)
   }
 }
 
