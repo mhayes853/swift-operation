@@ -85,16 +85,6 @@ struct QueryStoreTests {
     expectNoDifference(f2, 2)
   }
 
-  @Test("Fetch Twice, Passes Result Of First Fetch To Second Fetch")
-  func fetchTwicePassesResultOfFirstToSecondFetch() async throws {
-    let query = CurrentValueReadingQuery()
-    query.state.withLock { $0.fetchedValue = 10 }
-    let store = self.client.store(for: query)
-    try await store.fetch()
-    try await store.fetch()
-    query.state.withLock { expectNoDifference($0.currentValue, 10) }
-  }
-
   @Test("Fetch Cancellation")
   func fetchCancellation() async throws {
     let store = self.client.store(for: EndlessQuery())

@@ -7,7 +7,7 @@ public protocol QueryProtocol<Value>: Sendable {
 
   func _setup(context: inout QueryContext)
 
-  func fetch(in context: QueryContext, currentValue: StateValue) async throws -> Value
+  func fetch(in context: QueryContext) async throws -> Value
 }
 
 extension QueryProtocol {

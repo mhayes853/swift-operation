@@ -20,6 +20,18 @@ extension InfiniteQueryPage: Hashable where Value: Hashable {}
 public typealias InfiniteQueryPages<PageID: Hashable & Sendable, PageValue: Sendable> =
   IdentifiedArrayOf<InfiniteQueryPage<PageID, PageValue>>
 
+// MARK: - InfiniteQueryPaging
+
+public struct InfiniteQueryPaging<PageID: Hashable & Sendable, PageValue: Sendable>: Sendable {
+  public let currentPageId: PageID
+  public let pages: InfiniteQueryPages<PageID, PageValue>
+
+  public init(currentPageId: PageID, pages: InfiniteQueryPages<PageID, PageValue>) {
+    self.currentPageId = currentPageId
+    self.pages = pages
+  }
+}
+
 // MARK: - InfiniteQueryProtocol
 
 public protocol InfiniteQueryProtocol<PageID, PageValue>: QueryProtocol {
@@ -29,13 +41,27 @@ public protocol InfiniteQueryProtocol<PageID, PageValue>: QueryProtocol {
 
   var initialPageId: PageID { get }
 
-  func pageId(after page: InfiniteQueryPage<PageID, PageValue>, pages: Value) -> PageID?
-  func pageId(before page: InfiniteQueryPage<PageID, PageValue>, pages: Value) -> PageID?
-  func fetchPage(for id: PageID, in context: QueryContext, pages: Value) async throws -> PageValue
+  func pageId(
+    after page: InfiniteQueryPage<PageID, PageValue>,
+    using paging: InfiniteQueryPaging<PageID, PageValue>
+  ) -> PageID?
+
+  func pageId(
+    before page: InfiniteQueryPage<PageID, PageValue>,
+    using paging: InfiniteQueryPaging<PageID, PageValue>
+  ) -> PageID?
+
+  func fetchPage(
+    using paging: InfiniteQueryPaging<PageID, PageValue>,
+    in context: QueryContext
+  ) async throws -> PageValue
 }
 
 extension InfiniteQueryProtocol {
-  public func pageId(before page: InfiniteQueryPage<PageID, PageValue>, pages: Value) -> PageID? {
+  public func pageId(
+    before page: InfiniteQueryPage<PageID, PageValue>,
+    using paging: InfiniteQueryPaging<PageID, PageValue>
+  ) -> PageID? {
     nil
   }
 

@@ -18,13 +18,7 @@ public struct DefaultQuery<Base: QueryProtocol>: QueryProtocol {
     self.base._setup(context: &context)
   }
 
-  public func fetch(
-    in context: QueryContext,
-    currentValue: StateValue
-  ) async throws -> Base.Value {
-    try await self.base.fetch(
-      in: context,
-      currentValue: currentValue as! Base.StateValue  // TODO: - Report issue if cast fails?
-    )
+  public func fetch(in context: QueryContext) async throws -> Base.Value {
+    try await self.base.fetch(in: context)
   }
 }
