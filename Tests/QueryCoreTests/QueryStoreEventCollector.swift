@@ -8,8 +8,8 @@ import Testing
 final class QueryStoreEventsCollector<Value: Equatable & Sendable>: Sendable {
   private let events = Lock([QueryStoreEvent<Value>]())
 
-  var eventHandler: QueryStoreEventHandler<Value> {
-    QueryStoreEventHandler(
+  var eventHandler: QueryEventHandler<Value> {
+    QueryEventHandler(
       onFetchingStarted: { self.events.withLock { $0.append(.fetchingStarted) } },
       onFetchingEnded: { self.events.withLock { $0.append(.fetchingEnded) } },
       onResultReceived: { result in self.events.withLock { $0.append(.resultReceived(result)) } }

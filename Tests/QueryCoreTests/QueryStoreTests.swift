@@ -181,10 +181,10 @@ struct QueryStoreTests {
   func startsFetchingOnFirstSubscription() async throws {
     let query = CountingQuery {}
     let store = self.client.store(for: query)
-    let s1 = store.subscribe(with: QueryStoreEventHandler())
+    let s1 = store.subscribe(with: QueryEventHandler())
     try await store.fetch()
-    let s2 = store.subscribe(with: QueryStoreEventHandler())
-    let s3 = store.subscribe(with: QueryStoreEventHandler())
+    let s2 = store.subscribe(with: QueryEventHandler())
+    let s3 = store.subscribe(with: QueryEventHandler())
     await Task.megaYield()
     let count = await query.fetchCount
     expectNoDifference(count, 1)
@@ -315,7 +315,7 @@ struct QueryStoreTests {
       expectNoDifference(store.subscriberCount, 0)
       Task { await clock.run() }
     }
-    try await store.fetch(handler: QueryStoreEventHandler())
+    try await store.fetch(handler: QueryEventHandler())
   }
 
   @Test("Init Casting Returns Nil When Invalid Cast")

@@ -9,7 +9,7 @@ struct QueryStoreSubscriptionTests {
     let query = TestQuery().enableAutomaticFetching(when: .fetchManuallyCalled)
     let store = QueryClient().store(for: query)
 
-    let subscription = store.subscribe(with: QueryStoreEventHandler())
+    let subscription = store.subscribe(with: QueryEventHandler())
     expectNoDifference(store.subscriberCount, 1)
     subscription.cancel()
     expectNoDifference(store.subscriberCount, 0)
@@ -20,7 +20,7 @@ struct QueryStoreSubscriptionTests {
     let query = TestQuery().enableAutomaticFetching(when: .fetchManuallyCalled)
     let store = QueryClient().store(for: query)
     do {
-      let subscription = store.subscribe(with: QueryStoreEventHandler())
+      let subscription = store.subscribe(with: QueryEventHandler())
       expectNoDifference(store.subscriberCount, 1)
       _ = subscription
     }

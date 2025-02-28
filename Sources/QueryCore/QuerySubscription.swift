@@ -1,6 +1,6 @@
 // MARK: - QueryStoreSubscription
 
-public final class QueryStoreSubscription: Sendable {
+public final class QuerySubscription: Sendable {
   private let onCancel: Lock<(@Sendable () -> Void)?>
 
   init(onCancel: @Sendable @escaping () -> Void) {
@@ -12,7 +12,7 @@ public final class QueryStoreSubscription: Sendable {
 
 // MARK: - Cancel
 
-extension QueryStoreSubscription {
+extension QuerySubscription {
   public func cancel() {
     self.onCancel.withLock { cancel in
       defer { cancel = nil }

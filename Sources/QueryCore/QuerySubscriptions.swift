@@ -1,7 +1,7 @@
 // MARK: - QueryStoreSubscriptions
 
-final class QueryStoreSubscriptions<Value: Sendable>: Sendable {
-  private typealias Handler = (isTemporary: Bool, handler: QueryStoreEventHandler<Value>)
+final class QuerySubscriptions: Sendable {
+  private typealias Handler = (isTemporary: Bool, handler: QueryEventHandler<any Sendable>)
   private typealias State = (currentId: Int, handlers: [Int: Handler])
 
   private let state = Lock<State>((currentId: 0, handlers: [:]))
@@ -9,7 +9,7 @@ final class QueryStoreSubscriptions<Value: Sendable>: Sendable {
 
 // MARK: - Count
 
-extension QueryStoreSubscriptions {
+extension QuerySubscriptions {
   var count: Int {
     self.state.withLock { self.handlersCount(in: $0) }
   }
@@ -21,16 +21,16 @@ extension QueryStoreSubscriptions {
 
 // MARK: - Subscribing
 
-extension QueryStoreSubscriptions {
-  func add(
-    handler: QueryStoreEventHandler<Value>,
+extension QuerySubscriptions {
+  func add<Value: Sendable>(
+    handler: QueryEventHandler<Value>,
     isTemporary: Bool = false
-  ) -> (QueryStoreSubscription, isFirst: Bool) {
+  ) -> (QuerySubscription, isFirst: Bool) {
     self.state.withLock { state in
       let id = state.currentId
       defer { state.currentId += 1 }
-      state.handlers[id] = (isTemporary, handler)
-      let subscription = QueryStoreSubscription {
+      state.handlers[id] = (isTemporary, handler.erased())
+      let subscription = QuerySubscription {
         _ = self.state.withLock { $0.handlers.removeValue(forKey: id) }
       }
       return (subscription, self.handlersCount(in: state) == 1)
@@ -40,9 +40,9 @@ extension QueryStoreSubscriptions {
 
 // MARK: - ForEach
 
-extension QueryStoreSubscriptions {
+extension QuerySubscriptions {
   func forEach(
-    _ body: (QueryStoreEventHandler<Value>) throws -> Void
+    _ body: (QueryEventHandler<any Sendable>) throws -> Void
   ) rethrows {
     try self.state.withLock { state in
       try state.handlers.forEach { try body($0.value.handler) }
