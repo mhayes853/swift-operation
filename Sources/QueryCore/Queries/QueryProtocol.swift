@@ -11,8 +11,6 @@ public protocol QueryProtocol<Value>: Sendable {
 }
 
 extension QueryProtocol {
-  public typealias _StateValue = Value?
-
   public func _setup(context: inout QueryContext) {
   }
 }
