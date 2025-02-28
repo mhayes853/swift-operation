@@ -4,7 +4,7 @@ import Foundation
 // MARK: - Typealiases
 
 public typealias QueryStoreFor<Query: QueryProtocol> = QueryStore<
-  Query._StateValue, Query.Value
+  Query.StateValue, Query.Value
 >
 
 public typealias QueryStoreOf<Value: Sendable> = QueryStore<Value?, Value>
@@ -45,7 +45,7 @@ public final class QueryStore<StateValue: Sendable, QueryValue: Sendable>: Senda
 extension QueryStore {
   public static func detached<Query: QueryProtocol>(
     query: Query,
-    initialValue: Query._StateValue,
+    initialValue: Query.StateValue,
     initialContext: QueryContext = QueryContext()
   ) -> QueryStoreFor<Query> {
     QueryStoreFor<Query>(query: query, initialValue: initialValue, initialContext: initialContext)

@@ -1,7 +1,7 @@
 public protocol QueryProtocol<Value>: Sendable {
   associatedtype Value: Sendable
 
-  associatedtype _StateValue: Sendable = Value?
+  associatedtype StateValue: Sendable = Value?
 
   var path: QueryPath { get }
 

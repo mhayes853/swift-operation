@@ -36,7 +36,7 @@ extension QueryClient {
 
   private func anyStore<Query: QueryProtocol>(
     for query: Query,
-    initialValue: Query._StateValue?
+    initialValue: Query.StateValue?
   ) -> AnyQueryStore {
     self.state.withLock { state in
       let newStore = AnyQueryStore.detached(
