@@ -85,6 +85,16 @@ struct QueryStoreTests {
     expectNoDifference(f2, 2)
   }
 
+  @Test("Fetch Twice, Passes Result Of First Fetch To Second Fetch")
+  func fetchTwicePassesResultOfFirstToSecondFetch() async throws {
+    let query = CurrentValueReadingQuery()
+    query.state.withLock { $0.fetchedValue = 10 }
+    let store = self.client.store(for: query)
+    try await store.fetch()
+    try await store.fetch()
+    query.state.withLock { expectNoDifference($0.currentValue, 10) }
+  }
+
   @Test("Fetch Cancellation")
   func fetchCancellation() async throws {
     let store = self.client.store(for: EndlessQuery())
@@ -157,7 +167,7 @@ struct QueryStoreTests {
 
   @Test("Starts Fetching By Default When Query Store Subscribed To")
   func startsFetchingOnSubscription() async throws {
-    let collector = QueryStoreEventsCollector<TestQuery.PageValue>()
+    let collector = QueryStoreEventsCollector<TestQuery.Value>()
     let store = self.client.store(for: TestQuery())
     let subscription = store.subscribe(with: collector.eventHandler)
     try await store.fetch()
@@ -217,7 +227,7 @@ struct QueryStoreTests {
   @Test("Starts Fetching By When Automatic Fetching Enabled On Subscription")
   func startsFetchingOnSubscriptionWhenAutomaticFetchingEnabled() async throws {
     let query = TestQuery().enableAutomaticFetching(when: .firstSubscribedTo)
-    let collector = QueryStoreEventsCollector<TestQuery.PageValue>()
+    let collector = QueryStoreEventsCollector<TestQuery.Value>()
     let store = self.client.store(for: query)
     let subscription = store.subscribe(with: collector.eventHandler)
     try await store.fetch()
@@ -230,7 +240,7 @@ struct QueryStoreTests {
   @Test("Emits Nothing When Automatic Fetching Disabled On Subscription")
   func emitsIdleEventWhenAutomaticFetchingEnabled() async throws {
     let query = TestQuery().enableAutomaticFetching(when: .fetchManuallyCalled)
-    let collector = QueryStoreEventsCollector<TestQuery.PageValue>()
+    let collector = QueryStoreEventsCollector<TestQuery.Value>()
     let store = self.client.store(for: query)
     let subscription = store.subscribe(with: collector.eventHandler)
     await Task.megaYield()  // NB: Give some time for any potential fetching to start.
@@ -240,7 +250,7 @@ struct QueryStoreTests {
 
   @Test("Emits Fetch Events When fetch Manually Called")
   func emitsFetchEventsWhenFetchManuallyCalled() async throws {
-    let collector = QueryStoreEventsCollector<TestQuery.PageValue>()
+    let collector = QueryStoreEventsCollector<TestQuery.Value>()
     let query = TestQuery().enableAutomaticFetching(when: .fetchManuallyCalled)
     let store = self.client.store(for: query)
     let subscription = store.subscribe(with: collector.eventHandler)
@@ -254,7 +264,7 @@ struct QueryStoreTests {
   @Test("Does Not Receive Events When Unsubscribed")
   func doesNotReceiveEventsWhenUnsubscribed() async throws {
     let query = TestQuery().enableAutomaticFetching(when: .fetchManuallyCalled)
-    let collector = QueryStoreEventsCollector<TestQuery.PageValue>()
+    let collector = QueryStoreEventsCollector<TestQuery.Value>()
     let store = self.client.store(for: query)
     let subscription = store.subscribe(with: collector.eventHandler)
     subscription.cancel()
@@ -288,7 +298,7 @@ struct QueryStoreTests {
   @Test("Handles Events When Fetching")
   func handlesEventsWhenFetching() async throws {
     let query = TestQuery().enableAutomaticFetching(when: .fetchManuallyCalled)
-    let collector = QueryStoreEventsCollector<TestQuery.PageValue>()
+    let collector = QueryStoreEventsCollector<TestQuery.Value>()
     let store = self.client.store(for: query)
     try await store.fetch(handler: collector.eventHandler)
     collector.expectEventsMatch([

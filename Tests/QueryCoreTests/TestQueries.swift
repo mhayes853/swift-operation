@@ -6,9 +6,7 @@ import QueryCore
 struct TestQuery: QueryProtocol, Hashable {
   static let value = 1
 
-  typealias PageValue = Int
-
-  func fetch(in context: QueryContext) async throws -> PageValue {
+  func fetch(in context: QueryContext, currentValue: Int?) async throws -> Int {
     Self.value
   }
 }
@@ -18,7 +16,7 @@ struct TestQuery: QueryProtocol, Hashable {
 struct TestStringQuery: QueryProtocol, Hashable {
   static let value = "Foo"
 
-  func fetch(in context: QueryContext) async throws -> String {
+  func fetch(in context: QueryContext, currentValue: String?) async throws -> String {
     Self.value
   }
 }
@@ -40,7 +38,7 @@ final class SleepingQuery: QueryProtocol, @unchecked Sendable {
     ["test-sleeping", self.duration]
   }
 
-  func fetch(in context: QueryContext) async throws -> String {
+  func fetch(in context: QueryContext, currentValue: String?) async throws -> String {
     self.didBeginSleeping?()
     try await self.clock.sleep(for: self.duration)
     return ""
@@ -52,7 +50,7 @@ final class SleepingQuery: QueryProtocol, @unchecked Sendable {
 struct FailingQuery: QueryProtocol, Hashable {
   struct SomeError: Equatable, Error {}
 
-  func fetch(in context: QueryContext) async throws -> String {
+  func fetch(in context: QueryContext, currentValue: String?) async throws -> String {
     throw SomeError()
   }
 }
@@ -71,7 +69,7 @@ final actor CountingQuery: QueryProtocol {
     [ObjectIdentifier(self)]
   }
 
-  func fetch(in context: QueryContext) async throws -> Int {
+  func fetch(in context: QueryContext, currentValue: Int?) async throws -> Int {
     await self.sleep()
     self.fetchCount += 1
     return self.fetchCount
@@ -81,7 +79,7 @@ final actor CountingQuery: QueryProtocol {
 // MARK: - EndlesQuery
 
 struct EndlessQuery: QueryProtocol, Hashable {
-  func fetch(in context: QueryContext) async throws -> String {
+  func fetch(in context: QueryContext, currentValue: String?) async throws -> String {
     try await Task.never()
     return ""
   }
@@ -104,7 +102,7 @@ actor FlakeyQuery: QueryProtocol {
     self.result = nil
   }
 
-  func fetch(in context: QueryContext) async throws -> String {
+  func fetch(in context: QueryContext, currentValue: String?) async throws -> String {
     struct SomeError: Error {}
     guard let result else { throw SomeError() }
     return result
@@ -117,7 +115,7 @@ struct PathableQuery: QueryProtocol {
   let value: Int
   let path: QueryPath
 
-  func fetch(in context: QueryContext) async throws -> Int {
+  func fetch(in context: QueryContext, currentValue: Int?) async throws -> Int {
     self.value
   }
 }
@@ -131,8 +129,27 @@ final actor ContextReadingQuery: QueryProtocol {
     [ObjectIdentifier(self)]
   }
 
-  func fetch(in context: QueryContext) async throws -> String {
+  func fetch(in context: QueryContext, currentValue: String?) async throws -> String {
     self.latestContext = context
     return ""
+  }
+}
+
+// MARK: - CurrentValueReadingQuery
+
+final class CurrentValueReadingQuery: QueryProtocol {
+  typealias State = (fetchedValue: Int, currentValue: Int?)
+
+  let state = Lock<State>((0, nil))
+
+  var path: QueryPath {
+    [ObjectIdentifier(self)]
+  }
+
+  func fetch(in context: QueryContext, currentValue: Int?) async throws -> Int {
+    self.state.withLock { state in
+      state.currentValue = currentValue
+      return state.fetchedValue
+    }
   }
 }

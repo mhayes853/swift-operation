@@ -31,7 +31,7 @@ public protocol InfiniteQueryProtocol<PageID, PageValue>: QueryProtocol {
 
   func pageId(after page: InfiniteQueryPage<PageID, PageValue>, pages: Value) -> PageID?
   func pageId(before page: InfiniteQueryPage<PageID, PageValue>, pages: Value) -> PageID?
-  func fetchPage(for id: PageID, pages: Value, context: QueryContext) async throws -> PageValue
+  func fetchPage(for id: PageID, in context: QueryContext, pages: Value) async throws -> PageValue
 }
 
 extension InfiniteQueryProtocol {

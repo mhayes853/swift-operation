@@ -52,8 +52,8 @@ private struct EnableAutomaticFetchingQuery<Base: QueryProtocol>: QueryProtocol 
     self.base._setup(context: &context)
   }
 
-  func fetch(in context: QueryContext) async throws -> Base.Value {
-    try await self.base.fetch(in: context)
+  func fetch(in context: QueryContext, currentValue: Base.StateValue) async throws -> Base.Value {
+    try await self.base.fetch(in: context, currentValue: currentValue)
   }
 }
 

@@ -131,11 +131,11 @@ extension QueryStore {
   @discardableResult
   private func beginFetchTask() -> Task<any Sendable, any Error> {
     self._state.inner.withLock { state in
-      state.query.startFetchTask { [context = state.context] in
+      state.query.startFetchTask { [state] in
         self.subscriptions.forEach { $0.onFetchingStarted?() }
         defer { self.subscriptions.forEach { $0.onFetchingEnded?() } }
         do {
-          let value = try await self.query.fetch(in: context) as! QueryValue
+          let value = try await self.openFetch(with: self.query, using: state)
           self._state.inner.withLock { state in
             state.query.endFetchTask(with: value as! StateValue)
             self.subscriptions.forEach { $0.onResultReceived?(.success(value)) }
@@ -150,6 +150,16 @@ extension QueryStore {
         }
       }
     }
+  }
+
+  private func openFetch<Query: QueryProtocol>(
+    with query: Query,
+    using state: State
+  ) async throws -> QueryValue {
+    try await query.fetch(
+      in: state.context,
+      currentValue: state.query.casted(to: Query.StateValue.self)!.currentValue
+    ) as! QueryValue
   }
 }
 
