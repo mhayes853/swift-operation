@@ -134,3 +134,33 @@ final actor ContextReadingQuery: QueryProtocol {
     return ""
   }
 }
+
+struct IQuery: InfiniteQueryProtocol {
+  let initialPageId: Int
+  let path: QueryPath
+
+  func pageId(
+    after page: InfiniteQueryPage<Int, String>,
+    using paging: InfiniteQueryPaging<Int, String>
+  ) -> Int? {
+    nil
+  }
+
+  func fetchPage(
+    using paging: InfiniteQueryPaging<PageID, PageValue>,
+    in context: QueryContext
+  ) async throws -> String {
+    ""
+  }
+}
+
+func doInfinite(query: some InfiniteQueryProtocol) async throws {
+}
+
+func foo() async throws {
+  let query = IQuery(initialPageId: 0, path: []).enableAutomaticFetching(when: .fetchManuallyCalled)
+    .defaultValue([])
+  try await doInfinite(query: query)
+  //try await doInfinite(query: query)
+
+}
