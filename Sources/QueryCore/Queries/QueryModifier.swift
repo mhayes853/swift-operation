@@ -26,8 +26,8 @@ extension QueryProtocol {
 
 public struct ModifiedQuery<Query: QueryProtocol, Modifier: QueryModifier>: QueryProtocol
 where Modifier.Query == Query {
-  let query: Query
-  let modifier: Modifier
+  public let query: Query
+  public let modifier: Modifier
 
   public var path: QueryPath {
     self.query.path
@@ -39,5 +39,35 @@ where Modifier.Query == Query {
 
   public func fetch(in context: QueryContext) async throws -> Query.Value {
     try await self.modifier.fetch(in: context, using: query)
+  }
+}
+
+extension ModifiedQuery: InfiniteQueryProtocol where Query: InfiniteQueryProtocol {
+  public typealias PageValue = Query.PageValue
+  public typealias PageID = Query.PageID
+
+  public var initialPageId: PageID {
+    self.query.initialPageId
+  }
+
+  public func pageId(
+    after page: InfiniteQueryPage<PageID, PageValue>,
+    using paging: InfiniteQueryPaging<PageID, PageValue>
+  ) -> PageID? {
+    self.query.pageId(after: page, using: paging)
+  }
+
+  public func pageId(
+    before page: InfiniteQueryPage<PageID, PageValue>,
+    using paging: InfiniteQueryPaging<PageID, PageValue>
+  ) -> PageID? {
+    self.query.pageId(before: page, using: paging)
+  }
+
+  public func fetchPage(
+    using paging: InfiniteQueryPaging<PageID, PageValue>,
+    in context: QueryContext
+  ) async throws -> PageValue {
+    try await self.query.fetchPage(using: paging, in: context)
   }
 }

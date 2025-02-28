@@ -34,20 +34,20 @@ extension EnableAutomaticFetchingCondition {
 extension QueryProtocol {
   public func enableAutomaticFetching(
     when condition: EnableAutomaticFetchingCondition
-  ) -> some QueryProtocol<Value> {
-    self.modifier(EnableAutomaticFetchingModifier(condition: condition))
+  ) -> ModifiedQuery<Self, _EnableAutomaticFetchingModifier<Self>> {
+    self.modifier(_EnableAutomaticFetchingModifier(condition: condition))
   }
 }
 
-private struct EnableAutomaticFetchingModifier<Query: QueryProtocol>: QueryModifier {
+public struct _EnableAutomaticFetchingModifier<Query: QueryProtocol>: QueryModifier {
   let condition: EnableAutomaticFetchingCondition
 
-  func _setup(context: inout QueryContext, using query: Query) {
+  public func _setup(context: inout QueryContext, using query: Query) {
     context.enableAutomaticFetchingCondition = self.condition
     query._setup(context: &context)
   }
 
-  func fetch(in context: QueryContext, using query: Query) async throws -> Query.Value {
+  public func fetch(in context: QueryContext, using query: Query) async throws -> Query.Value {
     try await query.fetch(in: context)
   }
 }
