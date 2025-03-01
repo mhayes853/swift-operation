@@ -1,5 +1,5 @@
 public protocol FetchConditionObserver {
-  var isSatisfied: Bool { get }
+  func isSatisfied(in context: QueryContext) -> Bool
 
   func subscribe(
     in context: QueryContext,

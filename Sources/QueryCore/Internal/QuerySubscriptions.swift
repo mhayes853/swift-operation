@@ -1,16 +1,18 @@
 // MARK: - QueryStoreSubscriptions
 
-final class QuerySubscriptions<QueryHandler: Sendable>: Sendable {
+package final class QuerySubscriptions<QueryHandler: Sendable>: Sendable {
   private typealias Handler = (isTemporary: Bool, handler: QueryHandler)
   private typealias State = (currentId: Int, handlers: [Int: Handler])
 
   private let state = Lock<State>((currentId: 0, handlers: [:]))
+
+  package init() {}
 }
 
 // MARK: - Count
 
 extension QuerySubscriptions {
-  var count: Int {
+  package var count: Int {
     self.state.withLock { self.handlersCount(in: $0) }
   }
 
@@ -22,7 +24,7 @@ extension QuerySubscriptions {
 // MARK: - Subscribing
 
 extension QuerySubscriptions {
-  func add(
+  package func add(
     handler: QueryHandler,
     isTemporary: Bool = false
   ) -> (QuerySubscription, isFirst: Bool) {
@@ -41,7 +43,7 @@ extension QuerySubscriptions {
 // MARK: - ForEach
 
 extension QuerySubscriptions {
-  func forEach(
+  package func forEach(
     _ body: (QueryHandler) throws -> Void
   ) rethrows {
     try self.state.withLock { state in

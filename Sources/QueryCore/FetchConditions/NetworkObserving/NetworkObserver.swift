@@ -1,9 +1,15 @@
 // MARK: - NetworkStatus
 
-public enum NetworkStatus: Hashable, Sendable {
-  case connected
-  case disconnected
-  case requiresConnection
+public enum NetworkStatus: Int, Hashable, Sendable {
+  case connected = 2
+  case disconnected = 0
+  case requiresConnection = 1
+}
+
+extension NetworkStatus: Comparable {
+  public static func < (lhs: NetworkStatus, rhs: NetworkStatus) -> Bool {
+    lhs.rawValue < rhs.rawValue
+  }
 }
 
 // MARK: - NetworkObserver
@@ -13,15 +19,28 @@ public protocol NetworkObserver: FetchConditionObserver, Sendable {
   func subscribe(with handler: @escaping @Sendable (NetworkStatus) -> Void) -> QuerySubscription
 }
 
-// TODO: - Should `requiresConnection` also be satisfiable?
-
 extension NetworkObserver {
-  public var isSatisfied: Bool { self.currentStatus == .connected }
+  public func isSatisfied(in context: QueryContext) -> Bool {
+    self.currentStatus >= context.satisfiedConnectionStatus
+  }
 
   public func subscribe(
     in context: QueryContext,
     _ observer: @escaping @Sendable (Bool) -> Void
   ) -> QuerySubscription {
-    QuerySubscription {}
+    self.subscribe { observer($0 >= context.satisfiedConnectionStatus) }
+  }
+}
+
+// MARK: - Satisfied Connection Status
+
+extension QueryContext {
+  public var satisfiedConnectionStatus: NetworkStatus {
+    get { self[SatisfiedConnectionStatusKey.self] }
+    set { self[SatisfiedConnectionStatusKey.self] = newValue }
+  }
+
+  private struct SatisfiedConnectionStatusKey: Key {
+    static let defaultValue = NetworkStatus.connected
   }
 }
