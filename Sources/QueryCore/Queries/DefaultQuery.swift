@@ -1,54 +1,60 @@
 extension QueryProtocol {
-  public func defaultValue(_ value: Self.Value) -> DefaultQuery<Self> {
-    DefaultQuery(defaultValue: value, base: self)
+  public func defaultValue(
+    _ value: @autoclosure @escaping @Sendable () -> Value
+  ) -> DefaultQuery<Self> {
+    DefaultQuery(_defaultValue: value, query: self)
   }
 }
 
-public struct DefaultQuery<Base: QueryProtocol>: QueryProtocol {
-  public typealias StateValue = Base.Value
+public struct DefaultQuery<Query: QueryProtocol>: QueryProtocol {
+  public typealias StateValue = Query.Value
 
-  let defaultValue: Base.Value
-  let base: Base
+  let _defaultValue: @Sendable () -> Query.Value
+  public let query: Query
+
+  public var defaultValue: Query.Value {
+    self._defaultValue()
+  }
 
   public var path: QueryPath {
-    self.base.path
+    self.query.path
   }
 
   public func _setup(context: inout QueryContext) {
-    self.base._setup(context: &context)
+    self.query._setup(context: &context)
   }
 
-  public func fetch(in context: QueryContext) async throws -> Base.Value {
-    try await self.base.fetch(in: context)
+  public func fetch(in context: QueryContext) async throws -> Query.Value {
+    try await self.query.fetch(in: context)
   }
 }
 
-extension DefaultQuery: InfiniteQueryProtocol where Base: InfiniteQueryProtocol {
-  public typealias PageValue = Base.PageValue
-  public typealias PageID = Base.PageID
+extension DefaultQuery: InfiniteQueryProtocol where Query: InfiniteQueryProtocol {
+  public typealias PageValue = Query.PageValue
+  public typealias PageID = Query.PageID
 
   public var initialPageId: PageID {
-    self.base.initialPageId
+    self.query.initialPageId
   }
 
   public func pageId(
     after page: InfiniteQueryPage<PageID, PageValue>,
     using paging: InfiniteQueryPaging<PageID, PageValue>
   ) -> PageID? {
-    self.base.pageId(after: page, using: paging)
+    self.query.pageId(after: page, using: paging)
   }
 
   public func pageId(
     before page: InfiniteQueryPage<PageID, PageValue>,
     using paging: InfiniteQueryPaging<PageID, PageValue>
   ) -> PageID? {
-    self.base.pageId(before: page, using: paging)
+    self.query.pageId(before: page, using: paging)
   }
 
   public func fetchPage(
     using paging: InfiniteQueryPaging<PageID, PageValue>,
     in context: QueryContext
   ) async throws -> PageValue {
-    try await self.base.fetchPage(using: paging, in: context)
+    try await self.query.fetchPage(using: paging, in: context)
   }
 }
