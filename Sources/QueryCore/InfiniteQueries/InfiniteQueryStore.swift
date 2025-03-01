@@ -28,26 +28,10 @@ extension InfiniteQueryStore {
   }
 
   public convenience init?(casting store: AnyQueryStore) {
-    nil
-  }
-}
-
-private struct FQuery: InfiniteQueryProtocol {
-  let initialPageId: Int
-  let path: QueryPath
-
-  func pageId(
-    after page: InfiniteQueryPage<Int, String>,
-    using paging: InfiniteQueryPaging<Int, String>
-  ) -> Int? {
-    nil
-  }
-
-  func fetchPage(
-    using paging: InfiniteQueryPaging<PageID, PageValue>,
-    in context: QueryContext
-  ) async throws -> String {
-    ""
+    guard let store = QueryStoreOfInfinitePages<PageID, PageValue>(casting: store) else {
+      return nil
+    }
+    self.init(store: store)
   }
 }
 
@@ -103,7 +87,6 @@ extension InfiniteQueryStore {
 
 extension InfiniteQueryStore {
   public var state: InfiniteQueryState<PageID, PageValue> {
-    //InfiniteQueryState(base: self.base.state, currentPageId: fatalError())
     fatalError()
   }
 

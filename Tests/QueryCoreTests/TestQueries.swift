@@ -156,6 +156,25 @@ struct TestInfiniteQuery: InfiniteQueryProtocol {
   }
 }
 
+struct TestIntInfiniteQuery: InfiniteQueryProtocol {
+  let initialPageId: Int
+  let path: QueryPath
+
+  func pageId(
+    after page: InfiniteQueryPage<Int, Int>,
+    using paging: InfiniteQueryPaging<Int, Int>
+  ) -> Int? {
+    nil
+  }
+
+  func fetchPage(
+    using paging: InfiniteQueryPaging<Int, Int>,
+    in context: QueryContext
+  ) async throws -> Int {
+    0
+  }
+}
+
 func doInfinite(query: some InfiniteQueryProtocol) async throws {
 }
 
