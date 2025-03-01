@@ -30,8 +30,8 @@ extension QuerySubscriptions {
       let id = state.currentId
       defer { state.currentId += 1 }
       state.handlers[id] = (isTemporary, handler)
-      let subscription = QuerySubscription {
-        _ = self.state.withLock { $0.handlers.removeValue(forKey: id) }
+      let subscription = QuerySubscription { [weak self] in
+        _ = self?.state.withLock { $0.handlers.removeValue(forKey: id) }
       }
       return (subscription, self.handlersCount(in: state) == 1)
     }
