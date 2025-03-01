@@ -17,7 +17,7 @@ public typealias AnyQueryStore = QueryStoreOf<any Sendable>
 public final class QueryStore<StateValue: Sendable, QueryValue: Sendable>: Sendable {
   private typealias State = (query: QueryState<any Sendable>, context: QueryContext)
 
-  private let query: any QueryProtocol
+  private let _query: any QueryProtocol
   private let _state: LockedBox<State>
   private let subscriptions: QuerySubscriptions<QueryEventHandler<any Sendable>>
 
@@ -26,7 +26,7 @@ public final class QueryStore<StateValue: Sendable, QueryValue: Sendable>: Senda
     initialValue: (any Sendable)?,
     initialContext: QueryContext
   ) {
-    self.query = query
+    self._query = query
     self._state = LockedBox(value: (QueryState(initialValue: initialValue), initialContext))
     self.subscriptions = QuerySubscriptions()
     self._state.inner.withLock { query._setup(context: &$0.context) }
@@ -36,7 +36,7 @@ public final class QueryStore<StateValue: Sendable, QueryValue: Sendable>: Senda
     guard base._state.inner.withLock({ $0.query.casted(to: StateValue.self) }) != nil else {
       return nil
     }
-    self.query = base.query
+    self._query = base._query
     self._state = base._state
     self.subscriptions = base.subscriptions
   }
@@ -82,7 +82,7 @@ extension AnyQueryStore {
 
 extension QueryStore {
   public var path: QueryPath {
-    self.query.path
+    self._query.path
   }
 }
 
@@ -137,7 +137,7 @@ extension QueryStore {
         self.subscriptions.forEach { $0.onFetchingStarted?() }
         defer { self.subscriptions.forEach { $0.onFetchingEnded?() } }
         do {
-          let value = try await self.query.fetch(in: context) as! QueryValue
+          let value = try await self._query.fetch(in: context) as! QueryValue
           self._state.inner.withLock { state in
             state.query.endFetchTask(with: value as! StateValue)
             self.subscriptions.forEach { $0.onResultReceived?(.success(value)) }
@@ -170,5 +170,19 @@ extension QueryStore {
       self.beginFetchTask()
     }
     return subscription
+  }
+}
+
+// MARK: - Is Query Type
+
+extension QueryStore {
+  @available(iOS 16.0, macOS 13.0, watchOS 9.0, tvOS 16.0, visionOS 1.0, *)
+  public func query() -> any QueryProtocol<QueryValue> {
+    self._query as! any QueryProtocol<QueryValue>
+  }
+
+  @_disfavoredOverload
+  public func query() -> any QueryProtocol {
+    self._query
   }
 }

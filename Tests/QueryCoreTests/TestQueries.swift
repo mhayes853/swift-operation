@@ -135,7 +135,9 @@ final actor ContextReadingQuery: QueryProtocol {
   }
 }
 
-struct IQuery: InfiniteQueryProtocol {
+// MARK: - TestInfiniteQuery
+
+struct TestInfiniteQuery: InfiniteQueryProtocol {
   let initialPageId: Int
   let path: QueryPath
 
@@ -158,9 +160,18 @@ func doInfinite(query: some InfiniteQueryProtocol) async throws {
 }
 
 func foo() async throws {
-  let query = IQuery(initialPageId: 0, path: []).enableAutomaticFetching(when: .fetchManuallyCalled)
+  let query = TestInfiniteQuery(initialPageId: 0, path: [])
+    .enableAutomaticFetching(when: .fetchManuallyCalled)
     .defaultValue([])
   try await doInfinite(query: query)
   //try await doInfinite(query: query)
 
+}
+
+// MARK: - FakeInfiniteQuery
+
+struct FakeInfiniteQuery: QueryProtocol, Hashable {
+  func fetch(in context: QueryContext) async throws -> InfiniteQueryPages<Int, String> {
+    []
+  }
 }

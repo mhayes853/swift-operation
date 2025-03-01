@@ -23,11 +23,31 @@ public final class InfiniteQueryStore<PageID: Hashable & Sendable, PageValue: Se
 
 extension InfiniteQueryStore {
   public convenience init?(store: QueryStoreOfInfinitePages<PageID, PageValue>) {
-    nil
+    guard store.query() is any InfiniteQueryProtocol else { return nil }
+    self.init(base: store)
   }
 
   public convenience init?(casting store: AnyQueryStore) {
     nil
+  }
+}
+
+private struct FQuery: InfiniteQueryProtocol {
+  let initialPageId: Int
+  let path: QueryPath
+
+  func pageId(
+    after page: InfiniteQueryPage<Int, String>,
+    using paging: InfiniteQueryPaging<Int, String>
+  ) -> Int? {
+    nil
+  }
+
+  func fetchPage(
+    using paging: InfiniteQueryPaging<PageID, PageValue>,
+    in context: QueryContext
+  ) async throws -> String {
+    ""
   }
 }
 
