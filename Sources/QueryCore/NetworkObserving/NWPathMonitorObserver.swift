@@ -11,8 +11,10 @@
     public init(monitor: NWPathMonitor = NWPathMonitor(), queue: DispatchQueue = .global()) {
       self.monitor = monitor
       self.queue = queue
+      let currentHandler = self.monitor.pathUpdateHandler
       self.monitor.pathUpdateHandler = { [weak self] path in
         guard let self else { return }
+        currentHandler?(path)
         self.subscriptions.forEach { $0(NetworkStatus(path.status)) }
       }
     }
