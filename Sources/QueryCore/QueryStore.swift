@@ -19,7 +19,7 @@ public final class QueryStore<StateValue: Sendable, QueryValue: Sendable>: Senda
 
   private let query: any QueryProtocol
   private let _state: LockedBox<State>
-  private let subscriptions: QuerySubscriptions
+  private let subscriptions: QuerySubscriptions<QueryEventHandler<any Sendable>>
 
   private init<Query: QueryProtocol>(
     query: Query,
@@ -124,7 +124,7 @@ extension QueryStore {
   public func fetch(
     handler: QueryEventHandler<QueryValue> = QueryEventHandler()
   ) async throws -> QueryValue {
-    let (subscription, _) = self.subscriptions.add(handler: handler, isTemporary: true)
+    let (subscription, _) = self.subscriptions.add(handler: handler.erased(), isTemporary: true)
     defer { subscription.cancel() }
     let task = self.beginFetchTask()
     return try await task.cancellableValue as! QueryValue
@@ -165,7 +165,7 @@ extension QueryStore {
   public func subscribe(
     with handler: QueryEventHandler<QueryValue>
   ) -> QuerySubscription {
-    let (subscription, isFirstSubscriber) = self.subscriptions.add(handler: handler)
+    let (subscription, isFirstSubscriber) = self.subscriptions.add(handler: handler.erased())
     if self.willFetchOnFirstSubscription && isFirstSubscriber {
       self.beginFetchTask()
     }
