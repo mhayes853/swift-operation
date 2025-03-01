@@ -3,7 +3,7 @@
 
   // MARK: - NWPathMonitorObserver
 
-  public final class NWPathMonitorObserver: NetworkObserver {
+  public final class NWPathMonitorObserver {
     private typealias Handler = @Sendable (NetworkStatus) -> Void
 
     private let monitor: NWPathMonitor
@@ -20,7 +20,11 @@
         self.subscriptions.forEach { $0(NetworkStatus(path.status)) }
       }
     }
+  }
 
+  // MARK: - NetworkObserver Conformance
+
+  extension NWPathMonitorObserver: NetworkObserver {
     public var currentStatus: NetworkStatus {
       NetworkStatus(self.monitor.currentPath.status)
     }
@@ -39,6 +43,12 @@
         }
       }
     }
+  }
+
+  // MARK: - Shared Instance
+
+  extension NWPathMonitorObserver {
+    public static let shared = NWPathMonitorObserver()
   }
 
   // MARK: - Helpers
