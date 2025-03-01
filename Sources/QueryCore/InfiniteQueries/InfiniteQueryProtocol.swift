@@ -17,6 +17,9 @@ extension InfiniteQueryPage: Hashable where Value: Hashable {}
 
 // MARK: - InfiniteQueryPages
 
+public typealias InfiniteQueryPagesFor<Query: InfiniteQueryProtocol> =
+  InfiniteQueryPages<Query.PageID, Query.PageValue>
+
 public typealias InfiniteQueryPages<PageID: Hashable & Sendable, PageValue: Sendable> =
   IdentifiedArrayOf<InfiniteQueryPage<PageID, PageValue>>
 
@@ -37,7 +40,7 @@ public struct InfiniteQueryPaging<PageID: Hashable & Sendable, PageValue: Sendab
 public protocol InfiniteQueryProtocol<PageID, PageValue>: QueryProtocol {
   associatedtype PageValue: Sendable
   associatedtype PageID: Hashable & Sendable
-  associatedtype Value = InfiniteQueryPages<PageID, PageValue>
+  associatedtype Value = InfiniteQueryPagesFor<Self>
   associatedtype StateValue = Value
 
   var initialPageId: PageID { get }

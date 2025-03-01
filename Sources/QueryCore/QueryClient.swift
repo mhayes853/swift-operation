@@ -1,4 +1,5 @@
 import ConcurrencyExtras
+import IdentifiedCollections
 import IssueReporting
 
 // MARK: - QueryClient
@@ -30,8 +31,24 @@ extension QueryClient {
     QueryStore(casting: self.anyStore(for: query, initialValue: nil))!
   }
 
-  public func store<Query: QueryProtocol>(for query: DefaultQuery<Query>) -> QueryStoreFor<Query> {
+  public func store<Query: QueryProtocol>(
+    for query: DefaultQuery<Query>
+  ) -> QueryStoreFor<DefaultQuery<Query>> {
     QueryStore(casting: self.anyStore(for: query, initialValue: query.defaultValue))!
+  }
+
+  public func store<Query: InfiniteQueryProtocol>(
+    for query: Query
+  ) -> InfiniteQueryStoreFor<Query>
+  where Query.StateValue == InfiniteQueryPagesFor<Query>, Query.Value == Query.StateValue {
+    InfiniteQueryStore(casting: self.anyStore(for: query, initialValue: []))!
+  }
+
+  public func store<Query: InfiniteQueryProtocol>(
+    for query: DefaultQuery<Query>
+  ) -> InfiniteQueryStoreFor<DefaultQuery<Query>>
+  where Query.StateValue == InfiniteQueryPagesFor<Query>, Query.Value == Query.StateValue {
+    InfiniteQueryStore(casting: self.anyStore(for: query, initialValue: query.defaultValue))!
   }
 
   private func anyStore<Query: QueryProtocol>(

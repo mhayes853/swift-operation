@@ -3,9 +3,9 @@ import Foundation
 
 // MARK: - Typealiases
 
-public typealias QueryStoreFor<Query: QueryProtocol> = QueryStore<
-  Query.StateValue, Query.Value
->
+public typealias QueryStoreFor<
+  Query: QueryProtocol
+> = QueryStore<Query.StateValue, Query.Value>
 
 public typealias QueryStoreOf<Value: Sendable> = QueryStore<Value?, Value>
 
