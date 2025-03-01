@@ -3,7 +3,7 @@
 public final class QuerySubscription: Sendable {
   private let onCancel: Lock<(@Sendable () -> Void)?>
 
-  init(onCancel: @Sendable @escaping () -> Void) {
+  public init(onCancel: @Sendable @escaping () -> Void) {
     self.onCancel = Lock(onCancel)
   }
 
