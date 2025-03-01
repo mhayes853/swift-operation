@@ -1,7 +1,7 @@
 // MARK: - QueryContext
 
 public struct QueryContext: Sendable {
-  private var storage = Storage(entries: [:])
+  private var storage = LockedBox(value: [StorageKey: any Sendable]())
 
   public init() {}
 }
@@ -9,21 +9,13 @@ public struct QueryContext: Sendable {
 // MARK: - Storage
 
 extension QueryContext {
-  private final class Storage: Sendable {
-    struct Key: Hashable {
-      let id: ObjectIdentifier
-      let typeName: String
+  private struct StorageKey: Hashable {
+    let id: ObjectIdentifier
+    let typeName: String
 
-      init(type: Any.Type) {
-        self.id = ObjectIdentifier(type)
-        self.typeName = QueryCore.typeName(type)
-      }
-    }
-
-    let entries: Lock<[Key: any Sendable]>
-
-    init(entries: [Key: any Sendable]) {
-      self.entries = Lock(entries)
+    init(type: Any.Type) {
+      self.id = ObjectIdentifier(type)
+      self.typeName = QueryCore.typeName(type)
     }
   }
 }
@@ -43,8 +35,8 @@ extension QueryContext {
 extension QueryContext {
   public subscript<Value>(_ key: (some Key<Value>).Type) -> Value {
     get {
-      self.storage.entries.withLock { entries in
-        let storageKey = Storage.Key(type: key)
+      self.storage.inner.withLock { entries in
+        let storageKey = StorageKey(type: key)
         if let value = entries[storageKey] as? Value {
           return value
         }
@@ -54,14 +46,16 @@ extension QueryContext {
       }
     }
     set {
-      var storage: Storage
+      var storage: LockedBox<[StorageKey: any Sendable]>
       defer { self.storage = storage }
       if !isKnownUniquelyReferenced(&self.storage) {
-        storage = Storage(entries: self.storage.entries.withLock { $0 })
+        storage = LockedBox<[StorageKey: any Sendable]>(
+          value: self.storage.inner.withLock { $0 }
+        )
       } else {
         storage = self.storage
       }
-      storage.entries.withLock { $0[Storage.Key(type: key)] = newValue }
+      storage.inner.withLock { $0[StorageKey(type: key)] = newValue }
     }
   }
 }
@@ -70,7 +64,7 @@ extension QueryContext {
 
 extension QueryContext: CustomStringConvertible {
   public var description: String {
-    self.storage.entries.withLock {
+    self.storage.inner.withLock {
       let string = $0.map { (key, value) in "\(key.typeName) = \(value)" }.joined(separator: ", ")
       return "[\(string)]"
     }
