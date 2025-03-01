@@ -1,6 +1,8 @@
 #if canImport(Network)
   import Network
 
+  // MARK: - NWPathMonitorObserver
+
   public final class NWPathMonitorObserver: NetworkObserver {
     private typealias Handler = @Sendable (NetworkStatus) -> Void
 
@@ -38,6 +40,8 @@
       }
     }
   }
+
+  // MARK: - Helpers
 
   extension NetworkStatus {
     fileprivate init(_ status: NWPath.Status) {
