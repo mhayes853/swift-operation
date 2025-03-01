@@ -1,7 +1,3 @@
-#if canImport(Network)
-  import Network
-#endif
-
 // MARK: - NetworkStatus
 
 public enum NetworkStatus: Hashable, Sendable {
