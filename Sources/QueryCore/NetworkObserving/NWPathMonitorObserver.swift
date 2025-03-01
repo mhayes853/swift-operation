@@ -47,7 +47,7 @@
       case .requiresConnection:
         self = .requiresConnection
       @unknown default:
-        self = .disconnected
+        self = .connected
       }
     }
   }
