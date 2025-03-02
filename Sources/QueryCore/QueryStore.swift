@@ -7,9 +7,7 @@ public typealias QueryStoreFor<
   Query: QueryProtocol
 > = QueryStore<Query.StateValue, Query.Value>
 
-public typealias QueryStoreOf<Value: Sendable> = QueryStore<Value?, Value>
-
-public typealias AnyQueryStore = QueryStoreOf<any Sendable>
+public typealias AnyQueryStore = QueryStore<(any Sendable)?, any Sendable>
 
 // MARK: - QueryStore
 
