@@ -291,17 +291,3 @@ extension QueryStore {
     return subscription
   }
 }
-
-// MARK: - Is Query Type
-
-extension QueryStore {
-  @available(iOS 16.0, macOS 13.0, watchOS 9.0, tvOS 16.0, visionOS 1.0, *)
-  public func query() -> any QueryProtocol<State.QueryValue> {
-    self._query as! any QueryProtocol<State.QueryValue>
-  }
-
-  @_disfavoredOverload
-  public func query() -> any QueryProtocol {
-    self._query
-  }
-}
