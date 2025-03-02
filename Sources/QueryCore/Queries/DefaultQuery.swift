@@ -8,6 +8,7 @@ extension QueryProtocol {
 
 public struct DefaultQuery<Query: QueryProtocol>: QueryProtocol {
   public typealias StateValue = Query.Value
+  public typealias State = Query.State
 
   let _defaultValue: @Sendable () -> Query.Value
   public let query: Query

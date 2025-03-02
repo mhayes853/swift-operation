@@ -1,28 +1,86 @@
+import ConcurrencyExtras
+import Foundation
 import IdentifiedCollections
 
 // MARK: - InfiniteQueryState
 
-@dynamicMemberLookup
-public struct InfiniteQueryState<PageID: Hashable & Sendable, PageValue: Sendable>: Sendable {
-  public let base: QueryState<InfiniteQueryPages<PageID, PageValue>>
+public struct InfiniteQueryState<PageID: Hashable & Sendable, PageValue: Sendable> {
+  public var base:
+    QueryState<InfiniteQueryPages<PageID, PageValue>, InfiniteQueryPages<PageID, PageValue>>
   public private(set) var currentPageId: PageID
   public private(set) var isLoadingNextPage = false
   public private(set) var isLoadingPreviousPage = false
   public private(set) var hasNextPage = true
   public private(set) var hasPreviousPage = true
 
-  init(base: QueryState<InfiniteQueryPages<PageID, PageValue>>, currentPageId: PageID) {
-    self.base = base
+  init(initialValue: StateValue, currentPageId: PageID) {
+    self.base = QueryState(initialValue: initialValue)
     self.currentPageId = currentPageId
   }
 }
 
-// MARK: - Dynamic Member Lookup
+extension InfiniteQueryState: QueryStateProtocol {
+  public typealias StateValue = InfiniteQueryPages<PageID, PageValue>
+  public typealias QueryValue = InfiniteQueryPages<PageID, PageValue>
 
-extension InfiniteQueryState {
-  public subscript<Value>(
-    dynamicMember keyPath: KeyPath<QueryState<InfiniteQueryPages<PageID, PageValue>>, Value>
-  ) -> Value {
-    self.base[keyPath: keyPath]
+  public var currentValue: StateValue {
+    get { self.base.currentValue }
+    set { self.base.currentValue = newValue }
   }
+
+  public var initialValue: StateValue {
+    get { self.base.initialValue }
+    set { self.base.initialValue = newValue }
+  }
+
+  public var valueUpdateCount: Int {
+    get { self.base.valueUpdateCount }
+    set { self.base.valueUpdateCount = newValue }
+  }
+
+  public var valueLastUpdatedAt: Date? {
+    get { self.base.valueLastUpdatedAt }
+    set { self.base.valueLastUpdatedAt = newValue }
+  }
+
+  public var isLoading: Bool {
+    get { self.base.isLoading }
+    set { self.base.isLoading = newValue }
+  }
+
+  public var error: (any Error)? {
+    get { self.base.error }
+    set { self.base.error = newValue }
+  }
+
+  public var errorUpdateCount: Int {
+    get { self.base.errorUpdateCount }
+    set { self.base.errorUpdateCount = newValue }
+  }
+
+  public var errorLastUpdatedAt: Date? {
+    get { self.base.errorLastUpdatedAt }
+    set { self.base.errorLastUpdatedAt = newValue }
+  }
+
+  public var fetchTask: Task<any Sendable, any Error>? {
+    get { self.base.fetchTask }
+    set { self.base.fetchTask = newValue }
+  }
+
+  public init(initialValue: StateValue) {
+    self.base = QueryState(initialValue: initialValue)
+    self.currentPageId = InfiniteQueryLocal.currentPageId?.base as! PageID
+  }
+
+  public func casted<NewValue: Sendable, NewQueryValue: Sendable>(
+    to newValue: NewValue.Type,
+    newQueryValue: NewQueryValue.Type
+  ) -> (any QueryStateProtocol)? {
+    self.base.casted(to: newValue, newQueryValue: newQueryValue)
+  }
+}
+
+enum InfiniteQueryLocal {
+  @TaskLocal static var currentPageId: AnyHashableSendable?
 }

@@ -42,6 +42,7 @@ public protocol InfiniteQueryProtocol<PageID, PageValue>: QueryProtocol {
   associatedtype PageID: Hashable & Sendable
   associatedtype Value = InfiniteQueryPagesFor<Self>
   associatedtype StateValue = Value
+  associatedtype State: QueryStateProtocol = InfiniteQueryState<PageID, PageValue>
 
   var initialPageId: PageID { get }
 

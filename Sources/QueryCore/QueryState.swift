@@ -1,21 +1,45 @@
 import Foundation
 
+// MARK: - QueryStateProtocol
+
+public protocol QueryStateProtocol<StateValue, QueryValue>: Sendable {
+  associatedtype StateValue: Sendable
+  associatedtype QueryValue: Sendable
+
+  var currentValue: StateValue { get set }
+  var initialValue: StateValue { get set }
+  var valueUpdateCount: Int { get set }
+  var valueLastUpdatedAt: Date? { get set }
+  var isLoading: Bool { get set }
+  var error: (any Error)? { get set }
+  var errorUpdateCount: Int { get set }
+  var errorLastUpdatedAt: Date? { get set }
+  var fetchTask: Task<any Sendable, any Error>? { get set }
+
+  func casted<NewValue: Sendable, NewQueryValue: Sendable>(
+    to newValue: NewValue.Type,
+    newQueryValue: NewQueryValue.Type
+  ) -> (any QueryStateProtocol)?
+
+  init(initialValue: StateValue)
+}
+
 // MARK: - QueryState
 
-public struct QueryState<Value: Sendable>: Sendable {
-  public private(set) var currentValue: Value
-  public let initialValue: Value
-  public private(set) var valueUpdateCount = 0
-  public private(set) var valueLastUpdatedAt: Date?
-  public private(set) var isLoading = false
-  public private(set) var error: (any Error)?
-  public private(set) var errorUpdateCount = 0
-  public private(set) var errorLastUpdatedAt: Date?
-  private var fetchTask: Task<any Sendable, any Error>?
+public struct QueryState<StateValue: Sendable, QueryValue: Sendable>: QueryStateProtocol {
+  public var currentValue: StateValue
+  public var initialValue: StateValue
+  public var valueUpdateCount = 0
+  public var valueLastUpdatedAt: Date?
+  public var isLoading = false
+  public var error: (any Error)?
+  public var errorUpdateCount = 0
+  public var errorLastUpdatedAt: Date?
+  public var fetchTask: Task<any Sendable, any Error>?
 }
 
 extension QueryState {
-  init(initialValue: Value) {
+  public init(initialValue: StateValue) {
     self.currentValue = initialValue
     self.initialValue = initialValue
   }
@@ -23,7 +47,7 @@ extension QueryState {
 
 // MARK: - Fetch Task
 
-extension QueryState {
+extension QueryStateProtocol {
   mutating func startFetchTask(
     for fn: @Sendable @escaping () async throws -> any Sendable
   ) -> Task<any Sendable, any Error> {
@@ -36,7 +60,7 @@ extension QueryState {
     return task
   }
 
-  mutating func endFetchTask(with value: Value) {
+  mutating func endFetchTask(with value: StateValue) {
     self.currentValue = value
     self.valueUpdateCount += 1
     self.valueLastUpdatedAt = Date()
@@ -57,10 +81,13 @@ extension QueryState {
 // MARK: - Casting
 
 extension QueryState {
-  func casted<V>(to type: V.Type) -> QueryState<V>? {
-    guard let cv = self.currentValue as? V else { return nil }
-    guard let iv = self.initialValue as? V else { return nil }
-    return QueryState<V>(
+  public func casted<NewValue: Sendable, NewQueryValue: Sendable>(
+    to newValue: NewValue.Type,
+    newQueryValue: NewQueryValue.Type
+  ) -> (any QueryStateProtocol)? {
+    guard let cv = self.currentValue as? NewValue else { return nil }
+    guard let iv = self.initialValue as? NewValue else { return nil }
+    return QueryState<NewValue, NewQueryValue>(
       currentValue: cv,
       initialValue: iv,
       valueUpdateCount: self.valueUpdateCount,

@@ -1,3 +1,4 @@
+import ConcurrencyExtras
 import IdentifiedCollections
 
 // MARK: - Type Aliases
@@ -7,7 +8,7 @@ public typealias InfiniteQueryStoreFor<
 > = InfiniteQueryStore<Query.PageID, Query.PageValue>
 
 public typealias QueryStoreOfInfinitePages<PageID: Hashable & Sendable, PageValue: Sendable> =
-  QueryStore<InfiniteQueryPages<PageID, PageValue>, InfiniteQueryPages<PageID, PageValue>>
+  QueryStore<InfiniteQueryState<PageID, PageValue>>
 
 // MARK: - InfiniteQueryStore
 
@@ -43,17 +44,29 @@ extension InfiniteQueryStore {
     initialValue: Query.StateValue = [],
     initialContext: QueryContext = QueryContext()
   ) -> InfiniteQueryStoreFor<Query>
-  where Query.Value == InfiniteQueryPagesFor<Query>, Query.StateValue == Query.Value {
-    InfiniteQueryStoreFor<Query>(
-      base: .detached(query: query, initialValue: initialValue, initialContext: initialContext)
-    )
+  where
+    Query.Value == InfiniteQueryPagesFor<Query>, Query.StateValue == Query.Value,
+    Query.State == InfiniteQueryState<Query.PageID, Query.PageValue>
+  {
+    InfiniteQueryLocal.$currentPageId.withValue(AnyHashableSendable(query.initialPageId)) {
+      InfiniteQueryStoreFor<Query>(
+        base: .detached(
+          query: query,
+          initialValue: initialValue,
+          initialContext: initialContext
+        )
+      )
+    }
   }
 
   public static func detached<Query: InfiniteQueryProtocol>(
     query: DefaultQuery<Query>,
     initialContext: QueryContext = QueryContext()
   ) -> InfiniteQueryStoreFor<Query>
-  where Query.Value == InfiniteQueryPagesFor<Query> {
+  where
+    Query.Value == InfiniteQueryPagesFor<DefaultQuery<Query>>, Query.StateValue == Query.Value,
+    Query.State == InfiniteQueryState<Query.PageID, Query.PageValue>
+  {
     .detached(query: query, initialValue: query.defaultValue, initialContext: initialContext)
   }
 }
