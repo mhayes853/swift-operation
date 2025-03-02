@@ -17,6 +17,17 @@ struct InfiniteQueryStoreTests {
     expectNoDifference(infiniteStore != nil, true)
   }
 
+  @Test("Casts To InfiniteQueryStore From AnyQueryStore With Modifier")
+  func testCastsToInfiniteQueryStoreFromAnyQueryStoreWithModifier() {
+    let store = AnyQueryStore.detached(
+      erasing: TestInfiniteQuery(initialPageId: 0, path: [])
+        .enableAutomaticFetching(when: .fetchManuallyCalled),
+      initialValue: TestInfiniteQuery.Value()
+    )
+    let infiniteStore = InfiniteQueryStoreFor<TestInfiniteQuery>(casting: store)
+    expectNoDifference(infiniteStore != nil, true)
+  }
+
   @Test(
     "Does Not Cast To InfiniteQueryStore From AnyQueryStore When Underlying Query Is Not Infinite"
   )

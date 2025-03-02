@@ -26,6 +26,10 @@ extension QueryProtocol {
 
 public struct ModifiedQuery<Query: QueryProtocol, Modifier: QueryModifier>: QueryProtocol
 where Modifier.Query == Query {
+  public typealias State = Query.State
+  public typealias Value = Query.Value
+  public typealias StateValue = Query.StateValue
+
   public let query: Query
   public let modifier: Modifier
 

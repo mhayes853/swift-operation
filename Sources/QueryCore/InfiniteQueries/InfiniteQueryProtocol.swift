@@ -37,12 +37,14 @@ public struct InfiniteQueryPaging<PageID: Hashable & Sendable, PageValue: Sendab
 
 // MARK: - InfiniteQueryProtocol
 
-public protocol InfiniteQueryProtocol<PageID, PageValue>: QueryProtocol {
+public protocol InfiniteQueryProtocol<PageID, PageValue>: QueryProtocol
+where
+  Value == InfiniteQueryPages<PageID, PageValue>,
+  StateValue == Value,
+  State == InfiniteQueryState<PageID, PageValue>
+{
   associatedtype PageValue: Sendable
   associatedtype PageID: Hashable & Sendable
-  associatedtype Value = InfiniteQueryPagesFor<Self>
-  associatedtype StateValue = Value
-  associatedtype State: QueryStateProtocol = InfiniteQueryState<PageID, PageValue>
 
   var initialPageId: PageID { get }
 

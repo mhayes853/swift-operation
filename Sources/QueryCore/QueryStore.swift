@@ -77,11 +77,7 @@ extension QueryStore {
     query: Query,
     initialValue: Query.StateValue,
     initialContext: QueryContext = QueryContext()
-  ) -> QueryStoreFor<Query>
-  where
-    Query.State == InfiniteQueryState<Query.PageID, Query.PageValue>,
-    Query.StateValue == InfiniteQueryPages<Query.PageID, Query.PageValue>
-  {
+  ) -> QueryStoreFor<Query> {
     .detached(
       query: query,
       initialState: InfiniteQueryState(
@@ -95,11 +91,7 @@ extension QueryStore {
   public static func detached<Query: InfiniteQueryProtocol>(
     query: DefaultInfiniteQuery<Query>,
     initialContext: QueryContext = QueryContext()
-  ) -> QueryStoreFor<Query>
-  where
-    DefaultInfiniteQuery<Query>.State == InfiniteQueryState<Query.PageID, Query.PageValue>,
-    DefaultInfiniteQuery<Query>.StateValue == InfiniteQueryPages<Query.PageID, Query.PageValue>
-  {
+  ) -> QueryStoreFor<Query> {
     .detached(
       query: query,
       initialState: InfiniteQueryState(
@@ -155,11 +147,7 @@ extension AnyQueryStore {
     erasing query: Query,
     initialValue: Query.StateValue,
     initialContext: QueryContext = QueryContext()
-  ) -> AnyQueryStore
-  where
-    Query.State == InfiniteQueryState<Query.PageID, Query.PageValue>,
-    Query.StateValue == InfiniteQueryPages<Query.PageID, Query.PageValue>
-  {
+  ) -> AnyQueryStore {
     .detached(
       erasing: query,
       initialState: InfiniteQueryState(
@@ -173,11 +161,7 @@ extension AnyQueryStore {
   public static func detached<Query: InfiniteQueryProtocol>(
     erasing query: DefaultInfiniteQuery<Query>,
     initialContext: QueryContext = QueryContext()
-  ) -> AnyQueryStore
-  where
-    DefaultInfiniteQuery<Query>.State == InfiniteQueryState<Query.PageID, Query.PageValue>,
-    DefaultInfiniteQuery<Query>.StateValue == InfiniteQueryPages<Query.PageID, Query.PageValue>
-  {
+  ) -> AnyQueryStore {
     .detached(
       erasing: query,
       initialState: InfiniteQueryState(

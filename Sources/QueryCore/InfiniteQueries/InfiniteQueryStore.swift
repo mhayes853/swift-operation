@@ -34,11 +34,7 @@ extension InfiniteQueryStore {
     query: Query,
     initialValue: Query.StateValue = [],
     initialContext: QueryContext = QueryContext()
-  ) -> InfiniteQueryStoreFor<Query>
-  where
-    Query.State == InfiniteQueryState<PageID, PageValue>,
-    Query.StateValue == InfiniteQueryPages<PageID, PageValue>
-  {
+  ) -> InfiniteQueryStoreFor<Query> {
     InfiniteQueryStoreFor<Query>(
       store: .detached(
         query: query,
@@ -54,11 +50,7 @@ extension InfiniteQueryStore {
   public static func detached<Query: InfiniteQueryProtocol<PageID, PageValue>>(
     query: DefaultInfiniteQuery<Query>,
     initialContext: QueryContext = QueryContext()
-  ) -> InfiniteQueryStoreFor<Query>
-  where
-    Query.State == InfiniteQueryState<PageID, PageValue>,
-    DefaultInfiniteQuery<Query>.StateValue == InfiniteQueryPages<PageID, PageValue>
-  {
+  ) -> InfiniteQueryStoreFor<Query> {
     .detached(query: query, initialValue: query.defaultValue, initialContext: initialContext)
   }
 }

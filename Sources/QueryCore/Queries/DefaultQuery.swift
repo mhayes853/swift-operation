@@ -44,7 +44,8 @@ public struct _DefaultQuery<Query: QueryProtocol, State: QueryStateProtocol>: Qu
   }
 }
 
-extension _DefaultQuery: InfiniteQueryProtocol where Query: InfiniteQueryProtocol {
+extension _DefaultQuery: InfiniteQueryProtocol
+where Query: InfiniteQueryProtocol, Query.State == State {
   public typealias PageValue = Query.PageValue
   public typealias PageID = Query.PageID
 
