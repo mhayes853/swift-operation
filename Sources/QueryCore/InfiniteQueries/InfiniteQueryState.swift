@@ -2,6 +2,13 @@ import ConcurrencyExtras
 import Foundation
 import IdentifiedCollections
 
+public protocol _InfiniteQueryStateProtocol: QueryStateProtocol {
+  associatedtype PageID: Hashable & Sendable
+  associatedtype PageValue: Sendable
+  associatedtype StateValue = InfiniteQueryPages<PageID, PageValue>
+  associatedtype QueryValue = StateValue
+}
+
 // MARK: - InfiniteQueryState
 
 public struct InfiniteQueryState<PageID: Hashable & Sendable, PageValue: Sendable> {
@@ -19,10 +26,7 @@ public struct InfiniteQueryState<PageID: Hashable & Sendable, PageValue: Sendabl
   }
 }
 
-extension InfiniteQueryState: QueryStateProtocol {
-  public typealias StateValue = InfiniteQueryPages<PageID, PageValue>
-  public typealias QueryValue = InfiniteQueryPages<PageID, PageValue>
-
+extension InfiniteQueryState: _InfiniteQueryStateProtocol {
   public var currentValue: StateValue {
     get { self.base.currentValue }
     set { self.base.currentValue = newValue }
