@@ -27,3 +27,18 @@ extension QueryPath: ExpressibleByArrayLiteral {
     self.init(elements)
   }
 }
+
+// MARK: - CustomStringConvertible
+
+extension QueryPath: CustomStringConvertible {
+  public var description: String {
+    "QueryPath([\(elements.map { self.elementDescription($0) }.joined(separator: ", "))])"
+  }
+
+  private func elementDescription(_ element: AnyHashableSendable) -> String {
+    if element.base is any StringProtocol {
+      return "\"\(element.description)\""
+    }
+    return element.description
+  }
+}

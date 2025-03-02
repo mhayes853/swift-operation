@@ -23,4 +23,31 @@ struct QueryPathTests {
   func prefixMatches(a: QueryPath, b: QueryPath, doesMatch: Bool) {
     expectNoDifference(a.prefixMatches(other: b), doesMatch)
   }
+
+  @Test(
+    "CustomStringConvertible",
+    arguments: [
+      (QueryPath(), #"QueryPath([])"#),
+      (QueryPath([1, "hello", true]), #"QueryPath([1, "hello", true])"#),
+      (QueryPath([1, Substring("hello"), true]), #"QueryPath([1, "hello", true])"#),
+      (
+        QueryPath([1, ["hello", "blob"]]),
+        #"QueryPath([1, ["hello", "blob"]])"#
+      ),
+      (
+        QueryPath([1, SomeValue()]),
+        "QueryPath([1, SomeValue()])"
+      ),
+      (
+        QueryPath([1, NetworkStatus.disconnected]),
+        "QueryPath([1, disconnected])"
+      )
+    ]
+  )
+  func customStringConvertible(path: QueryPath, string: String) {
+    expectNoDifference(path.description, string)
+  }
+}
+
+private struct SomeValue: Hashable, Sendable {
 }
