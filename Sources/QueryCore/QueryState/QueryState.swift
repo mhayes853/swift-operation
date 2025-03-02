@@ -53,26 +53,3 @@ extension QueryState {
     self.fetchTask = nil
   }
 }
-
-// MARK: - Casting
-
-extension QueryState {
-  public func casted<NewValue: Sendable, NewQueryValue: Sendable>(
-    to newValue: NewValue.Type,
-    newQueryValue: NewQueryValue.Type
-  ) -> (any QueryStateProtocol)? {
-    guard let cv = self.currentValue as? NewValue else { return nil }
-    guard let iv = self.initialValue as? NewValue else { return nil }
-    return QueryState<NewValue, NewQueryValue>(
-      currentValue: cv,
-      initialValue: iv,
-      valueUpdateCount: self.valueUpdateCount,
-      valueLastUpdatedAt: self.valueLastUpdatedAt,
-      isLoading: self.isLoading,
-      error: self.error,
-      errorUpdateCount: self.errorUpdateCount,
-      errorLastUpdatedAt: self.errorLastUpdatedAt,
-      fetchTask: self.fetchTask
-    )
-  }
-}

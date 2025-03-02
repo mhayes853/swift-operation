@@ -27,38 +27,63 @@ extension QueryClient {
 // MARK: - Store
 
 extension QueryClient {
-  public func store<Query: QueryProtocol>(for query: Query) -> QueryStoreFor<Query> {
-    QueryStore(casting: self.anyStore(for: query, initialValue: nil))!
+  public func store<Query: QueryProtocol>(for query: Query) -> QueryStoreFor<Query>
+  where Query.State == QueryState<Query.StateValue, Query.Value>, Query.StateValue == Query.Value? {
+    QueryStore(casting: self.anyStore(for: query, initialState: Query.State(initialValue: nil)))!
   }
 
   public func store<Query: QueryProtocol>(
     for query: DefaultQuery<Query>
-  ) -> QueryStoreFor<DefaultQuery<Query>> {
-    QueryStore(casting: self.anyStore(for: query, initialValue: query.defaultValue))!
+  ) -> QueryStoreFor<DefaultQuery<Query>>
+  where
+    DefaultQuery<Query>.State == QueryState<DefaultQuery<Query>.StateValue, Query.Value>
+  {
+    QueryStore(
+      casting: self.anyStore(
+        for: query,
+        initialState: DefaultQuery<Query>.State(initialValue: query.defaultValue)
+      )
+    )!
   }
 
   public func store<Query: InfiniteQueryProtocol>(
     for query: Query
   ) -> InfiniteQueryStoreFor<Query>
-  where Query.StateValue == InfiniteQueryPagesFor<Query>, Query.Value == Query.StateValue {
-    InfiniteQueryStore(casting: self.anyStore(for: query, initialValue: []))!
+  where Query.State == InfiniteQueryState<Query.PageID, Query.PageValue> {
+    InfiniteQueryStore(
+      casting: self.anyStore(
+        for: query,
+        initialState: InfiniteQueryState(initialValue: [], currentPageId: query.initialPageId)
+      )
+    )!
   }
 
   public func store<Query: InfiniteQueryProtocol>(
-    for query: DefaultQuery<Query>
-  ) -> InfiniteQueryStoreFor<DefaultQuery<Query>>
-  where Query.StateValue == InfiniteQueryPagesFor<Query>, Query.Value == Query.StateValue {
-    InfiniteQueryStore(casting: self.anyStore(for: query, initialValue: query.defaultValue))!
+    for query: DefaultInfiniteQuery<Query>
+  ) -> InfiniteQueryStoreFor<DefaultInfiniteQuery<Query>>
+  where
+    DefaultInfiniteQuery<Query>.State == InfiniteQueryState<Query.PageID, Query.PageValue>,
+    Query.Value == InfiniteQueryPagesFor<Query>
+  {
+    InfiniteQueryStore(
+      casting: self.anyStore(
+        for: query,
+        initialState: InfiniteQueryState(
+          initialValue: query.defaultValue,
+          currentPageId: query.initialPageId
+        )
+      )
+    )!
   }
 
   private func anyStore<Query: QueryProtocol>(
     for query: Query,
-    initialValue: Query.StateValue?
+    initialState: Query.State
   ) -> AnyQueryStore {
     self.state.withLock { state in
       let newStore = AnyQueryStore.detached(
         erasing: query,
-        initialValue: initialValue,
+        initialState: initialState,
         initialContext: state.defaultContext
       )
       if let entry = state.stores[query.path] {

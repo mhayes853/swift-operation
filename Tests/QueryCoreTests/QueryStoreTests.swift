@@ -320,7 +320,7 @@ struct QueryStoreTests {
     let store1 = AnyQueryStore.detached(
       erasing: TestStringQuery().defaultValue(TestStringQuery.value)
     )
-    let store2 = QueryStoreFor<TestStringQuery>(casting: store1)
+    let store2 = QueryStoreFor<DefaultQuery<TestStringQuery>>(casting: store1)
     expectNoDifference(store2 != nil, true)
   }
 }

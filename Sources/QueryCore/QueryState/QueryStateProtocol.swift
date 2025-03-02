@@ -14,11 +14,6 @@ public protocol QueryStateProtocol<StateValue, QueryValue>: Sendable {
   var errorLastUpdatedAt: Date? { get }
   var fetchTask: Task<any Sendable, any Error>? { get }
 
-  func casted<NewValue: Sendable, NewQueryValue: Sendable>(
-    to newValue: NewValue.Type,
-    newQueryValue: NewQueryValue.Type
-  ) -> (any QueryStateProtocol)?
-
   mutating func startFetchTask(
     for fn: @Sendable @escaping () async throws -> any Sendable
   ) -> Task<any Sendable, any Error>
@@ -26,6 +21,4 @@ public protocol QueryStateProtocol<StateValue, QueryValue>: Sendable {
   mutating func endFetchTask(with value: StateValue)
 
   mutating func finishFetchTask(with error: any Error)
-
-  init(initialValue: StateValue)
 }

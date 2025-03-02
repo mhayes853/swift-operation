@@ -45,18 +45,6 @@ extension InfiniteQueryState: _InfiniteQueryStateProtocol {
 
   public var fetchTask: Task<any Sendable, any Error>? { self.base.fetchTask }
 
-  public init(initialValue: StateValue) {
-    self.base = QueryState(initialValue: initialValue)
-    self.currentPageId = InfiniteQueryLocal.currentPageId?.base as! PageID
-  }
-
-  public func casted<NewValue: Sendable, NewQueryValue: Sendable>(
-    to newValue: NewValue.Type,
-    newQueryValue: NewQueryValue.Type
-  ) -> (any QueryStateProtocol)? {
-    self.base.casted(to: newValue, newQueryValue: newQueryValue)
-  }
-
   public mutating func startFetchTask(
     for fn: @escaping @Sendable () async throws -> any Sendable
   ) -> Task<any Sendable, any Error> {
@@ -72,8 +60,4 @@ extension InfiniteQueryState: _InfiniteQueryStateProtocol {
   public mutating func finishFetchTask(with error: any Error) {
     self.base.finishFetchTask(with: error)
   }
-}
-
-enum InfiniteQueryLocal {
-  @TaskLocal static var currentPageId: AnyHashableSendable?
 }

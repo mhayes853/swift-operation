@@ -3,17 +3,15 @@ import Foundation
 
 // MARK: - Typealiases
 
-public typealias QueryStoreFor<
-  Query: QueryProtocol
-> = QueryStore<Query.State>
+public typealias QueryStoreFor<Query: QueryProtocol> = QueryStore<Query.State>
 
-public typealias AnyQueryStore = QueryStore<QueryState<(any Sendable)?, any Sendable>>
+public typealias AnyQueryStore = QueryStore<AnyQueryState>
 
 // MARK: - QueryStore
 
 @dynamicMemberLookup
 public final class QueryStore<State: QueryStateProtocol>: Sendable {
-  private typealias _State = (query: any QueryStateProtocol, context: QueryContext)
+  private typealias _State = (query: AnyQueryState, context: QueryContext)
 
   private let _query: any QueryProtocol
   private let _state: LockedBox<_State>
@@ -21,21 +19,17 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
 
   private init<Query: QueryProtocol>(
     query: Query,
-    initialValue: State,
+    initialState: AnyQueryState,
     initialContext: QueryContext
   ) {
     self._query = query
-    self._state = LockedBox(value: (query: initialValue, context: initialContext))
+    self._state = LockedBox(value: (query: initialState, context: initialContext))
     self.subscriptions = QuerySubscriptions()
     self._state.inner.withLock { query._setup(context: &$0.context) }
   }
 
   public init?(casting base: AnyQueryStore) {
-    guard
-      base._state.inner.withLock({
-        $0.query.casted(to: State.StateValue.self, newQueryValue: State.QueryValue.self)
-      }) != nil
-    else {
+    guard base._state.inner.withLock({ $0.query.base as? State }) != nil else {
       return nil
     }
     self._query = base._query
@@ -51,10 +45,10 @@ extension QueryStore {
     query: Query,
     initialValue: Query.StateValue,
     initialContext: QueryContext = QueryContext()
-  ) -> QueryStoreFor<Query> where Query.State.StateValue == Query.StateValue {
+  ) -> QueryStoreFor<Query> where Query.State == QueryState<Query.StateValue, Query.Value> {
     QueryStoreFor<Query>(
       query: query,
-      initialValue: Query.State(initialValue: initialValue),
+      initialState: AnyQueryState(Query.State(initialValue: initialValue)),
       initialContext: initialContext
     )
   }
@@ -63,7 +57,7 @@ extension QueryStore {
     query: DefaultQuery<Query>,
     initialContext: QueryContext = QueryContext()
   ) -> QueryStoreFor<DefaultQuery<Query>>
-  where Query.State.StateValue == Query.StateValue, Query.Value == Query.StateValue {
+  where DefaultQuery<Query>.State == QueryState<DefaultQuery<Query>.StateValue, Query.Value> {
     .detached(query: query, initialValue: query.defaultValue, initialContext: initialContext)
   }
 }
@@ -71,12 +65,25 @@ extension QueryStore {
 extension AnyQueryStore {
   public static func detached<Query: QueryProtocol>(
     erasing query: Query,
-    initialValue: (any Sendable)?,
+    initialState: Query.State,
     initialContext: QueryContext = QueryContext()
   ) -> AnyQueryStore {
     AnyQueryStore(
       query: query,
-      initialValue: QueryState(initialValue: initialValue),
+      initialState: AnyQueryState(initialState),
+      initialContext: initialContext
+    )
+  }
+
+  public static func detached<Query: QueryProtocol>(
+    erasing query: Query,
+    initialValue: Query.StateValue,
+    initialContext: QueryContext = QueryContext()
+  ) -> AnyQueryStore
+  where Query.State == QueryState<Query.StateValue, Query.Value> {
+    AnyQueryStore(
+      query: query,
+      initialState: AnyQueryState(Query.State(initialValue: initialValue)),
       initialContext: initialContext
     )
   }
@@ -84,8 +91,15 @@ extension AnyQueryStore {
   public static func detached<Query: QueryProtocol>(
     erasing query: DefaultQuery<Query>,
     initialContext: QueryContext = QueryContext()
-  ) -> AnyQueryStore {
-    .detached(erasing: query, initialValue: query.defaultValue, initialContext: initialContext)
+  ) -> AnyQueryStore
+  where
+    DefaultQuery<Query>.State == QueryState<DefaultQuery<Query>.StateValue, Query.Value>
+  {
+    AnyQueryStore(
+      query: query,
+      initialState: AnyQueryState(DefaultQuery<Query>.State(initialValue: query.defaultValue)),
+      initialContext: initialContext
+    )
   }
 }
 
@@ -118,8 +132,11 @@ extension QueryStore {
 
 extension QueryStore {
   public var state: State {
-    self._state.inner.withLock {
-      $0.query.casted(to: State.StateValue.self, newQueryValue: State.QueryValue.self) as! State
+    self._state.inner.withLock { state in
+      if let query = state.query as? State {
+        return query
+      }
+      return state.query.base as! State
     }
   }
 

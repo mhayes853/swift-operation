@@ -6,9 +6,23 @@ extension QueryProtocol {
   }
 }
 
-public struct DefaultQuery<Query: QueryProtocol>: QueryProtocol {
+extension InfiniteQueryProtocol {
+  public func defaultValue(
+    _ value: @autoclosure @escaping @Sendable () -> Value
+  ) -> DefaultInfiniteQuery<Self> {
+    DefaultInfiniteQuery(_defaultValue: value, query: self)
+  }
+}
+
+public typealias DefaultQuery<Query: QueryProtocol> = _DefaultQuery<
+  Query, QueryState<Query.Value, Query.Value>
+>
+public typealias DefaultInfiniteQuery<Query: InfiniteQueryProtocol> = _DefaultQuery<
+  Query, Query.State
+>
+
+public struct _DefaultQuery<Query: QueryProtocol, State: QueryStateProtocol>: QueryProtocol {
   public typealias StateValue = Query.Value
-  public typealias State = Query.State
 
   let _defaultValue: @Sendable () -> Query.Value
   public let query: Query
@@ -30,7 +44,7 @@ public struct DefaultQuery<Query: QueryProtocol>: QueryProtocol {
   }
 }
 
-extension DefaultQuery: InfiniteQueryProtocol where Query: InfiniteQueryProtocol {
+extension _DefaultQuery: InfiniteQueryProtocol where Query: InfiniteQueryProtocol {
   public typealias PageValue = Query.PageValue
   public typealias PageID = Query.PageID
 
