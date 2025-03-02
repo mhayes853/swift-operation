@@ -97,4 +97,17 @@ struct QueryClientTests {
     let contextClient = try #require(context?.queryClient)
     expectNoDifference(client === contextClient, true)
   }
+
+  @Test("Sets Custom QueryClient Instance To The QueryContext")
+  func setCustomQueryClientInContext() async throws {
+    let client = QueryClient()
+    let query = ContextReadingQuery()
+    let store = QueryStoreFor<ContextReadingQuery>.detached(query: query, initialValue: nil)
+    store.context.queryClient = client
+    try await store.fetch()
+
+    let context = await query.latestContext
+    let contextClient = try #require(context?.queryClient)
+    expectNoDifference(client === contextClient, true)
+  }
 }

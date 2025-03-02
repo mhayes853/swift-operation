@@ -11,7 +11,7 @@ public final class QueryClient: Sendable {
 
   public init(defaultContext: QueryContext = QueryContext()) {
     self.state = Lock(([:], defaultContext))
-    self.state.withLock { $0.defaultContext.queryClient = self }
+    self.state.withLock { $0.defaultContext.setWeakQueryClient(self) }
   }
 }
 
@@ -102,14 +102,30 @@ extension QueryClient {
 // MARK: - QueryContext
 
 extension QueryContext {
-  public fileprivate(set) var queryClient: QueryClient? {
-    get { self[QueryClientKey.self].inner.withLock { $0.value } }
-    set { self[QueryClientKey.self].inner.withLock { $0.value = newValue } }
+  public var queryClient: QueryClient? {
+    get { self[QueryClientKey.self]?.client }
+    set { self[QueryClientKey.self] = newValue.map { .strong($0) } }
+  }
+
+  fileprivate mutating func setWeakQueryClient(_ client: QueryClient) {
+    self[QueryClientKey.self] = .weak(LockedWeakBox(value: client))
+  }
+
+  fileprivate enum QueryClientValue: Sendable {
+    case strong(QueryClient)
+    case weak(LockedWeakBox<QueryClient>)
+
+    var client: QueryClient? {
+      switch self {
+      case let .strong(client): client
+      case let .weak(box): box.inner.withLock { $0.value }
+      }
+    }
   }
 
   private enum QueryClientKey: Key {
-    static var defaultValue: LockedWeakBox<QueryClient> {
-      LockedWeakBox<QueryClient>(value: nil)
+    static var defaultValue: QueryClientValue? {
+      nil
     }
   }
 }
