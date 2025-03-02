@@ -4,7 +4,7 @@ import Foundation
 
 /// A simple lock data type.
 package struct Lock<Value: ~Copyable>: ~Copyable {
-  private let lock = NSLock()
+  private let lock = NSRecursiveLock()
   private var value: UnsafeMutablePointer<Value>
 
   /// Creates a lock by consuming the specified value.
