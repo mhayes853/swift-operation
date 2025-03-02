@@ -28,16 +28,14 @@ extension QueryClient {
 
 extension QueryClient {
   public func store<Query: QueryProtocol>(for query: Query) -> QueryStoreFor<Query>
-  where Query.State == QueryState<Query.StateValue, Query.Value>, Query.StateValue == Query.Value? {
+  where Query.State == QueryState<Query.Value?, Query.Value> {
     QueryStore(casting: self.anyStore(for: query, initialState: Query.State(initialValue: nil)))!
   }
 
   public func store<Query: QueryProtocol>(
     for query: DefaultQuery<Query>
   ) -> QueryStoreFor<DefaultQuery<Query>>
-  where
-    DefaultQuery<Query>.State == QueryState<DefaultQuery<Query>.StateValue, Query.Value>
-  {
+  where DefaultQuery<Query>.State == QueryState<Query.Value, Query.Value> {
     QueryStore(
       casting: self.anyStore(
         for: query,
@@ -48,8 +46,7 @@ extension QueryClient {
 
   public func store<Query: InfiniteQueryProtocol>(
     for query: Query
-  ) -> InfiniteQueryStoreFor<Query>
-  where Query.State == InfiniteQueryState<Query.PageID, Query.PageValue> {
+  ) -> InfiniteQueryStoreFor<Query> {
     InfiniteQueryStore(
       casting: self.anyStore(
         for: query,
@@ -60,11 +57,7 @@ extension QueryClient {
 
   public func store<Query: InfiniteQueryProtocol>(
     for query: DefaultInfiniteQuery<Query>
-  ) -> InfiniteQueryStoreFor<DefaultInfiniteQuery<Query>>
-  where
-    DefaultInfiniteQuery<Query>.State == InfiniteQueryState<Query.PageID, Query.PageValue>,
-    Query.Value == InfiniteQueryPagesFor<Query>
-  {
+  ) -> InfiniteQueryStoreFor<DefaultInfiniteQuery<Query>> {
     InfiniteQueryStore(
       casting: self.anyStore(
         for: query,
