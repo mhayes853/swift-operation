@@ -190,7 +190,11 @@ func foo() async throws {
 // MARK: - FakeInfiniteQuery
 
 struct FakeInfiniteQuery: QueryProtocol, Hashable {
-  func fetch(in context: QueryContext) async throws -> InfiniteQueryPages<Int, String> {
+  typealias State = InfiniteQueryState<Int, String>
+  typealias StateValue = InfiniteQueryPages<Int, String>
+  typealias Value = InfiniteQueryPages<Int, String>
+
+  func fetch(in context: QueryContext) async throws -> Value {
     []
   }
 }

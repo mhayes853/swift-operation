@@ -43,6 +43,18 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
 extension QueryStore {
   public static func detached<Query: QueryProtocol>(
     query: Query,
+    initialState: Query.State,
+    initialContext: QueryContext = QueryContext()
+  ) -> QueryStoreFor<Query> {
+    QueryStoreFor<Query>(
+      query: query,
+      initialState: AnyQueryState(initialState),
+      initialContext: initialContext
+    )
+  }
+
+  public static func detached<Query: QueryProtocol>(
+    query: Query,
     initialValue: Query.StateValue,
     initialContext: QueryContext = QueryContext()
   ) -> QueryStoreFor<Query> where Query.State == QueryState<Query.StateValue, Query.Value> {
@@ -59,6 +71,43 @@ extension QueryStore {
   ) -> QueryStoreFor<DefaultQuery<Query>>
   where DefaultQuery<Query>.State == QueryState<DefaultQuery<Query>.StateValue, Query.Value> {
     .detached(query: query, initialValue: query.defaultValue, initialContext: initialContext)
+  }
+
+  public static func detached<Query: InfiniteQueryProtocol>(
+    query: Query,
+    initialValue: Query.StateValue,
+    initialContext: QueryContext = QueryContext()
+  ) -> QueryStoreFor<Query>
+  where
+    Query.State == InfiniteQueryState<Query.PageID, Query.PageValue>,
+    Query.StateValue == InfiniteQueryPages<Query.PageID, Query.PageValue>
+  {
+    .detached(
+      query: query,
+      initialState: InfiniteQueryState(
+        initialValue: initialValue,
+        currentPageId: query.initialPageId
+      ),
+      initialContext: initialContext
+    )
+  }
+
+  public static func detached<Query: InfiniteQueryProtocol>(
+    query: DefaultInfiniteQuery<Query>,
+    initialContext: QueryContext = QueryContext()
+  ) -> QueryStoreFor<Query>
+  where
+    DefaultInfiniteQuery<Query>.State == InfiniteQueryState<Query.PageID, Query.PageValue>,
+    DefaultInfiniteQuery<Query>.StateValue == InfiniteQueryPages<Query.PageID, Query.PageValue>
+  {
+    .detached(
+      query: query,
+      initialState: InfiniteQueryState(
+        initialValue: query.defaultValue,
+        currentPageId: query.initialPageId
+      ),
+      initialContext: initialContext
+    )
   }
 }
 
@@ -81,9 +130,9 @@ extension AnyQueryStore {
     initialContext: QueryContext = QueryContext()
   ) -> AnyQueryStore
   where Query.State == QueryState<Query.StateValue, Query.Value> {
-    AnyQueryStore(
-      query: query,
-      initialState: AnyQueryState(Query.State(initialValue: initialValue)),
+    .detached(
+      erasing: query,
+      initialState: QueryState(initialValue: initialValue),
       initialContext: initialContext
     )
   }
@@ -95,9 +144,46 @@ extension AnyQueryStore {
   where
     DefaultQuery<Query>.State == QueryState<DefaultQuery<Query>.StateValue, Query.Value>
   {
-    AnyQueryStore(
-      query: query,
-      initialState: AnyQueryState(DefaultQuery<Query>.State(initialValue: query.defaultValue)),
+    .detached(
+      erasing: query,
+      initialState: DefaultQuery<Query>.State(initialValue: query.defaultValue),
+      initialContext: initialContext
+    )
+  }
+
+  public static func detached<Query: InfiniteQueryProtocol>(
+    erasing query: Query,
+    initialValue: Query.StateValue,
+    initialContext: QueryContext = QueryContext()
+  ) -> AnyQueryStore
+  where
+    Query.State == InfiniteQueryState<Query.PageID, Query.PageValue>,
+    Query.StateValue == InfiniteQueryPages<Query.PageID, Query.PageValue>
+  {
+    .detached(
+      erasing: query,
+      initialState: InfiniteQueryState(
+        initialValue: initialValue,
+        currentPageId: query.initialPageId
+      ),
+      initialContext: initialContext
+    )
+  }
+
+  public static func detached<Query: InfiniteQueryProtocol>(
+    erasing query: DefaultInfiniteQuery<Query>,
+    initialContext: QueryContext = QueryContext()
+  ) -> AnyQueryStore
+  where
+    DefaultInfiniteQuery<Query>.State == InfiniteQueryState<Query.PageID, Query.PageValue>,
+    DefaultInfiniteQuery<Query>.StateValue == InfiniteQueryPages<Query.PageID, Query.PageValue>
+  {
+    .detached(
+      erasing: query,
+      initialState: InfiniteQueryState(
+        initialValue: query.defaultValue,
+        currentPageId: query.initialPageId
+      ),
       initialContext: initialContext
     )
   }
