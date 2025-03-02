@@ -1,41 +1,17 @@
 import Foundation
 
-// MARK: - QueryStateProtocol
-
-public protocol QueryStateProtocol<StateValue, QueryValue>: Sendable {
-  associatedtype StateValue: Sendable
-  associatedtype QueryValue: Sendable
-
-  var currentValue: StateValue { get set }
-  var initialValue: StateValue { get set }
-  var valueUpdateCount: Int { get set }
-  var valueLastUpdatedAt: Date? { get set }
-  var isLoading: Bool { get set }
-  var error: (any Error)? { get set }
-  var errorUpdateCount: Int { get set }
-  var errorLastUpdatedAt: Date? { get set }
-  var fetchTask: Task<any Sendable, any Error>? { get set }
-
-  func casted<NewValue: Sendable, NewQueryValue: Sendable>(
-    to newValue: NewValue.Type,
-    newQueryValue: NewQueryValue.Type
-  ) -> (any QueryStateProtocol)?
-
-  init(initialValue: StateValue)
-}
-
 // MARK: - QueryState
 
 public struct QueryState<StateValue: Sendable, QueryValue: Sendable>: QueryStateProtocol {
-  public var currentValue: StateValue
-  public var initialValue: StateValue
-  public var valueUpdateCount = 0
-  public var valueLastUpdatedAt: Date?
-  public var isLoading = false
-  public var error: (any Error)?
-  public var errorUpdateCount = 0
-  public var errorLastUpdatedAt: Date?
-  public var fetchTask: Task<any Sendable, any Error>?
+  public private(set) var currentValue: StateValue
+  public private(set) var initialValue: StateValue
+  public private(set) var valueUpdateCount = 0
+  public private(set) var valueLastUpdatedAt: Date?
+  public private(set) var isLoading = false
+  public private(set) var error: (any Error)?
+  public private(set) var errorUpdateCount = 0
+  public private(set) var errorLastUpdatedAt: Date?
+  public private(set) var fetchTask: Task<any Sendable, any Error>?
 }
 
 extension QueryState {
@@ -47,8 +23,8 @@ extension QueryState {
 
 // MARK: - Fetch Task
 
-extension QueryStateProtocol {
-  mutating func startFetchTask(
+extension QueryState {
+  public mutating func startFetchTask(
     for fn: @Sendable @escaping () async throws -> any Sendable
   ) -> Task<any Sendable, any Error> {
     if let task = self.fetchTask {
@@ -60,7 +36,7 @@ extension QueryStateProtocol {
     return task
   }
 
-  mutating func endFetchTask(with value: StateValue) {
+  public mutating func endFetchTask(with value: StateValue) {
     self.currentValue = value
     self.valueUpdateCount += 1
     self.valueLastUpdatedAt = Date()
@@ -69,7 +45,7 @@ extension QueryStateProtocol {
     self.fetchTask = nil
   }
 
-  mutating func finishFetchTask(with error: any Error) {
+  public mutating func finishFetchTask(with error: any Error) {
     self.error = error
     self.errorUpdateCount += 1
     self.errorLastUpdatedAt = Date()

@@ -27,50 +27,23 @@ public struct InfiniteQueryState<PageID: Hashable & Sendable, PageValue: Sendabl
 }
 
 extension InfiniteQueryState: _InfiniteQueryStateProtocol {
-  public var currentValue: StateValue {
-    get { self.base.currentValue }
-    set { self.base.currentValue = newValue }
-  }
+  public var currentValue: StateValue { self.base.currentValue }
 
-  public var initialValue: StateValue {
-    get { self.base.initialValue }
-    set { self.base.initialValue = newValue }
-  }
+  public var initialValue: StateValue { self.base.initialValue }
 
-  public var valueUpdateCount: Int {
-    get { self.base.valueUpdateCount }
-    set { self.base.valueUpdateCount = newValue }
-  }
+  public var valueUpdateCount: Int { self.base.valueUpdateCount }
 
-  public var valueLastUpdatedAt: Date? {
-    get { self.base.valueLastUpdatedAt }
-    set { self.base.valueLastUpdatedAt = newValue }
-  }
+  public var valueLastUpdatedAt: Date? { self.base.valueLastUpdatedAt }
 
-  public var isLoading: Bool {
-    get { self.base.isLoading }
-    set { self.base.isLoading = newValue }
-  }
+  public var isLoading: Bool { self.base.isLoading }
 
-  public var error: (any Error)? {
-    get { self.base.error }
-    set { self.base.error = newValue }
-  }
+  public var error: (any Error)? { self.base.error }
 
-  public var errorUpdateCount: Int {
-    get { self.base.errorUpdateCount }
-    set { self.base.errorUpdateCount = newValue }
-  }
+  public var errorUpdateCount: Int { self.base.errorUpdateCount }
 
-  public var errorLastUpdatedAt: Date? {
-    get { self.base.errorLastUpdatedAt }
-    set { self.base.errorLastUpdatedAt = newValue }
-  }
+  public var errorLastUpdatedAt: Date? { self.base.errorLastUpdatedAt }
 
-  public var fetchTask: Task<any Sendable, any Error>? {
-    get { self.base.fetchTask }
-    set { self.base.fetchTask = newValue }
-  }
+  public var fetchTask: Task<any Sendable, any Error>? { self.base.fetchTask }
 
   public init(initialValue: StateValue) {
     self.base = QueryState(initialValue: initialValue)
@@ -82,6 +55,22 @@ extension InfiniteQueryState: _InfiniteQueryStateProtocol {
     newQueryValue: NewQueryValue.Type
   ) -> (any QueryStateProtocol)? {
     self.base.casted(to: newValue, newQueryValue: newQueryValue)
+  }
+
+  public mutating func startFetchTask(
+    for fn: @escaping @Sendable () async throws -> any Sendable
+  ) -> Task<any Sendable, any Error> {
+    self.base.startFetchTask(for: fn)
+  }
+
+  public mutating func endFetchTask(
+    with value: IdentifiedCollections.IdentifiedArray<PageID, InfiniteQueryPage<PageID, PageValue>>
+  ) {
+    self.base.endFetchTask(with: value)
+  }
+
+  public mutating func finishFetchTask(with error: any Error) {
+    self.base.finishFetchTask(with: error)
   }
 }
 
