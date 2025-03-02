@@ -2,10 +2,10 @@ import CustomDump
 import QueryCore
 import Testing
 
-@Suite("NetworkObserver+FetchConditionObserver tests")
-struct NetworkObserverFetchConditionObserverTests {
+@Suite("NetworkObserver tests")
+struct NetworkObserverTests {
   @Test(
-    "Satisfied When Status",
+    "Default Satisfied When Status",
     arguments: [
       (NetworkStatus.disconnected, false),
       (.connected, true),
@@ -19,7 +19,7 @@ struct NetworkObserverFetchConditionObserverTests {
   }
 
   @Test(
-    "Satisfied When Status For Context Value",
+    "Default Satisfied When Status For Context Value",
     arguments: [
       (NetworkStatus.disconnected, false),
       (.connected, true),
@@ -35,7 +35,7 @@ struct NetworkObserverFetchConditionObserverTests {
   }
 
   @Test(
-    "Observses When Status",
+    "Default Observes When Status",
     arguments: [
       (NetworkStatus.disconnected, false),
       (.connected, true),
@@ -54,7 +54,7 @@ struct NetworkObserverFetchConditionObserverTests {
   }
 
   @Test(
-    "Observses When Status For Context Value",
+    "Default Observes When Status For Context Value",
     arguments: [
       (NetworkStatus.disconnected, false),
       (.connected, true),
