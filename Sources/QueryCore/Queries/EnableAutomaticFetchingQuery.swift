@@ -1,46 +1,15 @@
-// MARK: - QueryEnableAutomaticFetchingCondition
-
-public struct EnableAutomaticFetchingCondition: Sendable {
-  private let storage: Storage
-
-  private init(_ storage: Storage) {
-    self.storage = storage
-  }
-}
-
-extension EnableAutomaticFetchingCondition {
-  public static let firstSubscribedTo = Self(.firstSubscribedTo)
-  public static let fetchManuallyCalled = Self(.fetchManuallyCalled)
-}
-
-extension EnableAutomaticFetchingCondition {
-  public var isEnabledByDefault: Bool {
-    switch self.storage {
-    case .firstSubscribedTo: true
-    case .fetchManuallyCalled: false
-    }
-  }
-}
-
-extension EnableAutomaticFetchingCondition {
-  private enum Storage: Equatable {
-    case firstSubscribedTo
-    case fetchManuallyCalled
-  }
-}
-
 // MARK: - QueryProtocol
 
 extension QueryProtocol {
   public func enableAutomaticFetching(
-    when condition: EnableAutomaticFetchingCondition
+    when condition: EnableStoreAutomaticFetchingCondition
   ) -> ModifiedQuery<Self, some QueryModifier<Self>> {
     self.modifier(EnableAutomaticFetchingModifier(condition: condition))
   }
 }
 
 private struct EnableAutomaticFetchingModifier<Query: QueryProtocol>: QueryModifier {
-  let condition: EnableAutomaticFetchingCondition
+  let condition: EnableStoreAutomaticFetchingCondition
 
   func _setup(context: inout QueryContext, using query: Query) {
     context.enableAutomaticFetchingCondition = self.condition
@@ -55,12 +24,12 @@ private struct EnableAutomaticFetchingModifier<Query: QueryProtocol>: QueryModif
 // MARK: - QueryContext
 
 extension QueryContext {
-  public var enableAutomaticFetchingCondition: EnableAutomaticFetchingCondition {
+  public var enableAutomaticFetchingCondition: EnableStoreAutomaticFetchingCondition {
     get { self[EnableAutomaticFetchingKey.self] }
     set { self[EnableAutomaticFetchingKey.self] = newValue }
   }
 
   private enum EnableAutomaticFetchingKey: Key {
-    static let defaultValue = EnableAutomaticFetchingCondition.firstSubscribedTo
+    static let defaultValue = EnableStoreAutomaticFetchingCondition.firstSubscribedTo
   }
 }
