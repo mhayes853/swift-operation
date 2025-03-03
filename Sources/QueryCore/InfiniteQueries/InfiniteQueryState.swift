@@ -2,13 +2,6 @@ import ConcurrencyExtras
 import Foundation
 import IdentifiedCollections
 
-public protocol _InfiniteQueryStateProtocol: QueryStateProtocol {
-  associatedtype PageID: Hashable & Sendable
-  associatedtype PageValue: Sendable
-  associatedtype StateValue = InfiniteQueryPages<PageID, PageValue>
-  associatedtype QueryValue = StateValue
-}
-
 // MARK: - InfiniteQueryState
 
 public struct InfiniteQueryState<PageID: Hashable & Sendable, PageValue: Sendable> {
@@ -26,7 +19,12 @@ public struct InfiniteQueryState<PageID: Hashable & Sendable, PageValue: Sendabl
   }
 }
 
-extension InfiniteQueryState: _InfiniteQueryStateProtocol {
+// MARK: - InfiniteQueryStateProtocol Conformance
+
+extension InfiniteQueryState: QueryStateProtocol {
+  public typealias StateValue = InfiniteQueryPages<PageID, PageValue>
+  public typealias QueryValue = StateValue
+
   public var currentValue: StateValue { self.base.currentValue }
 
   public var initialValue: StateValue { self.base.initialValue }
@@ -44,6 +42,8 @@ extension InfiniteQueryState: _InfiniteQueryStateProtocol {
   public var errorLastUpdatedAt: Date? { self.base.errorLastUpdatedAt }
 
   public var fetchTask: Task<any Sendable, any Error>? { self.base.fetchTask }
+
+  // TODO: - Infinite Query Logic
 
   public mutating func startFetchTask(
     in context: QueryContext,
