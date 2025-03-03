@@ -1,3 +1,4 @@
+import Clocks
 import CustomDump
 import IssueReporting
 @_spi(Warnings) import QueryCore
@@ -63,7 +64,7 @@ struct QueryClientTests {
     let store2 = client.store(for: q3)
     _ = try await (store1.fetch(), store2.fetch())
 
-    let stores = client.queries(matching: [1])
+    let stores = client.stores(matching: [1])
     try #require(stores.count == 2)
 
     expectNoDifference(stores[q1.path]?.currentValue as? Int, nil)
@@ -79,7 +80,7 @@ struct QueryClientTests {
     let q1 = PathableQuery(value: 1, path: [1, 2]).defaultValue(10)
     _ = client.store(for: q1)
 
-    let stores = client.queries(matching: [])
+    let stores = client.stores(matching: [])
     try #require(stores.count == 1)
 
     expectNoDifference(stores[q1.path]?.currentValue as? Int, 10)
@@ -109,5 +110,24 @@ struct QueryClientTests {
     let context = await query.latestContext
     let contextClient = try #require(context?.queryClient)
     expectNoDifference(client === contextClient, true)
+  }
+
+  @Test("Loads AnyStore In A Loading State")
+  func loadAnyStoreInLoadingState() async throws {
+    let client = QueryClient()
+    let query = SleepingQuery(clock: ImmediateClock(), duration: .seconds(1))
+    let store = client.store(for: query)
+    query.didBeginSleeping = {
+      let anyStore = client.store(with: query.path)
+      expectNoDifference(anyStore?.isLoading, true)
+    }
+    try await store.fetch()
+  }
+
+  @Test("No AnyStore For QueryPath That Does Not Exist")
+  func noAnyStoreForQueryPathThatDoesNotExist() async throws {
+    let client = QueryClient()
+    let store = client.store(with: [1, 2, 3])
+    expectNoDifference(store == nil, true)
   }
 }

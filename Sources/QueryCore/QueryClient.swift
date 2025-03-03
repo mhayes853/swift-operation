@@ -95,7 +95,11 @@ extension QueryClient {
 // MARK: - Queries For Path
 
 extension QueryClient {
-  public func queries(matching path: QueryPath) -> [QueryPath: AnyQueryStore] {
+  public func store(with path: QueryPath) -> AnyQueryStore? {
+    self.state.withLock { $0.stores[path]?.store }
+  }
+
+  public func stores(matching path: QueryPath) -> [QueryPath: AnyQueryStore] {
     self.state.withLock { state in
       var newValues = [QueryPath: AnyQueryStore]()
       for (queryPath, entry) in state.stores {
