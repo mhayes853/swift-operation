@@ -75,8 +75,8 @@ extension InfiniteQueryStore {
 // MARK: - Automatic Fetching
 
 extension InfiniteQueryStore {
-  public var willFetchOnFirstSubscription: Bool {
-    self.base.willFetchOnFirstSubscription
+  public var isAutomaticFetchingEnabled: Bool {
+    self.base.isAutomaticFetchingEnabled
   }
 }
 

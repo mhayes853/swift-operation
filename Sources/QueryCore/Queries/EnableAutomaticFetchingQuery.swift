@@ -55,7 +55,7 @@ private struct EnableAutomaticFetchingModifier<Query: QueryProtocol>: QueryModif
 // MARK: - QueryContext
 
 extension QueryContext {
-  public fileprivate(set) var enableAutomaticFetchingCondition: EnableAutomaticFetchingCondition {
+  public var enableAutomaticFetchingCondition: EnableAutomaticFetchingCondition {
     get { self[EnableAutomaticFetchingKey.self] }
     set { self[EnableAutomaticFetchingKey.self] = newValue }
   }
