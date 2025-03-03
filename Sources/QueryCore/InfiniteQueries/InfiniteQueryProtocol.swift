@@ -73,6 +73,39 @@ extension InfiniteQueryProtocol {
   }
 
   public func fetch(in context: QueryContext) async throws -> Value {
-    fatalError("TODO")
+    let paging = context.infiniteValues.paging(for: self)
+    switch context.infiniteValues.fetchType {
+    case .allPages:
+      return paging.pages
+
+    case .currentPage:
+      let pageValue = try await self.fetchPage(using: paging, in: context)
+      let page = InfiniteQueryPage(id: paging.currentPageId, value: pageValue)
+      var pages = paging.pages
+      pages[id: page.id] = page
+      return pages
+
+    case .nextPage:
+      guard let nextId = self.pageId(after: paging.pages.last!, using: paging) else {
+        return paging.pages
+      }
+      let pageValue = try await self.fetchPage(
+        using: InfiniteQueryPaging(currentPageId: nextId, pages: paging.pages),
+        in: context
+      )
+      let page = InfiniteQueryPage(id: nextId, value: pageValue)
+      return paging.pages + [page]
+
+    case .previousPage:
+      guard let previousId = self.pageId(before: paging.pages.first!, using: paging) else {
+        return paging.pages
+      }
+      let pageValue = try await self.fetchPage(
+        using: InfiniteQueryPaging(currentPageId: previousId, pages: paging.pages),
+        in: context
+      )
+      let page = InfiniteQueryPage(id: previousId, value: pageValue)
+      return [page] + paging.pages
+    }
   }
 }

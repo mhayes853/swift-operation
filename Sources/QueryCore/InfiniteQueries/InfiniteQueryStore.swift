@@ -1,3 +1,4 @@
+import Foundation
 import IdentifiedCollections
 
 // MARK: - Type Aliases
@@ -101,21 +102,33 @@ extension InfiniteQueryStore {
   public func fetchAllPages(
     handler: InfiniteQueryEventHandler<PageID, PageValue> = InfiniteQueryEventHandler()
   ) async throws -> InfiniteQueryPages<PageID, PageValue> {
-    []
+    var context = self.context
+    context.infiniteValues.currentPages = self.state.currentValue
+    return try await self.base.fetch(using: context)
   }
 
   @discardableResult
   public func fetchNextPage(
     handler: InfiniteQueryEventHandler<PageID, PageValue> = InfiniteQueryEventHandler()
   ) async throws -> InfiniteQueryPage<PageID, PageValue>? {
-    nil
+    var context = self.context
+    let before = self.state.currentValue
+    context.infiniteValues.currentPages = before
+    context.infiniteValues.fetchType = before.isEmpty ? .currentPage : .nextPage
+    let after = try await self.base.fetch(using: context)
+    return before.count == after.count ? nil : after.last
   }
 
   @discardableResult
   public func fetchPreviousPage(
     handler: InfiniteQueryEventHandler<PageID, PageValue> = InfiniteQueryEventHandler()
   ) async throws -> InfiniteQueryPage<PageID, PageValue>? {
-    nil
+    var context = self.context
+    let before = self.state.currentValue
+    context.infiniteValues.currentPages = before
+    context.infiniteValues.fetchType = before.isEmpty ? .currentPage : .previousPage
+    let after = try await self.base.fetch(using: context)
+    return before.count == after.count ? nil : after.first
   }
 }
 

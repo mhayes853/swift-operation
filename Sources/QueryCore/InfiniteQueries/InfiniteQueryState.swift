@@ -52,11 +52,10 @@ extension InfiniteQueryState: QueryStateProtocol {
     self.base.startFetchTask(in: context, for: fn)
   }
 
-  public mutating func endFetchTask(in context: QueryContext, with value: QueryValue) {
-    self.base.endFetchTask(in: context, with: value)
-  }
-
-  public mutating func finishFetchTask(in context: QueryContext, with error: any Error) {
-    self.base.finishFetchTask(in: context, with: error)
+  public mutating func endFetchTask(
+    in context: QueryContext,
+    with result: Result<QueryValue, Error>
+  ) {
+    self.base.endFetchTask(in: context, with: result)
   }
 }

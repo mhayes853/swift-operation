@@ -222,25 +222,26 @@ extension QueryStore {
 extension QueryStore {
   @discardableResult
   public func fetch(
-    handler: QueryEventHandler<State.QueryValue> = QueryEventHandler()
+    handler: QueryEventHandler<State.QueryValue> = QueryEventHandler(),
+    using context: QueryContext? = nil
   ) async throws -> State.QueryValue {
     let (subscription, _) = self.subscriptions.add(handler: handler.erased(), isTemporary: true)
     defer { subscription.cancel() }
-    let task = self.beginFetchTask()
+    let task = self.beginFetchTask(using: context)
     return try await task.cancellableValue as! State.QueryValue
   }
 
   @discardableResult
-  private func beginFetchTask() -> Task<any Sendable, any Error> {
+  private func beginFetchTask(using context: QueryContext? = nil) -> Task<any Sendable, any Error> {
     self._state.inner.withLock { state in
-      state.query.startFetchTask(in: state.context) { [context = state.context] in
+      state.query.startFetchTask(in: state.context) { [context = context ?? state.context] in
         self.subscriptions.forEach { $0.onFetchingStarted?() }
         defer { self.subscriptions.forEach { $0.onFetchingEnded?() } }
         do {
           let value = try await self._query.fetch(in: context) as! State.QueryValue
           self._state.inner.withLock { state in
             func open<S: QueryStateProtocol>(state: inout S) {
-              state.endFetchTask(in: context, with: value as! S.StateValue)
+              state.endFetchTask(in: context, with: .success(value as! S.QueryValue))
             }
             open(state: &state.query)
             self.subscriptions.forEach { $0.onResultReceived?(.success(value)) }
@@ -248,7 +249,7 @@ extension QueryStore {
           return value
         } catch {
           self._state.inner.withLock { state in
-            state.query.finishFetchTask(in: context, with: error)
+            state.query.endFetchTask(in: context, with: .failure(error))
             self.subscriptions.forEach { $0.onResultReceived?(.failure(error)) }
           }
           throw error

@@ -37,20 +37,24 @@ extension QueryState: QueryStateProtocol {
     return task
   }
 
-  public mutating func endFetchTask(in context: QueryContext, with value: StateValue) {
-    self.currentValue = value
-    self.valueUpdateCount += 1
-    self.valueLastUpdatedAt = context.queryClock.now()
-    self.error = nil
-    self.isLoading = false
-    self.fetchTask = nil
-  }
-
-  public mutating func finishFetchTask(in context: QueryContext, with error: any Error) {
-    self.error = error
-    self.errorUpdateCount += 1
-    self.errorLastUpdatedAt = context.queryClock.now()
-    self.isLoading = false
-    self.fetchTask = nil
+  public mutating func endFetchTask(
+    in context: QueryContext,
+    with result: Result<StateValue, any Error>
+  ) {
+    switch result {
+    case let .success(value):
+      self.currentValue = value
+      self.valueUpdateCount += 1
+      self.valueLastUpdatedAt = context.queryClock.now()
+      self.error = nil
+      self.isLoading = false
+      self.fetchTask = nil
+    case let .failure(error):
+      self.error = error
+      self.errorUpdateCount += 1
+      self.errorLastUpdatedAt = context.queryClock.now()
+      self.isLoading = false
+      self.fetchTask = nil
+    }
   }
 }

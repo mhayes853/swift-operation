@@ -137,12 +137,19 @@ final actor ContextReadingQuery: QueryProtocol {
 
 // MARK: - TestInfiniteQuery
 
-struct TestInfiniteQuery: InfiniteQueryProtocol {
+struct EmptyInfiniteQuery: InfiniteQueryProtocol {
   let initialPageId: Int
   let path: QueryPath
 
   func pageId(
     after page: InfiniteQueryPage<Int, String>,
+    using paging: InfiniteQueryPaging<Int, String>
+  ) -> Int? {
+    nil
+  }
+
+  func pageId(
+    before page: InfiniteQueryPage<Int, String>,
     using paging: InfiniteQueryPaging<Int, String>
   ) -> Int? {
     nil
@@ -156,12 +163,19 @@ struct TestInfiniteQuery: InfiniteQueryProtocol {
   }
 }
 
-struct TestIntInfiniteQuery: InfiniteQueryProtocol {
+struct EmptyIntInfiniteQuery: InfiniteQueryProtocol {
   let initialPageId: Int
   let path: QueryPath
 
   func pageId(
     after page: InfiniteQueryPage<Int, Int>,
+    using paging: InfiniteQueryPaging<Int, Int>
+  ) -> Int? {
+    nil
+  }
+
+  func pageId(
+    before page: InfiniteQueryPage<Int, Int>,
     using paging: InfiniteQueryPaging<Int, Int>
   ) -> Int? {
     nil
@@ -175,18 +189,6 @@ struct TestIntInfiniteQuery: InfiniteQueryProtocol {
   }
 }
 
-func doInfinite(query: some InfiniteQueryProtocol) async throws {
-}
-
-func foo() async throws {
-  let query = TestInfiniteQuery(initialPageId: 0, path: [])
-    .enableAutomaticFetching(when: .fetchManuallyCalled)
-    .defaultValue([])
-  try await doInfinite(query: query)
-  //try await doInfinite(query: query)
-
-}
-
 // MARK: - FakeInfiniteQuery
 
 struct FakeInfiniteQuery: QueryProtocol, Hashable {
@@ -197,4 +199,44 @@ struct FakeInfiniteQuery: QueryProtocol, Hashable {
   func fetch(in context: QueryContext) async throws -> Value {
     []
   }
+}
+
+// MARK: - TestInfiniteQuery
+
+final class TestInfiniteQuery: InfiniteQueryProtocol {
+  let initialPageId = 0
+
+  let state = Lock([Int: String]())
+
+  var path: QueryPath {
+    [ObjectIdentifier(self)]
+  }
+
+  func pageId(
+    after page: InfiniteQueryPage<Int, String>,
+    using paging: InfiniteQueryPaging<Int, String>
+  ) -> Int? {
+    self.state.withLock { $0[page.id + 1] != nil ? page.id + 1 : nil }
+  }
+
+  func pageId(
+    before page: InfiniteQueryPage<Int, String>,
+    using paging: InfiniteQueryPaging<Int, String>
+  ) -> Int? {
+    self.state.withLock { $0[page.id - 1] != nil ? page.id - 1 : nil }
+  }
+
+  func fetchPage(
+    using paging: InfiniteQueryPaging<Int, String>,
+    in context: QueryContext
+  ) async throws -> String {
+    try self.state.withLock {
+      if let value = $0[paging.currentPageId] {
+        return value
+      }
+      throw PageNotFoundError()
+    }
+  }
+
+  struct PageNotFoundError: Error {}
 }

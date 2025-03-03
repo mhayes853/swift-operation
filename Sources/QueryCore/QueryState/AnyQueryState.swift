@@ -41,14 +41,13 @@ extension AnyQueryState: QueryStateProtocol {
     self.base.startFetchTask(in: context, for: fn)
   }
 
-  public mutating func endFetchTask(in context: QueryContext, with value: StateValue) {
+  public mutating func endFetchTask(
+    in context: QueryContext,
+    with result: Result<QueryValue, any Error>
+  ) {
     func open<State: QueryStateProtocol>(state: inout State) {
-      state.endFetchTask(in: context, with: value as! State.StateValue)
+      state.endFetchTask(in: context, with: result.map { $0 as! State.QueryValue })
     }
     open(state: &self.base)
-  }
-
-  public mutating func finishFetchTask(in context: QueryContext, with error: any Error) {
-    self.base.finishFetchTask(in: context, with: error)
   }
 }

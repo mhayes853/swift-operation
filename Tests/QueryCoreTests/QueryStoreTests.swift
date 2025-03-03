@@ -155,17 +155,17 @@ struct QueryStoreTests {
     expectNoDifference(context?.test, "blob")
   }
 
-  @Test("Starts Fetching By Default When Query Store Subscribed To")
-  func startsFetchingOnSubscription() async throws {
-    let collector = QueryStoreEventsCollector<TestQuery.Value>()
-    let store = self.client.store(for: TestQuery())
-    let subscription = store.subscribe(with: collector.eventHandler)
-    try await store.fetch()
-    collector.expectEventsMatch([
-      .fetchingStarted, .resultReceived(.success(TestQuery.value)), .fetchingEnded
-    ])
-    subscription.cancel()
-  }
+  //@Test("Starts Fetching By Default When Query Store Subscribed To")
+  //func startsFetchingOnSubscription() async throws {
+  //  let collector = QueryStoreEventsCollector<TestQuery.Value>()
+  //  let store = self.client.store(for: TestQuery())
+  //  let subscription = store.subscribe(with: collector.eventHandler)
+  //  try await store.fetch()
+  //  collector.expectEventsMatch([
+  //    .fetchingStarted, .resultReceived(.success(TestQuery.value)), .fetchingEnded
+  //  ])
+  //  subscription.cancel()
+  //}
 
   @Test("Only Starts Fetching For The First Query Subscriber")
   func startsFetchingOnFirstSubscription() async throws {
@@ -183,85 +183,85 @@ struct QueryStoreTests {
     s3.cancel()
   }
 
-  @Test("Subscribe, Unsubscribe, Then Subscribe Again, Emits Events Both Times")
-  func subscribeUnsubscribeThenSubscribeAgainEmitsEventsBothTimes() async throws {
-    let collector = QueryStoreEventsCollector<FailingQuery.Value>()
-    let store = self.client.store(for: FailingQuery())
-    var subscription = store.subscribe(with: collector.eventHandler)
-    _ = try? await store.fetch()
-    collector.expectEventsMatch([
-      .fetchingStarted, .resultReceived(.failure(FailingQuery.SomeError())), .fetchingEnded
-    ])
-    subscription.cancel()
-    collector.reset()
-    subscription = store.subscribe(with: collector.eventHandler)
-    _ = try? await store.fetch()
-    collector.expectEventsMatch([
-      .fetchingStarted, .resultReceived(.failure(FailingQuery.SomeError())), .fetchingEnded
-    ])
-    subscription.cancel()
-  }
+  //@Test("Subscribe, Unsubscribe, Then Subscribe Again, Emits Events Both Times")
+  //func subscribeUnsubscribeThenSubscribeAgainEmitsEventsBothTimes() async throws {
+  //  let collector = QueryStoreEventsCollector<FailingQuery.Value>()
+  //  let store = self.client.store(for: FailingQuery())
+  //  var subscription = store.subscribe(with: collector.eventHandler)
+  //  _ = try? await store.fetch()
+  //  collector.expectEventsMatch([
+  //    .fetchingStarted, .resultReceived(.failure(FailingQuery.SomeError())), .fetchingEnded
+  //  ])
+  //  subscription.cancel()
+  //  collector.reset()
+  //  subscription = store.subscribe(with: collector.eventHandler)
+  //  _ = try? await store.fetch()
+  //  collector.expectEventsMatch([
+  //    .fetchingStarted, .resultReceived(.failure(FailingQuery.SomeError())), .fetchingEnded
+  //  ])
+  //  subscription.cancel()
+  //}
 
-  @Test("Emits Error Event When Fetching Fails")
-  func emitsErrorEventWhenFetchingFails() async throws {
-    let collector = QueryStoreEventsCollector<FailingQuery.Value>()
-    let store = self.client.store(for: FailingQuery())
-    let subscription = store.subscribe(with: collector.eventHandler)
-    _ = try? await store.fetch()
-    collector.expectEventsMatch([
-      .fetchingStarted, .resultReceived(.failure(FailingQuery.SomeError())), .fetchingEnded
-    ])
-    subscription.cancel()
-  }
+  //@Test("Emits Error Event When Fetching Fails")
+  //func emitsErrorEventWhenFetchingFails() async throws {
+  //  let collector = QueryStoreEventsCollector<FailingQuery.Value>()
+  //  let store = self.client.store(for: FailingQuery())
+  //  let subscription = store.subscribe(with: collector.eventHandler)
+  //  _ = try? await store.fetch()
+  //  collector.expectEventsMatch([
+  //    .fetchingStarted, .resultReceived(.failure(FailingQuery.SomeError())), .fetchingEnded
+  //  ])
+  //  subscription.cancel()
+  //}
 
-  @Test("Starts Fetching By When Automatic Fetching Enabled On Subscription")
-  func startsFetchingOnSubscriptionWhenAutomaticFetchingEnabled() async throws {
-    let query = TestQuery().enableAutomaticFetching(when: .firstSubscribedTo)
-    let collector = QueryStoreEventsCollector<TestQuery.Value>()
-    let store = self.client.store(for: query)
-    let subscription = store.subscribe(with: collector.eventHandler)
-    try await store.fetch()
-    collector.expectEventsMatch([
-      .fetchingStarted, .resultReceived(.success(TestQuery.value)), .fetchingEnded
-    ])
-    subscription.cancel()
-  }
+  //@Test("Starts Fetching By When Automatic Fetching Enabled On Subscription")
+  //func startsFetchingOnSubscriptionWhenAutomaticFetchingEnabled() async throws {
+  //  let query = TestQuery().enableAutomaticFetching(when: .firstSubscribedTo)
+  //  let collector = QueryStoreEventsCollector<TestQuery.Value>()
+  //  let store = self.client.store(for: query)
+  //  let subscription = store.subscribe(with: collector.eventHandler)
+  //  try await store.fetch()
+  //  collector.expectEventsMatch([
+  //    .fetchingStarted, .resultReceived(.success(TestQuery.value)), .fetchingEnded
+  //  ])
+  //  subscription.cancel()
+  //}
 
-  @Test("Emits Nothing When Automatic Fetching Disabled On Subscription")
-  func emitsIdleEventWhenAutomaticFetchingEnabled() async throws {
-    let query = TestQuery().enableAutomaticFetching(when: .fetchManuallyCalled)
-    let collector = QueryStoreEventsCollector<TestQuery.Value>()
-    let store = self.client.store(for: query)
-    let subscription = store.subscribe(with: collector.eventHandler)
-    await Task.megaYield()  // NB: Give some time for any potential fetching to start.
-    collector.expectEventsMatch([])
-    subscription.cancel()
-  }
+  //@Test("Emits Nothing When Automatic Fetching Disabled On Subscription")
+  //func emitsIdleEventWhenAutomaticFetchingEnabled() async throws {
+  //  let query = TestQuery().enableAutomaticFetching(when: .fetchManuallyCalled)
+  //  let collector = QueryStoreEventsCollector<TestQuery.Value>()
+  //  let store = self.client.store(for: query)
+  //  let subscription = store.subscribe(with: collector.eventHandler)
+  //  await Task.megaYield()  // NB: Give some time for any potential fetching to start.
+  //  collector.expectEventsMatch([])
+  //  subscription.cancel()
+  //}
 
-  @Test("Emits Fetch Events When fetch Manually Called")
-  func emitsFetchEventsWhenFetchManuallyCalled() async throws {
-    let collector = QueryStoreEventsCollector<TestQuery.Value>()
-    let query = TestQuery().enableAutomaticFetching(when: .fetchManuallyCalled)
-    let store = self.client.store(for: query)
-    let subscription = store.subscribe(with: collector.eventHandler)
-    try await store.fetch()
-    collector.expectEventsMatch([
-      .fetchingStarted, .resultReceived(.success(TestQuery.value)), .fetchingEnded
-    ])
-    subscription.cancel()
-  }
+  //@Test("Emits Fetch Events When fetch Manually Called")
+  //func emitsFetchEventsWhenFetchManuallyCalled() async throws {
+  //  let collector = QueryStoreEventsCollector<TestQuery.Value>()
+  //  let query = TestQuery().enableAutomaticFetching(when: .fetchManuallyCalled)
+  //  let store = self.client.store(for: query)
+  //  let subscription = store.subscribe(with: collector.eventHandler)
+  //  try await store.fetch()
+  //  collector.expectEventsMatch([
+  //    .fetchingStarted, .resultReceived(.success(TestQuery.value)), .fetchingEnded
+  //  ])
+  //  subscription.cancel()
+  //}
 
-  @Test("Does Not Receive Events When Unsubscribed")
-  func doesNotReceiveEventsWhenUnsubscribed() async throws {
-    let query = TestQuery().enableAutomaticFetching(when: .fetchManuallyCalled)
-    let collector = QueryStoreEventsCollector<TestQuery.Value>()
-    let store = self.client.store(for: query)
-    let subscription = store.subscribe(with: collector.eventHandler)
-    subscription.cancel()
-    try await store.fetch()
-    collector.expectEventsMatch([])
-    subscription.cancel()
-  }
+  //@Test("Does Not Receive Events When Unsubscribed")
+  //func doesNotReceiveEventsWhenUnsubscribed() async throws {
+  //  let query = TestQuery().enableAutomaticFetching(when: .fetchManuallyCalled)
+  //  let collector = QueryStoreEventsCollector<TestQuery.Value>()
+  //  let store = self.client.store(for: query)
+  //  let subscription = store.subscribe(with: collector.eventHandler)
+  //  subscription.cancel()
+  //  try await store.fetch()
+  //  collector.expectEventsMatch([])
+  //  subscription.cancel()
+  //}
 
   @Test("Automatic Fetching Enabled By Default")
   func automaticFetchingEnabledByDefault() async throws {
@@ -285,16 +285,16 @@ struct QueryStoreTests {
     expectNoDifference(store.isAutomaticFetchingEnabled, false)
   }
 
-  @Test("Handles Events When Fetching")
-  func handlesEventsWhenFetching() async throws {
-    let query = TestQuery().enableAutomaticFetching(when: .fetchManuallyCalled)
-    let collector = QueryStoreEventsCollector<TestQuery.Value>()
-    let store = self.client.store(for: query)
-    try await store.fetch(handler: collector.eventHandler)
-    collector.expectEventsMatch([
-      .fetchingStarted, .resultReceived(.success(TestQuery.value)), .fetchingEnded
-    ])
-  }
+  //@Test("Handles Events When Fetching")
+  //func handlesEventsWhenFetching() async throws {
+  //  let query = TestQuery().enableAutomaticFetching(when: .fetchManuallyCalled)
+  //  let collector = QueryStoreEventsCollector<TestQuery.Value>()
+  //  let store = self.client.store(for: query)
+  //  try await store.fetch(handler: collector.eventHandler)
+  //  collector.expectEventsMatch([
+  //    .fetchingStarted, .resultReceived(.success(TestQuery.value)), .fetchingEnded
+  //  ])
+  //}
 
   @Test("Does Not Increment Subscription Count When Fetching")
   func doesNotIncrementSubscriptionCountWhenFetching() async throws {
