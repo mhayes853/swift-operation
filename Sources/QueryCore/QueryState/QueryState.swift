@@ -39,11 +39,11 @@ extension QueryState: QueryStateProtocol {
 
   public mutating func endFetchTask(
     in context: QueryContext,
-    with result: Result<StateValue, any Error>
+    with result: Result<QueryValue, any Error>
   ) {
     switch result {
     case let .success(value):
-      self.currentValue = value
+      self.currentValue = value as! StateValue
       self.valueUpdateCount += 1
       self.valueLastUpdatedAt = context.queryClock.now()
       self.error = nil
