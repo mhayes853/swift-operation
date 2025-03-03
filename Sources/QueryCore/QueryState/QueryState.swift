@@ -2,7 +2,7 @@ import Foundation
 
 // MARK: - QueryState
 
-public struct QueryState<StateValue: Sendable, QueryValue: Sendable>: QueryStateProtocol {
+public struct QueryState<StateValue: Sendable, QueryValue: Sendable> {
   public private(set) var currentValue: StateValue
   public private(set) var initialValue: StateValue
   public private(set) var valueUpdateCount = 0
@@ -23,8 +23,9 @@ extension QueryState {
 
 // MARK: - Fetch Task
 
-extension QueryState {
+extension QueryState: QueryStateProtocol {
   public mutating func startFetchTask(
+    in context: QueryContext,
     for fn: @Sendable @escaping () async throws -> any Sendable
   ) -> Task<any Sendable, any Error> {
     if let task = self.fetchTask {
@@ -36,19 +37,19 @@ extension QueryState {
     return task
   }
 
-  public mutating func endFetchTask(with value: StateValue) {
+  public mutating func endFetchTask(in context: QueryContext, with value: StateValue) {
     self.currentValue = value
     self.valueUpdateCount += 1
-    self.valueLastUpdatedAt = Date()
+    self.valueLastUpdatedAt = context.queryClock.now()
     self.error = nil
     self.isLoading = false
     self.fetchTask = nil
   }
 
-  public mutating func finishFetchTask(with error: any Error) {
+  public mutating func finishFetchTask(in context: QueryContext, with error: any Error) {
     self.error = error
     self.errorUpdateCount += 1
-    self.errorLastUpdatedAt = Date()
+    self.errorLastUpdatedAt = context.queryClock.now()
     self.isLoading = false
     self.fetchTask = nil
   }

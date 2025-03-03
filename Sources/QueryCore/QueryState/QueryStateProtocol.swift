@@ -15,10 +15,11 @@ public protocol QueryStateProtocol<StateValue, QueryValue>: Sendable {
   var fetchTask: Task<any Sendable, any Error>? { get }
 
   mutating func startFetchTask(
+    in context: QueryContext,
     for fn: @Sendable @escaping () async throws -> any Sendable
   ) -> Task<any Sendable, any Error>
 
-  mutating func endFetchTask(with value: StateValue)
+  mutating func endFetchTask(in context: QueryContext, with value: StateValue)
 
-  mutating func finishFetchTask(with error: any Error)
+  mutating func finishFetchTask(in context: QueryContext, with error: any Error)
 }

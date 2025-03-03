@@ -35,19 +35,20 @@ extension AnyQueryState: QueryStateProtocol {
   public var fetchTask: Task<any Sendable, any Error>? { self.base.fetchTask }
 
   public mutating func startFetchTask(
+    in context: QueryContext,
     for fn: @escaping @Sendable () async throws -> any Sendable
   ) -> Task<any Sendable, any Error> {
-    self.base.startFetchTask(for: fn)
+    self.base.startFetchTask(in: context, for: fn)
   }
 
-  public mutating func endFetchTask(with value: StateValue) {
+  public mutating func endFetchTask(in context: QueryContext, with value: StateValue) {
     func open<State: QueryStateProtocol>(state: inout State) {
-      state.endFetchTask(with: value as! State.StateValue)
+      state.endFetchTask(in: context, with: value as! State.StateValue)
     }
     open(state: &self.base)
   }
 
-  public mutating func finishFetchTask(with error: any Error) {
-    self.base.finishFetchTask(with: error)
+  public mutating func finishFetchTask(in context: QueryContext, with error: any Error) {
+    self.base.finishFetchTask(in: context, with: error)
   }
 }

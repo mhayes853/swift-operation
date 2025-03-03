@@ -46,18 +46,17 @@ extension InfiniteQueryState: _InfiniteQueryStateProtocol {
   public var fetchTask: Task<any Sendable, any Error>? { self.base.fetchTask }
 
   public mutating func startFetchTask(
+    in context: QueryContext,
     for fn: @escaping @Sendable () async throws -> any Sendable
   ) -> Task<any Sendable, any Error> {
-    self.base.startFetchTask(for: fn)
+    self.base.startFetchTask(in: context, for: fn)
   }
 
-  public mutating func endFetchTask(
-    with value: IdentifiedCollections.IdentifiedArray<PageID, InfiniteQueryPage<PageID, PageValue>>
-  ) {
-    self.base.endFetchTask(with: value)
+  public mutating func endFetchTask(in context: QueryContext, with value: QueryValue) {
+    self.base.endFetchTask(in: context, with: value)
   }
 
-  public mutating func finishFetchTask(with error: any Error) {
-    self.base.finishFetchTask(with: error)
+  public mutating func finishFetchTask(in context: QueryContext, with error: any Error) {
+    self.base.finishFetchTask(in: context, with: error)
   }
 }
