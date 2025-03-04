@@ -111,7 +111,7 @@ extension InfiniteQueryProtocol {
             using: InfiniteQueryPaging(pageId: lastPage.id, pages: newPages, request: .allPages)
           )
         } else {
-          self.initialPageId
+          paging.pages.first?.id ?? self.initialPageId
         }
       guard let pageId else { return newPages }
       let pageValue = try await self.fetchPage(
