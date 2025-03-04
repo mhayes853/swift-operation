@@ -39,13 +39,13 @@ extension InfiniteQueryContextValues {
       if let last = pages.last {
         return .nextPageAfter(last)
       } else {
-        return .initialPage(latestPageId)
+        return .initialPage
       }
     case .previousPage:
       if let first = pages.first {
         return .previousPageBefore(first)
       } else {
-        return .initialPage(latestPageId)
+        return .initialPage
       }
     }
   }
