@@ -6,9 +6,9 @@ struct InfiniteQueryContextValues: Sendable {
 extension InfiniteQueryContextValues {
   enum FetchType {
     case nextPage
+    case previousPage
     case currentPage
     case allPages
-    case previousPage
   }
 }
 
@@ -20,7 +20,37 @@ extension InfiniteQueryContextValues {
     else {
       fatalError("TODO")
     }
-    return InfiniteQueryPaging(currentPageId: pages.last?.id ?? query.initialPageId, pages: pages)
+    let currentPageId = pages.last?.id ?? query.initialPageId
+    return InfiniteQueryPaging(
+      pageId: currentPageId,
+      pages: pages,
+      request: self.request(Query.self, currentPageId: currentPageId, pages: pages)
+    )
+  }
+
+  private func request<Query: InfiniteQueryProtocol>(
+    _: Query.Type,
+    currentPageId: Query.PageID,
+    pages: InfiniteQueryPages<Query.PageID, Query.PageValue>
+  ) -> InfiniteQueryPaging<Query.PageID, Query.PageValue>.Request {
+    switch self.fetchType {
+    case .allPages:
+      return .allPages
+    case .currentPage:
+      return .currentPage(currentPageId)
+    case .nextPage:
+      if let last = pages.last {
+        return .nextPageAfter(last)
+      } else {
+        return .currentPage(currentPageId)
+      }
+    case .previousPage:
+      if let first = pages.first {
+        return .previousPageBefore(first)
+      } else {
+        return .currentPage(currentPageId)
+      }
+    }
   }
 }
 

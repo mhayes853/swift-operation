@@ -114,7 +114,7 @@ extension InfiniteQueryStore {
     var context = self.context
     let before = self.state.currentValue
     context.infiniteValues.currentPages = before
-    context.infiniteValues.fetchType = before.isEmpty ? .currentPage : .nextPage
+    context.infiniteValues.fetchType = .nextPage
     let after = try await self.base.fetch(using: context)
     return before.count == after.count ? nil : after.last
   }
@@ -126,7 +126,7 @@ extension InfiniteQueryStore {
     var context = self.context
     let before = self.state.currentValue
     context.infiniteValues.currentPages = before
-    context.infiniteValues.fetchType = before.isEmpty ? .currentPage : .previousPage
+    context.infiniteValues.fetchType = .previousPage
     let after = try await self.base.fetch(using: context)
     return before.count == after.count ? nil : after.first
   }

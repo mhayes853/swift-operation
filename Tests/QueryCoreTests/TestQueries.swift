@@ -231,7 +231,7 @@ final class TestInfiniteQuery: InfiniteQueryProtocol {
     in context: QueryContext
   ) async throws -> String {
     try self.state.withLock {
-      if let value = $0[paging.currentPageId] {
+      if let value = $0[paging.pageId] {
         return value
       }
       throw PageNotFoundError()
