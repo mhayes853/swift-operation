@@ -129,6 +129,20 @@ struct InfiniteQueryStoreTests {
     expectNoDifference(store.state.status.isSuccessful, true)
   }
 
+  @Test("Fetch Next And Previous Page Concurrently When No Pages Fetched, Returns Same Page Data")
+  func fetchNextAndPreviousConcurrentlyInitially() async throws {
+    let query = TestInfiniteQuery()
+    query.state.withLock { $0[0] = "blob" }
+    let store = self.client.store(for: query)
+    async let p1 = store.fetchNextPage()
+    async let p2 = store.fetchPreviousPage()
+    let (page1, page2) = try await (p1, p2)
+    expectNoDifference(page1, InfiniteQueryPage(id: 0, value: "blob"))
+    expectNoDifference(page2, page1)
+    expectNoDifference(store.state.currentValue, [InfiniteQueryPage(id: 0, value: "blob")])
+    expectNoDifference(store.state.status.isSuccessful, true)
+  }
+
   @Test("Fetch Previous Page, Returns Page Data Before First")
   func fetchPreviousPageReturnsPageDataBeforeFirst() async throws {
     let query = TestInfiniteQuery()
