@@ -61,6 +61,49 @@ struct InfiniteQueryStoreTests {
     expectNoDifference(store.state.status.isSuccessful, true)
   }
 
+  @Test("Fetch All Pages After Fetching Some, Returns Updated Values For Refetched Pages")
+  func fetchAllPagesAfterFetchingSome() async throws {
+    let query = TestInfiniteQuery()
+    let store = self.client.store(for: query)
+    query.state.withLock {
+      $0[0] = "a"
+      $0[1] = "b"
+    }
+    try await store.fetchNextPage()
+    try await store.fetchNextPage()
+    query.state.withLock {
+      $0[0] = "c"
+      $0[1] = "d"
+    }
+    let pages = try await store.fetchAllPages()
+    let expectedPages = InfiniteQueryPages<Int, String>(
+      uniqueElements: [InfiniteQueryPage(id: 0, value: "c"), InfiniteQueryPage(id: 1, value: "d")]
+    )
+    expectNoDifference(pages, expectedPages)
+    expectNoDifference(store.state.currentValue, expectedPages)
+    expectNoDifference(store.state.status.isSuccessful, true)
+  }
+
+  @Test("Fetch All Pages After Fetching Some, Stops Refetching When No Next Page ID")
+  func fetchAllPagesAfterFetchingSomeStopsWhenNoNextPageID() async throws {
+    let query = TestInfiniteQuery()
+    let store = self.client.store(for: query)
+    query.state.withLock {
+      $0[0] = "a"
+      $0[1] = "b"
+    }
+    try await store.fetchNextPage()
+    try await store.fetchNextPage()
+    query.state.withLock { $0 = [0: "c"] }
+    let pages = try await store.fetchAllPages()
+    let expectedPages = InfiniteQueryPages<Int, String>(
+      uniqueElements: [InfiniteQueryPage(id: 0, value: "c")]
+    )
+    expectNoDifference(pages, expectedPages)
+    expectNoDifference(store.state.currentValue, expectedPages)
+    expectNoDifference(store.state.status.isSuccessful, true)
+  }
+
   @Test("Fetch Next Page, Returns Page Data First")
   func fetchNextPageReturnsPageDataFirst() async throws {
     let query = TestInfiniteQuery()

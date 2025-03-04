@@ -87,7 +87,28 @@ extension InfiniteQueryProtocol {
     let paging = context.infiniteValues.paging(for: self)
     switch paging.request {
     case .allPages:
-      return paging.pages
+      var newPages = InfiniteQueryPages<PageID, PageValue>(uniqueElements: [])
+      var lastPage: InfiniteQueryPage<PageID, PageValue>?
+      for _ in 0..<paging.pages.count {
+        let pageId =
+          if let lastPage {
+            self.pageId(
+              after: lastPage,
+              using: InfiniteQueryPaging(pageId: lastPage.id, pages: newPages, request: .allPages)
+            )
+          } else {
+            self.initialPageId
+          }
+        guard let pageId else { return newPages }
+        let pageValue = try await self.fetchPage(
+          using: InfiniteQueryPaging(pageId: pageId, pages: newPages, request: .allPages),
+          in: context
+        )
+        let page = InfiniteQueryPage(id: pageId, value: pageValue)
+        lastPage = page
+        newPages.append(page)
+      }
+      return newPages
 
     case let .initialPage(id):
       let pageValue = try await self.fetchPage(using: paging, in: context)
