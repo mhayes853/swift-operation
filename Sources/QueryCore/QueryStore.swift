@@ -82,7 +82,7 @@ extension QueryStore {
       query: query,
       initialState: InfiniteQueryState(
         initialValue: initialValue,
-        currentPageId: query.initialPageId
+        initialPageId: query.initialPageId
       ),
       initialContext: initialContext
     )
@@ -96,7 +96,7 @@ extension QueryStore {
       query: query,
       initialState: InfiniteQueryState(
         initialValue: query.defaultValue,
-        currentPageId: query.initialPageId
+        initialPageId: query.initialPageId
       ),
       initialContext: initialContext
     )
@@ -152,7 +152,7 @@ extension AnyQueryStore {
       erasing: query,
       initialState: InfiniteQueryState(
         initialValue: initialValue,
-        currentPageId: query.initialPageId
+        initialPageId: query.initialPageId
       ),
       initialContext: initialContext
     )
@@ -166,7 +166,7 @@ extension AnyQueryStore {
       erasing: query,
       initialState: InfiniteQueryState(
         initialValue: query.defaultValue,
-        currentPageId: query.initialPageId
+        initialPageId: query.initialPageId
       ),
       initialContext: initialContext
     )

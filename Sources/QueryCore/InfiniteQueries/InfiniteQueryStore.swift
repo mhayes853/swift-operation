@@ -41,7 +41,7 @@ extension InfiniteQueryStore {
         query: query,
         initialState: InfiniteQueryState(
           initialValue: initialValue,
-          currentPageId: query.initialPageId
+          initialPageId: query.initialPageId
         ),
         initialContext: initialContext
       )
@@ -104,6 +104,7 @@ extension InfiniteQueryStore {
   ) async throws -> InfiniteQueryPages<PageID, PageValue> {
     var context = self.context
     context.infiniteValues.currentPages = self.state.currentValue
+    context.infiniteValues.fetchType = .allPages
     return try await self.base.fetch(using: context)
   }
 

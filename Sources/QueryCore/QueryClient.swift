@@ -50,7 +50,7 @@ extension QueryClient {
     InfiniteQueryStore(
       casting: self.anyStore(
         for: query,
-        initialState: InfiniteQueryState(initialValue: [], currentPageId: query.initialPageId)
+        initialState: InfiniteQueryState(initialValue: [], initialPageId: query.initialPageId)
       )
     )!
   }
@@ -63,7 +63,7 @@ extension QueryClient {
         for: query,
         initialState: InfiniteQueryState(
           initialValue: query.defaultValue,
-          currentPageId: query.initialPageId
+          initialPageId: query.initialPageId
         )
       )
     )!

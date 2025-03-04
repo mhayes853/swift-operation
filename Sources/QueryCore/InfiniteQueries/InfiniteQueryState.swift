@@ -7,15 +7,15 @@ import IdentifiedCollections
 public struct InfiniteQueryState<PageID: Hashable & Sendable, PageValue: Sendable> {
   public var base:
     QueryState<InfiniteQueryPages<PageID, PageValue>, InfiniteQueryPages<PageID, PageValue>>
-  public private(set) var currentPageId: PageID
+  public let initialPageId: PageID
   public private(set) var isLoadingNextPage = false
   public private(set) var isLoadingPreviousPage = false
   public private(set) var hasNextPage = true
   public private(set) var hasPreviousPage = true
 
-  init(initialValue: StateValue, currentPageId: PageID) {
+  init(initialValue: StateValue, initialPageId: PageID) {
     self.base = QueryState(initialValue: initialValue)
-    self.currentPageId = currentPageId
+    self.initialPageId = initialPageId
   }
 }
 

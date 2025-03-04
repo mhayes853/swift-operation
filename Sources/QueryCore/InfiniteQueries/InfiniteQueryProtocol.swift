@@ -35,7 +35,7 @@ extension InfiniteQueryPaging {
   public enum Request: Sendable {
     case nextPageAfter(InfiniteQueryPage<PageID, PageValue>)
     case previousPageBefore(InfiniteQueryPage<PageID, PageValue>)
-    case currentPage(PageID)
+    case initialPage(PageID)
     case allPages
   }
 }
@@ -89,7 +89,7 @@ extension InfiniteQueryProtocol {
     case .allPages:
       return paging.pages
 
-    case let .currentPage(id):
+    case let .initialPage(id):
       let pageValue = try await self.fetchPage(using: paging, in: context)
       let page = InfiniteQueryPage(id: id, value: pageValue)
       var pages = paging.pages

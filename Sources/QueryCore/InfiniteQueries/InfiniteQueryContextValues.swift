@@ -7,7 +7,6 @@ extension InfiniteQueryContextValues {
   enum FetchType {
     case nextPage
     case previousPage
-    case currentPage
     case allPages
   }
 }
@@ -20,35 +19,33 @@ extension InfiniteQueryContextValues {
     else {
       fatalError("TODO")
     }
-    let currentPageId = pages.last?.id ?? query.initialPageId
+    let latestPageId = pages.last?.id ?? query.initialPageId
     return InfiniteQueryPaging(
-      pageId: currentPageId,
+      pageId: latestPageId,
       pages: pages,
-      request: self.request(Query.self, currentPageId: currentPageId, pages: pages)
+      request: self.request(Query.self, latestPageId: latestPageId, pages: pages)
     )
   }
 
   private func request<Query: InfiniteQueryProtocol>(
     _: Query.Type,
-    currentPageId: Query.PageID,
+    latestPageId: Query.PageID,
     pages: InfiniteQueryPages<Query.PageID, Query.PageValue>
   ) -> InfiniteQueryPaging<Query.PageID, Query.PageValue>.Request {
     switch self.fetchType {
     case .allPages:
       return .allPages
-    case .currentPage:
-      return .currentPage(currentPageId)
     case .nextPage:
       if let last = pages.last {
         return .nextPageAfter(last)
       } else {
-        return .currentPage(currentPageId)
+        return .initialPage(latestPageId)
       }
     case .previousPage:
       if let first = pages.first {
         return .previousPageBefore(first)
       } else {
-        return .currentPage(currentPageId)
+        return .initialPage(latestPageId)
       }
     }
   }
