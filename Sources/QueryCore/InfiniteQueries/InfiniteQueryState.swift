@@ -39,6 +39,7 @@ public struct InfiniteQueryState<PageID: Hashable & Sendable, PageValue: Sendabl
 extension InfiniteQueryState: QueryStateProtocol {
   public typealias StateValue = InfiniteQueryPages<PageID, PageValue>
   public typealias QueryValue = InfiniteQueryValue<PageID, PageValue>
+  public typealias StatusValue = StateValue
 
   public mutating func startFetchTask(
     in context: QueryContext,

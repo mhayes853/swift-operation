@@ -15,6 +15,7 @@ public struct AnyQueryState {
 extension AnyQueryState: QueryStateProtocol {
   public typealias StateValue = (any Sendable)?
   public typealias QueryValue = any Sendable
+  public typealias StatusValue = any Sendable
 
   public var currentValue: StateValue { self.base.currentValue }
 

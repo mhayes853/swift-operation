@@ -24,6 +24,8 @@ extension QueryState {
 // MARK: - Fetch Task
 
 extension QueryState: QueryStateProtocol {
+  public typealias StatusValue = QueryValue
+
   public mutating func startFetchTask(
     in context: QueryContext,
     for fn: @Sendable @escaping () async throws -> any Sendable

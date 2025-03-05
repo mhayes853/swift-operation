@@ -3,6 +3,7 @@ import Foundation
 public protocol QueryStateProtocol<StateValue, QueryValue>: Sendable {
   associatedtype StateValue: Sendable
   associatedtype QueryValue: Sendable
+  associatedtype StatusValue: Sendable
 
   var currentValue: StateValue { get }
   var initialValue: StateValue { get }

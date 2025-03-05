@@ -76,30 +76,26 @@ extension QueryStatus {
 
 // MARK: - QueryStateProtocol
 
-extension QueryState {
-  public var status: QueryStatus<QueryValue> {
-    if self.isLoading {
-      return .loading
-    } else if self.valueUpdateCount == 0 && self.errorUpdateCount == 0 {
-      return .idle
-    } else if let currentValue = self.currentValue as? QueryValue, self.hasMostRecentValueUpdate {
-      return .result(.success(currentValue))
-    } else if let error, !self.hasMostRecentValueUpdate {
-      return .result(.failure(error))
-    } else {
-      return .idle
-    }
-  }
-
-  private var hasMostRecentValueUpdate: Bool {
-    guard let valueLastUpdatedAt else { return self.errorLastUpdatedAt == nil }
-    guard let errorLastUpdatedAt else { return true }
-    return valueLastUpdatedAt > errorLastUpdatedAt
+extension QueryStateProtocol where StateValue == StatusValue {
+  public var status: QueryStatus<StatusValue> {
+    self.stateStatus
   }
 }
 
-extension InfiniteQueryState {
-  public var status: QueryStatus<StateValue> {
+extension QueryStateProtocol where StateValue == StatusValue? {
+  public var status: QueryStatus<StatusValue> {
+    self.stateStatus.flatMapSuccess { value in
+      if let value {
+        return .result(.success(value))
+      } else {
+        return .idle
+      }
+    }
+  }
+}
+
+extension QueryStateProtocol {
+  private var stateStatus: QueryStatus<StateValue> {
     if self.isLoading {
       return .loading
     } else if self.valueUpdateCount == 0 && self.errorUpdateCount == 0 {
@@ -112,7 +108,6 @@ extension InfiniteQueryState {
       return .idle
     }
   }
-
   private var hasMostRecentValueUpdate: Bool {
     guard let valueLastUpdatedAt else { return self.errorLastUpdatedAt == nil }
     guard let errorLastUpdatedAt else { return true }
