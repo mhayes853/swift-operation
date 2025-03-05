@@ -1,4 +1,5 @@
 struct InfiniteQueryContextValues: Sendable {
+  let fetchType: FetchType
   private let request: any Sendable
   private let store: any Sendable
 }
@@ -25,6 +26,7 @@ extension InfiniteQueryContextValues {
         self.request = InfiniteQueryPaging<PageID, PageValue>.Request.initialPage
       }
     }
+    self.fetchType = fetchType
     self.store = store
   }
 }

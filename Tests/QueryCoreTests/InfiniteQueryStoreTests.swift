@@ -52,6 +52,28 @@ struct InfiniteQueryStoreTests {
     expectNoDifference(infiniteStore == nil, true)
   }
 
+  @Test("Is Loading All Pages When Fetching All Pages")
+  func isLoadingWhenFetchingAllPages() async throws {
+    let query = WaitableInfiniteQuery()
+    query.state.withLock { $0.values = [0: "a"] }
+
+    let store = self.client.store(for: query)
+    try await store.fetchNextPage()
+
+    query.state.withLock {
+      $0.willWait = true
+      $0.onLoading = {
+        expectNoDifference(store.state.isLoading, true)
+        expectNoDifference(store.state.isLoadingAllPages, true)
+        expectNoDifference(store.state.isLoadingInitialPage, false)
+        expectNoDifference(store.state.isLoadingNextPage, false)
+        expectNoDifference(store.state.isLoadingPreviousPage, false)
+      }
+    }
+    Task { try await store.fetchAllPages() }
+    try await query.waitForLoading()
+  }
+
   @Test("Returns Empty Array When No Pages After Fetching All Pages")
   func emptyArrayWhenNoPagesAfterFetchingAllPages() async throws {
     let store = self.client.store(for: TestInfiniteQuery())
@@ -134,6 +156,50 @@ struct InfiniteQueryStoreTests {
     expectNoDifference(store.state.status.isSuccessful, true)
   }
 
+  @Test("Is Loading Initial And Next When Fetching Next Page")
+  func isLoadingInitialAndNextWhenFetchingNextPage() async throws {
+    let query = WaitableInfiniteQuery()
+    query.state.withLock {
+      $0.values = [0: "a"]
+      $0.willWait = true
+    }
+
+    let store = self.client.store(for: query)
+    query.state.withLock {
+      $0.onLoading = {
+        expectNoDifference(store.state.isLoading, true)
+        expectNoDifference(store.state.isLoadingAllPages, false)
+        expectNoDifference(store.state.isLoadingInitialPage, true)
+        expectNoDifference(store.state.isLoadingNextPage, true)
+        expectNoDifference(store.state.isLoadingPreviousPage, false)
+      }
+    }
+    Task { try await store.fetchNextPage() }
+    try await query.waitForLoading()
+  }
+
+  @Test("Is Loading Next When Fetching Next Page After Fetching Initial Page")
+  func isLoadingNextWhenFetchingNextPageAfterFetchingInitialPage() async throws {
+    let query = WaitableInfiniteQuery()
+    query.state.withLock { $0.values = [0: "a", 1: "b"] }
+    let store = self.client.store(for: query)
+    try await store.fetchNextPage()
+
+    query.state.withLock {
+      $0.willWait = true
+      $0.onLoading = {
+        expectNoDifference(store.state.isLoading, true)
+        expectNoDifference(store.state.isLoadingAllPages, false)
+        expectNoDifference(store.state.isLoadingInitialPage, false)
+        expectNoDifference(store.state.isLoadingNextPage, true)
+        expectNoDifference(store.state.isLoadingPreviousPage, false)
+      }
+    }
+
+    Task { try await store.fetchNextPage() }
+    try await query.waitForLoading()
+  }
+
   @Test("Fetch Next Page Concurrently, Returns Same Page Data")
   func fetchNextPageConcurrentlyReturnsSamePageData() async throws {
     let query = TestInfiniteQuery()
@@ -172,6 +238,50 @@ struct InfiniteQueryStoreTests {
     expectNoDifference(page, InfiniteQueryPage(id: 0, value: "blob"))
     expectNoDifference(store.state.currentValue, [InfiniteQueryPage(id: 0, value: "blob")])
     expectNoDifference(store.state.status.isSuccessful, true)
+  }
+
+  @Test("Is Loading Initial And Previous When Fetching Previous Page")
+  func isLoadingInitialAndPreviousWhenFetchingPreviousPage() async throws {
+    let query = WaitableInfiniteQuery()
+    query.state.withLock {
+      $0.values = [0: "a"]
+      $0.willWait = true
+    }
+
+    let store = self.client.store(for: query)
+    query.state.withLock {
+      $0.onLoading = {
+        expectNoDifference(store.isLoading, true)
+        expectNoDifference(store.isLoadingAllPages, false)
+        expectNoDifference(store.isLoadingInitialPage, true)
+        expectNoDifference(store.isLoadingNextPage, false)
+        expectNoDifference(store.isLoadingPreviousPage, true)
+      }
+    }
+    Task { try await store.fetchPreviousPage() }
+    try await query.waitForLoading()
+  }
+
+  @Test("Is Loading Previous When Fetching Previous Page After Fetching Initial Page")
+  func isLoadingPreviousWhenFetchingPreviousPageAfterFetchingInitialPage() async throws {
+    let query = WaitableInfiniteQuery()
+    query.state.withLock { $0.values = [0: "a", -1: "b"] }
+    let store = self.client.store(for: query)
+    try await store.fetchPreviousPage()
+
+    query.state.withLock {
+      $0.willWait = true
+      $0.onLoading = {
+        expectNoDifference(store.state.isLoading, true)
+        expectNoDifference(store.state.isLoadingAllPages, false)
+        expectNoDifference(store.state.isLoadingInitialPage, false)
+        expectNoDifference(store.state.isLoadingNextPage, false)
+        expectNoDifference(store.state.isLoadingPreviousPage, true)
+      }
+    }
+
+    Task { try await store.fetchPreviousPage() }
+    try await query.waitForLoading()
   }
 
   @Test("Fetch Previous Page Concurrently, Returns Same Page Data")
@@ -245,7 +355,7 @@ struct InfiniteQueryStoreTests {
 
   @Test("Fetch Next Page While Fetching All, Always Fetches Next Page After Fetching All")
   func fetchNextPageWhileFetchingAllAlwaysFetchesNextPageAfterFetchingAll() async throws {
-    let query = FetchAllWithOtherInfiniteQuery()
+    let query = WaitableInfiniteQuery()
     let store = self.client.store(for: query)
 
     query.state.withLock { $0.values = [0: "blob", 1: "blob jr"] }
@@ -259,9 +369,9 @@ struct InfiniteQueryStoreTests {
       $0.willWait = true
     }
     let all = Task { try await store.fetchAllPages() }
-    try await query.wait()
+    try await query.waitForLoading()
     let next = Task { try await store.fetchNextPage() }
-    try await query.wait()
+    try await query.waitForLoading()
     let pages = try await all.value
     await query.advance()
     let page = try await next.value
@@ -284,7 +394,7 @@ struct InfiniteQueryStoreTests {
 
   @Test("Fetch Previous Page While Fetching All, Always Fetches Previous Page After Fetching All")
   func fetchPreviousPageWhileFetchingAllAlwaysFetchesPreviousPageAfterFetchingAll() async throws {
-    let query = FetchAllWithOtherInfiniteQuery()
+    let query = WaitableInfiniteQuery()
     let store = self.client.store(for: query)
 
     query.state.withLock { $0.values = [0: "blob", -1: "blob jr", -2: "blob sr"] }
@@ -298,9 +408,9 @@ struct InfiniteQueryStoreTests {
       $0.willWait = true
     }
     let all = Task { try await store.fetchAllPages() }
-    try await query.wait()
+    try await query.waitForLoading()
     let next = Task { try await store.fetchPreviousPage() }
-    try await query.wait()
+    try await query.waitForLoading()
     let pages = try await all.value
     await query.advance()
     let page = try await next.value

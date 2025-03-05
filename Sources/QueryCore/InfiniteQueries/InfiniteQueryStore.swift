@@ -9,6 +9,7 @@ public typealias InfiniteQueryStoreFor<
 
 // MARK: - InfiniteQueryStore
 
+@dynamicMemberLookup
 public final class InfiniteQueryStore<PageID: Hashable & Sendable, PageValue: Sendable>: Sendable {
   private let base: QueryStore<InfiniteQueryState<PageID, PageValue>>
 
@@ -104,8 +105,12 @@ extension InfiniteQueryStore {
   ) async throws -> InfiniteQueryPages<PageID, PageValue> {
     var context = self.context
     context.infiniteValues = InfiniteQueryContextValues(fetchType: .allPages, store: self)
-    try await self.base.fetch(using: context)
-    return self.state.currentValue
+    switch try await self.base.fetch(using: context) {
+    case let .allPages(pages):
+      return pages
+    default:
+      return self.state.currentValue
+    }
   }
 
   @discardableResult

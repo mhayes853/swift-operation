@@ -242,25 +242,26 @@ final class TestInfiniteQuery: InfiniteQueryProtocol {
   struct PageNotFoundError: Error {}
 }
 
-// MARK: - FetchAllWithOtherInfiniteQuery
+// MARK: - WaitableInfiniteQuery
 
-final class FetchAllWithOtherInfiniteQuery: InfiniteQueryProtocol {
+final class WaitableInfiniteQuery: InfiniteQueryProtocol {
   let initialPageId = 0
 
   typealias _Values = (
     values: [Int: String],
     nextPageIds: [Int: Int],
     willWait: Bool,
-    continuations: [UnsafeContinuation<Void, Never>]
+    continuations: [UnsafeContinuation<Void, Never>],
+    onLoading: () -> Void
   )
 
-  let state = Lock<_Values>(([:], [:], false, []))
+  let state = Lock<_Values>(([:], [:], false, [], {}))
 
   var path: QueryPath {
     [ObjectIdentifier(self)]
   }
 
-  func wait() async throws {
+  func waitForLoading() async throws {
     await withUnsafeContinuation { continuation in
       self.state.withLock { $0.continuations.append(continuation) }
     }
@@ -301,9 +302,10 @@ final class FetchAllWithOtherInfiniteQuery: InfiniteQueryProtocol {
     using paging: InfiniteQueryPaging<Int, String>,
     in context: QueryContext
   ) async throws -> String {
+    self.state.withLock { $0.onLoading() }
     if self.state.withLock({ $0.willWait }) {
       Task { await self.advance() }
-      try await self.wait()
+      try await self.waitForLoading()
     }
     return try self.state.withLock {
       if let value = $0.values[paging.pageId] {

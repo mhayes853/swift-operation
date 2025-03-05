@@ -11,9 +11,10 @@ public struct InfiniteQueryState<PageID: Hashable & Sendable, PageValue: Sendabl
   public private(set) var valueUpdateCount = 0
   public private(set) var valueLastUpdatedAt: Date?
 
-  public private(set) var isLoading = false
   public private(set) var isLoadingNextPage = false
   public private(set) var isLoadingPreviousPage = false
+  public private(set) var isLoadingAllPages = false
+  public private(set) var isLoadingInitialPage = false
 
   public private(set) var error: (any Error)?
   public private(set) var errorUpdateCount = 0
@@ -41,6 +42,11 @@ extension InfiniteQueryState: QueryStateProtocol {
   public typealias QueryValue = InfiniteQueryValue<PageID, PageValue>
   public typealias StatusValue = StateValue
 
+  public var isLoading: Bool {
+    self.isLoadingAllPages || self.isLoadingNextPage || self.isLoadingPreviousPage
+      || self.isLoadingInitialPage
+  }
+
   public mutating func startFetchTask(
     in context: QueryContext,
     for fn: @escaping @Sendable () async throws -> any Sendable
@@ -61,6 +67,7 @@ extension InfiniteQueryState: QueryStateProtocol {
 
     case .initialPage:
       defer { self.fetchInitialTask = task }
+      self.isLoadingInitialPage = true
       task = self.fetchInitialTask ?? Task { try await fn() }
 
     case .nextPageAfter:
@@ -82,6 +89,14 @@ extension InfiniteQueryState: QueryStateProtocol {
           _ = try? await self.fetchAllTask?.cancellableValue
           return try await fn()
         }
+    }
+    switch context.infiniteValues?.fetchType {
+    case .nextPage:
+      self.isLoadingNextPage = true
+    case .previousPage:
+      self.isLoadingPreviousPage = true
+    case .allPages, .none:
+      self.isLoadingAllPages = true
     }
     return task
   }
@@ -111,24 +126,28 @@ extension InfiniteQueryState: QueryStateProtocol {
       self.valueUpdateCount += 1
       self.valueLastUpdatedAt = context.queryClock.now()
       self.error = nil
-      self.isLoading = false
     case let .failure(error):
       self.error = error
       self.errorUpdateCount += 1
       self.errorLastUpdatedAt = context.queryClock.now()
-      self.isLoading = false
     }
 
     let request = context.infiniteValues?.request(PageID.self, PageValue.self) ?? .allPages
     switch request {
     case .allPages:
       self.fetchAllTask = nil
+      self.isLoadingAllPages = false
     case .initialPage:
       self.fetchInitialTask = nil
+      self.isLoadingInitialPage = false
+      self.isLoadingNextPage = false
+      self.isLoadingPreviousPage = false
     case .nextPageAfter:
       self.fetchNextPageTask = nil
+      self.isLoadingNextPage = false
     case .previousPageBefore:
       self.fetchPreviousPageTask = nil
+      self.isLoadingPreviousPage = false
     }
   }
 }
