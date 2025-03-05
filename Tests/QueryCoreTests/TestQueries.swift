@@ -1,3 +1,4 @@
+import Clocks
 import ConcurrencyExtras
 import QueryCore
 
@@ -232,6 +233,80 @@ final class TestInfiniteQuery: InfiniteQueryProtocol {
   ) async throws -> String {
     try self.state.withLock {
       if let value = $0[paging.pageId] {
+        return value
+      }
+      throw PageNotFoundError()
+    }
+  }
+
+  struct PageNotFoundError: Error {}
+}
+
+// MARK: - FetchAllWithOtherInfiniteQuery
+
+final class FetchAllWithOtherInfiniteQuery: InfiniteQueryProtocol {
+  let initialPageId = 0
+
+  typealias _Values = (
+    values: [Int: String],
+    nextPageIds: [Int: Int],
+    willWait: Bool,
+    continuations: [UnsafeContinuation<Void, Never>]
+  )
+
+  let state = Lock<_Values>(([:], [:], false, []))
+
+  var path: QueryPath {
+    [ObjectIdentifier(self)]
+  }
+
+  func wait() async throws {
+    await withUnsafeContinuation { continuation in
+      self.state.withLock { $0.continuations.append(continuation) }
+    }
+    await Task.megaYield()
+  }
+
+  func advance() async {
+    await Task.megaYield()
+    self.state.withLock {
+      for c in $0.continuations {
+        c.resume()
+      }
+      $0.continuations.removeAll()
+    }
+  }
+
+  func pageId(
+    after page: InfiniteQueryPage<Int, String>,
+    using paging: InfiniteQueryPaging<Int, String>
+  ) -> Int? {
+    self.state.withLock {
+      let id = $0.nextPageIds[page.id] ?? page.id + 1
+      return $0.values[id] != nil ? id : nil
+    }
+  }
+
+  func pageId(
+    before page: InfiniteQueryPage<Int, String>,
+    using paging: InfiniteQueryPaging<Int, String>
+  ) -> Int? {
+    self.state.withLock {
+      let id = $0.nextPageIds[page.id] ?? page.id - 1
+      return $0.values[id] != nil ? id : nil
+    }
+  }
+
+  func fetchPage(
+    using paging: InfiniteQueryPaging<Int, String>,
+    in context: QueryContext
+  ) async throws -> String {
+    if self.state.withLock({ $0.willWait }) {
+      Task { await self.advance() }
+      try await self.wait()
+    }
+    return try self.state.withLock {
+      if let value = $0.values[paging.pageId] {
         return value
       }
       throw PageNotFoundError()

@@ -4,14 +4,14 @@ import Foundation
 
 public struct QueryState<StateValue: Sendable, QueryValue: Sendable> {
   public private(set) var currentValue: StateValue
-  public private(set) var initialValue: StateValue
+  public let initialValue: StateValue
   public private(set) var valueUpdateCount = 0
   public private(set) var valueLastUpdatedAt: Date?
   public private(set) var isLoading = false
   public private(set) var error: (any Error)?
   public private(set) var errorUpdateCount = 0
   public private(set) var errorLastUpdatedAt: Date?
-  public private(set) var fetchTask: Task<any Sendable, any Error>?
+  private var fetchTask: Task<any Sendable, any Error>?
 }
 
 extension QueryState {

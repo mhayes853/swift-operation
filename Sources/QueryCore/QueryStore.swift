@@ -234,11 +234,12 @@ extension QueryStore {
   @discardableResult
   private func beginFetchTask(using context: QueryContext? = nil) -> Task<any Sendable, any Error> {
     self._state.inner.withLock { state in
-      state.query.startFetchTask(in: state.context) { [context = context ?? state.context] in
+      let context = context ?? state.context
+      return state.query.startFetchTask(in: context) {
         self.subscriptions.forEach { $0.onFetchingStarted?() }
         defer { self.subscriptions.forEach { $0.onFetchingEnded?() } }
         do {
-          let value = try await self._query.fetch(in: context) as! State.QueryValue
+          let value = try await self._query.fetch(in: context)
           self._state.inner.withLock { state in
             func open<S: QueryStateProtocol>(state: inout S) {
               state.endFetchTask(in: context, with: .success(value as! S.QueryValue))

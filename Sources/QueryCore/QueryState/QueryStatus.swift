@@ -1,3 +1,5 @@
+import IdentifiedCollections
+
 // MARK: - QueryStatus
 
 public enum QueryStatus<Value: Sendable>: Sendable {
@@ -74,7 +76,7 @@ extension QueryStatus {
 
 // MARK: - QueryStateProtocol
 
-extension QueryStateProtocol {
+extension QueryState {
   public var status: QueryStatus<QueryValue> {
     if self.isLoading {
       return .loading
@@ -82,6 +84,28 @@ extension QueryStateProtocol {
       return .idle
     } else if let currentValue = self.currentValue as? QueryValue, self.hasMostRecentValueUpdate {
       return .result(.success(currentValue))
+    } else if let error, !self.hasMostRecentValueUpdate {
+      return .result(.failure(error))
+    } else {
+      return .idle
+    }
+  }
+
+  private var hasMostRecentValueUpdate: Bool {
+    guard let valueLastUpdatedAt else { return self.errorLastUpdatedAt == nil }
+    guard let errorLastUpdatedAt else { return true }
+    return valueLastUpdatedAt > errorLastUpdatedAt
+  }
+}
+
+extension InfiniteQueryState {
+  public var status: QueryStatus<StateValue> {
+    if self.isLoading {
+      return .loading
+    } else if self.valueUpdateCount == 0 && self.errorUpdateCount == 0 {
+      return .idle
+    } else if self.hasMostRecentValueUpdate {
+      return .result(.success(self.currentValue))
     } else if let error, !self.hasMostRecentValueUpdate {
       return .result(.failure(error))
     } else {

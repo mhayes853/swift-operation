@@ -12,7 +12,6 @@ public protocol QueryStateProtocol<StateValue, QueryValue>: Sendable {
   var error: (any Error)? { get }
   var errorUpdateCount: Int { get }
   var errorLastUpdatedAt: Date? { get }
-  var fetchTask: Task<any Sendable, any Error>? { get }
 
   mutating func startFetchTask(
     in context: QueryContext,

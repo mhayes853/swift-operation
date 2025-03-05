@@ -1,3 +1,7 @@
+import IdentifiedCollections
+
+// MARK: - DefaultQuery
+
 extension QueryProtocol {
   public func defaultValue(
     _ value: @autoclosure @escaping @Sendable () -> Value
@@ -6,23 +10,9 @@ extension QueryProtocol {
   }
 }
 
-extension InfiniteQueryProtocol {
-  public func defaultValue(
-    _ value: @autoclosure @escaping @Sendable () -> Value
-  ) -> DefaultInfiniteQuery<Self> {
-    DefaultInfiniteQuery(_defaultValue: value, query: self)
-  }
-}
-
-public typealias DefaultQuery<Query: QueryProtocol> = _DefaultQuery<
-  Query, QueryState<Query.Value, Query.Value>
->
-public typealias DefaultInfiniteQuery<Query: InfiniteQueryProtocol> = _DefaultQuery<
-  Query, Query.State
->
-
-public struct _DefaultQuery<Query: QueryProtocol, State: QueryStateProtocol>: QueryProtocol {
+public struct DefaultQuery<Query: QueryProtocol>: QueryProtocol {
   public typealias StateValue = Query.Value
+  public typealias State = QueryState<StateValue, StateValue>
 
   let _defaultValue: @Sendable () -> Query.Value
   public let query: Query
@@ -44,10 +34,43 @@ public struct _DefaultQuery<Query: QueryProtocol, State: QueryStateProtocol>: Qu
   }
 }
 
-extension _DefaultQuery: InfiniteQueryProtocol
-where Query: InfiniteQueryProtocol, Query.State == State {
+// MARK: - DefaultInfiniteQuery
+
+extension InfiniteQueryProtocol {
+  public func defaultValue(
+    _ value: @autoclosure @escaping @Sendable () -> StateValue
+  ) -> DefaultInfiniteQuery<Self> {
+    DefaultInfiniteQuery(_defaultValue: value, query: self)
+  }
+}
+
+public struct DefaultInfiniteQuery<Query: InfiniteQueryProtocol>: QueryProtocol {
+  public typealias StateValue = Query.StateValue
+
+  let _defaultValue: @Sendable () -> Query.StateValue
+  public let query: Query
+
+  public var defaultValue: Query.StateValue {
+    self._defaultValue()
+  }
+
+  public var path: QueryPath {
+    self.query.path
+  }
+
+  public func _setup(context: inout QueryContext) {
+    self.query._setup(context: &context)
+  }
+
+  public func fetch(in context: QueryContext) async throws -> Query.Value {
+    try await self.query.fetch(in: context)
+  }
+}
+
+extension DefaultInfiniteQuery: InfiniteQueryProtocol {
   public typealias PageValue = Query.PageValue
   public typealias PageID = Query.PageID
+  public typealias State = Query.State
 
   public var initialPageId: PageID {
     self.query.initialPageId

@@ -32,8 +32,6 @@ extension AnyQueryState: QueryStateProtocol {
 
   public var errorLastUpdatedAt: Date? { self.base.errorLastUpdatedAt }
 
-  public var fetchTask: Task<any Sendable, any Error>? { self.base.fetchTask }
-
   public mutating func startFetchTask(
     in context: QueryContext,
     for fn: @escaping @Sendable () async throws -> any Sendable

@@ -103,9 +103,9 @@ extension InfiniteQueryStore {
     handler: InfiniteQueryEventHandler<PageID, PageValue> = InfiniteQueryEventHandler()
   ) async throws -> InfiniteQueryPages<PageID, PageValue> {
     var context = self.context
-    context.infiniteValues.currentPages = self.state.currentValue
-    context.infiniteValues.fetchType = .allPages
-    return try await self.base.fetch(using: context)
+    context.infiniteValues = InfiniteQueryContextValues(fetchType: .allPages, store: self)
+    try await self.base.fetch(using: context)
+    return self.state.currentValue
   }
 
   @discardableResult
@@ -113,11 +113,15 @@ extension InfiniteQueryStore {
     handler: InfiniteQueryEventHandler<PageID, PageValue> = InfiniteQueryEventHandler()
   ) async throws -> InfiniteQueryPage<PageID, PageValue>? {
     var context = self.context
-    let before = self.state.currentValue
-    context.infiniteValues.currentPages = before
-    context.infiniteValues.fetchType = .nextPage
-    let after = try await self.base.fetch(using: context)
-    return before.count == after.count ? nil : after.last
+    context.infiniteValues = InfiniteQueryContextValues(fetchType: .nextPage, store: self)
+    switch try await self.base.fetch(using: context) {
+    case let .nextPage(next):
+      return next?.page
+    case let .initialPage(page):
+      return page
+    default:
+      return nil
+    }
   }
 
   @discardableResult
@@ -125,11 +129,15 @@ extension InfiniteQueryStore {
     handler: InfiniteQueryEventHandler<PageID, PageValue> = InfiniteQueryEventHandler()
   ) async throws -> InfiniteQueryPage<PageID, PageValue>? {
     var context = self.context
-    let before = self.state.currentValue
-    context.infiniteValues.currentPages = before
-    context.infiniteValues.fetchType = .previousPage
-    let after = try await self.base.fetch(using: context)
-    return before.count == after.count ? nil : after.first
+    context.infiniteValues = InfiniteQueryContextValues(fetchType: .previousPage, store: self)
+    switch try await self.base.fetch(using: context) {
+    case let .previousPage(previous):
+      return previous?.page
+    case let .initialPage(page):
+      return page
+    default:
+      return nil
+    }
   }
 }
 
