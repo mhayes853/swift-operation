@@ -2,7 +2,7 @@ import Foundation
 
 // MARK: - MutationState
 
-public struct MutationState<Value: Sendable> {
+public struct MutationState<Arguments: Sendable, Value: Sendable> {
   public private(set) var currentValue: StateValue
   public let initialValue: StateValue
   public private(set) var valueUpdateCount = 0

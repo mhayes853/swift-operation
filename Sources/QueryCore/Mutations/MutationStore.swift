@@ -2,15 +2,15 @@
 
 public typealias MutationStoreFor<
   Mutation: MutationProtocol
-> = MutationStore<Mutation.Value, Mutation.Arguments>
+> = MutationStore<Mutation.Arguments, Mutation.Value>
 
 // MARK: - MutationStore
 
 @dynamicMemberLookup
-public final class MutationStore<Value: Sendable, Arguments: Sendable>: Sendable {
-  private let base: QueryStore<MutationState<Value>>
+public final class MutationStore<Arguments: Sendable, Value: Sendable>: Sendable {
+  private let base: QueryStore<MutationState<Arguments, Value>>
 
-  public init(store: QueryStore<MutationState<Value>>) {
+  public init(store: QueryStore<MutationState<Arguments, Value>>) {
     self.base = store
   }
 }
@@ -19,7 +19,7 @@ public final class MutationStore<Value: Sendable, Arguments: Sendable>: Sendable
 
 extension MutationStore {
   public convenience init?(casting store: AnyQueryStore) {
-    guard let store = QueryStore<MutationState<Value>>(casting: store) else {
+    guard let store = QueryStore<MutationState<Arguments, Value>>(casting: store) else {
       return nil
     }
     self.init(store: store)
@@ -57,12 +57,12 @@ extension MutationStore {
 // MARK: - State
 
 extension MutationStore {
-  public var state: MutationState<Value> {
+  public var state: MutationState<Arguments, Value> {
     self.base.state
   }
 
   public subscript<NewValue: Sendable>(
-    dynamicMember keyPath: KeyPath<MutationState<Value>, NewValue>
+    dynamicMember keyPath: KeyPath<MutationState<Arguments, Value>, NewValue>
   ) -> NewValue {
     self.state[keyPath: keyPath]
   }
