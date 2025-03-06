@@ -230,14 +230,14 @@ extension InfiniteQueryProtocol {
     using paging: InfiniteQueryPaging<PageID, PageValue>,
     in context: QueryContext
   ) async throws -> PageValue {
+    let id = AnyHashableSendable(paging.pageId)
     context.infiniteValues.subscriptions.forEach { sub in
-      sub.onPageFetchingStarted?(AnyHashableSendable(paging.pageId))
+      sub.onPageFetchingStarted?(id)
     }
     let result = await Result { try await self.fetchPage(using: paging, in: context) }
     context.infiniteValues.subscriptions.forEach { sub in
-      let id = AnyHashableSendable(paging.pageId)
       sub.onPageResultReceived?(id, result.map { InfiniteQueryPage(id: id, value: $0) })
-      sub.onPageFetchingFinished?(AnyHashableSendable(paging.pageId))
+      sub.onPageFetchingFinished?(id)
     }
     return try result.get()
   }
