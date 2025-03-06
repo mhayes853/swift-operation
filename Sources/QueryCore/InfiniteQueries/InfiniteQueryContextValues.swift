@@ -44,18 +44,13 @@ extension InfiniteQueryContextValues {
     _: PageID.Type,
     _: PageValue.Type
   ) -> InfiniteQueryPaging<PageID, PageValue>.Request {
-    guard let request = self.request as? InfiniteQueryPaging<PageID, PageValue>.Request else {
-      fatalError("TODO")
-    }
-    return request
+    return self.request as! InfiniteQueryPaging<PageID, PageValue>.Request
   }
 
   func paging<Query: InfiniteQueryProtocol>(
     for query: Query
   ) -> InfiniteQueryPaging<Query.PageID, Query.PageValue> {
-    guard let store = self.store as? InfiniteQueryStoreFor<Query> else {
-      fatalError("TODO")
-    }
+    let store = self.store as! InfiniteQueryStoreFor<Query>
     let state = store.state
     let pages = state.currentValue
     let latestPageId = pages.last?.id ?? query.initialPageId
