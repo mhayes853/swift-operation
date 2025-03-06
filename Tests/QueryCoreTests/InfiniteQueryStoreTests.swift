@@ -83,6 +83,14 @@ struct InfiniteQueryStoreTests {
     expectNoDifference(store.state.status.isSuccessful, true)
   }
 
+  @Test("Has Next And Previous Page After Fetching All Pages When Empty")
+  func hasNextAndPreviousPageAfterFetchingAllPagesWhenEmpty() async throws {
+    let store = self.client.store(for: TestInfiniteQuery())
+    try await store.fetchAllPages()
+    expectNoDifference(store.hasNextPage, true)
+    expectNoDifference(store.hasPreviousPage, true)
+  }
+
   @Test("Fetch All Pages After Fetching Some, Returns Updated Values For Refetched Pages")
   func fetchAllPagesAfterFetchingSome() async throws {
     let query = TestInfiniteQuery()
@@ -219,7 +227,11 @@ struct InfiniteQueryStoreTests {
     let query = TestInfiniteQuery()
     query.state.withLock { $0 = [0: "blob", 1: "blob jr"] }
     let store = self.client.store(for: query)
+
     try await store.fetchNextPage()
+    expectNoDifference(store.hasNextPage, true)
+    expectNoDifference(store.hasPreviousPage, false)
+
     let page = try await store.fetchNextPage()
     expectNoDifference(page, InfiniteQueryPage(id: 1, value: "blob jr"))
     expectNoDifference(
@@ -319,6 +331,9 @@ struct InfiniteQueryStoreTests {
 
     query.state.withLock { $0 = [0: "blob", -1: "blob jr"] }
     try await store.fetchPreviousPage()
+    expectNoDifference(store.hasNextPage, false)
+    expectNoDifference(store.hasPreviousPage, true)
+
     let page = try await store.fetchPreviousPage()
 
     expectNoDifference(page, InfiniteQueryPage(id: -1, value: "blob jr"))
@@ -337,8 +352,17 @@ struct InfiniteQueryStoreTests {
     try await store.fetchPreviousPage()
     let page = try await store.fetchPreviousPage()
     expectNoDifference(page, nil)
-    expectNoDifference(store.state.currentValue, [InfiniteQueryPage(id: 0, value: "blob")])
-    expectNoDifference(store.state.status.isSuccessful, true)
+    expectNoDifference(store.currentValue, [InfiniteQueryPage(id: 0, value: "blob")])
+    expectNoDifference(store.status.isSuccessful, true)
+  }
+
+  @Test("Fetch Previous Page, Detects When No Previous Page After Fetching Initial Page")
+  func fetchPreviousPageReturnsNilWithNoPreviousPageAfterFetchingInitialPage() async throws {
+    let query = TestInfiniteQuery()
+    query.state.withLock { $0 = [0: "blob"] }
+    let store = self.client.store(for: query)
+    try await store.fetchPreviousPage()
+    expectNoDifference(store.hasPreviousPage, false)
   }
 
   @Test("Fetch Next Page, No Next Page, Returns Nil")
@@ -349,8 +373,17 @@ struct InfiniteQueryStoreTests {
     try await store.fetchNextPage()
     let page = try await store.fetchNextPage()
     expectNoDifference(page, nil)
-    expectNoDifference(store.state.currentValue, [InfiniteQueryPage(id: 0, value: "blob")])
-    expectNoDifference(store.state.status.isSuccessful, true)
+    expectNoDifference(store.currentValue, [InfiniteQueryPage(id: 0, value: "blob")])
+    expectNoDifference(store.status.isSuccessful, true)
+  }
+
+  @Test("Fetch Next Page, Detects Whe No Next Page After Fetching Initial Page")
+  func fetchNextPageReturnsNilWithNoNextPageAfterFetchingInitialPage() async throws {
+    let query = TestInfiniteQuery()
+    query.state.withLock { $0 = [0: "blob"] }
+    let store = self.client.store(for: query)
+    try await store.fetchNextPage()
+    expectNoDifference(store.hasNextPage, false)
   }
 
   @Test("Fetch Next Page While Fetching All, Always Fetches Next Page After Fetching All")
@@ -358,7 +391,7 @@ struct InfiniteQueryStoreTests {
     let query = WaitableInfiniteQuery()
     let store = self.client.store(for: query)
 
-    query.state.withLock { $0.values = [0: "blob", 1: "blob jr"] }
+    query.state.withLock { $0.values = [0: "blob", 1: "blob jr", 2: "b", 3: "c"] }
     for _ in 0..<2 {
       try await store.fetchNextPage()
     }
@@ -397,7 +430,9 @@ struct InfiniteQueryStoreTests {
     let query = WaitableInfiniteQuery()
     let store = self.client.store(for: query)
 
-    query.state.withLock { $0.values = [0: "blob", -1: "blob jr", -2: "blob sr"] }
+    query.state.withLock {
+      $0.values = [0: "blob", -1: "blob jr", -2: "blob sr", -3: "d"]
+    }
     for _ in 0..<3 {
       try await store.fetchPreviousPage()
     }
@@ -441,10 +476,9 @@ struct InfiniteQueryStoreTests {
     let query = TestInfiniteQuery()
     let store = self.client.store(for: query)
 
-    query.state.withLock { $0 = [0: "blob"] }
+    query.state.withLock { $0 = [0: "blob", 1: "b", -1: "c"] }
     try await store.fetchNextPage()
 
-    query.state.withLock { $0 = [0: "a", 1: "b", -1: "c"] }
     async let previous = store.fetchPreviousPage()
     async let next = store.fetchNextPage()
     let (previousPage, nextPage) = try await (previous, next)

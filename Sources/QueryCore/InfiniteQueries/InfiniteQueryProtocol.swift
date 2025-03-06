@@ -33,8 +33,8 @@ public struct InfiniteQueryPaging<PageID: Hashable & Sendable, PageValue: Sendab
 
 extension InfiniteQueryPaging {
   public enum Request: Sendable {
-    case nextPageAfter(InfiniteQueryPage<PageID, PageValue>)
-    case previousPageBefore(InfiniteQueryPage<PageID, PageValue>)
+    case nextPage(PageID)
+    case previousPage(PageID)
     case initialPage
     case allPages
   }
@@ -48,27 +48,38 @@ extension InfiniteQueryPaging.Request: Hashable where PageValue: Hashable {}
 
 // MARK: - InfiniteQueryResponse
 
-public enum InfiniteQueryValue<PageID: Hashable & Sendable, PageValue: Sendable>: Sendable {
-  case allPages(InfiniteQueryPages<PageID, PageValue>)
-  case nextPage(NextPage?)
-  case previousPage(PreviousPage?)
-  case initialPage(InfiniteQueryPage<PageID, PageValue>)
+public struct InfiniteQueryValue<PageID: Hashable & Sendable, PageValue: Sendable>: Sendable {
+  public let nextPageId: PageID?
+  public let previousPageId: PageID?
+  public let response: Response
+}
+
+extension InfiniteQueryValue {
+  public enum Response: Sendable {
+    case allPages(InfiniteQueryPages<PageID, PageValue>)
+    case nextPage(NextPage?)
+    case previousPage(PreviousPage?)
+    case initialPage(InfiniteQueryPage<PageID, PageValue>)
+  }
 }
 
 extension InfiniteQueryValue {
   public struct NextPage: Sendable {
     public let page: InfiniteQueryPage<PageID, PageValue>
-    public let previousPage: InfiniteQueryPage<PageID, PageValue>
+    public let lastPage: InfiniteQueryPage<PageID, PageValue>
   }
 
   public struct PreviousPage: Sendable {
     public let page: InfiniteQueryPage<PageID, PageValue>
-    public let nextPage: InfiniteQueryPage<PageID, PageValue>
+    public let firstPage: InfiniteQueryPage<PageID, PageValue>
   }
 }
 
 extension InfiniteQueryValue: Equatable where PageValue: Equatable {}
 extension InfiniteQueryValue: Hashable where PageValue: Hashable {}
+
+extension InfiniteQueryValue.Response: Equatable where PageValue: Equatable {}
+extension InfiniteQueryValue.Response: Hashable where PageValue: Hashable {}
 
 extension InfiniteQueryValue.NextPage: Hashable where PageValue: Hashable {}
 extension InfiniteQueryValue.NextPage: Equatable where PageValue: Equatable {}
@@ -120,17 +131,17 @@ extension InfiniteQueryProtocol {
       return try await self.fetchAllPages(using: paging, in: context)
     case .initialPage:
       return try await self.fetchInitialPage(using: paging, in: context)
-    case let .nextPageAfter(lastPage):
-      return try await self.fetchNextPage(after: lastPage, using: paging, in: context)
-    case let .previousPageBefore(firstPage):
-      return try await self.fetchPreviousPage(before: firstPage, using: paging, in: context)
+    case let .nextPage(id):
+      return try await self.fetchNextPage(with: id, using: paging, in: context)
+    case let .previousPage(id):
+      return try await self.fetchPreviousPage(with: id, using: paging, in: context)
     }
   }
 
   private func fetchAllPages(
     using paging: InfiniteQueryPaging<PageID, PageValue>,
     in context: QueryContext
-  ) async throws -> Value {
+  ) async throws -> InfiniteQueryValue<PageID, PageValue> {
     var newPages = InfiniteQueryPages<PageID, PageValue>(uniqueElements: [])
     var lastPage: InfiniteQueryPage<PageID, PageValue>?
     for _ in 0..<paging.pages.count {
@@ -143,7 +154,13 @@ extension InfiniteQueryProtocol {
         } else {
           paging.pages.first?.id ?? self.initialPageId
         }
-      guard let pageId else { return .allPages(newPages) }
+      guard let pageId else {
+        return InfiniteQueryValue(
+          nextPageId: newPages.last.flatMap { self.pageId(after: $0, using: paging) },
+          previousPageId: newPages.first.flatMap { self.pageId(before: $0, using: paging) },
+          response: .allPages(newPages)
+        )
+      }
       let pageValue = try await self.fetchPage(
         using: InfiniteQueryPaging(pageId: pageId, pages: newPages, request: .allPages),
         in: context
@@ -152,48 +169,71 @@ extension InfiniteQueryProtocol {
       lastPage = page
       newPages.append(page)
     }
-    return .allPages(newPages)
+    return InfiniteQueryValue(
+      nextPageId: newPages.last.flatMap { self.pageId(after: $0, using: paging) },
+      previousPageId: newPages.first.flatMap { self.pageId(before: $0, using: paging) },
+      response: .allPages(newPages)
+    )
   }
 
   private func fetchInitialPage(
     using paging: InfiniteQueryPaging<PageID, PageValue>,
     in context: QueryContext
-  ) async throws -> Value {
+  ) async throws -> InfiniteQueryValue<PageID, PageValue> {
     let pageValue = try await self.fetchPage(using: paging, in: context)
-    return .initialPage(InfiniteQueryPage(id: self.initialPageId, value: pageValue))
+    let page = InfiniteQueryPage(id: self.initialPageId, value: pageValue)
+    return InfiniteQueryValue(
+      nextPageId: self.pageId(after: page, using: paging),
+      previousPageId: self.pageId(before: page, using: paging),
+      response: .initialPage(page)
+    )
   }
 
   private func fetchNextPage(
-    after page: InfiniteQueryPage<PageID, PageValue>,
+    with pageId: PageID,
     using paging: InfiniteQueryPaging<PageID, PageValue>,
     in context: QueryContext
-  ) async throws -> Value {
-    let currentPage = page
-    guard let nextId = self.pageId(after: currentPage, using: paging) else {
-      return .nextPage(nil)
-    }
+  ) async throws -> InfiniteQueryValue<PageID, PageValue> {
     let pageValue = try await self.fetchPage(
-      using: InfiniteQueryPaging(pageId: nextId, pages: paging.pages, request: paging.request),
+      using: InfiniteQueryPaging(pageId: pageId, pages: paging.pages, request: paging.request),
       in: context
     )
-    let page = InfiniteQueryPage(id: nextId, value: pageValue)
-    return .nextPage(InfiniteQueryValue.NextPage(page: page, previousPage: currentPage))
+    let page = InfiniteQueryPage(id: pageId, value: pageValue)
+    return InfiniteQueryValue(
+      nextPageId: self.pageId(after: page, using: paging),
+      previousPageId: self.beforePageId(using: paging),
+      response: .nextPage(InfiniteQueryValue.NextPage(page: page, lastPage: paging.pages.last!))
+    )
   }
 
   private func fetchPreviousPage(
-    before page: InfiniteQueryPage<PageID, PageValue>,
+    with pageId: PageID,
     using paging: InfiniteQueryPaging<PageID, PageValue>,
     in context: QueryContext
-  ) async throws -> Value {
-    let currentPage = page
-    guard let previousId = self.pageId(before: currentPage, using: paging) else {
-      return .previousPage(nil)
-    }
+  ) async throws -> InfiniteQueryValue<PageID, PageValue> {
     let pageValue = try await self.fetchPage(
-      using: InfiniteQueryPaging(pageId: previousId, pages: paging.pages, request: paging.request),
+      using: InfiniteQueryPaging(pageId: pageId, pages: paging.pages, request: paging.request),
       in: context
     )
-    let page = InfiniteQueryPage(id: previousId, value: pageValue)
-    return .previousPage(InfiniteQueryValue.PreviousPage(page: page, nextPage: currentPage))
+    let page = InfiniteQueryPage(id: pageId, value: pageValue)
+    return InfiniteQueryValue(
+      nextPageId: self.afterPageId(using: paging),
+      previousPageId: self.pageId(before: page, using: paging),
+      response: .previousPage(
+        InfiniteQueryValue.PreviousPage(page: page, firstPage: paging.pages.first!)
+      )
+    )
+  }
+
+  private func beforePageId(
+    using paging: InfiniteQueryPaging<PageID, PageValue>
+  ) -> PageID? {
+    paging.pages.first.flatMap { self.pageId(before: $0, using: paging) }
+  }
+
+  private func afterPageId(
+    using paging: InfiniteQueryPaging<PageID, PageValue>
+  ) -> PageID? {
+    paging.pages.last.flatMap { self.pageId(after: $0, using: paging) }
   }
 }

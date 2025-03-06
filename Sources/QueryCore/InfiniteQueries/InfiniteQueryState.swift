@@ -22,6 +22,8 @@ public struct InfiniteQueryState<PageID: Hashable & Sendable, PageValue: Sendabl
 
   public private(set) var hasNextPage = true
   public private(set) var hasPreviousPage = true
+  public private(set) var nextPageId: PageID?
+  public private(set) var previousPageId: PageID?
 
   private var fetchAllTask: Task<any Sendable, any Error>?
   private var fetchInitialTask: Task<any Sendable, any Error>?
@@ -70,7 +72,7 @@ extension InfiniteQueryState: QueryStateProtocol {
       self.isLoadingInitialPage = true
       task = self.fetchInitialTask ?? Task { try await fn() }
 
-    case .nextPageAfter:
+    case .nextPage:
       defer { self.fetchNextPageTask = task }
       task =
         self.fetchNextPageTask
@@ -80,7 +82,7 @@ extension InfiniteQueryState: QueryStateProtocol {
           return try await fn()
         }
 
-    case .previousPageBefore:
+    case .previousPage:
       defer { self.fetchPreviousPageTask = task }
       task =
         self.fetchPreviousPageTask
@@ -107,22 +109,32 @@ extension InfiniteQueryState: QueryStateProtocol {
   ) {
     switch result {
     case let .success(value):
-      switch value {
+      switch value.response {
       case let .allPages(pages):
         self.currentValue = pages
+        self.hasNextPage = pages.isEmpty || value.nextPageId != nil
+        self.hasPreviousPage = pages.isEmpty || value.previousPageId != nil
       case let .initialPage(page):
         self.currentValue[id: page.id] = page
+        self.hasNextPage = value.nextPageId != nil
+        self.hasPreviousPage = value.previousPageId != nil
       case let .nextPage(next?):
-        if let index = self.currentValue.firstIndex(where: { $0.id == next.previousPage.id }) {
+        if let index = self.currentValue.firstIndex(where: { $0.id == next.lastPage.id }) {
           self.currentValue.insert(next.page, at: index + 1)
         }
+        self.hasNextPage = value.nextPageId != nil
+        self.hasPreviousPage = value.previousPageId != nil
       case let .previousPage(previous?):
-        if let index = self.currentValue.firstIndex(where: { $0.id == previous.nextPage.id }) {
+        if let index = self.currentValue.firstIndex(where: { $0.id == previous.firstPage.id }) {
           self.currentValue.insert(previous.page, at: index)
         }
+        self.hasNextPage = value.nextPageId != nil
+        self.hasPreviousPage = value.previousPageId != nil
       default: break
       }
 
+      self.nextPageId = value.nextPageId
+      self.previousPageId = value.previousPageId
       self.valueUpdateCount += 1
       self.valueLastUpdatedAt = context.queryClock.now()
       self.error = nil
@@ -142,10 +154,10 @@ extension InfiniteQueryState: QueryStateProtocol {
       self.isLoadingInitialPage = false
       self.isLoadingNextPage = false
       self.isLoadingPreviousPage = false
-    case .nextPageAfter:
+    case .nextPage:
       self.fetchNextPageTask = nil
       self.isLoadingNextPage = false
-    case .previousPageBefore:
+    case .previousPage:
       self.fetchPreviousPageTask = nil
       self.isLoadingPreviousPage = false
     }

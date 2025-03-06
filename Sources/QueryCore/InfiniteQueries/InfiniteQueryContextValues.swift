@@ -9,19 +9,19 @@ extension InfiniteQueryContextValues {
     fetchType: FetchType,
     store: InfiniteQueryStore<PageID, PageValue>
   ) {
-    let pages = store.state.currentValue
+    let state = store.state
     switch fetchType {
     case .allPages:
       self.request = InfiniteQueryPaging<PageID, PageValue>.Request.allPages
     case .nextPage:
-      if let last = pages.last {
-        self.request = InfiniteQueryPaging<PageID, PageValue>.Request.nextPageAfter(last)
+      if let last = state.nextPageId {
+        self.request = InfiniteQueryPaging<PageID, PageValue>.Request.nextPage(last)
       } else {
         self.request = InfiniteQueryPaging<PageID, PageValue>.Request.initialPage
       }
     case .previousPage:
-      if let first = pages.first {
-        self.request = InfiniteQueryPaging<PageID, PageValue>.Request.previousPageBefore(first)
+      if let first = state.previousPageId {
+        self.request = InfiniteQueryPaging<PageID, PageValue>.Request.previousPage(first)
       } else {
         self.request = InfiniteQueryPaging<PageID, PageValue>.Request.initialPage
       }
@@ -56,17 +56,21 @@ extension InfiniteQueryContextValues {
     guard let store = self.store as? InfiniteQueryStoreFor<Query> else {
       fatalError("TODO")
     }
-    let pages = store.state.currentValue
+    let state = store.state
+    let pages = state.currentValue
     let latestPageId = pages.last?.id ?? query.initialPageId
 
     // NB: The state may have changed since we assigned the request type, so ensure that we're
     // using the most up-to-date pages from the store for the nextPageAfter and previousPageBefore
     // requests.
     let pagingRequest: InfiniteQueryPaging<Query.PageID, Query.PageValue>.Request =
-      switch (self.request(Query.PageID.self, Query.PageValue.self), pages.last, pages.first) {
+      switch (
+        self.request(Query.PageID.self, Query.PageValue.self), state.nextPageId,
+        state.previousPageId
+      ) {
       case (.allPages, _, _): .allPages
-      case let (.nextPageAfter, last?, _): .nextPageAfter(last)
-      case let (.previousPageBefore, _, first?): .previousPageBefore(first)
+      case let (.nextPage, last?, _): .nextPage(last)
+      case let (.previousPage, _, first?): .previousPage(first)
       default: .initialPage
       }
     return InfiniteQueryPaging(pageId: latestPageId, pages: pages, request: pagingRequest)
