@@ -18,19 +18,12 @@ extension AnyQueryState: QueryStateProtocol {
   public typealias StatusValue = any Sendable
 
   public var currentValue: StateValue { self.base.currentValue }
-
   public var initialValue: StateValue { self.base.initialValue }
-
   public var valueUpdateCount: Int { self.base.valueUpdateCount }
-
   public var valueLastUpdatedAt: Date? { self.base.valueLastUpdatedAt }
-
   public var isLoading: Bool { self.base.isLoading }
-
   public var error: (any Error)? { self.base.error }
-
   public var errorUpdateCount: Int { self.base.errorUpdateCount }
-
   public var errorLastUpdatedAt: Date? { self.base.errorLastUpdatedAt }
 
   public mutating func startFetchTask(
