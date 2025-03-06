@@ -350,3 +350,23 @@ final class FailableInfiniteQuery: InfiniteQueryProtocol {
 
   struct SomeError: Error {}
 }
+
+// MARK: - EmptyMutation
+
+struct EmptyMutation: MutationProtocol, Hashable {
+  typealias Value = String
+
+  func mutate(with arguments: String, in context: QueryContext) async throws -> String {
+    arguments
+  }
+}
+
+// MARK: - EmptyIntMutation
+
+struct EmptyIntMutation: MutationProtocol, Hashable {
+  typealias Value = Int
+
+  func mutate(with arguments: Int, in context: QueryContext) async throws -> Int {
+    arguments
+  }
+}

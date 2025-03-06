@@ -184,7 +184,7 @@ extension AnyQueryStore {
   }
 
   public static func detached<Mutation: MutationProtocol>(
-    mutation: Mutation,
+    erasing mutation: Mutation,
     initialContext: QueryContext = QueryContext()
   ) -> AnyQueryStore {
     .detached(
