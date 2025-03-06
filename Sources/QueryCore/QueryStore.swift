@@ -101,6 +101,17 @@ extension QueryStore {
       initialContext: initialContext
     )
   }
+
+  public static func detached<Mutation: MutationProtocol>(
+    mutation: Mutation,
+    initialContext: QueryContext = QueryContext()
+  ) -> QueryStoreFor<Mutation> {
+    .detached(
+      query: mutation,
+      initialState: MutationState(),
+      initialContext: initialContext
+    )
+  }
 }
 
 extension AnyQueryStore {
@@ -168,6 +179,17 @@ extension AnyQueryStore {
         initialValue: query.defaultValue,
         initialPageId: query.initialPageId
       ),
+      initialContext: initialContext
+    )
+  }
+
+  public static func detached<Mutation: MutationProtocol>(
+    mutation: Mutation,
+    initialContext: QueryContext = QueryContext()
+  ) -> AnyQueryStore {
+    .detached(
+      erasing: mutation,
+      initialState: MutationState(),
       initialContext: initialContext
     )
   }

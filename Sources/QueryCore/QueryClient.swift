@@ -69,6 +69,12 @@ extension QueryClient {
     )!
   }
 
+  public func store<Mutation: MutationProtocol>(
+    for mutation: Mutation
+  ) -> MutationStoreFor<Mutation> {
+    MutationStore(casting: self.anyStore(for: mutation, initialState: MutationState()))!
+  }
+
   private func anyStore<Query: QueryProtocol>(
     for query: Query,
     initialState: Query.State

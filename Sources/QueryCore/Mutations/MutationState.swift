@@ -2,14 +2,16 @@ import Foundation
 
 // MARK: - MutationState
 
-public struct MutationState<StateValue: Sendable, QueryValue: Sendable> {
+public struct MutationState<Value: Sendable> {
 
 }
 
 // MARK: - QueryStateProtocol
 
 extension MutationState: QueryStateProtocol {
-  public typealias StatusValue = QueryValue
+  public typealias StateValue = Value?
+  public typealias StatusValue = Value
+  public typealias QueryValue = Value
 
   public var currentValue: StateValue {
     fatalError()
