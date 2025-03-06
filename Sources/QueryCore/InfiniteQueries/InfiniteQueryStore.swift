@@ -104,7 +104,7 @@ extension InfiniteQueryStore {
     handler: InfiniteQueryEventHandler<PageID, PageValue> = InfiniteQueryEventHandler()
   ) async throws -> InfiniteQueryPages<PageID, PageValue> {
     var context = self.context
-    context.infiniteValues = InfiniteQueryContextValues(fetchType: .allPages, store: self)
+    context.infiniteValues = InfiniteQueryContextValues(fetchType: .allPages)
     switch try await self.base.fetch(using: context).response {
     case let .allPages(pages):
       return pages
@@ -119,7 +119,7 @@ extension InfiniteQueryStore {
   ) async throws -> InfiniteQueryPage<PageID, PageValue>? {
     guard self.hasNextPage else { return nil }
     var context = self.context
-    context.infiniteValues = InfiniteQueryContextValues(fetchType: .nextPage, store: self)
+    context.infiniteValues = InfiniteQueryContextValues(fetchType: .nextPage)
     switch try await self.base.fetch(using: context).response {
     case let .nextPage(next):
       return next?.page
@@ -136,7 +136,7 @@ extension InfiniteQueryStore {
   ) async throws -> InfiniteQueryPage<PageID, PageValue>? {
     guard self.hasPreviousPage else { return nil }
     var context = self.context
-    context.infiniteValues = InfiniteQueryContextValues(fetchType: .previousPage, store: self)
+    context.infiniteValues = InfiniteQueryContextValues(fetchType: .previousPage)
     switch try await self.base.fetch(using: context).response {
     case let .previousPage(previous):
       return previous?.page

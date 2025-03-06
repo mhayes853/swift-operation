@@ -234,8 +234,9 @@ extension QueryStore {
   @discardableResult
   private func beginFetchTask(using context: QueryContext? = nil) -> Task<any Sendable, any Error> {
     self._state.inner.withLock { state in
-      let context = context ?? state.context
-      return state.query.startFetchTask(in: context) {
+      var context = context ?? state.context
+      context.queryStateLoader = self
+      return state.query.startFetchTask(in: context) { [context] in
         self.subscriptions.forEach { $0.onFetchingStarted?() }
         defer { self.subscriptions.forEach { $0.onFetchingEnded?() } }
         do {

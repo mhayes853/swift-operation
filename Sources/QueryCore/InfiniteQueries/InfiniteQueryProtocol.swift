@@ -125,7 +125,7 @@ extension InfiniteQueryProtocol {
   }
 
   public func fetch(in context: QueryContext) async throws -> Value {
-    let paging = context.infiniteValues!.paging(for: self)
+    let paging = context.paging(for: self)
     switch paging.request {
     case .allPages:
       return try await self.fetchAllPages(using: paging, in: context)
