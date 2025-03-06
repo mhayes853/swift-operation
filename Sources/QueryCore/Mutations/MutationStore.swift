@@ -71,6 +71,7 @@ extension MutationStore {
 // MARK: - Mutate
 
 extension MutationStore {
+  @discardableResult
   public func mutate(
     with arguments: Arguments,
     handler: MutationEventHandler<Arguments, Value> = MutationEventHandler(),
@@ -78,7 +79,10 @@ extension MutationStore {
   ) async throws -> Value {
     var context = context ?? self.context
     context.mutationValues = MutationContextValues(arguments: arguments)
-    return try await self.base.fetch(using: context)
+    return try await self.base.fetch(
+      handler: self.queryStoreHandler(for: handler, args: arguments),
+      using: context
+    )
   }
 }
 
@@ -89,5 +93,20 @@ extension MutationStore {
     with handler: MutationEventHandler<Arguments, Value>
   ) async throws -> QuerySubscription {
     fatalError()
+  }
+}
+
+// MARK: - Event Handler
+
+extension MutationStore {
+  private func queryStoreHandler(
+    for handler: MutationEventHandler<Arguments, Value>,
+    args: Arguments
+  ) -> QueryEventHandler<Value> {
+    QueryEventHandler<Value>(
+      onFetchingStarted: { handler.onMutatingStarted?(args) },
+      onFetchingEnded: { handler.onMutatingEnded?(args) },
+      onResultReceived: { handler.onMutationResultReceived?(args, $0) }
+    )
   }
 }

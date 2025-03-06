@@ -5,7 +5,6 @@ where StateValue == Value?, State == MutationState<Value> {
   associatedtype Arguments: Sendable
 
   func mutate(with arguments: Arguments, in context: QueryContext) async throws -> Value
-
 }
 
 extension MutationProtocol {

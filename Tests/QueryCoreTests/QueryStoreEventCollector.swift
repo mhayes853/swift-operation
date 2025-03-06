@@ -31,6 +31,54 @@ final class _QueryStoreEventsCollector<Event: QueryStoreEventProtocol>: Sendable
   }
 }
 
+// MARK: - MutationStoreEvent
+
+enum MutationStoreEvent<Arguments: Equatable & Sendable, Value: Equatable & Sendable>: Sendable {
+  case mutatingStarted(Arguments)
+  case mutatingEnded(Arguments)
+  case mutationResultReceived(Arguments, Result<Value, any Error>)
+}
+
+extension MutationStoreEvent: QueryStoreEventProtocol {
+  func isMatch(with other: Self) -> Bool {
+    switch (self, other) {
+    case let (.mutatingStarted(a), .mutatingStarted(b)):
+      return a == b
+    case let (.mutatingEnded(a), .mutatingEnded(b)):
+      return a == b
+    case let (.mutationResultReceived(a, b), .mutationResultReceived(c, d)):
+      let isResultMatch =
+        switch (b, d) {
+        case let (.success(b), .success(d)): b == d
+        case (.failure, .failure): true
+        default: false
+        }
+      return a == c && isResultMatch
+    default:
+      return false
+    }
+  }
+}
+
+typealias MutationStoreEventsCollector<
+  Arguments: Equatable & Sendable,
+  Value: Equatable & Sendable
+> = _QueryStoreEventsCollector<MutationStoreEvent<Arguments, Value>>
+
+extension MutationStoreEventsCollector {
+  func eventHandler<Arguments: Equatable & Sendable, Value: Equatable & Sendable>()
+    -> MutationEventHandler<Arguments, Value>
+  where Event == MutationStoreEvent<Arguments, Value> {
+    MutationEventHandler(
+      onMutatingStarted: { args in self.events.withLock { $0.append(.mutatingStarted(args)) } },
+      onMutationResultReceived: { args, result in
+        self.events.withLock { $0.append(.mutationResultReceived(args, result)) }
+      },
+      onMutatingEnded: { args in self.events.withLock { $0.append(.mutatingEnded(args)) } }
+    )
+  }
+}
+
 // MARK: - InfiniteQueryStoreEvent
 
 enum InfiniteQueryStoreEvent<

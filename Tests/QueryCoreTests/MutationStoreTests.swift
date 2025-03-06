@@ -60,7 +60,7 @@ struct MutationStoreTests {
     mutation.didBeginSleeping = {
       expectNoDifference(store.isLoading, true)
     }
-    let result = try await store.mutate(with: "blob")
+    try await store.mutate(with: "blob")
     expectNoDifference(store.isLoading, false)
   }
 
@@ -73,11 +73,32 @@ struct MutationStoreTests {
     expectNoDifference(result, nil)
   }
 
-  //@Test("Mutate Throws Error")
-  //func mutateThrowsError() async throws {
-  //  let mutation = EmptyMutation()
-  //  let store = AnyQueryStore.detached(erasing: mutation)
-  //  let mutationStore = MutationStoreFor<EmptyMutation>(casting: store)
-  //  try await expectThrowsError(mutationStore!.mutate(with: mutation.arguments, in: QueryContext()))
-  //}
+  @Test("Successful Mutation Events")
+  func successfulMutationEvents() async throws {
+    let store = self.client.store(for: EmptyMutation())
+    let collector = MutationStoreEventsCollector<EmptyMutation.Arguments, EmptyMutation.Value>()
+    try await store.mutate(with: "blob", handler: collector.eventHandler())
+
+    collector.expectEventsMatch([
+      .mutatingStarted("blob"),
+      .mutationResultReceived("blob", .success("blob")),
+      .mutatingEnded("blob")
+    ])
+  }
+
+  @Test("Failing Mutation Events")
+  func failingMutationEvents() async throws {
+    let mutation = FailableMutation()
+    let store = self.client.store(for: mutation)
+    let collector = MutationStoreEventsCollector<
+      FailableMutation.Arguments, FailableMutation.Value
+    >()
+    _ = try? await store.mutate(with: "blob", handler: collector.eventHandler())
+
+    collector.expectEventsMatch([
+      .mutatingStarted("blob"),
+      .mutationResultReceived("blob", .failure(FailableMutation.SomeError())),
+      .mutatingEnded("blob")
+    ])
+  }
 }
