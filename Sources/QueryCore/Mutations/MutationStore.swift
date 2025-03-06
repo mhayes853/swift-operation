@@ -6,6 +6,7 @@ public typealias MutationStoreFor<
 
 // MARK: - MutationStore
 
+@dynamicMemberLookup
 public final class MutationStore<Value: Sendable, Arguments: Sendable>: Sendable {
   private let base: QueryStore<MutationState<Value>>
 
@@ -75,7 +76,9 @@ extension MutationStore {
     handler: MutationEventHandler<Arguments, Value> = MutationEventHandler(),
     using context: QueryContext? = nil
   ) async throws -> Value {
-    fatalError()
+    var context = context ?? self.context
+    context.mutationValues = MutationContextValues(arguments: arguments)
+    return try await self.base.fetch(using: context)
   }
 }
 

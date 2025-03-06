@@ -14,6 +14,7 @@ extension MutationProtocol {
   }
 
   public func fetch(in context: QueryContext) async throws -> Value {
-    fatalError("TODO")
+    let args = context.mutationValues?.arguments as! Arguments
+    return try await self.mutate(with: args, in: context)
   }
 }

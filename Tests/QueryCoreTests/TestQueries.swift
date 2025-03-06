@@ -370,3 +370,52 @@ struct EmptyIntMutation: MutationProtocol, Hashable {
     arguments
   }
 }
+
+// MARK: - SleepingMutation
+
+final class SleepingMutation: MutationProtocol, @unchecked Sendable {
+  typealias Value = String
+
+  let clock: any Clock<Duration>
+  let duration: Duration
+
+  var didBeginSleeping: (() -> Void)?
+
+  init(clock: any Clock<Duration>, duration: Duration) {
+    self.clock = clock
+    self.duration = duration
+  }
+
+  var path: QueryPath {
+    ["test-sleeping-mutation", self.duration]
+  }
+
+  func mutate(with arguments: String, in context: QueryContext) async throws -> String {
+    self.didBeginSleeping?()
+    try await self.clock.sleep(for: self.duration)
+    return ""
+  }
+}
+
+// MARK: - FailableMutation
+
+final class FailableMutation: MutationProtocol {
+  typealias Value = String
+
+  let state = Lock<String?>(nil)
+
+  var path: QueryPath {
+    [ObjectIdentifier(self)]
+  }
+
+  func mutate(with arguments: String, in context: QueryContext) async throws -> String {
+    try self.state.withLock { state in
+      if let state {
+        return state
+      }
+      throw SomeError()
+    }
+  }
+
+  struct SomeError: Error {}
+}
