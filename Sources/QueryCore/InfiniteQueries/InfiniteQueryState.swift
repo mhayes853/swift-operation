@@ -89,7 +89,7 @@ extension InfiniteQueryState: QueryStateProtocol {
           return try await fn()
         }
     }
-    switch context.infiniteValues?.fetchType {
+    switch context.infiniteValues.fetchType {
     case .allPages:
       self.isLoadingAllPages = true
     case .nextPage:
@@ -102,7 +102,7 @@ extension InfiniteQueryState: QueryStateProtocol {
   }
 
   func request(in context: QueryContext) -> InfiniteQueryPaging<PageID, PageValue>.Request {
-    guard let fetchType = context.infiniteValues?.fetchType else {
+    guard let fetchType = context.infiniteValues.fetchType else {
       return self.currentValue.isEmpty ? .initialPage : .allPages
     }
     switch (fetchType, self.nextPageId, self.previousPageId) {

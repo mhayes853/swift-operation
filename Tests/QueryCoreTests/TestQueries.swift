@@ -317,3 +317,36 @@ final class WaitableInfiniteQuery: InfiniteQueryProtocol {
 
   struct PageNotFoundError: Error {}
 }
+
+// MARK: - FailingInfiniteQuery
+
+final class FailableInfiniteQuery: InfiniteQueryProtocol {
+  let initialPageId = 0
+
+  let state = Lock<String?>(nil)
+
+  var path: QueryPath {
+    [ObjectIdentifier(self)]
+  }
+
+  func pageId(
+    after page: InfiniteQueryPage<Int, String>,
+    using paging: InfiniteQueryPaging<Int, String>
+  ) -> Int? {
+    page.id + 1
+  }
+
+  func fetchPage(
+    using paging: InfiniteQueryPaging<Int, String>,
+    in context: QueryContext
+  ) async throws -> String {
+    try self.state.withLock { state in
+      if let state {
+        return state
+      }
+      throw SomeError()
+    }
+  }
+
+  struct SomeError: Error {}
+}

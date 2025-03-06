@@ -536,4 +536,169 @@ struct InfiniteQueryStoreTests {
     expectNoDifference(store.hasNextPage, true)
     expectNoDifference(store.hasPreviousPage, true)
   }
+
+  @Test("Fetch Next Page Events")
+  func fetchNextPageEvents() async throws {
+    let collector = InfiniteQueryStoreEventsCollector<Int, String>()
+    let query = TestInfiniteQuery()
+    let store = self.client.store(for: query)
+    query.state.withLock { $0 = [0: "a"] }
+    try await store.fetchNextPage(handler: collector.eventHandler())
+
+    collector.expectEventsMatch([
+      .fetchingStarted,
+      .pageFetchingStarted(0),
+      .pageResultReceived(0, .success(InfiniteQueryPage(id: 0, value: "a"))),
+      .pageFetchingEnded(0),
+      .resultReceived(.success([InfiniteQueryPage(id: 0, value: "a")])),
+      .fetchingEnded
+    ])
+  }
+
+  @Test("Fetch Next Page Failing Events")
+  func fetchNextPageFailingEvents() async throws {
+    let collector = InfiniteQueryStoreEventsCollector<Int, String>()
+    let store = self.client.store(for: FailableInfiniteQuery())
+    _ = try? await store.fetchNextPage(handler: collector.eventHandler())
+
+    collector.expectEventsMatch([
+      .fetchingStarted,
+      .pageFetchingStarted(0),
+      .pageResultReceived(0, .failure(FailableInfiniteQuery.SomeError())),
+      .pageFetchingEnded(0),
+      .resultReceived(.failure(FailableInfiniteQuery.SomeError())),
+      .fetchingEnded
+    ])
+  }
+
+  @Test("Fetch Previous Page Events")
+  func fetchPreviousPageEvents() async throws {
+    let collector = InfiniteQueryStoreEventsCollector<Int, String>()
+    let query = TestInfiniteQuery()
+    let store = self.client.store(for: query)
+    query.state.withLock { $0 = [0: "a"] }
+    try await store.fetchPreviousPage(handler: collector.eventHandler())
+
+    collector.expectEventsMatch([
+      .fetchingStarted,
+      .pageFetchingStarted(0),
+      .pageResultReceived(0, .success(InfiniteQueryPage(id: 0, value: "a"))),
+      .pageFetchingEnded(0),
+      .resultReceived(.success([InfiniteQueryPage(id: 0, value: "a")])),
+      .fetchingEnded
+    ])
+  }
+
+  @Test("Fetch Previous Page Failing Events")
+  func fetchPreviousPageFailingEvents() async throws {
+    let collector = InfiniteQueryStoreEventsCollector<Int, String>()
+    let store = self.client.store(for: FailableInfiniteQuery())
+    _ = try? await store.fetchPreviousPage(handler: collector.eventHandler())
+
+    collector.expectEventsMatch([
+      .fetchingStarted,
+      .pageFetchingStarted(0),
+      .pageResultReceived(0, .failure(FailableInfiniteQuery.SomeError())),
+      .pageFetchingEnded(0),
+      .resultReceived(.failure(FailableInfiniteQuery.SomeError())),
+      .fetchingEnded
+    ])
+  }
+
+  @Test("Fetch All Pages Events")
+  func fetchAllPagesEvents() async throws {
+    let collector = InfiniteQueryStoreEventsCollector<Int, String>()
+    let query = TestInfiniteQuery()
+    let store = self.client.store(for: query)
+    query.state.withLock { $0 = [0: "a", 1: "b"] }
+    try await store.fetchNextPage()
+    try await store.fetchNextPage()
+    try await store.fetchAllPages(handler: collector.eventHandler())
+
+    collector.expectEventsMatch([
+      .fetchingStarted,
+      .pageFetchingStarted(0),
+      .pageResultReceived(0, .success(InfiniteQueryPage(id: 0, value: "a"))),
+      .pageFetchingEnded(0),
+      .pageFetchingStarted(1),
+      .pageResultReceived(1, .success(InfiniteQueryPage(id: 1, value: "b"))),
+      .pageFetchingEnded(1),
+      .resultReceived(
+        .success([InfiniteQueryPage(id: 0, value: "a"), InfiniteQueryPage(id: 1, value: "b")])
+      ),
+      .fetchingEnded
+    ])
+  }
+
+  @Test("Fetch All Pages Failing Events")
+  func fetchAllPagesFailingEvents() async throws {
+    let collector = InfiniteQueryStoreEventsCollector<Int, String>()
+    let query = FailableInfiniteQuery()
+    let store = self.client.store(for: query)
+    query.state.withLock { $0 = "test" }
+    try await store.fetchNextPage()
+    try await store.fetchNextPage()
+
+    query.state.withLock { $0 = nil }
+    _ = try? await store.fetchAllPages(handler: collector.eventHandler())
+
+    collector.expectEventsMatch([
+      .fetchingStarted,
+      .pageFetchingStarted(0),
+      .pageResultReceived(0, .failure(FailableInfiniteQuery.SomeError())),
+      .pageFetchingEnded(0),
+      .resultReceived(.failure(FailableInfiniteQuery.SomeError())),
+      .fetchingEnded
+    ])
+  }
+
+  @Test("Fetch Through Normal Query Store Events")
+  func fetchThroughNormalQueryStoreEvents() async throws {
+    let collector = InfiniteQueryStoreEventsCollector<Int, String>()
+    let query = TestInfiniteQuery()
+    let infiniteStore = self.client.store(for: query)
+    query.state.withLock { $0 = [0: "a", 1: "b"] }
+    try await infiniteStore.fetchNextPage()
+    try await infiniteStore.fetchNextPage()
+
+    let subscription = infiniteStore.subscribe(with: collector.eventHandler())
+
+    let store = QueryStoreFor<TestInfiniteQuery>(casting: self.client.store(with: query.path)!)!
+    try await store.fetch()
+
+    collector.expectEventsMatch([
+      .fetchingStarted,
+      .pageFetchingStarted(0),
+      .pageResultReceived(0, .success(InfiniteQueryPage(id: 0, value: "a"))),
+      .pageFetchingEnded(0),
+      .pageFetchingStarted(1),
+      .pageResultReceived(1, .success(InfiniteQueryPage(id: 1, value: "b"))),
+      .pageFetchingEnded(1),
+      .resultReceived(
+        .success([InfiniteQueryPage(id: 0, value: "a"), InfiniteQueryPage(id: 1, value: "b")])
+      ),
+      .fetchingEnded
+    ])
+    subscription.cancel()
+  }
+
+  @Test("Subscribe To Infinite Query")
+  func subscribeToInfiniteQuery() async throws {
+    let collector = InfiniteQueryStoreEventsCollector<Int, String>()
+    let query = TestInfiniteQuery()
+    let store = self.client.store(for: query)
+    query.state.withLock { $0 = [0: "a"] }
+    let subscription = store.subscribe(with: collector.eventHandler())
+    try await store.fetchNextPage()
+
+    collector.expectEventsMatch([
+      .fetchingStarted,
+      .pageFetchingStarted(0),
+      .pageResultReceived(0, .success(InfiniteQueryPage(id: 0, value: "a"))),
+      .pageFetchingEnded(0),
+      .resultReceived(.success([InfiniteQueryPage(id: 0, value: "a")])),
+      .fetchingEnded
+    ])
+    subscription.cancel()
+  }
 }

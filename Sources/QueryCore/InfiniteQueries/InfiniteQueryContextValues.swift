@@ -1,7 +1,12 @@
+import ConcurrencyExtras
+
 // MARK: - InfiniteQueryContextValues
 
 struct InfiniteQueryContextValues: Sendable {
-  let fetchType: FetchType
+  var fetchType: FetchType?
+  let subscriptions = QuerySubscriptions<
+    InfiniteQueryEventHandler<AnyHashableSendable, any Sendable>
+  >()
 }
 
 // MARK: - FetchType
@@ -32,12 +37,14 @@ extension QueryContext {
     )
   }
 
-  var infiniteValues: InfiniteQueryContextValues? {
+  var infiniteValues: InfiniteQueryContextValues {
     get { self[InfiniteQueryContextValuesKey.self] }
     set { self[InfiniteQueryContextValuesKey.self] = newValue }
   }
 
   private enum InfiniteQueryContextValuesKey: Key {
-    static var defaultValue: InfiniteQueryContextValues? { nil }
+    static var defaultValue: InfiniteQueryContextValues {
+      InfiniteQueryContextValues()
+    }
   }
 }

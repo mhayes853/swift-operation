@@ -104,8 +104,8 @@ extension InfiniteQueryStore {
     handler: InfiniteQueryEventHandler<PageID, PageValue> = InfiniteQueryEventHandler()
   ) async throws -> InfiniteQueryPages<PageID, PageValue> {
     var context = self.context
-    context.infiniteValues = InfiniteQueryContextValues(fetchType: .allPages)
-    switch try await self.base.fetch(using: context).response {
+    context.infiniteValues.fetchType = .allPages
+    switch try await self.fetch(handler: handler, using: context).response {
     case let .allPages(pages):
       return pages
     default:
@@ -119,8 +119,8 @@ extension InfiniteQueryStore {
   ) async throws -> InfiniteQueryPage<PageID, PageValue>? {
     guard self.hasNextPage else { return nil }
     var context = self.context
-    context.infiniteValues = InfiniteQueryContextValues(fetchType: .nextPage)
-    switch try await self.base.fetch(using: context).response {
+    context.infiniteValues.fetchType = .nextPage
+    switch try await self.fetch(handler: handler, using: context).response {
     case let .nextPage(next):
       return next?.page
     case let .initialPage(page):
@@ -136,8 +136,8 @@ extension InfiniteQueryStore {
   ) async throws -> InfiniteQueryPage<PageID, PageValue>? {
     guard self.hasPreviousPage else { return nil }
     var context = self.context
-    context.infiniteValues = InfiniteQueryContextValues(fetchType: .previousPage)
-    switch try await self.base.fetch(using: context).response {
+    context.infiniteValues.fetchType = .previousPage
+    switch try await self.fetch(handler: handler, using: context).response {
     case let .previousPage(previous):
       return previous?.page
     case let .initialPage(page):
@@ -146,18 +146,49 @@ extension InfiniteQueryStore {
       return nil
     }
   }
+
+  private func fetch(
+    handler: InfiniteQueryEventHandler<PageID, PageValue>,
+    using context: QueryContext
+  ) async throws -> InfiniteQueryValue<PageID, PageValue> {
+    let (subscription, _) = context.infiniteValues.subscriptions.add(
+      handler: handler.erased(),
+      isTemporary: true
+    )
+    defer { subscription.cancel() }
+    return try await self.base.fetch(handler: self.queryStoreHandler(for: handler), using: context)
+  }
 }
 
 // MARK: - Subscribe
 
 extension InfiniteQueryStore {
-  public var subscriberCount: Int {
-    self.base.subscriberCount
-  }
-
   public func subscribe(
     with handler: InfiniteQueryEventHandler<PageID, PageValue>
   ) -> QuerySubscription {
-    QuerySubscription {}
+    let (contextSubscription, _) = context.infiniteValues.subscriptions.add(
+      handler: handler.erased()
+    )
+    let baseSubscription = self.base.subscribe(with: self.queryStoreHandler(for: handler))
+    return QuerySubscription {
+      baseSubscription.cancel()
+      contextSubscription.cancel()
+    }
+  }
+}
+
+// MARK: - InfiniteQueryEventHandler
+
+extension InfiniteQueryStore {
+  private func queryStoreHandler(
+    for handler: InfiniteQueryEventHandler<PageID, PageValue>
+  ) -> QueryEventHandler<InfiniteQueryState<PageID, PageValue>.QueryValue> {
+    QueryEventHandler(
+      onFetchingStarted: { handler.onFetchingStarted?() },
+      onFetchingEnded: { handler.onFetchingFinished?() },
+      onResultReceived: {
+        handler.onResultReceived?($0.map { [weak self] _ in self?.currentValue ?? [] })
+      }
+    )
   }
 }
