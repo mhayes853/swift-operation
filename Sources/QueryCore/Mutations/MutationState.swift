@@ -32,13 +32,8 @@ extension MutationState: QueryStateProtocol {
     in context: QueryContext,
     for fn: @escaping @Sendable () async throws -> any Sendable
   ) -> Task<any Sendable, any Error> {
-    if let task = self.fetchTask {
-      return task
-    }
     self.isLoading = true
-    let task = Task { try await fn() }
-    self.fetchTask = task
-    return task
+    return Task { try await fn() }
   }
 
   public mutating func endFetchTask(
