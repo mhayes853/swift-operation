@@ -11,7 +11,6 @@ public struct MutationState<Arguments: Sendable, Value: Sendable> {
   public private(set) var error: (any Error)?
   public private(set) var errorUpdateCount = 0
   public private(set) var errorLastUpdatedAt: Date?
-  private var fetchTask: Task<any Sendable, any Error>?
 }
 
 extension MutationState {
@@ -28,32 +27,27 @@ extension MutationState: QueryStateProtocol {
   public typealias StatusValue = Value
   public typealias QueryValue = Value
 
-  public mutating func startFetchTask(
-    in context: QueryContext,
-    for fn: @escaping @Sendable () async throws -> any Sendable
-  ) -> Task<any Sendable, any Error> {
+  public mutating func startFetchTask(_ task: QueryTask<Value>) -> QueryTask<Value> {
     self.isLoading = true
-    return Task { try await fn() }
+    return task
   }
 
   public mutating func endFetchTask(
-    in context: QueryContext,
-    with result: Result<QueryValue, any Error>
+    _ task: QueryTask<Value>,
+    with result: Result<Value, any Error>
   ) {
     switch result {
     case let .success(value):
       self.currentValue = value
       self.valueUpdateCount += 1
-      self.valueLastUpdatedAt = context.queryClock.now()
+      self.valueLastUpdatedAt = task.context.queryClock.now()
       self.error = nil
       self.isLoading = false
-      self.fetchTask = nil
     case let .failure(error):
       self.error = error
       self.errorUpdateCount += 1
-      self.errorLastUpdatedAt = context.queryClock.now()
+      self.errorLastUpdatedAt = task.context.queryClock.now()
       self.isLoading = false
-      self.fetchTask = nil
     }
   }
 }

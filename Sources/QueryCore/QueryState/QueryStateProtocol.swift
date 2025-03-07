@@ -14,10 +14,10 @@ public protocol QueryStateProtocol<StateValue, QueryValue>: Sendable {
   var errorUpdateCount: Int { get }
   var errorLastUpdatedAt: Date? { get }
 
-  mutating func startFetchTask(
-    in context: QueryContext,
-    for fn: @Sendable @escaping () async throws -> any Sendable
-  ) -> Task<any Sendable, any Error>
+  mutating func startFetchTask(_ task: QueryTask<QueryValue>) -> QueryTask<QueryValue>
 
-  mutating func endFetchTask(in context: QueryContext, with result: Result<QueryValue, any Error>)
+  mutating func endFetchTask(
+    _ task: QueryTask<QueryValue>,
+    with result: Result<QueryValue, any Error>
+  )
 }

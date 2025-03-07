@@ -27,18 +27,23 @@ extension AnyQueryState: QueryStateProtocol {
   public var errorLastUpdatedAt: Date? { self.base.errorLastUpdatedAt }
 
   public mutating func startFetchTask(
-    in context: QueryContext,
-    for fn: @escaping @Sendable () async throws -> any Sendable
-  ) -> Task<any Sendable, any Error> {
-    self.base.startFetchTask(in: context, for: fn)
+    _ task: QueryTask<any Sendable>
+  ) -> QueryTask<any Sendable> {
+    func open<State: QueryStateProtocol>(state: inout State) -> QueryTask<any Sendable> {
+      state.startFetchTask(task.map { $0 as! State.QueryValue }).map { $0 as any Sendable }
+    }
+    return open(state: &self.base)
   }
 
   public mutating func endFetchTask(
-    in context: QueryContext,
-    with result: Result<QueryValue, any Error>
+    _ task: QueryTask<any Sendable>,
+    with result: Result<any Sendable, any Error>
   ) {
     func open<State: QueryStateProtocol>(state: inout State) {
-      state.endFetchTask(in: context, with: result.map { $0 as! State.QueryValue })
+      state.endFetchTask(
+        task.map { $0 as! State.QueryValue },
+        with: result.map { $0 as! State.QueryValue }
+      )
     }
     open(state: &self.base)
   }

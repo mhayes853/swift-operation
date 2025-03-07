@@ -250,34 +250,42 @@ extension QueryStore {
     let (subscription, _) = self.subscriptions.add(handler: handler.erased(), isTemporary: true)
     defer { subscription.cancel() }
     let task = self.beginFetchTask(using: context)
-    return try await task.cancellableValue as! State.QueryValue
+    return try await task.run() as! State.QueryValue
   }
 
   @discardableResult
-  private func beginFetchTask(using context: QueryContext? = nil) -> Task<any Sendable, any Error> {
+  private func beginFetchTask(using context: QueryContext? = nil) -> QueryTask<any Sendable> {
     self._state.inner.withLock { state in
       var context = context ?? state.context
       context.queryStateLoader = self
-      return state.query.startFetchTask(in: context) { [context] in
-        self.subscriptions.forEach { $0.onFetchingStarted?() }
-        defer { self.subscriptions.forEach { $0.onFetchingEnded?() } }
-        do {
-          let value = try await self._query.fetch(in: context)
-          self._state.inner.withLock { state in
-            func open<S: QueryStateProtocol>(state: inout S) {
-              state.endFetchTask(in: context, with: .success(value as! S.QueryValue))
+      let task = Lock<QueryTask<any Sendable>?>(nil)
+      return task.withLock { newTask in
+        let inner = QueryTask<any Sendable>(context: context) { [context] in
+          self.subscriptions.forEach { $0.onFetchingStarted?() }
+          defer { self.subscriptions.forEach { $0.onFetchingEnded?() } }
+          do {
+            let value = try await self._query.fetch(in: context)
+            self._state.inner.withLock { state in
+              task.withLock {
+                guard let task = $0 else { return }
+                state.query.endFetchTask(task, with: .success(value))
+              }
+              self.subscriptions.forEach { $0.onResultReceived?(.success(value)) }
             }
-            open(state: &state.query)
-            self.subscriptions.forEach { $0.onResultReceived?(.success(value)) }
+            return value as! State.QueryValue
+          } catch {
+            self._state.inner.withLock { state in
+              task.withLock {
+                guard let task = $0 else { return }
+                state.query.endFetchTask(task, with: .failure(error))
+              }
+              self.subscriptions.forEach { $0.onResultReceived?(.failure(error)) }
+            }
+            throw error
           }
-          return value
-        } catch {
-          self._state.inner.withLock { state in
-            state.query.endFetchTask(in: context, with: .failure(error))
-            self.subscriptions.forEach { $0.onResultReceived?(.failure(error)) }
-          }
-          throw error
         }
+        newTask = inner
+        return state.query.startFetchTask(inner)
       }
     }
   }
