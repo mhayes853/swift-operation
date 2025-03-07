@@ -60,7 +60,7 @@ extension InfiniteQueryState: QueryStateProtocol {
       if let fetchAllTask {
         task = fetchAllTask
       } else {
-        task.optionallyDepend(on: [
+        task.optionallySchedule(after: [
           self.fetchInitialTask, self.fetchNextPageTask, self.fetchPreviousPageTask
         ])
       }
@@ -73,14 +73,14 @@ extension InfiniteQueryState: QueryStateProtocol {
       if let fetchNextPageTask {
         task = fetchNextPageTask
       } else {
-        task.optionallyDepend(on: [self.fetchInitialTask, self.fetchAllTask])
+        task.optionallySchedule(after: [self.fetchInitialTask, self.fetchAllTask])
       }
     case .previousPage:
       defer { self.fetchPreviousPageTask = task }
       if let fetchPreviousPageTask {
         task = fetchPreviousPageTask
       } else {
-        task.optionallyDepend(on: [self.fetchInitialTask, self.fetchAllTask])
+        task.optionallySchedule(after: [self.fetchInitialTask, self.fetchAllTask])
       }
     }
     switch task.context.infiniteValues.fetchType {
@@ -172,7 +172,7 @@ extension InfiniteQueryState: QueryStateProtocol {
 }
 
 extension QueryTask {
-  fileprivate mutating func optionallyDepend(on tasks: [Self?]) {
-    self.depend(on: tasks.compactMap { $0 })
+  fileprivate func optionallySchedule(after tasks: [Self?]) {
+    self.schedule(after: tasks.compactMap { $0 })
   }
 }

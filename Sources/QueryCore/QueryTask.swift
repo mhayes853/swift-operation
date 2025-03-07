@@ -3,52 +3,96 @@ import Foundation
 
 // MARK: - _QueryTask
 
-private protocol _QueryTask: Sendable {
+private protocol _QueryTask: Sendable, Identifiable {
+  var id: QueryTaskID { get }
+
+  var dependencies: [any _QueryTask] { get }
+
   func _runIfNotRunning() async throws -> any Sendable
 
-  func map<T: Sendable>(
-    _ transform: @escaping @Sendable (any Sendable) throws -> T
-  ) -> QueryTask<T>
+  func warnIfCyclesDetected(cyclicalIds: [QueryTaskID], visited: Set<QueryTaskID>)
 }
 
 // MARK: - QueryTask
 
 public struct QueryTask<Value: Sendable>: _QueryTask {
+  private typealias State = (task: Task<any Sendable, any Error>?, dependencies: [any _QueryTask])
+
+  public let id: QueryTaskID
   public let context: QueryContext
-  private var dependencies = [any _QueryTask]()
+  fileprivate var dependencies: [any _QueryTask] {
+    self.box.inner.withLock { $0.dependencies }
+  }
   private var work: @Sendable () async throws -> Value
-  private let box: LockedBox<Task<any Sendable, any Error>?>
+  private let box: LockedBox<State>
 }
 
 extension QueryTask {
   public init(context: QueryContext, work: @escaping @Sendable () async throws -> Value) {
     self.context = context
     self.work = work
-    self.box = LockedBox(value: nil)
+    self.box = LockedBox(value: (nil, []))
+    self.id = .next()
+  }
+}
+
+// MARK: - QueryTaskID
+
+public struct QueryTaskID: Hashable, Sendable {
+  private let number: Int
+}
+
+extension QueryTaskID {
+  private static let counter = Lock(1)
+
+  fileprivate static func next() -> Self {
+    counter.withLock { counter in
+      defer { counter += 1 }
+      return Self(number: counter)
+    }
+  }
+}
+
+extension QueryTaskID: CustomDebugStringConvertible {
+  public var debugDescription: String {
+    "#\(self.number)"
   }
 }
 
 // MARK: - Task Dependencies
 
 extension QueryTask {
-  public mutating func depend<V: Sendable>(on task: QueryTask<V>) {
-    self.dependencies.append(task)
+  public func schedule<V: Sendable>(after task: QueryTask<V>) {
+    self.withDependencies { $0.append(task) }
   }
 
-  public mutating func depend<V: Sendable>(on tasks: [QueryTask<V>]) {
-    self.dependencies.append(contentsOf: tasks)
+  public func schedule<V: Sendable>(after tasks: [QueryTask<V>]) {
+    self.withDependencies { $0.append(contentsOf: tasks) }
   }
 
-  public func depending<V: Sendable>(on task: QueryTask<V>) -> Self {
-    var new = self
-    new.depend(on: task)
-    return new
+  private func withDependencies(_ fn: (inout [any _QueryTask]) -> Void) {
+    self.box.inner.withLock { state in
+      fn(&state.dependencies)
+    }
+    self.warnIfCyclesDetected(cyclicalIds: [self.id], visited: [self.id])
   }
 
-  public func depending<V: Sendable>(on tasks: [QueryTask<V>]) -> Self {
-    var new = self
-    new.depend(on: tasks)
-    return new
+  fileprivate func warnIfCyclesDetected(
+    cyclicalIds: [QueryTaskID],
+    visited: Set<QueryTaskID>
+  ) {
+    #if DEBUG
+      for dependency in self.dependencies {
+        if visited.contains(dependency.id) {
+          reportWarning(.queryTaskCircularScheduling(ids: cyclicalIds + [dependency.id]))
+        } else {
+          dependency.warnIfCyclesDetected(
+            cyclicalIds: cyclicalIds + [dependency.id],
+            visited: visited.union([dependency.id])
+          )
+        }
+      }
+    #endif
   }
 }
 
@@ -60,19 +104,20 @@ extension QueryTask {
   }
 
   fileprivate func _runIfNotRunning() async throws -> any Sendable {
-    let task = self.box.inner.withLock { task in
-      if let task {
+    let task = self.box.inner.withLock { state in
+      if let task = state.task {
         return task
       }
-      let newTask = Task {
-        // TODO: - Does this need a TaskGroup?
-        for dependency in self.dependencies {
-          _ = try await dependency._runIfNotRunning()
+      let task = Task {
+        await withTaskGroup(of: Void.self) { group in
+          for dependency in self.dependencies {
+            group.addTask { _ = try? await dependency._runIfNotRunning() }
+          }
         }
         return try await self.work() as any Sendable
       }
-      task = newTask
-      return newTask
+      state.task = task
+      return task
     }
     return try await task.cancellableValue
   }
@@ -85,12 +130,28 @@ extension QueryTask {
     _ transform: @escaping @Sendable (any Sendable) throws -> T
   ) -> QueryTask<T> {
     QueryTask<T>(
+      id: self.id,
       context: self.context,
-      dependencies: self.dependencies.map { task in
-        task.map { try transform($0 as any Sendable) }
-      },
       work: { try await transform(try self.work()) },
       box: self.box
+    )
+  }
+}
+
+// MARK: - Warning
+
+extension QueryCoreWarning {
+  public static func queryTaskCircularScheduling(ids: [QueryTaskID]) -> Self {
+    Self(
+      """
+      Circular scheduling detected for tasks.
+
+        Cycle:
+
+        \(ids.map(\.debugDescription).joined(separator: " -> "))
+
+      This will cause task starvation when running any of the tasks in this cycle.
+      """
     )
   }
 }
