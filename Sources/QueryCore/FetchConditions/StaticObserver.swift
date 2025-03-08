@@ -15,15 +15,7 @@ public struct StaticObserver: FetchConditionObserver {
 }
 
 extension FetchConditionObserver where Self == StaticObserver {
-  public static func `is`(_ value: Bool) -> Self {
+  public static func always(_ value: Bool) -> Self {
     Self(isTrue: value)
-  }
-
-  public static var `true`: Self {
-    Self(isTrue: true)
-  }
-
-  public static var `false`: Self {
-    Self(isTrue: false)
   }
 }
