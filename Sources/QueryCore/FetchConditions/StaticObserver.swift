@@ -1,4 +1,4 @@
-public struct StaticFetchConditionObserver: FetchConditionObserver {
+public struct StaticObserver: FetchConditionObserver {
   let isTrue: Bool
 
   public func isSatisfied(in context: QueryContext) -> Bool {
@@ -14,16 +14,16 @@ public struct StaticFetchConditionObserver: FetchConditionObserver {
   }
 }
 
-extension FetchConditionObserver where Self == StaticFetchConditionObserver {
+extension FetchConditionObserver where Self == StaticObserver {
   public static func `is`(_ value: Bool) -> Self {
-    StaticFetchConditionObserver(isTrue: value)
+    Self(isTrue: value)
   }
 
   public static var `true`: Self {
-    StaticFetchConditionObserver(isTrue: true)
+    Self(isTrue: true)
   }
 
   public static var `false`: Self {
-    StaticFetchConditionObserver(isTrue: false)
+    Self(isTrue: false)
   }
 }
