@@ -63,17 +63,22 @@ extension QueryTaskID: CustomDebugStringConvertible {
 
 extension QueryTask {
   public func schedule<V: Sendable>(after task: QueryTask<V>) {
-    self.withDependencies { $0.append(task) }
+    self.withDependencies {
+      $0.removeAll { $0.id == task.id }
+      $0.append(task)
+    }
   }
 
   public func schedule<V: Sendable>(after tasks: [QueryTask<V>]) {
-    self.withDependencies { $0.append(contentsOf: tasks) }
+    self.withDependencies {
+      let ids = Set(tasks.map(\.id))
+      $0.removeAll { ids.contains($0.id) }
+      $0.append(contentsOf: tasks.removeFirstDuplicates(by: \.id))
+    }
   }
 
   private func withDependencies(_ fn: (inout [any _QueryTask]) -> Void) {
-    self.box.inner.withLock { state in
-      fn(&state.dependencies)
-    }
+    self.box.inner.withLock { fn(&$0.dependencies) }
     self.warnIfCyclesDetected(cyclicalIds: [self.id], visited: [self.id])
   }
 

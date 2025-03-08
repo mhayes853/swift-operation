@@ -8,7 +8,7 @@ struct QueryTaskTests {
   func runsDependentTasks() async throws {
     let runCount = Lock(0)
 
-    var task1 = QueryTask<Int>(context: QueryContext()) { 40 }
+    let task1 = QueryTask<Int>(context: QueryContext()) { 40 }
     let task2 = QueryTask<Int>(context: QueryContext()) {
       runCount.withLock { $0 += 1 }
       return 32
@@ -22,7 +22,7 @@ struct QueryTaskTests {
   func ignoresErrorsFromDependentTasks() async throws {
     struct SomeError: Error {}
 
-    var task1 = QueryTask<Int>(context: QueryContext()) { 40 }
+    let task1 = QueryTask<Int>(context: QueryContext()) { 40 }
     let task2 = QueryTask<Int>(context: QueryContext()) { throw SomeError() }
     task1.schedule(after: task2)
     await #expect(throws: Never.self) {
@@ -30,12 +30,52 @@ struct QueryTaskTests {
     }
   }
 
+  @Test("Schedule After Moves Already Scheduled Task To Back")
+  func scheduleAfterMovesAlreadyScheduledTaskToBack() async throws {
+    let runs = Lock([Int]())
+
+    let task1 = QueryTask<Void>(context: QueryContext()) {
+      runs.withLock { $0.append(1) }
+    }
+    let task2 = QueryTask<Void>(context: QueryContext()) {
+      runs.withLock { $0.append(2) }
+    }
+    let task3 = QueryTask<Void>(context: QueryContext()) {
+      runs.withLock { $0.append(3) }
+    }
+    task1.schedule(after: task2)
+    task1.schedule(after: task3)
+    task1.schedule(after: task2)
+    try await task1.runIfNotRunning()
+    runs.withLock { expectNoDifference($0, [3, 2, 1]) }
+  }
+
+  @Test("Multiple Schedule After Moves Already Scheduled Task To Back")
+  func multipleScheduleAfterMovesAlreadyScheduledTaskToBack() async throws {
+    let runs = Lock([Int]())
+
+    let task1 = QueryTask<Void>(context: QueryContext()) {
+      runs.withLock { $0.append(1) }
+    }
+    let task2 = QueryTask<Void>(context: QueryContext()) {
+      runs.withLock { $0.append(2) }
+    }
+    let task3 = QueryTask<Void>(context: QueryContext()) {
+      runs.withLock { $0.append(3) }
+    }
+    task1.schedule(after: task2)
+    task1.schedule(after: task3)
+    task1.schedule(after: [task2, task3, task2])
+    try await task1.runIfNotRunning()
+    runs.withLock { expectNoDifference($0, [3, 2, 1]) }
+  }
+
   #if DEBUG
     @Test("Reports Issue When Circular Scheduling, 2 Tasks")
     func reportsIssueWhenCircularScheduling2Tasks() async throws {
       let context = QueryContext()
-      var task1 = QueryTask<Int>(context: context) { 40 }
-      var task2 = QueryTask<Int>(context: context) { 32 }
+      let task1 = QueryTask<Int>(context: context) { 40 }
+      let task2 = QueryTask<Int>(context: context) { 32 }
       task1.schedule(after: task2)
       withKnownIssue {
         task2.schedule(after: task1)
@@ -49,9 +89,9 @@ struct QueryTaskTests {
     @Test("Reports Issue When Circular Scheduling, 3 Tasks")
     func reportsIssueWhenCircularScheduling3Tasks() async throws {
       let context = QueryContext()
-      var task1 = QueryTask<Int>(context: context) { 40 }
-      var task2 = QueryTask<Int>(context: context) { 32 }
-      var task3 = QueryTask<Int>(context: context) { 24 }
+      let task1 = QueryTask<Int>(context: context) { 40 }
+      let task2 = QueryTask<Int>(context: context) { 32 }
+      let task3 = QueryTask<Int>(context: context) { 24 }
       let task4 = QueryTask<Int>(context: context) { 16 }
       task1.schedule(after: task2)
       task2.schedule(after: task3)
