@@ -14,7 +14,7 @@ struct QueryTaskTests {
       return 32
     }
     task1.schedule(after: task2)
-    _ = try await task1.runIfNotRunning()
+    _ = try await task1.runIfNeeded()
     runCount.withLock { expectNoDifference($0, 1) }
   }
 
@@ -26,7 +26,7 @@ struct QueryTaskTests {
     let task2 = QueryTask<Int>(context: QueryContext()) { throw SomeError() }
     task1.schedule(after: task2)
     await #expect(throws: Never.self) {
-      _ = try await task1.runIfNotRunning()
+      _ = try await task1.runIfNeeded()
     }
   }
 
@@ -46,7 +46,7 @@ struct QueryTaskTests {
     task1.schedule(after: task2)
     task1.schedule(after: task3)
     task1.schedule(after: task2)
-    try await task1.runIfNotRunning()
+    try await task1.runIfNeeded()
     runs.withLock { expectNoDifference($0, [3, 2, 1]) }
   }
 
@@ -66,7 +66,7 @@ struct QueryTaskTests {
     task1.schedule(after: task2)
     task1.schedule(after: task3)
     task1.schedule(after: [task2, task3, task2])
-    try await task1.runIfNotRunning()
+    try await task1.runIfNeeded()
     runs.withLock { expectNoDifference($0, [3, 2, 1]) }
   }
 

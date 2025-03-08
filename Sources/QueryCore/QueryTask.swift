@@ -8,7 +8,7 @@ private protocol _QueryTask: Sendable, Identifiable {
 
   var dependencies: [any _QueryTask] { get }
 
-  func _runIfNotRunning() async throws -> any Sendable
+  func _runIfNeeded() async throws -> any Sendable
 
   func warnIfCyclesDetected(cyclicalIds: [QueryTaskID], visited: Set<QueryTaskID>)
 }
@@ -104,11 +104,11 @@ extension QueryTask {
 // MARK: - Run
 
 extension QueryTask {
-  public func runIfNotRunning() async throws -> Value {
-    try await self._runIfNotRunning() as! Value
+  public func runIfNeeded() async throws -> Value {
+    try await self._runIfNeeded() as! Value
   }
 
-  fileprivate func _runIfNotRunning() async throws -> any Sendable {
+  fileprivate func _runIfNeeded() async throws -> any Sendable {
     let task = self.box.inner.withLock { state in
       if let task = state.task {
         return task
@@ -116,7 +116,7 @@ extension QueryTask {
       let task = Task {
         await withTaskGroup(of: Void.self) { group in
           for dependency in self.dependencies {
-            group.addTask { _ = try? await dependency._runIfNotRunning() }
+            group.addTask { _ = try? await dependency._runIfNeeded() }
           }
         }
         return try await self.work() as any Sendable

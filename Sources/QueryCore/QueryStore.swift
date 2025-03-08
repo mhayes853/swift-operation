@@ -250,7 +250,7 @@ extension QueryStore {
     let (subscription, _) = self.subscriptions.add(handler: handler.erased(), isTemporary: true)
     defer { subscription.cancel() }
     let task = self.beginFetchTask(using: context)
-    return try await task.runIfNotRunning() as! State.QueryValue
+    return try await task.runIfNeeded() as! State.QueryValue
   }
 
   @discardableResult
