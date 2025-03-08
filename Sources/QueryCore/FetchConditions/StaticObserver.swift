@@ -9,8 +9,7 @@ public struct StaticObserver: FetchConditionObserver {
     in context: QueryContext,
     _ observer: @escaping @Sendable (Bool) -> Void
   ) -> QuerySubscription {
-    observer(self.isTrue)
-    return .empty
+    .empty
   }
 }
 
