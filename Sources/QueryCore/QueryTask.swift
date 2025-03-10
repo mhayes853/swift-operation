@@ -59,6 +59,22 @@ extension QueryTaskID: CustomDebugStringConvertible {
   }
 }
 
+// MARK: - Equatable
+
+extension QueryTask: Equatable {
+  public static func == (lhs: Self, rhs: Self) -> Bool {
+    lhs.id == rhs.id
+  }
+}
+
+// MARK: - Hashable
+
+extension QueryTask: Hashable {
+  public func hash(into hasher: inout Hasher) {
+    hasher.combine(self.id)
+  }
+}
+
 // MARK: - Task Dependencies
 
 extension QueryTask {
