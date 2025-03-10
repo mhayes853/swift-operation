@@ -4,18 +4,11 @@ import IdentifiedCollections
 // MARK: - MutationState
 
 public struct MutationState<Arguments: Sendable, Value: Sendable> {
-  public let initialValue: StateValue
   public private(set) var valueUpdateCount = 0
   public private(set) var valueLastUpdatedAt: Date?
   public private(set) var errorUpdateCount = 0
   public private(set) var errorLastUpdatedAt: Date?
   public private(set) var history = IdentifiedArrayOf<HistoryEntry>()
-}
-
-extension MutationState {
-  init() {
-    self.initialValue = nil
-  }
 }
 
 // MARK: - QueryStateProtocol
@@ -24,6 +17,8 @@ extension MutationState: QueryStateProtocol {
   public typealias StateValue = Value?
   public typealias StatusValue = Value
   public typealias QueryValue = Value
+
+  public var initialValue: StateValue { nil }
 
   public var currentValue: StateValue {
     self.history.last?.status.resultValue
