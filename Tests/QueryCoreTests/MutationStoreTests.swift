@@ -275,8 +275,15 @@ struct MutationStoreTests {
   func historyErrorLastUpdatedAtEqualsStateLastUpdatedAt() async throws {
     let mutation = FailableMutation()
     let store = self.client.store(for: mutation)
-    try? await store.mutate(with: "blob")
+    _ = try? await store.mutate(with: "blob")
     expectNoDifference(store.history.first?.finishDate, store.errorLastUpdatedAt)
+  }
+
+  @Test("Automatic Fetching Disabled By Default On Regular Store")
+  func automaticFetchingDisabledByDefault() async throws {
+    let mutation = FailableMutation()
+    let store = QueryStoreFor<FailableMutation>.detached(mutation: mutation)
+    expectNoDifference(store.isAutomaticFetchingEnabled, false)
   }
 
   @Test("Successful Mutation Events")
