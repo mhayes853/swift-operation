@@ -110,6 +110,43 @@ struct MutationStoreTests {
     expectNoDifference(store.history[0].arguments, "blob")
   }
 
+  @Test("Can Wait For Individual Historical Mutation")
+  func canWaitForIndividualHistoricalMutation() async throws {
+    let mutation = WaitableMutation()
+    mutation.state.withLock { $0.willWait = true }
+    let store = self.client.store(for: mutation)
+
+    let handle = Lock<MutationTask<String>?>(nil)
+    mutation.onLoading(for: "blob") {
+      handle.withLock { $0 = store.history[0].task }
+    }
+    Task { try await store.mutate(with: "blob") }
+    try await mutation.waitForLoading(on: "blob")
+
+    mutation.state.withLock { $0.willWait = false }
+    _ = try? await store.mutate(with: "blob jr")
+    expectNoDifference(store.history.map(\.status.isLoading), [true, false])
+
+    let task = try #require(handle.withLock { $0 })
+    async let value = task.value
+    await mutation.advance(on: "blob")
+    _ = try await value
+    expectNoDifference(store.history.map(\.status.isLoading), [false, false])
+  }
+
+  @Test("Mutation History Finished Date After Start Date")
+  func mutationHistoryFinishedDateAfterStartDate() async throws {
+    let mutation = WaitableMutation()
+
+    let store = self.client.store(for: mutation)
+    mutation.onLoading(for: "blob") {
+      expectNoDifference(store.history[0].finishDate, nil)
+    }
+    _ = try? await store.mutate(with: "blob")
+    let endDate = try #require(store.history[0].finishDate)
+    expectNoDifference(endDate > store.history[0].startDate, true)
+  }
+
   @Test("Successful Mutation Events")
   func successfulMutationEvents() async throws {
     let store = self.client.store(for: EmptyMutation())

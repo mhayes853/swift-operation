@@ -419,3 +419,49 @@ final class FailableMutation: MutationProtocol {
 
   struct SomeError: Error {}
 }
+
+// MARK: - WaitableMutation
+
+final class WaitableMutation: MutationProtocol {
+  typealias _Values = (
+    willWait: Bool,
+    continuations: [String: UnsafeContinuation<Void, Never>],
+    onLoading: [String: @Sendable () -> Void]
+  )
+  typealias Value = String
+  typealias Arguments = String
+
+  let state = Lock<_Values>((false, [:], [:]))
+
+  var path: QueryPath {
+    [ObjectIdentifier(self)]
+  }
+
+  func onLoading(for args: String, _ onLoading: @escaping @Sendable () -> Void) {
+    self.state.withLock { $0.onLoading[args] = onLoading }
+  }
+
+  func waitForLoading(on args: String) async throws {
+    await withUnsafeContinuation { continuation in
+      self.state.withLock { $0.continuations[args] = continuation }
+    }
+    await Task.megaYield()
+  }
+
+  func advance(on args: String) async {
+    await Task.megaYield()
+    self.state.withLock {
+      $0.continuations[args]?.resume()
+      $0.continuations.removeValue(forKey: args)
+    }
+  }
+
+  func mutate(with arguments: String, in context: QueryContext) async throws -> String {
+    self.state.withLock { $0.onLoading[arguments]?() }
+    if self.state.withLock({ $0.willWait }) {
+      await self.advance(on: arguments)
+      try await self.waitForLoading(on: arguments)
+    }
+    return arguments
+  }
+}
