@@ -1,4 +1,5 @@
 import Foundation
+import IdentifiedCollections
 
 // MARK: - MutationState
 
@@ -11,7 +12,7 @@ public struct MutationState<Arguments: Sendable, Value: Sendable> {
   public private(set) var error: (any Error)?
   public private(set) var errorUpdateCount = 0
   public private(set) var errorLastUpdatedAt: Date?
-  public private(set) var history = [HistoryEntry]()
+  public private(set) var history = IdentifiedArrayOf<HistoryEntry>()
 }
 
 extension MutationState {
