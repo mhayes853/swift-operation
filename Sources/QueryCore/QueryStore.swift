@@ -260,7 +260,7 @@ extension QueryStore {
       context.queryStateLoader = self
       let task = Lock<QueryTask<any Sendable>?>(nil)
       return task.withLock { newTask in
-        let inner = QueryTask<any Sendable>(context: context) { [context] in
+        let inner = QueryTask<any Sendable>(context: context) { context in
           self.subscriptions.forEach { $0.onFetchingStarted?(context) }
           defer { self.subscriptions.forEach { $0.onFetchingEnded?(context) } }
           do {

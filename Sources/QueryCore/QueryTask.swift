@@ -19,16 +19,17 @@ public struct QueryTask<Value: Sendable>: _QueryTask {
   private typealias State = (task: Task<any Sendable, any Error>?, dependencies: [any _QueryTask])
 
   public let id: QueryTaskID
-  public let context: QueryContext
+  public var context: QueryContext
   fileprivate var dependencies: [any _QueryTask] {
     self.box.inner.withLock { $0.dependencies }
   }
-  private var work: @Sendable () async throws -> Value
+  private var work: @Sendable (QueryContext) async throws -> Value
   private let box: LockedBox<State>
 }
 
 extension QueryTask {
-  public init(context: QueryContext, work: @escaping @Sendable () async throws -> Value) {
+  public init(context: QueryContext, work: @escaping @Sendable (QueryContext) async throws -> Value)
+  {
     self.context = context
     self.work = work
     self.box = LockedBox(value: (nil, []))
@@ -135,7 +136,7 @@ extension QueryTask {
             group.addTask { _ = try? await dependency._runIfNeeded() }
           }
         }
-        return try await self.work() as any Sendable
+        return try await self.work(self.context) as any Sendable
       }
       state.task = task
       return task
@@ -153,7 +154,7 @@ extension QueryTask {
     QueryTask<T>(
       id: self.id,
       context: self.context,
-      work: { try await transform(try self.work()) },
+      work: { try await transform(try self.work($0)) },
       box: self.box
     )
   }

@@ -38,7 +38,8 @@ extension MutationState: QueryStateProtocol {
       reportWarning(.mutationWithNoArgumentsOrHistory)
       return task
     }
-    task.context.mutationValues.arguments = args
+    var task = task
+    task.context.mutationValues = MutationContextValues(arguments: args)
     self.history.append(HistoryEntry(task: task, args: args))
     return task
   }

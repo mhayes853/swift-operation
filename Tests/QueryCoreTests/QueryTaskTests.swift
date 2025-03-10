@@ -8,8 +8,8 @@ struct QueryTaskTests {
   func runsDependentTasks() async throws {
     let runCount = Lock(0)
 
-    let task1 = QueryTask<Int>(context: QueryContext()) { 40 }
-    let task2 = QueryTask<Int>(context: QueryContext()) {
+    let task1 = QueryTask<Int>(context: QueryContext()) { _ in 40 }
+    let task2 = QueryTask<Int>(context: QueryContext()) { _ in
       runCount.withLock { $0 += 1 }
       return 32
     }
@@ -22,8 +22,8 @@ struct QueryTaskTests {
   func ignoresErrorsFromDependentTasks() async throws {
     struct SomeError: Error {}
 
-    let task1 = QueryTask<Int>(context: QueryContext()) { 40 }
-    let task2 = QueryTask<Int>(context: QueryContext()) { throw SomeError() }
+    let task1 = QueryTask<Int>(context: QueryContext()) { _ in 40 }
+    let task2 = QueryTask<Int>(context: QueryContext()) { _ in throw SomeError() }
     task1.schedule(after: task2)
     await #expect(throws: Never.self) {
       _ = try await task1.runIfNeeded()
@@ -34,8 +34,8 @@ struct QueryTaskTests {
     @Test("Reports Issue When Circular Scheduling, 2 Tasks")
     func reportsIssueWhenCircularScheduling2Tasks() async throws {
       let context = QueryContext()
-      let task1 = QueryTask<Int>(context: context) { 40 }
-      let task2 = QueryTask<Int>(context: context) { 32 }
+      let task1 = QueryTask<Int>(context: context) { _ in 40 }
+      let task2 = QueryTask<Int>(context: context) { _ in 32 }
       task1.schedule(after: task2)
       withKnownIssue {
         task2.schedule(after: task1)
@@ -49,10 +49,10 @@ struct QueryTaskTests {
     @Test("Reports Issue When Circular Scheduling, 3 Tasks")
     func reportsIssueWhenCircularScheduling3Tasks() async throws {
       let context = QueryContext()
-      let task1 = QueryTask<Int>(context: context) { 40 }
-      let task2 = QueryTask<Int>(context: context) { 32 }
-      let task3 = QueryTask<Int>(context: context) { 24 }
-      let task4 = QueryTask<Int>(context: context) { 16 }
+      let task1 = QueryTask<Int>(context: context) { _ in 40 }
+      let task2 = QueryTask<Int>(context: context) { _ in 32 }
+      let task3 = QueryTask<Int>(context: context) { _ in 24 }
+      let task4 = QueryTask<Int>(context: context) { _ in 16 }
       task1.schedule(after: task2)
       task2.schedule(after: task3)
       task3.schedule(after: task4)
