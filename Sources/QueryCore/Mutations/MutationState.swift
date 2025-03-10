@@ -30,7 +30,11 @@ extension MutationState: QueryStateProtocol {
   public typealias QueryValue = Value
 
   public mutating func fetchTaskStarted(_ task: QueryTask<Value>) -> QueryTask<Value> {
+    let args = task.context.mutationValues?.arguments as! Arguments
     self.isLoading = true
+    self.history.append(
+      HistoryEntry(task: MutationTask(inner: task), arguments: args, status: .loading)
+    )
     return task
   }
 
@@ -38,15 +42,18 @@ extension MutationState: QueryStateProtocol {
     _ task: QueryTask<Value>,
     with result: Result<Value, any Error>
   ) {
+    let taskId = MutationTaskID(inner: task.id)
     switch result {
     case let .success(value):
       self.currentValue = value
       self.valueUpdateCount += 1
       self.valueLastUpdatedAt = task.context.queryClock.now()
+      self.history[id: taskId]?.status = .result(.success(value))
       self.error = nil
       self.isLoading = false
     case let .failure(error):
       self.error = error
+      self.history[id: taskId]?.status = .result(.failure(error))
       self.errorUpdateCount += 1
       self.errorLastUpdatedAt = task.context.queryClock.now()
       self.isLoading = false
@@ -60,7 +67,7 @@ extension MutationState {
   public struct HistoryEntry: Sendable {
     public let task: MutationTask<Value>
     public let arguments: Arguments
-    public let status: QueryStatus<StatusValue>
+    public fileprivate(set) var status: QueryStatus<StatusValue>
   }
 }
 

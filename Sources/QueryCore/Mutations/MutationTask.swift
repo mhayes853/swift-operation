@@ -31,7 +31,7 @@ extension MutationTask: Identifiable {
 // MARK: - MutationTaskID
 
 public struct MutationTaskID: Hashable, Sendable {
-  fileprivate let inner: QueryTaskID
+  let inner: QueryTaskID
 }
 
 // MARK: - Hashable

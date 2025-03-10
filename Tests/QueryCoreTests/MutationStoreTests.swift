@@ -53,6 +53,21 @@ struct MutationStoreTests {
     expectNoDifference(store.currentValue, "blob")
   }
 
+  @Test("Mutate Adds Value To History")
+  func mutateAddsValueToHistory() async throws {
+    let mutation = EmptyMutation()
+    let store = self.client.store(for: mutation)
+    try await store.mutate(with: "blob")
+    expectNoDifference(store.history.count, 1)
+    expectNoDifference(store.history[0].arguments, "blob")
+    expectNoDifference(store.history[0].status.isSuccessful, true)
+
+    try await store.mutate(with: "blob jr")
+    expectNoDifference(store.history.count, 2)
+    expectNoDifference(store.history[1].arguments, "blob jr")
+    expectNoDifference(store.history[1].status.isSuccessful, true)
+  }
+
   @Test("Mutation Is Loading")
   func mutationIsLoading() async throws {
     let mutation = SleepingMutation(clock: ImmediateClock(), duration: .seconds(1))
@@ -64,6 +79,18 @@ struct MutationStoreTests {
     expectNoDifference(store.isLoading, false)
   }
 
+  @Test("Mutation Is Loading, Adds Loading Status To History")
+  func mutationIsLoadingAddsLoadingStatusToHistory() async throws {
+    let mutation = SleepingMutation(clock: ImmediateClock(), duration: .seconds(1))
+    let store = self.client.store(for: mutation)
+    mutation.didBeginSleeping = {
+      expectNoDifference(store.history.count, 1)
+      expectNoDifference(store.history[0].status.isLoading, true)
+      expectNoDifference(store.history[0].arguments, "blob")
+    }
+    try await store.mutate(with: "blob")
+  }
+
   @Test("Mutation Throws Error")
   func mutationThrowsError() async throws {
     let mutation = FailableMutation()
@@ -71,6 +98,16 @@ struct MutationStoreTests {
     let result = try? await store.mutate(with: "blob")
     expectNoDifference(store.error != nil, true)
     expectNoDifference(result, nil)
+  }
+
+  @Test("Mutation Throws Error, Adds Error Status To History")
+  func mutationThrowsErrorAddsErrorStatusToHistory() async throws {
+    let mutation = FailableMutation()
+    let store = self.client.store(for: mutation)
+    _ = try? await store.mutate(with: "blob")
+    expectNoDifference(store.history.count, 1)
+    expectNoDifference(store.history[0].status.isFailure, true)
+    expectNoDifference(store.history[0].arguments, "blob")
   }
 
   @Test("Successful Mutation Events")
