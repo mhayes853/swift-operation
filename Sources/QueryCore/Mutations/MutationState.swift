@@ -4,12 +4,9 @@ import IdentifiedCollections
 // MARK: - MutationState
 
 public struct MutationState<Arguments: Sendable, Value: Sendable> {
-  public private(set) var currentValue: StateValue
   public let initialValue: StateValue
   public private(set) var valueUpdateCount = 0
   public private(set) var valueLastUpdatedAt: Date?
-  public private(set) var isLoading = false
-  public private(set) var error: (any Error)?
   public private(set) var errorUpdateCount = 0
   public private(set) var errorLastUpdatedAt: Date?
   public private(set) var history = IdentifiedArrayOf<HistoryEntry>()
@@ -17,7 +14,6 @@ public struct MutationState<Arguments: Sendable, Value: Sendable> {
 
 extension MutationState {
   init() {
-    self.currentValue = nil
     self.initialValue = nil
   }
 }
@@ -29,8 +25,19 @@ extension MutationState: QueryStateProtocol {
   public typealias StatusValue = Value
   public typealias QueryValue = Value
 
+  public var currentValue: StateValue {
+    self.history.last?.status.resultValue
+  }
+
+  public var error: (any Error)? {
+    self.history.last?.status.resultError
+  }
+
+  public var isLoading: Bool {
+    self.history.last?.status.isLoading ?? false
+  }
+
   public mutating func fetchTaskStarted(_ task: QueryTask<Value>) -> QueryTask<Value> {
-    self.isLoading = true
     self.history.append(HistoryEntry(task: task))
     return task
   }
@@ -41,18 +48,14 @@ extension MutationState: QueryStateProtocol {
   ) {
     let taskId = MutationTaskID(inner: task.id)
     self.history[id: taskId]?.finish(with: result)
+    guard let last = self.history.last, last.task.id == taskId else { return }
     switch result {
-    case let .success(value):
-      self.currentValue = value
+    case .success:
       self.valueUpdateCount += 1
-      self.valueLastUpdatedAt = task.context.queryClock.now()
-      self.error = nil
-      self.isLoading = false
-    case let .failure(error):
-      self.error = error
+      self.valueLastUpdatedAt = last.finishDate
+    case .failure:
       self.errorUpdateCount += 1
-      self.errorLastUpdatedAt = task.context.queryClock.now()
-      self.isLoading = false
+      self.errorLastUpdatedAt = last.finishDate
     }
   }
 }

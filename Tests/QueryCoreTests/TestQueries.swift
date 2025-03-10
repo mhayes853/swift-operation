@@ -425,7 +425,7 @@ final class FailableMutation: MutationProtocol {
 final class WaitableMutation: MutationProtocol {
   typealias _Values = (
     willWait: Bool,
-    continuations: [String: UnsafeContinuation<Void, Never>],
+    continuations: [String: UnsafeContinuation<Void, any Error>],
     onLoading: [String: @Sendable () -> Void]
   )
   typealias Value = String
@@ -442,16 +442,20 @@ final class WaitableMutation: MutationProtocol {
   }
 
   func waitForLoading(on args: String) async throws {
-    await withUnsafeContinuation { continuation in
+    try await withUnsafeThrowingContinuation { continuation in
       self.state.withLock { $0.continuations[args] = continuation }
     }
     await Task.megaYield()
   }
 
-  func advance(on args: String) async {
+  func advance(on args: String, with error: (any Error)? = nil) async {
     await Task.megaYield()
     self.state.withLock {
-      $0.continuations[args]?.resume()
+      if let error {
+        $0.continuations[args]?.resume(throwing: error)
+      } else {
+        $0.continuations[args]?.resume()
+      }
       $0.continuations.removeValue(forKey: args)
     }
   }

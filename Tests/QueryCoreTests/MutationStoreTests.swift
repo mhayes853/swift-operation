@@ -1,5 +1,6 @@
 import Clocks
 import CustomDump
+import Foundation
 import QueryCore
 import Testing
 
@@ -145,6 +146,137 @@ struct MutationStoreTests {
     _ = try? await store.mutate(with: "blob")
     let endDate = try #require(store.history[0].finishDate)
     expectNoDifference(endDate > store.history[0].startDate, true)
+  }
+
+  @Test("State Values Based On Most Recent Mutation")
+  func stateValuesBasedOnMostRecentMutation() async throws {
+    let mutation = WaitableMutation()
+    mutation.state.withLock { $0.willWait = true }
+    let store = self.client.store(for: mutation)
+
+    mutation.onLoading(for: "blob") {
+      expectNoDifference(store.isLoading, true)
+      Task { try await store.mutate(with: "blob jr") }
+    }
+    mutation.onLoading(for: "blob jr") {
+      expectNoDifference(store.isLoading, true)
+      Task {
+        await Task.megaYield()
+        await mutation.advance(on: "blob")
+      }
+    }
+    try await store.mutate(with: "blob")
+    expectNoDifference(store.isLoading, true)
+    expectNoDifference(store.currentValue, nil)
+
+    let task = store.history.first { $0.arguments == "blob jr" }?.task
+    await mutation.advance(on: "blob jr")
+    _ = try await task?.value
+    expectNoDifference(store.isLoading, false)
+    expectNoDifference(store.currentValue, "blob jr")
+  }
+
+  @Test("Only Updates Value Update Count And Date When Current Mutation Is Completed")
+  func onlyUpdatesValueUpdateCountAndDateWhenCurrentMutationIsCompleted() async throws {
+    let mutation = WaitableMutation()
+    mutation.state.withLock { $0.willWait = true }
+    let updatedAtDate = Date()
+    let store = self.client.store(for: mutation)
+    store.context.queryClock = .custom { updatedAtDate }
+
+    mutation.onLoading(for: "blob") {
+      Task { try await store.mutate(with: "blob jr") }
+    }
+    mutation.onLoading(for: "blob jr") {
+      Task {
+        await Task.megaYield()
+        await mutation.advance(on: "blob")
+      }
+    }
+    try await store.mutate(with: "blob")
+    expectNoDifference(store.valueUpdateCount, 0)
+    expectNoDifference(store.valueLastUpdatedAt, nil)
+
+    let task = store.history.first { $0.arguments == "blob jr" }?.task
+    await mutation.advance(on: "blob jr")
+    _ = try await task?.value
+    expectNoDifference(store.valueUpdateCount, 1)
+    expectNoDifference(store.valueLastUpdatedAt, updatedAtDate)
+  }
+
+  @Test("State Values Based On Most Recent Mutation, Throws Error")
+  func stateValuesBasedOnMostRecentMutationThrowsError() async throws {
+    struct SomeError: Error {}
+
+    let mutation = WaitableMutation()
+    mutation.state.withLock { $0.willWait = true }
+    let store = self.client.store(for: mutation)
+
+    mutation.onLoading(for: "blob") {
+      expectNoDifference(store.isLoading, true)
+      Task { try await store.mutate(with: "blob jr") }
+    }
+    mutation.onLoading(for: "blob jr") {
+      expectNoDifference(store.isLoading, true)
+      Task {
+        await Task.megaYield()
+        await mutation.advance(on: "blob")
+      }
+    }
+    try await store.mutate(with: "blob")
+    expectNoDifference(store.isLoading, true)
+    expectNoDifference(store.error == nil, true)
+
+    let task = store.history.first { $0.arguments == "blob jr" }?.task
+    await mutation.advance(on: "blob jr", with: SomeError())
+    _ = try? await task?.value
+    expectNoDifference(store.isLoading, false)
+    expectNoDifference(store.error != nil, true)
+  }
+
+  @Test("Only Updates Error Update Count And Date When Current Mutation Is Completed")
+  func onlyUpdatesErrorUpdateCountAndDateWhenCurrentMutationIsCompleted() async throws {
+    struct SomeError: Error {}
+
+    let mutation = WaitableMutation()
+    mutation.state.withLock { $0.willWait = true }
+    let updatedAtDate = Date()
+    let store = self.client.store(for: mutation)
+    store.context.queryClock = .custom { updatedAtDate }
+
+    mutation.onLoading(for: "blob") {
+      Task { try await store.mutate(with: "blob jr") }
+    }
+    mutation.onLoading(for: "blob jr") {
+      Task {
+        await Task.megaYield()
+        await mutation.advance(on: "blob", with: SomeError())
+      }
+    }
+    _ = try? await store.mutate(with: "blob")
+    expectNoDifference(store.errorUpdateCount, 0)
+    expectNoDifference(store.errorLastUpdatedAt, nil)
+
+    let task = store.history.first { $0.arguments == "blob jr" }?.task
+    await mutation.advance(on: "blob jr", with: SomeError())
+    _ = try? await task?.value
+    expectNoDifference(store.errorUpdateCount, 1)
+    expectNoDifference(store.errorLastUpdatedAt, updatedAtDate)
+  }
+
+  @Test("History Value Last Updated At Equals State Last Updated At")
+  func historyValueLastUpdatedAtEqualsStateLastUpdatedAt() async throws {
+    let store = self.client.store(for: EmptyMutation())
+    try await store.mutate(with: "blob")
+    expectNoDifference(store.history.first?.finishDate, store.valueLastUpdatedAt)
+  }
+
+  @Test("History Error Last Updated At Equals State Last Updated At")
+  func historyErrorLastUpdatedAtEqualsStateLastUpdatedAt() async throws {
+    let mutation = FailableMutation()
+    let store = self.client.store(for: mutation)
+    try? await store.mutate(with: "blob")
+    expectNoDifference(store.history.first?.finishDate, store.errorLastUpdatedAt)
   }
 
   @Test("Successful Mutation Events")
