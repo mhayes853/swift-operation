@@ -80,7 +80,7 @@ extension MutationStore {
     var context = context ?? self.context
     context.mutationValues = MutationContextValues(arguments: arguments)
     return try await self.base.fetch(
-      handler: self.queryStoreHandler(for: handler, args: arguments),
+      handler: self.queryStoreHandler(for: handler),
       using: context
     )
   }
@@ -89,10 +89,14 @@ extension MutationStore {
 // MARK: - Subscribe
 
 extension MutationStore {
+  public var subscriberCount: Int {
+    self.base.subscriberCount
+  }
+
   public func subscribe(
     with handler: MutationEventHandler<Arguments, Value>
   ) async throws -> QuerySubscription {
-    fatalError()
+    self.base.subscribe(with: self.queryStoreHandler(for: handler))
   }
 }
 
@@ -100,13 +104,21 @@ extension MutationStore {
 
 extension MutationStore {
   private func queryStoreHandler(
-    for handler: MutationEventHandler<Arguments, Value>,
-    args: Arguments
+    for handler: MutationEventHandler<Arguments, Value>
   ) -> QueryEventHandler<Value> {
     QueryEventHandler<Value>(
-      onFetchingStarted: { handler.onMutatingStarted?(args) },
-      onFetchingEnded: { handler.onMutatingEnded?(args) },
-      onResultReceived: { handler.onMutationResultReceived?(args, $0) }
+      onFetchingStarted: {
+        guard let args = $0.mutationArgs(as: Arguments.self) else { return }
+        handler.onMutatingStarted?(args, $0)
+      },
+      onFetchingEnded: {
+        guard let args = $0.mutationArgs(as: Arguments.self) else { return }
+        handler.onMutatingEnded?(args, $0)
+      },
+      onResultReceived: {
+        guard let args = $1.mutationArgs(as: Arguments.self) else { return }
+        handler.onMutationResultReceived?(args, $0, $1)
+      }
     )
   }
 }

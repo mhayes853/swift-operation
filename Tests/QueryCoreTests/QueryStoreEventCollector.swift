@@ -70,11 +70,11 @@ extension MutationStoreEventsCollector {
     -> MutationEventHandler<Arguments, Value>
   where Event == MutationStoreEvent<Arguments, Value> {
     MutationEventHandler(
-      onMutatingStarted: { args in self.events.withLock { $0.append(.mutatingStarted(args)) } },
-      onMutationResultReceived: { args, result in
+      onMutatingStarted: { args, _ in self.events.withLock { $0.append(.mutatingStarted(args)) } },
+      onMutationResultReceived: { args, result, _ in
         self.events.withLock { $0.append(.mutationResultReceived(args, result)) }
       },
-      onMutatingEnded: { args in self.events.withLock { $0.append(.mutatingEnded(args)) } }
+      onMutatingEnded: { args, _ in self.events.withLock { $0.append(.mutatingEnded(args)) } }
     )
   }
 }
@@ -137,14 +137,17 @@ extension InfiniteQueryStoreEventsCollector {
     -> InfiniteQueryEventHandler<PageID, PageValue>
   where Event == InfiniteQueryStoreEvent<PageID, PageValue> {
     InfiniteQueryEventHandler(
-      onFetchingStarted: { self.events.withLock { $0.append(.fetchingStarted) } },
-      onPageFetchingStarted: { id in self.events.withLock { $0.append(.pageFetchingStarted(id)) } },
-      onPageResultReceived: { id, result in
+      onFetchingStarted: { _ in self.events.withLock { $0.append(.fetchingStarted) } },
+      onPageFetchingStarted: { id, _ in self.events.withLock { $0.append(.pageFetchingStarted(id)) }
+      },
+      onPageResultReceived: { id, result, _ in
         self.events.withLock { $0.append(.pageResultReceived(id, result)) }
       },
-      onResultReceived: { result in self.events.withLock { $0.append(.resultReceived(result)) } },
-      onPageFetchingFinished: { id in self.events.withLock { $0.append(.pageFetchingEnded(id)) } },
-      onFetchingFinished: { self.events.withLock { $0.append(.fetchingEnded) } }
+      onResultReceived: { result, _ in self.events.withLock { $0.append(.resultReceived(result)) }
+      },
+      onPageFetchingFinished: { id, _ in self.events.withLock { $0.append(.pageFetchingEnded(id)) }
+      },
+      onFetchingFinished: { _ in self.events.withLock { $0.append(.fetchingEnded) } }
     )
   }
 }
@@ -187,9 +190,9 @@ extension QueryStoreEventsCollector {
   func eventHandler<Value: Sendable>() -> QueryEventHandler<Value>
   where Event == QueryStoreEvent<Value> {
     QueryEventHandler(
-      onFetchingStarted: { self.events.withLock { $0.append(.fetchingStarted) } },
-      onFetchingEnded: { self.events.withLock { $0.append(.fetchingEnded) } },
-      onResultReceived: { result in self.events.withLock { $0.append(.resultReceived(result)) } }
+      onFetchingStarted: { _ in self.events.withLock { $0.append(.fetchingStarted) } },
+      onFetchingEnded: { _ in self.events.withLock { $0.append(.fetchingEnded) } },
+      onResultReceived: { result, _ in self.events.withLock { $0.append(.resultReceived(result)) } }
     )
   }
 }

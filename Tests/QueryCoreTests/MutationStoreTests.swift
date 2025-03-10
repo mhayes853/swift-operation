@@ -338,4 +338,20 @@ struct MutationStoreTests {
       .mutatingEnded("blob")
     ])
   }
+
+  @Test("Subscribe To Mutation Events")
+  func subscribeToMutationEvents() async throws {
+    let mutation = EmptyMutation()
+    let store = self.client.store(for: mutation)
+    let collector = MutationStoreEventsCollector<EmptyMutation.Arguments, EmptyMutation.Value>()
+    let subscription = try await store.subscribe(with: collector.eventHandler())
+    try await store.mutate(with: "blob")
+
+    collector.expectEventsMatch([
+      .mutatingStarted("blob"),
+      .mutationResultReceived("blob", .success("blob")),
+      .mutatingEnded("blob")
+    ])
+    subscription.cancel()
+  }
 }

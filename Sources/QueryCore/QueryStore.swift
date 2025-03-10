@@ -261,8 +261,8 @@ extension QueryStore {
       let task = Lock<QueryTask<any Sendable>?>(nil)
       return task.withLock { newTask in
         let inner = QueryTask<any Sendable>(context: context) { [context] in
-          self.subscriptions.forEach { $0.onFetchingStarted?() }
-          defer { self.subscriptions.forEach { $0.onFetchingEnded?() } }
+          self.subscriptions.forEach { $0.onFetchingStarted?(context) }
+          defer { self.subscriptions.forEach { $0.onFetchingEnded?(context) } }
           do {
             let value = try await self._query.fetch(in: context)
             self._state.inner.withLock { state in
@@ -270,7 +270,7 @@ extension QueryStore {
                 guard let task = $0 else { return }
                 state.query.fetchTaskEnded(task, with: .success(value))
               }
-              self.subscriptions.forEach { $0.onResultReceived?(.success(value)) }
+              self.subscriptions.forEach { $0.onResultReceived?(.success(value), context) }
             }
             return value as! State.QueryValue
           } catch {
@@ -279,7 +279,7 @@ extension QueryStore {
                 guard let task = $0 else { return }
                 state.query.fetchTaskEnded(task, with: .failure(error))
               }
-              self.subscriptions.forEach { $0.onResultReceived?(.failure(error)) }
+              self.subscriptions.forEach { $0.onResultReceived?(.failure(error), context) }
             }
             throw error
           }

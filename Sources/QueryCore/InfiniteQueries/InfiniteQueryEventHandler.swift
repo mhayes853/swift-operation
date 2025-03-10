@@ -7,26 +7,30 @@ public struct InfiniteQueryEventHandler<
   PageID: Hashable & Sendable,
   PageValue: Sendable
 >: Sendable {
-  let onFetchingStarted: (@Sendable () -> Void)?
-  let onPageFetchingStarted: (@Sendable (PageID) -> Void)?
+  let onFetchingStarted: (@Sendable (QueryContext) -> Void)?
+  let onPageFetchingStarted: (@Sendable (PageID, QueryContext) -> Void)?
   let onPageResultReceived:
-    (@Sendable (PageID, Result<InfiniteQueryPage<PageID, PageValue>, any Error>) -> Void)?
+    (
+      @Sendable (PageID, Result<InfiniteQueryPage<PageID, PageValue>, any Error>, QueryContext) ->
+        Void
+    )?
   let onResultReceived:
-    (@Sendable (Result<InfiniteQueryPages<PageID, PageValue>, any Error>) -> Void)?
-  let onPageFetchingFinished: (@Sendable (PageID) -> Void)?
-  let onFetchingFinished: (@Sendable () -> Void)?
+    (@Sendable (Result<InfiniteQueryPages<PageID, PageValue>, any Error>, QueryContext) -> Void)?
+  let onPageFetchingFinished: (@Sendable (PageID, QueryContext) -> Void)?
+  let onFetchingFinished: (@Sendable (QueryContext) -> Void)?
 
   public init(
-    onFetchingStarted: (@Sendable () -> Void)? = nil,
-    onPageFetchingStarted: (@Sendable (PageID) -> Void)? = nil,
+    onFetchingStarted: (@Sendable (QueryContext) -> Void)? = nil,
+    onPageFetchingStarted: (@Sendable (PageID, QueryContext) -> Void)? = nil,
     onPageResultReceived: (
-      @Sendable (PageID, Result<InfiniteQueryPage<PageID, PageValue>, any Error>) -> Void
+      @Sendable (PageID, Result<InfiniteQueryPage<PageID, PageValue>, any Error>, QueryContext) ->
+        Void
     )? = nil,
     onResultReceived: (
-      @Sendable (Result<InfiniteQueryPages<PageID, PageValue>, any Error>) -> Void
+      @Sendable (Result<InfiniteQueryPages<PageID, PageValue>, any Error>, QueryContext) -> Void
     )? = nil,
-    onPageFetchingFinished: (@Sendable (PageID) -> Void)? = nil,
-    onFetchingFinished: (@Sendable () -> Void)? = nil
+    onPageFetchingFinished: (@Sendable (PageID, QueryContext) -> Void)? = nil,
+    onFetchingFinished: (@Sendable (QueryContext) -> Void)? = nil
   ) {
     self.onFetchingStarted = onFetchingStarted
     self.onPageFetchingStarted = onPageFetchingStarted
@@ -43,23 +47,23 @@ extension InfiniteQueryEventHandler {
   func erased() -> InfiniteQueryEventHandler<AnyHashableSendable, any Sendable> {
     InfiniteQueryEventHandler<AnyHashableSendable, any Sendable>(
       onFetchingStarted: self.onFetchingStarted,
-      onPageFetchingStarted: { self.onPageFetchingStarted?($0.base as! PageID) },
-      onPageResultReceived: { id, result in
+      onPageFetchingStarted: { self.onPageFetchingStarted?($0.base as! PageID, $1) },
+      onPageResultReceived: { id, result, context in
         let newResult = result.map {
           InfiniteQueryPage(id: $0.id.base as! PageID, value: $0.value as! PageValue)
         }
-        self.onPageResultReceived?(id.base as! PageID, newResult)
+        self.onPageResultReceived?(id.base as! PageID, newResult, context)
       },
-      onResultReceived: { result in
+      onResultReceived: { result, context in
         let newResult = result.map { pages in
           let array = pages.map {
             InfiniteQueryPage(id: $0.id.base as! PageID, value: $0.value as! PageValue)
           }
           return InfiniteQueryPages(uniqueElements: array)
         }
-        self.onResultReceived?(newResult)
+        self.onResultReceived?(newResult, context)
       },
-      onPageFetchingFinished: { self.onPageFetchingFinished?($0.base as! PageID) },
+      onPageFetchingFinished: { self.onPageFetchingFinished?($0.base as! PageID, $1) },
       onFetchingFinished: self.onFetchingFinished
     )
   }

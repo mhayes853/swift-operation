@@ -1,14 +1,14 @@
 // MARK: - QueryEventHandler
 
 public struct QueryEventHandler<Value: Sendable>: Sendable {
-  let onFetchingStarted: (@Sendable () -> Void)?
-  let onFetchingEnded: (@Sendable () -> Void)?
-  let onResultReceived: (@Sendable (Result<Value, any Error>) -> Void)?
+  let onFetchingStarted: (@Sendable (QueryContext) -> Void)?
+  let onFetchingEnded: (@Sendable (QueryContext) -> Void)?
+  let onResultReceived: (@Sendable (Result<Value, any Error>, QueryContext) -> Void)?
 
   public init(
-    onFetchingStarted: (@Sendable () -> Void)? = nil,
-    onFetchingEnded: (@Sendable () -> Void)? = nil,
-    onResultReceived: (@Sendable (Result<Value, any Error>) -> Void)? = nil
+    onFetchingStarted: (@Sendable (QueryContext) -> Void)? = nil,
+    onFetchingEnded: (@Sendable (QueryContext) -> Void)? = nil,
+    onResultReceived: (@Sendable (Result<Value, any Error>, QueryContext) -> Void)? = nil
   ) {
     self.onFetchingStarted = onFetchingStarted
     self.onResultReceived = onResultReceived
@@ -23,12 +23,12 @@ extension QueryEventHandler {
     QueryEventHandler<any Sendable>(
       onFetchingStarted: onFetchingStarted,
       onFetchingEnded: onFetchingEnded,
-      onResultReceived: { result in
+      onResultReceived: { result, context in
         switch result {
         case let .success(value):
-          onResultReceived?(.success(value as! Value))
+          onResultReceived?(.success(value as! Value), context)
         case let .failure(error):
-          onResultReceived?(.failure(error))
+          onResultReceived?(.failure(error), context)
         }
       }
     )

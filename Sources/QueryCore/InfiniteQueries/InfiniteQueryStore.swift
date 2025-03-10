@@ -187,10 +187,10 @@ extension InfiniteQueryStore {
     for handler: InfiniteQueryEventHandler<PageID, PageValue>
   ) -> QueryEventHandler<InfiniteQueryState<PageID, PageValue>.QueryValue> {
     QueryEventHandler(
-      onFetchingStarted: { handler.onFetchingStarted?() },
-      onFetchingEnded: { handler.onFetchingFinished?() },
+      onFetchingStarted: { handler.onFetchingStarted?($0) },
+      onFetchingEnded: { handler.onFetchingFinished?($0) },
       onResultReceived: {
-        handler.onResultReceived?($0.map { [weak self] _ in self?.currentValue ?? [] })
+        handler.onResultReceived?($0.map { [weak self] _ in self?.currentValue ?? [] }, $1)
       }
     )
   }
