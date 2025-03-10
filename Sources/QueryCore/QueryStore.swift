@@ -268,7 +268,7 @@ extension QueryStore {
             self._state.inner.withLock { state in
               task.withLock {
                 guard let task = $0 else { return }
-                state.query.endFetchTask(task, with: .success(value))
+                state.query.fetchTaskEnded(task, with: .success(value))
               }
               self.subscriptions.forEach { $0.onResultReceived?(.success(value)) }
             }
@@ -277,7 +277,7 @@ extension QueryStore {
             self._state.inner.withLock { state in
               task.withLock {
                 guard let task = $0 else { return }
-                state.query.endFetchTask(task, with: .failure(error))
+                state.query.fetchTaskEnded(task, with: .failure(error))
               }
               self.subscriptions.forEach { $0.onResultReceived?(.failure(error)) }
             }
@@ -285,7 +285,7 @@ extension QueryStore {
           }
         }
         newTask = inner
-        return state.query.startFetchTask(inner)
+        return state.query.fetchTaskStarted(inner)
       }
     }
   }

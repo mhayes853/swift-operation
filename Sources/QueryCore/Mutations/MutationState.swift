@@ -28,12 +28,12 @@ extension MutationState: QueryStateProtocol {
   public typealias StatusValue = Value
   public typealias QueryValue = Value
 
-  public mutating func startFetchTask(_ task: QueryTask<Value>) -> QueryTask<Value> {
+  public mutating func fetchTaskStarted(_ task: QueryTask<Value>) -> QueryTask<Value> {
     self.isLoading = true
     return task
   }
 
-  public mutating func endFetchTask(
+  public mutating func fetchTaskEnded(
     _ task: QueryTask<Value>,
     with result: Result<Value, any Error>
   ) {

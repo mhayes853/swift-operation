@@ -49,7 +49,7 @@ extension InfiniteQueryState: QueryStateProtocol {
       || self.isLoadingInitialPage
   }
 
-  public mutating func startFetchTask(
+  public mutating func fetchTaskStarted(
     _ task: QueryTask<InfiniteQueryValue<PageID, PageValue>>
   ) -> QueryTask<InfiniteQueryValue<PageID, PageValue>> {
     let request = self.request(in: task.context)
@@ -95,7 +95,7 @@ extension InfiniteQueryState: QueryStateProtocol {
     return task
   }
 
-  public mutating func endFetchTask(
+  public mutating func fetchTaskEnded(
     _ task: QueryTask<InfiniteQueryValue<PageID, PageValue>>,
     with result: Result<InfiniteQueryValue<PageID, PageValue>, any Error>
   ) {

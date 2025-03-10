@@ -26,21 +26,21 @@ extension AnyQueryState: QueryStateProtocol {
   public var errorUpdateCount: Int { self.base.errorUpdateCount }
   public var errorLastUpdatedAt: Date? { self.base.errorLastUpdatedAt }
 
-  public mutating func startFetchTask(
+  public mutating func fetchTaskStarted(
     _ task: QueryTask<any Sendable>
   ) -> QueryTask<any Sendable> {
     func open<State: QueryStateProtocol>(state: inout State) -> QueryTask<any Sendable> {
-      state.startFetchTask(task.map { $0 as! State.QueryValue }).map { $0 as any Sendable }
+      state.fetchTaskStarted(task.map { $0 as! State.QueryValue }).map { $0 as any Sendable }
     }
     return open(state: &self.base)
   }
 
-  public mutating func endFetchTask(
+  public mutating func fetchTaskEnded(
     _ task: QueryTask<any Sendable>,
     with result: Result<any Sendable, any Error>
   ) {
     func open<State: QueryStateProtocol>(state: inout State) {
-      state.endFetchTask(
+      state.fetchTaskEnded(
         task.map { $0 as! State.QueryValue },
         with: result.map { $0 as! State.QueryValue }
       )

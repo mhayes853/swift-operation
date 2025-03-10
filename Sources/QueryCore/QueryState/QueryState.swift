@@ -26,7 +26,7 @@ extension QueryState {
 extension QueryState: QueryStateProtocol {
   public typealias StatusValue = QueryValue
 
-  public mutating func startFetchTask(_ task: QueryTask<QueryValue>) -> QueryTask<QueryValue> {
+  public mutating func fetchTaskStarted(_ task: QueryTask<QueryValue>) -> QueryTask<QueryValue> {
     if let task = self.fetchTask {
       return task
     }
@@ -35,7 +35,7 @@ extension QueryState: QueryStateProtocol {
     return task
   }
 
-  public mutating func endFetchTask(
+  public mutating func fetchTaskEnded(
     _ task: QueryTask<QueryValue>,
     with result: Result<QueryValue, any Error>
   ) {
