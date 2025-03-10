@@ -11,6 +11,7 @@ public struct MutationState<Arguments: Sendable, Value: Sendable> {
   public private(set) var error: (any Error)?
   public private(set) var errorUpdateCount = 0
   public private(set) var errorLastUpdatedAt: Date?
+  public private(set) var history = [HistoryEntry]()
 }
 
 extension MutationState {
@@ -49,5 +50,21 @@ extension MutationState: QueryStateProtocol {
       self.errorLastUpdatedAt = task.context.queryClock.now()
       self.isLoading = false
     }
+  }
+}
+
+// MARK: - History Entry
+
+extension MutationState {
+  public struct HistoryEntry: Sendable {
+    public let task: MutationTask<Value>
+    public let arguments: Arguments
+    public let status: QueryStatus<StatusValue>
+  }
+}
+
+extension MutationState.HistoryEntry: Identifiable {
+  public var id: MutationTaskID {
+    self.task.id
   }
 }
