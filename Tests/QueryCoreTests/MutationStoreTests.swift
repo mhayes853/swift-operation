@@ -1,7 +1,7 @@
 import Clocks
 import CustomDump
 import Foundation
-import QueryCore
+@_spi(Warnings) import QueryCore
 import Testing
 
 @Suite("MutationStore tests")
@@ -284,6 +284,30 @@ struct MutationStoreTests {
     let mutation = FailableMutation()
     let store = QueryStoreFor<FailableMutation>.detached(mutation: mutation)
     expectNoDifference(store.isAutomaticFetchingEnabled, false)
+  }
+
+  @Test("Reports Issue When Fetching Mutation Through A Base QueryStore With No History")
+  func reportsIssueWhenFetchingMutationThroughABaseQueryStoreWithNoHistory() async throws {
+    let mutation = FailableMutation()
+    let store = QueryStoreFor<FailableMutation>.detached(mutation: mutation)
+    await withKnownIssue {
+      _ = try? await store.fetch()
+    } matching: {
+      $0.comments.contains(.warning(.mutationWithNoArgumentsOrHistory))
+    }
+    expectNoDifference(store.history.isEmpty, true)
+  }
+
+  @Test("Retries Latest History When Calling Fetch On Base QueryStore For Mutation")
+  func retriesLatestHistoryWhenCallingFetchOnBaseQueryStoreForMutation() async throws {
+    let mutation = EmptyMutation()
+    let store = QueryStoreFor<FailableMutation>.detached(mutation: mutation)
+    let mutationStore = MutationStore(store: store)
+    try await mutationStore.mutate(with: "blob")
+    let value = try await store.fetch()
+    expectNoDifference(value, "blob")
+    expectNoDifference(mutationStore.history.count, 2)
+    expectNoDifference(mutationStore.history.map(\.arguments), ["blob", "blob"])
   }
 
   @Test("Successful Mutation Events")

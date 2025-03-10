@@ -33,7 +33,13 @@ extension MutationState: QueryStateProtocol {
   }
 
   public mutating func fetchTaskStarted(_ task: QueryTask<Value>) -> QueryTask<Value> {
-    self.history.append(HistoryEntry(task: task))
+    let args = task.context.mutationArgs(as: Arguments.self) ?? self.history.last?.arguments
+    guard let args else {
+      reportWarning(.mutationWithNoArgumentsOrHistory)
+      return task
+    }
+    task.context.mutationValues.arguments = args
+    self.history.append(HistoryEntry(task: task, args: args))
     return task
   }
 
@@ -64,16 +70,20 @@ extension MutationState {
     public let startDate: Date
     public private(set) var finishDate: Date?
     public private(set) var status: QueryStatus<StatusValue>
+
+    fileprivate init(task: QueryTask<Value>, args: Arguments) {
+      self.task = MutationTask(inner: task)
+      self.arguments = args
+      self.startDate = task.context.queryClock.now()
+      self.finishDate = nil
+      self.status = .loading
+    }
   }
 }
 
-extension MutationState.HistoryEntry {
-  fileprivate init(task: QueryTask<Value>) {
-    self.task = MutationTask(inner: task)
-    self.arguments = task.context.mutationValues?.arguments as! Arguments
-    self.startDate = task.context.queryClock.now()
-    self.finishDate = nil
-    self.status = .loading
+extension MutationState.HistoryEntry: Identifiable {
+  public var id: MutationTaskID {
+    self.task.id
   }
 }
 
@@ -84,8 +94,19 @@ extension MutationState.HistoryEntry {
   }
 }
 
-extension MutationState.HistoryEntry: Identifiable {
-  public var id: MutationTaskID {
-    self.task.id
-  }
+// MARK: - Warnings
+
+extension QueryCoreWarning {
+  public static let mutationWithNoArgumentsOrHistory = QueryCoreWarning(
+    """
+    A mutation was started by a base QueryStore instance, but no history for the mutation exists.
+
+    Calling `fetch` on a QueryStore that uses a mutation will retry the latest mutation attempt in
+    the history (ie. recalling `mutate`, but with the same arguments), but this is impossible if
+    there is no history for the mutation.
+
+    Make sure to call `mutate` on a `MutationStore` instance first before calling `fetch` on the
+    `QueryStore` instance, and ensure that the MutationStore uses the same QueryStore.
+    """
+  )
 }

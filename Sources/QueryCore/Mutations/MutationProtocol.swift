@@ -13,7 +13,11 @@ extension MutationProtocol {
   }
 
   public func fetch(in context: QueryContext) async throws -> Value {
-    let args = context.mutationValues?.arguments as! Arguments
+    guard let args = context.mutationArgs(as: Arguments.self) else {
+      throw MutationNoArgumentsError()
+    }
     return try await self.mutate(with: args, in: context)
   }
 }
+
+private struct MutationNoArgumentsError: Error {}
