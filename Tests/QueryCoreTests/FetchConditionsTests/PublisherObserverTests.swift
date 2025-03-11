@@ -2,7 +2,7 @@
   import CustomDump
   import QueryCore
   import Testing
-  import Combine
+  @preconcurrency import Combine
 
   @Suite("PublisherObserver tests")
   struct PublisherObserverTests {

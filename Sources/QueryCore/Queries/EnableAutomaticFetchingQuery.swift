@@ -2,14 +2,14 @@
 
 extension QueryProtocol {
   public func enableAutomaticFetching(
-    when condition: EnableStoreAutomaticFetchingCondition
+    when condition: some FetchConditionObserver
   ) -> ModifiedQuery<Self, some QueryModifier<Self>> {
     self.modifier(EnableAutomaticFetchingModifier(condition: condition))
   }
 }
 
 private struct EnableAutomaticFetchingModifier<Query: QueryProtocol>: QueryModifier {
-  let condition: EnableStoreAutomaticFetchingCondition
+  let condition: any FetchConditionObserver
 
   func _setup(context: inout QueryContext, using query: Query) {
     context.enableAutomaticFetchingCondition = self.condition
@@ -24,12 +24,12 @@ private struct EnableAutomaticFetchingModifier<Query: QueryProtocol>: QueryModif
 // MARK: - QueryContext
 
 extension QueryContext {
-  public var enableAutomaticFetchingCondition: EnableStoreAutomaticFetchingCondition {
+  public var enableAutomaticFetchingCondition: any FetchConditionObserver {
     get { self[EnableAutomaticFetchingKey.self] }
     set { self[EnableAutomaticFetchingKey.self] = newValue }
   }
 
   private enum EnableAutomaticFetchingKey: Key {
-    static let defaultValue = EnableStoreAutomaticFetchingCondition.firstSubscribedTo
+    static var defaultValue: any FetchConditionObserver { .always(true) }
   }
 }

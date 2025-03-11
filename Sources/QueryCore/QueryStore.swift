@@ -216,7 +216,7 @@ extension QueryStore {
 
 extension QueryStore {
   public var isAutomaticFetchingEnabled: Bool {
-    self.context.enableAutomaticFetchingCondition.isEnabledByDefault
+    self.context.enableAutomaticFetchingCondition.isSatisfied(in: self.context)
   }
 }
 

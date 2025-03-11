@@ -21,7 +21,7 @@ struct InfiniteQueryStoreTests {
   func testCastsToInfiniteQueryStoreFromAnyQueryStoreWithModifier() {
     let store = AnyQueryStore.detached(
       erasing: EmptyInfiniteQuery(initialPageId: 0, path: [])
-        .enableAutomaticFetching(when: .fetchManuallyCalled),
+        .enableAutomaticFetching(when: .always(false)),
       initialValue: []
     )
     let infiniteStore = InfiniteQueryStoreFor<EmptyInfiniteQuery>(casting: store)

@@ -1,4 +1,4 @@
-public protocol FetchConditionObserver {
+public protocol FetchConditionObserver: Sendable {
   func isSatisfied(in context: QueryContext) -> Bool
 
   func subscribe(

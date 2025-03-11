@@ -9,7 +9,7 @@ where StateValue == Value?, State == MutationState<Arguments, Value> {
 
 extension MutationProtocol {
   public func _setup(context: inout QueryContext) {
-    context.enableAutomaticFetchingCondition = .fetchManuallyCalled
+    context.enableAutomaticFetchingCondition = .always(false)
   }
 
   public func fetch(in context: QueryContext) async throws -> Value {

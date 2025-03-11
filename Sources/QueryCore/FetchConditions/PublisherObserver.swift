@@ -3,7 +3,8 @@
 
   // MARK: - PublisherObserver
 
-  public final class PublisherObserver<P: Publisher> where P.Output == Bool, P.Failure == Never {
+  public final class PublisherObserver<P: Publisher & Sendable>
+  where P.Output == Bool, P.Failure == Never {
     private typealias State = (cancellable: AnyCancellable?, currentValue: Bool)
 
     private let publisher: P

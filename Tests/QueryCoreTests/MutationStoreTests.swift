@@ -18,7 +18,7 @@ struct MutationStoreTests {
   @Test("Casts To MutationStore From AnyQueryStore With Modifier")
   func testCastsToMutationStoreFromAnyQueryStoreWithModifier() {
     let store = AnyQueryStore.detached(
-      erasing: EmptyMutation().enableAutomaticFetching(when: .fetchManuallyCalled)
+      erasing: EmptyMutation().enableAutomaticFetching(when: .always(false))
     )
     let mutationStore = MutationStoreFor<EmptyMutation>(casting: store)
     expectNoDifference(mutationStore != nil, true)
