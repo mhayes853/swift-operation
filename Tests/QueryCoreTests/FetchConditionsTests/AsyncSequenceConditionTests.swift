@@ -3,8 +3,8 @@ import CustomDump
 import QueryCore
 import Testing
 
-@Suite("PublisherObserver tests")
-struct AsyncSequenceObserverTests {
+@Suite("AsyncSequenceCondition tests")
+struct AsyncSequenceConditionTests {
   @Test("Observes Publisher Value")
   func observeSequenceValue() async {
     let (stream, continuation) = AsyncStream<Bool>.makeStream()

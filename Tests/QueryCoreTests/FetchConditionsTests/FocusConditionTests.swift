@@ -3,11 +3,11 @@ import Foundation
 import QueryCore
 import Testing
 
-@Suite("FocusObserver tests", .serialized)
-struct FocusObserverTests {
+@Suite("FocusCondition tests", .serialized)
+struct FocusConditionTests {
   @Test("Uses Default Activity State", arguments: [true, false])
   func defaultActivityState(isActive: Bool) {
-    let observer = FocusObserver(
+    let observer = FocusCondition(
       didBecomeActive: _didBecomeActive,
       willResignActive: _willResignActive,
       isActive: { isActive }
@@ -17,7 +17,7 @@ struct FocusObserverTests {
 
   @Test("Emits True When Becomes Active")
   func emitsTrueWhenBecomesActive() {
-    let observer = FocusObserver(
+    let observer = FocusCondition(
       didBecomeActive: _didBecomeActive,
       willResignActive: _willResignActive,
       isActive: { true }
@@ -33,7 +33,7 @@ struct FocusObserverTests {
 
   @Test("Emits False When Resigns Active")
   func emitsFalseWhenResignsActive() {
-    let observer = FocusObserver(
+    let observer = FocusCondition(
       didBecomeActive: _didBecomeActive,
       willResignActive: _willResignActive,
       isActive: { true }

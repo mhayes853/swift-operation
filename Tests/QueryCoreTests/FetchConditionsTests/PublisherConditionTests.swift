@@ -4,8 +4,8 @@
   import Testing
   @preconcurrency import Combine
 
-  @Suite("PublisherObserver tests")
-  struct PublisherObserverTests {
+  @Suite("PublisherCondition tests")
+  struct PublisherConditionTests {
     @Test("Observes Publisher Value")
     func observePublisherValue() {
       let subject = PassthroughSubject<Bool, Never>()

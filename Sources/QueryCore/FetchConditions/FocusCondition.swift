@@ -12,7 +12,7 @@ import Foundation
 
 // MARK: - FocusFetchCondition
 
-public final class FocusObserver: Sendable {
+public final class FocusCondition: Sendable {
   private let didBecomeActive: Notification.Name
   private let willResignActive: Notification.Name
   private let isActive: @Sendable () -> Bool
@@ -30,7 +30,7 @@ public final class FocusObserver: Sendable {
 
 // MARK: - Shared Instance
 
-extension FocusObserver {
+extension FocusCondition {
   #if os(iOS) || os(tvOS) || os(visionOS)
     public static let shared = FocusObserver(
       didBecomeActive: UIApplication.didBecomeActiveNotification,
@@ -38,7 +38,7 @@ extension FocusObserver {
       isActive: { MainActor.runSync { UIApplication.shared.applicationState == .active } }
     )
   #elseif os(macOS)
-    public static let shared = FocusObserver(
+    public static let shared = FocusCondition(
       didBecomeActive: NSApplication.didBecomeActiveNotification,
       willResignActive: NSApplication.willResignActiveNotification,
       isActive: { MainActor.runSync { NSApplication.shared.isActive } }
@@ -55,7 +55,7 @@ extension FocusObserver {
 
 // MARK: - FetchConditionObserver Conformance
 
-extension FocusObserver: FetchCondition {
+extension FocusCondition: FetchCondition {
   public func isSatisfied(in context: QueryContext) -> Bool {
     self.isActive()
   }

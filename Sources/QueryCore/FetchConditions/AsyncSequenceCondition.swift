@@ -1,4 +1,4 @@
-public final class AsyncSequenceObserver<S: AsyncSequence & Sendable>: Sendable
+public final class AsyncSequenceCondition<S: AsyncSequence & Sendable>: Sendable
 where S.Element == Bool {
   private typealias State = (task: Task<Void, any Error>?, currentValue: Bool)
   private typealias Handler = @Sendable (Bool) -> Void
@@ -23,7 +23,7 @@ where S.Element == Bool {
   }
 }
 
-extension AsyncSequenceObserver: FetchCondition {
+extension AsyncSequenceCondition: FetchCondition {
   public func isSatisfied(in context: QueryContext) -> Bool {
     self.state.withLock { $0.currentValue }
   }
@@ -40,7 +40,7 @@ extension FetchCondition {
   public static func observing<S: AsyncSequence>(
     sequence: S,
     initialValue: Bool
-  ) -> Self where Self == AsyncSequenceObserver<S> {
+  ) -> Self where Self == AsyncSequenceCondition<S> {
     Self(sequence: sequence, initialValue: initialValue)
   }
 }

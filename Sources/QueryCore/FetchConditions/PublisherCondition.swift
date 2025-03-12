@@ -3,7 +3,7 @@
 
   // MARK: - PublisherObserver
 
-  public final class PublisherObserver<P: Publisher & Sendable>
+  public final class PublisherCondition<P: Publisher & Sendable>
   where P.Output == Bool, P.Failure == Never {
     private typealias State = (cancellable: AnyCancellable?, currentValue: Bool)
 
@@ -23,7 +23,7 @@
 
   // MARK: - FetchConditionObserver Conformance
 
-  extension PublisherObserver: FetchCondition {
+  extension PublisherCondition: FetchCondition {
     public func isSatisfied(in context: QueryContext) -> Bool {
       self.state.withLock { $0.currentValue }
     }
@@ -43,14 +43,14 @@
     public static func observing<P: Publisher>(
       publisher: P,
       initialValue: Bool
-    ) -> Self where Self == PublisherObserver<P> {
-      PublisherObserver(publisher: publisher, initialValue: initialValue)
+    ) -> Self where Self == PublisherCondition<P> {
+      PublisherCondition(publisher: publisher, initialValue: initialValue)
     }
 
     public static func observing(
       subject: CurrentValueSubject<Bool, Never>
-    ) -> Self where Self == PublisherObserver<CurrentValueSubject<Bool, Never>> {
-      PublisherObserver(publisher: subject, initialValue: subject.value)
+    ) -> Self where Self == PublisherCondition<CurrentValueSubject<Bool, Never>> {
+      PublisherCondition(publisher: subject, initialValue: subject.value)
     }
   }
 #endif
