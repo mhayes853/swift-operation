@@ -23,7 +23,7 @@ where S.Element == Bool {
   }
 }
 
-extension AsyncSequenceObserver: FetchConditionObserver {
+extension AsyncSequenceObserver: FetchCondition {
   public func isSatisfied(in context: QueryContext) -> Bool {
     self.state.withLock { $0.currentValue }
   }
@@ -36,7 +36,7 @@ extension AsyncSequenceObserver: FetchConditionObserver {
   }
 }
 
-extension FetchConditionObserver {
+extension FetchCondition {
   public static func observing<S: AsyncSequence>(
     sequence: S,
     initialValue: Bool

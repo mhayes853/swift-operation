@@ -9,7 +9,7 @@
     @Test("Observes Publisher Value")
     func observePublisherValue() {
       let subject = PassthroughSubject<Bool, Never>()
-      let observer: some FetchConditionObserver = .observing(
+      let observer: some FetchCondition = .observing(
         publisher: subject,
         initialValue: true
       )
@@ -29,7 +29,7 @@
     func isPublisherValueInContext() {
       let context = QueryContext()
       let subject = PassthroughSubject<Bool, Never>()
-      let observer: some FetchConditionObserver = .observing(
+      let observer: some FetchCondition = .observing(
         publisher: subject,
         initialValue: true
       )
@@ -46,7 +46,7 @@
     func usesInitialValueFromCurrentValueSubject() {
       let context = QueryContext()
       let subject = CurrentValueSubject<Bool, Never>(true)
-      let observer: some FetchConditionObserver = .observing(subject: subject)
+      let observer: some FetchCondition = .observing(subject: subject)
       expectNoDifference(observer.isSatisfied(in: context), true)
 
       subject.send(false)

@@ -23,7 +23,7 @@
 
   // MARK: - FetchConditionObserver Conformance
 
-  extension PublisherObserver: FetchConditionObserver {
+  extension PublisherObserver: FetchCondition {
     public func isSatisfied(in context: QueryContext) -> Bool {
       self.state.withLock { $0.currentValue }
     }
@@ -39,7 +39,7 @@
 
   // MARK: - FetchConditionObserver Extensions
 
-  extension FetchConditionObserver {
+  extension FetchCondition {
     public static func observing<P: Publisher>(
       publisher: P,
       initialValue: Bool

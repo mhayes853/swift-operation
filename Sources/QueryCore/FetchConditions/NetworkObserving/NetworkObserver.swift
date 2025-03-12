@@ -14,7 +14,7 @@ extension NetworkStatus: Comparable {
 
 // MARK: - NetworkObserver
 
-public protocol NetworkObserver: FetchConditionObserver, Sendable {
+public protocol NetworkObserver: FetchCondition, Sendable {
   var currentStatus: NetworkStatus { get }
   func subscribe(with handler: @escaping @Sendable (NetworkStatus) -> Void) -> QuerySubscription
 }

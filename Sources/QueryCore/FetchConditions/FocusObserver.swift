@@ -55,7 +55,7 @@ extension FocusObserver {
 
 // MARK: - FetchConditionObserver Conformance
 
-extension FocusObserver: FetchConditionObserver {
+extension FocusObserver: FetchCondition {
   public func isSatisfied(in context: QueryContext) -> Bool {
     self.isActive()
   }

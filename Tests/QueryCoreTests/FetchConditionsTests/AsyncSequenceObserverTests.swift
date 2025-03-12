@@ -8,7 +8,7 @@ struct AsyncSequenceObserverTests {
   @Test("Observes Publisher Value")
   func observeSequenceValue() async {
     let (stream, continuation) = AsyncStream<Bool>.makeStream()
-    let observer: some FetchConditionObserver = .observing(
+    let observer: some FetchCondition = .observing(
       sequence: stream,
       initialValue: true
     )
@@ -31,7 +31,7 @@ struct AsyncSequenceObserverTests {
   func isSequenceValueInContext() async {
     let context = QueryContext()
     let (stream, continuation) = AsyncStream<Bool>.makeStream()
-    let observer: some FetchConditionObserver = .observing(
+    let observer: some FetchCondition = .observing(
       sequence: stream,
       initialValue: true
     )
