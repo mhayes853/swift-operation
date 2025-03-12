@@ -1,3 +1,5 @@
+// TODO: - Find a way to batch AndConditions for performance.
+
 public struct AndCondition<Left: FetchCondition, Right: FetchCondition> {
   let left: Left
   let right: Right

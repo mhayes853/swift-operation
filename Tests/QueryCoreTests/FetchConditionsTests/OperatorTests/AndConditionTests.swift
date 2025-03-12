@@ -53,4 +53,59 @@ struct AndConditionTests {
 
     subscription.cancel()
   }
+
+  @Test("&&s Subscribed Values With 3 Conditions")
+  func andsSubscribedValuesWith3Conditions() {
+    let c1 = TestCondition()
+    let c2 = TestCondition()
+    let c3 = TestCondition()
+    let values = Lock([Bool]())
+    let subscription = (c1 && c2 && c3)
+      .subscribe(in: QueryContext()) { value in
+        values.withLock { $0.append(value) }
+      }
+
+    c1.send(true)
+    c2.send(true)
+    c3.send(true)
+    c1.send(false)
+    c1.send(true)
+    c2.send(false)
+    c2.send(true)
+    c3.send(false)
+
+    values.withLock {
+      expectNoDifference($0, [false, false, true, false, true, false, true, false])
+    }
+
+    subscription.cancel()
+  }
+
+  @Test("&& ||s Subscribed Values With 3 Conditions")
+  func andOrsSubscribedValuesWith3Conditions() {
+    let c1 = TestCondition()
+    let c2 = TestCondition()
+    let c3 = TestCondition()
+    let values = Lock([Bool]())
+    let subscription = ((c1 && c2) || c3)
+      .subscribe(in: QueryContext()) { value in
+        values.withLock { $0.append(value) }
+      }
+
+    c1.send(true)
+    c2.send(true)
+    c3.send(true)
+    c1.send(false)
+    c1.send(true)
+    c2.send(false)
+    c2.send(true)
+    c3.send(false)
+    c1.send(false)
+
+    values.withLock {
+      expectNoDifference($0, [false, true, true, true, true, true, true, true, false])
+    }
+
+    subscription.cancel()
+  }
 }

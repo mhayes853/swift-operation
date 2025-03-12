@@ -1,3 +1,5 @@
+// TODO: - Find a way to batch OrConditions for performance.
+
 public struct OrCondition<Left: FetchCondition, Right: FetchCondition> {
   let left: Left
   let right: Right

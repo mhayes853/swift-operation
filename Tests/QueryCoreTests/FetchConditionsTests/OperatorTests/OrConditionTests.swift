@@ -54,4 +54,33 @@ struct OrConditionTests {
 
     subscription.cancel()
   }
+
+  @Test("||s Subscribed Values With 3 Conditions")
+  func orsSubscribedValuesWith3Conditions() {
+    let c1 = TestCondition()
+    let c2 = TestCondition()
+    let c3 = TestCondition()
+    let values = Lock([Bool]())
+    let subscription = (c1 || c2 || c3)
+      .subscribe(in: QueryContext()) { value in
+        values.withLock { $0.append(value) }
+      }
+
+    c1.send(true)
+    c2.send(true)
+    c3.send(true)
+    c1.send(false)
+    c2.send(false)
+    c3.send(false)
+    c1.send(true)
+    c1.send(false)
+    c2.send(true)
+    c3.send(true)
+
+    values.withLock {
+      expectNoDifference($0, [true, true, true, true, true, false, true, false, true, true])
+    }
+
+    subscription.cancel()
+  }
 }
