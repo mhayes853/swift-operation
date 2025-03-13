@@ -7,19 +7,19 @@ public enum QueryCacheValue<Value: Sendable>: Sendable {
 
 // MARK: - QueryCache
 
-public protocol QueryCache<Query> {
-  associatedtype Query: QueryProtocol
+public protocol QueryCache<Value> {
+  associatedtype Value: Sendable
 
   func value(
-    for query: Query,
+    for query: some QueryProtocol<Value>,
     in context: QueryContext
-  ) async throws -> QueryCacheValue<Query.State.StatusValue>?
+  ) async throws -> QueryCacheValue<Value>?
 
   func saveValue(
-    _ value: Query.State.StatusValue,
-    for query: Query,
+    _ value: Value,
+    for query: some QueryProtocol<Value>,
     in context: QueryContext
   ) async throws
 
-  func removeValue(for query: Query, in context: QueryContext) async throws
+  func removeValue(for query: some QueryProtocol<Value>, in context: QueryContext) async throws
 }
