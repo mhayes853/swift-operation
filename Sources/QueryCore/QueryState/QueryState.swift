@@ -15,7 +15,12 @@ public struct QueryState<StateValue: Sendable, QueryValue: Sendable> {
 }
 
 extension QueryState {
-  public init(initialValue: StateValue) {
+  public init(initialValue: StateValue) where StateValue == QueryValue? {
+    self.currentValue = initialValue
+    self.initialValue = initialValue
+  }
+
+  public init(initialValue: StateValue) where StateValue == QueryValue {
     self.currentValue = initialValue
     self.initialValue = initialValue
   }
