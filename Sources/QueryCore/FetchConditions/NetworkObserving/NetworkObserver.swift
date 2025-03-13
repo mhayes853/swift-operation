@@ -14,33 +14,7 @@ extension NetworkStatus: Comparable {
 
 // MARK: - NetworkObserver
 
-public protocol NetworkObserver: FetchCondition, Sendable {
+public protocol NetworkObserver: Sendable {
   var currentStatus: NetworkStatus { get }
   func subscribe(with handler: @escaping @Sendable (NetworkStatus) -> Void) -> QuerySubscription
-}
-
-extension NetworkObserver {
-  public func isSatisfied(in context: QueryContext) -> Bool {
-    self.currentStatus >= context.satisfiedConnectionStatus
-  }
-
-  public func subscribe(
-    in context: QueryContext,
-    _ observer: @escaping @Sendable (Bool) -> Void
-  ) -> QuerySubscription {
-    self.subscribe { observer($0 >= context.satisfiedConnectionStatus) }
-  }
-}
-
-// MARK: - Satisfied Connection Status
-
-extension QueryContext {
-  public var satisfiedConnectionStatus: NetworkStatus {
-    get { self[SatisfiedConnectionStatusKey.self] }
-    set { self[SatisfiedConnectionStatusKey.self] = newValue }
-  }
-
-  private struct SatisfiedConnectionStatusKey: Key {
-    static let defaultValue = NetworkStatus.connected
-  }
 }
