@@ -1,12 +1,3 @@
-// MARK: - QueryCacheValue
-
-public enum QueryCacheValue<Value: Sendable>: Sendable {
-  case stale(Value)
-  case fresh(Value)
-}
-
-// MARK: - QueryCache
-
 public protocol QueryCache<Value> {
   associatedtype Value: Sendable
 
@@ -15,7 +6,7 @@ public protocol QueryCache<Value> {
     in context: QueryContext
   ) async throws -> QueryCacheValue<Value>?
 
-  func saveValue(
+  func save(
     _ value: Value,
     for query: some QueryProtocol<Value>,
     in context: QueryContext
