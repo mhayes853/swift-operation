@@ -1,3 +1,4 @@
+import ConcurrencyExtras
 import CustomDump
 @_spi(Warnings) import QueryCore
 import Testing
@@ -28,6 +29,30 @@ struct QueryTaskTests {
     await #expect(throws: Never.self) {
       _ = try await task1.runIfNeeded()
     }
+  }
+
+  @Test("Task Has Not Been Started By Default")
+  func taskHasNotBeenStartedByDefault() async throws {
+    let task = QueryTask<Int>(context: QueryContext()) { _ in 40 }
+    expectNoDifference(task.hasStarted, false)
+  }
+
+  @Test("Task Has Been Started When Run Called")
+  func taskHasBeenStartedWhenRunCalled() async throws {
+    let task = QueryTask<Int>(context: QueryContext()) { _ in 40 }
+    try await task.runIfNeeded()
+    expectNoDifference(task.hasStarted, true)
+  }
+
+  @Test("Task Has Been Started While Running")
+  func taskHasBeenStartedWhileRunning() async throws {
+    let task = QueryTask<Int>(context: QueryContext()) { _ in
+      try await Task.never()
+      return 40
+    }
+    Task { try await task.runIfNeeded() }
+    await Task.megaYield()
+    expectNoDifference(task.hasStarted, true)
   }
 
   #if DEBUG

@@ -28,8 +28,10 @@ public struct QueryTask<Value: Sendable>: _QueryTask {
 }
 
 extension QueryTask {
-  public init(context: QueryContext, work: @escaping @Sendable (QueryContext) async throws -> Value)
-  {
+  public init(
+    context: QueryContext,
+    work: @escaping @Sendable (QueryContext) async throws -> Value
+  ) {
     self.context = context
     self.work = work
     self.box = LockedBox(value: (nil, []))
@@ -121,6 +123,10 @@ extension QueryTask {
 // MARK: - Run
 
 extension QueryTask {
+  public var hasStarted: Bool {
+    self.box.inner.withLock { $0.task != nil }
+  }
+
   public func runIfNeeded() async throws -> Value {
     try await self._runIfNeeded() as! Value
   }
