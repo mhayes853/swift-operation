@@ -1,7 +1,7 @@
 // MARK: - MutationProtocol
 
 public protocol MutationProtocol<Arguments>: QueryProtocol
-where StateValue == Value?, State == MutationState<Arguments, Value> {
+where State == MutationState<Arguments, Value> {
   associatedtype Arguments: Sendable
 
   func mutate(with arguments: Arguments, in context: QueryContext) async throws -> Value

@@ -11,8 +11,7 @@ extension QueryProtocol {
 }
 
 public struct DefaultQuery<Query: QueryProtocol>: QueryProtocol {
-  public typealias StateValue = Query.Value
-  public typealias State = QueryState<StateValue, StateValue>
+  public typealias State = QueryState<Query.Value, Query.Value>
 
   let _defaultValue: @Sendable () -> Query.Value
   public let query: Query
@@ -38,19 +37,17 @@ public struct DefaultQuery<Query: QueryProtocol>: QueryProtocol {
 
 extension InfiniteQueryProtocol {
   public func defaultValue(
-    _ value: @autoclosure @escaping @Sendable () -> StateValue
+    _ value: @autoclosure @escaping @Sendable () -> State.StateValue
   ) -> DefaultInfiniteQuery<Self> {
     DefaultInfiniteQuery(_defaultValue: value, query: self)
   }
 }
 
 public struct DefaultInfiniteQuery<Query: InfiniteQueryProtocol>: QueryProtocol {
-  public typealias StateValue = Query.StateValue
-
-  let _defaultValue: @Sendable () -> Query.StateValue
+  let _defaultValue: @Sendable () -> Query.State.StateValue
   public let query: Query
 
-  public var defaultValue: Query.StateValue {
+  public var defaultValue: Query.State.StateValue {
     self._defaultValue()
   }
 

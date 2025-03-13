@@ -29,8 +29,7 @@ struct MutationStoreTests {
   )
   func testDoesNotCastsToMutationStoreFromAnyQueryStore() {
     let store = AnyQueryStore.detached(
-      erasing: FakeInfiniteQuery().defaultValue([]),
-      initialValue: FakeInfiniteQuery.Value()
+      erasing: FakeInfiniteQuery().defaultValue([])
     )
     let mutationStore = MutationStoreFor<EmptyMutation>(casting: store)
     expectNoDifference(mutationStore == nil, true)

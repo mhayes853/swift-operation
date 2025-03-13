@@ -55,9 +55,9 @@ extension QueryStore {
 
   public static func detached<Query: QueryProtocol>(
     query: Query,
-    initialValue: Query.StateValue,
+    initialValue: Query.State.StateValue,
     initialContext: QueryContext = QueryContext()
-  ) -> QueryStoreFor<Query> where Query.State == QueryState<Query.StateValue, Query.Value> {
+  ) -> QueryStoreFor<Query> where Query.State == QueryState<Query.Value?, Query.Value> {
     QueryStoreFor<Query>(
       query: query,
       initialState: AnyQueryState(Query.State(initialValue: initialValue)),
@@ -69,13 +69,17 @@ extension QueryStore {
     query: DefaultQuery<Query>,
     initialContext: QueryContext = QueryContext()
   ) -> QueryStoreFor<DefaultQuery<Query>>
-  where DefaultQuery<Query>.State == QueryState<DefaultQuery<Query>.StateValue, Query.Value> {
-    .detached(query: query, initialValue: query.defaultValue, initialContext: initialContext)
+  where DefaultQuery<Query>.State == QueryState<Query.Value, Query.Value> {
+    .detached(
+      query: query,
+      initialState: DefaultQuery<Query>.State(initialValue: query.defaultValue),
+      initialContext: initialContext
+    )
   }
 
   public static func detached<Query: InfiniteQueryProtocol>(
     query: Query,
-    initialValue: Query.StateValue,
+    initialValue: Query.State.StateValue,
     initialContext: QueryContext = QueryContext()
   ) -> QueryStoreFor<Query> {
     .detached(
@@ -129,10 +133,10 @@ extension AnyQueryStore {
 
   public static func detached<Query: QueryProtocol>(
     erasing query: Query,
-    initialValue: Query.StateValue,
+    initialValue: Query.State.StateValue,
     initialContext: QueryContext = QueryContext()
   ) -> AnyQueryStore
-  where Query.State == QueryState<Query.StateValue, Query.Value> {
+  where Query.State == QueryState<Query.Value?, Query.Value> {
     .detached(
       erasing: query,
       initialState: QueryState(initialValue: initialValue),
@@ -145,7 +149,7 @@ extension AnyQueryStore {
     initialContext: QueryContext = QueryContext()
   ) -> AnyQueryStore
   where
-    DefaultQuery<Query>.State == QueryState<DefaultQuery<Query>.StateValue, Query.Value>
+    DefaultQuery<Query>.State == QueryState<Query.Value, Query.Value>
   {
     .detached(
       erasing: query,
@@ -156,7 +160,7 @@ extension AnyQueryStore {
 
   public static func detached<Query: InfiniteQueryProtocol>(
     erasing query: Query,
-    initialValue: Query.StateValue,
+    initialValue: Query.State.StateValue,
     initialContext: QueryContext = QueryContext()
   ) -> AnyQueryStore {
     .detached(

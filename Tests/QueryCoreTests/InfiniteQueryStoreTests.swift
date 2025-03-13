@@ -33,8 +33,7 @@ struct InfiniteQueryStoreTests {
   )
   func testDoesNotCastsToInfiniteQueryStoreFromAnyQueryStore() {
     let store = AnyQueryStore.detached(
-      erasing: FakeInfiniteQuery().defaultValue([]),
-      initialValue: FakeInfiniteQuery.Value()
+      erasing: FakeInfiniteQuery().defaultValue([])
     )
     let infiniteStore = InfiniteQueryStoreFor<EmptyInfiniteQuery>(casting: store)
     expectNoDifference(infiniteStore == nil, true)

@@ -40,7 +40,7 @@ struct QueryTaskTests {
   @Test("Task Has Been Started When Run Called")
   func taskHasBeenStartedWhenRunCalled() async throws {
     let task = QueryTask<Int>(context: QueryContext()) { _ in 40 }
-    try await task.runIfNeeded()
+    _ = try await task.runIfNeeded()
     expectNoDifference(task.hasStarted, true)
   }
 

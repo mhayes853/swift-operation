@@ -93,7 +93,6 @@ extension InfiniteQueryValue.PreviousPage: Equatable where PageValue: Equatable 
 public protocol InfiniteQueryProtocol<PageID, PageValue>: QueryProtocol
 where
   Value == InfiniteQueryValue<PageID, PageValue>,
-  StateValue == InfiniteQueryPages<PageID, PageValue>,
   State == InfiniteQueryState<PageID, PageValue>
 {
   associatedtype PageValue: Sendable
