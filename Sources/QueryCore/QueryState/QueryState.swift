@@ -12,9 +12,7 @@ public struct QueryState<StateValue: Sendable, QueryValue: Sendable> {
   public private(set) var errorUpdateCount = 0
   public private(set) var errorLastUpdatedAt: Date?
   private var fetchTask: QueryTask<QueryValue>?
-}
 
-extension QueryState {
   public init(initialValue: StateValue) where StateValue == QueryValue? {
     self.currentValue = initialValue
     self.initialValue = initialValue

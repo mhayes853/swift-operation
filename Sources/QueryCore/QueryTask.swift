@@ -20,9 +20,7 @@ public struct QueryTask<Value: Sendable>: _QueryTask {
 
   public let id: QueryTaskID
   public var context: QueryContext
-  fileprivate var dependencies: [any _QueryTask] {
-    self.box.inner.withLock { $0.dependencies }
-  }
+
   private var work: @Sendable (QueryContext) async throws -> Value
   private let box: LockedBox<State>
 }
@@ -117,6 +115,10 @@ extension QueryTask {
         }
       }
     #endif
+  }
+
+  fileprivate var dependencies: [any _QueryTask] {
+    self.box.inner.withLock { $0.dependencies }
   }
 }
 
