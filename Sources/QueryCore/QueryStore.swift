@@ -257,7 +257,7 @@ extension QueryStore {
   public func fetchTask(using context: QueryContext? = nil) -> QueryTask<State.QueryValue> {
     self._state.inner.withLock { state in
       var context = context ?? state.context
-      context.queryStateLoader = self
+      context.currentStore = self
       let task = Lock<QueryTask<any Sendable>?>(nil)
       return task.withLock { newTask in
         let inner = QueryTask<any Sendable>(context: context) { context in
@@ -306,5 +306,26 @@ extension QueryStore {
       Task { try await self.fetchTask().runIfNeeded() }
     }
     return subscription
+  }
+}
+
+// MARK: - Access QueryStore In Query
+
+extension QueryProtocol {
+  public func currentStore(in context: QueryContext) -> QueryStoreFor<Self>? {
+    context.currentStore as? QueryStoreFor<Self>
+  }
+}
+
+extension QueryContext {
+  fileprivate var currentStore: (any Sendable)? {
+    get { self[CurrentStoreKey.self] }
+    set { self[CurrentStoreKey.self] = newValue }
+  }
+
+  private enum CurrentStoreKey: Key {
+    static var defaultValue: (any Sendable)? {
+      nil
+    }
   }
 }
