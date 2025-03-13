@@ -249,12 +249,12 @@ extension QueryStore {
   ) async throws -> State.QueryValue {
     let (subscription, _) = self.subscriptions.add(handler: handler.erased(), isTemporary: true)
     defer { subscription.cancel() }
-    let task = self.beginFetchTask(using: context)
-    return try await task.runIfNeeded() as! State.QueryValue
+    let task = self.fetchTask(using: context)
+    return try await task.runIfNeeded()
   }
 
   @discardableResult
-  private func beginFetchTask(using context: QueryContext? = nil) -> QueryTask<any Sendable> {
+  public func fetchTask(using context: QueryContext? = nil) -> QueryTask<State.QueryValue> {
     self._state.inner.withLock { state in
       var context = context ?? state.context
       context.queryStateLoader = self
@@ -285,7 +285,7 @@ extension QueryStore {
           }
         }
         newTask = inner
-        return state.query.fetchTaskStarted(inner)
+        return state.query.fetchTaskStarted(inner).map { $0 as! State.QueryValue }
       }
     }
   }
@@ -303,7 +303,7 @@ extension QueryStore {
   ) -> QuerySubscription {
     let (subscription, isFirstSubscriber) = self.subscriptions.add(handler: handler.erased())
     if self.isAutomaticFetchingEnabled && isFirstSubscriber {
-      self.beginFetchTask()
+      Task { try await self.fetchTask().runIfNeeded() }
     }
     return subscription
   }

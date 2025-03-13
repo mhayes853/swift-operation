@@ -160,7 +160,7 @@ struct QueryStoreTests {
     let collector = QueryStoreEventsCollector<TestQuery.Value>()
     let store = self.client.store(for: TestQuery())
     let subscription = store.subscribe(with: collector.eventHandler())
-    try await store.fetch()
+    await Task.megaYield()
     collector.expectEventsMatch([
       .fetchingStarted, .resultReceived(.success(TestQuery.value)), .fetchingEnded
     ])
