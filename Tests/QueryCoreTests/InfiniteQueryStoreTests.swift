@@ -7,51 +7,6 @@ import Testing
 struct InfiniteQueryStoreTests {
   private let client = QueryClient()
 
-  @Test("Casts To InfiniteQueryStore From AnyQueryStore")
-  func testCastsToInfiniteQueryStoreFromAnyQueryStore() {
-    let baseStore = InfiniteQueryStore.detached(
-      query: EmptyInfiniteQuery(initialPageId: 0, path: [])
-    )
-    let store = OpaqueQueryStore(erasing: baseStore.base)
-    let infiniteStore = InfiniteQueryStoreFor<EmptyInfiniteQuery>(casting: store)
-    expectNoDifference(infiniteStore != nil, true)
-  }
-
-  @Test("Casts To InfiniteQueryStore From AnyQueryStore With Modifier")
-  func testCastsToInfiniteQueryStoreFromAnyQueryStoreWithModifier() {
-    let baseStore = InfiniteQueryStore.detached(
-      query: EmptyInfiniteQuery(initialPageId: 0, path: [])
-        .enableAutomaticFetching(when: .always(false)),
-      initialValue: []
-    )
-    let store = OpaqueQueryStore(erasing: baseStore.base)
-    let infiniteStore = InfiniteQueryStoreFor<EmptyInfiniteQuery>(casting: store)
-    expectNoDifference(infiniteStore != nil, true)
-  }
-
-  @Test(
-    "Does Not Cast To InfiniteQueryStore From AnyQueryStore When Underlying Query Is Not Infinite"
-  )
-  func testDoesNotCastsToInfiniteQueryStoreFromAnyQueryStore() {
-    let baseStore = QueryStoreFor<FakeInfiniteQuery>
-      .detached(query: TestQuery().defaultValue(TestQuery.value))
-    let store = OpaqueQueryStore(erasing: baseStore)
-    let infiniteStore = InfiniteQueryStoreFor<EmptyInfiniteQuery>(casting: store)
-    expectNoDifference(infiniteStore == nil, true)
-  }
-
-  @Test(
-    "Does Not Cast To InfiniteQueryStore From AnyQueryStore When Type Mismatch"
-  )
-  func testDoesNotCastsToInfiniteQueryStoreFromAnyQueryStoreWithTypeMismatch() {
-    let baseStore = InfiniteQueryStore.detached(
-      query: EmptyIntInfiniteQuery(initialPageId: 0, path: []).defaultValue([])
-    )
-    let store = OpaqueQueryStore(erasing: baseStore.base)
-    let infiniteStore = InfiniteQueryStoreFor<EmptyInfiniteQuery>(casting: store)
-    expectNoDifference(infiniteStore == nil, true)
-  }
-
   @Test("Is Loading All Pages When Fetching All Pages")
   func isLoadingWhenFetchingAllPages() async throws {
     let query = WaitableInfiniteQuery()
@@ -400,7 +355,7 @@ struct InfiniteQueryStoreTests {
     expectNoDifference(store.hasNextPage, false)
     expectNoDifference(store.hasPreviousPage, true)
 
-    let task = try await store.fetchPreviousPageTask()
+    let task = store.fetchPreviousPageTask()
     let page = try await task.runIfNeeded()
 
     expectNoDifference(page, InfiniteQueryPage(id: -1, value: "blob jr"))
@@ -573,7 +528,7 @@ struct InfiniteQueryStoreTests {
     try await infiniteStore.fetchNextPage()
     try await infiniteStore.fetchPreviousPage()
 
-    let store = QueryStoreFor<TestInfiniteQuery>(casting: self.client.store(with: query.path)!)!
+    let store = self.client.store(with: query.path)!.base as! QueryStoreFor<TestInfiniteQuery>
 
     query.state.withLock { $0 = [0: "a", 1: "c", -1: "d"] }
     try await store.fetch()
@@ -593,7 +548,7 @@ struct InfiniteQueryStoreTests {
   func fetchFromRegularQueryStoreFetchesInitialPage() async throws {
     let query = TestInfiniteQuery()
     _ = self.client.store(for: query)
-    let store = QueryStoreFor<TestInfiniteQuery>(casting: self.client.store(with: query.path)!)!
+    let store = self.client.store(with: query.path)!.base as! QueryStoreFor<TestInfiniteQuery>
 
     query.state.withLock { $0 = [0: "a", 1: "c", -1: "d"] }
     try await store.fetch()
@@ -730,7 +685,7 @@ struct InfiniteQueryStoreTests {
 
     let subscription = infiniteStore.subscribe(with: collector.eventHandler())
 
-    let store = QueryStoreFor<TestInfiniteQuery>(casting: self.client.store(with: query.path)!)!
+    let store = self.client.store(with: query.path)!.base as! QueryStoreFor<TestInfiniteQuery>
     try await store.fetch()
 
     collector.expectEventsMatch([

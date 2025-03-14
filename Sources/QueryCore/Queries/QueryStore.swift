@@ -27,15 +27,6 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
     self.subscriptions = QuerySubscriptions()
     self._state.inner.withLock { query.setup(context: &$0.context) }
   }
-
-  public init?(casting store: OpaqueQueryStore) {
-    guard let store = store.base as? QueryStore<State> else {
-      return nil
-    }
-    self._query = store._query
-    self._state = store._state
-    self.subscriptions = store.subscriptions
-  }
 }
 
 // MARK: - Detached

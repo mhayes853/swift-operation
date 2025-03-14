@@ -18,17 +18,6 @@ public final class InfiniteQueryStore<PageID: Hashable & Sendable, PageValue: Se
   }
 }
 
-// MARK: - Store Initializers
-
-extension InfiniteQueryStore {
-  public convenience init?(casting store: OpaqueQueryStore) {
-    guard let store = QueryStore<InfiniteQueryState<PageID, PageValue>>(casting: store) else {
-      return nil
-    }
-    self.init(store: store)
-  }
-}
-
 // MARK: - Detached
 
 extension InfiniteQueryStore {

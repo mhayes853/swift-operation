@@ -29,52 +29,57 @@ extension QueryClient {
 extension QueryClient {
   public func store<Query: QueryProtocol>(for query: Query) -> QueryStoreFor<Query>
   where Query.State == QueryState<Query.Value?, Query.Value> {
-    QueryStore(
-      casting: self.opaqueStore(for: query, initialState: Query.State(initialValue: nil))
-    )!
+    self.opaqueStore(for: query, initialState: Query.State(initialValue: nil)).base
+      as! QueryStoreFor<Query>
   }
 
   public func store<Query: QueryProtocol>(
     for query: DefaultQuery<Query>
   ) -> QueryStoreFor<DefaultQuery<Query>>
   where DefaultQuery<Query>.State == QueryState<Query.Value, Query.Value> {
-    QueryStore(
-      casting: self.opaqueStore(
-        for: query,
-        initialState: DefaultQuery<Query>.State(initialValue: query.defaultValue)
-      )
-    )!
+    self.opaqueStore(
+      for: query,
+      initialState: DefaultQuery<Query>.State(initialValue: query.defaultValue)
+    )
+    .base as! QueryStoreFor<DefaultQuery<Query>>
   }
 
   public func store<Query: InfiniteQueryProtocol>(
     for query: Query
   ) -> InfiniteQueryStoreFor<Query> {
     InfiniteQueryStore(
-      casting: self.opaqueStore(
-        for: query,
-        initialState: InfiniteQueryState(initialValue: [], initialPageId: query.initialPageId)
-      )
-    )!
+      store:
+        self.opaqueStore(
+          for: query,
+          initialState: InfiniteQueryState(initialValue: [], initialPageId: query.initialPageId)
+        )
+        .base as! QueryStoreFor<Query>
+    )
   }
 
   public func store<Query: InfiniteQueryProtocol>(
     for query: DefaultInfiniteQuery<Query>
   ) -> InfiniteQueryStoreFor<DefaultInfiniteQuery<Query>> {
     InfiniteQueryStore(
-      casting: self.opaqueStore(
-        for: query,
-        initialState: InfiniteQueryState(
-          initialValue: query.defaultValue,
-          initialPageId: query.initialPageId
+      store:
+        self.opaqueStore(
+          for: query,
+          initialState: InfiniteQueryState(
+            initialValue: query.defaultValue,
+            initialPageId: query.initialPageId
+          )
         )
-      )
-    )!
+        .base as! QueryStoreFor<DefaultInfiniteQuery<Query>>
+    )
   }
 
   public func store<Mutation: MutationProtocol>(
     for mutation: Mutation
   ) -> MutationStoreFor<Mutation> {
-    MutationStore(casting: self.opaqueStore(for: mutation, initialState: MutationState()))!
+    MutationStore(
+      store: self.opaqueStore(for: mutation, initialState: MutationState()).base
+        as! QueryStoreFor<Mutation>
+    )
   }
 
   private func opaqueStore<Query: QueryProtocol>(

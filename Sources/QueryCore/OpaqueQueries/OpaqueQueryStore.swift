@@ -15,7 +15,7 @@ public final class OpaqueQueryStore: Sendable {
 // MARK: - Base
 
 extension OpaqueQueryStore {
-  var base: any Sendable {
+  public var base: any Sendable {
     self._base
   }
 }
@@ -41,7 +41,7 @@ extension OpaqueQueryStore {
 
 extension OpaqueQueryStore {
   public var isAutomaticFetchingEnabled: Bool {
-    self.context.enableAutomaticFetchingCondition.isSatisfied(in: self.context)
+    self._base.isAutomaticFetchingEnabled
   }
 }
 

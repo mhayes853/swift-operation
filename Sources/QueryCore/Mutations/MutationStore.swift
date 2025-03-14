@@ -15,17 +15,6 @@ public final class MutationStore<Arguments: Sendable, Value: Sendable>: Sendable
   }
 }
 
-// MARK: - Casting
-
-extension MutationStore {
-  public convenience init?(casting store: OpaqueQueryStore) {
-    guard let store = QueryStore<MutationState<Arguments, Value>>(casting: store) else {
-      return nil
-    }
-    self.init(store: store)
-  }
-}
-
 // MARK: - Detached
 
 extension MutationStore {

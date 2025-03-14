@@ -8,45 +8,6 @@ import Testing
 struct MutationStoreTests {
   private let client = QueryClient()
 
-  @Test("Casts To MutationStore From AnyQueryStore")
-  func testCastsToMutationStoreFromAnyQueryStore() {
-    let baseStore = MutationStore.detached(mutation: EmptyMutation())
-    let store = OpaqueQueryStore(erasing: baseStore.base)
-    let mutationStore = MutationStoreFor<EmptyMutation>(casting: store)
-    expectNoDifference(mutationStore != nil, true)
-  }
-
-  @Test("Casts To MutationStore From AnyQueryStore With Modifier")
-  func testCastsToMutationStoreFromAnyQueryStoreWithModifier() {
-    let baseStore = MutationStore.detached(
-      mutation: EmptyMutation().enableAutomaticFetching(when: .always(false))
-    )
-    let store = OpaqueQueryStore(erasing: baseStore.base)
-    let mutationStore = MutationStoreFor<EmptyMutation>(casting: store)
-    expectNoDifference(mutationStore != nil, true)
-  }
-
-  @Test(
-    "Does Not Cast To MutationStore From AnyQueryStore When Underlying Query Is Not A Mutation"
-  )
-  func testDoesNotCastsToMutationStoreFromAnyQueryStore() {
-    let baseStore = QueryStoreFor<TestQuery>
-      .detached(query: TestQuery().defaultValue(TestQuery.value))
-    let store = OpaqueQueryStore(erasing: baseStore)
-    let mutationStore = MutationStoreFor<EmptyMutation>(casting: store)
-    expectNoDifference(mutationStore == nil, true)
-  }
-
-  @Test(
-    "Does Not Cast To MutationStore From AnyQueryStore When Type Mismatch"
-  )
-  func testDoesNotCastsToMutationStoreFromAnyQueryStoreWithTypeMismatch() {
-    let baseStore = MutationStore.detached(mutation: EmptyIntMutation())
-    let store = OpaqueQueryStore(erasing: baseStore.base)
-    let mutationStore = MutationStoreFor<EmptyMutation>(casting: store)
-    expectNoDifference(mutationStore == nil, true)
-  }
-
   @Test("Mutate Returns Mutated Value")
   func mutate() async throws {
     let mutation = EmptyMutation()
