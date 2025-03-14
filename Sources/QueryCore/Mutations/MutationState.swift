@@ -48,9 +48,8 @@ extension MutationState: QueryStateProtocol {
     _ task: QueryTask<Value>,
     with result: Result<Value, any Error>
   ) {
-    let taskId = MutationTaskID(inner: task.id)
-    self.history[id: taskId]?.finish(with: result)
-    guard let last = self.history.last, last.task.id == taskId else { return }
+    self.history[id: task.id]?.finish(with: result)
+    guard let last = self.history.last, last.task.id == task.id else { return }
     switch result {
     case .success:
       self.valueUpdateCount += 1
@@ -66,14 +65,14 @@ extension MutationState: QueryStateProtocol {
 
 extension MutationState {
   public struct HistoryEntry: Sendable {
-    public let task: MutationTask<Value>
+    public let task: QueryTask<Value>
     public let arguments: Arguments
     public let startDate: Date
     public private(set) var finishDate: Date?
     public private(set) var status: QueryStatus<StatusValue>
 
     fileprivate init(task: QueryTask<Value>, args: Arguments) {
-      self.task = MutationTask(inner: task)
+      self.task = task
       self.arguments = args
       self.startDate = task.context.queryClock.now()
       self.finishDate = nil
@@ -83,7 +82,7 @@ extension MutationState {
 }
 
 extension MutationState.HistoryEntry: Identifiable {
-  public var id: MutationTaskID {
+  public var id: QueryTaskID {
     self.task.id
   }
 }

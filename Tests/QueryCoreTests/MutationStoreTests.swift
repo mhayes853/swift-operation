@@ -119,7 +119,7 @@ struct MutationStoreTests {
     mutation.state.withLock { $0.willWait = true }
     let store = self.client.store(for: mutation)
 
-    let handle = Lock<MutationTask<String>?>(nil)
+    let handle = Lock<QueryTask<String>?>(nil)
     mutation.onLoading(for: "blob") {
       handle.withLock { $0 = store.history[0].task }
     }
@@ -131,7 +131,7 @@ struct MutationStoreTests {
     expectNoDifference(store.history.map(\.status.isLoading), [true, false])
 
     let task = try #require(handle.withLock { $0 })
-    async let value = task.value
+    async let value = task.runIfNeeded()
     await mutation.advance(on: "blob")
     _ = try await value
     expectNoDifference(store.history.map(\.status.isLoading), [false, false])
@@ -173,7 +173,7 @@ struct MutationStoreTests {
 
     let task = store.history.first { $0.arguments == "blob jr" }?.task
     await mutation.advance(on: "blob jr")
-    _ = try await task?.value
+    _ = try await task?.runIfNeeded()
     expectNoDifference(store.isLoading, false)
     expectNoDifference(store.currentValue, "blob jr")
   }
@@ -201,7 +201,7 @@ struct MutationStoreTests {
 
     let task = store.history.first { $0.arguments == "blob jr" }?.task
     await mutation.advance(on: "blob jr")
-    _ = try await task?.value
+    _ = try await task?.runIfNeeded()
     expectNoDifference(store.valueUpdateCount, 1)
     expectNoDifference(store.valueLastUpdatedAt, updatedAtDate)
   }
@@ -231,7 +231,7 @@ struct MutationStoreTests {
 
     let task = store.history.first { $0.arguments == "blob jr" }?.task
     await mutation.advance(on: "blob jr", with: SomeError())
-    _ = try? await task?.value
+    _ = try? await task?.runIfNeeded()
     expectNoDifference(store.isLoading, false)
     expectNoDifference(store.error != nil, true)
   }
@@ -261,7 +261,7 @@ struct MutationStoreTests {
 
     let task = store.history.first { $0.arguments == "blob jr" }?.task
     await mutation.advance(on: "blob jr", with: SomeError())
-    _ = try? await task?.value
+    _ = try? await task?.runIfNeeded()
     expectNoDifference(store.errorUpdateCount, 1)
     expectNoDifference(store.errorLastUpdatedAt, updatedAtDate)
   }
