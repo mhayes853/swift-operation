@@ -84,7 +84,7 @@ extension InMemoryQueryCacheStorageKey {
 // MARK: - InMemoryValue
 
 @objc public final class InMemoryQueryCacheStorageValue: NSObject, Sendable {
-  fileprivate let value: any Sendable
+  public let value: any Sendable
 
   fileprivate init(value: any Sendable) {
     self.value = value
