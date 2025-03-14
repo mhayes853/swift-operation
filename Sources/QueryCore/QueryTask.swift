@@ -21,7 +21,8 @@ public struct QueryTask<Value: Sendable>: _QueryTask {
   public let id: QueryTaskID
   public var context: QueryContext
 
-  private var work: @Sendable (QueryContext) async throws -> Value
+  private let work: @Sendable (QueryContext) async throws -> any Sendable
+  private let transforms: @Sendable (any Sendable) throws -> Value
   private let box: LockedBox<State>
 }
 
@@ -32,6 +33,7 @@ extension QueryTask {
   ) {
     self.context = context
     self.work = work
+    self.transforms = { $0 as! Value }
     self.box = LockedBox(value: (nil, []))
     self.id = .next()
   }
@@ -130,7 +132,7 @@ extension QueryTask {
   }
 
   public func runIfNeeded() async throws -> Value {
-    try await self._runIfNeeded() as! Value
+    try await self.transforms(self._runIfNeeded())
   }
 
   fileprivate func _runIfNeeded() async throws -> any Sendable {
@@ -200,7 +202,8 @@ extension QueryTask {
     QueryTask<T>(
       id: self.id,
       context: self.context,
-      work: { try await transform(try self.work($0)) },
+      work: self.work,
+      transforms: { try transform(self.transforms($0)) },
       box: self.box
     )
   }

@@ -119,6 +119,24 @@ struct QueryTaskTests {
     expectNoDifference(task.isCancelled, true)
   }
 
+  @Test("Map Task Value")
+  func mapTaskValue() async throws {
+    let task = QueryTask<Int>(context: QueryContext()) { _ in 42 }
+    let task2 = task.map { $0 * 2 }
+    _ = try await task.runIfNeeded()
+    let value = try await task2.runIfNeeded()
+    expectNoDifference(value, 84)
+  }
+
+  @Test("Map Task Value With Different Types")
+  func mapTaskValueWithDifferentTypes() async throws {
+    let task = QueryTask<Int>(context: QueryContext()) { _ in 42 }
+    let task2 = task.map { String($0) }
+    _ = try await task.runIfNeeded()
+    let value = try await task2.runIfNeeded()
+    expectNoDifference(value, "42")
+  }
+
   #if DEBUG
     @Test("Reports Issue When Circular Scheduling, 2 Tasks")
     func reportsIssueWhenCircularScheduling2Tasks() async throws {
