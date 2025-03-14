@@ -141,14 +141,18 @@ struct QueryTaskTests {
     @Test("Reports Issue When Circular Scheduling, 2 Tasks")
     func reportsIssueWhenCircularScheduling2Tasks() async throws {
       let context = QueryContext()
-      let task1 = QueryTask<Int>(context: context) { _ in 40 }
-      let task2 = QueryTask<Int>(context: context) { _ in 32 }
+      let task1 = QueryTask<Int>(name: "Test task 1", context: context) { _ in 40 }
+      let task2 = QueryTask<Int>(name: "Test task 2", context: context) { _ in 32 }
       task1.schedule(after: task2)
       withKnownIssue {
         task2.schedule(after: task1)
       } matching: { [task1, task2] issue in
         issue.comments.contains(
-          .warning(.queryTaskCircularScheduling(ids: [task2.id, task1.id, task2.id]))
+          .warning(
+            .queryTaskCircularScheduling(info: [
+              task2.warningInfo, task1.warningInfo, task2.warningInfo
+            ])
+          )
         )
       }
     }
@@ -156,10 +160,10 @@ struct QueryTaskTests {
     @Test("Reports Issue When Circular Scheduling, 3 Tasks")
     func reportsIssueWhenCircularScheduling3Tasks() async throws {
       let context = QueryContext()
-      let task1 = QueryTask<Int>(context: context) { _ in 40 }
-      let task2 = QueryTask<Int>(context: context) { _ in 32 }
-      let task3 = QueryTask<Int>(context: context) { _ in 24 }
-      let task4 = QueryTask<Int>(context: context) { _ in 16 }
+      let task1 = QueryTask<Int>(name: "Test task 1", context: context) { _ in 40 }
+      let task2 = QueryTask<Int>(name: "Test task 2", context: context) { _ in 32 }
+      let task3 = QueryTask<Int>(name: "Test task 3", context: context) { _ in 24 }
+      let task4 = QueryTask<Int>(name: "Test task 4", context: context) { _ in 16 }
       task1.schedule(after: task2)
       task2.schedule(after: task3)
       task3.schedule(after: task4)
@@ -167,7 +171,11 @@ struct QueryTaskTests {
         task3.schedule(after: task1)
       } matching: { [task1, task2, task3] issue in
         issue.comments.contains(
-          .warning(.queryTaskCircularScheduling(ids: [task3.id, task1.id, task2.id, task3.id]))
+          .warning(
+            .queryTaskCircularScheduling(info: [
+              task3.warningInfo, task1.warningInfo, task2.warningInfo, task3.warningInfo
+            ])
+          )
         )
       }
     }

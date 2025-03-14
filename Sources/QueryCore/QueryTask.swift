@@ -5,12 +5,11 @@ import Foundation
 
 private protocol _QueryTask: Sendable, Identifiable {
   var id: QueryTaskID { get }
-
+  var warningInfo: QueryTaskWarningInfo { get }
   var dependencies: [any _QueryTask] { get }
 
   func _runIfNeeded() async throws -> any Sendable
-
-  func warnIfCyclesDetected(cyclicalIds: [QueryTaskID], visited: Set<QueryTaskID>)
+  func warnIfCyclesDetected(cyclicalIds: [QueryTaskWarningInfo], visited: Set<QueryTaskID>)
 }
 
 // MARK: - QueryTask
@@ -19,6 +18,7 @@ public struct QueryTask<Value: Sendable>: _QueryTask {
   private typealias State = (task: TaskState?, dependencies: [any _QueryTask])
 
   public let id: QueryTaskID
+  public var name: String?
   public var context: QueryContext
 
   private let work: @Sendable (QueryContext) async throws -> any Sendable
@@ -28,9 +28,11 @@ public struct QueryTask<Value: Sendable>: _QueryTask {
 
 extension QueryTask {
   public init(
+    name: String? = nil,
     context: QueryContext,
     work: @escaping @Sendable (QueryContext) async throws -> Value
   ) {
+    self.name = name
     self.context = context
     self.work = work
     self.transforms = { $0 as! Value }
@@ -98,20 +100,20 @@ extension QueryTask {
 
   private func withDependencies(_ fn: (inout [any _QueryTask]) -> Void) {
     self.box.inner.withLock { fn(&$0.dependencies) }
-    self.warnIfCyclesDetected(cyclicalIds: [self.id], visited: [self.id])
+    self.warnIfCyclesDetected(cyclicalIds: [self.warningInfo], visited: [self.id])
   }
 
   fileprivate func warnIfCyclesDetected(
-    cyclicalIds: [QueryTaskID],
+    cyclicalIds: [QueryTaskWarningInfo],
     visited: Set<QueryTaskID>
   ) {
     #if DEBUG
       for dependency in self.dependencies {
         if visited.contains(dependency.id) {
-          reportWarning(.queryTaskCircularScheduling(ids: cyclicalIds + [dependency.id]))
+          reportWarning(.queryTaskCircularScheduling(info: cyclicalIds + [dependency.warningInfo]))
         } else {
           dependency.warnIfCyclesDetected(
-            cyclicalIds: cyclicalIds + [dependency.id],
+            cyclicalIds: cyclicalIds + [dependency.warningInfo],
             visited: visited.union([dependency.id])
           )
         }
@@ -201,6 +203,7 @@ extension QueryTask {
   ) -> QueryTask<T> {
     QueryTask<T>(
       id: self.id,
+      name: self.name,
       context: self.context,
       work: self.work,
       transforms: { try transform(self.transforms($0)) },
@@ -209,17 +212,34 @@ extension QueryTask {
   }
 }
 
-// MARK: - Warning
+// MARK: - Warnings
+
+@_spi(Warnings) public struct QueryTaskWarningInfo {
+  let name: String?
+  let id: QueryTaskID
+}
+
+extension QueryTaskWarningInfo: CustomStringConvertible {
+  public var description: String {
+    "[\(name ?? "Unnamed QueryTask")](ID: \(id.debugDescription))"
+  }
+}
+
+extension QueryTask {
+  @_spi(Warnings) public var warningInfo: QueryTaskWarningInfo {
+    QueryTaskWarningInfo(name: self.name, id: self.id)
+  }
+}
 
 extension QueryCoreWarning {
-  public static func queryTaskCircularScheduling(ids: [QueryTaskID]) -> Self {
+  public static func queryTaskCircularScheduling(info: [QueryTaskWarningInfo]) -> Self {
     Self(
       """
       Circular scheduling detected for tasks.
 
         Cycle:
 
-        \(ids.map(\.debugDescription).joined(separator: " -> "))
+        \(info.map(\.description).joined(separator: " -> "))
 
       This will cause task starvation when running any of the tasks in this cycle.
       """
