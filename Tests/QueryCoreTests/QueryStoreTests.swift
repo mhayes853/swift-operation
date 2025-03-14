@@ -310,14 +310,14 @@ struct QueryStoreTests {
 
   @Test("Init Casting Returns Nil When Invalid Cast")
   func initCastingReturnsNilWhenInvalidCast() async throws {
-    let store1 = AnyQueryStore.detached(erasing: TestQuery().defaultValue(TestQuery.value))
+    let store1 = OpaqueQueryStore.detached(erasing: TestQuery().defaultValue(TestQuery.value))
     let store2 = QueryStoreFor<TestStringQuery>(casting: store1)
     expectNoDifference(store2 == nil, true)
   }
 
   @Test("Init Casting Returns New Store When Valid Cast")
   func initCastingReturnsNewStoreWhenValidCast() async throws {
-    let store1 = AnyQueryStore.detached(
+    let store1 = OpaqueQueryStore.detached(
       erasing: TestStringQuery().defaultValue(TestStringQuery.value)
     )
     let store2 = QueryStoreFor<DefaultQuery<TestStringQuery>>(casting: store1)

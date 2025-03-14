@@ -10,14 +10,14 @@ struct MutationStoreTests {
 
   @Test("Casts To MutationStore From AnyQueryStore")
   func testCastsToMutationStoreFromAnyQueryStore() {
-    let store = AnyQueryStore.detached(erasing: EmptyMutation())
+    let store = OpaqueQueryStore.detached(erasing: EmptyMutation())
     let mutationStore = MutationStoreFor<EmptyMutation>(casting: store)
     expectNoDifference(mutationStore != nil, true)
   }
 
   @Test("Casts To MutationStore From AnyQueryStore With Modifier")
   func testCastsToMutationStoreFromAnyQueryStoreWithModifier() {
-    let store = AnyQueryStore.detached(
+    let store = OpaqueQueryStore.detached(
       erasing: EmptyMutation().enableAutomaticFetching(when: .always(false))
     )
     let mutationStore = MutationStoreFor<EmptyMutation>(casting: store)
@@ -28,7 +28,7 @@ struct MutationStoreTests {
     "Does Not Cast To MutationStore From AnyQueryStore When Underlying Query Is Not Infinite"
   )
   func testDoesNotCastsToMutationStoreFromAnyQueryStore() {
-    let store = AnyQueryStore.detached(
+    let store = OpaqueQueryStore.detached(
       erasing: FakeInfiniteQuery().defaultValue([])
     )
     let mutationStore = MutationStoreFor<EmptyMutation>(casting: store)
@@ -39,7 +39,7 @@ struct MutationStoreTests {
     "Does Not Cast To MutationStore From AnyQueryStore When Type Mismatch"
   )
   func testDoesNotCastsToMutationStoreFromAnyQueryStoreWithTypeMismatch() {
-    let store = AnyQueryStore.detached(erasing: EmptyIntMutation())
+    let store = OpaqueQueryStore.detached(erasing: EmptyIntMutation())
     let mutationStore = MutationStoreFor<EmptyMutation>(casting: store)
     expectNoDifference(mutationStore == nil, true)
   }

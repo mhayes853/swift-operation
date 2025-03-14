@@ -2,7 +2,7 @@ import Foundation
 
 // MARK: - AnyQueryState
 
-public struct AnyQueryState {
+public struct OpaqueQueryState {
   public private(set) var base: any QueryStateProtocol
 
   public init(_ base: any QueryStateProtocol) {
@@ -12,7 +12,7 @@ public struct AnyQueryState {
 
 // MARK: - QueryStateProtocol
 
-extension AnyQueryState: QueryStateProtocol {
+extension OpaqueQueryState: QueryStateProtocol {
   public typealias StateValue = (any Sendable)?
   public typealias QueryValue = any Sendable
   public typealias StatusValue = any Sendable

@@ -9,7 +9,7 @@ struct InfiniteQueryStoreTests {
 
   @Test("Casts To InfiniteQueryStore From AnyQueryStore")
   func testCastsToInfiniteQueryStoreFromAnyQueryStore() {
-    let store = AnyQueryStore.detached(
+    let store = OpaqueQueryStore.detached(
       erasing: EmptyInfiniteQuery(initialPageId: 0, path: []),
       initialValue: []
     )
@@ -19,7 +19,7 @@ struct InfiniteQueryStoreTests {
 
   @Test("Casts To InfiniteQueryStore From AnyQueryStore With Modifier")
   func testCastsToInfiniteQueryStoreFromAnyQueryStoreWithModifier() {
-    let store = AnyQueryStore.detached(
+    let store = OpaqueQueryStore.detached(
       erasing: EmptyInfiniteQuery(initialPageId: 0, path: [])
         .enableAutomaticFetching(when: .always(false)),
       initialValue: []
@@ -32,7 +32,7 @@ struct InfiniteQueryStoreTests {
     "Does Not Cast To InfiniteQueryStore From AnyQueryStore When Underlying Query Is Not Infinite"
   )
   func testDoesNotCastsToInfiniteQueryStoreFromAnyQueryStore() {
-    let store = AnyQueryStore.detached(
+    let store = OpaqueQueryStore.detached(
       erasing: FakeInfiniteQuery().defaultValue([])
     )
     let infiniteStore = InfiniteQueryStoreFor<EmptyInfiniteQuery>(casting: store)
@@ -43,7 +43,7 @@ struct InfiniteQueryStoreTests {
     "Does Not Cast To InfiniteQueryStore From AnyQueryStore When Type Mismatch"
   )
   func testDoesNotCastsToInfiniteQueryStoreFromAnyQueryStoreWithTypeMismatch() {
-    let store = AnyQueryStore.detached(
+    let store = OpaqueQueryStore.detached(
       erasing: EmptyIntInfiniteQuery(initialPageId: 0, path: []).defaultValue([]),
       initialValue: []
     )

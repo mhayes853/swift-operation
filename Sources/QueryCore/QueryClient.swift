@@ -78,9 +78,9 @@ extension QueryClient {
   private func anyStore<Query: QueryProtocol>(
     for query: Query,
     initialState: Query.State
-  ) -> AnyQueryStore {
+  ) -> OpaqueQueryStore where Query.State.QueryValue == Query.Value {
     self.state.withLock { state in
-      let newStore = AnyQueryStore.detached(
+      let newStore = OpaqueQueryStore.detached(
         erasing: query,
         initialState: initialState,
         initialContext: state.defaultContext
@@ -101,13 +101,13 @@ extension QueryClient {
 // MARK: - Queries For Path
 
 extension QueryClient {
-  public func store(with path: QueryPath) -> AnyQueryStore? {
+  public func store(with path: QueryPath) -> OpaqueQueryStore? {
     self.state.withLock { $0.stores[path]?.store }
   }
 
-  public func stores(matching path: QueryPath) -> [QueryPath: AnyQueryStore] {
+  public func stores(matching path: QueryPath) -> [QueryPath: OpaqueQueryStore] {
     self.state.withLock { state in
-      var newValues = [QueryPath: AnyQueryStore]()
+      var newValues = [QueryPath: OpaqueQueryStore]()
       for (queryPath, entry) in state.stores {
         if path.prefixMatches(other: queryPath) {
           newValues[queryPath] = entry.store
@@ -123,7 +123,7 @@ extension QueryClient {
 extension QueryClient {
   private struct StoreEntry {
     let queryType: Any.Type
-    let store: AnyQueryStore
+    let store: OpaqueQueryStore
   }
 }
 
