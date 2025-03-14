@@ -323,6 +323,25 @@ struct QueryStoreTests {
     let store2 = QueryStoreFor<DefaultQuery<TestStringQuery>>(casting: store1)
     expectNoDifference(store2 != nil, true)
   }
+
+  @Test("Cancel Fetch, Query Status Is Cancelled")
+  func cancelFetchQueryStatusIsCancelled() async throws {
+    let query = SleepingQuery(clock: TestClock(), duration: .seconds(1))
+    let store = self.client.store(for: query)
+    query.didBeginSleeping = { store.fetchTask().cancel() }
+    _ = try? await store.fetch()
+    expectNoDifference(store.status.isCancelled, true)
+  }
+
+  @Test("Cancel Fetch From Task, Query Status Is Cancelled")
+  func cancelFetchFromTaskQueryStatusIsCancelled() async throws {
+    let query = SleepingQuery(clock: TestClock(), duration: .seconds(1))
+    let store = self.client.store(for: query)
+    let task = Task { try await store.fetch() }
+    query.didBeginSleeping = { task.cancel() }
+    _ = try? await task.value
+    expectNoDifference(store.status.isCancelled, true)
+  }
 }
 
 extension QueryContext {

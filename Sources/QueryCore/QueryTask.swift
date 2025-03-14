@@ -16,7 +16,7 @@ private protocol _QueryTask: Sendable, Identifiable {
 // MARK: - QueryTask
 
 public struct QueryTask<Value: Sendable>: _QueryTask {
-  private typealias State = (task: Task<any Sendable, any Error>?, dependencies: [any _QueryTask])
+  private typealias State = (task: TaskState?, dependencies: [any _QueryTask])
 
   public let id: QueryTaskID
   public var context: QueryContext
@@ -44,7 +44,7 @@ public struct QueryTaskID: Hashable, Sendable {
 }
 
 extension QueryTaskID {
-  private static let counter = Lock(1)
+  private static let counter = Lock(0)
 
   fileprivate static func next() -> Self {
     counter.withLock { counter in
@@ -134,23 +134,61 @@ extension QueryTask {
   }
 
   fileprivate func _runIfNeeded() async throws -> any Sendable {
-    let task = self.box.inner.withLock { state in
-      if let task = state.task {
+    let task = try self.box.inner.withLock { state in
+      switch state.task {
+      case let .running(task):
+        return task
+      case .cancelled:
+        throw CancellationError()
+      case .none:
+        let task = Task {
+          await withTaskGroup(of: Void.self) { group in
+            for dependency in self.dependencies {
+              group.addTask { _ = try? await dependency._runIfNeeded() }
+            }
+          }
+          return try await self.work(self.context) as any Sendable
+        }
+        state.task = .running(task)
         return task
       }
-      let task = Task {
-        await withTaskGroup(of: Void.self) { group in
-          for dependency in self.dependencies {
-            group.addTask { _ = try? await dependency._runIfNeeded() }
-          }
-        }
-        return try await self.work(self.context) as any Sendable
-      }
-      state.task = task
-      return task
     }
-    return try await task.cancellableValue
+    return try await withTaskCancellationHandler {
+      try await task.value
+    } onCancel: {
+      self.cancel()
+    }
   }
+}
+
+// MARK: - Cancellation
+
+extension QueryTask {
+  public var isCancelled: Bool {
+    self.box.inner.withLock {
+      switch $0.task {
+      case .cancelled: true
+      default: false
+      }
+    }
+  }
+
+  public func cancel() {
+    self.box.inner.withLock {
+      switch $0.task {
+      case .running(let task): task.cancel()
+      default: break
+      }
+      $0.task = .cancelled
+    }
+  }
+}
+
+// MARK: - TaskState
+
+private enum TaskState {
+  case cancelled
+  case running(Task<any Sendable, any Error>)
 }
 
 // MARK: - Map

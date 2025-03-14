@@ -55,6 +55,70 @@ struct QueryTaskTests {
     expectNoDifference(task.hasStarted, true)
   }
 
+  @Test("Cancel Query Task While Running, Throws Cancellation Error")
+  func cancelQueryTaskThrowsCancellationError() async throws {
+    let task = QueryTask<Void>(context: QueryContext()) { _ in try await Task.never() }
+    let base = Task {
+      do {
+        try await task.runIfNeeded()
+        return false
+      } catch is CancellationError {
+        return true
+      }
+    }
+    await Task.megaYield()
+    task.cancel()
+    let value = try await base.value
+    expectNoDifference(value, true)
+  }
+
+  @Test("Cancel Query Task From Task, Throws Cancellation Error")
+  func cancelQueryTaskFromTaskThrowsCancellationError() async throws {
+    let task = QueryTask<Void>(context: QueryContext()) { _ in try await Task.never() }
+    let base = Task {
+      do {
+        try await task.runIfNeeded()
+        return false
+      } catch is CancellationError {
+        return true
+      }
+    }
+    base.cancel()
+    let value = try await base.value
+    expectNoDifference(value, true)
+  }
+
+  @Test("Cancel Query Task Before Running, Throws Cancellation Error Immediately")
+  func cancelQueryTaskBeforeRunningThrowsCancellationErrorImmediately() async throws {
+    let task = QueryTask<Void>(context: QueryContext()) { _ in try await Task.never() }
+    task.cancel()
+    await #expect(throws: CancellationError.self) {
+      try await task.runIfNeeded()
+    }
+  }
+
+  @Test("Is Cancelled Is False By Default")
+  func isCancelledIsFalseByDefault() {
+    let task = QueryTask<Void>(context: QueryContext()) { _ in try await Task.never() }
+    expectNoDifference(task.isCancelled, false)
+  }
+
+  @Test("Cancel, Is Cancelled")
+  func cancelIsCancelled() {
+    let task = QueryTask<Void>(context: QueryContext()) { _ in try await Task.never() }
+    task.cancel()
+    expectNoDifference(task.isCancelled, true)
+  }
+
+  @Test("Cancel From Regular Task, Is Cancelled")
+  func cancelFromRegularTaskIsCancelled() async throws {
+    let task = QueryTask<Void>(context: QueryContext()) { _ in try await Task.never() }
+    let base = Task.detached { try await task.runIfNeeded() }
+    base.cancel()
+    _ = try? await base.value
+    expectNoDifference(task.isCancelled, true)
+  }
+
   #if DEBUG
     @Test("Reports Issue When Circular Scheduling, 2 Tasks")
     func reportsIssueWhenCircularScheduling2Tasks() async throws {
