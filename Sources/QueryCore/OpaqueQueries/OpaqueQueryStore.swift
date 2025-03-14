@@ -150,7 +150,7 @@ extension OpaqueQueryStore {
 extension OpaqueQueryStore {
   @discardableResult
   public func fetch(
-    handler: OpaqueQueryEventHandler = QueryEventHandler(),
+    handler: OpaqueQueryEventHandler = OpaqueQueryEventHandler(),
     using context: QueryContext? = nil
   ) async throws -> any Sendable {
     try await self._base.opaqueFetch(handler: handler, using: context)

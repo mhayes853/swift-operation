@@ -1,4 +1,22 @@
-public typealias OpaqueQueryEventHandler = QueryEventHandler<any Sendable>
+// MARK: - OpaqueQueryEventHandler
+
+public struct OpaqueQueryEventHandler: Sendable {
+  let onFetchingStarted: (@Sendable (QueryContext) -> Void)?
+  let onFetchingEnded: (@Sendable (QueryContext) -> Void)?
+  let onResultReceived: (@Sendable (Result<any Sendable, any Error>, QueryContext) -> Void)?
+
+  public init(
+    onFetchingStarted: (@Sendable (QueryContext) -> Void)? = nil,
+    onFetchingEnded: (@Sendable (QueryContext) -> Void)? = nil,
+    onResultReceived: (@Sendable (Result<any Sendable, any Error>, QueryContext) -> Void)? = nil
+  ) {
+    self.onFetchingEnded = onFetchingEnded
+    self.onFetchingStarted = onFetchingStarted
+    self.onResultReceived = onResultReceived
+  }
+}
+
+// MARK: - Casting
 
 extension OpaqueQueryEventHandler {
   func casted<V: Sendable>(to value: V.Type) -> QueryEventHandler<V> {
