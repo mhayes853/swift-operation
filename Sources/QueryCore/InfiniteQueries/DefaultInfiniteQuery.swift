@@ -20,8 +20,8 @@ public struct DefaultInfiniteQuery<Query: InfiniteQueryProtocol>: QueryProtocol 
     self.query.path
   }
 
-  public func _setup(context: inout QueryContext) {
-    self.query._setup(context: &context)
+  public func setup(context: inout QueryContext) {
+    self.query.setup(context: &context)
   }
 
   public func fetch(in context: QueryContext) async throws -> Query.Value {

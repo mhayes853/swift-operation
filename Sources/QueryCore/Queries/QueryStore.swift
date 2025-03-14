@@ -25,7 +25,7 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
     self._query = query
     self._state = LockedBox(value: (query: initialState, context: initialContext))
     self.subscriptions = QuerySubscriptions()
-    self._state.inner.withLock { query._setup(context: &$0.context) }
+    self._state.inner.withLock { query.setup(context: &$0.context) }
   }
 
   public init?(casting store: OpaqueQueryStore) {

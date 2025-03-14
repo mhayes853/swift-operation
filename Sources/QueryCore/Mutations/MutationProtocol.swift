@@ -8,7 +8,7 @@ where State == MutationState<Arguments, Value> {
 }
 
 extension MutationProtocol {
-  public func _setup(context: inout QueryContext) {
+  public func setup(context: inout QueryContext) {
     context.enableAutomaticFetchingCondition = .always(false)
   }
 

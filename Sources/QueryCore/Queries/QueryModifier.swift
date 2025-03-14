@@ -3,14 +3,14 @@
 public protocol QueryModifier<Query>: Sendable {
   associatedtype Query: QueryProtocol
 
-  func _setup(context: inout QueryContext, using query: Query)
+  func setup(context: inout QueryContext, using query: Query)
 
   func fetch(in context: QueryContext, using query: Query) async throws -> Query.Value
 }
 
 extension QueryModifier {
-  public func _setup(context: inout QueryContext, using query: Query) {
-    query._setup(context: &context)
+  public func setup(context: inout QueryContext, using query: Query) {
+    query.setup(context: &context)
   }
 }
 
@@ -36,8 +36,8 @@ where Modifier.Query == Query {
     self.query.path
   }
 
-  public func _setup(context: inout QueryContext) {
-    self.modifier._setup(context: &context, using: query)
+  public func setup(context: inout QueryContext) {
+    self.modifier.setup(context: &context, using: query)
   }
 
   public func fetch(in context: QueryContext) async throws -> Query.Value {

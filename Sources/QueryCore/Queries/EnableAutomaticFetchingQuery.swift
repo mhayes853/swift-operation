@@ -11,9 +11,9 @@ extension QueryProtocol {
 private struct EnableAutomaticFetchingModifier<Query: QueryProtocol>: QueryModifier {
   let condition: any FetchCondition
 
-  func _setup(context: inout QueryContext, using query: Query) {
+  func setup(context: inout QueryContext, using query: Query) {
     context.enableAutomaticFetchingCondition = self.condition
-    query._setup(context: &context)
+    query.setup(context: &context)
   }
 
   func fetch(in context: QueryContext, using query: Query) async throws -> Query.Value {
