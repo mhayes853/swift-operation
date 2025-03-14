@@ -7,7 +7,7 @@ import Foundation
 public final class OpaqueQueryStore: Sendable {
   private let _base: any OpaqueableQueryStore
 
-  private init(base: any OpaqueableQueryStore) {
+  public init(erasing base: QueryStore<some QueryStateProtocol>) {
     self._base = base
   }
 }
@@ -29,7 +29,7 @@ extension OpaqueQueryStore {
     initialContext: QueryContext = QueryContext()
   ) -> OpaqueQueryStore where Query.State.QueryValue == Query.Value {
     OpaqueQueryStore(
-      base: QueryStoreFor<Query>
+      erasing: QueryStoreFor<Query>
         .detached(
           query: query,
           initialState: initialState,

@@ -8,7 +8,7 @@ public typealias MutationStoreFor<
 
 @dynamicMemberLookup
 public final class MutationStore<Arguments: Sendable, Value: Sendable>: Sendable {
-  private let base: QueryStore<MutationState<Arguments, Value>>
+  public let base: QueryStore<MutationState<Arguments, Value>>
 
   public init(store: QueryStore<MutationState<Arguments, Value>>) {
     self.base = store

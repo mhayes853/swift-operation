@@ -11,7 +11,7 @@ public typealias InfiniteQueryStoreFor<
 
 @dynamicMemberLookup
 public final class InfiniteQueryStore<PageID: Hashable & Sendable, PageValue: Sendable>: Sendable {
-  private let base: QueryStore<InfiniteQueryState<PageID, PageValue>>
+  public let base: QueryStore<InfiniteQueryState<PageID, PageValue>>
 
   public init(store: QueryStore<InfiniteQueryState<PageID, PageValue>>) {
     self.base = store
