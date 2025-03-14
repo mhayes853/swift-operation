@@ -241,3 +241,11 @@ extension InfiniteQueryProtocol {
     return try result.get()
   }
 }
+
+// MARK: - QueryStore
+
+extension InfiniteQueryProtocol {
+  public func currentInfiniteStore(in context: QueryContext) -> InfiniteQueryStoreFor<Self>? {
+    self.currentQueryStore(in: context).map { InfiniteQueryStore(store: $0) }
+  }
+}

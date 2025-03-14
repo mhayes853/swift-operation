@@ -171,7 +171,7 @@ extension QueryStore {
   public func fetchTask(using context: QueryContext? = nil) -> QueryTask<State.QueryValue> {
     self._state.inner.withLock { state in
       var context = context ?? state.context
-      context.currentStore = self
+      context.currentQueryStore = self
       let task = LockedBox<QueryTask<State.QueryValue>?>(value: nil)
       let inner = self.queryTask(in: context, using: task)
       return task.inner.withLock { newTask in
@@ -233,20 +233,18 @@ extension QueryStore {
 // MARK: - Access QueryStore In Query
 
 extension QueryProtocol where State.QueryValue == Value {
-  public func currentStore(in context: QueryContext) -> QueryStoreFor<Self>? {
-    context.currentStore as? QueryStoreFor<Self>
+  public func currentQueryStore(in context: QueryContext) -> QueryStoreFor<Self>? {
+    context.currentQueryStore as? QueryStoreFor<Self>
   }
 }
 
 extension QueryContext {
-  var currentStore: (any Sendable)? {
-    get { self[CurrentStoreKey.self] }
-    set { self[CurrentStoreKey.self] = newValue }
+  fileprivate var currentQueryStore: (any Sendable)? {
+    get { self[CurrentQueryStoreKey.self] }
+    set { self[CurrentQueryStoreKey.self] = newValue }
   }
 
-  private enum CurrentStoreKey: Key {
-    static var defaultValue: (any Sendable)? {
-      nil
-    }
+  private enum CurrentQueryStoreKey: Key {
+    static var defaultValue: (any Sendable)? { nil }
   }
 }

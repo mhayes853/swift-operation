@@ -21,3 +21,11 @@ extension MutationProtocol {
 }
 
 private struct MutationNoArgumentsError: Error {}
+
+// MARK: - MutationStore
+
+extension MutationProtocol {
+  public func currentMutationStore(in context: QueryContext) -> MutationStoreFor<Self>? {
+    self.currentQueryStore(in: context).map { MutationStore(store: $0) }
+  }
+}
