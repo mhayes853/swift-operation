@@ -147,6 +147,20 @@ struct QueryStatusTests {
     let newStatus = status.flatMapSuccess { .result(.success($0.description)) }
     newStatus.expectLoading()
   }
+
+  @Test(
+    "Is Cancelled",
+    arguments: [
+      (QueryStatus<Int>.idle, false),
+      (QueryStatus<Int>.loading, false),
+      (QueryStatus<Int>.result(.success(1)), false),
+      (QueryStatus<Int>.result(.failure(FailingQuery.SomeError())), false),
+      (QueryStatus<Int>.result(.failure(CancellationError())), true)
+    ]
+  )
+  func isCancelled(status: QueryStatus<Int>, isCanceled: Bool) {
+    expectNoDifference(status.isCancelled, isCanceled)
+  }
 }
 
 extension QueryStatus {

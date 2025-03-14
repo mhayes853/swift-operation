@@ -46,6 +46,10 @@ extension QueryStatus {
   public var isFailure: Bool {
     self.resultError != nil
   }
+
+  public var isCancelled: Bool {
+    self.resultError is CancellationError
+  }
 }
 
 // MARK: - Mapping
