@@ -32,8 +32,14 @@ extension MutationStore {
   public static func detached<Mutation: MutationProtocol>(
     mutation: Mutation,
     initialContext: QueryContext = QueryContext()
-  ) -> MutationStoreFor<Mutation> {
-    MutationStoreFor<Mutation>(store: .detached(mutation: mutation, initialContext: initialContext))
+  ) -> MutationStoreFor<Mutation> where Arguments == Mutation.Arguments, Value == Mutation.Value {
+    MutationStoreFor<Mutation>(
+      store: .detached(
+        query: mutation,
+        initialState: MutationState(),
+        initialContext: initialContext
+      )
+    )
   }
 }
 

@@ -9,21 +9,22 @@ struct InfiniteQueryStoreTests {
 
   @Test("Casts To InfiniteQueryStore From AnyQueryStore")
   func testCastsToInfiniteQueryStoreFromAnyQueryStore() {
-    let store = OpaqueQueryStore.detached(
-      erasing: EmptyInfiniteQuery(initialPageId: 0, path: []),
-      initialValue: []
+    let baseStore = InfiniteQueryStore.detached(
+      query: EmptyInfiniteQuery(initialPageId: 0, path: [])
     )
+    let store = OpaqueQueryStore(erasing: baseStore.base)
     let infiniteStore = InfiniteQueryStoreFor<EmptyInfiniteQuery>(casting: store)
     expectNoDifference(infiniteStore != nil, true)
   }
 
   @Test("Casts To InfiniteQueryStore From AnyQueryStore With Modifier")
   func testCastsToInfiniteQueryStoreFromAnyQueryStoreWithModifier() {
-    let store = OpaqueQueryStore.detached(
-      erasing: EmptyInfiniteQuery(initialPageId: 0, path: [])
+    let baseStore = InfiniteQueryStore.detached(
+      query: EmptyInfiniteQuery(initialPageId: 0, path: [])
         .enableAutomaticFetching(when: .always(false)),
       initialValue: []
     )
+    let store = OpaqueQueryStore(erasing: baseStore.base)
     let infiniteStore = InfiniteQueryStoreFor<EmptyInfiniteQuery>(casting: store)
     expectNoDifference(infiniteStore != nil, true)
   }
@@ -32,9 +33,9 @@ struct InfiniteQueryStoreTests {
     "Does Not Cast To InfiniteQueryStore From AnyQueryStore When Underlying Query Is Not Infinite"
   )
   func testDoesNotCastsToInfiniteQueryStoreFromAnyQueryStore() {
-    let store = OpaqueQueryStore.detached(
-      erasing: FakeInfiniteQuery().defaultValue([])
-    )
+    let baseStore = QueryStoreFor<FakeInfiniteQuery>
+      .detached(query: TestQuery().defaultValue(TestQuery.value))
+    let store = OpaqueQueryStore(erasing: baseStore)
     let infiniteStore = InfiniteQueryStoreFor<EmptyInfiniteQuery>(casting: store)
     expectNoDifference(infiniteStore == nil, true)
   }
@@ -43,10 +44,10 @@ struct InfiniteQueryStoreTests {
     "Does Not Cast To InfiniteQueryStore From AnyQueryStore When Type Mismatch"
   )
   func testDoesNotCastsToInfiniteQueryStoreFromAnyQueryStoreWithTypeMismatch() {
-    let store = OpaqueQueryStore.detached(
-      erasing: EmptyIntInfiniteQuery(initialPageId: 0, path: []).defaultValue([]),
-      initialValue: []
+    let baseStore = InfiniteQueryStore.detached(
+      query: EmptyIntInfiniteQuery(initialPageId: 0, path: []).defaultValue([])
     )
+    let store = OpaqueQueryStore(erasing: baseStore.base)
     let infiniteStore = InfiniteQueryStoreFor<EmptyInfiniteQuery>(casting: store)
     expectNoDifference(infiniteStore == nil, true)
   }

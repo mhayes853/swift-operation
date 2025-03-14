@@ -10,27 +10,29 @@ struct MutationStoreTests {
 
   @Test("Casts To MutationStore From AnyQueryStore")
   func testCastsToMutationStoreFromAnyQueryStore() {
-    let store = OpaqueQueryStore.detached(erasing: EmptyMutation())
+    let baseStore = MutationStore.detached(mutation: EmptyMutation())
+    let store = OpaqueQueryStore(erasing: baseStore.base)
     let mutationStore = MutationStoreFor<EmptyMutation>(casting: store)
     expectNoDifference(mutationStore != nil, true)
   }
 
   @Test("Casts To MutationStore From AnyQueryStore With Modifier")
   func testCastsToMutationStoreFromAnyQueryStoreWithModifier() {
-    let store = OpaqueQueryStore.detached(
-      erasing: EmptyMutation().enableAutomaticFetching(when: .always(false))
+    let baseStore = MutationStore.detached(
+      mutation: EmptyMutation().enableAutomaticFetching(when: .always(false))
     )
+    let store = OpaqueQueryStore(erasing: baseStore.base)
     let mutationStore = MutationStoreFor<EmptyMutation>(casting: store)
     expectNoDifference(mutationStore != nil, true)
   }
 
   @Test(
-    "Does Not Cast To MutationStore From AnyQueryStore When Underlying Query Is Not Infinite"
+    "Does Not Cast To MutationStore From AnyQueryStore When Underlying Query Is Not A Mutation"
   )
   func testDoesNotCastsToMutationStoreFromAnyQueryStore() {
-    let store = OpaqueQueryStore.detached(
-      erasing: FakeInfiniteQuery().defaultValue([])
-    )
+    let baseStore = QueryStoreFor<TestQuery>
+      .detached(query: TestQuery().defaultValue(TestQuery.value))
+    let store = OpaqueQueryStore(erasing: baseStore)
     let mutationStore = MutationStoreFor<EmptyMutation>(casting: store)
     expectNoDifference(mutationStore == nil, true)
   }
@@ -39,7 +41,8 @@ struct MutationStoreTests {
     "Does Not Cast To MutationStore From AnyQueryStore When Type Mismatch"
   )
   func testDoesNotCastsToMutationStoreFromAnyQueryStoreWithTypeMismatch() {
-    let store = OpaqueQueryStore.detached(erasing: EmptyIntMutation())
+    let baseStore = MutationStore.detached(mutation: EmptyIntMutation())
+    let store = OpaqueQueryStore(erasing: baseStore.base)
     let mutationStore = MutationStoreFor<EmptyMutation>(casting: store)
     expectNoDifference(mutationStore == nil, true)
   }
@@ -281,14 +284,14 @@ struct MutationStoreTests {
   @Test("Automatic Fetching Disabled By Default On Regular Store")
   func automaticFetchingDisabledByDefault() async throws {
     let mutation = FailableMutation()
-    let store = QueryStoreFor<FailableMutation>.detached(mutation: mutation)
+    let store = MutationStore.detached(mutation: mutation).base
     expectNoDifference(store.isAutomaticFetchingEnabled, false)
   }
 
   @Test("Reports Issue When Fetching Mutation Through A Base QueryStore With No History")
   func reportsIssueWhenFetchingMutationThroughABaseQueryStoreWithNoHistory() async throws {
     let mutation = FailableMutation()
-    let store = QueryStoreFor<FailableMutation>.detached(mutation: mutation)
+    let store = MutationStore.detached(mutation: mutation).base
     await withKnownIssue {
       _ = try? await store.fetch()
     } matching: {
@@ -300,13 +303,24 @@ struct MutationStoreTests {
   @Test("Retries Latest History When Calling Fetch On Base QueryStore For Mutation")
   func retriesLatestHistoryWhenCallingFetchOnBaseQueryStoreForMutation() async throws {
     let mutation = EmptyMutation()
-    let store = QueryStoreFor<FailableMutation>.detached(mutation: mutation)
+    let store = MutationStore.detached(mutation: mutation).base
     let mutationStore = MutationStore(store: store)
     try await mutationStore.mutate(with: "blob")
     let value = try await store.fetch()
     expectNoDifference(value, "blob")
     expectNoDifference(mutationStore.history.count, 2)
     expectNoDifference(mutationStore.history.map(\.arguments), ["blob", "blob"])
+  }
+
+  @Test("Retries Latest History When Calling RetryLatest")
+  func retriesLatestHistoryWhenCallingRetryLatest() async throws {
+    let mutation = EmptyMutation()
+    let store = MutationStore.detached(mutation: mutation)
+    try await store.mutate(with: "blob")
+    let value = try await store.retryLatest()
+    expectNoDifference(value, "blob")
+    expectNoDifference(store.history.count, 2)
+    expectNoDifference(store.history.map(\.arguments), ["blob", "blob"])
   }
 
   @Test("Successful Mutation Events")

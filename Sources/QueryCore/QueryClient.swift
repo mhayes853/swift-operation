@@ -82,10 +82,12 @@ extension QueryClient {
     initialState: Query.State
   ) -> OpaqueQueryStore where Query.State.QueryValue == Query.Value {
     self.state.withLock { state in
-      let newStore = OpaqueQueryStore.detached(
-        erasing: query,
-        initialState: initialState,
-        initialContext: state.defaultContext
+      let newStore = OpaqueQueryStore(
+        erasing: .detached(
+          query: query,
+          initialState: initialState,
+          initialContext: self.defaultContext
+        )
       )
       if let entry = state.stores[query.path] {
         if entry.queryType != Query.self {

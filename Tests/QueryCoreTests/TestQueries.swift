@@ -194,11 +194,10 @@ struct EmptyIntInfiniteQuery: InfiniteQueryProtocol {
 
 struct FakeInfiniteQuery: QueryProtocol, Hashable {
   typealias State = InfiniteQueryState<Int, String>
-  typealias StateValue = InfiniteQueryPages<Int, String>
-  typealias Value = InfiniteQueryPages<Int, String>
+  typealias Value = InfiniteQueryValue<Int, String>
 
   func fetch(in context: QueryContext) async throws -> Value {
-    []
+    fatalError()
   }
 }
 

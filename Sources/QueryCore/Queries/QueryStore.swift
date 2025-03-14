@@ -54,7 +54,7 @@ extension QueryStore {
     initialValue: Query.State.StateValue,
     initialContext: QueryContext = QueryContext()
   ) -> QueryStoreFor<Query> where Query.State == QueryState<Query.Value?, Query.Value> {
-    .detached(
+    QueryStoreFor<Query>(
       query: query,
       initialState: Query.State(initialValue: initialValue),
       initialContext: initialContext
@@ -66,49 +66,9 @@ extension QueryStore {
     initialContext: QueryContext = QueryContext()
   ) -> QueryStoreFor<DefaultQuery<Query>>
   where DefaultQuery<Query>.State == QueryState<Query.Value, Query.Value> {
-    .detached(
+    QueryStoreFor<DefaultQuery<Query>>(
       query: query,
       initialState: DefaultQuery<Query>.State(initialValue: query.defaultValue),
-      initialContext: initialContext
-    )
-  }
-
-  public static func detached<Query: InfiniteQueryProtocol>(
-    query: Query,
-    initialValue: Query.State.StateValue,
-    initialContext: QueryContext = QueryContext()
-  ) -> QueryStoreFor<Query> {
-    .detached(
-      query: query,
-      initialState: InfiniteQueryState(
-        initialValue: initialValue,
-        initialPageId: query.initialPageId
-      ),
-      initialContext: initialContext
-    )
-  }
-
-  public static func detached<Query: InfiniteQueryProtocol>(
-    query: DefaultInfiniteQuery<Query>,
-    initialContext: QueryContext = QueryContext()
-  ) -> QueryStoreFor<Query> {
-    .detached(
-      query: query,
-      initialState: InfiniteQueryState(
-        initialValue: query.defaultValue,
-        initialPageId: query.initialPageId
-      ),
-      initialContext: initialContext
-    )
-  }
-
-  public static func detached<Mutation: MutationProtocol>(
-    mutation: Mutation,
-    initialContext: QueryContext = QueryContext()
-  ) -> QueryStoreFor<Mutation> {
-    .detached(
-      query: mutation,
-      initialState: MutationState(),
       initialContext: initialContext
     )
   }
