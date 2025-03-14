@@ -194,8 +194,8 @@ private enum TaskState {
 // MARK: - Map
 
 extension QueryTask {
-  func map<T: Sendable>(
-    _ transform: @escaping @Sendable (any Sendable) throws -> T
+  public func map<T: Sendable>(
+    _ transform: @escaping @Sendable (Value) throws -> T
   ) -> QueryTask<T> {
     QueryTask<T>(
       id: self.id,

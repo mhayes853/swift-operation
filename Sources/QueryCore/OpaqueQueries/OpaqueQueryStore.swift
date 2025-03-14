@@ -120,7 +120,7 @@ extension QueryStore: OpaqueableQueryStore {
   }
 
   func opaqueFetchTask(using context: QueryContext?) -> QueryTask<any Sendable> {
-    self.fetchTask(using: context).map { $0 as any Sendable }
+    self.fetchTask(using: context).map { $0 }
   }
 
   func opaqueSubscribe(
