@@ -86,6 +86,15 @@ extension MutationStore {
   }
 }
 
+extension MutationStore {
+  public func retryLatest(
+    handler: MutationEventHandler<Arguments, Value> = MutationEventHandler(),
+    using context: QueryContext? = nil
+  ) async throws -> Value {
+    try await self.base.fetch(handler: self.queryStoreHandler(for: handler), using: context)
+  }
+}
+
 // MARK: - Subscribe
 
 extension MutationStore {

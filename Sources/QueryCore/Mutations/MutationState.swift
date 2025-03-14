@@ -100,14 +100,14 @@ extension MutationState.HistoryEntry {
 extension QueryCoreWarning {
   public static let mutationWithNoArgumentsOrHistory = QueryCoreWarning(
     """
-    A mutation was started by a base QueryStore instance, but no history for the mutation exists.
+    The latest mutation attempt was retried, but the retried mutation has no history.
 
-    Calling `fetch` on a QueryStore that uses a mutation will retry the latest mutation attempt in
-    the history (ie. recalling `mutate`, but with the same arguments), but this is impossible if
-    there is no history for the mutation.
+    Calling `fetch` on a QueryStore, or `retryLatest` on a `MutationStore` that uses a mutation
+    will retry the latest mutation attempt in the history (ie. recalling `mutate`, but with the
+    same arguments), but this is impossible if there is no history for the mutation.
 
     Make sure to call `mutate` on a `MutationStore` instance first before calling `fetch` on the
-    `QueryStore` instance, and ensure that the MutationStore uses the same QueryStore.
+    `QueryStore` instance, or before calling `retryLatest` on the `MutationStore`.
     """
   )
 }
