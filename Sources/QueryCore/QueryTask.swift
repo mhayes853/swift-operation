@@ -5,11 +5,11 @@ import Foundation
 
 private protocol _QueryTask: Sendable, Identifiable {
   var id: QueryTaskID { get }
-  var warningInfo: QueryTaskWarningInfo { get }
+  var info: QueryTaskInfo { get }
   var dependencies: [any _QueryTask] { get }
 
   func _runIfNeeded() async throws -> any Sendable
-  func warnIfCyclesDetected(cyclicalIds: [QueryTaskWarningInfo], visited: Set<QueryTaskID>)
+  func warnIfCyclesDetected(cyclicalIds: [QueryTaskInfo], visited: Set<QueryTaskID>)
 }
 
 // MARK: - QueryTask
@@ -100,20 +100,20 @@ extension QueryTask {
 
   private func withDependencies(_ fn: (inout [any _QueryTask]) -> Void) {
     self.box.inner.withLock { fn(&$0.dependencies) }
-    self.warnIfCyclesDetected(cyclicalIds: [self.warningInfo], visited: [self.id])
+    self.warnIfCyclesDetected(cyclicalIds: [self.info], visited: [self.id])
   }
 
   fileprivate func warnIfCyclesDetected(
-    cyclicalIds: [QueryTaskWarningInfo],
+    cyclicalIds: [QueryTaskInfo],
     visited: Set<QueryTaskID>
   ) {
     #if DEBUG
       for dependency in self.dependencies {
         if visited.contains(dependency.id) {
-          reportWarning(.queryTaskCircularScheduling(info: cyclicalIds + [dependency.warningInfo]))
+          reportWarning(.queryTaskCircularScheduling(info: cyclicalIds + [dependency.info]))
         } else {
           dependency.warnIfCyclesDetected(
-            cyclicalIds: cyclicalIds + [dependency.warningInfo],
+            cyclicalIds: cyclicalIds + [dependency.info],
             visited: visited.union([dependency.id])
           )
         }
@@ -212,27 +212,29 @@ extension QueryTask {
   }
 }
 
-// MARK: - Warnings
+// MARK: - Info
 
-@_spi(Warnings) public struct QueryTaskWarningInfo {
+public struct QueryTaskInfo {
   let name: String?
   let id: QueryTaskID
 }
 
-extension QueryTaskWarningInfo: CustomStringConvertible {
+extension QueryTaskInfo: CustomStringConvertible {
   public var description: String {
     "[\(name ?? "Unnamed QueryTask")](ID: \(id.debugDescription))"
   }
 }
 
 extension QueryTask {
-  @_spi(Warnings) public var warningInfo: QueryTaskWarningInfo {
-    QueryTaskWarningInfo(name: self.name, id: self.id)
+  public var info: QueryTaskInfo {
+    QueryTaskInfo(name: self.name, id: self.id)
   }
 }
 
+// MARK: - Warnings
+
 extension QueryCoreWarning {
-  public static func queryTaskCircularScheduling(info: [QueryTaskWarningInfo]) -> Self {
+  public static func queryTaskCircularScheduling(info: [QueryTaskInfo]) -> Self {
     Self(
       """
       Circular scheduling detected for tasks.

@@ -64,15 +64,19 @@ extension OpaqueQueryStore {
 extension OpaqueQueryStore {
   @discardableResult
   public func fetch(
+    taskName: String?,
     handler: OpaqueQueryEventHandler = OpaqueQueryEventHandler(),
     using context: QueryContext? = nil
   ) async throws -> any Sendable {
-    try await self._base.opaqueFetch(handler: handler, using: context)
+    try await self._base.opaqueFetch(taskName: taskName, handler: handler, using: context)
   }
 
   @discardableResult
-  public func fetchTask(using context: QueryContext? = nil) -> QueryTask<any Sendable> {
-    self._base.opaqueFetchTask(using: context)
+  public func fetchTask(
+    name: String?,
+    using context: QueryContext? = nil
+  ) -> QueryTask<any Sendable> {
+    self._base.opaqueFetchTask(name: name, using: context)
   }
 }
 
@@ -98,11 +102,12 @@ private protocol OpaqueableQueryStore: Sendable {
   var subscriberCount: Int { get }
 
   func opaqueFetch(
+    taskName: String?,
     handler: OpaqueQueryEventHandler,
     using context: QueryContext?
   ) async throws -> any Sendable
 
-  func opaqueFetchTask(using context: QueryContext?) -> QueryTask<any Sendable>
+  func opaqueFetchTask(name: String?, using context: QueryContext?) -> QueryTask<any Sendable>
 
   func opaqueSubscribe(
     with handler: OpaqueQueryEventHandler
@@ -113,14 +118,19 @@ extension QueryStore: OpaqueableQueryStore {
   var opaqueState: OpaqueQueryState { OpaqueQueryState(self.state) }
 
   func opaqueFetch(
+    taskName: String?,
     handler: OpaqueQueryEventHandler,
     using context: QueryContext?
   ) async throws -> any Sendable {
-    try await self.fetch(handler: handler.casted(to: State.QueryValue.self), using: context)
+    try await self.fetch(
+      taskName: taskName,
+      handler: handler.casted(to: State.QueryValue.self),
+      using: context
+    )
   }
 
-  func opaqueFetchTask(using context: QueryContext?) -> QueryTask<any Sendable> {
-    self.fetchTask(using: context).map { $0 }
+  func opaqueFetchTask(name: String?, using context: QueryContext?) -> QueryTask<any Sendable> {
+    self.fetchTask(name: name, using: context).map { $0 }
   }
 
   func opaqueSubscribe(
