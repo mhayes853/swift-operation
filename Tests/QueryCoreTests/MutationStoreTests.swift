@@ -367,4 +367,19 @@ struct MutationStoreTests {
     ])
     subscription.cancel()
   }
+
+  @Test("Default MutationStoreTask Name")
+  func defaultMutationStoreTaskName() async throws {
+    let store = self.client.store(for: EmptyMutation())
+    let task = store.mutateTask(with: "blob")
+    expectNoDifference(task.name, "MutationStore<String, String> Mutate Task")
+  }
+
+  @Test("Default RetryLatest MutationStoreTask Name")
+  func defaultRetryLatestMutationStoreTaskName() async throws {
+    let store = self.client.store(for: EmptyMutation())
+    try await store.mutate(with: "blob")
+    let task = store.retryLatestTask()
+    expectNoDifference(task.name, "MutationStore<String, String> Retry Latest Task")
+  }
 }

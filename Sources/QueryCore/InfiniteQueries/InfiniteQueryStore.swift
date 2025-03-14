@@ -96,17 +96,39 @@ extension InfiniteQueryStore {
   }
 }
 
-// MARK: - Fetch
+// MARK: - Fetch All Pages
 
 extension InfiniteQueryStore {
   @discardableResult
   public func fetchAllPages(
+    taskName: String? = nil,
     handler: InfiniteQueryEventHandler<PageID, PageValue> = InfiniteQueryEventHandler(),
     using context: QueryContext? = nil
   ) async throws -> InfiniteQueryPages<PageID, PageValue> {
     var context = context ?? self.context
     context.infiniteValues.fetchType = .allPages
-    switch try await self.fetch(handler: handler, using: context).response {
+    let value = try await self.fetch(
+      taskName: taskName ?? self.fetchAllPagesTaskName,
+      handler: handler,
+      using: context
+    )
+    return self.allPages(from: value)
+  }
+
+  public func fetchAllPagesTask(
+    name: String? = nil,
+    using context: QueryContext? = nil
+  ) -> QueryTask<InfiniteQueryPages<PageID, PageValue>> {
+    var context = context ?? self.context
+    context.infiniteValues.fetchType = .allPages
+    return self.base.fetchTask(name: name ?? self.fetchAllPagesTaskName, using: context)
+      .map(self.allPages(from:))
+  }
+
+  private func allPages(
+    from value: InfiniteQueryValue<PageID, PageValue>
+  ) -> InfiniteQueryPages<PageID, PageValue> {
+    switch value.response {
     case let .allPages(pages):
       return pages
     default:
@@ -114,15 +136,51 @@ extension InfiniteQueryStore {
     }
   }
 
+  private var fetchAllPagesTaskName: String {
+    "\(typeName(Self.self, genericsAbbreviated: false)) Fetch All Pages Task"
+  }
+}
+
+// MARK: - Fetch Next Page
+
+extension InfiniteQueryStore {
+
   @discardableResult
   public func fetchNextPage(
+    taskName: String? = nil,
     handler: InfiniteQueryEventHandler<PageID, PageValue> = InfiniteQueryEventHandler(),
     using context: QueryContext? = nil
   ) async throws -> InfiniteQueryPage<PageID, PageValue>? {
     guard self.hasNextPage else { return nil }
     var context = context ?? self.context
     context.infiniteValues.fetchType = .nextPage
-    switch try await self.fetch(handler: handler, using: context).response {
+    let value = try await self.fetch(
+      taskName: taskName ?? self.fetchNextPageTaskName,
+      handler: handler,
+      using: context
+    )
+    return self.nextPage(from: value)
+  }
+
+  public func fetchNextPageTask(
+    name: String? = nil,
+    using context: QueryContext? = nil
+  ) -> QueryTask<InfiniteQueryPage<PageID, PageValue>?> {
+    guard self.hasNextPage else {
+      return QueryTask(name: name ?? self.fetchNextPageTaskName, context: QueryContext()) { _ in
+        nil
+      }
+    }
+    var context = context ?? self.context
+    context.infiniteValues.fetchType = .nextPage
+    return self.base.fetchTask(name: name ?? self.fetchNextPageTaskName, using: context)
+      .map(self.nextPage(from:))
+  }
+
+  private func nextPage(
+    from value: InfiniteQueryValue<PageID, PageValue>
+  ) -> InfiniteQueryPage<PageID, PageValue>? {
+    switch value.response {
     case let .nextPage(next):
       return next?.page
     case let .initialPage(page):
@@ -132,15 +190,50 @@ extension InfiniteQueryStore {
     }
   }
 
+  private var fetchNextPageTaskName: String {
+    "\(typeName(Self.self, genericsAbbreviated: false)) Fetch Next Page Task"
+  }
+}
+
+// MARK: - Fetch Previous Page
+
+extension InfiniteQueryStore {
   @discardableResult
   public func fetchPreviousPage(
+    taskName: String? = nil,
     handler: InfiniteQueryEventHandler<PageID, PageValue> = InfiniteQueryEventHandler(),
     using context: QueryContext? = nil
   ) async throws -> InfiniteQueryPage<PageID, PageValue>? {
     guard self.hasPreviousPage else { return nil }
     var context = context ?? self.context
     context.infiniteValues.fetchType = .previousPage
-    switch try await self.fetch(handler: handler, using: context).response {
+    let value = try await self.fetch(
+      taskName: taskName ?? fetchPreviousPageTaskName,
+      handler: handler,
+      using: context
+    )
+    return self.previousPage(from: value)
+  }
+
+  public func fetchPreviousPageTask(
+    name: String? = nil,
+    using context: QueryContext? = nil
+  ) -> QueryTask<InfiniteQueryPage<PageID, PageValue>?> {
+    guard self.hasPreviousPage else {
+      return QueryTask(name: name ?? self.fetchPreviousPageTaskName, context: QueryContext()) { _ in
+        nil
+      }
+    }
+    var context = context ?? self.context
+    context.infiniteValues.fetchType = .previousPage
+    return self.base.fetchTask(name: name ?? self.fetchPreviousPageTaskName, using: context)
+      .map(self.previousPage(from:))
+  }
+
+  private func previousPage(
+    from value: InfiniteQueryValue<PageID, PageValue>
+  ) -> InfiniteQueryPage<PageID, PageValue>? {
+    switch value.response {
     case let .previousPage(previous):
       return previous?.page
     case let .initialPage(page):
@@ -150,7 +243,16 @@ extension InfiniteQueryStore {
     }
   }
 
+  private var fetchPreviousPageTaskName: String {
+    "\(typeName(Self.self, genericsAbbreviated: false)) Fetch Previous Page Task"
+  }
+}
+
+// MARK: - Fetch
+
+extension InfiniteQueryStore {
   private func fetch(
+    taskName: String,
     handler: InfiniteQueryEventHandler<PageID, PageValue>,
     using context: QueryContext
   ) async throws -> InfiniteQueryValue<PageID, PageValue> {
@@ -159,7 +261,11 @@ extension InfiniteQueryStore {
       isTemporary: true
     )
     defer { subscription.cancel() }
-    return try await self.base.fetch(handler: self.queryStoreHandler(for: handler), using: context)
+    return try await self.base.fetch(
+      taskName: taskName,
+      handler: self.queryStoreHandler(for: handler),
+      using: context
+    )
   }
 }
 
@@ -187,8 +293,8 @@ extension InfiniteQueryStore {
     for handler: InfiniteQueryEventHandler<PageID, PageValue>
   ) -> QueryEventHandler<InfiniteQueryState<PageID, PageValue>.QueryValue> {
     QueryEventHandler(
-      onFetchingStarted: { handler.onFetchingStarted?($0) },
-      onFetchingEnded: { handler.onFetchingFinished?($0) },
+      onFetchingStarted: handler.onFetchingStarted,
+      onFetchingEnded: handler.onFetchingFinished,
       onResultReceived: {
         handler.onResultReceived?($0.map { [weak self] _ in self?.currentValue ?? [] }, $1)
       }

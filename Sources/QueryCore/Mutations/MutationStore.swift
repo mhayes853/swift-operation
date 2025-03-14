@@ -79,6 +79,7 @@ extension MutationStore {
 extension MutationStore {
   @discardableResult
   public func mutate(
+    taskName: String? = nil,
     with arguments: Arguments,
     handler: MutationEventHandler<Arguments, Value> = MutationEventHandler(),
     using context: QueryContext? = nil
@@ -86,18 +87,51 @@ extension MutationStore {
     var context = context ?? self.context
     context.mutationValues = MutationContextValues(arguments: arguments)
     return try await self.base.fetch(
+      taskName: taskName ?? self.mutateTaskName,
       handler: self.queryStoreHandler(for: handler),
       using: context
     )
   }
+
+  public func mutateTask(
+    name: String? = nil,
+    with arguments: Arguments,
+    using context: QueryContext? = nil
+  ) -> QueryTask<Value> {
+    var context = context ?? self.context
+    context.mutationValues = MutationContextValues(arguments: arguments)
+    return self.base.fetchTask(name: name ?? self.mutateTaskName, using: context)
+  }
+
+  private var mutateTaskName: String {
+    "\(typeName(Self.self, genericsAbbreviated: false)) Mutate Task"
+  }
 }
+
+// MARK: - Retry Latest
 
 extension MutationStore {
   public func retryLatest(
+    taskName: String? = nil,
     handler: MutationEventHandler<Arguments, Value> = MutationEventHandler(),
     using context: QueryContext? = nil
   ) async throws -> Value {
-    try await self.base.fetch(handler: self.queryStoreHandler(for: handler), using: context)
+    try await self.base.fetch(
+      taskName: taskName ?? self.retryLatestTaskName,
+      handler: self.queryStoreHandler(for: handler),
+      using: context
+    )
+  }
+
+  public func retryLatestTask(
+    name: String? = nil,
+    using context: QueryContext? = nil
+  ) -> QueryTask<Value> {
+    self.base.fetchTask(name: name ?? self.retryLatestTaskName, using: context)
+  }
+
+  private var retryLatestTaskName: String {
+    "\(typeName(Self.self, genericsAbbreviated: false)) Retry Latest Task"
   }
 }
 

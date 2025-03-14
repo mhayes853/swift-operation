@@ -118,6 +118,7 @@ extension QueryStore {
 extension QueryStore {
   @discardableResult
   public func fetch(
+    taskName: String? = nil,
     handler: QueryEventHandler<State.QueryValue> = QueryEventHandler(),
     using context: QueryContext? = nil
   ) async throws -> State.QueryValue {
@@ -128,12 +129,15 @@ extension QueryStore {
   }
 
   @discardableResult
-  public func fetchTask(using context: QueryContext? = nil) -> QueryTask<State.QueryValue> {
+  public func fetchTask(
+    name: String? = nil,
+    using context: QueryContext? = nil
+  ) -> QueryTask<State.QueryValue> {
     self._state.inner.withLock { state in
       var context = context ?? state.context
       context.currentQueryStore = self
       let task = LockedBox<QueryTask<State.QueryValue>?>(value: nil)
-      let inner = self.queryTask(in: context, using: task)
+      let inner = self.queryTask(name: name, in: context, using: task)
       return task.inner.withLock { newTask in
         newTask = inner
         return state.query.fetchTaskStarted(inner)
@@ -142,10 +146,13 @@ extension QueryStore {
   }
 
   private func queryTask(
+    name: String?,
     in context: QueryContext,
     using task: LockedBox<QueryTask<State.QueryValue>?>
   ) -> QueryTask<State.QueryValue> {
-    QueryTask<State.QueryValue>(context: context) { context in
+    let taskName =
+      name ?? "\(typeName(Self.self, qualified: true, genericsAbbreviated: false)) Task"
+    return QueryTask<State.QueryValue>(name: taskName, context: context) { context in
       self.subscriptions.forEach { $0.onFetchingStarted?(context) }
       defer { self.subscriptions.forEach { $0.onFetchingEnded?(context) } }
       do {

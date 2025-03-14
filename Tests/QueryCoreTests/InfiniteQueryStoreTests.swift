@@ -153,6 +153,32 @@ struct InfiniteQueryStoreTests {
     expectNoDifference(store.state.status.isSuccessful, true)
   }
 
+  @Test("Fetch All Pages With Task After Fetching Some, Starts From Earliest Page")
+  func fetchAllPagesWithTaskAfterFetchingSomeStartsFromEarliestPage() async throws {
+    let query = TestInfiniteQuery()
+    let store = self.client.store(for: query)
+
+    query.state.withLock { $0 = [-1: "c", 0: "a", 1: "b"] }
+    try await store.fetchNextPage()
+    try await store.fetchNextPage()
+
+    query.state.withLock { $0 = [-1: "d", 0: "e", 1: "f"] }
+    try await store.fetchPreviousPage()
+    let task = store.fetchAllPagesTask()
+    let pages = try await task.runIfNeeded()
+
+    let expectedPages = InfiniteQueryPages<Int, String>(
+      uniqueElements: [
+        InfiniteQueryPage(id: -1, value: "d"),
+        InfiniteQueryPage(id: 0, value: "e"),
+        InfiniteQueryPage(id: 1, value: "f")
+      ]
+    )
+    expectNoDifference(pages, expectedPages)
+    expectNoDifference(store.state.currentValue, expectedPages)
+    expectNoDifference(store.state.status.isSuccessful, true)
+  }
+
   @Test("Fetch Next Page, Returns Page Data First")
   func fetchNextPageReturnsPageDataFirst() async throws {
     let query = TestInfiniteQuery()
@@ -233,6 +259,26 @@ struct InfiniteQueryStoreTests {
     expectNoDifference(store.hasPreviousPage, false)
 
     let page = try await store.fetchNextPage()
+    expectNoDifference(page, InfiniteQueryPage(id: 1, value: "blob jr"))
+    expectNoDifference(
+      store.state.currentValue,
+      [InfiniteQueryPage(id: 0, value: "blob"), InfiniteQueryPage(id: 1, value: "blob jr")]
+    )
+    expectNoDifference(store.state.status.isSuccessful, true)
+  }
+
+  @Test("Fetch Next Page With Task, Returns Page Data For Next Page After First")
+  func fetchNextPageWithTaskReturnsPageDataForNextPageAfterFirst() async throws {
+    let query = TestInfiniteQuery()
+    query.state.withLock { $0 = [0: "blob", 1: "blob jr"] }
+    let store = self.client.store(for: query)
+
+    try await store.fetchNextPage()
+    expectNoDifference(store.hasNextPage, true)
+    expectNoDifference(store.hasPreviousPage, false)
+
+    let task = store.fetchNextPageTask()
+    let page = try await task.runIfNeeded()
     expectNoDifference(page, InfiniteQueryPage(id: 1, value: "blob jr"))
     expectNoDifference(
       store.state.currentValue,
@@ -335,6 +381,27 @@ struct InfiniteQueryStoreTests {
     expectNoDifference(store.hasPreviousPage, true)
 
     let page = try await store.fetchPreviousPage()
+
+    expectNoDifference(page, InfiniteQueryPage(id: -1, value: "blob jr"))
+    expectNoDifference(
+      store.state.currentValue,
+      [InfiniteQueryPage(id: -1, value: "blob jr"), InfiniteQueryPage(id: 0, value: "blob")]
+    )
+    expectNoDifference(store.state.status.isSuccessful, true)
+  }
+
+  @Test("Fetch Previous Page With Task, Returns Page Data Before First")
+  func fetchPreviousPageWithTaskReturnsPageDataBeforeFirst() async throws {
+    let query = TestInfiniteQuery()
+    let store = self.client.store(for: query)
+
+    query.state.withLock { $0 = [0: "blob", -1: "blob jr"] }
+    try await store.fetchPreviousPage()
+    expectNoDifference(store.hasNextPage, false)
+    expectNoDifference(store.hasPreviousPage, true)
+
+    let task = try await store.fetchPreviousPageTask()
+    let page = try await task.runIfNeeded()
 
     expectNoDifference(page, InfiniteQueryPage(id: -1, value: "blob jr"))
     expectNoDifference(
@@ -700,5 +767,26 @@ struct InfiniteQueryStoreTests {
       .fetchingEnded
     ])
     subscription.cancel()
+  }
+
+  @Test("Default FetchAll InfiniteQueryStore Task Name")
+  func defaultInfiniteQueryStoreName() async throws {
+    let store = self.client.store(for: EmptyInfiniteQuery(initialPageId: 0, path: []))
+    let task = store.fetchAllPagesTask()
+    expectNoDifference(task.name, "InfiniteQueryStore<Int, String> Fetch All Pages Task")
+  }
+
+  @Test("Default FetchNext InfiniteQueryStore Task Name")
+  func defaultFetchNextInfiniteQueryStoreName() async throws {
+    let store = self.client.store(for: EmptyInfiniteQuery(initialPageId: 0, path: []))
+    let task = store.fetchNextPageTask()
+    expectNoDifference(task.name, "InfiniteQueryStore<Int, String> Fetch Next Page Task")
+  }
+
+  @Test("Default FetchPrevious InfiniteQueryStore Task Name")
+  func defaultFetchPreviousInfiniteQueryStoreName() async throws {
+    let store = self.client.store(for: EmptyInfiniteQuery(initialPageId: 0, path: []))
+    let task = store.fetchPreviousPageTask()
+    expectNoDifference(task.name, "InfiniteQueryStore<Int, String> Fetch Previous Page Task")
   }
 }

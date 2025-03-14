@@ -344,6 +344,20 @@ struct QueryStoreTests {
     _ = try? await task.value
     expectNoDifference(store.status.isCancelled, true)
   }
+
+  @Test("Override Query Store Task Name")
+  func overrideQueryStoreTaskName() async throws {
+    let store = self.client.store(for: TestQuery())
+    let taskName = store.fetchTask(name: "Blob").name
+    expectNoDifference(taskName, "Blob")
+  }
+
+  @Test("Default Query Store Task Name")
+  func defaultQueryStoreTaskName() async throws {
+    let store = self.client.store(for: TestQuery())
+    let taskName = store.fetchTask().name
+    expectNoDifference(taskName, "QueryStore<QueryState<Int?, Int>> Task")
+  }
 }
 
 extension QueryContext {
