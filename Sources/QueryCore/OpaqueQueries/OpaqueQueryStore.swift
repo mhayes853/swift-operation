@@ -15,7 +15,7 @@ public final class OpaqueQueryStore: Sendable {
 // MARK: - Base
 
 extension OpaqueQueryStore {
-  public var base: any Sendable {
+  var base: any Sendable {
     self._base
   }
 }
