@@ -11,7 +11,9 @@ public typealias QueryStoreFor<Query: QueryProtocol> = QueryStore<
 
 @dynamicMemberLookup
 public final class QueryStore<State: QueryStateProtocol>: Sendable {
-  private typealias _State = (query: State, context: QueryContext)
+  private typealias _State = (
+    query: State, context: QueryContext, controllerSubscriptions: [QuerySubscription]
+  )
 
   private let _query: any QueryProtocol<State.QueryValue>
   private let _state: LockedBox<_State>
@@ -23,9 +25,33 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
     initialContext: QueryContext
   ) where State == Query.State, State.QueryValue == Query.Value {
     self._query = query
-    self._state = LockedBox(value: (query: initialState, context: initialContext))
+    self._state = LockedBox(
+      value: (query: initialState, context: initialContext, controllerSubscriptions: [])
+    )
     self.subscriptions = QuerySubscriptions()
-    self._state.inner.withLock { query.setup(context: &$0.context) }
+    let controls = QueryControls<State>(
+      context: initialContext,
+      onResult: { _, _ in },
+      refetchTask: { [weak self] taskName, context in
+        guard self?.isAutomaticFetchingEnabled == true else { return nil }
+        return self?.fetchTask(name: taskName, using: context)
+      }
+    )
+    self._state.inner.withLock { state in
+      query.setup(context: &state.context)
+      for controller in state.context.queryControllers {
+        func open<C: QueryController>(_ controller: C) -> QuerySubscription {
+          controller.control(with: controls as! QueryControls<C.State>)
+        }
+        state.controllerSubscriptions.append(open(controller))
+      }
+    }
+  }
+
+  deinit {
+    self._state.inner.withLock {
+      $0.controllerSubscriptions.forEach { $0.cancel() }
+    }
   }
 }
 

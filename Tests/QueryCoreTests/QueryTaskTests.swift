@@ -150,7 +150,7 @@ struct QueryTaskTests {
         issue.comments.contains(
           .warning(
             .queryTaskCircularScheduling(info: [
-              task2.warningInfo, task1.warningInfo, task2.warningInfo
+              task2.info, task1.info, task2.info
             ])
           )
         )
@@ -173,7 +173,7 @@ struct QueryTaskTests {
         issue.comments.contains(
           .warning(
             .queryTaskCircularScheduling(info: [
-              task3.warningInfo, task1.warningInfo, task2.warningInfo, task3.warningInfo
+              task3.info, task1.info, task2.info, task3.info
             ])
           )
         )

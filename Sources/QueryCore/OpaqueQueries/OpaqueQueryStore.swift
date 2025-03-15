@@ -64,7 +64,7 @@ extension OpaqueQueryStore {
 extension OpaqueQueryStore {
   @discardableResult
   public func fetch(
-    taskName: String?,
+    taskName: String? = nil,
     handler: OpaqueQueryEventHandler = OpaqueQueryEventHandler(),
     using context: QueryContext? = nil
   ) async throws -> any Sendable {
@@ -73,7 +73,7 @@ extension OpaqueQueryStore {
 
   @discardableResult
   public func fetchTask(
-    name: String?,
+    name: String? = nil,
     using context: QueryContext? = nil
   ) -> QueryTask<any Sendable> {
     self._base.opaqueFetchTask(name: name, using: context)

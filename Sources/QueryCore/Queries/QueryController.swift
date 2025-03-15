@@ -1,23 +1,22 @@
 // MARK: - QueryController
 
-public protocol QueryController<Query>: Sendable {
-  associatedtype Query: QueryProtocol
+public protocol QueryController<State>: Sendable {
+  associatedtype State: QueryStateProtocol
 
-  func control(with controls: QueryControls<Query>) -> QuerySubscription
+  func control(with controls: QueryControls<State>) -> QuerySubscription
 }
 
 // MARK: - QueryControls
 
-public struct QueryControls<Query: QueryProtocol>: Sendable {
+public struct QueryControls<State: QueryStateProtocol>: Sendable {
   public var context: QueryContext
-  private let onResult: @Sendable (Result<Query.State.StateValue, any Error>, QueryContext) -> Void
-  private let refetchTask:
-    @Sendable (_ name: String?, QueryContext) -> QueryTask<Query.State.QueryValue>?
+  private let onResult: @Sendable (Result<State.StateValue, any Error>, QueryContext) -> Void
+  private let refetchTask: @Sendable (_ name: String?, QueryContext) -> QueryTask<State.QueryValue>?
 
   public init(
     context: QueryContext,
-    onResult: @escaping @Sendable (Result<Query.State.StateValue, any Error>, QueryContext) -> Void,
-    refetchTask: @escaping @Sendable (String?, QueryContext) -> QueryTask<Query.State.QueryValue>?
+    onResult: @escaping @Sendable (Result<State.StateValue, any Error>, QueryContext) -> Void,
+    refetchTask: @escaping @Sendable (String?, QueryContext) -> QueryTask<State.QueryValue>?
   ) {
     self.context = context
     self.onResult = onResult
@@ -29,7 +28,7 @@ public struct QueryControls<Query: QueryProtocol>: Sendable {
 
 extension QueryControls {
   public func yield(
-    with result: Result<Query.State.StateValue, any Error>,
+    with result: Result<State.StateValue, any Error>,
     using context: QueryContext? = nil
   ) {
     self.onResult(result, context ?? self.context)
@@ -39,7 +38,7 @@ extension QueryControls {
     self.yield(with: .failure(error), using: context)
   }
 
-  public func yield(_ value: Query.State.StateValue, using context: QueryContext? = nil) {
+  public func yield(_ value: State.StateValue, using context: QueryContext? = nil) {
     self.yield(with: .success(value), using: context)
   }
 }
@@ -51,14 +50,14 @@ extension QueryControls {
   public func yieldRefetch(
     taskName: String? = nil,
     using context: QueryContext? = nil
-  ) async throws -> Query.State.QueryValue? {
+  ) async throws -> State.QueryValue? {
     try await self.yieldRefetchTask(name: taskName, using: context)?.runIfNeeded()
   }
 
   public func yieldRefetchTask(
     name: String? = nil,
     using context: QueryContext? = nil
-  ) -> QueryTask<Query.State.QueryValue>? {
+  ) -> QueryTask<State.QueryValue>? {
     self.refetchTask(name, context ?? self.context)
   }
 }
@@ -67,7 +66,7 @@ extension QueryControls {
 
 extension QueryProtocol {
   public func controlled(
-    by controller: some QueryController<Self>
+    by controller: some QueryController<State>
   ) -> ModifiedQuery<Self, some QueryModifier<Self>> {
     self.modifier(QueryControllerModifier(controller: controller))
   }
@@ -75,7 +74,7 @@ extension QueryProtocol {
 
 private struct QueryControllerModifier<
   Query: QueryProtocol,
-  Controller: QueryController<Query>
+  Controller: QueryController<Query.State>
 >: QueryModifier {
   let controller: Controller
 
