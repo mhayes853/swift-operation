@@ -30,8 +30,9 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
     )
     self.subscriptions = QuerySubscriptions()
     let controls = QueryControls<State>(
-      context: initialContext,
-      onResult: { result, context in
+      context: { [weak self] in self?._state.inner.withLock { $0.context } ?? QueryContext() },
+      onResult: { [weak self] result, context in
+        self?._state.inner.withLock { $0.query.update(with: result, using: context) }
       },
       refetchTask: { [weak self] taskName, context in
         guard self?.isAutomaticFetchingEnabled == true else { return nil }

@@ -9,18 +9,24 @@ public protocol QueryController<State>: Sendable {
 // MARK: - QueryControls
 
 public struct QueryControls<State: QueryStateProtocol>: Sendable {
-  public var context: QueryContext
+  private var _context: @Sendable () -> QueryContext
   private let onResult: @Sendable (Result<State.StateValue, any Error>, QueryContext) -> Void
   private let refetchTask: @Sendable (_ name: String?, QueryContext) -> QueryTask<State.QueryValue>?
 
   public init(
-    context: QueryContext,
+    context: @escaping @Sendable () -> QueryContext,
     onResult: @escaping @Sendable (Result<State.StateValue, any Error>, QueryContext) -> Void,
     refetchTask: @escaping @Sendable (String?, QueryContext) -> QueryTask<State.QueryValue>?
   ) {
-    self.context = context
+    self._context = context
     self.onResult = onResult
     self.refetchTask = refetchTask
+  }
+}
+
+extension QueryControls {
+  public var context: QueryContext {
+    self._context()
   }
 }
 
@@ -97,8 +103,6 @@ extension QueryContext {
   }
 
   private enum QueryControllersKey: Key {
-    static var defaultValue: [any QueryController] {
-      []
-    }
+    static var defaultValue: [any QueryController] { [] }
   }
 }

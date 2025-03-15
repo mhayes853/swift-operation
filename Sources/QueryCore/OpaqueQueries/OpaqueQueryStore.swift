@@ -109,9 +109,7 @@ private protocol OpaqueableQueryStore: Sendable {
 
   func opaqueFetchTask(name: String?, using context: QueryContext?) -> QueryTask<any Sendable>
 
-  func opaqueSubscribe(
-    with handler: OpaqueQueryEventHandler
-  ) -> QuerySubscription
+  func opaqueSubscribe(with handler: OpaqueQueryEventHandler) -> QuerySubscription
 }
 
 extension QueryStore: OpaqueableQueryStore {
