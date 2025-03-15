@@ -1,4 +1,5 @@
 import CustomDump
+import Foundation
 import QueryCore
 import Testing
 
@@ -45,6 +46,60 @@ struct QueryControllerTests {
     let value = try await task?.runIfNeeded()
     expectNoDifference(value, TestQuery.value)
     expectNoDifference(store.currentValue, TestQuery.value)
+  }
+
+  @Test("Yields New State Value To Query")
+  func yieldsNewStateValueToQuery() async throws {
+    let controller = TestController<TestQuery>()
+    let store = QueryStoreFor<TestQuery>
+      .detached(
+        query: TestQuery().controlled(by: controller)
+          .enableAutomaticFetching(when: .always(true)),
+        initialValue: nil
+      )
+
+    let date = Lock(Date())
+    store.context.queryClock = .custom { date.withLock { $0 } }
+
+    controller.controls.withLock { $0?.yield(10) }
+    expectNoDifference(store.currentValue, 10)
+    expectNoDifference(store.valueUpdateCount, 1)
+    expectNoDifference(store.valueLastUpdatedAt, date.withLock { $0 })
+
+    date.withLock { $0 = .distantFuture }
+    controller.controls.withLock { $0?.yield(20) }
+    expectNoDifference(store.currentValue, 20)
+    expectNoDifference(store.valueUpdateCount, 2)
+    expectNoDifference(store.valueLastUpdatedAt, .distantFuture)
+  }
+
+  @Test("Yields New Error Value To Query")
+  func yieldsNewErrorValueToQuery() async throws {
+    let controller = TestController<TestQuery>()
+    let store = QueryStoreFor<TestQuery>
+      .detached(
+        query: TestQuery().controlled(by: controller)
+          .enableAutomaticFetching(when: .always(true)),
+        initialValue: nil
+      )
+
+    let date = Lock(Date())
+    store.context.queryClock = .custom { date.withLock { $0 } }
+
+    enum SomeError: Equatable, Error {
+      case a, b
+    }
+
+    controller.controls.withLock { $0?.yield(throwing: SomeError.a) }
+    expectNoDifference(store.error as? SomeError, .a)
+    expectNoDifference(store.errorUpdateCount, 1)
+    expectNoDifference(store.errorLastUpdatedAt, date.withLock { $0 })
+
+    date.withLock { $0 = .distantFuture }
+    controller.controls.withLock { $0?.yield(throwing: SomeError.b) }
+    expectNoDifference(store.error as? SomeError, .b)
+    expectNoDifference(store.errorUpdateCount, 2)
+    expectNoDifference(store.errorLastUpdatedAt, .distantFuture)
   }
 }
 
