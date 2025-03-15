@@ -1,4 +1,5 @@
 import CustomDump
+import Foundation
 import Testing
 
 @testable import QueryCore
@@ -426,8 +427,12 @@ struct InfiniteQueryStoreTests {
     let all = Task { try await store.fetchAllPages() }
     try await query.waitForLoading()
     let next = Task { try await store.fetchNextPage() }
+    // NB: One advance for each individual page fetch on fetchAll
+    await query.advance()
     try await query.waitForLoading()
+    await query.advance()
     let pages = try await all.value
+    try await query.waitForLoading()
     await query.advance()
     let page = try await next.value
 
@@ -467,8 +472,14 @@ struct InfiniteQueryStoreTests {
     let all = Task { try await store.fetchAllPages() }
     try await query.waitForLoading()
     let next = Task { try await store.fetchPreviousPage() }
+    // NB: One advance for each individual page fetch on fetchAll
+    await query.advance()
     try await query.waitForLoading()
+    await query.advance()
+    try await query.waitForLoading()
+    await query.advance()
     let pages = try await all.value
+    try await query.waitForLoading()
     await query.advance()
     let page = try await next.value
 
@@ -743,5 +754,91 @@ struct InfiniteQueryStoreTests {
     let store = self.client.store(for: EmptyInfiniteQuery(initialPageId: 0, path: []))
     let task = store.fetchPreviousPageTask()
     expectNoDifference(task.name, "InfiniteQueryStore<Int, String> Fetch Previous Page Task")
+  }
+
+  @Test("Controller Yields New State Value To Infinite Query")
+  func yieldsNewStateValueToInfiniteQuery() async throws {
+    let controller = TestQueryController<TestInfiniteQuery>()
+    let store =
+      InfiniteQueryStore.detached(query: TestInfiniteQuery().controlled(by: controller))
+
+    let date = Lock(Date())
+    store.context.queryClock = .custom { date.withLock { $0 } }
+
+    controller.controls.withLock { $0?.yield([InfiniteQueryPage(id: 0, value: "blob")]) }
+    expectNoDifference(store.currentValue, [InfiniteQueryPage(id: 0, value: "blob")])
+    expectNoDifference(store.valueUpdateCount, 1)
+    expectNoDifference(store.valueLastUpdatedAt, date.withLock { $0 })
+
+    date.withLock { $0 = .distantFuture }
+    controller.controls.withLock { $0?.yield([]) }
+    expectNoDifference(store.currentValue, [])
+    expectNoDifference(store.valueUpdateCount, 2)
+    expectNoDifference(store.valueLastUpdatedAt, .distantFuture)
+  }
+
+  //@Test("Controller Yields New State Value To Infinite Query While Fetching Initial Page")
+  //func yieldsNewStateValueToInfiniteQueryWhileFetchingInitialPage() async throws {
+  //  let controller = TestQueryController<TestInfiniteQuery>()
+  //  let query = WaitableInfiniteQuery()
+  //  query.state.withLock {
+  //    $0.values = [0: "vlov"]
+  //    $0.willWait = true
+  //  }
+  //  let store =
+  //    InfiniteQueryStore.detached(query: query.controlled(by: controller))
+
+  //  let task = Task { try await store.fetchNextPage() }
+  //  try await query.waitForLoading()
+
+  //  controller.controls.withLock { $0?.yield([InfiniteQueryPage(id: 0, value: "blob")]) }
+  //  expectNoDifference(store.currentValue, [InfiniteQueryPage(id: 0, value: "blob")])
+
+  //  await query.advance()
+  //  _ = try await task.value
+
+  //  expectNoDifference(store.currentValue, [InfiniteQueryPage(id: 0, value: "vlov")])
+  //}
+
+  //@Test("Controller Yields New State Value To Infinite Query While Fetching Next Page")
+  //func yieldsNewStateValueToInfiniteQueryWhileFetchingNextPage() async throws {
+  //  let controller = TestQueryController<TestInfiniteQuery>()
+  //  let query = WaitableInfiniteQuery()
+  //  query.state.withLock {
+  //    $0.values = [0: "vlov", 1: "trov"]
+  //    $0.willWait = false
+  //  }
+  //  let store =
+  //    InfiniteQueryStore.detached(query: query.controlled(by: controller))
+  //  try await store.fetchNextPage()
+  //  query.state.withLock { $0.willWait = true }
+
+  //  let task = Task { try await store.fetchNextPage() }
+  //  try await query.waitForLoading()
+
+  //  controller.controls.withLock { $0?.yield([InfiniteQueryPage(id: 10, value: "blob")]) }
+  //  expectNoDifference(store.currentValue, [InfiniteQueryPage(id: 10, value: "blob")])
+
+  //  await query.advance()
+  //  _ = try await task.value
+
+  //  expectNoDifference(store.currentValue, [InfiniteQueryPage(id: 10, value: "blob")])
+  //}
+
+  @Test("ControllerYields New Error Value To Infinite Query")
+  func yieldsNewErrorValueToInfiniteQuery() async throws {
+    let controller = TestQueryController<TestInfiniteQuery>()
+    let store =
+      InfiniteQueryStore.detached(query: TestInfiniteQuery().controlled(by: controller))
+
+    let date = Lock(Date())
+    store.context.queryClock = .custom { date.withLock { $0 } }
+
+    struct SomeError: Equatable, Error {}
+
+    controller.controls.withLock { $0?.yield(throwing: SomeError()) }
+    expectNoDifference(store.error as? SomeError, SomeError())
+    expectNoDifference(store.errorUpdateCount, 1)
+    expectNoDifference(store.errorLastUpdatedAt, date.withLock { $0 })
   }
 }

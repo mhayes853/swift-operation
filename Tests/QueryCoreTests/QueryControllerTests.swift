@@ -7,7 +7,7 @@ import Testing
 struct QueryControllerTests {
   @Test("Unsubscribes When Store Deallocated")
   func unsubscribeWhenStoreDeallocated() {
-    let controller = TestController<TestQuery>()
+    let controller = TestQueryController<TestQuery>()
     var store: QueryStoreFor<TestQuery>? = QueryStoreFor<TestQuery>
       .detached(query: TestQuery().controlled(by: controller), initialValue: nil)
 
@@ -19,7 +19,7 @@ struct QueryControllerTests {
 
   @Test("Does Not Return Refetch Task When Automatic Fetching Disabled")
   func doesNotReturnRefetchTaskWhenAutomaticFetchingDisabled() {
-    let controller = TestController<TestQuery>()
+    let controller = TestQueryController<TestQuery>()
     let store = QueryStoreFor<TestQuery>
       .detached(
         query: TestQuery().controlled(by: controller)
@@ -34,7 +34,7 @@ struct QueryControllerTests {
 
   @Test("Refetches Data")
   func refetchesData() async throws {
-    let controller = TestController<TestQuery>()
+    let controller = TestQueryController<TestQuery>()
     let store = QueryStoreFor<TestQuery>
       .detached(
         query: TestQuery().controlled(by: controller)
@@ -50,7 +50,7 @@ struct QueryControllerTests {
 
   @Test("Yields New State Value To Query")
   func yieldsNewStateValueToQuery() async throws {
-    let controller = TestController<TestQuery>()
+    let controller = TestQueryController<TestQuery>()
     let store = QueryStoreFor<TestQuery>
       .detached(
         query: TestQuery().controlled(by: controller)
@@ -75,7 +75,7 @@ struct QueryControllerTests {
 
   @Test("Yields New Error Value To Query")
   func yieldsNewErrorValueToQuery() async throws {
-    let controller = TestController<TestQuery>()
+    let controller = TestQueryController<TestQuery>()
     let store = QueryStoreFor<TestQuery>
       .detached(
         query: TestQuery().controlled(by: controller)
@@ -85,10 +85,6 @@ struct QueryControllerTests {
 
     let date = Lock(Date())
     store.context.queryClock = .custom { date.withLock { $0 } }
-
-    enum SomeError: Equatable, Error {
-      case a, b
-    }
 
     controller.controls.withLock { $0?.yield(throwing: SomeError.a) }
     expectNoDifference(store.error as? SomeError, .a)
@@ -103,15 +99,6 @@ struct QueryControllerTests {
   }
 }
 
-private final class TestController<Query: QueryProtocol>: QueryController {
-  typealias State = Query.State
-
-  let controls = Lock<QueryControls<State>?>(nil)
-
-  func control(with controls: QueryControls<State>) -> QuerySubscription {
-    self.controls.withLock { $0 = controls }
-    return QuerySubscription {
-      self.controls.withLock { $0 = nil }
-    }
-  }
+private enum SomeError: Equatable, Error {
+  case a, b
 }

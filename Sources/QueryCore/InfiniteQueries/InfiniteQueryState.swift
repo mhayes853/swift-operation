@@ -101,7 +101,17 @@ extension InfiniteQueryState: QueryStateProtocol {
     with result: Result<InfiniteQueryPages<PageID, PageValue>, any Error>,
     using context: QueryContext
   ) {
-
+    switch result {
+    case let .success(value):
+      self.currentValue = value
+      self.valueUpdateCount += 1
+      self.valueLastUpdatedAt = context.queryClock.now()
+      self.error = nil
+    case let .failure(error):
+      self.error = error
+      self.errorUpdateCount += 1
+      self.errorLastUpdatedAt = context.queryClock.now()
+    }
   }
 
   public mutating func update(

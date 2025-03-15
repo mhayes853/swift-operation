@@ -303,7 +303,7 @@ final class WaitableInfiniteQuery: InfiniteQueryProtocol {
   ) async throws -> String {
     self.state.withLock { $0.onLoading() }
     if self.state.withLock({ $0.willWait }) {
-      Task { await self.advance() }
+      await self.advance()
       try await self.waitForLoading()
     }
     return try self.state.withLock {
