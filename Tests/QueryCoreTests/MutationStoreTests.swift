@@ -104,10 +104,10 @@ struct MutationStoreTests {
 
     let store = self.client.store(for: mutation)
     mutation.onLoading(for: "blob") {
-      expectNoDifference(store.history[0].finishDate, nil)
+      expectNoDifference(store.history[0].lastUpdatedAt, nil)
     }
     _ = try? await store.mutate(with: "blob")
-    let endDate = try #require(store.history[0].finishDate)
+    let endDate = try #require(store.history[0].lastUpdatedAt)
     expectNoDifference(endDate > store.history[0].startDate, true)
   }
 
@@ -231,7 +231,7 @@ struct MutationStoreTests {
   func historyValueLastUpdatedAtEqualsStateLastUpdatedAt() async throws {
     let store = self.client.store(for: EmptyMutation())
     try await store.mutate(with: "blob")
-    expectNoDifference(store.history.first?.finishDate, store.valueLastUpdatedAt)
+    expectNoDifference(store.history.first?.lastUpdatedAt, store.valueLastUpdatedAt)
   }
 
   @Test("History Error Last Updated At Equals State Last Updated At")
@@ -239,7 +239,7 @@ struct MutationStoreTests {
     let mutation = FailableMutation()
     let store = self.client.store(for: mutation)
     _ = try? await store.mutate(with: "blob")
-    expectNoDifference(store.history.first?.finishDate, store.errorLastUpdatedAt)
+    expectNoDifference(store.history.first?.lastUpdatedAt, store.errorLastUpdatedAt)
   }
 
   @Test("Automatic Fetching Disabled By Default On Regular Store")

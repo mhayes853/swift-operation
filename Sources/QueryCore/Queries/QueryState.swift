@@ -29,7 +29,7 @@ public struct QueryState<StateValue: Sendable, QueryValue: Sendable> {
 extension QueryState: QueryStateProtocol {
   public typealias StatusValue = QueryValue
 
-  public mutating func fetchTaskStarted(_ task: QueryTask<QueryValue>) -> QueryTask<QueryValue> {
+  public mutating func scheduleFetchTask(_ task: QueryTask<QueryValue>) -> QueryTask<QueryValue> {
     if let task = self.fetchTask {
       return task
     }
@@ -38,24 +38,32 @@ extension QueryState: QueryStateProtocol {
     return task
   }
 
-  public mutating func fetchTaskEnded(
-    _ task: QueryTask<QueryValue>,
-    with result: Result<QueryValue, any Error>
+  public mutating func update(
+    with result: Result<StateValue, any Error>,
+    using context: QueryContext
   ) {
     switch result {
     case let .success(value):
-      self.currentValue = value as! StateValue
+      self.currentValue = value
       self.valueUpdateCount += 1
-      self.valueLastUpdatedAt = task.context.queryClock.now()
+      self.valueLastUpdatedAt = context.queryClock.now()
       self.error = nil
-      self.isLoading = false
-      self.fetchTask = nil
     case let .failure(error):
       self.error = error
       self.errorUpdateCount += 1
-      self.errorLastUpdatedAt = task.context.queryClock.now()
-      self.isLoading = false
-      self.fetchTask = nil
+      self.errorLastUpdatedAt = context.queryClock.now()
     }
+  }
+
+  public mutating func update(
+    with result: Result<QueryValue, any Error>,
+    for task: QueryTask<QueryValue>
+  ) {
+    self.update(with: result.map { $0 as! StateValue }, using: task.context)
+  }
+
+  public mutating func finishFetchTask(_ task: QueryTask<QueryValue>) {
+    self.isLoading = false
+    self.fetchTask = nil
   }
 }

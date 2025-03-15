@@ -26,24 +26,41 @@ extension OpaqueQueryState: QueryStateProtocol {
   public var errorUpdateCount: Int { self.base.errorUpdateCount }
   public var errorLastUpdatedAt: Date? { self.base.errorLastUpdatedAt }
 
-  public mutating func fetchTaskStarted(
+  public mutating func scheduleFetchTask(
     _ task: QueryTask<any Sendable>
   ) -> QueryTask<any Sendable> {
     func open<State: QueryStateProtocol>(state: inout State) -> QueryTask<any Sendable> {
-      state.fetchTaskStarted(task.map { $0 as! State.QueryValue }).map { $0 as any Sendable }
+      state.scheduleFetchTask(task.map { $0 as! State.QueryValue }).map { $0 as any Sendable }
     }
     return open(state: &self.base)
   }
 
-  public mutating func fetchTaskEnded(
-    _ task: QueryTask<any Sendable>,
-    with result: Result<any Sendable, any Error>
+  public mutating func update(
+    with result: Result<any Sendable, any Error>,
+    for task: QueryTask<any Sendable>
   ) {
     func open<State: QueryStateProtocol>(state: inout State) {
-      state.fetchTaskEnded(
-        task.map { $0 as! State.QueryValue },
-        with: result.map { $0 as! State.QueryValue }
+      state.update(
+        with: result.map { $0 as! State.QueryValue },
+        for: task.map { $0 as! State.QueryValue }
       )
+    }
+    open(state: &self.base)
+  }
+
+  public mutating func update(
+    with result: Result<(any Sendable)?, any Error>,
+    using context: QueryContext
+  ) {
+    func open<State: QueryStateProtocol>(state: inout State) {
+      state.update(with: result.map { $0 as! State.StateValue }, using: context)
+    }
+    open(state: &self.base)
+  }
+
+  public mutating func finishFetchTask(_ task: QueryTask<any Sendable>) {
+    func open<State: QueryStateProtocol>(state: inout State) {
+      state.finishFetchTask(task.map { $0 as! State.QueryValue })
     }
     open(state: &self.base)
   }

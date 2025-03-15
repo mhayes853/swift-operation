@@ -30,6 +30,8 @@ public struct InfiniteQueryState<PageID: Hashable & Sendable, PageValue: Sendabl
   private var fetchNextPageTask: QueryTask<QueryValue>?
   private var fetchPreviousPageTask: QueryTask<QueryValue>?
 
+  private var requests = [QueryTaskID: InfiniteQueryPaging<PageID, PageValue>.Request]()
+
   init(initialValue: StateValue, initialPageId: PageID) {
     self.currentValue = initialValue
     self.initialValue = initialValue
@@ -49,7 +51,7 @@ extension InfiniteQueryState: QueryStateProtocol {
       || self.isLoadingInitialPage
   }
 
-  public mutating func fetchTaskStarted(
+  public mutating func scheduleFetchTask(
     _ task: QueryTask<InfiniteQueryValue<PageID, PageValue>>
   ) -> QueryTask<InfiniteQueryValue<PageID, PageValue>> {
     let request = self.request(in: task.context)
@@ -95,11 +97,18 @@ extension InfiniteQueryState: QueryStateProtocol {
     return task
   }
 
-  public mutating func fetchTaskEnded(
-    _ task: QueryTask<InfiniteQueryValue<PageID, PageValue>>,
-    with result: Result<InfiniteQueryValue<PageID, PageValue>, any Error>
+  public mutating func update(
+    with result: Result<InfiniteQueryPages<PageID, PageValue>, any Error>,
+    using context: QueryContext
   ) {
-    let originalRequest = self.request(in: task.context)
+
+  }
+
+  public mutating func update(
+    with result: Result<InfiniteQueryValue<PageID, PageValue>, any Error>,
+    for task: QueryTask<InfiniteQueryValue<PageID, PageValue>>
+  ) {
+    self.requests[task.id] = self.request(in: task.context)
     switch result {
     case let .success(value):
       switch value.response {
@@ -135,8 +144,10 @@ extension InfiniteQueryState: QueryStateProtocol {
       self.errorUpdateCount += 1
       self.errorLastUpdatedAt = task.context.queryClock.now()
     }
+  }
 
-    switch originalRequest {
+  public mutating func finishFetchTask(_ task: QueryTask<InfiniteQueryValue<PageID, PageValue>>) {
+    switch self.requests[task.id] {
     case .allPages:
       self.fetchAllTask = nil
       self.isLoadingAllPages = false
@@ -151,7 +162,9 @@ extension InfiniteQueryState: QueryStateProtocol {
     case .previousPage:
       self.fetchPreviousPageTask = nil
       self.isLoadingPreviousPage = false
+    default: break
     }
+    self.requests.removeValue(forKey: task.id)
   }
 
   func request(in context: QueryContext) -> InfiniteQueryPaging<PageID, PageValue>.Request {

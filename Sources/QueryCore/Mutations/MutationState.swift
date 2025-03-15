@@ -32,7 +32,7 @@ extension MutationState: QueryStateProtocol {
     self.history.last?.status.isLoading ?? false
   }
 
-  public mutating func fetchTaskStarted(_ task: QueryTask<Value>) -> QueryTask<Value> {
+  public mutating func scheduleFetchTask(_ task: QueryTask<Value>) -> QueryTask<Value> {
     let args = task.context.mutationArgs(as: Arguments.self) ?? self.history.last?.arguments
     guard let args else {
       reportWarning(.mutationWithNoArgumentsOrHistory)
@@ -44,20 +44,30 @@ extension MutationState: QueryStateProtocol {
     return task
   }
 
-  public mutating func fetchTaskEnded(
-    _ task: QueryTask<Value>,
-    with result: Result<Value, any Error>
+  public mutating func update(
+    with result: Result<Value?, any Error>,
+    using context: QueryContext
   ) {
-    self.history[id: task.id]?.finish(with: result)
+  }
+
+  public mutating func update(
+    with result: Result<Value, any Error>,
+    for task: QueryTask<Value>
+  ) {
+    self.history[id: task.id]?.update(with: result)
     guard let last = self.history.last, last.task.id == task.id else { return }
     switch result {
     case .success:
       self.valueUpdateCount += 1
-      self.valueLastUpdatedAt = last.finishDate
+      self.valueLastUpdatedAt = last.lastUpdatedAt
     case .failure:
       self.errorUpdateCount += 1
-      self.errorLastUpdatedAt = last.finishDate
+      self.errorLastUpdatedAt = last.lastUpdatedAt
     }
+  }
+
+  public mutating func finishFetchTask(_ task: QueryTask<Value>) {
+    self.history[id: task.id]?.finish()
   }
 }
 
@@ -68,14 +78,15 @@ extension MutationState {
     public let task: QueryTask<Value>
     public let arguments: Arguments
     public let startDate: Date
-    public private(set) var finishDate: Date?
+    public private(set) var currentResult: Result<Value, any Error>?
+    public private(set) var lastUpdatedAt: Date?
     public private(set) var status: QueryStatus<StatusValue>
 
     fileprivate init(task: QueryTask<Value>, args: Arguments) {
       self.task = task
       self.arguments = args
       self.startDate = task.context.queryClock.now()
-      self.finishDate = nil
+      self.lastUpdatedAt = nil
       self.status = .loading
     }
   }
@@ -88,9 +99,15 @@ extension MutationState.HistoryEntry: Identifiable {
 }
 
 extension MutationState.HistoryEntry {
-  fileprivate mutating func finish(with result: Result<Value, any Error>) {
-    self.finishDate = self.task.context.queryClock.now()
-    self.status = .result(result)
+  fileprivate mutating func update(with result: Result<Value, any Error>) {
+    self.currentResult = result
+    self.lastUpdatedAt = self.task.context.queryClock.now()
+  }
+
+  fileprivate mutating func finish() {
+    if let currentResult {
+      self.status = .result(currentResult)
+    }
   }
 }
 

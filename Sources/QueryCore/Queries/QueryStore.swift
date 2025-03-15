@@ -31,7 +31,8 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
     self.subscriptions = QuerySubscriptions()
     let controls = QueryControls<State>(
       context: initialContext,
-      onResult: { _, _ in },
+      onResult: { result, context in
+      },
       refetchTask: { [weak self] taskName, context in
         guard self?.isAutomaticFetchingEnabled == true else { return nil }
         return self?.fetchTask(name: taskName, using: context)
@@ -157,7 +158,7 @@ extension QueryStore {
       let inner = self.queryTask(name: name, in: context, using: task)
       return task.inner.withLock { newTask in
         newTask = inner
-        return state.query.fetchTaskStarted(inner)
+        return state.query.scheduleFetchTask(inner)
       }
     }
   }
@@ -177,7 +178,8 @@ extension QueryStore {
         self._state.inner.withLock { state in
           task.inner.withLock {
             guard let task = $0 else { return }
-            state.query.fetchTaskEnded(task, with: .success(value))
+            state.query.update(with: .success(value), for: task)
+            state.query.finishFetchTask(task)
           }
           self.subscriptions.forEach { $0.onResultReceived?(.success(value), context) }
         }
@@ -186,7 +188,8 @@ extension QueryStore {
         self._state.inner.withLock { state in
           task.inner.withLock {
             guard let task = $0 else { return }
-            state.query.fetchTaskEnded(task, with: .failure(error))
+            state.query.update(with: .failure(error), for: task)
+            state.query.finishFetchTask(task)
           }
           self.subscriptions.forEach { $0.onResultReceived?(.failure(error), context) }
         }

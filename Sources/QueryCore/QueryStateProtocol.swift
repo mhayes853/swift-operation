@@ -14,10 +14,17 @@ public protocol QueryStateProtocol<StateValue, QueryValue>: Sendable {
   var errorUpdateCount: Int { get }
   var errorLastUpdatedAt: Date? { get }
 
-  mutating func fetchTaskStarted(_ task: QueryTask<QueryValue>) -> QueryTask<QueryValue>
+  mutating func scheduleFetchTask(_ task: QueryTask<QueryValue>) -> QueryTask<QueryValue>
 
-  mutating func fetchTaskEnded(
-    _ task: QueryTask<QueryValue>,
-    with result: Result<QueryValue, any Error>
+  mutating func update(
+    with result: Result<StateValue, any Error>,
+    using context: QueryContext
   )
+
+  mutating func update(
+    with result: Result<QueryValue, any Error>,
+    for task: QueryTask<QueryValue>
+  )
+
+  mutating func finishFetchTask(_ task: QueryTask<QueryValue>)
 }
