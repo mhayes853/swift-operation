@@ -130,4 +130,23 @@ struct QueryClientTests {
     let store = client.store(with: [1, 2, 3])
     expectNoDifference(store == nil, true)
   }
+
+  @Test("Only Subscribes To QueryController Once Per Store")
+  func onlySubscribesToQueryControllerOncePerStore() async throws {
+    let client = QueryClient()
+    let controller = CountingController<TestQuery.State>()
+    let query = TestQuery().controlled(by: controller)
+    let store = client.store(for: query)
+    _ = client.store(for: query)
+    controller.count.withLock { expectNoDifference($0, 1) }
+  }
+}
+
+private final class CountingController<State: QueryStateProtocol>: QueryController {
+  let count = Lock(0)
+
+  func control(with controls: QueryControls<State>) -> QuerySubscription {
+    self.count.withLock { $0 += 1 }
+    return .empty
+  }
 }

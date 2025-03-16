@@ -87,23 +87,30 @@ extension QueryClient {
     initialState: Query.State
   ) -> OpaqueQueryStore where Query.State.QueryValue == Query.Value {
     self.state.withLock { state in
-      let newStore = OpaqueQueryStore(
-        erasing: .detached(
-          query: query,
-          initialState: initialState,
-          initialContext: self.defaultContext
-        )
-      )
       if let entry = state.stores[query.path] {
         if entry.queryType != Query.self {
           reportWarning(.duplicatePath(expectedType: entry.queryType, foundType: Query.self))
-          return newStore
+          return self.newOpaqueStore(for: query, initialState: initialState)
         }
         return entry.store
       }
+      let newStore = self.newOpaqueStore(for: query, initialState: initialState)
       state.stores[query.path] = StoreEntry(queryType: Query.self, store: newStore)
       return newStore
     }
+  }
+
+  private func newOpaqueStore<Query: QueryProtocol>(
+    for query: Query,
+    initialState: Query.State
+  ) -> OpaqueQueryStore where Query.State.QueryValue == Query.Value {
+    OpaqueQueryStore(
+      erasing: .detached(
+        query: query,
+        initialState: initialState,
+        initialContext: self.defaultContext
+      )
+    )
   }
 }
 
