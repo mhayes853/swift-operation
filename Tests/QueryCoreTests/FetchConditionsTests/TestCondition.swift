@@ -6,6 +6,10 @@ final class TestCondition: FetchCondition {
   private let value = Lock(false)
   private let subscribers = QuerySubscriptions<Handler>()
 
+  var subscriberCount: Int {
+    self.subscribers.count
+  }
+
   func isSatisfied(in context: QueryContext) -> Bool {
     self.value.withLock { $0 }
   }
