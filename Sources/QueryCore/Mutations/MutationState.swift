@@ -5,10 +5,11 @@ import IdentifiedCollections
 
 public struct MutationState<Arguments: Sendable, Value: Sendable> {
   public private(set) var valueUpdateCount = 0
-  public private(set) var valueLastUpdatedAt: Date?
+  private var historyValueLastUpdatedAt: Date?
   public private(set) var errorUpdateCount = 0
-  public private(set) var errorLastUpdatedAt: Date?
+  private var historyErrorLastUpdatedAt: Date?
   public private(set) var history = IdentifiedArrayOf<HistoryEntry>()
+  private var yielded: Yielded?
 }
 
 // MARK: - QueryStateProtocol
@@ -21,11 +22,57 @@ extension MutationState: QueryStateProtocol {
   public var initialValue: StateValue { nil }
 
   public var currentValue: StateValue {
-    self.history.last?.status.resultValue
+    switch (self.history.last?.status.resultValue, self.yielded) {
+    case let (historyValue?, nil):
+      return historyValue
+    case let (nil, .success(value, _)):
+      return value
+    case let (historyValue?, .success(value, lastUpdatedAt)):
+      guard let historyValueLastUpdatedAt else { return value }
+      return historyValueLastUpdatedAt > lastUpdatedAt ? historyValue : value
+    default:
+      return nil
+    }
+  }
+
+  public var valueLastUpdatedAt: Date? {
+    switch (self.historyValueLastUpdatedAt, self.yielded) {
+    case let (valueLastUpdatedAt?, nil):
+      return valueLastUpdatedAt
+    case let (nil, .success(_, lastUpdatedAt)):
+      return lastUpdatedAt
+    case let (valueLastUpdatedAt?, .success(_, lastUpdatedAt)):
+      return max(valueLastUpdatedAt, lastUpdatedAt)
+    default:
+      return nil
+    }
   }
 
   public var error: (any Error)? {
-    self.history.last?.status.resultError
+    switch (self.history.last?.status.resultError, self.yielded) {
+    case let (historyError?, nil):
+      return historyError
+    case let (nil, .failure(error, _)):
+      return error
+    case let (historyError?, .failure(error, lastUpdatedAt)):
+      guard let historyErrorLastUpdatedAt else { return error }
+      return historyErrorLastUpdatedAt > lastUpdatedAt ? historyError : error
+    default:
+      return nil
+    }
+  }
+
+  public var errorLastUpdatedAt: Date? {
+    switch (self.historyErrorLastUpdatedAt, self.yielded) {
+    case let (errorLastUpdatedAt?, nil):
+      return errorLastUpdatedAt
+    case let (nil, .failure(_, lastUpdatedAt)):
+      return lastUpdatedAt
+    case let (errorLastUpdatedAt?, .failure(_, lastUpdatedAt)):
+      return max(errorLastUpdatedAt, lastUpdatedAt)
+    default:
+      return nil
+    }
   }
 
   public var isLoading: Bool {
@@ -48,6 +95,14 @@ extension MutationState: QueryStateProtocol {
     with result: Result<Value?, any Error>,
     using context: QueryContext
   ) {
+    switch result {
+    case let .success(value):
+      self.yielded = .success(value, context.queryClock.now())
+      self.valueUpdateCount += 1
+    case let .failure(error):
+      self.yielded = .failure(error, context.queryClock.now())
+      self.errorUpdateCount += 1
+    }
   }
 
   public mutating func update(
@@ -59,10 +114,10 @@ extension MutationState: QueryStateProtocol {
     switch result {
     case .success:
       self.valueUpdateCount += 1
-      self.valueLastUpdatedAt = last.lastUpdatedAt
+      self.historyValueLastUpdatedAt = last.lastUpdatedAt
     case .failure:
       self.errorUpdateCount += 1
-      self.errorLastUpdatedAt = last.lastUpdatedAt
+      self.historyErrorLastUpdatedAt = last.lastUpdatedAt
     }
   }
 
@@ -108,6 +163,15 @@ extension MutationState.HistoryEntry {
     if let currentResult {
       self.status = .result(currentResult)
     }
+  }
+}
+
+// MARK: - Yielded
+
+extension MutationState {
+  private enum Yielded {
+    case success(StateValue, Date)
+    case failure(any Error, Date)
   }
 }
 

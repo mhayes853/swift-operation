@@ -412,11 +412,11 @@ final class FailableMutation: MutationProtocol {
       if let state {
         return state
       }
-      throw SomeError()
+      throw MutateError()
     }
   }
 
-  struct SomeError: Error {}
+  struct MutateError: Equatable, Error {}
 }
 
 // MARK: - WaitableMutation

@@ -308,7 +308,7 @@ struct MutationStoreTests {
 
     collector.expectEventsMatch([
       .mutatingStarted("blob"),
-      .mutationResultReceived("blob", .failure(FailableMutation.SomeError())),
+      .mutationResultReceived("blob", .failure(FailableMutation.MutateError())),
       .mutatingEnded("blob")
     ])
   }
@@ -342,5 +342,64 @@ struct MutationStoreTests {
     try await store.mutate(with: "blob")
     let task = store.retryLatestTask()
     expectNoDifference(task.name, "MutationStore<String, String> Retry Latest Task")
+  }
+
+  @Test("Uses More Recent State Update Between History And Yielding")
+  func mutationStoreUsesMoreRecentStateUpdate() async throws {
+    let controller = TestQueryController<EmptyMutation>()
+    let store = self.client.store(for: EmptyMutation().controlled(by: controller))
+    let clock = TestQueryClock(date: Date())
+    store.context.queryClock = clock
+
+    try await store.mutate(with: "blob")
+    expectNoDifference(store.currentValue, "blob")
+    expectNoDifference(store.valueLastUpdatedAt, clock.date)
+    expectNoDifference(store.valueUpdateCount, 1)
+
+    clock.date += 1000
+    controller.controls.withLock { $0?.yield("test") }
+    expectNoDifference(store.currentValue, "test")
+    expectNoDifference(store.valueLastUpdatedAt, clock.date)
+    expectNoDifference(store.valueUpdateCount, 2)
+
+    clock.date += 1000
+    try await store.mutate(with: "foo")
+    expectNoDifference(store.currentValue, "foo")
+    expectNoDifference(store.valueLastUpdatedAt, clock.date)
+    expectNoDifference(store.valueUpdateCount, 3)
+  }
+
+  @Test("Uses More Recent Error Update Between History And Yielding")
+  func mutationStoreUsesMoreRecentErrorUpdate() async throws {
+    struct SomeError: Equatable, Error {}
+
+    let controller = TestQueryController<EmptyMutation>()
+    let mutation = FailableMutation()
+    let store = self.client.store(for: mutation.controlled(by: controller))
+    let clock = TestQueryClock(date: Date())
+    store.context.queryClock = clock
+
+    _ = try? await store.mutate(with: "blob")
+    expectNoDifference(
+      store.error as? FailableMutation.MutateError,
+      FailableMutation.MutateError()
+    )
+    expectNoDifference(store.errorLastUpdatedAt, clock.date)
+    expectNoDifference(store.errorUpdateCount, 1)
+
+    clock.date += 1000
+    controller.controls.withLock { $0?.yield(throwing: SomeError()) }
+    expectNoDifference(store.error as? SomeError, SomeError())
+    expectNoDifference(store.errorLastUpdatedAt, clock.date)
+    expectNoDifference(store.errorUpdateCount, 2)
+
+    clock.date += 1000
+    _ = try? await store.mutate(with: "foo")
+    expectNoDifference(
+      store.error as? FailableMutation.MutateError,
+      FailableMutation.MutateError()
+    )
+    expectNoDifference(store.errorLastUpdatedAt, clock.date)
+    expectNoDifference(store.errorUpdateCount, 3)
   }
 }
