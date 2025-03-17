@@ -70,3 +70,15 @@ extension QueryContext: CustomStringConvertible {
     }
   }
 }
+
+// MARK: - Identifier
+
+extension QueryContext {
+  public struct Identifier: Hashable, Sendable {
+    private let boxIdentifier: ObjectIdentifier
+
+    public init(_ context: QueryContext) {
+      self.boxIdentifier = ObjectIdentifier(context.storage)
+    }
+  }
+}

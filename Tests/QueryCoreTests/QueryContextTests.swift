@@ -37,6 +37,24 @@ struct QueryContextTests {
     expectNoDifference(context2.test, _defaultValue + 100)
   }
 
+  @Test("Same Context Produces Same Identifier")
+  func sameContextSameID() {
+    let context = QueryContext()
+    expectNoDifference(QueryContext.Identifier(context), QueryContext.Identifier(context))
+  }
+
+  @Test("Mutated Context Produces Different Identifier")
+  func mutatedContextDifferentID() {
+    let context = QueryContext()
+    let id = QueryContext.Identifier(context)
+    var context2 = context
+    context2.test = 300
+    let id2 = QueryContext.Identifier(context2)
+    withKnownIssue {
+      expectNoDifference(id, id2)
+    }
+  }
+
   @Test("CustomStringConvertible")
   func customStringConvertible() {
     var context = QueryContext()

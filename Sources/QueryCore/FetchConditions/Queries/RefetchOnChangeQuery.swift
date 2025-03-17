@@ -11,6 +11,7 @@ private final class RefetchOnChangeController<
   Condition: FetchCondition
 >: QueryController {
   private let condition: Condition
+  private let state = Lock([QueryContext.Identifier: QuerySubscriptions<QueryControls<State>>]())
   private let subscriptions = QuerySubscriptions<QueryControls<State>>()
 
   init(condition: Condition) {
@@ -18,13 +19,22 @@ private final class RefetchOnChangeController<
   }
 
   func control(with controls: QueryControls<State>) -> QuerySubscription {
-    let (controlsSubscription, isFirst) = self.subscriptions.add(handler: controls)
+    let id = QueryContext.Identifier(controls.context)
+    let subscriptions = self.state.withLock { 
+      if let subs = $0[id] {
+        return subs
+      }
+      let subs = QuerySubscriptions<QueryControls<State>>()
+      $0[id] = subs
+      return subs
+    }
+    let (controlsSubscription, isFirst) = subscriptions.add(handler: controls)
     let conditionSubscription = isFirst ? self.subscribeToCondition(in: controls.context) : nil
     return QuerySubscription {
-      if self.subscriptions.count == 0 {
+      controlsSubscription.cancel()
+      if subscriptions.count == 0 {
         conditionSubscription?.cancel()
       }
-      controlsSubscription.cancel()
     }
   }
 
@@ -33,14 +43,16 @@ private final class RefetchOnChangeController<
   ) -> QuerySubscription {
     let currentValue = Lock(self.condition.isSatisfied(in: context))
     return self.condition.subscribe(in: context) { newValue in
-      currentValue.withLock { currentValue in
+      let shouldRefetch = currentValue.withLock { currentValue in
         defer { currentValue = newValue }
-        guard newValue && (newValue != currentValue) else { return }
-        Task {
-          await withTaskGroup(of: Void.self) { group in
-            self.subscriptions.forEach { controls in
-              group.addTask { _ = try? await controls.yieldRefetch() }
-            }
+        return newValue && (newValue != currentValue)
+      }
+      guard shouldRefetch else { return }
+      Task {
+        await withTaskGroup(of: Void.self) { group in
+          let subscriptions = self.state.withLock { $0[QueryContext.Identifier(context)] }
+          subscriptions?.forEach { controls in
+            group.addTask { _ = try? await controls.yieldRefetch() }
           }
         }
       }
