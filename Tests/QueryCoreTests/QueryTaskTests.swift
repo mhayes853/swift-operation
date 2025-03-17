@@ -137,6 +137,34 @@ struct QueryTaskTests {
     expectNoDifference(value, "42")
   }
 
+  @Test("QueryTask Is Not Finished By Default")
+  func queryTaskIsNotFinishedByDefault() async throws {
+    let task = QueryTask<Int>(context: QueryContext()) { _ in 42 }
+    expectNoDifference(task.isFinished, false)
+  }
+
+  @Test("QueryTask Is Not Finished When Loading")
+  func queryTaskIsNotFinishedWhenLoading() async throws {
+    let task = QueryTask<Int>(context: QueryContext()) { _ in try await Task.never() }
+    Task { try await task.runIfNeeded() }
+    await Task.megaYield()
+    expectNoDifference(task.isFinished, false)
+  }
+
+  @Test("QueryTask Is Finished After Running")
+  func queryTaskIsFinishedAfterRunning() async throws {
+    let task = QueryTask<Int>(context: QueryContext()) { _ in 42 }
+    _ = try await task.runIfNeeded()
+    expectNoDifference(task.isFinished, true)
+  }
+
+  @Test("QueryTask Is Finished When Cancelled")
+  func queryTaskIsFinishedWhenCancelled() async throws {
+    let task = QueryTask<Int>(context: QueryContext()) { _ in 42 }
+    task.cancel()
+    expectNoDifference(task.isFinished, true)
+  }
+
   #if DEBUG
     @Test("Reports Issue When Circular Scheduling, 2 Tasks")
     func reportsIssueWhenCircularScheduling2Tasks() async throws {

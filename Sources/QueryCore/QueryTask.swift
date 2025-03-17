@@ -138,30 +138,49 @@ extension QueryTask {
   }
 
   fileprivate func _runIfNeeded() async throws -> any Sendable {
-    let task = try self.box.inner.withLock { state in
+    switch try self.runTaskAction() {
+    case let .awaitTask(task):
+      return try await withTaskCancellationHandler {
+        try await task.value
+      } onCancel: {
+        self.cancel()
+      }
+    case let .returnValue(value):
+      return value
+    }
+  }
+
+  private func runTaskAction() throws -> RunAction {
+    try self.box.inner.withLock { state in
       switch state.task {
       case let .running(task):
-        return task
-      case .cancelled:
-        throw CancellationError()
+        return RunAction.awaitTask(task)
+      case let .finished(result):
+        return try .returnValue(result.get())
       case .none:
-        let task = Task {
-          await withTaskGroup(of: Void.self) { group in
-            for dependency in self.dependencies {
-              group.addTask { _ = try? await dependency._runIfNeeded() }
-            }
-          }
-          return try await self.work(self.context) as any Sendable
-        }
+        let task = self.newTask()
         state.task = .running(task)
-        return task
+        return .awaitTask(task)
       }
     }
-    return try await withTaskCancellationHandler {
-      try await task.value
-    } onCancel: {
-      self.cancel()
+  }
+
+  private func newTask() -> Task<any Sendable, any Error> {
+    Task {
+      await withTaskGroup(of: Void.self) { group in
+        for dependency in self.dependencies {
+          group.addTask { _ = try? await dependency._runIfNeeded() }
+        }
+      }
+      let result = await Result { try await self.work(self.context) as any Sendable }
+      self.box.inner.withLock { $0.task = .finished(result) }
+      return try result.get()
     }
+  }
+
+  private enum RunAction {
+    case awaitTask(Task<any Sendable, any Error>)
+    case returnValue(any Sendable)
   }
 }
 
@@ -171,7 +190,7 @@ extension QueryTask {
   public var isCancelled: Bool {
     self.box.inner.withLock {
       switch $0.task {
-      case .cancelled: true
+      case let .finished(.failure(error)): error is CancellationError
       default: false
       }
     }
@@ -180,10 +199,23 @@ extension QueryTask {
   public func cancel() {
     self.box.inner.withLock {
       switch $0.task {
-      case .running(let task): task.cancel()
+      case let .running(task): task.cancel()
       default: break
       }
-      $0.task = .cancelled
+      $0.task = .finished(.failure(CancellationError()))
+    }
+  }
+}
+
+// MARK: - Is Finished
+
+extension QueryTask {
+  public var isFinished: Bool {
+    self.box.inner.withLock {
+      switch $0.task {
+      case .finished: true
+      default: false
+      }
     }
   }
 }
@@ -191,7 +223,7 @@ extension QueryTask {
 // MARK: - TaskState
 
 private enum TaskState {
-  case cancelled
+  case finished(Result<any Sendable, any Error>)
   case running(Task<any Sendable, any Error>)
 }
 
