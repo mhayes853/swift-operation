@@ -165,6 +165,36 @@ struct QueryTaskTests {
     expectNoDifference(task.isFinished, true)
   }
 
+  @Test("QueryTask Is Not Running By Default")
+  func queryTaskIsNotRunningByDefault() {
+    let task = QueryTask(context: QueryContext()) { _ in 42 }
+    expectNoDifference(task.isRunning, false)
+  }
+
+  @Test("QueryTask Is Not Running When Cancelled")
+  func queryTaskIsNotRunningWhenCancelled() {
+    let task = QueryTask(context: QueryContext()) { _ in 42 }
+    task.cancel()
+    expectNoDifference(task.isRunning, false)
+  }
+
+  @Test("QueryTask Is Not Running When Finished")
+  func queryTaskIsNotRunningByDefault() async throws {
+    let task = QueryTask(context: QueryContext()) { _ in 42 }
+    _ = try await task.runIfNeeded()
+    expectNoDifference(task.isRunning, false)
+  }
+
+  @Test("QueryTask Is Running When Loading")
+  func queryTaskIsRunningWhenLoading() async {
+    let task = QueryTask(context: QueryContext()) { _ in 
+      try await Task.never()
+    }
+    Task { try await task.runIfNeeded() }
+    await Task.megaYield()
+    expectNoDifference(task.isRunning, true)
+  }
+
   #if DEBUG
     @Test("Reports Issue When Circular Scheduling, 2 Tasks")
     func reportsIssueWhenCircularScheduling2Tasks() async throws {

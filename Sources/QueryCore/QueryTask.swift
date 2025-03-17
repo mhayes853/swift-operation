@@ -133,6 +133,15 @@ extension QueryTask {
     self.box.inner.withLock { $0.task != nil }
   }
 
+  public var isRunning: Bool {
+    self.box.inner.withLock {
+      switch $0.task {
+      case .running: true
+      default: false
+      }
+    }
+  }
+
   public func runIfNeeded() async throws -> Value {
     try await self.transforms(self._runIfNeeded())
   }
