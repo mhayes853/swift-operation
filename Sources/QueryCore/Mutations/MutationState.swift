@@ -148,7 +148,7 @@ extension MutationState {
 }
 
 extension MutationState.HistoryEntry: Identifiable {
-  public var id: QueryTaskID {
+  public var id: QueryTaskIdentifier {
     self.task.id
   }
 }

@@ -4,12 +4,12 @@ import Foundation
 // MARK: - _QueryTask
 
 private protocol _QueryTask: Sendable, Identifiable {
-  var id: QueryTaskID { get }
+  var id: QueryTaskIdentifier { get }
   var info: QueryTaskInfo { get }
   var dependencies: [any _QueryTask] { get }
 
   func _runIfNeeded() async throws -> any Sendable
-  func warnIfCyclesDetected(cyclicalIds: [QueryTaskInfo], visited: Set<QueryTaskID>)
+  func warnIfCyclesDetected(cyclicalIds: [QueryTaskInfo], visited: Set<QueryTaskIdentifier>)
 }
 
 // MARK: - QueryTask
@@ -17,7 +17,7 @@ private protocol _QueryTask: Sendable, Identifiable {
 public struct QueryTask<Value: Sendable>: _QueryTask {
   private typealias State = (task: TaskState?, dependencies: [any _QueryTask])
 
-  public let id: QueryTaskID
+  public let id: QueryTaskIdentifier
   public var name: String?
   public var context: QueryContext
 
@@ -43,11 +43,11 @@ extension QueryTask {
 
 // MARK: - QueryTaskID
 
-public struct QueryTaskID: Hashable, Sendable {
+public struct QueryTaskIdentifier: Hashable, Sendable {
   private let number: Int
 }
 
-extension QueryTaskID {
+extension QueryTaskIdentifier {
   private static let counter = Lock(0)
 
   fileprivate static func next() -> Self {
@@ -58,7 +58,7 @@ extension QueryTaskID {
   }
 }
 
-extension QueryTaskID: CustomDebugStringConvertible {
+extension QueryTaskIdentifier: CustomDebugStringConvertible {
   public var debugDescription: String {
     "#\(self.number)"
   }
@@ -105,7 +105,7 @@ extension QueryTask {
 
   fileprivate func warnIfCyclesDetected(
     cyclicalIds: [QueryTaskInfo],
-    visited: Set<QueryTaskID>
+    visited: Set<QueryTaskIdentifier>
   ) {
     #if DEBUG
       for dependency in self.dependencies {
@@ -257,7 +257,7 @@ extension QueryTask {
 
 public struct QueryTaskInfo {
   let name: String?
-  let id: QueryTaskID
+  let id: QueryTaskIdentifier
 }
 
 extension QueryTaskInfo: CustomStringConvertible {

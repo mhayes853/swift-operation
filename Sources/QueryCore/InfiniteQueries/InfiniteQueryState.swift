@@ -30,7 +30,7 @@ public struct InfiniteQueryState<PageID: Hashable & Sendable, PageValue: Sendabl
   private var fetchNextPageTask: QueryTask<QueryValue>?
   private var fetchPreviousPageTask: QueryTask<QueryValue>?
 
-  private var requests = [QueryTaskID: InfiniteQueryPaging<PageID, PageValue>.Request]()
+  private var requests = [QueryTaskIdentifier: InfiniteQueryPaging<PageID, PageValue>.Request]()
 
   init(initialValue: StateValue, initialPageId: PageID) {
     self.currentValue = initialValue
