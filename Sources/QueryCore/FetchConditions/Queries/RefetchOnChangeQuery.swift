@@ -11,7 +11,6 @@ private final class RefetchOnChangeController<
   Condition: FetchCondition
 >: QueryController {
   private let condition: Condition
-  private let state = Lock([QueryContext.Identifier: QuerySubscriptions<QueryControls<State>>]())
   private let subscriptions = QuerySubscriptions<QueryControls<State>>()
 
   init(condition: Condition) {
@@ -19,22 +18,11 @@ private final class RefetchOnChangeController<
   }
 
   func control(with controls: QueryControls<State>) -> QuerySubscription {
-    let id = QueryContext.Identifier(controls.context)
-    let subscriptions = self.state.withLock { 
-      if let subs = $0[id] {
-        return subs
-      }
-      let subs = QuerySubscriptions<QueryControls<State>>()
-      $0[id] = subs
-      return subs
-    }
-    let (controlsSubscription, isFirst) = subscriptions.add(handler: controls)
-    let conditionSubscription = isFirst ? self.subscribeToCondition(in: controls.context) : nil
+    let (controlsSubscription, _) = self.subscriptions.add(handler: controls)
+    let conditionSubscription = self.subscribeToCondition(in: controls.context)
     return QuerySubscription {
       controlsSubscription.cancel()
-      if subscriptions.count == 0 {
-        conditionSubscription?.cancel()
-      }
+      conditionSubscription.cancel()
     }
   }
 
@@ -50,8 +38,7 @@ private final class RefetchOnChangeController<
       guard shouldRefetch else { return }
       Task {
         await withTaskGroup(of: Void.self) { group in
-          let subscriptions = self.state.withLock { $0[QueryContext.Identifier(context)] }
-          subscriptions?.forEach { controls in
+          self.subscriptions.forEach { controls in
             group.addTask { _ = try? await controls.yieldRefetch() }
           }
         }
