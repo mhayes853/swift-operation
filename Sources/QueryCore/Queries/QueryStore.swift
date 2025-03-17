@@ -29,7 +29,7 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
       value: (query: initialState, context: initialContext, controllerSubscriptions: [])
     )
     self.subscriptions = QuerySubscriptions()
-    self.setupQuery()
+    self.setupQuery(with: initialContext)
   }
 
   deinit {
@@ -38,9 +38,9 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
     }
   }
 
-  private func setupQuery() {
+  private func setupQuery(with initialContext: QueryContext) {
     let controls = QueryControls<State>(
-      context: { [weak self] in self?._state.inner.withLock { $0.context } ?? QueryContext() },
+      context: { [weak self] in self?._state.inner.withLock { $0.context } ?? initialContext },
       onResult: { [weak self] result, context in
         self?._state.inner.withLock { $0.query.update(with: result, using: context) }
       },
