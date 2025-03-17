@@ -47,7 +47,8 @@ let package = Package(
       dependencies: [
         "QueryCore",
         .product(name: "CustomDump", package: "swift-custom-dump"),
-        .product(name: "Clocks", package: "swift-clocks")
+        .product(name: "Clocks", package: "swift-clocks"),
+        .product(name: "IssueReportingTestSupport", package: "xctest-dynamic-overlay")
       ]
     )
   ],

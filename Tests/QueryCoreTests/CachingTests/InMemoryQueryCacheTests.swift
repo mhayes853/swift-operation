@@ -82,9 +82,7 @@ struct InMemoryQueryCacheTests {
 private final class TestCacheStorage: InMemoryQueryCacheStorage {
   typealias State = (cost: Int, value: InMemoryQueryCacheStorageValue)
   let state = Lock([InMemoryQueryCacheStorageKey: State]())
-}
 
-extension TestCacheStorage {
   override func setObject(
     _ obj: InMemoryQueryCacheStorageValue,
     forKey key: InMemoryQueryCacheStorageKey,

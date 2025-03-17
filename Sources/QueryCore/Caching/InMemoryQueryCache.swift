@@ -60,15 +60,13 @@ extension QueryCache {
 
 // MARK: - QueryPathCacheKey
 
-@objc public final class InMemoryQueryCacheStorageKey: NSObject, Sendable {
+public final class InMemoryQueryCacheStorageKey: NSObject, Sendable {
   private let path: QueryPath
 
   fileprivate init(path: QueryPath) {
     self.path = path
   }
-}
 
-extension InMemoryQueryCacheStorageKey {
   public override var hash: Int {
     path.hashValue
   }
@@ -83,7 +81,7 @@ extension InMemoryQueryCacheStorageKey {
 
 // MARK: - InMemoryValue
 
-@objc public final class InMemoryQueryCacheStorageValue: NSObject, Sendable {
+public final class InMemoryQueryCacheStorageValue: NSObject, Sendable {
   public let value: any Sendable
 
   fileprivate init(value: any Sendable) {
