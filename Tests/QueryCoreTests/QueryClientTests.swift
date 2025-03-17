@@ -139,6 +139,7 @@ struct QueryClientTests {
     let store = client.store(for: query)
     _ = client.store(for: query)
     controller.count.withLock { expectNoDifference($0, 1) }
+    _ = store
   }
 }
 
