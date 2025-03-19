@@ -52,18 +52,4 @@ struct RetryQueryTests {
       .detached(query: query.retry(limit: 3, backoff: .noBackoff), initialValue: nil)
     expectNoDifference(store.context.maxRetryIndex, 10)
   }
-
-  //@Test("Linear Backoff")
-  //func linearBackoff() async throws {
-  //  let query = CountingQuery()
-  //  let store = QueryStoreFor<CountingQuery>
-  //    .detached(query: query.retry(limit: 3, delay: 1), initialValue: nil)
-  //  await query.ensureFails()
-
-  //  await #expect(throws: CountingQuery.SomeError.self) {
-  //    try await store.fetch()
-  //  }
-  //  let count = await query.fetchCount
-  //  expectNoDifference(count, 4)
-  //}
 }
