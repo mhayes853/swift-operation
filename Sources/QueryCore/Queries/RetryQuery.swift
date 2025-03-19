@@ -1,33 +1,9 @@
-import Foundation
-
-// MARK: - BackoffFunction
-
-public struct BackoffFunction: Sendable {
-  private let delay: @Sendable (_ retryIndex: Int) -> TimeInterval
-
-  public init(_ delay: @escaping @Sendable (_ retryIndex: Int) -> TimeInterval) {
-    self.delay = delay
-  }
-}
-
-extension BackoffFunction {
-  public static func linear(delay: TimeInterval) -> Self {
-    Self { TimeInterval($0) * delay }
-  }
-
-  public static func exponential(delay: TimeInterval) -> Self {
-    Self { TimeInterval(pow(delay, Double($0))) }
-  }
-
-  public static let noBackoff = Self { _ in 0 }
-}
-
 // MARK: - RetryModifier
 
 extension QueryProtocol {
   public func retry(
     limit: Int,
-    backoff: BackoffFunction
+    backoff: QueryBackoffFunction?
   ) -> ModifiedQuery<Self, some QueryModifier<Self>> {
     self.modifier(RetryModifier(limit: limit, backoff: backoff))
   }
@@ -35,7 +11,7 @@ extension QueryProtocol {
 
 private struct RetryModifier<Query: QueryProtocol>: QueryModifier {
   let limit: Int
-  let backoff: BackoffFunction
+  let backoff: QueryBackoffFunction?
 
   func setup(context: inout QueryContext, using query: Query) {
     context.maxRetryIndex = self.limit
