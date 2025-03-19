@@ -60,6 +60,7 @@ struct FailingQuery: QueryProtocol, Hashable {
 
 final actor CountingQuery: QueryProtocol {
   var fetchCount = 0
+  private var shouldFail = false
   private let sleep: @Sendable () async -> Void
 
   init(sleep: @Sendable @escaping () async -> Void = { await Task.megaYield() }) {
@@ -70,11 +71,20 @@ final actor CountingQuery: QueryProtocol {
     [ObjectIdentifier(self)]
   }
 
+  func ensureFails() {
+    self.shouldFail = true
+  }
+
   func fetch(in context: QueryContext) async throws -> Int {
     await self.sleep()
     self.fetchCount += 1
+    if self.shouldFail {
+      throw SomeError()
+    }
     return self.fetchCount
   }
+
+  struct SomeError: Equatable, Error {}
 }
 
 // MARK: - EndlesQuery
@@ -119,6 +129,23 @@ struct PathableQuery: QueryProtocol {
   func fetch(in context: QueryContext) async throws -> Int {
     self.value
   }
+}
+
+// MARK: - SucceedOnNthRefetchQuery
+
+struct SucceedOnNthRefetchQuery: QueryProtocol, Hashable {
+  static let value = "refetch success"
+
+  let index: Int
+
+  func fetch(in context: QueryContext) async throws -> String {
+    if context.retryIndex < self.index {
+      throw SomeError()
+    }
+    return Self.value
+  }
+
+  struct SomeError: Error {}
 }
 
 // MARK: - ContextReadingQuery
