@@ -3,15 +3,17 @@
 extension QueryProtocol {
   public func retry(
     limit: Int,
-    backoff: QueryBackoffFunction?
+    backoff: QueryBackoffFunction? = nil,
+    delayer: (any QueryDelayer)? = nil
   ) -> ModifiedQuery<Self, some QueryModifier<Self>> {
-    self.modifier(RetryModifier(limit: limit, backoff: backoff))
+    self.modifier(RetryModifier(limit: limit, backoff: backoff, delayer: delayer))
   }
 }
 
 private struct RetryModifier<Query: QueryProtocol>: QueryModifier {
   let limit: Int
   let backoff: QueryBackoffFunction?
+  let delayer: (any QueryDelayer)?
 
   func setup(context: inout QueryContext, using query: Query) {
     context.maxRetryIndex = self.limit
