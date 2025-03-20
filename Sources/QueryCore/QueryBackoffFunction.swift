@@ -40,45 +40,7 @@ extension QueryBackoffFunction {
 
 extension QueryBackoffFunction {
   public static func fibonacci(_ base: TimeInterval) -> Self {
-    Self { TimeInterval(Self.fibonacci(n: $0)) * base }
-  }
-
-  private static func fibonacci(n: Int) -> Int {
-    guard n > 0 else { return 0 }
-    let baseMatrix = Matrix2x2(a: 1, b: 1, c: 1, d: 0)
-    return baseMatrix.power(exponent: n - 1).a
-  }
-
-  private struct Matrix2x2: Sendable {
-    var a: Int
-    var b: Int
-    var c: Int
-    var d: Int
-
-    static let identity = Matrix2x2(a: 1, b: 0, c: 0, d: 1)
-
-    func multiplied(by other: Self) -> Self {
-      Self(
-        a: a &* other.a &+ b &* other.c,
-        b: a &* other.b &+ b &* other.d,
-        c: c &* other.a &+ d &* other.c,
-        d: c &* other.b &+ d &* other.d
-      )
-    }
-
-    func power(exponent: Int) -> Self {
-      var result = Self.identity
-      var base = self
-      var exp = exponent
-      while exp > 0 {
-        if !exp.isMultiple(of: 2) {
-          result = result.multiplied(by: base)
-        }
-        base = base.multiplied(by: base)
-        exp /= 2
-      }
-      return result
-    }
+    Self { TimeInterval(QueryCore.fibonacci($0)) * base }
   }
 }
 
