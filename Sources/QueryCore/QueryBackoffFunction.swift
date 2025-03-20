@@ -47,7 +47,9 @@ extension QueryBackoffFunction {
 // MARK: - Jittered
 
 extension QueryBackoffFunction {
-  public func jittered<T: RandomNumberGenerator & Sendable>(using generator: T) -> Self {
+  public func jittered<T: RandomNumberGenerator & Sendable>(
+    using generator: T = SystemRandomNumberGenerator()
+  ) -> Self {
     let generator = LockedBox(value: generator)
     return Self { attempt in
       generator.inner.withLock { TimeInterval.random(in: 0..<self(attempt), using: &$0) }
