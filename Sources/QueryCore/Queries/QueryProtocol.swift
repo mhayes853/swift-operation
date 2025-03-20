@@ -7,7 +7,10 @@ public protocol QueryProtocol<Value>: Sendable {
   var path: QueryPath { get }
 
   func setup(context: inout QueryContext)
-  func fetch(in context: QueryContext) async throws -> Value
+  func fetch(
+    in context: QueryContext,
+    with continuation: QueryContinuation<Value>
+  ) async throws -> Value
 }
 
 extension QueryProtocol {
@@ -21,18 +24,18 @@ extension QueryProtocol where Self: Hashable {
 
 // MARK: - QueryContinuation
 
-public struct QueryContinuation<Query: QueryProtocol> {
-  private let onQueryResult: @Sendable (Result<Query.State.QueryValue, any Error>) -> Void
+public struct QueryContinuation<Value: Sendable>: Sendable {
+  private let onQueryResult: @Sendable (Result<Value, any Error>) -> Void
 
   public init(
-    onQueryResult: @escaping @Sendable (Result<Query.State.QueryValue, any Error>) -> Void
+    onQueryResult: @escaping @Sendable (Result<Value, any Error>) -> Void
   ) {
     self.onQueryResult = onQueryResult
   }
 }
 
 extension QueryContinuation {
-  public func yield(_ value: Query.State.QueryValue) {
+  public func yield(_ value: Value) {
     self.yield(with: .success(value))
   }
 
@@ -40,7 +43,7 @@ extension QueryContinuation {
     self.yield(with: .failure(error))
   }
 
-  public func yield(with result: Result<Query.State.QueryValue, any Error>) {
+  public func yield(with result: Result<Value, any Error>) {
     onQueryResult(result)
   }
 }

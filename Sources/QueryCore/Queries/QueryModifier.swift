@@ -5,7 +5,11 @@ public protocol QueryModifier<Query>: Sendable {
 
   func setup(context: inout QueryContext, using query: Query)
 
-  func fetch(in context: QueryContext, using query: Query) async throws -> Query.Value
+  func fetch(
+    in context: QueryContext,
+    using query: Query,
+    with continuation: QueryContinuation<Query.Value>
+  ) async throws -> Query.Value
 }
 
 extension QueryModifier {
@@ -40,8 +44,11 @@ where Modifier.Query == Query {
     self.modifier.setup(context: &context, using: query)
   }
 
-  public func fetch(in context: QueryContext) async throws -> Query.Value {
-    try await self.modifier.fetch(in: context, using: query)
+  public func fetch(
+    in context: QueryContext,
+    with continuation: QueryContinuation<Query.Value>
+  ) async throws -> Query.Value {
+    try await self.modifier.fetch(in: context, using: query, with: continuation)
   }
 }
 
@@ -78,8 +85,9 @@ extension ModifiedQuery: InfiniteQueryProtocol where Query: InfiniteQueryProtoco
 extension ModifiedQuery: MutationProtocol where Query: MutationProtocol {
   public func mutate(
     with arguments: Query.Arguments,
-    in context: QueryContext
+    in context: QueryContext,
+    with continuation: QueryContinuation<Value>
   ) async throws -> Value {
-    try await self.query.mutate(with: arguments, in: context)
+    try await self.query.mutate(with: arguments, in: context, with: continuation)
   }
 }

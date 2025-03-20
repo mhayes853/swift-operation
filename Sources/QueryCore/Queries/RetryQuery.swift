@@ -20,20 +20,24 @@ private struct RetryModifier<Query: QueryProtocol>: QueryModifier {
     query.setup(context: &context)
   }
 
-  func fetch(in context: QueryContext, using query: Query) async throws -> Query.Value {
+  func fetch(
+    in context: QueryContext,
+    using query: Query,
+    with continuation: QueryContinuation<Query.Value>
+  ) async throws -> Query.Value {
     var context = context
     let backoff = self.backoff ?? context.queryBackoffFunction
     let delayer = self.delayer ?? context.queryDelayer
     for index in 0..<context.queryMaxRetries {
       do {
         context.queryRetryIndex = index
-        return try await query.fetch(in: context)
+        return try await query.fetch(in: context, with: continuation)
       } catch {
         try await delayer.delay(for: backoff(index + 1))
       }
     }
     context.queryRetryIndex = context.queryMaxRetries
-    return try await query.fetch(in: context)
+    return try await query.fetch(in: context, with: continuation)
   }
 }
 

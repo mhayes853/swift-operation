@@ -9,12 +9,16 @@ extension QueryProtocol {
 private struct SuspendModifier<Query: QueryProtocol, Condition: FetchCondition>: QueryModifier {
   let condition: Condition
 
-  func fetch(in context: QueryContext, using query: Query) async throws -> Query.Value {
+  func fetch(
+    in context: QueryContext,
+    using query: Query,
+    with continuation: QueryContinuation<Query.Value>
+  ) async throws -> Query.Value {
     guard !self.condition.isSatisfied(in: context) else {
-      return try await query.fetch(in: context)
+      return try await query.fetch(in: context, with: continuation)
     }
     try await self.waitForTrue(in: context)
-    return try await query.fetch(in: context)
+    return try await query.fetch(in: context, with: continuation)
   }
 
   private func waitForTrue(in context: QueryContext) async throws {

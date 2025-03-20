@@ -7,7 +7,10 @@ import QueryCore
 struct TestQuery: QueryProtocol, Hashable {
   static let value = 1
 
-  func fetch(in context: QueryContext) async throws -> Int {
+  func fetch(
+    in context: QueryContext,
+    with continuation: QueryContinuation<Int>
+  ) async throws -> Int {
     Self.value
   }
 }
@@ -17,7 +20,10 @@ struct TestQuery: QueryProtocol, Hashable {
 struct TestStringQuery: QueryProtocol, Hashable {
   static let value = "Foo"
 
-  func fetch(in context: QueryContext) async throws -> String {
+  func fetch(
+    in context: QueryContext,
+    with continuation: QueryContinuation<String>
+  ) async throws -> String {
     Self.value
   }
 }
@@ -39,7 +45,10 @@ final class SleepingQuery: QueryProtocol, @unchecked Sendable {
     ["test-sleeping", self.duration]
   }
 
-  func fetch(in context: QueryContext) async throws -> String {
+  func fetch(
+    in context: QueryContext,
+    with continuation: QueryContinuation<String>
+  ) async throws -> String {
     self.didBeginSleeping?()
     try await self.clock.sleep(for: self.duration)
     return ""
@@ -51,7 +60,10 @@ final class SleepingQuery: QueryProtocol, @unchecked Sendable {
 struct FailingQuery: QueryProtocol, Hashable {
   struct SomeError: Equatable, Error {}
 
-  func fetch(in context: QueryContext) async throws -> String {
+  func fetch(
+    in context: QueryContext,
+    with continuation: QueryContinuation<String>
+  ) async throws -> String {
     throw SomeError()
   }
 }
@@ -75,7 +87,9 @@ final actor CountingQuery: QueryProtocol {
     self.shouldFail = true
   }
 
-  func fetch(in context: QueryContext) async throws -> Int {
+  func fetch(in context: QueryContext, with continuation: QueryContinuation<Int>) async throws
+    -> Int
+  {
     await self.sleep()
     self.fetchCount += 1
     if self.shouldFail {
@@ -90,7 +104,9 @@ final actor CountingQuery: QueryProtocol {
 // MARK: - EndlesQuery
 
 struct EndlessQuery: QueryProtocol, Hashable {
-  func fetch(in context: QueryContext) async throws -> String {
+  func fetch(in context: QueryContext, with continuation: QueryContinuation<String>) async throws
+    -> String
+  {
     try await Task.never()
     return ""
   }
@@ -113,7 +129,10 @@ actor FlakeyQuery: QueryProtocol {
     self.result = nil
   }
 
-  func fetch(in context: QueryContext) async throws -> String {
+  func fetch(
+    in context: QueryContext,
+    with continuation: QueryContinuation<String>
+  ) async throws -> String {
     struct SomeError: Error {}
     guard let result else { throw SomeError() }
     return result
@@ -126,7 +145,10 @@ struct PathableQuery: QueryProtocol {
   let value: Int
   let path: QueryPath
 
-  func fetch(in context: QueryContext) async throws -> Int {
+  func fetch(
+    in context: QueryContext,
+    with continuation: QueryContinuation<Int>
+  ) async throws -> Int {
     self.value
   }
 }
@@ -138,7 +160,10 @@ struct SucceedOnNthRefetchQuery: QueryProtocol, Hashable {
 
   let index: Int
 
-  func fetch(in context: QueryContext) async throws -> String {
+  func fetch(
+    in context: QueryContext,
+    with continuation: QueryContinuation<String>
+  ) async throws -> String {
     if context.queryRetryIndex < self.index {
       throw SomeError()
     }
@@ -157,7 +182,10 @@ final actor ContextReadingQuery: QueryProtocol {
     [ObjectIdentifier(self)]
   }
 
-  func fetch(in context: QueryContext) async throws -> String {
+  func fetch(
+    in context: QueryContext,
+    with continuation: QueryContinuation<String>
+  ) async throws -> String {
     self.latestContext = context
     return ""
   }
@@ -223,7 +251,10 @@ struct FakeInfiniteQuery: QueryProtocol, Hashable {
   typealias State = InfiniteQueryState<Int, String>
   typealias Value = InfiniteQueryValue<Int, String>
 
-  func fetch(in context: QueryContext) async throws -> Value {
+  func fetch(
+    in context: QueryContext,
+    with continuation: QueryContinuation<Value>
+  ) async throws -> Value {
     fatalError()
   }
 }
@@ -382,7 +413,11 @@ final class FailableInfiniteQuery: InfiniteQueryProtocol {
 struct EmptyMutation: MutationProtocol, Hashable {
   typealias Value = String
 
-  func mutate(with arguments: String, in context: QueryContext) async throws -> String {
+  func mutate(
+    with arguments: String,
+    in context: QueryContext,
+    with continuation: QueryContinuation<String>
+  ) async throws -> String {
     arguments
   }
 }
@@ -392,7 +427,11 @@ struct EmptyMutation: MutationProtocol, Hashable {
 struct EmptyIntMutation: MutationProtocol, Hashable {
   typealias Value = Int
 
-  func mutate(with arguments: Int, in context: QueryContext) async throws -> Int {
+  func mutate(
+    with arguments: Int,
+    in context: QueryContext,
+    with continuation: QueryContinuation<Int>
+  ) async throws -> Int {
     arguments
   }
 }
@@ -416,7 +455,11 @@ final class SleepingMutation: MutationProtocol, @unchecked Sendable {
     ["test-sleeping-mutation", self.duration]
   }
 
-  func mutate(with arguments: String, in context: QueryContext) async throws -> String {
+  func mutate(
+    with arguments: String,
+    in context: QueryContext,
+    with continuation: QueryContinuation<String>
+  ) async throws -> String {
     self.didBeginSleeping?()
     try await self.clock.sleep(for: self.duration)
     return ""
@@ -434,7 +477,11 @@ final class FailableMutation: MutationProtocol {
     [ObjectIdentifier(self)]
   }
 
-  func mutate(with arguments: String, in context: QueryContext) async throws -> String {
+  func mutate(
+    with arguments: String,
+    in context: QueryContext,
+    with continuation: QueryContinuation<String>
+  ) async throws -> String {
     try self.state.withLock { state in
       if let state {
         return state
@@ -486,7 +533,11 @@ final class WaitableMutation: MutationProtocol {
     }
   }
 
-  func mutate(with arguments: String, in context: QueryContext) async throws -> String {
+  func mutate(
+    with arguments: String,
+    in context: QueryContext,
+    with continuation: QueryContinuation<String>
+  ) async throws -> String {
     self.state.withLock { $0.onLoading[arguments]?() }
     if self.state.withLock({ $0.willWait }) {
       await self.advance(on: arguments)

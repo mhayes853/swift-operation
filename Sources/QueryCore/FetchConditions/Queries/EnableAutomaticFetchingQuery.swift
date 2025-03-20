@@ -16,8 +16,12 @@ private struct EnableAutomaticFetchingModifier<Query: QueryProtocol>: QueryModif
     query.setup(context: &context)
   }
 
-  func fetch(in context: QueryContext, using query: Query) async throws -> Query.Value {
-    try await query.fetch(in: context)
+  func fetch(
+    in context: QueryContext,
+    using query: Query,
+    with continuation: QueryContinuation<Query.Value>
+  ) async throws -> Query.Value {
+    try await query.fetch(in: context, with: continuation)
   }
 }
 

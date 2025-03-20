@@ -24,8 +24,11 @@ public struct DefaultInfiniteQuery<Query: InfiniteQueryProtocol>: QueryProtocol 
     self.query.setup(context: &context)
   }
 
-  public func fetch(in context: QueryContext) async throws -> Query.Value {
-    try await self.query.fetch(in: context)
+  public func fetch(
+    in context: QueryContext,
+    with continuation: QueryContinuation<Query.Value>
+  ) async throws -> Query.Value {
+    try await self.query.fetch(in: context, with: continuation)
   }
 }
 
