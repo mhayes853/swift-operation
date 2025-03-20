@@ -210,7 +210,9 @@ extension QueryStore {
     task: LockedBox<QueryTask<State.QueryValue>?>,
     context: QueryContext
   ) -> QueryContinuation<State.QueryValue> {
-    QueryContinuation { result in
+    var context = context
+    context.queryResultUpdateReason = .yieldedResult
+    return QueryContinuation { [context] result in
       self._state.inner.withLock { state in
         task.inner.withLock {
           guard let task = $0 else { return }

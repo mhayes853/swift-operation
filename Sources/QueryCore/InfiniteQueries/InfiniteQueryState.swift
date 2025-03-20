@@ -132,13 +132,15 @@ extension InfiniteQueryState: QueryStateProtocol {
         self.hasPreviousPage = value.previousPageId != nil
       case let .nextPage(next?):
         if let index = self.currentValue.firstIndex(where: { $0.id == next.lastPage.id }) {
-          self.currentValue.insert(next.page, at: index + 1)
+          let (_, index) = self.currentValue.insert(next.page, at: index + 1)
+          self.currentValue[index] = next.page
         }
         self.hasNextPage = value.nextPageId != nil
         self.hasPreviousPage = value.previousPageId != nil
       case let .previousPage(previous?):
         if let index = self.currentValue.firstIndex(where: { $0.id == previous.firstPage.id }) {
-          self.currentValue.insert(previous.page, at: index)
+          let (_, index) = self.currentValue.insert(previous.page, at: index)
+          self.currentValue[index] = previous.page
         }
         self.hasNextPage = value.nextPageId != nil
         self.hasPreviousPage = value.previousPageId != nil

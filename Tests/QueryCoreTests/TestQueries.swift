@@ -351,6 +351,63 @@ final class TestInfiniteQuery: InfiniteQueryProtocol {
   struct PageNotFoundError: Error {}
 }
 
+// MARK: - TestYieldableInfiniteQuery
+
+final class TestYieldableInfiniteQuery: InfiniteQueryProtocol {
+  static func finalValue(for id: PageID) -> String {
+    "page final value \(id)"
+  }
+
+  static func finalPage(for id: PageID) -> InfiniteQueryPage<Int, String> {
+    InfiniteQueryPage(id: id, value: finalValue(for: id))
+  }
+
+  let initialPageId = 0
+  let shouldThrow: Bool
+
+  init(shouldThrow: Bool = false) {
+    self.shouldThrow = shouldThrow
+  }
+
+  let state = Lock([Int: [Result<PageValue, any Error>]]())
+
+  var path: QueryPath {
+    [ObjectIdentifier(self)]
+  }
+
+  func pageId(
+    after page: InfiniteQueryPage<Int, String>,
+    using paging: InfiniteQueryPaging<Int, String>
+  ) -> Int? {
+    page.id + 1
+  }
+
+  func pageId(
+    before page: InfiniteQueryPage<Int, String>,
+    using paging: InfiniteQueryPaging<Int, String>
+  ) -> Int? {
+    page.id - 1
+  }
+
+  func fetchPage(
+    using paging: InfiniteQueryPaging<Int, String>,
+    in context: QueryContext,
+    with continuation: QueryContinuation<String>
+  ) async throws -> String {
+    self.state.withLock {
+      for result in $0[paging.pageId] ?? [] {
+        continuation.yield(with: result)
+      }
+    }
+    if self.shouldThrow {
+      throw TestYieldableInfiniteQuery.SomeError()
+    }
+    return Self.finalValue(for: paging.pageId)
+  }
+
+  struct SomeError: Equatable, Error {}
+}
+
 // MARK: - WaitableInfiniteQuery
 
 final class WaitableInfiniteQuery: InfiniteQueryProtocol {

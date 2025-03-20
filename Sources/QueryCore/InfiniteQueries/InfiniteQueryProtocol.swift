@@ -132,19 +132,25 @@ extension InfiniteQueryProtocol {
     let paging = context.paging(for: self)
     switch paging.request {
     case .allPages:
-      return try await self.fetchAllPages(using: paging, in: context)
+      return try await self.fetchAllPages(using: paging, in: context, with: continuation)
     case .initialPage:
-      return try await self.fetchInitialPage(using: paging, in: context)
+      return try await self.fetchInitialPage(using: paging, in: context, with: continuation)
     case let .nextPage(id):
-      return try await self.fetchNextPage(with: id, using: paging, in: context)
+      return try await self.fetchNextPage(with: id, using: paging, in: context, with: continuation)
     case let .previousPage(id):
-      return try await self.fetchPreviousPage(with: id, using: paging, in: context)
+      return try await self.fetchPreviousPage(
+        with: id,
+        using: paging,
+        in: context,
+        with: continuation
+      )
     }
   }
 
   private func fetchAllPages(
     using paging: InfiniteQueryPaging<PageID, PageValue>,
-    in context: QueryContext
+    in context: QueryContext,
+    with continuation: QueryContinuation<Value>
   ) async throws -> InfiniteQueryValue<PageID, PageValue> {
     var newPages = InfiniteQueryPages<PageID, PageValue>(uniqueElements: [])
     var lastPage: InfiniteQueryPage<PageID, PageValue>?
@@ -167,24 +173,58 @@ extension InfiniteQueryProtocol {
       }
       let pageValue = try await self.fetchPageWithPublishedEvents(
         using: InfiniteQueryPaging(pageId: pageId, pages: newPages, request: .allPages),
-        in: context
+        in: context,
+        with: QueryContinuation { [newPages] result in
+          continuation.yield(
+            with: result.map {
+              var pages = newPages
+              pages.append(InfiniteQueryPage(id: pageId, value: $0))
+              return self.allPagesValue(pages: pages, paging: paging, in: context)
+            }
+          )
+        }
       )
       let page = InfiniteQueryPage(id: pageId, value: pageValue)
       lastPage = page
       newPages.append(page)
     }
-    return InfiniteQueryValue(
-      nextPageId: newPages.last.flatMap { self.pageId(after: $0, using: paging) },
-      previousPageId: newPages.first.flatMap { self.pageId(before: $0, using: paging) },
-      response: .allPages(newPages)
+    return self.allPagesValue(pages: newPages, paging: paging, in: context)
+  }
+
+  private func allPagesValue(
+    pages: InfiniteQueryPages<PageID, PageValue>,
+    paging: InfiniteQueryPaging<PageID, PageValue>,
+    in context: QueryContext
+  ) -> Value {
+    InfiniteQueryValue(
+      nextPageId: pages.last.flatMap { self.pageId(after: $0, using: paging) },
+      previousPageId: pages.first.flatMap { self.pageId(before: $0, using: paging) },
+      response: .allPages(pages)
     )
   }
 
   private func fetchInitialPage(
     using paging: InfiniteQueryPaging<PageID, PageValue>,
-    in context: QueryContext
+    in context: QueryContext,
+    with continuation: QueryContinuation<Value>
   ) async throws -> InfiniteQueryValue<PageID, PageValue> {
-    let pageValue = try await self.fetchPageWithPublishedEvents(using: paging, in: context)
+    let pageValue = try await self.fetchPageWithPublishedEvents(
+      using: paging,
+      in: context,
+      with: QueryContinuation { result in
+        continuation.yield(
+          with: result.map { self.initialPageValue(pageValue: $0, using: paging, in: context) }
+        )
+      }
+    )
+    return self.initialPageValue(pageValue: pageValue, using: paging, in: context)
+  }
+
+  private func initialPageValue(
+    pageValue: PageValue,
+    using paging: InfiniteQueryPaging<PageID, PageValue>,
+    in context: QueryContext
+  ) -> Value {
     let page = InfiniteQueryPage(id: self.initialPageId, value: pageValue)
     return InfiniteQueryValue(
       nextPageId: self.pageId(after: page, using: paging),
@@ -196,12 +236,29 @@ extension InfiniteQueryProtocol {
   private func fetchNextPage(
     with pageId: PageID,
     using paging: InfiniteQueryPaging<PageID, PageValue>,
-    in context: QueryContext
+    in context: QueryContext,
+    with continuation: QueryContinuation<Value>
   ) async throws -> InfiniteQueryValue<PageID, PageValue> {
     let pageValue = try await self.fetchPageWithPublishedEvents(
       using: InfiniteQueryPaging(pageId: pageId, pages: paging.pages, request: paging.request),
-      in: context
+      in: context,
+      with: QueryContinuation { result in
+        continuation.yield(
+          with: result.map {
+            self.nextPageValue(pageValue: $0, with: pageId, using: paging, in: context)
+          }
+        )
+      }
     )
+    return self.nextPageValue(pageValue: pageValue, with: pageId, using: paging, in: context)
+  }
+
+  private func nextPageValue(
+    pageValue: PageValue,
+    with pageId: PageID,
+    using paging: InfiniteQueryPaging<PageID, PageValue>,
+    in context: QueryContext
+  ) -> Value {
     let page = InfiniteQueryPage(id: pageId, value: pageValue)
     return InfiniteQueryValue(
       nextPageId: self.pageId(after: page, using: paging),
@@ -213,12 +270,29 @@ extension InfiniteQueryProtocol {
   private func fetchPreviousPage(
     with pageId: PageID,
     using paging: InfiniteQueryPaging<PageID, PageValue>,
-    in context: QueryContext
+    in context: QueryContext,
+    with continuation: QueryContinuation<Value>
   ) async throws -> InfiniteQueryValue<PageID, PageValue> {
     let pageValue = try await self.fetchPageWithPublishedEvents(
       using: InfiniteQueryPaging(pageId: pageId, pages: paging.pages, request: paging.request),
-      in: context
+      in: context,
+      with: QueryContinuation { result in
+        continuation.yield(
+          with: result.map {
+            self.previousPageValue(pageValue: $0, with: pageId, using: paging, in: context)
+          }
+        )
+      }
     )
+    return self.previousPageValue(pageValue: pageValue, with: pageId, using: paging, in: context)
+  }
+
+  private func previousPageValue(
+    pageValue: PageValue,
+    with pageId: PageID,
+    using paging: InfiniteQueryPaging<PageID, PageValue>,
+    in context: QueryContext
+  ) -> Value {
     let page = InfiniteQueryPage(id: pageId, value: pageValue)
     return InfiniteQueryValue(
       nextPageId: paging.pages.last.flatMap { self.pageId(after: $0, using: paging) },
@@ -231,14 +305,21 @@ extension InfiniteQueryProtocol {
 
   private func fetchPageWithPublishedEvents(
     using paging: InfiniteQueryPaging<PageID, PageValue>,
-    in context: QueryContext
+    in context: QueryContext,
+    with continuation: QueryContinuation<PageValue>
   ) async throws -> PageValue {
     let id = AnyHashableSendable(paging.pageId)
     context.infiniteValues.subscriptions.forEach { sub in
       sub.onPageFetchingStarted?(id, context)
     }
+    let continuation = QueryContinuation<PageValue> { result in
+      continuation.yield(with: result)
+      context.infiniteValues.subscriptions.forEach { sub in
+        sub.onPageResultReceived?(id, result.map { InfiniteQueryPage(id: id, value: $0) }, context)
+      }
+    }
     let result = await Result {
-      try await self.fetchPage(using: paging, in: context, with: QueryContinuation { _ in })
+      try await self.fetchPage(using: paging, in: context, with: continuation)
     }
     context.infiniteValues.subscriptions.forEach { sub in
       sub.onPageResultReceived?(id, result.map { InfiniteQueryPage(id: id, value: $0) }, context)

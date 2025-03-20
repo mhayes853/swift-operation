@@ -284,8 +284,9 @@ extension InfiniteQueryStore {
     QueryEventHandler(
       onFetchingStarted: handler.onFetchingStarted,
       onFetchingEnded: handler.onFetchingFinished,
-      onResultReceived: {
-        handler.onResultReceived?($0.map { [weak self] _ in self?.currentValue ?? [] }, $1)
+      onResultReceived: { result, context in
+        guard context.queryResultUpdateReason == .returnedFinalResult else { return }
+        handler.onResultReceived?(result.map { [weak self] _ in self?.currentValue ?? [] }, context)
       }
     )
   }

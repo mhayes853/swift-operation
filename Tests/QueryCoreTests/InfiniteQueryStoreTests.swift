@@ -841,4 +841,149 @@ struct InfiniteQueryStoreTests {
     expectNoDifference(store.errorUpdateCount, 1)
     expectNoDifference(store.errorLastUpdatedAt, date.withLock { $0 })
   }
+
+  @Test("Yields Multiple Values During Query For Initial Page")
+  func yieldsMultipleValuesDuringQueryForInitialPage() async throws {
+    let query = TestYieldableInfiniteQuery()
+    query.state.withLock { $0[0] = [.success("blob"), .success("blob jr")] }
+    let store = self.client.store(for: query)
+    let collector = InfiniteQueryStoreEventsCollector<
+      TestYieldableInfiniteQuery.PageID, TestYieldableInfiniteQuery.PageValue
+    >()
+    let value = try await store.fetchNextPage(handler: collector.eventHandler())
+    let finalPage = InfiniteQueryPage(id: 0, value: TestYieldableInfiniteQuery.finalValue(for: 0))
+
+    collector.expectEventsMatch([
+      .fetchingStarted,
+      .pageFetchingStarted(0),
+      .pageResultReceived(0, .success(InfiniteQueryPage(id: 0, value: "blob"))),
+      .pageResultReceived(0, .success(InfiniteQueryPage(id: 0, value: "blob jr"))),
+      .pageResultReceived(0, .success(finalPage)),
+      .pageFetchingEnded(0),
+      .resultReceived(.success([finalPage])),
+      .fetchingEnded
+    ])
+    expectNoDifference(value, finalPage)
+    expectNoDifference(store.currentValue, [finalPage])
+  }
+
+  @Test("Yields Multiple Values During Query For Next Page")
+  func yieldsMultipleValuesDuringQueryForNextPage() async throws {
+    let query = TestYieldableInfiniteQuery()
+    query.state.withLock { $0[1] = [.success("blob"), .success("blob jr")] }
+    let store = self.client.store(for: query)
+    let collector = InfiniteQueryStoreEventsCollector<
+      TestYieldableInfiniteQuery.PageID, TestYieldableInfiniteQuery.PageValue
+    >()
+    try await store.fetchNextPage()
+    let value = try await store.fetchNextPage(handler: collector.eventHandler())
+    let finalPage = TestYieldableInfiniteQuery.finalPage(for: 1)
+    let firstPage = TestYieldableInfiniteQuery.finalPage(for: 0)
+
+    collector.expectEventsMatch([
+      .fetchingStarted,
+      .pageFetchingStarted(1),
+      .pageResultReceived(1, .success(InfiniteQueryPage(id: 1, value: "blob"))),
+      .pageResultReceived(1, .success(InfiniteQueryPage(id: 1, value: "blob jr"))),
+      .pageResultReceived(1, .success(finalPage)),
+      .pageFetchingEnded(1),
+      .resultReceived(.success([firstPage, finalPage])),
+      .fetchingEnded
+    ])
+    expectNoDifference(value, finalPage)
+    expectNoDifference(store.currentValue, [firstPage, finalPage])
+  }
+
+  @Test("Yields Multiple Values During Query For Previous Page")
+  func yieldsMultipleValuesDuringQueryForPreviousPage() async throws {
+    let query = TestYieldableInfiniteQuery()
+    query.state.withLock { $0[-1] = [.success("blob"), .success("blob jr")] }
+    let store = self.client.store(for: query)
+    let collector = InfiniteQueryStoreEventsCollector<
+      TestYieldableInfiniteQuery.PageID, TestYieldableInfiniteQuery.PageValue
+    >()
+    try await store.fetchPreviousPage()
+    let value = try await store.fetchPreviousPage(handler: collector.eventHandler())
+    let finalPage = TestYieldableInfiniteQuery.finalPage(for: -1)
+    let firstPage = TestYieldableInfiniteQuery.finalPage(for: 0)
+
+    collector.expectEventsMatch([
+      .fetchingStarted,
+      .pageFetchingStarted(-1),
+      .pageResultReceived(-1, .success(InfiniteQueryPage(id: -1, value: "blob"))),
+      .pageResultReceived(-1, .success(InfiniteQueryPage(id: -1, value: "blob jr"))),
+      .pageResultReceived(-1, .success(finalPage)),
+      .pageFetchingEnded(-1),
+      .resultReceived(.success([finalPage, firstPage])),
+      .fetchingEnded
+    ])
+    expectNoDifference(value, finalPage)
+    expectNoDifference(store.currentValue, [finalPage, firstPage])
+  }
+
+  @Test("Yields Multiple Values During Query For All Pages")
+  func yieldsMultipleValuesDuringQueryForAllPages() async throws {
+    struct SomeError: Error {}
+
+    let query = TestYieldableInfiniteQuery()
+    query.state.withLock {
+      $0[0] = [.success("blob"), .success("blob jr")]
+      $0[1] = [.success("trob"), .failure(SomeError())]
+    }
+    let store = self.client.store(for: query)
+    let collector = InfiniteQueryStoreEventsCollector<
+      TestYieldableInfiniteQuery.PageID, TestYieldableInfiniteQuery.PageValue
+    >()
+    try await store.fetchNextPage()
+    try await store.fetchNextPage()
+    let value = try await store.fetchAllPages(handler: collector.eventHandler())
+
+    collector.expectEventsMatch([
+      .fetchingStarted,
+      .pageFetchingStarted(0),
+      .pageResultReceived(0, .success(InfiniteQueryPage(id: 0, value: "blob"))),
+      .pageResultReceived(0, .success(InfiniteQueryPage(id: 0, value: "blob jr"))),
+      .pageResultReceived(0, .success(TestYieldableInfiniteQuery.finalPage(for: 0))),
+      .pageFetchingEnded(0),
+      .pageFetchingStarted(1),
+      .pageResultReceived(1, .success(InfiniteQueryPage(id: 1, value: "trob"))),
+      .pageResultReceived(1, .failure(SomeError())),
+      .pageResultReceived(1, .success(TestYieldableInfiniteQuery.finalPage(for: 1))),
+      .pageFetchingEnded(1),
+      .resultReceived(.success(value)),
+      .fetchingEnded
+    ])
+    expectNoDifference(
+      value,
+      [TestYieldableInfiniteQuery.finalPage(for: 0), TestYieldableInfiniteQuery.finalPage(for: 1)]
+    )
+    expectNoDifference(store.errorLastUpdatedAt != nil, true)
+    expectNoDifference(store.currentValue, value)
+  }
+
+  @Test("Yields Value Then Error During Query")
+  func yieldsValueThenErrorDuringQuery() async throws {
+    let query = TestYieldableInfiniteQuery(shouldThrow: true)
+    query.state.withLock { $0[0] = [.success("blob")] }
+    let store = self.client.store(for: query)
+    let collector = InfiniteQueryStoreEventsCollector<
+      TestYieldableInfiniteQuery.PageID, TestYieldableInfiniteQuery.PageValue
+    >()
+    let value = try? await store.fetchPreviousPage(handler: collector.eventHandler())
+
+    collector.expectEventsMatch([
+      .fetchingStarted,
+      .pageFetchingStarted(0),
+      .pageResultReceived(0, .success(InfiniteQueryPage(id: 0, value: "blob"))),
+      .pageResultReceived(0, .failure(TestYieldableInfiniteQuery.SomeError())),
+      .pageFetchingEnded(0),
+      .resultReceived(.failure(TestYieldableInfiniteQuery.SomeError())),
+      .fetchingEnded
+    ])
+    expectNoDifference(value, nil)
+    expectNoDifference(
+      store.error as? TestYieldableInfiniteQuery.SomeError,
+      TestYieldableInfiniteQuery.SomeError()
+    )
+  }
 }
