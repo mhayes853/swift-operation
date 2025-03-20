@@ -16,13 +16,13 @@ private struct RetryModifier<Query: QueryProtocol>: QueryModifier {
   let delayer: (any QueryDelayer)?
 
   func setup(context: inout QueryContext, using query: Query) {
-    context.maxRetryIndex = self.limit
+    context.maxRetries = self.limit
     query.setup(context: &context)
   }
 
   func fetch(in context: QueryContext, using query: Query) async throws -> Query.Value {
     var context = context
-    for index in 0..<self.limit {
+    for index in 0..<context.maxRetries {
       do {
         context.retryIndex = index
         return try await query.fetch(in: context)
@@ -30,7 +30,7 @@ private struct RetryModifier<Query: QueryProtocol>: QueryModifier {
         continue
       }
     }
-    context.retryIndex = self.limit
+    context.retryIndex = context.maxRetries
     return try await query.fetch(in: context)
   }
 }
@@ -47,7 +47,7 @@ extension QueryContext {
     static let defaultValue = 0
   }
 
-  public var maxRetryIndex: Int {
+  public var maxRetries: Int {
     get { self[MaxRetryIndexKey.self] }
     set { self[MaxRetryIndexKey.self] = newValue }
   }
