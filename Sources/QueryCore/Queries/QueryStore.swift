@@ -181,15 +181,7 @@ extension QueryStore {
       do {
         let value = try await self._query.fetch(
           in: context,
-          with: QueryContinuation { result in
-            self._state.inner.withLock { state in
-              task.inner.withLock {
-                guard let task = $0 else { return }
-                state.query.update(with: result, for: task)
-              }
-              self.subscriptions.forEach { $0.onResultReceived?(result, context) }
-            }
-          }
+          with: self.queryContinuation(task: task, context: context)
         )
         self._state.inner.withLock { state in
           task.inner.withLock {
@@ -210,6 +202,21 @@ extension QueryStore {
           self.subscriptions.forEach { $0.onResultReceived?(.failure(error), context) }
         }
         throw error
+      }
+    }
+  }
+
+  private func queryContinuation(
+    task: LockedBox<QueryTask<State.QueryValue>?>,
+    context: QueryContext
+  ) -> QueryContinuation<State.QueryValue> {
+    QueryContinuation { result in
+      self._state.inner.withLock { state in
+        task.inner.withLock {
+          guard let task = $0 else { return }
+          state.query.update(with: result, for: task)
+        }
+        self.subscriptions.forEach { $0.onResultReceived?(result, context) }
       }
     }
   }

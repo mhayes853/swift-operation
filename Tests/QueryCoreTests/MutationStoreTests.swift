@@ -402,4 +402,69 @@ struct MutationStoreTests {
     expectNoDifference(store.errorLastUpdatedAt, clock.date)
     expectNoDifference(store.errorUpdateCount, 3)
   }
+
+  @Test("Yields Multiple Values During Mutation")
+  func yieldsMultipleValuesDuringMutation() async throws {
+    let mutation = ContinuingMutation()
+    let store = self.client.store(for: mutation)
+    let collector = MutationStoreEventsCollector<
+      ContinuingMutation.Arguments, ContinuingMutation.Value
+    >()
+    let value = try await store.mutate(with: "foo", handler: collector.eventHandler())
+
+    collector.expectEventsMatch([
+      .mutatingStarted("foo"),
+      .mutationResultReceived("foo", .success(ContinuingMutation.values[0])),
+      .mutationResultReceived("foo", .success(ContinuingMutation.values[1])),
+      .mutationResultReceived("foo", .success(ContinuingMutation.values[2])),
+      .mutationResultReceived("foo", .success(ContinuingMutation.finalValue)),
+      .mutatingEnded("foo")
+    ])
+    expectNoDifference(value, ContinuingQuery.finalValue)
+  }
+
+  @Test("Yields Error Then Success During Mutation")
+  func yieldsErrorThenSuccessDuringMutation() async throws {
+    let mutation = ContinuingErrorMutation()
+    let store = self.client.store(for: mutation)
+    let collector = MutationStoreEventsCollector<
+      ContinuingErrorMutation.Arguments, ContinuingErrorMutation.Value
+    >()
+    let value = try await store.mutate(with: "foo", handler: collector.eventHandler())
+
+    collector.expectEventsMatch([
+      .mutatingStarted("foo"),
+      .mutationResultReceived("foo", .failure(ContinuingErrorMutation.SomeError())),
+      .mutationResultReceived("foo", .success(ContinuingErrorMutation.finalValue)),
+      .mutatingEnded("foo")
+    ])
+    expectNoDifference(value, ContinuingErrorQuery.finalValue)
+    expectNoDifference(
+      store.error as? ContinuingErrorQuery.SomeError,
+      nil
+    )
+    expectNoDifference(store.errorLastUpdatedAt != nil, true)
+  }
+
+  @Test("Yields Value Then Error During Mutation")
+  func yieldsValueThenErrorDuringMutation() async throws {
+    let mutation = ContinuingValueThenErrorMutation()
+    let store = self.client.store(for: mutation)
+    let collector = MutationStoreEventsCollector<
+      ContinuingValueThenErrorMutation.Arguments, ContinuingValueThenErrorMutation.Value
+    >()
+    let value = try? await store.mutate(with: "foo", handler: collector.eventHandler())
+
+    collector.expectEventsMatch([
+      .mutatingStarted("foo"),
+      .mutationResultReceived("foo", .success(ContinuingValueThenErrorMutation.value)),
+      .mutationResultReceived("foo", .failure(ContinuingValueThenErrorMutation.SomeError())),
+      .mutatingEnded("foo")
+    ])
+    expectNoDifference(value, nil)
+    expectNoDifference(
+      store.error as? ContinuingValueThenErrorMutation.SomeError,
+      ContinuingValueThenErrorMutation.SomeError()
+    )
+  }
 }

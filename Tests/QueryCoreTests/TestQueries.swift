@@ -595,3 +595,61 @@ final class WaitableMutation: MutationProtocol {
     return arguments
   }
 }
+
+// MARK: - ContinuingMutation
+
+struct ContinuingMutation: MutationProtocol, Hashable {
+  typealias Value = String
+
+  static let values = ["blob", "blob jr", "blob sr"]
+  static let finalValue = "the end"
+
+  func mutate(
+    with arguments: String,
+    in context: QueryContext,
+    with continuation: QueryContinuation<String>
+  ) async throws -> String {
+    for value in Self.values {
+      continuation.yield(value)
+    }
+    return Self.finalValue
+  }
+}
+
+// MARK: - ContinuingErrorMutation
+
+struct ContinuingErrorMutation: MutationProtocol, Hashable {
+  typealias Value = String
+
+  static let finalValue = "the end"
+
+  func mutate(
+    with arguments: String,
+    in context: QueryContext,
+    with continuation: QueryContinuation<String>
+  ) async throws -> String {
+    continuation.yield(error: SomeError())
+    return Self.finalValue
+  }
+
+  struct SomeError: Equatable, Error {}
+}
+
+// MARK: - ContinuingValueThenErrorMutation
+
+struct ContinuingValueThenErrorMutation: MutationProtocol, Hashable {
+  typealias Value = String
+
+  static let value = "the end"
+
+  func mutate(
+    with arguments: String,
+    in context: QueryContext,
+    with continuation: QueryContinuation<String>
+  ) async throws -> String {
+    continuation.yield(Self.value)
+    throw SomeError()
+  }
+
+  struct SomeError: Equatable, Error {}
+}
