@@ -1,6 +1,6 @@
 // MARK: - NotCondition
 
-public struct NotCondition<Base: FetchCondition> {
+public struct NotCondition<Base: FetchCondition>: FetchCondition {
   @usableFromInline
   let base: Base
 
