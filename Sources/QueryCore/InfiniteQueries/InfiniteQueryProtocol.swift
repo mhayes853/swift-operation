@@ -112,7 +112,8 @@ where
 
   func fetchPage(
     using paging: InfiniteQueryPaging<PageID, PageValue>,
-    in context: QueryContext
+    in context: QueryContext,
+    with continuation: QueryContinuation<PageValue>
   ) async throws -> PageValue
 }
 
@@ -236,7 +237,9 @@ extension InfiniteQueryProtocol {
     context.infiniteValues.subscriptions.forEach { sub in
       sub.onPageFetchingStarted?(id, context)
     }
-    let result = await Result { try await self.fetchPage(using: paging, in: context) }
+    let result = await Result {
+      try await self.fetchPage(using: paging, in: context, with: QueryContinuation { _ in })
+    }
     context.infiniteValues.subscriptions.forEach { sub in
       sub.onPageResultReceived?(id, result.map { InfiniteQueryPage(id: id, value: $0) }, context)
       sub.onPageFetchingFinished?(id, context)

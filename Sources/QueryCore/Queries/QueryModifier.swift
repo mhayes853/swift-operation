@@ -76,9 +76,10 @@ extension ModifiedQuery: InfiniteQueryProtocol where Query: InfiniteQueryProtoco
 
   public func fetchPage(
     using paging: InfiniteQueryPaging<PageID, PageValue>,
-    in context: QueryContext
+    in context: QueryContext,
+    with continuation: QueryContinuation<PageValue>
   ) async throws -> PageValue {
-    try await self.query.fetchPage(using: paging, in: context)
+    try await self.query.fetchPage(using: paging, in: context, with: continuation)
   }
 }
 

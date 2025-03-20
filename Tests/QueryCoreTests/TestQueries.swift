@@ -262,7 +262,8 @@ struct EmptyInfiniteQuery: InfiniteQueryProtocol {
 
   func fetchPage(
     using paging: InfiniteQueryPaging<PageID, PageValue>,
-    in context: QueryContext
+    in context: QueryContext,
+    with continuation: QueryContinuation<String>
   ) async throws -> String {
     ""
   }
@@ -288,7 +289,8 @@ struct EmptyIntInfiniteQuery: InfiniteQueryProtocol {
 
   func fetchPage(
     using paging: InfiniteQueryPaging<Int, Int>,
-    in context: QueryContext
+    in context: QueryContext,
+    with continuation: QueryContinuation<Int>
   ) async throws -> Int {
     0
   }
@@ -335,7 +337,8 @@ final class TestInfiniteQuery: InfiniteQueryProtocol {
 
   func fetchPage(
     using paging: InfiniteQueryPaging<Int, String>,
-    in context: QueryContext
+    in context: QueryContext,
+    with continuation: QueryContinuation<String>
   ) async throws -> String {
     try self.state.withLock {
       if let value = $0[paging.pageId] {
@@ -406,7 +409,8 @@ final class WaitableInfiniteQuery: InfiniteQueryProtocol {
 
   func fetchPage(
     using paging: InfiniteQueryPaging<Int, String>,
-    in context: QueryContext
+    in context: QueryContext,
+    with continuation: QueryContinuation<String>
   ) async throws -> String {
     self.state.withLock { $0.onLoading() }
     if self.state.withLock({ $0.willWait }) {
@@ -444,7 +448,8 @@ final class FailableInfiniteQuery: InfiniteQueryProtocol {
 
   func fetchPage(
     using paging: InfiniteQueryPaging<Int, String>,
-    in context: QueryContext
+    in context: QueryContext,
+    with continuation: QueryContinuation<String>
   ) async throws -> String {
     try self.state.withLock { state in
       if let state {
