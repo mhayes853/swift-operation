@@ -59,21 +59,30 @@ struct RetryQueryTests {
   func maxRetriesIsBasedOffOfLimit() async throws {
     let query = FailingQuery().retry(limit: 10, backoff: .noBackoff, delayer: .noDelay)
     let store = QueryStoreFor<FailingQuery>.detached(query: query, initialValue: nil)
-    expectNoDifference(store.context.maxRetries, 10)
+    expectNoDifference(store.context.queryMaxRetries, 10)
   }
 
   @Test("Uses Context Max Retries Over Query Limit")
   func usesContextMaxRetriesOverQueryLimit() async throws {
     let query = CountingQuery()
     await query.ensureFails()
-    let store = QueryStoreFor<FailingQuery>
+    let store = QueryStoreFor<CountingQuery>
       .detached(
         query: query.retry(limit: 3, backoff: .noBackoff, delayer: .noDelay),
         initialValue: nil
       )
-    store.context.maxRetries = 10
+    store.context.queryMaxRetries = 10
     _ = try? await store.fetch()
     let count = await query.fetchCount
     expectNoDifference(count, 11)
+  }
+
+  @Test("Delays Between Retries Using The Specified Backoff Function")
+  func delaysBetweenRetries() async throws {
+    let delayer = TestDelayer()
+    let query = FailingQuery().retry(limit: 5, backoff: .linear(1000), delayer: delayer)
+    let store = QueryStoreFor<FailingQuery>.detached(query: query, initialValue: nil)
+    _ = try? await store.fetch()
+    expectNoDifference(delayer.delays, [1000, 2000, 3000, 4000, 5000])
   }
 }

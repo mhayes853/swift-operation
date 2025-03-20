@@ -104,7 +104,7 @@ extension QueryBackoffFunction {
 // MARK: - QueryContext
 
 extension QueryContext {
-  public var backoffFunction: QueryBackoffFunction {
+  public var queryBackoffFunction: QueryBackoffFunction {
     get { self[QueryBackoffFunctionKey.self] }
     set { self[QueryBackoffFunctionKey.self] = newValue }
   }

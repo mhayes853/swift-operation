@@ -139,7 +139,7 @@ struct SucceedOnNthRefetchQuery: QueryProtocol, Hashable {
   let index: Int
 
   func fetch(in context: QueryContext) async throws -> String {
-    if context.retryIndex < self.index {
+    if context.queryRetryIndex < self.index {
       throw SomeError()
     }
     return Self.value
