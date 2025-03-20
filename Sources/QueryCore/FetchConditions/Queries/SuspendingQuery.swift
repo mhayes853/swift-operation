@@ -13,21 +13,31 @@ private struct SuspendModifier<Query: QueryProtocol, Condition: FetchCondition>:
     guard !self.condition.isSatisfied(in: context) else {
       return try await query.fetch(in: context)
     }
-    await self.waitForTrue(in: context)
+    try await self.waitForTrue(in: context)
     return try await query.fetch(in: context)
   }
 
-  private func waitForTrue(in context: QueryContext) async {
+  private func waitForTrue(in context: QueryContext) async throws {
     var subscription: QuerySubscription?
-    let didFinish = Lock(false)
-    await withUnsafeContinuation { continuation in
-      subscription = self.condition.subscribe(in: context) { value in
-        didFinish.withLock { didFinish in
-          if value && !didFinish {
-            continuation.resume()
-            didFinish = true
+    let state = Lock<(didFinish: Bool, continuation: UnsafeContinuation<Void, any Error>?)>(
+      (false, nil)
+    )
+    try await withTaskCancellationHandler {
+      try await withUnsafeThrowingContinuation { c in
+        state.withLock { $0.continuation = c }
+        subscription = self.condition.subscribe(in: context) { value in
+          state.withLock { state in
+            if value && !state.didFinish {
+              state.continuation?.resume()
+              state.didFinish = true
+            }
           }
         }
+      }
+    } onCancel: {
+      state.withLock { state in
+        state.continuation?.resume(throwing: CancellationError())
+        state.didFinish = true
       }
     }
     _ = subscription

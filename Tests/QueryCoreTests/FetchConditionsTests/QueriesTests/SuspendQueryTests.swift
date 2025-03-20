@@ -65,4 +65,49 @@ struct SuspendQueryTests {
     let value = try await task.value
     expectNoDifference(value, TestQuery.value)
   }
+
+  @Test("Cancellation While Suspended")
+  func cancellationWhileSuspended() async throws {
+    let condition = TestCondition()
+    condition.send(false)
+    let query = TestQuery().suspend(on: .always(false))
+    let store = QueryStoreFor<TestQuery>.detached(query: query, initialValue: nil)
+
+    let task = Task { try await store.fetch() }
+    await Task.megaYield()
+    task.cancel()
+    await #expect(throws: CancellationError.self) {
+      try await task.value
+    }
+    expectNoDifference(store.status.isCancelled, true)
+  }
+
+  @Test("Cancellation While Suspended, Unsubscribes From Condition")
+  func cancellationWhileSuspendedUnsubscribesFromCondition() async throws {
+    let condition = TestCondition()
+    condition.send(false)
+    let query = TestQuery().suspend(on: condition)
+    let store = QueryStoreFor<TestQuery>.detached(query: query, initialValue: nil)
+
+    let task = Task { try await store.fetch() }
+    await Task.megaYield()
+    task.cancel()
+    _ = try? await task.value
+    expectNoDifference(condition.subscriberCount, 0)
+  }
+
+  @Test("Cancellation While Suspended, Does Not Crash When Sending True After Cancel")
+  func cancellationWhileSuspendedDoesNotCrashWhenSendingTrueAfterCancel() async throws {
+    let condition = TestCondition()
+    condition.send(false)
+    let query = TestQuery().suspend(on: condition)
+    let store = QueryStoreFor<TestQuery>.detached(query: query, initialValue: nil)
+
+    let task = Task { try await store.fetch() }
+    await Task.megaYield()
+    task.cancel()
+    condition.send(true)
+    _ = try? await task.value
+    expectNoDifference(condition.subscriberCount, 0)
+  }
 }
