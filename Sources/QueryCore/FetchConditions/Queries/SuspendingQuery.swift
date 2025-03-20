@@ -13,18 +13,20 @@ private struct SuspendModifier<Query: QueryProtocol, Condition: FetchCondition>:
     guard !self.condition.isSatisfied(in: context) else {
       return try await query.fetch(in: context)
     }
-    await self.condition.waitForTrue(in: context)
+    await self.waitForTrue(in: context)
     return try await query.fetch(in: context)
   }
-}
 
-extension FetchCondition {
-  fileprivate func waitForTrue(in context: QueryContext) async {
+  private func waitForTrue(in context: QueryContext) async {
     var subscription: QuerySubscription?
+    let didFinish = Lock(false)
     await withUnsafeContinuation { continuation in
-      subscription = self.subscribe(in: context) {
-        if $0 {
-          continuation.resume()
+      subscription = self.condition.subscribe(in: context) { value in
+        didFinish.withLock { didFinish in
+          if value && !didFinish {
+            continuation.resume()
+            didFinish = true
+          }
         }
       }
     }

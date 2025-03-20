@@ -18,12 +18,51 @@ struct SuspendQueryTests {
     condition.send(false)
     let query = TestQuery().suspend(on: condition)
     let store = QueryStoreFor<TestQuery>.detached(query: query, initialValue: nil)
+
     let task = Task { try await store.fetch() }
     await Task.megaYield()
     expectNoDifference(store.isLoading, true)
+
     condition.send(true)
     let value = try await task.value
     expectNoDifference(value, TestQuery.value)
     expectNoDifference(store.isLoading, false)
+  }
+
+  @Test("Condition False When Query Starts, Unsubscribes After Condition Is True")
+  func conditionFalseWhenQueryStartsUnsubscribesAfterConditionIsTrue() async throws {
+    let condition = TestCondition()
+    condition.send(false)
+    let query = TestQuery().suspend(on: condition)
+    let store = QueryStoreFor<TestQuery>.detached(query: query, initialValue: nil)
+
+    let task = Task { try await store.fetch() }
+    await Task.megaYield()
+    expectNoDifference(condition.subscriberCount, 1)
+
+    condition.send(true)
+    _ = try await task.value
+    expectNoDifference(condition.subscriberCount, 0)
+  }
+
+  @Test(
+    "Condition False When Query Starts, Condition Signals True Twice In a Row Quickly, Does Not Crash"
+  )
+  func conditionFalseWhenQueryStartsConditionSignalsTrueTwiceInARowQuicklyDoesNotCrash()
+    async throws
+  {
+    let condition = TestCondition()
+    condition.send(false)
+    let query = TestQuery().suspend(on: condition)
+    let store = QueryStoreFor<TestQuery>.detached(query: query, initialValue: nil)
+
+    let task = Task { try await store.fetch() }
+    await Task.megaYield()
+    expectNoDifference(condition.subscriberCount, 1)
+
+    condition.send(true)
+    condition.send(true)
+    let value = try await task.value
+    expectNoDifference(value, TestQuery.value)
   }
 }
