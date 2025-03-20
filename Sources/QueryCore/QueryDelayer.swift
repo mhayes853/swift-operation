@@ -59,6 +59,18 @@ extension QueryDelayer {
   }
 }
 
+// MARK: - NoDelayer
+
+public struct NoDelayer: QueryDelayer {
+  @inlinable
+  public func delay(for seconds: TimeInterval) async throws {
+  }
+}
+
+extension QueryDelayer where Self == NoDelayer {
+  public static var noDelay: Self { NoDelayer() }
+}
+
 // MARK: - QueryContext
 
 extension QueryContext {

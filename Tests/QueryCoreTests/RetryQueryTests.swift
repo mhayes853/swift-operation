@@ -6,7 +6,8 @@ import Testing
 struct RetryQueryTests {
   @Test("Zero Retries, Does Not Perform Any Retries")
   func zeroRetriesDoesNotPerformAnyRetries() async {
-    let query = FailingQuery().retry(limit: 0, backoff: .noBackoff).defaultValue("blob")
+    let query = FailingQuery().retry(limit: 0, backoff: .noBackoff, delayer: .noDelay)
+      .defaultValue("blob")
     let store = QueryStoreFor<FailingQuery>.detached(query: query)
     await #expect(throws: FailingQuery.SomeError.self) {
       try await store.fetch()
@@ -17,7 +18,10 @@ struct RetryQueryTests {
   func fetchErrorsThenRetriesTheSpecifiedNumberOfTimes() async {
     let query = CountingQuery()
     let store = QueryStoreFor<CountingQuery>
-      .detached(query: query.retry(limit: 3, backoff: .noBackoff), initialValue: nil)
+      .detached(
+        query: query.retry(limit: 3, backoff: .noBackoff, delayer: .noDelay),
+        initialValue: nil
+      )
     await query.ensureFails()
 
     await #expect(throws: CountingQuery.SomeError.self) {
@@ -31,7 +35,10 @@ struct RetryQueryTests {
   func succeedsOnSecondRefetchReturnsValue() async throws {
     let query = SucceedOnNthRefetchQuery(index: 2)
     let store = QueryStoreFor<SucceedOnNthRefetchQuery>
-      .detached(query: query.retry(limit: 3, backoff: .noBackoff), initialValue: nil)
+      .detached(
+        query: query.retry(limit: 3, backoff: .noBackoff, delayer: .noDelay),
+        initialValue: nil
+      )
     let value = try await store.fetch()
     expectNoDifference(value, SucceedOnNthRefetchQuery.value)
   }
@@ -40,7 +47,10 @@ struct RetryQueryTests {
   func succeedsOnFinalRefetchReturnsValue() async throws {
     let query = SucceedOnNthRefetchQuery(index: 3)
     let store = QueryStoreFor<SucceedOnNthRefetchQuery>
-      .detached(query: query.retry(limit: 3, backoff: .noBackoff), initialValue: nil)
+      .detached(
+        query: query.retry(limit: 3, backoff: .noBackoff, delayer: .noDelay),
+        initialValue: nil
+      )
     let value = try await store.fetch()
     expectNoDifference(value, SucceedOnNthRefetchQuery.value)
   }
@@ -49,7 +59,10 @@ struct RetryQueryTests {
   func maxRetriesIsBasedOffOfLimit() async throws {
     let query = FailingQuery().retry(limit: 10, backoff: .noBackoff)
     let store = QueryStoreFor<FailingQuery>
-      .detached(query: query.retry(limit: 3, backoff: .noBackoff), initialValue: nil)
+      .detached(
+        query: query.retry(limit: 3, backoff: .noBackoff, delayer: .noDelay),
+        initialValue: nil
+      )
     expectNoDifference(store.context.maxRetryIndex, 10)
   }
 }
