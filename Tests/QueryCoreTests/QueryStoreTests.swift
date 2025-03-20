@@ -340,6 +340,65 @@ struct QueryStoreTests {
     let taskName = store.fetchTask().name
     expectNoDifference(taskName, "QueryStore<QueryState<Int?, Int>> Task")
   }
+
+  @Test("Yields Multiple Values During Query")
+  func yieldsMultipleValuesDuringQuery() async throws {
+    let query = ContinuingQuery()
+    let store = self.client.store(for: query)
+    let collector = QueryStoreEventsCollector<ContinuingQuery.Value>()
+    let value = try await store.fetch(handler: collector.eventHandler())
+
+    collector.expectEventsMatch([
+      .fetchingStarted,
+      .resultReceived(.success(ContinuingQuery.values[0])),
+      .resultReceived(.success(ContinuingQuery.values[1])),
+      .resultReceived(.success(ContinuingQuery.values[2])),
+      .resultReceived(.success(ContinuingQuery.finalValue)),
+      .fetchingEnded
+    ])
+    expectNoDifference(value, ContinuingQuery.finalValue)
+  }
+
+  @Test("Yields Error Then Success During Query")
+  func yieldsErrorThenSuccessDuringQuery() async throws {
+    let query = ContinuingErrorQuery()
+    let store = self.client.store(for: query)
+    let collector = QueryStoreEventsCollector<ContinuingErrorQuery.Value>()
+    let value = try await store.fetch(handler: collector.eventHandler())
+
+    collector.expectEventsMatch([
+      .fetchingStarted,
+      .resultReceived(.failure(ContinuingErrorQuery.SomeError())),
+      .resultReceived(.success(ContinuingErrorQuery.finalValue)),
+      .fetchingEnded
+    ])
+    expectNoDifference(value, ContinuingErrorQuery.finalValue)
+    expectNoDifference(
+      store.error as? ContinuingErrorQuery.SomeError,
+      nil
+    )
+    expectNoDifference(store.errorLastUpdatedAt != nil, true)
+  }
+
+  @Test("Yields Value Then Error During Query")
+  func yieldsValueThenErrorDuringQuery() async throws {
+    let query = ContinuingValueThenErrorQuery()
+    let store = self.client.store(for: query)
+    let collector = QueryStoreEventsCollector<ContinuingValueThenErrorQuery.Value>()
+    let value = try? await store.fetch(handler: collector.eventHandler())
+
+    collector.expectEventsMatch([
+      .fetchingStarted,
+      .resultReceived(.success(ContinuingValueThenErrorQuery.value)),
+      .resultReceived(.failure(ContinuingErrorQuery.SomeError())),
+      .fetchingEnded
+    ])
+    expectNoDifference(value, nil)
+    expectNoDifference(
+      store.error as? ContinuingValueThenErrorQuery.SomeError,
+      ContinuingValueThenErrorQuery.SomeError()
+    )
+  }
 }
 
 extension QueryContext {

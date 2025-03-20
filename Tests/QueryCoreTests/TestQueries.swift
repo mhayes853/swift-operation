@@ -191,6 +191,55 @@ final actor ContextReadingQuery: QueryProtocol {
   }
 }
 
+// MARK: - ContinuingQuery
+
+struct ContinuingQuery: QueryProtocol, Hashable {
+  static let values = ["blob", "blob jr", "blob sr"]
+  static let finalValue = "the end"
+
+  func fetch(
+    in context: QueryContext,
+    with continuation: QueryContinuation<String>
+  ) async throws -> String {
+    for value in Self.values {
+      continuation.yield(value)
+    }
+    return Self.finalValue
+  }
+}
+
+// MARK: - ContinuingErrorQuery
+
+struct ContinuingErrorQuery: QueryProtocol, Hashable {
+  static let finalValue = "the end"
+
+  func fetch(
+    in context: QueryContext,
+    with continuation: QueryContinuation<String>
+  ) async throws -> String {
+    continuation.yield(error: SomeError())
+    return Self.finalValue
+  }
+
+  struct SomeError: Equatable, Error {}
+}
+
+// MARK: - ContinuingValueThenErrorQuery
+
+struct ContinuingValueThenErrorQuery: QueryProtocol, Hashable {
+  static let value = "the end"
+
+  func fetch(
+    in context: QueryContext,
+    with continuation: QueryContinuation<String>
+  ) async throws -> String {
+    continuation.yield(Self.value)
+    throw SomeError()
+  }
+
+  struct SomeError: Equatable, Error {}
+}
+
 // MARK: - TestInfiniteQuery
 
 struct EmptyInfiniteQuery: InfiniteQueryProtocol {
