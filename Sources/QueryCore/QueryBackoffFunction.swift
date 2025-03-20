@@ -74,6 +74,6 @@ extension QueryContext {
   }
 
   private enum QueryBackoffFunctionKey: Key {
-    static var defaultValue: QueryBackoffFunction { .exponential(1) }
+    static var defaultValue: QueryBackoffFunction { .fibonacci(1) }
   }
 }
