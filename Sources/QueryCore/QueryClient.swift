@@ -142,6 +142,13 @@ extension QueryClient {
       state.stores = state.stores.filter { !path.prefixMatches(other: $0.key) }
     }
   }
+
+  @discardableResult
+  public func clearStore(with path: QueryPath) -> OpaqueQueryStore? {
+    self.state.withLock { state in
+      state.stores.removeValue(forKey: path)?.store
+    }
+  }
 }
 
 // MARK: - Store Entry
