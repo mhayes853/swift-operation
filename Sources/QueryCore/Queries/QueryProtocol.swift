@@ -44,6 +44,6 @@ extension QueryContinuation {
   }
 
   public func yield(with result: Result<Value, any Error>) {
-    onQueryResult(result)
+    self.onQueryResult(result)
   }
 }
