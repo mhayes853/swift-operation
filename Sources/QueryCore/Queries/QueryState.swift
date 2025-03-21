@@ -8,7 +8,6 @@ public struct QueryState<StateValue: Sendable, QueryValue: Sendable> {
   public let initialValue: StateValue
   public private(set) var valueUpdateCount = 0
   public private(set) var valueLastUpdatedAt: Date?
-  public private(set) var isLoading = false
   public private(set) var error: (any Error)?
   public private(set) var errorUpdateCount = 0
   public private(set) var errorLastUpdatedAt: Date?
@@ -30,8 +29,11 @@ public struct QueryState<StateValue: Sendable, QueryValue: Sendable> {
 extension QueryState: QueryStateProtocol {
   public typealias StatusValue = QueryValue
 
+  public var isLoading: Bool {
+    !self.tasks.isEmpty
+  }
+
   public mutating func scheduleFetchTask(_ task: inout QueryTask<QueryValue>) {
-    self.isLoading = true
     self.tasks.append(task)
   }
 
@@ -60,7 +62,6 @@ extension QueryState: QueryStateProtocol {
   }
 
   public mutating func finishFetchTask(_ task: QueryTask<QueryValue>) {
-    self.isLoading = false
     self.tasks.remove(id: task.id)
   }
 }
