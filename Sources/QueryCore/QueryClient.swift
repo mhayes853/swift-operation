@@ -134,6 +134,16 @@ extension QueryClient {
   }
 }
 
+// MARK: - Clearing Queries
+
+extension QueryClient {
+  public func clearStores(matching path: QueryPath = []) {
+    self.state.withLock { state in
+      state.stores = state.stores.filter { !path.prefixMatches(other: $0.key) }
+    }
+  }
+}
+
 // MARK: - Store Entry
 
 extension QueryClient {

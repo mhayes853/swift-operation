@@ -74,6 +74,23 @@ struct QueryClientTests {
     expectNoDifference(stores[q1.path]?.currentValue as? Int, 1)
   }
 
+  @Test("Clears Queries That Match The Specified Path")
+  func clearQueriesMatchingPath() async throws {
+    let client = QueryClient()
+    let q1 = PathableQuery(value: 1, path: [1, 2]).defaultValue(10)
+    let q2 = PathableQuery(value: 2, path: [1, 3]).defaultValue(20)
+    let q3 = PathableQuery(value: 3, path: [2, 4]).defaultValue(30)
+    _ = client.store(for: q1)
+    _ = client.store(for: q2)
+    _ = client.store(for: q3)
+
+    client.clearStores(matching: [1])
+
+    let stores = client.stores(matching: [])
+    expectNoDifference(stores.count, 1)
+    expectNoDifference(stores[q3.path] != nil, true)
+  }
+
   @Test("Uses Default Value For AnyQueryStore")
   func defaultAnyQueryStoreValue() async throws {
     let client = QueryClient()
