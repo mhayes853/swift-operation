@@ -102,12 +102,14 @@ where
 
   func pageId(
     after page: InfiniteQueryPage<PageID, PageValue>,
-    using paging: InfiniteQueryPaging<PageID, PageValue>
+    using paging: InfiniteQueryPaging<PageID, PageValue>,
+    in context: QueryContext
   ) -> PageID?
 
   func pageId(
     before page: InfiniteQueryPage<PageID, PageValue>,
-    using paging: InfiniteQueryPaging<PageID, PageValue>
+    using paging: InfiniteQueryPaging<PageID, PageValue>,
+    in context: QueryContext
   ) -> PageID?
 
   func fetchPage(
@@ -120,7 +122,8 @@ where
 extension InfiniteQueryProtocol {
   public func pageId(
     before page: InfiniteQueryPage<PageID, PageValue>,
-    using paging: InfiniteQueryPaging<PageID, PageValue>
+    using paging: InfiniteQueryPaging<PageID, PageValue>,
+    in context: QueryContext
   ) -> PageID? {
     nil
   }
@@ -159,17 +162,14 @@ extension InfiniteQueryProtocol {
         if let lastPage {
           self.pageId(
             after: lastPage,
-            using: InfiniteQueryPaging(pageId: lastPage.id, pages: newPages, request: .allPages)
+            using: InfiniteQueryPaging(pageId: lastPage.id, pages: newPages, request: .allPages),
+            in: context
           )
         } else {
           paging.pages.first?.id ?? self.initialPageId
         }
       guard let pageId else {
-        return InfiniteQueryValue(
-          nextPageId: newPages.last.flatMap { self.pageId(after: $0, using: paging) },
-          previousPageId: newPages.first.flatMap { self.pageId(before: $0, using: paging) },
-          response: .allPages(newPages)
-        )
+        return self.allPagesValue(pages: newPages, paging: paging, in: context)
       }
       let pageValue = try await self.fetchPageWithPublishedEvents(
         using: InfiniteQueryPaging(pageId: pageId, pages: newPages, request: .allPages),
@@ -197,8 +197,8 @@ extension InfiniteQueryProtocol {
     in context: QueryContext
   ) -> Value {
     InfiniteQueryValue(
-      nextPageId: pages.last.flatMap { self.pageId(after: $0, using: paging) },
-      previousPageId: pages.first.flatMap { self.pageId(before: $0, using: paging) },
+      nextPageId: pages.last.flatMap { self.pageId(after: $0, using: paging, in: context) },
+      previousPageId: pages.first.flatMap { self.pageId(before: $0, using: paging, in: context) },
       response: .allPages(pages)
     )
   }
@@ -227,8 +227,8 @@ extension InfiniteQueryProtocol {
   ) -> Value {
     let page = InfiniteQueryPage(id: self.initialPageId, value: pageValue)
     return InfiniteQueryValue(
-      nextPageId: self.pageId(after: page, using: paging),
-      previousPageId: self.pageId(before: page, using: paging),
+      nextPageId: self.pageId(after: page, using: paging, in: context),
+      previousPageId: self.pageId(before: page, using: paging, in: context),
       response: .initialPage(page)
     )
   }
@@ -261,8 +261,10 @@ extension InfiniteQueryProtocol {
   ) -> Value {
     let page = InfiniteQueryPage(id: pageId, value: pageValue)
     return InfiniteQueryValue(
-      nextPageId: self.pageId(after: page, using: paging),
-      previousPageId: paging.pages.first.flatMap { self.pageId(before: $0, using: paging) },
+      nextPageId: self.pageId(after: page, using: paging, in: context),
+      previousPageId: paging.pages.first.flatMap {
+        self.pageId(before: $0, using: paging, in: context)
+      },
       response: .nextPage(InfiniteQueryValue.NextPage(page: page, lastPage: paging.pages.last!))
     )
   }
@@ -295,8 +297,8 @@ extension InfiniteQueryProtocol {
   ) -> Value {
     let page = InfiniteQueryPage(id: pageId, value: pageValue)
     return InfiniteQueryValue(
-      nextPageId: paging.pages.last.flatMap { self.pageId(after: $0, using: paging) },
-      previousPageId: self.pageId(before: page, using: paging),
+      nextPageId: paging.pages.last.flatMap { self.pageId(after: $0, using: paging, in: context) },
+      previousPageId: self.pageId(before: page, using: paging, in: context),
       response: .previousPage(
         InfiniteQueryValue.PreviousPage(page: page, firstPage: paging.pages.first!)
       )

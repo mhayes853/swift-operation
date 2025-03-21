@@ -248,14 +248,16 @@ struct EmptyInfiniteQuery: InfiniteQueryProtocol {
 
   func pageId(
     after page: InfiniteQueryPage<Int, String>,
-    using paging: InfiniteQueryPaging<Int, String>
+    using paging: InfiniteQueryPaging<Int, String>,
+    in context: QueryContext
   ) -> Int? {
     nil
   }
 
   func pageId(
     before page: InfiniteQueryPage<Int, String>,
-    using paging: InfiniteQueryPaging<Int, String>
+    using paging: InfiniteQueryPaging<Int, String>,
+    in context: QueryContext
   ) -> Int? {
     nil
   }
@@ -275,14 +277,16 @@ struct EmptyIntInfiniteQuery: InfiniteQueryProtocol {
 
   func pageId(
     after page: InfiniteQueryPage<Int, Int>,
-    using paging: InfiniteQueryPaging<Int, Int>
+    using paging: InfiniteQueryPaging<Int, Int>,
+    in context: QueryContext
   ) -> Int? {
     nil
   }
 
   func pageId(
     before page: InfiniteQueryPage<Int, Int>,
-    using paging: InfiniteQueryPaging<Int, Int>
+    using paging: InfiniteQueryPaging<Int, Int>,
+    in context: QueryContext
   ) -> Int? {
     nil
   }
@@ -323,14 +327,16 @@ final class TestInfiniteQuery: InfiniteQueryProtocol {
 
   func pageId(
     after page: InfiniteQueryPage<Int, String>,
-    using paging: InfiniteQueryPaging<Int, String>
+    using paging: InfiniteQueryPaging<Int, String>,
+    in context: QueryContext
   ) -> Int? {
     self.state.withLock { $0[page.id + 1] != nil ? page.id + 1 : nil }
   }
 
   func pageId(
     before page: InfiniteQueryPage<Int, String>,
-    using paging: InfiniteQueryPaging<Int, String>
+    using paging: InfiniteQueryPaging<Int, String>,
+    in context: QueryContext
   ) -> Int? {
     self.state.withLock { $0[page.id - 1] != nil ? page.id - 1 : nil }
   }
@@ -377,14 +383,16 @@ final class TestYieldableInfiniteQuery: InfiniteQueryProtocol {
 
   func pageId(
     after page: InfiniteQueryPage<Int, String>,
-    using paging: InfiniteQueryPaging<Int, String>
+    using paging: InfiniteQueryPaging<Int, String>,
+    in context: QueryContext
   ) -> Int? {
     page.id + 1
   }
 
   func pageId(
     before page: InfiniteQueryPage<Int, String>,
-    using paging: InfiniteQueryPaging<Int, String>
+    using paging: InfiniteQueryPaging<Int, String>,
+    in context: QueryContext
   ) -> Int? {
     page.id - 1
   }
@@ -446,7 +454,8 @@ final class WaitableInfiniteQuery: InfiniteQueryProtocol {
 
   func pageId(
     after page: InfiniteQueryPage<Int, String>,
-    using paging: InfiniteQueryPaging<Int, String>
+    using paging: InfiniteQueryPaging<Int, String>,
+    in context: QueryContext
   ) -> Int? {
     self.state.withLock {
       let id = $0.nextPageIds[page.id] ?? page.id + 1
@@ -456,7 +465,8 @@ final class WaitableInfiniteQuery: InfiniteQueryProtocol {
 
   func pageId(
     before page: InfiniteQueryPage<Int, String>,
-    using paging: InfiniteQueryPaging<Int, String>
+    using paging: InfiniteQueryPaging<Int, String>,
+    in context: QueryContext
   ) -> Int? {
     self.state.withLock {
       let id = $0.nextPageIds[page.id] ?? page.id - 1
@@ -498,7 +508,8 @@ final class FailableInfiniteQuery: InfiniteQueryProtocol {
 
   func pageId(
     after page: InfiniteQueryPage<Int, String>,
-    using paging: InfiniteQueryPaging<Int, String>
+    using paging: InfiniteQueryPaging<Int, String>,
+    in context: QueryContext
   ) -> Int? {
     page.id + 1
   }
