@@ -52,29 +52,6 @@ struct QueryStoreTests {
     expectNoDifference(store.error as? FailingQuery.SomeError, FailingQuery.SomeError())
   }
 
-  @Test("Deduplicates Fetches From The Same Store")
-  func deduplicatesFetchesSameStore() async throws {
-    let query = CountingQuery()
-    let store = self.client.store(for: query)
-    async let f1 = store.fetch()
-    async let f2 = store.fetch()
-    _ = try await (f1, f2)
-    let count = await query.fetchCount
-    expectNoDifference(count, 1)
-  }
-
-  @Test("Deduplicates Fetches From Different Stores")
-  func deduplicatesFetchesDifferentStores() async throws {
-    let query = CountingQuery()
-    let store = self.client.store(for: query)
-    let store2 = self.client.store(for: query)
-    async let f1 = store.fetch()
-    async let f2 = store2.fetch()
-    _ = try await (f1, f2)
-    let count = await query.fetchCount
-    expectNoDifference(count, 1)
-  }
-
   @Test("Fetch Twice, Returns Different Values")
   func fetchTwiceReturnsDifferentValues() async throws {
     let query = CountingQuery()
@@ -172,7 +149,6 @@ struct QueryStoreTests {
     let query = CountingQuery {}
     let store = self.client.store(for: query)
     let s1 = store.subscribe(with: QueryEventHandler())
-    try await store.fetch()
     let s2 = store.subscribe(with: QueryEventHandler())
     let s3 = store.subscribe(with: QueryEventHandler())
     await Task.megaYield()
@@ -188,14 +164,16 @@ struct QueryStoreTests {
     let collector = QueryStoreEventsCollector<FailingQuery.Value>()
     let store = self.client.store(for: FailingQuery())
     var subscription = store.subscribe(with: collector.eventHandler())
-    _ = try? await store.fetch()
+    _ = try? await store.tasks.first?.runIfNeeded()
+    await Task.megaYield()
     collector.expectEventsMatch([
       .fetchingStarted, .resultReceived(.failure(FailingQuery.SomeError())), .fetchingEnded
     ])
     subscription.cancel()
     collector.reset()
     subscription = store.subscribe(with: collector.eventHandler())
-    _ = try? await store.fetch()
+    _ = try? await store.tasks.first?.runIfNeeded()
+    await Task.megaYield()
     collector.expectEventsMatch([
       .fetchingStarted, .resultReceived(.failure(FailingQuery.SomeError())), .fetchingEnded
     ])
@@ -207,7 +185,8 @@ struct QueryStoreTests {
     let collector = QueryStoreEventsCollector<FailingQuery.Value>()
     let store = self.client.store(for: FailingQuery())
     let subscription = store.subscribe(with: collector.eventHandler())
-    _ = try? await store.fetch()
+    _ = try? await store.tasks.first?.runIfNeeded()
+    await Task.megaYield()
     collector.expectEventsMatch([
       .fetchingStarted, .resultReceived(.failure(FailingQuery.SomeError())), .fetchingEnded
     ])
@@ -220,7 +199,8 @@ struct QueryStoreTests {
     let collector = QueryStoreEventsCollector<TestQuery.Value>()
     let store = self.client.store(for: query)
     let subscription = store.subscribe(with: collector.eventHandler())
-    try await store.fetch()
+    _ = try await store.tasks.first?.runIfNeeded()
+    await Task.megaYield()
     collector.expectEventsMatch([
       .fetchingStarted, .resultReceived(.success(TestQuery.value)), .fetchingEnded
     ])
@@ -312,7 +292,7 @@ struct QueryStoreTests {
   func cancelFetchQueryStatusIsCancelled() async throws {
     let query = SleepingQuery(clock: TestClock(), duration: .seconds(1))
     let store = self.client.store(for: query)
-    query.didBeginSleeping = { store.fetchTask().cancel() }
+    query.didBeginSleeping = { store.tasks.first?.cancel() }
     _ = try? await store.fetch()
     expectNoDifference(store.status.isCancelled, true)
   }

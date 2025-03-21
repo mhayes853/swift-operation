@@ -11,11 +11,6 @@ public struct InfiniteQueryState<PageID: Hashable & Sendable, PageValue: Sendabl
   public private(set) var valueUpdateCount = 0
   public private(set) var valueLastUpdatedAt: Date?
 
-  public private(set) var isLoadingNextPage = false
-  public private(set) var isLoadingPreviousPage = false
-  public private(set) var isLoadingAllPages = false
-  public private(set) var isLoadingInitialPage = false
-
   public private(set) var error: (any Error)?
   public private(set) var errorUpdateCount = 0
   public private(set) var errorLastUpdatedAt: Date?
@@ -25,17 +20,37 @@ public struct InfiniteQueryState<PageID: Hashable & Sendable, PageValue: Sendabl
   public private(set) var nextPageId: PageID?
   public private(set) var previousPageId: PageID?
 
-  private var fetchAllTask: QueryTask<QueryValue>?
-  private var fetchInitialTask: QueryTask<QueryValue>?
-  private var fetchNextPageTask: QueryTask<QueryValue>?
-  private var fetchPreviousPageTask: QueryTask<QueryValue>?
+  public private(set) var fetchAllTasks = IdentifiedArrayOf<QueryTask<QueryValue>>()
+  public private(set) var fetchInitialTasks = IdentifiedArrayOf<QueryTask<QueryValue>>()
+  public private(set) var fetchNextTasks = IdentifiedArrayOf<QueryTask<QueryValue>>()
+  public private(set) var fetchPreviousTasks = IdentifiedArrayOf<QueryTask<QueryValue>>()
 
-  private var requests = [QueryTaskIdentifier: InfiniteQueryPaging<PageID, PageValue>.Request]()
+  private var requests = [QueryTaskIdentifier: InfiniteQueryPagingRequest<PageID>]()
 
   init(initialValue: StateValue, initialPageId: PageID) {
     self.currentValue = initialValue
     self.initialValue = initialValue
     self.initialPageId = initialPageId
+  }
+}
+
+// MARK: - Is Loading
+
+extension InfiniteQueryState {
+  public var isLoadingNextPage: Bool {
+    !self.fetchNextTasks.isEmpty
+  }
+
+  public var isLoadingPreviousPage: Bool {
+    !self.fetchPreviousTasks.isEmpty
+  }
+
+  public var isLoadingAllPages: Bool {
+    !self.fetchAllTasks.isEmpty
+  }
+
+  public var isLoadingInitialPage: Bool {
+    !self.fetchInitialTasks.isEmpty
   }
 }
 
@@ -52,49 +67,25 @@ extension InfiniteQueryState: QueryStateProtocol {
   }
 
   public mutating func scheduleFetchTask(
-    _ task: QueryTask<InfiniteQueryValue<PageID, PageValue>>
-  ) -> QueryTask<InfiniteQueryValue<PageID, PageValue>> {
-    let request = self.request(in: task.context)
-    var task = task
-    switch request {
+    _ task: inout QueryTask<InfiniteQueryValue<PageID, PageValue>>
+  ) {
+    switch self.request(in: task.context) {
     case .allPages:
-      defer { self.fetchAllTask = task }
-      if let fetchAllTask {
-        task = fetchAllTask
-      } else {
-        task.optionallySchedule(after: [
-          self.fetchInitialTask, self.fetchNextPageTask, self.fetchPreviousPageTask
-        ])
-      }
+      task.schedule(after: self.fetchInitialTasks)
+      task.schedule(after: self.fetchNextTasks)
+      task.schedule(after: self.fetchPreviousTasks)
+      self.fetchAllTasks.append(task)
     case .initialPage:
-      defer { self.fetchInitialTask = task }
-      self.isLoadingInitialPage = true
-      task = self.fetchInitialTask ?? task
+      self.fetchInitialTasks.append(task)
     case .nextPage:
-      defer { self.fetchNextPageTask = task }
-      if let fetchNextPageTask {
-        task = fetchNextPageTask
-      } else {
-        task.optionallySchedule(after: [self.fetchInitialTask, self.fetchAllTask])
-      }
+      task.schedule(after: self.fetchInitialTasks)
+      task.schedule(after: self.fetchAllTasks)
+      self.fetchNextTasks.append(task)
     case .previousPage:
-      defer { self.fetchPreviousPageTask = task }
-      if let fetchPreviousPageTask {
-        task = fetchPreviousPageTask
-      } else {
-        task.optionallySchedule(after: [self.fetchInitialTask, self.fetchAllTask])
-      }
+      task.schedule(after: self.fetchInitialTasks)
+      task.schedule(after: self.fetchAllTasks)
+      self.fetchPreviousTasks.append(task)
     }
-    switch task.context.infiniteValues.fetchType {
-    case .allPages:
-      self.isLoadingAllPages = true
-    case .nextPage:
-      self.isLoadingNextPage = true
-    case .previousPage:
-      self.isLoadingPreviousPage = true
-    default: break
-    }
-    return task
   }
 
   public mutating func update(
@@ -161,25 +152,19 @@ extension InfiniteQueryState: QueryStateProtocol {
   public mutating func finishFetchTask(_ task: QueryTask<InfiniteQueryValue<PageID, PageValue>>) {
     switch self.requests[task.id] {
     case .allPages:
-      self.fetchAllTask = nil
-      self.isLoadingAllPages = false
+      self.fetchAllTasks.remove(id: task.id)
     case .initialPage:
-      self.fetchInitialTask = nil
-      self.isLoadingInitialPage = false
-      self.isLoadingNextPage = false
-      self.isLoadingPreviousPage = false
+      self.fetchInitialTasks.remove(id: task.id)
     case .nextPage:
-      self.fetchNextPageTask = nil
-      self.isLoadingNextPage = false
+      self.fetchNextTasks.remove(id: task.id)
     case .previousPage:
-      self.fetchPreviousPageTask = nil
-      self.isLoadingPreviousPage = false
+      self.fetchPreviousTasks.remove(id: task.id)
     default: break
     }
     self.requests.removeValue(forKey: task.id)
   }
 
-  func request(in context: QueryContext) -> InfiniteQueryPaging<PageID, PageValue>.Request {
+  func request(in context: QueryContext) -> InfiniteQueryPagingRequest<PageID> {
     guard let fetchType = context.infiniteValues.fetchType else {
       return self.currentValue.isEmpty ? .initialPage : .allPages
     }
@@ -193,11 +178,5 @@ extension InfiniteQueryState: QueryStateProtocol {
     default:
       return .initialPage
     }
-  }
-}
-
-extension QueryTask {
-  fileprivate func optionallySchedule(after tasks: [Self?]) {
-    self.schedule(after: tasks.compactMap { $0 })
   }
 }

@@ -29,23 +29,20 @@ public typealias InfiniteQueryPages<PageID: Hashable & Sendable, PageValue: Send
 public struct InfiniteQueryPaging<PageID: Hashable & Sendable, PageValue: Sendable>: Sendable {
   public let pageId: PageID
   public let pages: InfiniteQueryPages<PageID, PageValue>
-  public let request: Request
-}
-
-extension InfiniteQueryPaging {
-  public enum Request: Sendable {
-    case nextPage(PageID)
-    case previousPage(PageID)
-    case initialPage
-    case allPages
-  }
+  public let request: InfiniteQueryPagingRequest<PageID>
 }
 
 extension InfiniteQueryPaging: Equatable where PageValue: Equatable {}
 extension InfiniteQueryPaging: Hashable where PageValue: Hashable {}
 
-extension InfiniteQueryPaging.Request: Equatable where PageValue: Equatable {}
-extension InfiniteQueryPaging.Request: Hashable where PageValue: Hashable {}
+// MARK: - InfiniteQueryPagingRequest
+
+public enum InfiniteQueryPagingRequest<PageID: Hashable & Sendable>: Hashable, Sendable {
+  case nextPage(PageID)
+  case previousPage(PageID)
+  case initialPage
+  case allPages
+}
 
 // MARK: - InfiniteQueryResponse
 
@@ -328,13 +325,5 @@ extension InfiniteQueryRequest {
       sub.onPageFetchingFinished?(id, context)
     }
     return try result.get()
-  }
-}
-
-// MARK: - QueryStore
-
-extension InfiniteQueryRequest {
-  public func currentInfiniteStore(in context: QueryContext) -> InfiniteQueryStoreFor<Self>? {
-    self.currentQueryStore(in: context).map { InfiniteQueryStore(store: $0) }
   }
 }

@@ -25,7 +25,7 @@ extension QueryContext {
   func paging<Query: InfiniteQueryRequest>(
     for query: Query
   ) -> InfiniteQueryPaging<Query.PageID, Query.PageValue> {
-    guard let store = query.currentQueryStore(in: self) else {
+    guard let store = self.currentQueryStore?.base as? QueryStoreFor<Query> else {
       return InfiniteQueryPaging(pageId: query.initialPageId, pages: [], request: .initialPage)
     }
     let state = store.state

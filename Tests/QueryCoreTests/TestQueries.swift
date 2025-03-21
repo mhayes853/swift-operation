@@ -357,6 +357,46 @@ final class TestInfiniteQuery: InfiniteQueryRequest {
   struct PageNotFoundError: Error {}
 }
 
+final actor CountingInfiniteQuery: InfiniteQueryRequest {
+  let initialPageId = 0
+
+  var fetchCount = 0
+
+  func resetCount() {
+    self.fetchCount = 0
+  }
+
+  nonisolated var path: QueryPath {
+    [ObjectIdentifier(self)]
+  }
+
+  nonisolated func pageId(
+    after page: InfiniteQueryPage<Int, String>,
+    using paging: InfiniteQueryPaging<Int, String>,
+    in context: QueryContext
+  ) -> Int? {
+    page.id + 1
+  }
+
+  nonisolated func pageId(
+    before page: InfiniteQueryPage<Int, String>,
+    using paging: InfiniteQueryPaging<Int, String>,
+    in context: QueryContext
+  ) -> Int? {
+    page.id - 1
+  }
+
+  func fetchPage(
+    using paging: InfiniteQueryPaging<Int, String>,
+    in context: QueryContext,
+    with continuation: QueryContinuation<String>
+  ) async throws -> String {
+    await Task.megaYield()
+    self.fetchCount += 1
+    return "blob"
+  }
+}
+
 // MARK: - TestYieldableInfiniteQuery
 
 final class TestYieldableInfiniteQuery: InfiniteQueryRequest {

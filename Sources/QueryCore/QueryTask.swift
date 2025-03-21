@@ -17,8 +17,8 @@ private protocol _QueryTask: Sendable, Identifiable {
 public struct QueryTask<Value: Sendable>: _QueryTask {
   private typealias State = (task: TaskState?, dependencies: [any _QueryTask])
 
-  public let id: QueryTaskIdentifier
-  public var name: String?
+  public var info: QueryTaskInfo
+
   public var context: QueryContext
 
   private let work: @Sendable (QueryContext) async throws -> any Sendable
@@ -32,12 +32,20 @@ extension QueryTask {
     context: QueryContext,
     work: @escaping @Sendable (QueryContext) async throws -> Value
   ) {
-    self.name = name
+    self.info = QueryTaskInfo(name: name)
     self.context = context
     self.work = work
     self.transforms = { $0 as! Value }
     self.box = LockedBox(value: (nil, []))
-    self.id = .next()
+  }
+}
+
+// MARK: - Info
+
+extension QueryTask {
+  public var name: String? {
+    get { self.info.name }
+    set { self.info.name = newValue }
   }
 }
 
@@ -64,11 +72,19 @@ extension QueryTaskIdentifier: CustomDebugStringConvertible {
   }
 }
 
+// MARK: - Identifiable
+
+extension QueryTask: Identifiable {
+  public var id: QueryTaskIdentifier {
+    self.info.id
+  }
+}
+
 // MARK: - Equatable
 
 extension QueryTask: Equatable {
   public static func == (lhs: Self, rhs: Self) -> Bool {
-    lhs.id == rhs.id
+    lhs.info.id == rhs.info.id
   }
 }
 
@@ -76,7 +92,7 @@ extension QueryTask: Equatable {
 
 extension QueryTask: Hashable {
   public func hash(into hasher: inout Hasher) {
-    hasher.combine(self.id)
+    hasher.combine(self.info.id)
   }
 }
 
@@ -85,22 +101,22 @@ extension QueryTask: Hashable {
 extension QueryTask {
   public func schedule<V: Sendable>(after task: QueryTask<V>) {
     self.withDependencies {
-      $0.removeAll { $0.id == task.id }
+      $0.removeAll { $0.info.id == task.info.id }
       $0.append(task)
     }
   }
 
-  public func schedule<V: Sendable>(after tasks: [QueryTask<V>]) {
+  public func schedule<V: Sendable>(after tasks: some Sequence<QueryTask<V>>) {
     self.withDependencies {
-      let ids = Set(tasks.map(\.id))
-      $0.removeAll { ids.contains($0.id) }
-      $0.append(contentsOf: tasks.removeFirstDuplicates(by: \.id))
+      let ids = Set(tasks.map(\.info.id))
+      $0.removeAll { ids.contains($0.info.id) }
+      $0.append(contentsOf: tasks.removeFirstDuplicates(by: \.info.id))
     }
   }
 
   private func withDependencies(_ fn: (inout [any _QueryTask]) -> Void) {
     self.box.inner.withLock { fn(&$0.dependencies) }
-    self.warnIfCyclesDetected(cyclicalIds: [self.info], visited: [self.id])
+    self.warnIfCyclesDetected(cyclicalIds: [self.info], visited: [self.info.id])
   }
 
   fileprivate func warnIfCyclesDetected(
@@ -175,13 +191,15 @@ extension QueryTask {
   }
 
   private func newTask() -> Task<any Sendable, any Error> {
-    Task {
+    var context = self.context
+    context.queryRunningTaskInfo = self.info
+    return Task {
       await withTaskGroup(of: Void.self) { group in
         for dependency in self.dependencies {
           group.addTask { _ = try? await dependency._runIfNeeded() }
         }
       }
-      let result = await Result { try await self.work(self.context) as any Sendable }
+      let result = await Result { try await self.work(context) as any Sendable }
       self.box.inner.withLock { $0.task = .finished(result) }
       return try result.get()
     }
@@ -243,8 +261,7 @@ extension QueryTask {
     _ transform: @escaping @Sendable (Value) throws -> T
   ) -> QueryTask<T> {
     QueryTask<T>(
-      id: self.id,
-      name: self.name,
+      info: self.info,
       context: self.context,
       work: self.work,
       transforms: { try transform(self.transforms($0)) },
@@ -255,9 +272,14 @@ extension QueryTask {
 
 // MARK: - Info
 
-public struct QueryTaskInfo {
-  let name: String?
-  let id: QueryTaskIdentifier
+public struct QueryTaskInfo: Hashable, Sendable, Identifiable {
+  public let id: QueryTaskIdentifier
+  public var name: String?
+
+  public init(name: String? = nil) {
+    self.id = .next()
+    self.name = name
+  }
 }
 
 extension QueryTaskInfo: CustomStringConvertible {
@@ -266,9 +288,14 @@ extension QueryTaskInfo: CustomStringConvertible {
   }
 }
 
-extension QueryTask {
-  public var info: QueryTaskInfo {
-    QueryTaskInfo(name: self.name, id: self.id)
+extension QueryContext {
+  public var queryRunningTaskInfo: QueryTaskInfo? {
+    get { self[QueryTaskInfoKey.self] }
+    set { self[QueryTaskInfoKey.self] = newValue }
+  }
+
+  private enum QueryTaskInfoKey: Key {
+    static var defaultValue: QueryTaskInfo? { nil }
   }
 }
 

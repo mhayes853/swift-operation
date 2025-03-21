@@ -27,12 +27,14 @@ extension OpaqueQueryState: QueryStateProtocol {
   public var errorLastUpdatedAt: Date? { self.base.errorLastUpdatedAt }
 
   public mutating func scheduleFetchTask(
-    _ task: QueryTask<any Sendable>
-  ) -> QueryTask<any Sendable> {
-    func open<State: QueryStateProtocol>(state: inout State) -> QueryTask<any Sendable> {
-      state.scheduleFetchTask(task.map { $0 as! State.QueryValue }).map { $0 as any Sendable }
+    _ task: inout QueryTask<any Sendable>
+  ) {
+    func open<State: QueryStateProtocol>(state: inout State) {
+      var inner = task.map { $0 as! State.QueryValue }
+      state.scheduleFetchTask(&inner)
+      task = inner.map { $0 as any Sendable }
     }
-    return open(state: &self.base)
+    open(state: &self.base)
   }
 
   public mutating func update(

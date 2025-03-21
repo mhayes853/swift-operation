@@ -1,4 +1,5 @@
 import Foundation
+import IdentifiedCollections
 
 // MARK: - QueryState
 
@@ -11,7 +12,7 @@ public struct QueryState<StateValue: Sendable, QueryValue: Sendable> {
   public private(set) var error: (any Error)?
   public private(set) var errorUpdateCount = 0
   public private(set) var errorLastUpdatedAt: Date?
-  private var fetchTask: QueryTask<QueryValue>?
+  public private(set) var tasks = IdentifiedArrayOf<QueryTask<QueryValue>>()
 
   public init(initialValue: StateValue) where StateValue == QueryValue? {
     self.currentValue = initialValue
@@ -29,13 +30,9 @@ public struct QueryState<StateValue: Sendable, QueryValue: Sendable> {
 extension QueryState: QueryStateProtocol {
   public typealias StatusValue = QueryValue
 
-  public mutating func scheduleFetchTask(_ task: QueryTask<QueryValue>) -> QueryTask<QueryValue> {
-    if let task = self.fetchTask {
-      return task
-    }
+  public mutating func scheduleFetchTask(_ task: inout QueryTask<QueryValue>) {
     self.isLoading = true
-    self.fetchTask = task
-    return task
+    self.tasks.append(task)
   }
 
   public mutating func update(
@@ -64,6 +61,6 @@ extension QueryState: QueryStateProtocol {
 
   public mutating func finishFetchTask(_ task: QueryTask<QueryValue>) {
     self.isLoading = false
-    self.fetchTask = nil
+    self.tasks.remove(id: task.id)
   }
 }

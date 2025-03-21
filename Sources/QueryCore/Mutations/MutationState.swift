@@ -79,16 +79,14 @@ extension MutationState: QueryStateProtocol {
     self.history.last?.status.isLoading ?? false
   }
 
-  public mutating func scheduleFetchTask(_ task: QueryTask<Value>) -> QueryTask<Value> {
+  public mutating func scheduleFetchTask(_ task: inout QueryTask<Value>) {
     let args = task.context.mutationArgs(as: Arguments.self) ?? self.history.last?.arguments
     guard let args else {
       reportWarning(.mutationWithNoArgumentsOrHistory)
-      return task
+      return
     }
-    var task = task
     task.context.mutationValues = MutationContextValues(arguments: args)
     self.history.append(HistoryEntry(task: task, args: args))
-    return task
   }
 
   public mutating func update(

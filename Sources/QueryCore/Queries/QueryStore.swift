@@ -158,13 +158,14 @@ extension QueryStore {
   ) -> QueryTask<State.QueryValue> {
     self._state.inner.withLock { state in
       var context = context ?? state.context
-      context.currentQueryStore = self
+      context.currentQueryStore = OpaqueQueryStore(erasing: self)
       let task = LockedBox<QueryTask<State.QueryValue>?>(value: nil)
-      let inner = self.queryTask(name: name, in: context, using: task)
-      return task.inner.withLock { newTask in
+      var inner = self.queryTask(name: name, in: context, using: task)
+      task.inner.withLock { newTask in
+        state.query.scheduleFetchTask(&inner)
         newTask = inner
-        return state.query.scheduleFetchTask(inner)
       }
+      return inner
     }
   }
 
@@ -244,19 +245,13 @@ extension QueryStore {
 
 // MARK: - Access QueryStore In Query
 
-extension QueryRequest where State.QueryValue == Value {
-  public func currentQueryStore(in context: QueryContext) -> QueryStoreFor<Self>? {
-    context.currentQueryStore as? QueryStoreFor<Self>
-  }
-}
-
 extension QueryContext {
-  fileprivate var currentQueryStore: (any Sendable)? {
+  public var currentQueryStore: OpaqueQueryStore? {
     get { self[CurrentQueryStoreKey.self] }
     set { self[CurrentQueryStoreKey.self] = newValue }
   }
 
   private enum CurrentQueryStoreKey: Key {
-    static var defaultValue: (any Sendable)? { nil }
+    static var defaultValue: OpaqueQueryStore? { nil }
   }
 }
