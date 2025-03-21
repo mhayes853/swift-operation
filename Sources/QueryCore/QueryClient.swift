@@ -27,13 +27,13 @@ extension QueryClient {
 // MARK: - Store
 
 extension QueryClient {
-  public func store<Query: QueryProtocol>(for query: Query) -> QueryStoreFor<Query>
+  public func store<Query: QueryRequest>(for query: Query) -> QueryStoreFor<Query>
   where Query.State == QueryState<Query.Value?, Query.Value> {
     self.opaqueStore(for: query, initialState: Query.State(initialValue: nil)).base
       as! QueryStoreFor<Query>
   }
 
-  public func store<Query: QueryProtocol>(
+  public func store<Query: QueryRequest>(
     for query: DefaultQuery<Query>
   ) -> QueryStoreFor<DefaultQuery<Query>>
   where DefaultQuery<Query>.State == QueryState<Query.Value, Query.Value> {
@@ -44,7 +44,7 @@ extension QueryClient {
     .base as! QueryStoreFor<DefaultQuery<Query>>
   }
 
-  public func store<Query: InfiniteQueryProtocol>(
+  public func store<Query: InfiniteQueryRequest>(
     for query: Query
   ) -> InfiniteQueryStoreFor<Query> {
     InfiniteQueryStore(
@@ -57,7 +57,7 @@ extension QueryClient {
     )
   }
 
-  public func store<Query: InfiniteQueryProtocol>(
+  public func store<Query: InfiniteQueryRequest>(
     for query: DefaultInfiniteQuery<Query>
   ) -> InfiniteQueryStoreFor<DefaultInfiniteQuery<Query>> {
     InfiniteQueryStore(
@@ -73,7 +73,7 @@ extension QueryClient {
     )
   }
 
-  public func store<Mutation: MutationProtocol>(
+  public func store<Mutation: MutationRequest>(
     for mutation: Mutation
   ) -> MutationStoreFor<Mutation> {
     MutationStore(
@@ -82,7 +82,7 @@ extension QueryClient {
     )
   }
 
-  private func opaqueStore<Query: QueryProtocol>(
+  private func opaqueStore<Query: QueryRequest>(
     for query: Query,
     initialState: Query.State
   ) -> OpaqueQueryStore where Query.State.QueryValue == Query.Value {
@@ -100,7 +100,7 @@ extension QueryClient {
     }
   }
 
-  private func newOpaqueStore<Query: QueryProtocol>(
+  private func newOpaqueStore<Query: QueryRequest>(
     for query: Query,
     initialState: Query.State
   ) -> OpaqueQueryStore where Query.State.QueryValue == Query.Value {

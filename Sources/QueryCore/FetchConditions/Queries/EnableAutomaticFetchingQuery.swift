@@ -1,6 +1,6 @@
 // MARK: - QueryProtocol
 
-extension QueryProtocol {
+extension QueryRequest {
   public func enableAutomaticFetching(
     when condition: some FetchCondition
   ) -> ModifiedQuery<Self, some QueryModifier<Self>> {
@@ -8,7 +8,7 @@ extension QueryProtocol {
   }
 }
 
-private struct EnableAutomaticFetchingModifier<Query: QueryProtocol>: QueryModifier {
+private struct EnableAutomaticFetchingModifier<Query: QueryRequest>: QueryModifier {
   let condition: any FetchCondition
 
   func setup(context: inout QueryContext, using query: Query) {

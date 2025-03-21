@@ -1,6 +1,6 @@
-// MARK: - QueryProtocol
+// MARK: - QueryRequest
 
-public protocol QueryProtocol<Value>: Sendable {
+public protocol QueryRequest<Value>: Sendable {
   associatedtype Value: Sendable
   associatedtype State: QueryStateProtocol = QueryState<Value?, Value>
 
@@ -13,12 +13,12 @@ public protocol QueryProtocol<Value>: Sendable {
   ) async throws -> Value
 }
 
-extension QueryProtocol {
+extension QueryRequest {
   public func setup(context: inout QueryContext) {
   }
 }
 
-extension QueryProtocol where Self: Hashable {
+extension QueryRequest where Self: Hashable {
   public var path: QueryPath { [self] }
 }
 

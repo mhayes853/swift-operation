@@ -1,4 +1,4 @@
-extension ModifiedQuery: InfiniteQueryProtocol where Query: InfiniteQueryProtocol {
+extension ModifiedQuery: InfiniteQueryRequest where Query: InfiniteQueryRequest {
   public typealias PageValue = Query.PageValue
   public typealias PageID = Query.PageID
 

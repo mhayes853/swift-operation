@@ -1,4 +1,4 @@
-extension QueryProtocol {
+extension QueryRequest {
   public func suspend(
     on condition: some FetchCondition
   ) -> ModifiedQuery<Self, some QueryModifier<Self>> {
@@ -6,7 +6,7 @@ extension QueryProtocol {
   }
 }
 
-private struct SuspendModifier<Query: QueryProtocol, Condition: FetchCondition>: QueryModifier {
+private struct SuspendModifier<Query: QueryRequest, Condition: FetchCondition>: QueryModifier {
   let condition: Condition
 
   func fetch(

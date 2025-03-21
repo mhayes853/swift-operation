@@ -1,4 +1,4 @@
-extension ModifiedQuery: MutationProtocol where Query: MutationProtocol {
+extension ModifiedQuery: MutationRequest where Query: MutationRequest {
   public func mutate(
     with arguments: Query.Arguments,
     in context: QueryContext,

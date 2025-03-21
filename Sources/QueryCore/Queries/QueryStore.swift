@@ -3,7 +3,7 @@ import Foundation
 
 // MARK: - Typealiases
 
-public typealias QueryStoreFor<Query: QueryProtocol> = QueryStore<
+public typealias QueryStoreFor<Query: QueryRequest> = QueryStore<
   Query.State
 > where Query.State.QueryValue == Query.Value
 
@@ -15,11 +15,11 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
     query: State, context: QueryContext, controllerSubscriptions: [QuerySubscription]
   )
 
-  private let _query: any QueryProtocol<State.QueryValue>
+  private let _query: any QueryRequest<State.QueryValue>
   private let _state: LockedBox<_State>
   private let subscriptions: QuerySubscriptions<QueryEventHandler<State.QueryValue>>
 
-  private init<Query: QueryProtocol>(
+  private init<Query: QueryRequest>(
     query: Query,
     initialState: Query.State,
     initialContext: QueryContext
@@ -64,7 +64,7 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
 // MARK: - Detached
 
 extension QueryStore {
-  public static func detached<Query: QueryProtocol>(
+  public static func detached<Query: QueryRequest>(
     query: Query,
     initialState: Query.State,
     initialContext: QueryContext = QueryContext()
@@ -72,7 +72,7 @@ extension QueryStore {
     QueryStoreFor<Query>(query: query, initialState: initialState, initialContext: initialContext)
   }
 
-  public static func detached<Query: QueryProtocol>(
+  public static func detached<Query: QueryRequest>(
     query: Query,
     initialValue: Query.State.StateValue,
     initialContext: QueryContext = QueryContext()
@@ -84,7 +84,7 @@ extension QueryStore {
     )
   }
 
-  public static func detached<Query: QueryProtocol>(
+  public static func detached<Query: QueryRequest>(
     query: DefaultQuery<Query>,
     initialContext: QueryContext = QueryContext()
   ) -> QueryStoreFor<DefaultQuery<Query>>
@@ -244,7 +244,7 @@ extension QueryStore {
 
 // MARK: - Access QueryStore In Query
 
-extension QueryProtocol where State.QueryValue == Value {
+extension QueryRequest where State.QueryValue == Value {
   public func currentQueryStore(in context: QueryContext) -> QueryStoreFor<Self>? {
     context.currentQueryStore as? QueryStoreFor<Self>
   }

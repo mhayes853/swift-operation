@@ -1,7 +1,7 @@
 // MARK: - Typealiases
 
 public typealias MutationStoreFor<
-  Mutation: MutationProtocol
+  Mutation: MutationRequest
 > = MutationStore<Mutation.Arguments, Mutation.Value>
 
 // MARK: - MutationStore
@@ -18,7 +18,7 @@ public final class MutationStore<Arguments: Sendable, Value: Sendable>: Sendable
 // MARK: - Detached
 
 extension MutationStore {
-  public static func detached<Mutation: MutationProtocol>(
+  public static func detached<Mutation: MutationRequest>(
     mutation: Mutation,
     initialContext: QueryContext = QueryContext()
   ) -> MutationStoreFor<Mutation> where Arguments == Mutation.Arguments, Value == Mutation.Value {

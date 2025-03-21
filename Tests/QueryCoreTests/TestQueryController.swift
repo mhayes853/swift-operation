@@ -1,6 +1,6 @@
 import QueryCore
 
-final class TestQueryController<Query: QueryProtocol>: QueryController {
+final class TestQueryController<Query: QueryRequest>: QueryController {
   typealias State = Query.State
 
   let controls = Lock<QueryControls<State>?>(nil)

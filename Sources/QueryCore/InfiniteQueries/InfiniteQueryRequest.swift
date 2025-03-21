@@ -18,7 +18,7 @@ extension InfiniteQueryPage: Hashable where Value: Hashable {}
 
 // MARK: - InfiniteQueryPages
 
-public typealias InfiniteQueryPagesFor<Query: InfiniteQueryProtocol> =
+public typealias InfiniteQueryPagesFor<Query: InfiniteQueryRequest> =
   InfiniteQueryPages<Query.PageID, Query.PageValue>
 
 public typealias InfiniteQueryPages<PageID: Hashable & Sendable, PageValue: Sendable> =
@@ -88,9 +88,9 @@ extension InfiniteQueryValue.NextPage: Equatable where PageValue: Equatable {}
 extension InfiniteQueryValue.PreviousPage: Hashable where PageValue: Hashable {}
 extension InfiniteQueryValue.PreviousPage: Equatable where PageValue: Equatable {}
 
-// MARK: - InfiniteQueryProtocol
+// MARK: - InfiniteQueryRequest
 
-public protocol InfiniteQueryProtocol<PageID, PageValue>: QueryProtocol
+public protocol InfiniteQueryRequest<PageID, PageValue>: QueryRequest
 where
   Value == InfiniteQueryValue<PageID, PageValue>,
   State == InfiniteQueryState<PageID, PageValue>
@@ -119,7 +119,7 @@ where
   ) async throws -> PageValue
 }
 
-extension InfiniteQueryProtocol {
+extension InfiniteQueryRequest {
   public func pageId(
     before page: InfiniteQueryPage<PageID, PageValue>,
     using paging: InfiniteQueryPaging<PageID, PageValue>,
@@ -333,7 +333,7 @@ extension InfiniteQueryProtocol {
 
 // MARK: - QueryStore
 
-extension InfiniteQueryProtocol {
+extension InfiniteQueryRequest {
   public func currentInfiniteStore(in context: QueryContext) -> InfiniteQueryStoreFor<Self>? {
     self.currentQueryStore(in: context).map { InfiniteQueryStore(store: $0) }
   }

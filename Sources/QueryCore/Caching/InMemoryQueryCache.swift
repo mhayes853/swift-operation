@@ -14,7 +14,7 @@ public struct InMemoryQueryCache<Value: Sendable> {
 
 extension InMemoryQueryCache: QueryCache {
   public func value(
-    for query: some QueryProtocol<Value>,
+    for query: some QueryRequest<Value>,
     in context: QueryContext
   ) async throws -> QueryCacheValue<Value>? {
     let storage = self.cacheStorage(in: context)
@@ -27,7 +27,7 @@ extension InMemoryQueryCache: QueryCache {
 
   public func save(
     _ value: Value,
-    for query: some QueryProtocol<Value>,
+    for query: some QueryRequest<Value>,
     in context: QueryContext
   ) async throws {
     let storage = self.cacheStorage(in: context)
@@ -37,7 +37,7 @@ extension InMemoryQueryCache: QueryCache {
   }
 
   public func removeValue(
-    for query: some QueryProtocol<Value>,
+    for query: some QueryRequest<Value>,
     in context: QueryContext
   ) async throws {
     let storage = self.cacheStorage(in: context)

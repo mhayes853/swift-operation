@@ -4,7 +4,7 @@ import QueryCore
 
 // MARK: - TestQuery
 
-struct TestQuery: QueryProtocol, Hashable {
+struct TestQuery: QueryRequest, Hashable {
   static let value = 1
 
   func fetch(
@@ -17,7 +17,7 @@ struct TestQuery: QueryProtocol, Hashable {
 
 // MARK: - TestStringQuery
 
-struct TestStringQuery: QueryProtocol, Hashable {
+struct TestStringQuery: QueryRequest, Hashable {
   static let value = "Foo"
 
   func fetch(
@@ -30,7 +30,7 @@ struct TestStringQuery: QueryProtocol, Hashable {
 
 // MARK: - EndlessQuery
 
-final class SleepingQuery: QueryProtocol, @unchecked Sendable {
+final class SleepingQuery: QueryRequest, @unchecked Sendable {
   let clock: any Clock<Duration>
   let duration: Duration
 
@@ -57,7 +57,7 @@ final class SleepingQuery: QueryProtocol, @unchecked Sendable {
 
 // MARK: - FailingQuery
 
-struct FailingQuery: QueryProtocol, Hashable {
+struct FailingQuery: QueryRequest, Hashable {
   struct SomeError: Equatable, Error {}
 
   func fetch(
@@ -70,7 +70,7 @@ struct FailingQuery: QueryProtocol, Hashable {
 
 // MARK: - CountingQuery
 
-final actor CountingQuery: QueryProtocol {
+final actor CountingQuery: QueryRequest {
   var fetchCount = 0
   private var shouldFail = false
   private let sleep: @Sendable () async -> Void
@@ -103,7 +103,7 @@ final actor CountingQuery: QueryProtocol {
 
 // MARK: - EndlesQuery
 
-struct EndlessQuery: QueryProtocol, Hashable {
+struct EndlessQuery: QueryRequest, Hashable {
   func fetch(in context: QueryContext, with continuation: QueryContinuation<String>) async throws
     -> String
   {
@@ -114,7 +114,7 @@ struct EndlessQuery: QueryProtocol, Hashable {
 
 // MARK: - FailableQuery
 
-actor FlakeyQuery: QueryProtocol {
+actor FlakeyQuery: QueryRequest {
   private var result: String?
 
   nonisolated var path: QueryPath {
@@ -141,7 +141,7 @@ actor FlakeyQuery: QueryProtocol {
 
 // MARK: - PathableQuery
 
-struct PathableQuery: QueryProtocol {
+struct PathableQuery: QueryRequest {
   let value: Int
   let path: QueryPath
 
@@ -155,7 +155,7 @@ struct PathableQuery: QueryProtocol {
 
 // MARK: - SucceedOnNthRefetchQuery
 
-struct SucceedOnNthRefetchQuery: QueryProtocol, Hashable {
+struct SucceedOnNthRefetchQuery: QueryRequest, Hashable {
   static let value = "refetch success"
 
   let index: Int
@@ -175,7 +175,7 @@ struct SucceedOnNthRefetchQuery: QueryProtocol, Hashable {
 
 // MARK: - ContextReadingQuery
 
-final actor ContextReadingQuery: QueryProtocol {
+final actor ContextReadingQuery: QueryRequest {
   var latestContext: QueryContext?
 
   nonisolated var path: QueryPath {
@@ -193,7 +193,7 @@ final actor ContextReadingQuery: QueryProtocol {
 
 // MARK: - ContinuingQuery
 
-struct ContinuingQuery: QueryProtocol, Hashable {
+struct ContinuingQuery: QueryRequest, Hashable {
   static let values = ["blob", "blob jr", "blob sr"]
   static let finalValue = "the end"
 
@@ -210,7 +210,7 @@ struct ContinuingQuery: QueryProtocol, Hashable {
 
 // MARK: - ContinuingErrorQuery
 
-struct ContinuingErrorQuery: QueryProtocol, Hashable {
+struct ContinuingErrorQuery: QueryRequest, Hashable {
   static let finalValue = "the end"
 
   func fetch(
@@ -226,7 +226,7 @@ struct ContinuingErrorQuery: QueryProtocol, Hashable {
 
 // MARK: - ContinuingValueThenErrorQuery
 
-struct ContinuingValueThenErrorQuery: QueryProtocol, Hashable {
+struct ContinuingValueThenErrorQuery: QueryRequest, Hashable {
   static let value = "the end"
 
   func fetch(
@@ -242,7 +242,7 @@ struct ContinuingValueThenErrorQuery: QueryProtocol, Hashable {
 
 // MARK: - TestInfiniteQuery
 
-struct EmptyInfiniteQuery: InfiniteQueryProtocol {
+struct EmptyInfiniteQuery: InfiniteQueryRequest {
   let initialPageId: Int
   let path: QueryPath
 
@@ -271,7 +271,7 @@ struct EmptyInfiniteQuery: InfiniteQueryProtocol {
   }
 }
 
-struct EmptyIntInfiniteQuery: InfiniteQueryProtocol {
+struct EmptyIntInfiniteQuery: InfiniteQueryRequest {
   let initialPageId: Int
   let path: QueryPath
 
@@ -302,7 +302,7 @@ struct EmptyIntInfiniteQuery: InfiniteQueryProtocol {
 
 // MARK: - FakeInfiniteQuery
 
-struct FakeInfiniteQuery: QueryProtocol, Hashable {
+struct FakeInfiniteQuery: QueryRequest, Hashable {
   typealias State = InfiniteQueryState<Int, String>
   typealias Value = InfiniteQueryValue<Int, String>
 
@@ -316,7 +316,7 @@ struct FakeInfiniteQuery: QueryProtocol, Hashable {
 
 // MARK: - TestInfiniteQuery
 
-final class TestInfiniteQuery: InfiniteQueryProtocol {
+final class TestInfiniteQuery: InfiniteQueryRequest {
   let initialPageId = 0
 
   let state = Lock([Int: String]())
@@ -359,7 +359,7 @@ final class TestInfiniteQuery: InfiniteQueryProtocol {
 
 // MARK: - TestYieldableInfiniteQuery
 
-final class TestYieldableInfiniteQuery: InfiniteQueryProtocol {
+final class TestYieldableInfiniteQuery: InfiniteQueryRequest {
   static func finalValue(for id: PageID) -> String {
     "page final value \(id)"
   }
@@ -418,7 +418,7 @@ final class TestYieldableInfiniteQuery: InfiniteQueryProtocol {
 
 // MARK: - WaitableInfiniteQuery
 
-final class WaitableInfiniteQuery: InfiniteQueryProtocol {
+final class WaitableInfiniteQuery: InfiniteQueryRequest {
   let initialPageId = 0
 
   typealias _Values = (
@@ -497,7 +497,7 @@ final class WaitableInfiniteQuery: InfiniteQueryProtocol {
 
 // MARK: - FailingInfiniteQuery
 
-final class FailableInfiniteQuery: InfiniteQueryProtocol {
+final class FailableInfiniteQuery: InfiniteQueryRequest {
   let initialPageId = 0
 
   let state = Lock<String?>(nil)
@@ -532,7 +532,7 @@ final class FailableInfiniteQuery: InfiniteQueryProtocol {
 
 // MARK: - EmptyMutation
 
-struct EmptyMutation: MutationProtocol, Hashable {
+struct EmptyMutation: MutationRequest, Hashable {
   typealias Value = String
 
   func mutate(
@@ -546,7 +546,7 @@ struct EmptyMutation: MutationProtocol, Hashable {
 
 // MARK: - EmptyIntMutation
 
-struct EmptyIntMutation: MutationProtocol, Hashable {
+struct EmptyIntMutation: MutationRequest, Hashable {
   typealias Value = Int
 
   func mutate(
@@ -560,7 +560,7 @@ struct EmptyIntMutation: MutationProtocol, Hashable {
 
 // MARK: - SleepingMutation
 
-final class SleepingMutation: MutationProtocol, @unchecked Sendable {
+final class SleepingMutation: MutationRequest, @unchecked Sendable {
   typealias Value = String
 
   let clock: any Clock<Duration>
@@ -590,7 +590,7 @@ final class SleepingMutation: MutationProtocol, @unchecked Sendable {
 
 // MARK: - FailableMutation
 
-final class FailableMutation: MutationProtocol {
+final class FailableMutation: MutationRequest {
   typealias Value = String
 
   let state = Lock<String?>(nil)
@@ -617,7 +617,7 @@ final class FailableMutation: MutationProtocol {
 
 // MARK: - WaitableMutation
 
-final class WaitableMutation: MutationProtocol {
+final class WaitableMutation: MutationRequest {
   typealias _Values = (
     willWait: Bool,
     continuations: [String: UnsafeContinuation<Void, any Error>],
@@ -671,7 +671,7 @@ final class WaitableMutation: MutationProtocol {
 
 // MARK: - ContinuingMutation
 
-struct ContinuingMutation: MutationProtocol, Hashable {
+struct ContinuingMutation: MutationRequest, Hashable {
   typealias Value = String
 
   static let values = ["blob", "blob jr", "blob sr"]
@@ -691,7 +691,7 @@ struct ContinuingMutation: MutationProtocol, Hashable {
 
 // MARK: - ContinuingErrorMutation
 
-struct ContinuingErrorMutation: MutationProtocol, Hashable {
+struct ContinuingErrorMutation: MutationRequest, Hashable {
   typealias Value = String
 
   static let finalValue = "the end"
@@ -710,7 +710,7 @@ struct ContinuingErrorMutation: MutationProtocol, Hashable {
 
 // MARK: - ContinuingValueThenErrorMutation
 
-struct ContinuingValueThenErrorMutation: MutationProtocol, Hashable {
+struct ContinuingValueThenErrorMutation: MutationRequest, Hashable {
   typealias Value = String
 
   static let value = "the end"

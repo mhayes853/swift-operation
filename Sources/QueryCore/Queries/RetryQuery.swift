@@ -1,6 +1,6 @@
 // MARK: - RetryModifier
 
-extension QueryProtocol {
+extension QueryRequest {
   public func retry(
     limit: Int,
     backoff: QueryBackoffFunction? = nil,
@@ -10,7 +10,7 @@ extension QueryProtocol {
   }
 }
 
-private struct RetryModifier<Query: QueryProtocol>: QueryModifier {
+private struct RetryModifier<Query: QueryRequest>: QueryModifier {
   let limit: Int
   let backoff: QueryBackoffFunction?
   let delayer: (any QueryDelayer)?

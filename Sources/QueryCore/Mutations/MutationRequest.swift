@@ -1,6 +1,6 @@
-// MARK: - MutationProtocol
+// MARK: - MutationRequest
 
-public protocol MutationProtocol<Arguments>: QueryProtocol
+public protocol MutationRequest<Arguments>: QueryRequest
 where State == MutationState<Arguments, Value> {
   associatedtype Arguments: Sendable
 
@@ -11,7 +11,7 @@ where State == MutationState<Arguments, Value> {
   ) async throws -> Value
 }
 
-extension MutationProtocol {
+extension MutationRequest {
   public func setup(context: inout QueryContext) {
     context.enableAutomaticFetchingCondition = .always(false)
   }
@@ -31,7 +31,7 @@ private struct MutationNoArgumentsError: Error {}
 
 // MARK: - MutationStore
 
-extension MutationProtocol {
+extension MutationRequest {
   public func currentMutationStore(in context: QueryContext) -> MutationStoreFor<Self>? {
     self.currentQueryStore(in: context).map { MutationStore(store: $0) }
   }

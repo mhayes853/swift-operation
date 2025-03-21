@@ -1,4 +1,4 @@
-extension QueryProtocol {
+extension QueryRequest {
   public func defaultValue(
     _ value: @autoclosure @escaping @Sendable () -> Value
   ) -> DefaultQuery<Self> {
@@ -6,7 +6,7 @@ extension QueryProtocol {
   }
 }
 
-public struct DefaultQuery<Query: QueryProtocol>: QueryProtocol {
+public struct DefaultQuery<Query: QueryRequest>: QueryRequest {
   public typealias State = QueryState<Query.Value, Query.Value>
 
   let _defaultValue: @Sendable () -> Query.Value

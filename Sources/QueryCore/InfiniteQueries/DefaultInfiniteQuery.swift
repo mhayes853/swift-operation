@@ -1,6 +1,6 @@
 import IdentifiedCollections
 
-extension InfiniteQueryProtocol {
+extension InfiniteQueryRequest {
   public func defaultValue(
     _ value: @autoclosure @escaping @Sendable () -> State.StateValue
   ) -> DefaultInfiniteQuery<Self> {
@@ -8,7 +8,7 @@ extension InfiniteQueryProtocol {
   }
 }
 
-public struct DefaultInfiniteQuery<Query: InfiniteQueryProtocol>: QueryProtocol {
+public struct DefaultInfiniteQuery<Query: InfiniteQueryRequest>: QueryRequest {
   let _defaultValue: @Sendable () -> Query.State.StateValue
   public let query: Query
 
@@ -32,7 +32,7 @@ public struct DefaultInfiniteQuery<Query: InfiniteQueryProtocol>: QueryProtocol 
   }
 }
 
-extension DefaultInfiniteQuery: InfiniteQueryProtocol {
+extension DefaultInfiniteQuery: InfiniteQueryRequest {
   public typealias PageValue = Query.PageValue
   public typealias PageID = Query.PageID
   public typealias State = Query.State

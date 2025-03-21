@@ -70,7 +70,7 @@ extension QueryControls {
 
 // MARK: - QueryProtocol
 
-extension QueryProtocol {
+extension QueryRequest {
   public func controlled(
     by controller: some QueryController<State>
   ) -> ModifiedQuery<Self, some QueryModifier<Self>> {
@@ -79,7 +79,7 @@ extension QueryProtocol {
 }
 
 private struct QueryControllerModifier<
-  Query: QueryProtocol,
+  Query: QueryRequest,
   Controller: QueryController<Query.State>
 >: QueryModifier {
   let controller: Controller

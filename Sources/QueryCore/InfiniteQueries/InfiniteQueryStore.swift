@@ -4,7 +4,7 @@ import IdentifiedCollections
 // MARK: - Type Aliases
 
 public typealias InfiniteQueryStoreFor<
-  Query: InfiniteQueryProtocol
+  Query: InfiniteQueryRequest
 > = InfiniteQueryStore<Query.PageID, Query.PageValue>
 
 // MARK: - InfiniteQueryStore
@@ -21,7 +21,7 @@ public final class InfiniteQueryStore<PageID: Hashable & Sendable, PageValue: Se
 // MARK: - Detached
 
 extension InfiniteQueryStore {
-  public static func detached<Query: InfiniteQueryProtocol<PageID, PageValue>>(
+  public static func detached<Query: InfiniteQueryRequest<PageID, PageValue>>(
     query: Query,
     initialValue: Query.State.StateValue = [],
     initialContext: QueryContext = QueryContext()
@@ -38,7 +38,7 @@ extension InfiniteQueryStore {
     )
   }
 
-  public static func detached<Query: InfiniteQueryProtocol<PageID, PageValue>>(
+  public static func detached<Query: InfiniteQueryRequest<PageID, PageValue>>(
     query: DefaultInfiniteQuery<Query>,
     initialContext: QueryContext = QueryContext()
   ) -> InfiniteQueryStoreFor<Query> {

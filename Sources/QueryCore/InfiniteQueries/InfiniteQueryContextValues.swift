@@ -22,7 +22,7 @@ extension InfiniteQueryContextValues {
 // MARK: - QueryContext
 
 extension QueryContext {
-  func paging<Query: InfiniteQueryProtocol>(
+  func paging<Query: InfiniteQueryRequest>(
     for query: Query
   ) -> InfiniteQueryPaging<Query.PageID, Query.PageValue> {
     guard let store = query.currentQueryStore(in: self) else {

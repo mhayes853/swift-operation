@@ -1,4 +1,4 @@
-extension QueryProtocol {
+extension QueryRequest {
   public func refetchOnChange(
     of condition: some FetchCondition
   ) -> ModifiedQuery<Self, some QueryModifier<Self>> {

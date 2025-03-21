@@ -1,7 +1,7 @@
 // MARK: - QueryModifier
 
 public protocol QueryModifier<Query>: Sendable {
-  associatedtype Query: QueryProtocol
+  associatedtype Query: QueryRequest
 
   func setup(context: inout QueryContext, using query: Query)
 
@@ -20,7 +20,7 @@ extension QueryModifier {
 
 // MARK: - ModifiedQuery
 
-extension QueryProtocol {
+extension QueryRequest {
   public func modifier<Modifier: QueryModifier>(
     _ modifier: Modifier
   ) -> ModifiedQuery<Self, Modifier> {
@@ -28,7 +28,7 @@ extension QueryProtocol {
   }
 }
 
-public struct ModifiedQuery<Query: QueryProtocol, Modifier: QueryModifier>: QueryProtocol
+public struct ModifiedQuery<Query: QueryRequest, Modifier: QueryModifier>: QueryRequest
 where Modifier.Query == Query {
   public typealias State = Query.State
   public typealias Value = Query.Value
