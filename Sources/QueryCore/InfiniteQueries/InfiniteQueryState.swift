@@ -88,6 +88,9 @@ extension InfiniteQueryState: QueryStateProtocol {
     }
   }
 
+  public func cancelAllActiveTasks() {
+  }
+
   public mutating func update(
     with result: Result<InfiniteQueryPages<PageID, PageValue>, any Error>,
     using context: QueryContext

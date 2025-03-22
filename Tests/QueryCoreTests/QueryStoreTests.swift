@@ -387,6 +387,61 @@ struct QueryStoreTests {
     store.currentValue = TestQuery.value
     expectNoDifference(store.state.currentValue, TestQuery.value)
   }
+
+  @Test("Reset State, Resets Current Value To Initial Value")
+  func resetStateResetsCurrentStateToInitialState() async throws {
+    let store = self.client.store(for: TestQuery())
+    try await store.fetch()
+
+    expectNoDifference(store.currentValue, TestQuery.value)
+    store.reset()
+    expectNoDifference(store.currentValue, nil)
+  }
+
+  @Test("Reset State, Clears Any Errors")
+  func resetStateClearsAnyErrors() async throws {
+    let store = self.client.store(for: FailingQuery())
+    _ = try? await store.fetch()
+
+    expectNoDifference(store.error as? FailingQuery.SomeError, FailingQuery.SomeError())
+    store.reset()
+    expectNoDifference(store.error as? FailingQuery.SomeError, nil)
+  }
+
+  @Test("Reset State, Resets Value Count")
+  func resetStateResetsValueCount() async throws {
+    let store = self.client.store(for: TestQuery())
+    try await store.fetch()
+
+    expectNoDifference(store.valueUpdateCount, 1)
+    store.reset()
+    expectNoDifference(store.valueUpdateCount, 0)
+  }
+
+  @Test("Reset State, Resets Error Count")
+  func resetStateResetsErrorCount() async throws {
+    let store = self.client.store(for: FailingQuery())
+    _ = try? await store.fetch()
+
+    expectNoDifference(store.errorUpdateCount, 1)
+    store.reset()
+    expectNoDifference(store.errorUpdateCount, 0)
+  }
+
+  @Test("Reset State, Cancels All Active Tasks")
+  func resetStateCancelsAllActiveTasks() async throws {
+    let store = self.client.store(for: TestQuery())
+    let task = store.fetchTask()
+    let task2 = store.fetchTask()
+    store.reset()
+    expectNoDifference(store.tasks, [])
+    await #expect(throws: CancellationError.self) {
+      try await task.runIfNeeded()
+    }
+    await #expect(throws: CancellationError.self) {
+      try await task2.runIfNeeded()
+    }
+  }
 }
 
 extension QueryContext {

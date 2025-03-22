@@ -37,6 +37,10 @@ extension OpaqueQueryState: QueryStateProtocol {
     open(state: &self.base)
   }
 
+  public func cancelAllActiveTasks() {
+    self.base.cancelAllActiveTasks()
+  }
+
   public mutating func update(
     with result: Result<any Sendable, any Error>,
     for task: QueryTask<any Sendable>

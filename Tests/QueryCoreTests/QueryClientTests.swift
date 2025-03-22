@@ -177,6 +177,19 @@ struct QueryClientTests {
     controller.count.withLock { expectNoDifference($0, 1) }
     _ = store
   }
+
+  @Test("Resets Query State From Store Through Path")
+  func resetQueryStateFromStoreThroughPath() async throws {
+    let client = QueryClient()
+    let query = PathableQuery(value: 10, path: [1, 2])
+    let store = client.store(for: query)
+    try await store.fetch()
+
+    let opaqueStore = try #require(client.stores(matching: [1]).first?.value)
+    expectNoDifference(store.currentValue, 10)
+    opaqueStore.reset()
+    expectNoDifference(store.currentValue, nil)
+  }
 }
 
 private final class CountingController<State: QueryStateProtocol>: QueryController {

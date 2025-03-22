@@ -16,6 +16,8 @@ public protocol QueryStateProtocol<StateValue, QueryValue>: Sendable {
 
   mutating func scheduleFetchTask(_ task: inout QueryTask<QueryValue>)
 
+  func cancelAllActiveTasks()
+
   mutating func update(
     with result: Result<StateValue, any Error>,
     using context: QueryContext

@@ -15,6 +15,7 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
     query: State, context: QueryContext, controllerSubscriptions: [QuerySubscription]
   )
 
+  private let initialState: State
   private let _query: any QueryRequest<State.QueryValue>
   private let _state: LockedBox<_State>
   private let subscriptions: QuerySubscriptions<QueryEventHandler<State.QueryValue>>
@@ -24,6 +25,7 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
     initialState: Query.State,
     initialContext: QueryContext
   ) where State == Query.State, State.QueryValue == Query.Value {
+    self.initialState = initialState
     self._query = query
     self._state = LockedBox(
       value: (query: initialState, context: initialContext, controllerSubscriptions: [])
@@ -146,6 +148,25 @@ extension QueryStore {
         $0.query.update(with: .success(newValue), using: self.context)
       }
     }
+  }
+}
+
+// MARK: - Reset
+
+extension QueryStore {
+  public func reset() {
+    self._state.inner.withLock {
+      $0.query.cancelAllActiveTasks()
+      $0.query = self.initialState
+    }
+  }
+}
+
+// MARK: - Cancel All Active Tasks
+
+extension QueryStore {
+  public func cancelAllActiveTasks() {
+    self._state.inner.withLock { $0.query.cancelAllActiveTasks() }
   }
 }
 
