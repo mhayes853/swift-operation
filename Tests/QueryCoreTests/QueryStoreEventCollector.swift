@@ -197,7 +197,7 @@ extension QueryStoreEventsCollector {
       onFetchingEnded: { _ in self.events.withLock { $0.append(.fetchingEnded) } },
       onResultReceived: { result, _ in self.events.withLock { $0.append(.resultReceived(result)) }
       },
-      onStateChanged: { _ in self.events.withLock { $0.append(.stateChanged) } }
+      onStateChanged: { _, _ in self.events.withLock { $0.append(.stateChanged) } }
     )
   }
 }

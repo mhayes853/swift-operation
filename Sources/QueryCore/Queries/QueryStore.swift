@@ -44,8 +44,11 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
     let controls = QueryControls<State>(
       context: { [weak self] in self?._state.inner.withLock { $0.context } ?? initialContext },
       onResult: { [weak self] result, context in
-        self?._state.inner.withLock { $0.query.update(with: result, using: context) }
-        self?.subscriptions.forEach { $0.onStateChanged?(context) }
+        self?._state.inner
+          .withLock { state in
+            state.query.update(with: result, using: context)
+            self?.subscriptions.forEach { $0.onStateChanged?(state.query, context) }
+          }
       },
       refetchTask: { [weak self] configuration in
         guard self?.isAutomaticFetchingEnabled == true else { return nil }
@@ -147,7 +150,7 @@ extension QueryStore {
     set {
       self._state.inner.withLock {
         $0.query.update(with: .success(newValue), using: self.context)
-        self.subscriptions.forEach { $0.onStateChanged?(self.context) }
+        self.subscriptions.forEach { $0.onStateChanged?(self.state, self.context) }
       }
     }
   }
@@ -160,7 +163,7 @@ extension QueryStore {
     self._state.inner.withLock {
       $0.query.cancelAllActiveTasks()
       $0.query = self.initialState
-      self.subscriptions.forEach { $0.onStateChanged?(self.context) }
+      self.subscriptions.forEach { $0.onStateChanged?(self.state, self.context) }
     }
   }
 }
@@ -213,12 +216,12 @@ extension QueryStore {
     QueryTask<State.QueryValue>(configuration: configuration) { info in
       self.subscriptions.forEach {
         $0.onFetchingStarted?(info.configuration.context)
-        $0.onStateChanged?(info.configuration.context)
+        $0.onStateChanged?(self.state, info.configuration.context)
       }
       defer {
         self.subscriptions.forEach {
           $0.onFetchingEnded?(info.configuration.context)
-          $0.onStateChanged?(info.configuration.context)
+          $0.onStateChanged?(self.state, info.configuration.context)
         }
       }
       do {
@@ -234,7 +237,7 @@ extension QueryStore {
           }
           self.subscriptions.forEach {
             $0.onResultReceived?(.success(value), info.configuration.context)
-            $0.onStateChanged?(info.configuration.context)
+            $0.onStateChanged?(self.state, info.configuration.context)
           }
         }
         return value
@@ -247,7 +250,7 @@ extension QueryStore {
           }
           self.subscriptions.forEach {
             $0.onResultReceived?(.failure(error), info.configuration.context)
-            $0.onStateChanged?(info.configuration.context)
+            $0.onStateChanged?(self.state, info.configuration.context)
           }
         }
         throw error
@@ -269,7 +272,7 @@ extension QueryStore {
         }
         self.subscriptions.forEach {
           $0.onResultReceived?(result, context)
-          $0.onStateChanged?(context)
+          $0.onStateChanged?(self.state, context)
         }
       }
     }
