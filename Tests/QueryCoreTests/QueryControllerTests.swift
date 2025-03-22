@@ -97,6 +97,22 @@ struct QueryControllerTests {
     expectNoDifference(store.errorUpdateCount, 2)
     expectNoDifference(store.errorLastUpdatedAt, .distantFuture)
   }
+
+  @Test("Yields New State Value To Query, Emits State Changed Event")
+  func yieldsNewStateValueToQueryEmitsStateChangedEvent() async throws {
+    let controller = TestQueryController<TestQuery>()
+    let store = QueryStoreFor<TestQuery>
+      .detached(
+        query: TestQuery().controlled(by: controller)
+          .enableAutomaticFetching(when: .always(true)),
+        initialValue: nil
+      )
+    let collector = QueryStoreEventsCollector<TestQuery.Value>()
+    let subscription = store.subscribe(with: collector.eventHandler())
+    controller.controls.withLock { $0?.yield(10) }
+    collector.expectEventsMatch([.stateChanged])
+    subscription.cancel()
+  }
 }
 
 private enum SomeError: Equatable, Error {

@@ -45,6 +45,7 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
       context: { [weak self] in self?._state.inner.withLock { $0.context } ?? initialContext },
       onResult: { [weak self] result, context in
         self?._state.inner.withLock { $0.query.update(with: result, using: context) }
+        self?.subscriptions.forEach { $0.onStateChanged?(context) }
       },
       refetchTask: { [weak self] configuration in
         guard self?.isAutomaticFetchingEnabled == true else { return nil }
@@ -146,6 +147,7 @@ extension QueryStore {
     set {
       self._state.inner.withLock {
         $0.query.update(with: .success(newValue), using: self.context)
+        self.subscriptions.forEach { $0.onStateChanged?(self.context) }
       }
     }
   }
@@ -158,6 +160,7 @@ extension QueryStore {
     self._state.inner.withLock {
       $0.query.cancelAllActiveTasks()
       $0.query = self.initialState
+      self.subscriptions.forEach { $0.onStateChanged?(self.context) }
     }
   }
 }

@@ -157,6 +157,7 @@ extension InfiniteQueryStoreEventsCollector {
 enum QueryStoreEvent<Value: Sendable & Equatable>: Sendable {
   case fetchingStarted
   case fetchingEnded
+  case stateChanged
   case resultReceived(Result<Value, any Error>)
 }
 
@@ -176,6 +177,8 @@ extension QueryStoreEvent: QueryStoreEventProtocol {
       default:
         return false
       }
+    case (.stateChanged, .stateChanged):
+      return true
     default:
       return false
     }
@@ -192,7 +195,9 @@ extension QueryStoreEventsCollector {
     QueryEventHandler(
       onFetchingStarted: { _ in self.events.withLock { $0.append(.fetchingStarted) } },
       onFetchingEnded: { _ in self.events.withLock { $0.append(.fetchingEnded) } },
-      onResultReceived: { result, _ in self.events.withLock { $0.append(.resultReceived(result)) } }
+      onResultReceived: { result, _ in self.events.withLock { $0.append(.resultReceived(result)) }
+      },
+      onStateChanged: { _ in self.events.withLock { $0.append(.stateChanged) } }
     )
   }
 }

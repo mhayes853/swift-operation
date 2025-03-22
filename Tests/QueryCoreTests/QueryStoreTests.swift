@@ -388,6 +388,17 @@ struct QueryStoreTests {
     expectNoDifference(store.state.currentValue, TestQuery.value)
   }
 
+  @Test("Set Current Query Value, Emits Event")
+  func setCurrentQueryValueEmitsEvent() async throws {
+    let store = self.client.store(for: TestQuery())
+    store.currentValue = TestQuery.value
+    let collector = QueryStoreEventsCollector<TestQuery.Value>()
+    let subscription = store.subscribe(with: collector.eventHandler())
+    store.currentValue = TestQuery.value
+    collector.expectEventsMatch([.stateChanged])
+    subscription.cancel()
+  }
+
   @Test("Reset State, Resets Current Value To Initial Value")
   func resetStateResetsCurrentStateToInitialState() async throws {
     let store = self.client.store(for: TestQuery())
@@ -441,6 +452,16 @@ struct QueryStoreTests {
     await #expect(throws: CancellationError.self) {
       try await task2.runIfNeeded()
     }
+  }
+
+  @Test("Reset State, Emits Event")
+  func resetStateEmitsEvent() async throws {
+    let store = self.client.store(for: TestQuery())
+    let collector = QueryStoreEventsCollector<TestQuery.Value>()
+    let subscription = store.subscribe(with: collector.eventHandler())
+    store.reset()
+    collector.expectEventsMatch([.stateChanged])
+    subscription.cancel()
   }
 }
 
