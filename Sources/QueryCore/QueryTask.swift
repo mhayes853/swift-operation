@@ -209,15 +209,17 @@ extension QueryTask {
 
   private func newTask() -> Task<any Sendable, any Error> {
     // TODO: - Use the newly proposed task name API when available.
-    var config = self.configuration
-    config.context.queryRunningTaskInfo = self.info
-    let info = QueryTaskInfo(id: self.id, configuration: config)
+    var info = QueryTaskInfo(id: self.id, configuration: self.configuration)
+    info.configuration.context.queryRunningTaskInfo = info
     if #available(iOS 18.0, macOS 15.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, *) {
-      return Task(executorPreference: config.executorPreference, priority: config.priority) {
+      return Task(
+        executorPreference: info.configuration.executorPreference,
+        priority: info.configuration.priority
+      ) {
         try await self.performTask(using: info)
       }
     } else {
-      return Task(priority: config.priority) {
+      return Task(priority: info.configuration.priority) {
         try await self.performTask(using: info)
       }
     }
