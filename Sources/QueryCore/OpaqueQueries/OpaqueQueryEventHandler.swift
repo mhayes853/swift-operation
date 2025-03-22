@@ -4,15 +4,18 @@ public struct OpaqueQueryEventHandler: Sendable {
   let onFetchingStarted: (@Sendable (QueryContext) -> Void)?
   let onFetchingEnded: (@Sendable (QueryContext) -> Void)?
   let onResultReceived: (@Sendable (Result<any Sendable, any Error>, QueryContext) -> Void)?
+  let onStateChanged: (@Sendable (OpaqueQueryState, QueryContext) -> Void)?
 
   public init(
     onFetchingStarted: (@Sendable (QueryContext) -> Void)? = nil,
     onFetchingEnded: (@Sendable (QueryContext) -> Void)? = nil,
-    onResultReceived: (@Sendable (Result<any Sendable, any Error>, QueryContext) -> Void)? = nil
+    onResultReceived: (@Sendable (Result<any Sendable, any Error>, QueryContext) -> Void)? = nil,
+    onStateChanged: (@Sendable (OpaqueQueryState, QueryContext) -> Void)? = nil
   ) {
     self.onFetchingEnded = onFetchingEnded
     self.onFetchingStarted = onFetchingStarted
     self.onResultReceived = onResultReceived
+    self.onStateChanged = onStateChanged
   }
 }
 
@@ -30,6 +33,9 @@ extension OpaqueQueryEventHandler {
         case let .failure(error):
           self.onResultReceived?(.failure(error), context)
         }
+      },
+      onStateChanged: { state, context in
+        self.onStateChanged?(OpaqueQueryState(state), context)
       }
     )
   }

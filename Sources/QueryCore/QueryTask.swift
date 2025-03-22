@@ -208,7 +208,7 @@ extension QueryTask {
   }
 
   private func newTask() -> Task<any Sendable, any Error> {
-    // TODO: - Use the newly proposed task name API when available.
+    // TODO: - Use the newly proposed task name API when available in swift 6.x.
     var info = QueryTaskInfo(id: self.id, configuration: self.configuration)
     info.configuration.context.queryRunningTaskInfo = info
     if #available(iOS 18.0, macOS 15.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, *) {
