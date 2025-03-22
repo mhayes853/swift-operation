@@ -141,11 +141,9 @@ struct QueryStoreTests {
     collector.expectEventsMatch([
       .stateChanged,
       .fetchingStarted,
-      .stateChanged,
       .resultReceived(.success(TestQuery.value)),
       .stateChanged,
-      .fetchingEnded,
-      .stateChanged
+      .fetchingEnded
     ])
     subscription.cancel()
   }
@@ -175,11 +173,9 @@ struct QueryStoreTests {
     collector.expectEventsMatch([
       .stateChanged,
       .fetchingStarted,
-      .stateChanged,
       .resultReceived(.failure(FailingQuery.SomeError())),
       .stateChanged,
-      .fetchingEnded,
-      .stateChanged
+      .fetchingEnded
     ])
     subscription.cancel()
     collector.reset()
@@ -189,11 +185,9 @@ struct QueryStoreTests {
     collector.expectEventsMatch([
       .stateChanged,
       .fetchingStarted,
-      .stateChanged,
       .resultReceived(.failure(FailingQuery.SomeError())),
       .stateChanged,
-      .fetchingEnded,
-      .stateChanged
+      .fetchingEnded
     ])
     subscription.cancel()
   }
@@ -208,11 +202,9 @@ struct QueryStoreTests {
     collector.expectEventsMatch([
       .stateChanged,
       .fetchingStarted,
-      .stateChanged,
       .resultReceived(.failure(FailingQuery.SomeError())),
       .stateChanged,
-      .fetchingEnded,
-      .stateChanged
+      .fetchingEnded
     ])
     subscription.cancel()
   }
@@ -228,11 +220,9 @@ struct QueryStoreTests {
     collector.expectEventsMatch([
       .stateChanged,
       .fetchingStarted,
-      .stateChanged,
       .resultReceived(.success(TestQuery.value)),
       .stateChanged,
-      .fetchingEnded,
-      .stateChanged
+      .fetchingEnded
     ])
     subscription.cancel()
   }
@@ -258,11 +248,9 @@ struct QueryStoreTests {
     collector.expectEventsMatch([
       .stateChanged,
       .fetchingStarted,
-      .stateChanged,
       .resultReceived(.success(TestQuery.value)),
       .stateChanged,
-      .fetchingEnded,
-      .stateChanged
+      .fetchingEnded
     ])
     subscription.cancel()
   }
@@ -310,11 +298,9 @@ struct QueryStoreTests {
     collector.expectEventsMatch([
       .stateChanged,
       .fetchingStarted,
-      .stateChanged,
       .resultReceived(.success(TestQuery.value)),
       .stateChanged,
-      .fetchingEnded,
-      .stateChanged
+      .fetchingEnded
     ])
   }
 
@@ -374,7 +360,6 @@ struct QueryStoreTests {
     collector.expectEventsMatch([
       .stateChanged,
       .fetchingStarted,
-      .stateChanged,
       .resultReceived(.success(ContinuingQuery.values[0])),
       .stateChanged,
       .resultReceived(.success(ContinuingQuery.values[1])),
@@ -383,8 +368,7 @@ struct QueryStoreTests {
       .stateChanged,
       .resultReceived(.success(ContinuingQuery.finalValue)),
       .stateChanged,
-      .fetchingEnded,
-      .stateChanged
+      .fetchingEnded
     ])
     expectNoDifference(value, ContinuingQuery.finalValue)
   }
@@ -399,13 +383,11 @@ struct QueryStoreTests {
     collector.expectEventsMatch([
       .stateChanged,
       .fetchingStarted,
-      .stateChanged,
       .resultReceived(.failure(ContinuingErrorQuery.SomeError())),
       .stateChanged,
       .resultReceived(.success(ContinuingErrorQuery.finalValue)),
       .stateChanged,
-      .fetchingEnded,
-      .stateChanged
+      .fetchingEnded
     ])
     expectNoDifference(value, ContinuingErrorQuery.finalValue)
     expectNoDifference(
@@ -425,13 +407,11 @@ struct QueryStoreTests {
     collector.expectEventsMatch([
       .stateChanged,
       .fetchingStarted,
-      .stateChanged,
       .resultReceived(.success(ContinuingValueThenErrorQuery.value)),
       .stateChanged,
       .resultReceived(.failure(ContinuingErrorQuery.SomeError())),
       .stateChanged,
-      .fetchingEnded,
-      .stateChanged
+      .fetchingEnded
     ])
     expectNoDifference(value, nil)
     expectNoDifference(

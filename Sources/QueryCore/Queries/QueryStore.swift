@@ -209,16 +209,8 @@ extension QueryStore {
     using task: LockedBox<QueryTask<State.QueryValue>?>
   ) -> QueryTask<State.QueryValue> {
     QueryTask<State.QueryValue>(configuration: configuration) { info in
-      self.subscriptions.forEach {
-        $0.onFetchingStarted?(info.configuration.context)
-        $0.onStateChanged?(self.state, info.configuration.context)
-      }
-      defer {
-        self.subscriptions.forEach {
-          $0.onFetchingEnded?(info.configuration.context)
-          $0.onStateChanged?(self.state, info.configuration.context)
-        }
-      }
+      self.subscriptions.forEach { $0.onFetchingStarted?(info.configuration.context) }
+      defer { self.subscriptions.forEach { $0.onFetchingEnded?(info.configuration.context) } }
       do {
         let value = try await self._query.fetch(
           in: info.configuration.context,
