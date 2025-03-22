@@ -173,7 +173,8 @@ extension MutationStore {
       onResultReceived: {
         guard let args = $1.mutationArgs(as: Arguments.self) else { return }
         handler.onMutationResultReceived?(args, $0, $1)
-      }
+      },
+      onStateChanged: handler.onStateChanged
     )
   }
 }

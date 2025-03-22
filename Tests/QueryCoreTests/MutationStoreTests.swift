@@ -291,8 +291,10 @@ struct MutationStoreTests {
     try await store.mutate(with: "blob", handler: collector.eventHandler())
 
     collector.expectEventsMatch([
+      .stateChanged,
       .mutatingStarted("blob"),
       .mutationResultReceived("blob", .success("blob")),
+      .stateChanged,
       .mutatingEnded("blob")
     ])
   }
@@ -307,8 +309,10 @@ struct MutationStoreTests {
     _ = try? await store.mutate(with: "blob", handler: collector.eventHandler())
 
     collector.expectEventsMatch([
+      .stateChanged,
       .mutatingStarted("blob"),
       .mutationResultReceived("blob", .failure(FailableMutation.MutateError())),
+      .stateChanged,
       .mutatingEnded("blob")
     ])
   }
@@ -322,8 +326,10 @@ struct MutationStoreTests {
     try await store.mutate(with: "blob")
 
     collector.expectEventsMatch([
+      .stateChanged,
       .mutatingStarted("blob"),
       .mutationResultReceived("blob", .success("blob")),
+      .stateChanged,
       .mutatingEnded("blob")
     ])
     subscription.cancel()
@@ -413,11 +419,16 @@ struct MutationStoreTests {
     let value = try await store.mutate(with: "foo", handler: collector.eventHandler())
 
     collector.expectEventsMatch([
+      .stateChanged,
       .mutatingStarted("foo"),
       .mutationResultReceived("foo", .success(ContinuingMutation.values[0])),
+      .stateChanged,
       .mutationResultReceived("foo", .success(ContinuingMutation.values[1])),
+      .stateChanged,
       .mutationResultReceived("foo", .success(ContinuingMutation.values[2])),
+      .stateChanged,
       .mutationResultReceived("foo", .success(ContinuingMutation.finalValue)),
+      .stateChanged,
       .mutatingEnded("foo")
     ])
     expectNoDifference(value, ContinuingQuery.finalValue)
@@ -433,9 +444,12 @@ struct MutationStoreTests {
     let value = try await store.mutate(with: "foo", handler: collector.eventHandler())
 
     collector.expectEventsMatch([
+      .stateChanged,
       .mutatingStarted("foo"),
       .mutationResultReceived("foo", .failure(ContinuingErrorMutation.SomeError())),
+      .stateChanged,
       .mutationResultReceived("foo", .success(ContinuingErrorMutation.finalValue)),
+      .stateChanged,
       .mutatingEnded("foo")
     ])
     expectNoDifference(value, ContinuingErrorQuery.finalValue)
@@ -456,9 +470,12 @@ struct MutationStoreTests {
     let value = try? await store.mutate(with: "foo", handler: collector.eventHandler())
 
     collector.expectEventsMatch([
+      .stateChanged,
       .mutatingStarted("foo"),
       .mutationResultReceived("foo", .success(ContinuingValueThenErrorMutation.value)),
+      .stateChanged,
       .mutationResultReceived("foo", .failure(ContinuingValueThenErrorMutation.SomeError())),
+      .stateChanged,
       .mutatingEnded("foo")
     ])
     expectNoDifference(value, nil)

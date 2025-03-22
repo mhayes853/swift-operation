@@ -551,11 +551,13 @@ struct InfiniteQueryStoreTests {
     try await store.fetchNextPage(handler: collector.eventHandler())
 
     collector.expectEventsMatch([
+      .stateChanged,
       .fetchingStarted,
       .pageFetchingStarted(0),
       .pageResultReceived(0, .success(InfiniteQueryPage(id: 0, value: "a"))),
       .pageFetchingEnded(0),
       .resultReceived(.success([InfiniteQueryPage(id: 0, value: "a")])),
+      .stateChanged,
       .fetchingEnded
     ])
   }
@@ -567,11 +569,13 @@ struct InfiniteQueryStoreTests {
     _ = try? await store.fetchNextPage(handler: collector.eventHandler())
 
     collector.expectEventsMatch([
+      .stateChanged,
       .fetchingStarted,
       .pageFetchingStarted(0),
       .pageResultReceived(0, .failure(FailableInfiniteQuery.SomeError())),
       .pageFetchingEnded(0),
       .resultReceived(.failure(FailableInfiniteQuery.SomeError())),
+      .stateChanged,
       .fetchingEnded
     ])
   }
@@ -585,11 +589,13 @@ struct InfiniteQueryStoreTests {
     try await store.fetchPreviousPage(handler: collector.eventHandler())
 
     collector.expectEventsMatch([
+      .stateChanged,
       .fetchingStarted,
       .pageFetchingStarted(0),
       .pageResultReceived(0, .success(InfiniteQueryPage(id: 0, value: "a"))),
       .pageFetchingEnded(0),
       .resultReceived(.success([InfiniteQueryPage(id: 0, value: "a")])),
+      .stateChanged,
       .fetchingEnded
     ])
   }
@@ -601,11 +607,13 @@ struct InfiniteQueryStoreTests {
     _ = try? await store.fetchPreviousPage(handler: collector.eventHandler())
 
     collector.expectEventsMatch([
+      .stateChanged,
       .fetchingStarted,
       .pageFetchingStarted(0),
       .pageResultReceived(0, .failure(FailableInfiniteQuery.SomeError())),
       .pageFetchingEnded(0),
       .resultReceived(.failure(FailableInfiniteQuery.SomeError())),
+      .stateChanged,
       .fetchingEnded
     ])
   }
@@ -621,6 +629,7 @@ struct InfiniteQueryStoreTests {
     try await store.fetchAllPages(handler: collector.eventHandler())
 
     collector.expectEventsMatch([
+      .stateChanged,
       .fetchingStarted,
       .pageFetchingStarted(0),
       .pageResultReceived(0, .success(InfiniteQueryPage(id: 0, value: "a"))),
@@ -631,6 +640,7 @@ struct InfiniteQueryStoreTests {
       .resultReceived(
         .success([InfiniteQueryPage(id: 0, value: "a"), InfiniteQueryPage(id: 1, value: "b")])
       ),
+      .stateChanged,
       .fetchingEnded
     ])
   }
@@ -648,11 +658,13 @@ struct InfiniteQueryStoreTests {
     _ = try? await store.fetchAllPages(handler: collector.eventHandler())
 
     collector.expectEventsMatch([
+      .stateChanged,
       .fetchingStarted,
       .pageFetchingStarted(0),
       .pageResultReceived(0, .failure(FailableInfiniteQuery.SomeError())),
       .pageFetchingEnded(0),
       .resultReceived(.failure(FailableInfiniteQuery.SomeError())),
+      .stateChanged,
       .fetchingEnded
     ])
   }
@@ -670,6 +682,7 @@ struct InfiniteQueryStoreTests {
     try await infiniteStore.base.fetch()
 
     collector.expectEventsMatch([
+      .stateChanged,
       .fetchingStarted,
       .pageFetchingStarted(0),
       .pageResultReceived(0, .success(InfiniteQueryPage(id: 0, value: "a"))),
@@ -680,6 +693,7 @@ struct InfiniteQueryStoreTests {
       .resultReceived(
         .success([InfiniteQueryPage(id: 0, value: "a"), InfiniteQueryPage(id: 1, value: "b")])
       ),
+      .stateChanged,
       .fetchingEnded
     ])
     subscription.cancel()
@@ -696,11 +710,13 @@ struct InfiniteQueryStoreTests {
     await Task.megaYield()
 
     collector.expectEventsMatch([
+      .stateChanged,
       .fetchingStarted,
       .pageFetchingStarted(0),
       .pageResultReceived(0, .success(InfiniteQueryPage(id: 0, value: "a"))),
       .pageFetchingEnded(0),
       .resultReceived(.success([InfiniteQueryPage(id: 0, value: "a")])),
+      .stateChanged,
       .fetchingEnded
     ])
     subscription.cancel()
@@ -834,13 +850,17 @@ struct InfiniteQueryStoreTests {
     let finalPage = InfiniteQueryPage(id: 0, value: TestYieldableInfiniteQuery.finalValue(for: 0))
 
     collector.expectEventsMatch([
+      .stateChanged,
       .fetchingStarted,
       .pageFetchingStarted(0),
       .pageResultReceived(0, .success(InfiniteQueryPage(id: 0, value: "blob"))),
+      .stateChanged,
       .pageResultReceived(0, .success(InfiniteQueryPage(id: 0, value: "blob jr"))),
+      .stateChanged,
       .pageResultReceived(0, .success(finalPage)),
       .pageFetchingEnded(0),
       .resultReceived(.success([finalPage])),
+      .stateChanged,
       .fetchingEnded
     ])
     expectNoDifference(value, finalPage)
@@ -861,13 +881,17 @@ struct InfiniteQueryStoreTests {
     let firstPage = TestYieldableInfiniteQuery.finalPage(for: 0)
 
     collector.expectEventsMatch([
+      .stateChanged,
       .fetchingStarted,
       .pageFetchingStarted(1),
       .pageResultReceived(1, .success(InfiniteQueryPage(id: 1, value: "blob"))),
+      .stateChanged,
       .pageResultReceived(1, .success(InfiniteQueryPage(id: 1, value: "blob jr"))),
+      .stateChanged,
       .pageResultReceived(1, .success(finalPage)),
       .pageFetchingEnded(1),
       .resultReceived(.success([firstPage, finalPage])),
+      .stateChanged,
       .fetchingEnded
     ])
     expectNoDifference(value, finalPage)
@@ -888,13 +912,17 @@ struct InfiniteQueryStoreTests {
     let firstPage = TestYieldableInfiniteQuery.finalPage(for: 0)
 
     collector.expectEventsMatch([
+      .stateChanged,
       .fetchingStarted,
       .pageFetchingStarted(-1),
       .pageResultReceived(-1, .success(InfiniteQueryPage(id: -1, value: "blob"))),
+      .stateChanged,
       .pageResultReceived(-1, .success(InfiniteQueryPage(id: -1, value: "blob jr"))),
+      .stateChanged,
       .pageResultReceived(-1, .success(finalPage)),
       .pageFetchingEnded(-1),
       .resultReceived(.success([finalPage, firstPage])),
+      .stateChanged,
       .fetchingEnded
     ])
     expectNoDifference(value, finalPage)
@@ -919,18 +947,24 @@ struct InfiniteQueryStoreTests {
     let value = try await store.fetchAllPages(handler: collector.eventHandler())
 
     collector.expectEventsMatch([
+      .stateChanged,
       .fetchingStarted,
       .pageFetchingStarted(0),
       .pageResultReceived(0, .success(InfiniteQueryPage(id: 0, value: "blob"))),
+      .stateChanged,
       .pageResultReceived(0, .success(InfiniteQueryPage(id: 0, value: "blob jr"))),
+      .stateChanged,
       .pageResultReceived(0, .success(TestYieldableInfiniteQuery.finalPage(for: 0))),
       .pageFetchingEnded(0),
       .pageFetchingStarted(1),
       .pageResultReceived(1, .success(InfiniteQueryPage(id: 1, value: "trob"))),
+      .stateChanged,
       .pageResultReceived(1, .failure(SomeError())),
+      .stateChanged,
       .pageResultReceived(1, .success(TestYieldableInfiniteQuery.finalPage(for: 1))),
       .pageFetchingEnded(1),
       .resultReceived(.success(value)),
+      .stateChanged,
       .fetchingEnded
     ])
     expectNoDifference(
@@ -952,12 +986,15 @@ struct InfiniteQueryStoreTests {
     let value = try? await store.fetchPreviousPage(handler: collector.eventHandler())
 
     collector.expectEventsMatch([
+      .stateChanged,
       .fetchingStarted,
       .pageFetchingStarted(0),
       .pageResultReceived(0, .success(InfiniteQueryPage(id: 0, value: "blob"))),
+      .stateChanged,
       .pageResultReceived(0, .failure(TestYieldableInfiniteQuery.SomeError())),
       .pageFetchingEnded(0),
       .resultReceived(.failure(TestYieldableInfiniteQuery.SomeError())),
+      .stateChanged,
       .fetchingEnded
     ])
     expectNoDifference(value, nil)

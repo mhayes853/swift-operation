@@ -312,10 +312,10 @@ extension InfiniteQueryRequest {
       sub.onPageFetchingStarted?(id, context)
     }
     let continuation = QueryContinuation<PageValue> { result in
-      continuation.yield(with: result)
       context.infiniteValues.subscriptions.forEach { sub in
         sub.onPageResultReceived?(id, result.map { InfiniteQueryPage(id: id, value: $0) }, context)
       }
+      continuation.yield(with: result)
     }
     let result = await Result {
       try await self.fetchPage(using: paging, in: context, with: continuation)

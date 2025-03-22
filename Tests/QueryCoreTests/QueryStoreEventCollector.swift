@@ -37,6 +37,7 @@ enum MutationStoreEvent<Arguments: Equatable & Sendable, Value: Equatable & Send
   case mutatingStarted(Arguments)
   case mutatingEnded(Arguments)
   case mutationResultReceived(Arguments, Result<Value, any Error>)
+  case stateChanged
 }
 
 extension MutationStoreEvent: QueryStoreEventProtocol {
@@ -54,6 +55,8 @@ extension MutationStoreEvent: QueryStoreEventProtocol {
         default: false
         }
       return a == c && isResultMatch
+    case (.stateChanged, .stateChanged):
+      return true
     default:
       return false
     }
@@ -74,7 +77,8 @@ extension MutationStoreEventsCollector {
       onMutationResultReceived: { args, result, _ in
         self.events.withLock { $0.append(.mutationResultReceived(args, result)) }
       },
-      onMutatingEnded: { args, _ in self.events.withLock { $0.append(.mutatingEnded(args)) } }
+      onMutatingEnded: { args, _ in self.events.withLock { $0.append(.mutatingEnded(args)) } },
+      onStateChanged: { _, _ in self.events.withLock { $0.append(.stateChanged) } }
     )
   }
 }
@@ -91,6 +95,7 @@ enum InfiniteQueryStoreEvent<
   case pageFetchingEnded(PageID)
   case pageResultReceived(PageID, Result<InfiniteQueryPage<PageID, PageValue>, any Error>)
   case resultReceived(Result<InfiniteQueryPages<PageID, PageValue>, any Error>)
+  case stateChanged
 }
 
 extension InfiniteQueryStoreEvent: QueryStoreEventProtocol {
@@ -121,6 +126,8 @@ extension InfiniteQueryStoreEvent: QueryStoreEventProtocol {
         default: false
         }
       return a == c && isResultMatch
+    case (.stateChanged, .stateChanged):
+      return true
     default:
       return false
     }
@@ -147,7 +154,8 @@ extension InfiniteQueryStoreEventsCollector {
       },
       onPageFetchingFinished: { id, _ in self.events.withLock { $0.append(.pageFetchingEnded(id)) }
       },
-      onFetchingFinished: { _ in self.events.withLock { $0.append(.fetchingEnded) } }
+      onFetchingFinished: { _ in self.events.withLock { $0.append(.fetchingEnded) } },
+      onStateChanged: { _, _ in self.events.withLock { $0.append(.stateChanged) } }
     )
   }
 }

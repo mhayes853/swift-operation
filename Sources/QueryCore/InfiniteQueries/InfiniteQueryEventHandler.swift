@@ -18,6 +18,7 @@ public struct InfiniteQueryEventHandler<
     (@Sendable (Result<InfiniteQueryPages<PageID, PageValue>, any Error>, QueryContext) -> Void)?
   let onPageFetchingFinished: (@Sendable (PageID, QueryContext) -> Void)?
   let onFetchingFinished: (@Sendable (QueryContext) -> Void)?
+  let onStateChanged: (@Sendable (InfiniteQueryState<PageID, PageValue>, QueryContext) -> Void)?
 
   public init(
     onFetchingStarted: (@Sendable (QueryContext) -> Void)? = nil,
@@ -30,7 +31,8 @@ public struct InfiniteQueryEventHandler<
       @Sendable (Result<InfiniteQueryPages<PageID, PageValue>, any Error>, QueryContext) -> Void
     )? = nil,
     onPageFetchingFinished: (@Sendable (PageID, QueryContext) -> Void)? = nil,
-    onFetchingFinished: (@Sendable (QueryContext) -> Void)? = nil
+    onFetchingFinished: (@Sendable (QueryContext) -> Void)? = nil,
+    onStateChanged: (@Sendable (InfiniteQueryState<PageID, PageValue>, QueryContext) -> Void)? = nil
   ) {
     self.onFetchingStarted = onFetchingStarted
     self.onPageFetchingStarted = onPageFetchingStarted
@@ -38,6 +40,7 @@ public struct InfiniteQueryEventHandler<
     self.onResultReceived = onResultReceived
     self.onPageFetchingFinished = onPageFetchingFinished
     self.onFetchingFinished = onFetchingFinished
+    self.onStateChanged = onStateChanged
   }
 }
 

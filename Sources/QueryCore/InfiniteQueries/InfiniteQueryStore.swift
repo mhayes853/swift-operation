@@ -299,7 +299,8 @@ extension InfiniteQueryStore {
       onResultReceived: { result, context in
         guard context.queryResultUpdateReason == .returnedFinalResult else { return }
         handler.onResultReceived?(result.map { [weak self] _ in self?.currentValue ?? [] }, context)
-      }
+      },
+      onStateChanged: handler.onStateChanged
     )
   }
 }
