@@ -56,7 +56,7 @@ public struct QueryTask<Value: Sendable>: _QueryTask {
   public let id: QueryTaskIdentifier
   public var configuration: QueryTaskConfiguration
 
-  private let work: @Sendable (QueryTaskConfiguration) async throws -> any Sendable
+  private let work: @Sendable (QueryTaskInfo) async throws -> any Sendable
   private let transforms: @Sendable (any Sendable) throws -> Value
   private let box: LockedBox<State>
 }
@@ -64,7 +64,7 @@ public struct QueryTask<Value: Sendable>: _QueryTask {
 extension QueryTask {
   public init(
     configuration: QueryTaskConfiguration,
-    work: @escaping @Sendable (QueryTaskConfiguration) async throws -> Value
+    work: @escaping @Sendable (QueryTaskInfo) async throws -> Value
   ) {
     self.id = .next()
     self.configuration = configuration
@@ -211,26 +211,27 @@ extension QueryTask {
     // TODO: - Use the newly proposed task name API when available.
     var config = self.configuration
     config.context.queryRunningTaskInfo = self.info
+    let info = QueryTaskInfo(id: self.id, configuration: config)
     if #available(iOS 18.0, macOS 15.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, *) {
       return Task(executorPreference: config.executorPreference, priority: config.priority) {
-        try await self.performTask(using: config)
+        try await self.performTask(using: info)
       }
     } else {
       return Task(priority: config.priority) {
-        try await self.performTask(using: config)
+        try await self.performTask(using: info)
       }
     }
   }
 
   private func performTask(
-    using configuration: QueryTaskConfiguration
+    using info: QueryTaskInfo
   ) async throws -> any Sendable {
     await withTaskGroup(of: Void.self) { group in
       for dependency in self.dependencies {
         group.addTask { _ = try? await dependency._runIfNeeded() }
       }
     }
-    let result = await Result { try await self.work(configuration) as any Sendable }
+    let result = await Result { try await self.work(info) as any Sendable }
     self.box.inner.withLock { $0.task = .finished(result) }
     return try result.get()
   }
@@ -304,7 +305,7 @@ extension QueryTask {
 
 public struct QueryTaskInfo: Sendable, Identifiable {
   public let id: QueryTaskIdentifier
-  public let configuration: QueryTaskConfiguration
+  public var configuration: QueryTaskConfiguration
 }
 
 extension QueryTaskInfo: CustomStringConvertible {

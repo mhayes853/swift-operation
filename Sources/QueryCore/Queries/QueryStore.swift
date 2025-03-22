@@ -173,13 +173,13 @@ extension QueryStore {
     configuration: QueryTaskConfiguration,
     using task: LockedBox<QueryTask<State.QueryValue>?>
   ) -> QueryTask<State.QueryValue> {
-    QueryTask<State.QueryValue>(configuration: configuration) { config in
-      self.subscriptions.forEach { $0.onFetchingStarted?(config.context) }
-      defer { self.subscriptions.forEach { $0.onFetchingEnded?(config.context) } }
+    QueryTask<State.QueryValue>(configuration: configuration) { info in
+      self.subscriptions.forEach { $0.onFetchingStarted?(info.configuration.context) }
+      defer { self.subscriptions.forEach { $0.onFetchingEnded?(info.configuration.context) } }
       do {
         let value = try await self._query.fetch(
-          in: config.context,
-          with: self.queryContinuation(task: task, context: config.context)
+          in: info.configuration.context,
+          with: self.queryContinuation(task: task, context: info.configuration.context)
         )
         self._state.inner.withLock { state in
           task.inner.withLock {
@@ -187,7 +187,9 @@ extension QueryStore {
             state.query.update(with: .success(value), for: task)
             state.query.finishFetchTask(task)
           }
-          self.subscriptions.forEach { $0.onResultReceived?(.success(value), config.context) }
+          self.subscriptions.forEach {
+            $0.onResultReceived?(.success(value), info.configuration.context)
+          }
         }
         return value
       } catch {
@@ -197,7 +199,9 @@ extension QueryStore {
             state.query.update(with: .failure(error), for: task)
             state.query.finishFetchTask(task)
           }
-          self.subscriptions.forEach { $0.onResultReceived?(.failure(error), config.context) }
+          self.subscriptions.forEach {
+            $0.onResultReceived?(.failure(error), info.configuration.context)
+          }
         }
         throw error
       }
