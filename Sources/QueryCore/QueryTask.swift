@@ -223,9 +223,7 @@ extension QueryTask {
     }
   }
 
-  private func performTask(
-    using info: QueryTaskInfo
-  ) async throws -> any Sendable {
+  private func performTask(using info: QueryTaskInfo) async throws -> any Sendable {
     await withTaskGroup(of: Void.self) { group in
       for dependency in self.dependencies {
         group.addTask { _ = try? await dependency._runIfNeeded() }

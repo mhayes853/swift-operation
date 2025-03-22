@@ -380,6 +380,13 @@ struct QueryStoreTests {
       ContinuingValueThenErrorQuery.SomeError()
     )
   }
+
+  @Test("Set Current Query Value")
+  func setCurrentQueryValue() async throws {
+    let store = self.client.store(for: TestQuery())
+    store.currentValue = TestQuery.value
+    expectNoDifference(store.state.currentValue, TestQuery.value)
+  }
 }
 
 extension QueryContext {

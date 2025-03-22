@@ -63,6 +63,15 @@ extension MutationStore {
   }
 }
 
+// MARK: - Current Value
+
+extension MutationStore {
+  public var currentValue: Value? {
+    get { self.base.currentValue }
+    set { self.base.currentValue = newValue }
+  }
+}
+
 // MARK: - Mutate
 
 extension MutationStore {

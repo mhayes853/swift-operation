@@ -85,6 +85,15 @@ extension InfiniteQueryStore {
   }
 }
 
+// MARK: - Current Value
+
+extension InfiniteQueryStore {
+  public var currentValue: InfiniteQueryPages<PageID, PageValue> {
+    get { self.base.currentValue }
+    set { self.base.currentValue = newValue }
+  }
+}
+
 // MARK: - Fetch All Pages
 
 extension InfiniteQueryStore {
@@ -135,7 +144,6 @@ extension InfiniteQueryStore {
 // MARK: - Fetch Next Page
 
 extension InfiniteQueryStore {
-
   @discardableResult
   public func fetchNextPage(
     using configuration: QueryTaskConfiguration? = nil,

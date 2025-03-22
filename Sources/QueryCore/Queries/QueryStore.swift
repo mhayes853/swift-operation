@@ -136,6 +136,19 @@ extension QueryStore {
   }
 }
 
+// MARK: - Current Value
+
+extension QueryStore {
+  public var currentValue: State.StateValue {
+    get { self.state.currentValue }
+    set {
+      self._state.inner.withLock {
+        $0.query.update(with: .success(newValue), using: self.context)
+      }
+    }
+  }
+}
+
 // MARK: - Fetch
 
 extension QueryStore {
