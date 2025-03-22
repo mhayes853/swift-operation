@@ -139,6 +139,7 @@ struct QueryStoreTests {
     let subscription = store.subscribe(with: collector.eventHandler())
     await Task.megaYield()
     collector.expectEventsMatch([
+      .stateChanged,
       .fetchingStarted,
       .stateChanged,
       .resultReceived(.success(TestQuery.value)),
@@ -172,6 +173,7 @@ struct QueryStoreTests {
     _ = try? await store.tasks.first?.runIfNeeded()
     await Task.megaYield()
     collector.expectEventsMatch([
+      .stateChanged,
       .fetchingStarted,
       .stateChanged,
       .resultReceived(.failure(FailingQuery.SomeError())),
@@ -185,6 +187,7 @@ struct QueryStoreTests {
     _ = try? await store.tasks.first?.runIfNeeded()
     await Task.megaYield()
     collector.expectEventsMatch([
+      .stateChanged,
       .fetchingStarted,
       .stateChanged,
       .resultReceived(.failure(FailingQuery.SomeError())),
@@ -203,6 +206,7 @@ struct QueryStoreTests {
     _ = try? await store.tasks.first?.runIfNeeded()
     await Task.megaYield()
     collector.expectEventsMatch([
+      .stateChanged,
       .fetchingStarted,
       .stateChanged,
       .resultReceived(.failure(FailingQuery.SomeError())),
@@ -222,6 +226,7 @@ struct QueryStoreTests {
     _ = try await store.tasks.first?.runIfNeeded()
     await Task.megaYield()
     collector.expectEventsMatch([
+      .stateChanged,
       .fetchingStarted,
       .stateChanged,
       .resultReceived(.success(TestQuery.value)),
@@ -251,6 +256,7 @@ struct QueryStoreTests {
     let subscription = store.subscribe(with: collector.eventHandler())
     try await store.fetch()
     collector.expectEventsMatch([
+      .stateChanged,
       .fetchingStarted,
       .stateChanged,
       .resultReceived(.success(TestQuery.value)),
@@ -302,6 +308,7 @@ struct QueryStoreTests {
     let store = self.client.store(for: query)
     try await store.fetch(handler: collector.eventHandler())
     collector.expectEventsMatch([
+      .stateChanged,
       .fetchingStarted,
       .stateChanged,
       .resultReceived(.success(TestQuery.value)),
@@ -365,6 +372,7 @@ struct QueryStoreTests {
     let value = try await store.fetch(handler: collector.eventHandler())
 
     collector.expectEventsMatch([
+      .stateChanged,
       .fetchingStarted,
       .stateChanged,
       .resultReceived(.success(ContinuingQuery.values[0])),
@@ -389,6 +397,7 @@ struct QueryStoreTests {
     let value = try await store.fetch(handler: collector.eventHandler())
 
     collector.expectEventsMatch([
+      .stateChanged,
       .fetchingStarted,
       .stateChanged,
       .resultReceived(.failure(ContinuingErrorQuery.SomeError())),
@@ -414,6 +423,7 @@ struct QueryStoreTests {
     let value = try? await store.fetch(handler: collector.eventHandler())
 
     collector.expectEventsMatch([
+      .stateChanged,
       .fetchingStarted,
       .stateChanged,
       .resultReceived(.success(ContinuingValueThenErrorQuery.value)),

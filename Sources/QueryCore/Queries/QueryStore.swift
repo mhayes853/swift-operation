@@ -44,11 +44,7 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
     let controls = QueryControls<State>(
       context: { [weak self] in self?._state.inner.withLock { $0.context } ?? initialContext },
       onResult: { [weak self] result, context in
-        self?._state.inner
-          .withLock { state in
-            state.query.update(with: result, using: context)
-            self?.subscriptions.forEach { $0.onStateChanged?(state.query, context) }
-          }
+        self?.editState(in: context) { $0.update(with: result, using: context) }
       },
       refetchTask: { [weak self] configuration in
         guard self?.isAutomaticFetchingEnabled == true else { return nil }
@@ -160,10 +156,9 @@ extension QueryStore {
 
 extension QueryStore {
   public func reset() {
-    self._state.inner.withLock {
-      $0.query.cancelAllActiveTasks()
-      $0.query = self.initialState
-      self.subscriptions.forEach { $0.onStateChanged?(self.state, self.context) }
+    self.editState {
+      $0.cancelAllActiveTasks()
+      $0 = self.initialState
     }
   }
 }
@@ -194,7 +189,7 @@ extension QueryStore {
   public func fetchTask(
     using configuration: QueryTaskConfiguration? = nil
   ) -> QueryTask<State.QueryValue> {
-    self._state.inner.withLock { state in
+    self.editState(in: configuration?.context) { state in
       var config = configuration ?? QueryTaskConfiguration(context: self.context)
       config.context.currentQueryStore = OpaqueQueryStore(erasing: self)
       config.name =
@@ -202,7 +197,7 @@ extension QueryStore {
       let task = LockedBox<QueryTask<State.QueryValue>?>(value: nil)
       var inner = self.queryTask(configuration: config, using: task)
       task.inner.withLock { newTask in
-        state.query.scheduleFetchTask(&inner)
+        state.scheduleFetchTask(&inner)
         newTask = inner
       }
       return inner
@@ -229,28 +224,26 @@ extension QueryStore {
           in: info.configuration.context,
           with: self.queryContinuation(task: task, context: info.configuration.context)
         )
-        self._state.inner.withLock { state in
+        self.editState(in: info.configuration.context) { state in
           task.inner.withLock {
             guard let task = $0 else { return }
-            state.query.update(with: .success(value), for: task)
-            state.query.finishFetchTask(task)
+            state.update(with: .success(value), for: task)
+            state.finishFetchTask(task)
           }
           self.subscriptions.forEach {
             $0.onResultReceived?(.success(value), info.configuration.context)
-            $0.onStateChanged?(self.state, info.configuration.context)
           }
         }
         return value
       } catch {
-        self._state.inner.withLock { state in
+        self.editState(in: info.configuration.context) { state in
           task.inner.withLock {
             guard let task = $0 else { return }
-            state.query.update(with: .failure(error), for: task)
-            state.query.finishFetchTask(task)
+            state.update(with: .failure(error), for: task)
+            state.finishFetchTask(task)
           }
           self.subscriptions.forEach {
             $0.onResultReceived?(.failure(error), info.configuration.context)
-            $0.onStateChanged?(self.state, info.configuration.context)
           }
         }
         throw error
@@ -265,15 +258,12 @@ extension QueryStore {
     var context = context
     context.queryResultUpdateReason = .yieldedResult
     return QueryContinuation { [context] result in
-      self._state.inner.withLock { state in
+      self.editState(in: context) { state in
         task.inner.withLock {
           guard let task = $0 else { return }
-          state.query.update(with: result, for: task)
+          state.update(with: result, for: task)
         }
-        self.subscriptions.forEach {
-          $0.onResultReceived?(result, context)
-          $0.onStateChanged?(self.state, context)
-        }
+        self.subscriptions.forEach { $0.onResultReceived?(result, context) }
       }
     }
   }
@@ -294,6 +284,23 @@ extension QueryStore {
       Task { try await self.fetchTask().runIfNeeded() }
     }
     return subscription
+  }
+}
+
+// MARK: - Edit State
+
+extension QueryStore {
+  private func editState<T: Sendable>(
+    in context: QueryContext? = nil,
+    _ fn: @Sendable (inout State) -> T
+  ) -> T {
+    self._state.inner.withLock { state in
+      let value = fn(&state.query)
+      self.subscriptions.forEach {
+        $0.onStateChanged?(state.query, context ?? state.context)
+      }
+      return value
+    }
   }
 }
 

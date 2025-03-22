@@ -185,9 +185,9 @@ extension QueryStoreEvent: QueryStoreEventProtocol {
   }
 }
 
-typealias QueryStoreEventsCollector<State: QueryStateProtocol> = _QueryStoreEventsCollector<
-  QueryStoreEvent<State>
-> where State.QueryValue: Equatable
+typealias QueryStoreEventsCollector<
+  State: QueryStateProtocol
+> = _QueryStoreEventsCollector<QueryStoreEvent<State>> where State.QueryValue: Equatable
 
 extension QueryStoreEventsCollector {
   func eventHandler<State>() -> QueryEventHandler<State>
