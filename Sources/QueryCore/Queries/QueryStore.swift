@@ -44,9 +44,9 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
       onResult: { [weak self] result, context in
         self?._state.inner.withLock { $0.query.update(with: result, using: context) }
       },
-      refetchTask: { [weak self] taskName, context in
+      refetchTask: { [weak self] configuration in
         guard self?.isAutomaticFetchingEnabled == true else { return nil }
-        return self?.fetchTask(name: taskName, using: context)
+        return self?.fetchTask(using: configuration)
       }
     )
     self._state.inner.withLock { state in
@@ -141,26 +141,26 @@ extension QueryStore {
 extension QueryStore {
   @discardableResult
   public func fetch(
-    taskName: String? = nil,
-    handler: QueryEventHandler<State.QueryValue> = QueryEventHandler(),
-    using context: QueryContext? = nil
+    using configuration: QueryTaskConfiguration? = nil,
+    handler: QueryEventHandler<State.QueryValue> = QueryEventHandler()
   ) async throws -> State.QueryValue {
     let (subscription, _) = self.subscriptions.add(handler: handler, isTemporary: true)
     defer { subscription.cancel() }
-    let task = self.fetchTask(using: context)
+    let task = self.fetchTask(using: configuration)
     return try await task.runIfNeeded()
   }
 
   @discardableResult
   public func fetchTask(
-    name: String? = nil,
-    using context: QueryContext? = nil
+    using configuration: QueryTaskConfiguration? = nil
   ) -> QueryTask<State.QueryValue> {
     self._state.inner.withLock { state in
-      var context = context ?? state.context
-      context.currentQueryStore = OpaqueQueryStore(erasing: self)
+      var config = configuration ?? QueryTaskConfiguration(context: self.context)
+      config.context.currentQueryStore = OpaqueQueryStore(erasing: self)
+      config.name =
+        config.name ?? "\(typeName(Self.self, qualified: true, genericsAbbreviated: false)) Task"
       let task = LockedBox<QueryTask<State.QueryValue>?>(value: nil)
-      var inner = self.queryTask(name: name, in: context, using: task)
+      var inner = self.queryTask(configuration: config, using: task)
       task.inner.withLock { newTask in
         state.query.scheduleFetchTask(&inner)
         newTask = inner
@@ -170,19 +170,16 @@ extension QueryStore {
   }
 
   private func queryTask(
-    name: String?,
-    in context: QueryContext,
+    configuration: QueryTaskConfiguration,
     using task: LockedBox<QueryTask<State.QueryValue>?>
   ) -> QueryTask<State.QueryValue> {
-    let taskName =
-      name ?? "\(typeName(Self.self, qualified: true, genericsAbbreviated: false)) Task"
-    return QueryTask<State.QueryValue>(name: taskName, context: context) { context in
-      self.subscriptions.forEach { $0.onFetchingStarted?(context) }
-      defer { self.subscriptions.forEach { $0.onFetchingEnded?(context) } }
+    QueryTask<State.QueryValue>(configuration: configuration) { config in
+      self.subscriptions.forEach { $0.onFetchingStarted?(config.context) }
+      defer { self.subscriptions.forEach { $0.onFetchingEnded?(config.context) } }
       do {
         let value = try await self._query.fetch(
-          in: context,
-          with: self.queryContinuation(task: task, context: context)
+          in: config.context,
+          with: self.queryContinuation(task: task, context: config.context)
         )
         self._state.inner.withLock { state in
           task.inner.withLock {
@@ -190,7 +187,7 @@ extension QueryStore {
             state.query.update(with: .success(value), for: task)
             state.query.finishFetchTask(task)
           }
-          self.subscriptions.forEach { $0.onResultReceived?(.success(value), context) }
+          self.subscriptions.forEach { $0.onResultReceived?(.success(value), config.context) }
         }
         return value
       } catch {
@@ -200,7 +197,7 @@ extension QueryStore {
             state.query.update(with: .failure(error), for: task)
             state.query.finishFetchTask(task)
           }
-          self.subscriptions.forEach { $0.onResultReceived?(.failure(error), context) }
+          self.subscriptions.forEach { $0.onResultReceived?(.failure(error), config.context) }
         }
         throw error
       }

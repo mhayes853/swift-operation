@@ -80,12 +80,13 @@ extension MutationState: QueryStateProtocol {
   }
 
   public mutating func scheduleFetchTask(_ task: inout QueryTask<Value>) {
-    let args = task.context.mutationArgs(as: Arguments.self) ?? self.history.last?.arguments
+    let args =
+      task.configuration.context.mutationArgs(as: Arguments.self) ?? self.history.last?.arguments
     guard let args else {
       reportWarning(.mutationWithNoArgumentsOrHistory)
       return
     }
-    task.context.mutationValues = MutationContextValues(arguments: args)
+    task.configuration.context.mutationValues = MutationContextValues(arguments: args)
     self.history.append(HistoryEntry(task: task, args: args))
   }
 
@@ -138,7 +139,7 @@ extension MutationState {
     fileprivate init(task: QueryTask<Value>, args: Arguments) {
       self.task = task
       self.arguments = args
-      self.startDate = task.context.queryClock.now()
+      self.startDate = task.configuration.context.queryClock.now()
       self.lastUpdatedAt = nil
       self.status = .loading
     }
@@ -154,7 +155,7 @@ extension MutationState.HistoryEntry: Identifiable {
 extension MutationState.HistoryEntry {
   fileprivate mutating func update(with result: Result<Value, any Error>) {
     self.currentResult = result
-    self.lastUpdatedAt = self.task.context.queryClock.now()
+    self.lastUpdatedAt = self.task.configuration.context.queryClock.now()
   }
 
   fileprivate mutating func finish() {

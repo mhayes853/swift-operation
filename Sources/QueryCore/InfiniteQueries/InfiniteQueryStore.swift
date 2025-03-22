@@ -90,27 +90,20 @@ extension InfiniteQueryStore {
 extension InfiniteQueryStore {
   @discardableResult
   public func fetchAllPages(
-    taskName: String? = nil,
-    handler: InfiniteQueryEventHandler<PageID, PageValue> = InfiniteQueryEventHandler(),
-    using context: QueryContext? = nil
+    using configuration: QueryTaskConfiguration? = nil,
+    handler: InfiniteQueryEventHandler<PageID, PageValue> = InfiniteQueryEventHandler()
   ) async throws -> InfiniteQueryPages<PageID, PageValue> {
-    var context = context ?? self.context
-    context.infiniteValues.fetchType = .allPages
     let value = try await self.fetch(
-      taskName: taskName ?? self.fetchAllPagesTaskName,
-      handler: handler,
-      using: context
+      using: self.fetchAllPagesTaskConfiguration(using: configuration),
+      handler: handler
     )
     return self.allPages(from: value)
   }
 
   public func fetchAllPagesTask(
-    name: String? = nil,
-    using context: QueryContext? = nil
+    using configuration: QueryTaskConfiguration? = nil
   ) -> QueryTask<InfiniteQueryPages<PageID, PageValue>> {
-    var context = context ?? self.context
-    context.infiniteValues.fetchType = .allPages
-    return self.base.fetchTask(name: name ?? self.fetchAllPagesTaskName, using: context)
+    self.base.fetchTask(using: self.fetchAllPagesTaskConfiguration(using: configuration))
       .map(self.allPages(from:))
   }
 
@@ -125,6 +118,15 @@ extension InfiniteQueryStore {
     }
   }
 
+  private func fetchAllPagesTaskConfiguration(
+    using configuration: QueryTaskConfiguration? = nil
+  ) -> QueryTaskConfiguration {
+    var configuration = configuration ?? QueryTaskConfiguration(context: self.context)
+    configuration.context.infiniteValues.fetchType = .allPages
+    configuration.name = self.fetchAllPagesTaskName
+    return configuration
+  }
+
   private var fetchAllPagesTaskName: String {
     "\(typeName(Self.self, genericsAbbreviated: false)) Fetch All Pages Task"
   }
@@ -136,33 +138,26 @@ extension InfiniteQueryStore {
 
   @discardableResult
   public func fetchNextPage(
-    taskName: String? = nil,
-    handler: InfiniteQueryEventHandler<PageID, PageValue> = InfiniteQueryEventHandler(),
-    using context: QueryContext? = nil
+    using configuration: QueryTaskConfiguration? = nil,
+    handler: InfiniteQueryEventHandler<PageID, PageValue> = InfiniteQueryEventHandler()
   ) async throws -> InfiniteQueryPage<PageID, PageValue>? {
     guard self.hasNextPage else { return nil }
-    var context = context ?? self.context
-    context.infiniteValues.fetchType = .nextPage
     let value = try await self.fetch(
-      taskName: taskName ?? self.fetchNextPageTaskName,
-      handler: handler,
-      using: context
+      using: self.fetchNextPageTaskConfiguration(using: configuration),
+      handler: handler
     )
     return self.nextPage(from: value)
   }
 
   public func fetchNextPageTask(
-    name: String? = nil,
-    using context: QueryContext? = nil
+    using configuration: QueryTaskConfiguration? = nil
   ) -> QueryTask<InfiniteQueryPage<PageID, PageValue>?> {
     guard self.hasNextPage else {
-      return QueryTask(name: name ?? self.fetchNextPageTaskName, context: QueryContext()) { _ in
-        nil
-      }
+      return QueryTask(
+        configuration: self.fetchNextPageTaskConfiguration(using: configuration)
+      ) { _ in nil }
     }
-    var context = context ?? self.context
-    context.infiniteValues.fetchType = .nextPage
-    return self.base.fetchTask(name: name ?? self.fetchNextPageTaskName, using: context)
+    return self.base.fetchTask(using: self.fetchNextPageTaskConfiguration(using: configuration))
       .map(self.nextPage(from:))
   }
 
@@ -179,6 +174,15 @@ extension InfiniteQueryStore {
     }
   }
 
+  private func fetchNextPageTaskConfiguration(
+    using configuration: QueryTaskConfiguration?
+  ) -> QueryTaskConfiguration {
+    var configuration = configuration ?? QueryTaskConfiguration(context: self.context)
+    configuration.context.infiniteValues.fetchType = .nextPage
+    configuration.name = configuration.name ?? self.fetchNextPageTaskName
+    return configuration
+  }
+
   private var fetchNextPageTaskName: String {
     "\(typeName(Self.self, genericsAbbreviated: false)) Fetch Next Page Task"
   }
@@ -189,33 +193,26 @@ extension InfiniteQueryStore {
 extension InfiniteQueryStore {
   @discardableResult
   public func fetchPreviousPage(
-    taskName: String? = nil,
-    handler: InfiniteQueryEventHandler<PageID, PageValue> = InfiniteQueryEventHandler(),
-    using context: QueryContext? = nil
+    using configuration: QueryTaskConfiguration? = nil,
+    handler: InfiniteQueryEventHandler<PageID, PageValue> = InfiniteQueryEventHandler()
   ) async throws -> InfiniteQueryPage<PageID, PageValue>? {
     guard self.hasPreviousPage else { return nil }
-    var context = context ?? self.context
-    context.infiniteValues.fetchType = .previousPage
     let value = try await self.fetch(
-      taskName: taskName ?? fetchPreviousPageTaskName,
-      handler: handler,
-      using: context
+      using: self.fetchPreviousPageTaskConfiguration(using: configuration),
+      handler: handler
     )
     return self.previousPage(from: value)
   }
 
   public func fetchPreviousPageTask(
-    name: String? = nil,
-    using context: QueryContext? = nil
+    using configuration: QueryTaskConfiguration?
   ) -> QueryTask<InfiniteQueryPage<PageID, PageValue>?> {
     guard self.hasPreviousPage else {
-      return QueryTask(name: name ?? self.fetchPreviousPageTaskName, context: QueryContext()) { _ in
-        nil
-      }
+      return QueryTask(
+        configuration: self.fetchPreviousPageTaskConfiguration(using: configuration)
+      ) { _ in nil }
     }
-    var context = context ?? self.context
-    context.infiniteValues.fetchType = .previousPage
-    return self.base.fetchTask(name: name ?? self.fetchPreviousPageTaskName, using: context)
+    return self.base.fetchTask(using: self.fetchPreviousPageTaskConfiguration(using: configuration))
       .map(self.previousPage(from:))
   }
 
@@ -232,6 +229,15 @@ extension InfiniteQueryStore {
     }
   }
 
+  private func fetchPreviousPageTaskConfiguration(
+    using configuration: QueryTaskConfiguration?
+  ) -> QueryTaskConfiguration {
+    var configuration = configuration ?? QueryTaskConfiguration(context: self.context)
+    configuration.context.infiniteValues.fetchType = .previousPage
+    configuration.name = configuration.name ?? self.fetchPreviousPageTaskName
+    return configuration
+  }
+
   private var fetchPreviousPageTaskName: String {
     "\(typeName(Self.self, genericsAbbreviated: false)) Fetch Previous Page Task"
   }
@@ -241,9 +247,8 @@ extension InfiniteQueryStore {
 
 extension InfiniteQueryStore {
   private func fetch(
-    taskName: String,
-    handler: InfiniteQueryEventHandler<PageID, PageValue>,
-    using context: QueryContext
+    using configuration: QueryTaskConfiguration,
+    handler: InfiniteQueryEventHandler<PageID, PageValue>
   ) async throws -> InfiniteQueryValue<PageID, PageValue> {
     let (subscription, _) = context.infiniteValues.subscriptions.add(
       handler: handler.erased(),
@@ -251,9 +256,8 @@ extension InfiniteQueryStore {
     )
     defer { subscription.cancel() }
     return try await self.base.fetch(
-      taskName: taskName,
-      handler: self.queryStoreHandler(for: handler),
-      using: context
+      using: configuration,
+      handler: self.queryStoreHandler(for: handler)
     )
   }
 }

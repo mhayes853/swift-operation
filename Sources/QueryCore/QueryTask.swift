@@ -1,6 +1,42 @@
 import ConcurrencyExtras
 import Foundation
 
+// MARK: - QueryTaskConfiguration
+
+public struct QueryTaskConfiguration: Sendable {
+  public var name: String?
+  public var priority: TaskPriority?
+  public var context: QueryContext
+  private var _executorPreference: (any Sendable)?
+
+  public init(name: String? = nil, priority: TaskPriority? = nil, context: QueryContext) {
+    self.name = name
+    self.priority = priority
+    self.context = context
+    self._executorPreference = nil
+  }
+}
+
+@available(iOS 18.0, macOS 15.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, *)
+extension QueryTaskConfiguration {
+  public var executorPreference: (any TaskExecutor)? {
+    get { self._executorPreference as? any TaskExecutor }
+    set { self._executorPreference = newValue }
+  }
+
+  public init(
+    name: String? = nil,
+    priority: TaskPriority? = nil,
+    executorPreference: (any TaskExecutor)? = nil,
+    context: QueryContext
+  ) {
+    self.name = name
+    self.priority = priority
+    self._executorPreference = executorPreference
+    self.context = context
+  }
+}
+
 // MARK: - _QueryTask
 
 private protocol _QueryTask: Sendable, Identifiable {
@@ -17,35 +53,24 @@ private protocol _QueryTask: Sendable, Identifiable {
 public struct QueryTask<Value: Sendable>: _QueryTask {
   private typealias State = (task: TaskState?, dependencies: [any _QueryTask])
 
-  public var info: QueryTaskInfo
+  public let id: QueryTaskIdentifier
+  public var configuration: QueryTaskConfiguration
 
-  public var context: QueryContext
-
-  private let work: @Sendable (QueryContext) async throws -> any Sendable
+  private let work: @Sendable (QueryTaskConfiguration) async throws -> any Sendable
   private let transforms: @Sendable (any Sendable) throws -> Value
   private let box: LockedBox<State>
 }
 
 extension QueryTask {
   public init(
-    name: String? = nil,
-    context: QueryContext,
-    work: @escaping @Sendable (QueryContext) async throws -> Value
+    configuration: QueryTaskConfiguration,
+    work: @escaping @Sendable (QueryTaskConfiguration) async throws -> Value
   ) {
-    self.info = QueryTaskInfo(name: name)
-    self.context = context
+    self.id = .next()
+    self.configuration = configuration
     self.work = work
     self.transforms = { $0 as! Value }
     self.box = LockedBox(value: (nil, []))
-  }
-}
-
-// MARK: - Info
-
-extension QueryTask {
-  public var name: String? {
-    get { self.info.name }
-    set { self.info.name = newValue }
   }
 }
 
@@ -72,19 +97,11 @@ extension QueryTaskIdentifier: CustomDebugStringConvertible {
   }
 }
 
-// MARK: - Identifiable
-
-extension QueryTask: Identifiable {
-  public var id: QueryTaskIdentifier {
-    self.info.id
-  }
-}
-
 // MARK: - Equatable
 
 extension QueryTask: Equatable {
   public static func == (lhs: Self, rhs: Self) -> Bool {
-    lhs.info.id == rhs.info.id
+    lhs.id == rhs.id
   }
 }
 
@@ -92,7 +109,7 @@ extension QueryTask: Equatable {
 
 extension QueryTask: Hashable {
   public func hash(into hasher: inout Hasher) {
-    hasher.combine(self.info.id)
+    hasher.combine(self.id)
   }
 }
 
@@ -101,22 +118,22 @@ extension QueryTask: Hashable {
 extension QueryTask {
   public func schedule<V: Sendable>(after task: QueryTask<V>) {
     self.withDependencies {
-      $0.removeAll { $0.info.id == task.info.id }
+      $0.removeAll { $0.id == task.id }
       $0.append(task)
     }
   }
 
   public func schedule<V: Sendable>(after tasks: some Sequence<QueryTask<V>>) {
     self.withDependencies {
-      let ids = Set(tasks.map(\.info.id))
+      let ids = Set(tasks.map(\.id))
       $0.removeAll { ids.contains($0.info.id) }
-      $0.append(contentsOf: tasks.removeFirstDuplicates(by: \.info.id))
+      $0.append(contentsOf: tasks.removeFirstDuplicates(by: \.id))
     }
   }
 
   private func withDependencies(_ fn: (inout [any _QueryTask]) -> Void) {
     self.box.inner.withLock { fn(&$0.dependencies) }
-    self.warnIfCyclesDetected(cyclicalIds: [self.info], visited: [self.info.id])
+    self.warnIfCyclesDetected(cyclicalIds: [self.info], visited: [self.id])
   }
 
   fileprivate func warnIfCyclesDetected(
@@ -191,18 +208,31 @@ extension QueryTask {
   }
 
   private func newTask() -> Task<any Sendable, any Error> {
-    var context = self.context
-    context.queryRunningTaskInfo = self.info
-    return Task {
-      await withTaskGroup(of: Void.self) { group in
-        for dependency in self.dependencies {
-          group.addTask { _ = try? await dependency._runIfNeeded() }
-        }
+    // TODO: - Use the newly proposed task name API when available.
+    var config = self.configuration
+    config.context.queryRunningTaskInfo = self.info
+    if #available(iOS 18.0, macOS 15.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, *) {
+      return Task(executorPreference: config.executorPreference, priority: config.priority) {
+        try await self.performTask(using: config)
       }
-      let result = await Result { try await self.work(context) as any Sendable }
-      self.box.inner.withLock { $0.task = .finished(result) }
-      return try result.get()
+    } else {
+      return Task(priority: config.priority) {
+        try await self.performTask(using: config)
+      }
     }
+  }
+
+  private func performTask(
+    using configuration: QueryTaskConfiguration
+  ) async throws -> any Sendable {
+    await withTaskGroup(of: Void.self) { group in
+      for dependency in self.dependencies {
+        group.addTask { _ = try? await dependency._runIfNeeded() }
+      }
+    }
+    let result = await Result { try await self.work(configuration) as any Sendable }
+    self.box.inner.withLock { $0.task = .finished(result) }
+    return try result.get()
   }
 
   private enum RunAction {
@@ -261,8 +291,8 @@ extension QueryTask {
     _ transform: @escaping @Sendable (Value) throws -> T
   ) -> QueryTask<T> {
     QueryTask<T>(
-      info: self.info,
-      context: self.context,
+      id: self.id,
+      configuration: self.configuration,
       work: self.work,
       transforms: { try transform(self.transforms($0)) },
       box: self.box
@@ -272,19 +302,20 @@ extension QueryTask {
 
 // MARK: - Info
 
-public struct QueryTaskInfo: Hashable, Sendable, Identifiable {
+public struct QueryTaskInfo: Sendable, Identifiable {
   public let id: QueryTaskIdentifier
-  public var name: String?
-
-  public init(name: String? = nil) {
-    self.id = .next()
-    self.name = name
-  }
+  public let configuration: QueryTaskConfiguration
 }
 
 extension QueryTaskInfo: CustomStringConvertible {
   public var description: String {
-    "[\(name ?? "Unnamed QueryTask")](ID: \(id.debugDescription))"
+    "[\(self.configuration.name ?? "Unnamed QueryTask")](ID: \(id.debugDescription))"
+  }
+}
+
+extension QueryTask {
+  public var info: QueryTaskInfo {
+    QueryTaskInfo(id: self.id, configuration: self.configuration)
   }
 }
 

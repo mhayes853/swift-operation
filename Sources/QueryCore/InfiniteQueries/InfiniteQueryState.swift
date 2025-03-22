@@ -69,7 +69,7 @@ extension InfiniteQueryState: QueryStateProtocol {
   public mutating func scheduleFetchTask(
     _ task: inout QueryTask<InfiniteQueryValue<PageID, PageValue>>
   ) {
-    switch self.request(in: task.context) {
+    switch self.request(in: task.configuration.context) {
     case .allPages:
       task.schedule(after: self.fetchInitialTasks)
       task.schedule(after: self.fetchNextTasks)
@@ -109,7 +109,7 @@ extension InfiniteQueryState: QueryStateProtocol {
     with result: Result<InfiniteQueryValue<PageID, PageValue>, any Error>,
     for task: QueryTask<InfiniteQueryValue<PageID, PageValue>>
   ) {
-    self.requests[task.id] = self.request(in: task.context)
+    self.requests[task.id] = self.request(in: task.configuration.context)
     switch result {
     case let .success(value):
       switch value.response {
@@ -140,12 +140,12 @@ extension InfiniteQueryState: QueryStateProtocol {
       self.nextPageId = value.nextPageId
       self.previousPageId = value.previousPageId
       self.valueUpdateCount += 1
-      self.valueLastUpdatedAt = task.context.queryClock.now()
+      self.valueLastUpdatedAt = task.configuration.context.queryClock.now()
       self.error = nil
     case let .failure(error):
       self.error = error
       self.errorUpdateCount += 1
-      self.errorLastUpdatedAt = task.context.queryClock.now()
+      self.errorLastUpdatedAt = task.configuration.context.queryClock.now()
     }
   }
 

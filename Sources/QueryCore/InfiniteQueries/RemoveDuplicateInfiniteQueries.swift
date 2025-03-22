@@ -1,7 +1,8 @@
 func removeDuplicateInfiniteQueries<Query: InfiniteQueryRequest>(
-  _ info1: QueryRequestDeuplicateableInfo,
-  _ info2: QueryRequestDeuplicateableInfo,
+  _ info1: QueryTaskInfo,
+  _ info2: QueryTaskInfo,
   using query: Query
 ) -> Bool {
-  info1.context.paging(for: query).request == info2.context.paging(for: query).request
+  info1.configuration.context.paging(for: query).request
+    == info2.configuration.context.paging(for: query).request
 }

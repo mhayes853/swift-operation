@@ -11,12 +11,12 @@ public protocol QueryController<State>: Sendable {
 public struct QueryControls<State: QueryStateProtocol>: Sendable {
   private var _context: @Sendable () -> QueryContext
   private let onResult: @Sendable (Result<State.StateValue, any Error>, QueryContext) -> Void
-  private let refetchTask: @Sendable (_ name: String?, QueryContext) -> QueryTask<State.QueryValue>?
+  private let refetchTask: @Sendable (QueryTaskConfiguration?) -> QueryTask<State.QueryValue>?
 
   public init(
     context: @escaping @Sendable () -> QueryContext,
     onResult: @escaping @Sendable (Result<State.StateValue, any Error>, QueryContext) -> Void,
-    refetchTask: @escaping @Sendable (String?, QueryContext) -> QueryTask<State.QueryValue>?
+    refetchTask: @escaping @Sendable (QueryTaskConfiguration?) -> QueryTask<State.QueryValue>?
   ) {
     self._context = context
     self.onResult = onResult
@@ -54,17 +54,15 @@ extension QueryControls {
 extension QueryControls {
   @discardableResult
   public func yieldRefetch(
-    taskName: String? = nil,
-    using context: QueryContext? = nil
+    with configuration: QueryTaskConfiguration? = nil
   ) async throws -> State.QueryValue? {
-    try await self.yieldRefetchTask(name: taskName, using: context)?.runIfNeeded()
+    try await self.yieldRefetchTask(with: configuration)?.runIfNeeded()
   }
 
   public func yieldRefetchTask(
-    name: String? = nil,
-    using context: QueryContext? = nil
+    with configuration: QueryTaskConfiguration? = nil
   ) -> QueryTask<State.QueryValue>? {
-    self.refetchTask(name, context ?? self.context)
+    self.refetchTask(configuration)
   }
 }
 

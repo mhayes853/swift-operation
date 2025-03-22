@@ -68,28 +68,31 @@ extension MutationStore {
 extension MutationStore {
   @discardableResult
   public func mutate(
-    taskName: String? = nil,
     with arguments: Arguments,
-    handler: MutationEventHandler<Arguments, Value> = MutationEventHandler(),
-    using context: QueryContext? = nil
+    using configuration: QueryTaskConfiguration? = nil,
+    handler: MutationEventHandler<Arguments, Value> = MutationEventHandler()
   ) async throws -> Value {
-    var context = context ?? self.context
-    context.mutationValues = MutationContextValues(arguments: arguments)
-    return try await self.base.fetch(
-      taskName: taskName ?? self.mutateTaskName,
-      handler: self.queryStoreHandler(for: handler),
-      using: context
+    try await self.base.fetch(
+      using: self.taskConfiguration(with: arguments, using: configuration),
+      handler: self.queryStoreHandler(for: handler)
     )
   }
 
   public func mutateTask(
-    name: String? = nil,
     with arguments: Arguments,
-    using context: QueryContext? = nil
+    using configuration: QueryTaskConfiguration? = nil
   ) -> QueryTask<Value> {
-    var context = context ?? self.context
-    context.mutationValues = MutationContextValues(arguments: arguments)
-    return self.base.fetchTask(name: name ?? self.mutateTaskName, using: context)
+    self.base.fetchTask(using: self.taskConfiguration(with: arguments, using: configuration))
+  }
+
+  private func taskConfiguration(
+    with arguments: Arguments,
+    using base: QueryTaskConfiguration?
+  ) -> QueryTaskConfiguration {
+    var config = base ?? QueryTaskConfiguration(context: self.context)
+    config.context.mutationValues = MutationContextValues(arguments: arguments)
+    config.name = config.name ?? self.mutateTaskName
+    return config
   }
 
   private var mutateTaskName: String {
@@ -101,22 +104,27 @@ extension MutationStore {
 
 extension MutationStore {
   public func retryLatest(
-    taskName: String? = nil,
-    handler: MutationEventHandler<Arguments, Value> = MutationEventHandler(),
-    using context: QueryContext? = nil
+    using configuration: QueryTaskConfiguration? = nil,
+    handler: MutationEventHandler<Arguments, Value> = MutationEventHandler()
   ) async throws -> Value {
     try await self.base.fetch(
-      taskName: taskName ?? self.retryLatestTaskName,
-      handler: self.queryStoreHandler(for: handler),
-      using: context
+      using: self.retryTaskConfiguration(using: configuration),
+      handler: self.queryStoreHandler(for: handler)
     )
   }
 
   public func retryLatestTask(
-    name: String? = nil,
-    using context: QueryContext? = nil
+    using configuration: QueryTaskConfiguration? = nil
   ) -> QueryTask<Value> {
-    self.base.fetchTask(name: name ?? self.retryLatestTaskName, using: context)
+    self.base.fetchTask(using: self.retryTaskConfiguration(using: configuration))
+  }
+
+  private func retryTaskConfiguration(
+    using base: QueryTaskConfiguration?
+  ) -> QueryTaskConfiguration {
+    var config = base ?? QueryTaskConfiguration(context: self.context)
+    config.name = config.name ?? self.retryLatestTaskName
+    return config
   }
 
   private var retryLatestTaskName: String {

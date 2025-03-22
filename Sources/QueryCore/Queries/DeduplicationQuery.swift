@@ -1,12 +1,3 @@
-// MARK: - QueryRequestDeuplicateableInfo
-
-public struct QueryRequestDeuplicateableInfo: Sendable {
-  public let taskInfo: QueryTaskInfo
-  public let context: QueryContext
-}
-
-// MARK: - Deduplicated Modifier
-
 extension QueryRequest {
   public func deduplicated() -> ModifiedQuery<Self, some QueryModifier<Self>> {
     self.modifier(
@@ -21,29 +12,20 @@ extension QueryRequest {
   }
 
   public func deduplicated(
-    by removeDuplicates: @escaping @Sendable (
-      QueryRequestDeuplicateableInfo,
-      QueryRequestDeuplicateableInfo
-    ) -> Bool
+    by removeDuplicates: @escaping @Sendable (QueryTaskInfo, QueryTaskInfo) -> Bool
   ) -> ModifiedQuery<Self, some QueryModifier<Self>> {
     self.modifier(DeduplicationModifier(removeDuplicates: removeDuplicates))
   }
 }
 
 private final actor DeduplicationModifier<Query: QueryRequest>: QueryModifier {
-  private let removeDuplicates:
-    @Sendable (QueryRequestDeuplicateableInfo, QueryRequestDeuplicateableInfo) -> Bool
+  private let removeDuplicates: @Sendable (QueryTaskInfo, QueryTaskInfo) -> Bool
 
   private var entries = [
-    QueryTaskIdentifier: (info: QueryRequestDeuplicateableInfo, task: Task<Query.Value, any Error>)
+    QueryTaskIdentifier: (info: QueryTaskInfo, task: Task<Query.Value, any Error>)
   ]()
 
-  init(
-    removeDuplicates: @escaping @Sendable (
-      QueryRequestDeuplicateableInfo,
-      QueryRequestDeuplicateableInfo
-    ) -> Bool
-  ) {
+  init(removeDuplicates: @escaping @Sendable (QueryTaskInfo, QueryTaskInfo) -> Bool) {
     self.removeDuplicates = removeDuplicates
   }
 
@@ -55,11 +37,7 @@ private final actor DeduplicationModifier<Query: QueryRequest>: QueryModifier {
     guard let taskInfo = context.queryRunningTaskInfo else {
       return try await query.fetch(in: context, with: continuation)
     }
-    let deduplicatedInfo = QueryRequestDeuplicateableInfo(
-      taskInfo: taskInfo,
-      context: context
-    )
-    let entry = self.entries.first { self.removeDuplicates($0.value.info, deduplicatedInfo) }?.value
+    let entry = self.entries.first { self.removeDuplicates($0.value.info, taskInfo) }?.value
     if let entry {
       return try await entry.task.value
     } else {
@@ -67,7 +45,7 @@ private final actor DeduplicationModifier<Query: QueryRequest>: QueryModifier {
         defer { self.entries[taskInfo.id] = nil }
         return try await query.fetch(in: context, with: continuation)
       }
-      self.entries[taskInfo.id] = (deduplicatedInfo, task)
+      self.entries[taskInfo.id] = (taskInfo, task)
       return try await task.value
     }
   }

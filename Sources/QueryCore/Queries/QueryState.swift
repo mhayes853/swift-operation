@@ -58,7 +58,7 @@ extension QueryState: QueryStateProtocol {
     with result: Result<QueryValue, any Error>,
     for task: QueryTask<QueryValue>
   ) {
-    self.update(with: result.map { $0 as! StateValue }, using: task.context)
+    self.update(with: result.map { $0 as! StateValue }, using: task.configuration.context)
   }
 
   public mutating func finishFetchTask(_ task: QueryTask<QueryValue>) {
