@@ -18,7 +18,7 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
   private let initialState: State
   private let _query: any QueryRequest<State.QueryValue>
   private let _state: LockedBox<_State>
-  private let subscriptions: QuerySubscriptions<QueryEventHandler<State.QueryValue>>
+  private let subscriptions: QuerySubscriptions<QueryEventHandler<State>>
 
   private init<Query: QueryRequest>(
     query: Query,
@@ -179,7 +179,7 @@ extension QueryStore {
   @discardableResult
   public func fetch(
     using configuration: QueryTaskConfiguration? = nil,
-    handler: QueryEventHandler<State.QueryValue> = QueryEventHandler()
+    handler: QueryEventHandler<State> = QueryEventHandler()
   ) async throws -> State.QueryValue {
     let (subscription, _) = self.subscriptions.add(handler: handler, isTemporary: true)
     defer { subscription.cancel() }
@@ -284,7 +284,7 @@ extension QueryStore {
   }
 
   public func subscribe(
-    with handler: QueryEventHandler<State.QueryValue>
+    with handler: QueryEventHandler<State>
   ) -> QuerySubscription {
     let (subscription, isFirstSubscriber) = self.subscriptions.add(handler: handler)
     if self.isAutomaticFetchingEnabled && isFirstSubscriber {

@@ -107,7 +107,7 @@ struct QueryControllerTests {
           .enableAutomaticFetching(when: .always(true)),
         initialValue: nil
       )
-    let collector = QueryStoreEventsCollector<TestQuery.Value>()
+    let collector = QueryStoreEventsCollector<TestQuery.State>()
     let subscription = store.subscribe(with: collector.eventHandler())
     controller.controls.withLock { $0?.yield(10) }
     collector.expectEventsMatch([.stateChanged])

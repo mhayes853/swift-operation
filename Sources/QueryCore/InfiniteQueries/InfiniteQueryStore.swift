@@ -292,7 +292,7 @@ extension InfiniteQueryStore {
 extension InfiniteQueryStore {
   private func queryStoreHandler(
     for handler: InfiniteQueryEventHandler<PageID, PageValue>
-  ) -> QueryEventHandler<InfiniteQueryState<PageID, PageValue>.QueryValue> {
+  ) -> QueryEventHandler<InfiniteQueryState<PageID, PageValue>> {
     QueryEventHandler(
       onFetchingStarted: handler.onFetchingStarted,
       onFetchingEnded: handler.onFetchingFinished,

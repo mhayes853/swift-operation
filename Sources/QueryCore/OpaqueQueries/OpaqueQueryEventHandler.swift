@@ -19,8 +19,8 @@ public struct OpaqueQueryEventHandler: Sendable {
 // MARK: - Casting
 
 extension OpaqueQueryEventHandler {
-  func casted<V: Sendable>(to value: V.Type) -> QueryEventHandler<V> {
-    QueryEventHandler<V>(
+  func casted<State: QueryStateProtocol>(to stateType: State.Type) -> QueryEventHandler<State> {
+    QueryEventHandler<State>(
       onFetchingStarted: self.onFetchingStarted,
       onFetchingEnded: self.onFetchingEnded,
       onResultReceived: { result, context in

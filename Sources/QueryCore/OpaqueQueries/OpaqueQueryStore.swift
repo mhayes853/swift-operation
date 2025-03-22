@@ -135,19 +135,14 @@ extension QueryStore: OpaqueableQueryStore {
     using configuration: QueryTaskConfiguration?,
     handler: OpaqueQueryEventHandler
   ) async throws -> any Sendable {
-    try await self.fetch(
-      using: configuration,
-      handler: handler.casted(to: State.QueryValue.self)
-    )
+    try await self.fetch(using: configuration, handler: handler.casted(to: State.self))
   }
 
   func opaqueFetchTask(using configuration: QueryTaskConfiguration?) -> QueryTask<any Sendable> {
     self.fetchTask(using: configuration).map { $0 }
   }
 
-  func opaqueSubscribe(
-    with handler: OpaqueQueryEventHandler
-  ) -> QuerySubscription {
-    self.subscribe(with: handler.casted(to: State.QueryValue.self))
+  func opaqueSubscribe(with handler: OpaqueQueryEventHandler) -> QuerySubscription {
+    self.subscribe(with: handler.casted(to: State.self))
   }
 }

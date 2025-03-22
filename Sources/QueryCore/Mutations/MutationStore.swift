@@ -160,8 +160,8 @@ extension MutationStore {
 extension MutationStore {
   private func queryStoreHandler(
     for handler: MutationEventHandler<Arguments, Value>
-  ) -> QueryEventHandler<Value> {
-    QueryEventHandler<Value>(
+  ) -> QueryEventHandler<MutationState<Arguments, Value>> {
+    QueryEventHandler<MutationState<Arguments, Value>>(
       onFetchingStarted: {
         guard let args = $0.mutationArgs(as: Arguments.self) else { return }
         handler.onMutatingStarted?(args, $0)

@@ -154,11 +154,11 @@ extension InfiniteQueryStoreEventsCollector {
 
 // MARK: - QueryStoreEvent
 
-enum QueryStoreEvent<Value: Sendable & Equatable>: Sendable {
+enum QueryStoreEvent<State: QueryStateProtocol>: Sendable where State.QueryValue: Equatable {
   case fetchingStarted
   case fetchingEnded
   case stateChanged
-  case resultReceived(Result<Value, any Error>)
+  case resultReceived(Result<State.QueryValue, any Error>)
 }
 
 extension QueryStoreEvent: QueryStoreEventProtocol {
@@ -185,13 +185,13 @@ extension QueryStoreEvent: QueryStoreEventProtocol {
   }
 }
 
-typealias QueryStoreEventsCollector<Value: Equatable & Sendable> = _QueryStoreEventsCollector<
-  QueryStoreEvent<Value>
->
+typealias QueryStoreEventsCollector<State: QueryStateProtocol> = _QueryStoreEventsCollector<
+  QueryStoreEvent<State>
+> where State.QueryValue: Equatable
 
 extension QueryStoreEventsCollector {
-  func eventHandler<Value: Sendable>() -> QueryEventHandler<Value>
-  where Event == QueryStoreEvent<Value> {
+  func eventHandler<State>() -> QueryEventHandler<State>
+  where Event == QueryStoreEvent<State> {
     QueryEventHandler(
       onFetchingStarted: { _ in self.events.withLock { $0.append(.fetchingStarted) } },
       onFetchingEnded: { _ in self.events.withLock { $0.append(.fetchingEnded) } },
