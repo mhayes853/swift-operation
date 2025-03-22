@@ -333,7 +333,7 @@ struct MutationStoreTests {
   func defaultMutationStoreTaskName() async throws {
     let store = self.client.store(for: EmptyMutation())
     let task = store.mutateTask(with: "blob")
-    expectNoDifference(task.name, "MutationStore<String, String> Mutate Task")
+    expectNoDifference(task.configuration.name, "MutationStore<String, String> Mutate Task")
   }
 
   @Test("Default RetryLatest MutationStoreTask Name")
@@ -341,7 +341,7 @@ struct MutationStoreTests {
     let store = self.client.store(for: EmptyMutation())
     try await store.mutate(with: "blob")
     let task = store.retryLatestTask()
-    expectNoDifference(task.name, "MutationStore<String, String> Retry Latest Task")
+    expectNoDifference(task.configuration.name, "MutationStore<String, String> Retry Latest Task")
   }
 
   @Test("Uses More Recent State Update Between History And Yielding")

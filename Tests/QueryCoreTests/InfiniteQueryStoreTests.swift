@@ -710,21 +710,30 @@ struct InfiniteQueryStoreTests {
   func defaultInfiniteQueryStoreName() async throws {
     let store = self.client.store(for: EmptyInfiniteQuery(initialPageId: 0, path: []))
     let task = store.fetchAllPagesTask()
-    expectNoDifference(task.name, "InfiniteQueryStore<Int, String> Fetch All Pages Task")
+    expectNoDifference(
+      task.configuration.name,
+      "InfiniteQueryStore<Int, String> Fetch All Pages Task"
+    )
   }
 
   @Test("Default FetchNext InfiniteQueryStore Task Name")
   func defaultFetchNextInfiniteQueryStoreName() async throws {
     let store = self.client.store(for: EmptyInfiniteQuery(initialPageId: 0, path: []))
     let task = store.fetchNextPageTask()
-    expectNoDifference(task.name, "InfiniteQueryStore<Int, String> Fetch Next Page Task")
+    expectNoDifference(
+      task.configuration.name,
+      "InfiniteQueryStore<Int, String> Fetch Next Page Task"
+    )
   }
 
   @Test("Default FetchPrevious InfiniteQueryStore Task Name")
   func defaultFetchPreviousInfiniteQueryStoreName() async throws {
     let store = self.client.store(for: EmptyInfiniteQuery(initialPageId: 0, path: []))
     let task = store.fetchPreviousPageTask()
-    expectNoDifference(task.name, "InfiniteQueryStore<Int, String> Fetch Previous Page Task")
+    expectNoDifference(
+      task.configuration.name,
+      "InfiniteQueryStore<Int, String> Fetch Previous Page Task"
+    )
   }
 
   @Test("Controller Yields New State Value To Infinite Query")

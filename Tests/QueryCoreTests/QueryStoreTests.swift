@@ -310,14 +310,15 @@ struct QueryStoreTests {
   @Test("Override Query Store Task Name")
   func overrideQueryStoreTaskName() async throws {
     let store = self.client.store(for: TestQuery())
-    let taskName = store.fetchTask(name: "Blob").name
+    let config = QueryTaskConfiguration(name: "Blob", context: store.context)
+    let taskName = store.fetchTask(using: config).configuration.name
     expectNoDifference(taskName, "Blob")
   }
 
   @Test("Default Query Store Task Name")
   func defaultQueryStoreTaskName() async throws {
     let store = self.client.store(for: TestQuery())
-    let taskName = store.fetchTask().name
+    let taskName = store.fetchTask().configuration.name
     expectNoDifference(taskName, "QueryStore<QueryState<Int?, Int>> Task")
   }
 

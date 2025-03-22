@@ -205,7 +205,7 @@ extension InfiniteQueryStore {
   }
 
   public func fetchPreviousPageTask(
-    using configuration: QueryTaskConfiguration?
+    using configuration: QueryTaskConfiguration? = nil
   ) -> QueryTask<InfiniteQueryPage<PageID, PageValue>?> {
     guard self.hasPreviousPage else {
       return QueryTask(
