@@ -262,6 +262,7 @@ extension QueryTask {
     self.box.inner.withLock {
       switch $0.task {
       case let .running(task): task.cancel()
+      case .finished: return
       default: break
       }
       $0.task = .finished(.failure(CancellationError()))

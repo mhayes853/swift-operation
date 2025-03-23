@@ -144,6 +144,15 @@ struct QueryTaskTests {
     expectNoDifference(task.isCancelled, true)
   }
 
+  @Test("Cannot Be Cancelled After Finishing")
+  func cannotBeCancelledAfterFinishing() async throws {
+    let config = QueryTaskConfiguration(context: QueryContext())
+    let task = QueryTask<Int>(configuration: config) { _ in 42 }
+    _ = try await task.runIfNeeded()
+    task.cancel()
+    expectNoDifference(task.isCancelled, false)
+  }
+
   @Test("Map Task Value")
   func mapTaskValue() async throws {
     let config = QueryTaskConfiguration(context: QueryContext())
