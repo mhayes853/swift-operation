@@ -124,9 +124,23 @@ struct QueryTaskTests {
   func cancelFromRegularTaskIsCancelled() async throws {
     let config = QueryTaskConfiguration(context: QueryContext())
     let task = QueryTask<Void>(configuration: config) { _ in try await Task.never() }
-    let base = Task.detached { try await task.runIfNeeded() }
+    let base = Task { try await task.runIfNeeded() }
     base.cancel()
-    _ = try? await base.value
+    await #expect(throws: CancellationError.self) {
+      try await base.value
+    }
+    expectNoDifference(task.isCancelled, true)
+  }
+
+  @Test("Cancel From Regular Task When Not Respecting Cancellation Error, Is Cancelled")
+  func cancelFromRegularTaskWhenNotRespectingCancellationError() async throws {
+    let config = QueryTaskConfiguration(context: QueryContext())
+    let task = QueryTask<Void>(configuration: config) { _ in try? await Task.never() }
+    let base = Task { try await task.runIfNeeded() }
+    base.cancel()
+    await #expect(throws: CancellationError.self) {
+      try await base.value
+    }
     expectNoDifference(task.isCancelled, true)
   }
 

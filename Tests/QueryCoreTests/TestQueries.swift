@@ -104,9 +104,10 @@ final actor CountingQuery: QueryRequest {
 // MARK: - EndlesQuery
 
 struct EndlessQuery: QueryRequest, Hashable {
-  func fetch(in context: QueryContext, with continuation: QueryContinuation<String>) async throws
-    -> String
-  {
+  func fetch(
+    in context: QueryContext,
+    with continuation: QueryContinuation<String>
+  ) async throws -> String {
     try await Task.never()
     return ""
   }

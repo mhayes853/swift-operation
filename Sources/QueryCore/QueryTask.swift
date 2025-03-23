@@ -231,7 +231,11 @@ extension QueryTask {
         group.addTask { _ = try? await dependency._runIfNeeded() }
       }
     }
-    let result = await Result { try await self.work(info) as any Sendable }
+    let result = await Result {
+      let value = try await self.work(info) as any Sendable
+      try Task.checkCancellation()
+      return value
+    }
     self.box.inner.withLock { $0.task = .finished(result) }
     return try result.get()
   }
