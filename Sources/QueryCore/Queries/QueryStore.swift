@@ -246,9 +246,8 @@ extension QueryStore {
       } catch {
         self.editState(in: info.configuration.context) { state in
           let cohortId = self._state.inner.withLock { $0.taskCohortId }
-          guard cohortId == initialCohortId else { return }
           task.inner.withLock {
-            guard let task = $0 else { return }
+            guard let task = $0, cohortId == initialCohortId else { return }
             state.update(with: .failure(error), for: task)
             state.finishFetchTask(task)
           }

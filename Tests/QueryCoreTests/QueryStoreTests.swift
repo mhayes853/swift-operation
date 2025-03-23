@@ -528,6 +528,13 @@ struct QueryStoreTests {
     expectNoDifference(store.error is CancellationError, true)
   }
 
+  @Test("Cancel All Active Tasks, Does Not Set Cancellation Error When No Tasks Are Active")
+  func cancelAllActiveTasksDoesNotSetCancellationErrorWhenNoTasksAreActive() async throws {
+    let store = self.client.store(for: TestQuery())
+    store.cancelAllActiveTasks()
+    expectNoDifference(store.error == nil, true)
+  }
+
   @Test("Cancel All Active Tasks, Does Not Update Error With Cancelled Task Error")
   func cancelAllActiveTasksDoesNotUpdateErrorWithIndividualTaskCancellationErrors() async throws {
     let store = self.client.store(for: EndlessQuery())
