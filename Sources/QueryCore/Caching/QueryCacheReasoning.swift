@@ -1,8 +1,18 @@
 // MARK: - QueryCacheSaveReason
 
-public enum QueryCacheSaveReason: Sendable, Hashable {
-  case userInitiated
-  case newlyFetchedData
+public struct QueryCacheSaveReason: Sendable, Hashable {
+  private let rawValue: String
+}
+
+extension QueryCacheSaveReason {
+  public static let userInitiated = Self(rawValue: "userInitiated")
+  public static let newlyFetchedData = Self(rawValue: "newlyFetchedData")
+}
+
+extension QueryCacheSaveReason: CustomStringConvertible {
+  public var description: String {
+    self.rawValue
+  }
 }
 
 extension QueryContext {
@@ -18,9 +28,19 @@ extension QueryContext {
 
 // MARK: - QueryCacheRemoveReason
 
-public enum QueryCacheRemoveReason: Sendable, Hashable {
-  case userInitiated
-  case expiredData
+public struct QueryCacheRemoveReason: Sendable, Hashable {
+  private let rawValue: String
+}
+
+extension QueryCacheRemoveReason {
+  public static let userInitiated = Self(rawValue: "userInitiated")
+  public static let expiredData = Self(rawValue: "expiredData")
+}
+
+extension QueryCacheRemoveReason: CustomStringConvertible {
+  public var description: String {
+    self.rawValue
+  }
 }
 
 extension QueryContext {
