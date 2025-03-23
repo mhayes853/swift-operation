@@ -157,7 +157,7 @@ extension QueryStore {
 extension QueryStore {
   public func reset() {
     self.editState {
-      $0.cancelAllActiveTasks()
+      $0.cancelAllActiveTasks(using: self.context)
       $0 = self.initialState
     }
   }
@@ -167,7 +167,7 @@ extension QueryStore {
 
 extension QueryStore {
   public func cancelAllActiveTasks() {
-    self._state.inner.withLock { $0.query.cancelAllActiveTasks() }
+    self._state.inner.withLock { $0.query.cancelAllActiveTasks(using: $0.context) }
   }
 }
 

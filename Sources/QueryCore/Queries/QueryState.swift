@@ -37,7 +37,7 @@ extension QueryState: QueryStateProtocol {
     self.tasks.append(task)
   }
 
-  public func cancelAllActiveTasks() {
+  public mutating func cancelAllActiveTasks(using context: QueryContext) {
     for task in self.tasks {
       task.cancel()
     }

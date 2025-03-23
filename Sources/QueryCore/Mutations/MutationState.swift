@@ -90,7 +90,7 @@ extension MutationState: QueryStateProtocol {
     self.history.append(HistoryEntry(task: task, args: args))
   }
 
-  public func cancelAllActiveTasks() {
+  public mutating func cancelAllActiveTasks(using context: QueryContext) {
   }
 
   public mutating func update(
