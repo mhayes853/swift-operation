@@ -1,8 +1,18 @@
 // MARK: - QueryResultUpdateReason
 
-public enum QueryResultUpdateReason: Hashable, Sendable {
-  case yieldedResult
-  case returnedFinalResult
+public struct QueryResultUpdateReason: Hashable, Sendable {
+  private let rawValue: String
+}
+
+extension QueryResultUpdateReason {
+  public static let yieldedResult = Self(rawValue: "yieldedResult")
+  public static let returnedFinalResult = Self(rawValue: "returnedFinalResult")
+}
+
+extension QueryResultUpdateReason: CustomStringConvertible {
+  public var description: String {
+    self.rawValue
+  }
 }
 
 // MARK: - QueryContext
