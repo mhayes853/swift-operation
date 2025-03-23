@@ -41,6 +41,8 @@ extension QueryState: QueryStateProtocol {
     for task in self.tasks {
       task.cancel()
     }
+    self.tasks.removeAll()
+    self.update(with: .failure(CancellationError()), using: context)
   }
 
   public mutating func update(

@@ -502,6 +502,43 @@ struct QueryStoreTests {
     collector.expectEventsMatch([.stateChanged])
     subscription.cancel()
   }
+
+  @Test("Cancel All Active Tasks, Cancels Tasks")
+  func cancelAllActiveTasksCancelsTasks() async throws {
+    let store = self.client.store(for: TestQuery())
+    let task = store.fetchTask()
+    let task2 = store.fetchTask()
+    store.cancelAllActiveTasks()
+    await #expect(throws: CancellationError.self) {
+      try await task.runIfNeeded()
+    }
+    await #expect(throws: CancellationError.self) {
+      try await task2.runIfNeeded()
+    }
+  }
+
+  @Test("Cancel All Active Tasks, Eagerly Updates Tasks In State")
+  func cancelAllActiveTasksRemovesAllTasks() async throws {
+    let store = self.client.store(for: TestQuery())
+    let task = store.fetchTask()
+    let task2 = store.fetchTask()
+    expectNoDifference(store.tasks, [task, task2])
+    store.cancelAllActiveTasks()
+    expectNoDifference(store.tasks, [])
+    expectNoDifference(store.error is CancellationError, true)
+  }
+
+  @Test("Cancel All Active Tasks, Does Not Update Error With Cancelled Task Error")
+  func cancelAllActiveTasksDoesNotUpdateErrorWithIndividualTaskCancellationErrors() async throws {
+    let store = self.client.store(for: EndlessQuery())
+    let task = Task { try await store.fetch() }
+    await Task.megaYield()
+    store.cancelAllActiveTasks()
+
+    expectNoDifference(store.errorUpdateCount, 1)
+    _ = try? await task.value
+    expectNoDifference(store.errorUpdateCount, 1)
+  }
 }
 
 extension QueryContext {

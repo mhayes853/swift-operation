@@ -12,7 +12,10 @@ public typealias QueryStoreFor<Query: QueryRequest> = QueryStore<
 @dynamicMemberLookup
 public final class QueryStore<State: QueryStateProtocol>: Sendable {
   private typealias _State = (
-    query: State, context: QueryContext, controllerSubscriptions: [QuerySubscription]
+    query: State,
+    taskCohortId: Int,
+    context: QueryContext,
+    controllerSubscriptions: [QuerySubscription]
   )
 
   private let initialState: State
@@ -28,7 +31,12 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
     self.initialState = initialState
     self._query = query
     self._state = LockedBox(
-      value: (query: initialState, context: initialContext, controllerSubscriptions: [])
+      value: (
+        query: initialState,
+        taskCohortId: 0,
+        context: initialContext,
+        controllerSubscriptions: []
+      )
     )
     self.subscriptions = QuerySubscriptions()
     self.setupQuery(with: initialContext)
@@ -157,7 +165,7 @@ extension QueryStore {
 extension QueryStore {
   public func reset() {
     self.editState {
-      $0.cancelAllActiveTasks(using: self.context)
+      self.cancelAllActiveTasks()
       $0 = self.initialState
     }
   }
@@ -167,7 +175,10 @@ extension QueryStore {
 
 extension QueryStore {
   public func cancelAllActiveTasks() {
-    self._state.inner.withLock { $0.query.cancelAllActiveTasks(using: $0.context) }
+    self._state.inner.withLock {
+      $0.query.cancelAllActiveTasks(using: $0.context)
+      $0.taskCohortId += 1
+    }
   }
 }
 
@@ -195,7 +206,11 @@ extension QueryStore {
       config.name =
         config.name ?? "\(typeName(Self.self, qualified: true, genericsAbbreviated: false)) Task"
       let task = LockedBox<QueryTask<State.QueryValue>?>(value: nil)
-      var inner = self.queryTask(configuration: config, using: task)
+      var inner = self.queryTask(
+        configuration: config,
+        initialCohortId: self._state.inner.withLock { $0.taskCohortId },
+        using: task
+      )
       task.inner.withLock { newTask in
         state.scheduleFetchTask(&inner)
         newTask = inner
@@ -206,6 +221,7 @@ extension QueryStore {
 
   private func queryTask(
     configuration: QueryTaskConfiguration,
+    initialCohortId: Int,
     using task: LockedBox<QueryTask<State.QueryValue>?>
   ) -> QueryTask<State.QueryValue> {
     QueryTask<State.QueryValue>(configuration: configuration) { info in
@@ -229,6 +245,8 @@ extension QueryStore {
         return value
       } catch {
         self.editState(in: info.configuration.context) { state in
+          let cohortId = self._state.inner.withLock { $0.taskCohortId }
+          guard cohortId == initialCohortId else { return }
           task.inner.withLock {
             guard let task = $0 else { return }
             state.update(with: .failure(error), for: task)
