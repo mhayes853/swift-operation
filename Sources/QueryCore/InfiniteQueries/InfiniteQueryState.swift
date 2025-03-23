@@ -25,8 +25,6 @@ public struct InfiniteQueryState<PageID: Hashable & Sendable, PageValue: Sendabl
   public private(set) var fetchNextTasks = IdentifiedArrayOf<QueryTask<QueryValue>>()
   public private(set) var fetchPreviousTasks = IdentifiedArrayOf<QueryTask<QueryValue>>()
 
-  private var requests = [QueryTaskIdentifier: InfiniteQueryPagingRequest<PageID>]()
-
   init(initialValue: StateValue, initialPageId: PageID) {
     self.currentValue = initialValue
     self.initialValue = initialValue
@@ -112,7 +110,6 @@ extension InfiniteQueryState: QueryStateProtocol {
     with result: Result<InfiniteQueryValue<PageID, PageValue>, any Error>,
     for task: QueryTask<InfiniteQueryValue<PageID, PageValue>>
   ) {
-    self.requests[task.id] = self.request(in: task.configuration.context)
     switch result {
     case let .success(value):
       switch value.response {
@@ -153,18 +150,10 @@ extension InfiniteQueryState: QueryStateProtocol {
   }
 
   public mutating func finishFetchTask(_ task: QueryTask<InfiniteQueryValue<PageID, PageValue>>) {
-    switch self.requests[task.id] {
-    case .allPages:
-      self.fetchAllTasks.remove(id: task.id)
-    case .initialPage:
-      self.fetchInitialTasks.remove(id: task.id)
-    case .nextPage:
-      self.fetchNextTasks.remove(id: task.id)
-    case .previousPage:
-      self.fetchPreviousTasks.remove(id: task.id)
-    default: break
-    }
-    self.requests.removeValue(forKey: task.id)
+    self.fetchAllTasks.remove(id: task.id)
+    self.fetchInitialTasks.remove(id: task.id)
+    self.fetchNextTasks.remove(id: task.id)
+    self.fetchPreviousTasks.remove(id: task.id)
   }
 
   func request(in context: QueryContext) -> InfiniteQueryPagingRequest<PageID> {
