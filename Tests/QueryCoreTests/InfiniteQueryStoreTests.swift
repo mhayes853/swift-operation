@@ -1030,10 +1030,13 @@ struct InfiniteQueryStoreTests {
     expectNoDifference(store.nextPageActiveTasks.count, 0)
     expectNoDifference(store.previousPageActiveTasks.count, 0)
     expectNoDifference(store.allPagesActiveTasks.count, 0)
+    _ = task
+    _ = task2
+    _ = task3
   }
 
-  @Test("Cancel All Active Tasks, Eagerly Updates Tasks In State")
-  func cancelAllActiveTasksRemovesAllTasks() async throws {
+  @Test("Cancel All Active Tasks, Eagerly Updates Error State")
+  func cancelAllActiveTasksUpdatesErrorState() async throws {
     let store = self.client.store(for: TestYieldableInfiniteQuery())
     let task = store.fetchNextPageTask()
     store.cancelAllActiveTasks()

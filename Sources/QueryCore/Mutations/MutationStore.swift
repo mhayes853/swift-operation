@@ -72,6 +72,22 @@ extension MutationStore {
   }
 }
 
+// MARK: - Reset
+
+extension MutationStore {
+  public func reset() {
+    self.base.reset()
+  }
+}
+
+// MARK: - Cancel Active Tasks
+
+extension MutationStore {
+  public func cancelAllActiveTasks() {
+    self.base.cancelAllActiveTasks()
+  }
+}
+
 // MARK: - Mutate
 
 extension MutationStore {

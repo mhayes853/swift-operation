@@ -484,4 +484,39 @@ struct MutationStoreTests {
       ContinuingValueThenErrorMutation.SomeError()
     )
   }
+
+  @Test("Cancel All Active Tasks, Eagerly Updates Error State")
+  func cancelAllActiveTasksUpdatesErrorState() async throws {
+    let store = self.client.store(for: EmptyMutation())
+    let task = store.mutateTask(with: "blob")
+    store.cancelAllActiveTasks()
+    expectNoDifference(store.error is CancellationError, true)
+    _ = task
+  }
+
+  @Test("Cancel All Active Tasks, Eagerly Task History Entry")
+  func cancelAllActiveTasksUpdatesTaskHistoryEntry() async throws {
+    let store = self.client.store(for: EmptyMutation())
+    let task = store.mutateTask(with: "blob")
+    store.cancelAllActiveTasks()
+    expectNoDifference(store.history[id: task.id]?.status.isCancelled, true)
+  }
+
+  @Test("Cancel All Active Tasks, Cancels Tasks")
+  func cancelAllActiveTasksCancelsTasks() async throws {
+    let store = self.client.store(for: EmptyMutation())
+    let task = store.mutateTask(with: "blob")
+    store.cancelAllActiveTasks()
+    await #expect(throws: CancellationError.self) {
+      try await task.runIfNeeded()
+    }
+  }
+
+  @Test("Cancel All Active Tasks, Does Not Set Cancellation Error When No Tasks Are Active")
+  func cancelAllActiveTasksDoesNotSetCancellationErrorWhenNoTasksAreActive() async throws {
+    let store = self.client.store(for: EmptyMutation())
+    try await store.mutate(with: "blob")
+    store.cancelAllActiveTasks()
+    expectNoDifference(store.error == nil, true)
+  }
 }
