@@ -4,9 +4,12 @@
 import PackageDescription
 
 let package = Package(
-  name: "swift-sharing-query",
+  name: "swift-query",
   platforms: [.iOS(.v13), .macOS(.v10_15), .tvOS(.v13), .watchOS(.v6)],
-  products: [.library(name: "SharingQuery", targets: ["SharingQuery"])],
+  products: [
+    .library(name: "SharingQuery", targets: ["SharingQuery"]),
+    .library(name: "QueryCore", targets: ["QueryCore"])
+  ],
   dependencies: [
     .package(url: "https://github.com/pointfreeco/swift-sharing", .upToNextMajor(from: "2.0.0")),
     .package(url: "https://github.com/pointfreeco/swift-custom-dump", from: "1.3.3"),
