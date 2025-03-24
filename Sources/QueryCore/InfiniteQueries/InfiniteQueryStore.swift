@@ -94,6 +94,17 @@ extension InfiniteQueryStore {
   }
 }
 
+// MARK: - Set Result
+
+extension InfiniteQueryStore {
+  public func setResult(
+    to result: Result<InfiniteQueryPages<PageID, PageValue>, any Error>,
+    using context: QueryContext? = nil
+  ) {
+    self.base.setResult(to: result, using: context)
+  }
+}
+
 // MARK: - Reset
 
 extension InfiniteQueryStore {

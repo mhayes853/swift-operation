@@ -72,6 +72,14 @@ extension MutationStore {
   }
 }
 
+// MARK: - Set Result
+
+extension MutationStore {
+  public func setResult(to result: Result<Value?, any Error>, using context: QueryContext? = nil) {
+    self.base.setResult(to: result, using: context)
+  }
+}
+
 // MARK: - Reset
 
 extension MutationStore {
