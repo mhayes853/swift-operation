@@ -57,7 +57,8 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
       refetchTask: { [weak self] configuration in
         guard self?.isAutomaticFetchingEnabled == true else { return nil }
         return self?.fetchTask(using: configuration)
-      }
+      },
+      onReset: { [weak self] in self?.reset(using: $0) }
     )
     self.values.inner.withLock { state in
       for controller in state.context.queryControllers {

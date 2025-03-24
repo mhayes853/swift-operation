@@ -12,15 +12,18 @@ public struct QueryControls<State: QueryStateProtocol>: Sendable {
   private var _context: @Sendable () -> QueryContext
   private let onResult: @Sendable (Result<State.StateValue, any Error>, QueryContext) -> Void
   private let refetchTask: @Sendable (QueryTaskConfiguration?) -> QueryTask<State.QueryValue>?
+  private let onReset: @Sendable (QueryContext) -> Void
 
   public init(
     context: @escaping @Sendable () -> QueryContext,
     onResult: @escaping @Sendable (Result<State.StateValue, any Error>, QueryContext) -> Void,
-    refetchTask: @escaping @Sendable (QueryTaskConfiguration?) -> QueryTask<State.QueryValue>?
+    refetchTask: @escaping @Sendable (QueryTaskConfiguration?) -> QueryTask<State.QueryValue>?,
+    onReset: @escaping @Sendable (QueryContext) -> Void
   ) {
     self._context = context
     self.onResult = onResult
     self.refetchTask = refetchTask
+    self.onReset = onReset
   }
 }
 
@@ -63,6 +66,14 @@ extension QueryControls {
     with configuration: QueryTaskConfiguration? = nil
   ) -> QueryTask<State.QueryValue>? {
     self.refetchTask(configuration)
+  }
+}
+
+// MARK: - Resetting
+
+extension QueryControls {
+  public func yieldReset(using context: QueryContext? = nil) {
+    self.onReset(context ?? self.context)
   }
 }
 

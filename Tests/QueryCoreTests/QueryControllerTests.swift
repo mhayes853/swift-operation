@@ -113,6 +113,18 @@ struct QueryControllerTests {
     collector.expectEventsMatch([.stateChanged])
     subscription.cancel()
   }
+
+  @Test("Yields Reset To Query")
+  func yieldsResetToQuery() async throws {
+    let controller = TestQueryController<TestQuery>()
+    let store = QueryStoreFor<TestQuery>
+      .detached(query: TestQuery().controlled(by: controller), initialValue: nil)
+    try await store.fetch()
+
+    expectNoDifference(store.currentValue, TestQuery.value)
+    controller.controls.withLock { $0?.yieldReset() }
+    expectNoDifference(store.currentValue, nil)
+  }
 }
 
 private enum SomeError: Equatable, Error {
