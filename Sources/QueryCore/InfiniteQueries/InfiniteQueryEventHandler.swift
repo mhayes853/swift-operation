@@ -7,18 +7,19 @@ public struct InfiniteQueryEventHandler<
   PageID: Hashable & Sendable,
   PageValue: Sendable
 >: Sendable {
-  let onFetchingStarted: (@Sendable (QueryContext) -> Void)?
-  let onPageFetchingStarted: (@Sendable (PageID, QueryContext) -> Void)?
-  let onPageResultReceived:
+  public var onFetchingStarted: (@Sendable (QueryContext) -> Void)?
+  public var onPageFetchingStarted: (@Sendable (PageID, QueryContext) -> Void)?
+  public var onPageResultReceived:
     (
       @Sendable (PageID, Result<InfiniteQueryPage<PageID, PageValue>, any Error>, QueryContext) ->
         Void
     )?
-  let onResultReceived:
+  public var onResultReceived:
     (@Sendable (Result<InfiniteQueryPages<PageID, PageValue>, any Error>, QueryContext) -> Void)?
-  let onPageFetchingFinished: (@Sendable (PageID, QueryContext) -> Void)?
-  let onFetchingFinished: (@Sendable (QueryContext) -> Void)?
-  let onStateChanged: (@Sendable (InfiniteQueryState<PageID, PageValue>, QueryContext) -> Void)?
+  public var onPageFetchingFinished: (@Sendable (PageID, QueryContext) -> Void)?
+  public var onFetchingFinished: (@Sendable (QueryContext) -> Void)?
+  public var onStateChanged:
+    (@Sendable (InfiniteQueryState<PageID, PageValue>, QueryContext) -> Void)?
 
   public init(
     onFetchingStarted: (@Sendable (QueryContext) -> Void)? = nil,

@@ -1,10 +1,11 @@
 // MARK: - QueryEventHandler
 
 public struct QueryEventHandler<State: QueryStateProtocol>: Sendable {
-  let onFetchingStarted: (@Sendable (QueryContext) -> Void)?
-  let onFetchingEnded: (@Sendable (QueryContext) -> Void)?
-  let onResultReceived: (@Sendable (Result<State.QueryValue, any Error>, QueryContext) -> Void)?
-  let onStateChanged: (@Sendable (State, QueryContext) -> Void)?
+  public var onFetchingStarted: (@Sendable (QueryContext) -> Void)?
+  public var onFetchingEnded: (@Sendable (QueryContext) -> Void)?
+  public var onResultReceived:
+    (@Sendable (Result<State.QueryValue, any Error>, QueryContext) -> Void)?
+  public var onStateChanged: (@Sendable (State, QueryContext) -> Void)?
 
   public init(
     onFetchingStarted: (@Sendable (QueryContext) -> Void)? = nil,

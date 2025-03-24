@@ -1,10 +1,10 @@
 // MARK: - OpaqueQueryEventHandler
 
 public struct OpaqueQueryEventHandler: Sendable {
-  let onFetchingStarted: (@Sendable (QueryContext) -> Void)?
-  let onFetchingEnded: (@Sendable (QueryContext) -> Void)?
-  let onResultReceived: (@Sendable (Result<any Sendable, any Error>, QueryContext) -> Void)?
-  let onStateChanged: (@Sendable (OpaqueQueryState, QueryContext) -> Void)?
+  public var onFetchingStarted: (@Sendable (QueryContext) -> Void)?
+  public var onFetchingEnded: (@Sendable (QueryContext) -> Void)?
+  public var onResultReceived: (@Sendable (Result<any Sendable, any Error>, QueryContext) -> Void)?
+  public var onStateChanged: (@Sendable (OpaqueQueryState, QueryContext) -> Void)?
 
   public init(
     onFetchingStarted: (@Sendable (QueryContext) -> Void)? = nil,

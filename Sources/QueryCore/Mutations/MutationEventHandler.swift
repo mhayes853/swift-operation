@@ -1,11 +1,11 @@
 // MARK: - MutationEventHandler
 
 public struct MutationEventHandler<Arguments: Sendable, Value: Sendable>: Sendable {
-  let onMutatingStarted: (@Sendable (Arguments, QueryContext) -> Void)?
-  let onMutationResultReceived:
+  public var onMutatingStarted: (@Sendable (Arguments, QueryContext) -> Void)?
+  public var onMutationResultReceived:
     (@Sendable (Arguments, Result<Value, any Error>, QueryContext) -> Void)?
-  let onMutatingEnded: (@Sendable (Arguments, QueryContext) -> Void)?
-  let onStateChanged: (@Sendable (MutationState<Arguments, Value>, QueryContext) -> Void)?
+  public var onMutatingEnded: (@Sendable (Arguments, QueryContext) -> Void)?
+  public var onStateChanged: (@Sendable (MutationState<Arguments, Value>, QueryContext) -> Void)?
 
   public init(
     onMutatingStarted: (@Sendable (Arguments, QueryContext) -> Void)? = nil,
