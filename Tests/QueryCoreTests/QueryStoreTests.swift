@@ -427,6 +427,15 @@ struct QueryStoreTests {
     expectNoDifference(store.state.currentValue, TestQuery.value)
   }
 
+  @Test("Set Current Query Error")
+  func setCurrentQueryError() async throws {
+    struct SomeError: Equatable, Error {}
+
+    let store = self.client.store(for: TestQuery())
+    store.setResult(to: .failure(SomeError()))
+    expectNoDifference(store.state.error as? SomeError, SomeError())
+  }
+
   @Test("Set Current Query Value, Emits Event")
   func setCurrentQueryValueEmitsEvent() async throws {
     let store = self.client.store(for: TestQuery())
@@ -434,6 +443,18 @@ struct QueryStoreTests {
     let collector = QueryStoreEventsCollector<TestQuery.State>()
     let subscription = store.subscribe(with: collector.eventHandler())
     store.currentValue = TestQuery.value
+    collector.expectEventsMatch([.stateChanged])
+    subscription.cancel()
+  }
+
+  @Test("Set Current Query Error, Emits Event")
+  func setCurrentQueryErrorEmitsEvent() async throws {
+    struct SomeError: Equatable, Error {}
+
+    let store = self.client.store(for: TestQuery())
+    let collector = QueryStoreEventsCollector<TestQuery.State>()
+    let subscription = store.subscribe(with: collector.eventHandler())
+    store.setResult(to: .failure(SomeError()))
     collector.expectEventsMatch([.stateChanged])
     subscription.cancel()
   }

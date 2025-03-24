@@ -31,12 +31,7 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
     query.setup(context: &context)
     self.query = query
     self.values = LockedBox(
-      value: (
-        query: initialState,
-        taskCohortId: 0,
-        context: context,
-        controllerSubscriptions: []
-      )
+      value: (query: initialState, taskCohortId: 0, context: context, controllerSubscriptions: [])
     )
     self.subscriptions = QuerySubscriptions()
     self.setupQuery(with: context)
@@ -51,9 +46,7 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
   private func setupQuery(with initialContext: QueryContext) {
     let controls = QueryControls<State>(
       context: { [weak self] in self?.values.inner.withLock { $0.context } ?? initialContext },
-      onResult: { [weak self] result, context in
-        self?.editValuesWithStateChangeEvent { $0.query.update(with: result, using: context) }
-      },
+      onResult: { [weak self] in self?.setResult(to: $0, using: $1) },
       refetchTask: { [weak self] configuration in
         guard self?.isAutomaticFetchingEnabled == true else { return nil }
         return self?.fetchTask(using: configuration)
@@ -155,6 +148,19 @@ extension QueryStore {
       self.editValuesWithStateChangeEvent {
         $0.query.update(with: .success(newValue), using: $0.context)
       }
+    }
+  }
+}
+
+// MARK: - Set Result
+
+extension QueryStore {
+  public func setResult(
+    to result: Result<State.StateValue, any Error>,
+    using context: QueryContext? = nil
+  ) {
+    self.editValuesWithStateChangeEvent {
+      $0.query.update(with: result, using: context ?? $0.context)
     }
   }
 }
