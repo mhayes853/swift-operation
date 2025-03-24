@@ -15,8 +15,6 @@ public struct InfiniteQueryState<PageID: Hashable & Sendable, PageValue: Sendabl
   public private(set) var errorUpdateCount = 0
   public private(set) var errorLastUpdatedAt: Date?
 
-  public private(set) var hasNextPage = true
-  public private(set) var hasPreviousPage = true
   public private(set) var nextPageId: PageID?
   public private(set) var previousPageId: PageID?
 
@@ -49,6 +47,18 @@ extension InfiniteQueryState {
 
   public var isLoadingInitialPage: Bool {
     !self.initialPageActiveTasks.isEmpty
+  }
+}
+
+// MARK: - Has Page
+
+extension InfiniteQueryState {
+  public var hasNextPage: Bool {
+    self.currentValue.isEmpty || self.nextPageId != nil
+  }
+
+  public var hasPreviousPage: Bool {
+    self.currentValue.isEmpty || self.previousPageId != nil
   }
 }
 
@@ -115,26 +125,18 @@ extension InfiniteQueryState: QueryStateProtocol {
       switch value.response {
       case let .allPages(pages):
         self.currentValue = pages
-        self.hasNextPage = pages.isEmpty || value.nextPageId != nil
-        self.hasPreviousPage = pages.isEmpty || value.previousPageId != nil
       case let .initialPage(page):
         self.currentValue[id: page.id] = page
-        self.hasNextPage = value.nextPageId != nil
-        self.hasPreviousPage = value.previousPageId != nil
       case let .nextPage(next?):
         if let index = self.currentValue.firstIndex(where: { $0.id == next.lastPage.id }) {
           let (_, index) = self.currentValue.insert(next.page, at: index + 1)
           self.currentValue[index] = next.page
         }
-        self.hasNextPage = value.nextPageId != nil
-        self.hasPreviousPage = value.previousPageId != nil
       case let .previousPage(previous?):
         if let index = self.currentValue.firstIndex(where: { $0.id == previous.firstPage.id }) {
           let (_, index) = self.currentValue.insert(previous.page, at: index)
           self.currentValue[index] = previous.page
         }
-        self.hasNextPage = value.nextPageId != nil
-        self.hasPreviousPage = value.previousPageId != nil
       default: break
       }
       self.nextPageId = value.nextPageId
