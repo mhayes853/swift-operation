@@ -517,6 +517,18 @@ struct QueryStoreTests {
     }
   }
 
+  @Test("Cancel All Active Tasks, Emits State Changed Event")
+  func cancelAllActiveTasksEmitsStateChangedEvent() async throws {
+    let collector = QueryStoreEventsCollector<TestQuery.State>()
+    let store = self.client.store(for: TestQuery())
+    let task = store.fetchTask()
+    let subscription = store.subscribe(with: collector.eventHandler())
+    store.cancelAllActiveTasks()
+    collector.expectEventsMatch([.stateChanged])
+    subscription.cancel()
+    _ = task
+  }
+
   @Test("Cancel All Active Tasks, Eagerly Updates Tasks In State")
   func cancelAllActiveTasksRemovesAllTasks() async throws {
     let store = self.client.store(for: TestQuery())
