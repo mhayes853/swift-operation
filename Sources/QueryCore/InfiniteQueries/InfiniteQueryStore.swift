@@ -94,6 +94,22 @@ extension InfiniteQueryStore {
   }
 }
 
+// MARK: - Reset
+
+extension InfiniteQueryStore {
+  public func reset() {
+    self.base.reset()
+  }
+}
+
+// MARK: - Cancel Active Tasks
+
+extension InfiniteQueryStore {
+  public func cancelAllActiveTasks() {
+    self.base.cancelAllActiveTasks()
+  }
+}
+
 // MARK: - Fetch All Pages
 
 extension InfiniteQueryStore {

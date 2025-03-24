@@ -1003,4 +1003,48 @@ struct InfiniteQueryStoreTests {
       TestYieldableInfiniteQuery.SomeError()
     )
   }
+
+  @Test("Cancel All Active Tasks, Cancels Tasks")
+  func cancelAllActiveTasksCancelsTasks() async throws {
+    let store = self.client.store(for: TestYieldableInfiniteQuery())
+    let task = store.fetchNextPageTask()
+    expectNoDifference(store.initialPageActiveTasks.count, 1)
+    store.cancelAllActiveTasks()
+    expectNoDifference(store.initialPageActiveTasks.count, 0)
+    await #expect(throws: CancellationError.self) {
+      try await task.runIfNeeded()
+    }
+  }
+
+  @Test("Cancel All Active Tasks, Removes All Active Tasks")
+  func cancelAllActiveTasksRemovesAllActiveTasks() async throws {
+    let store = self.client.store(for: TestYieldableInfiniteQuery())
+    try await store.fetchNextPage()
+    let task = store.fetchNextPageTask()
+    let task2 = store.fetchPreviousPageTask()
+    let task3 = store.fetchAllPagesTask()
+    expectNoDifference(store.nextPageActiveTasks.count, 1)
+    expectNoDifference(store.previousPageActiveTasks.count, 1)
+    expectNoDifference(store.allPagesActiveTasks.count, 1)
+    store.cancelAllActiveTasks()
+    expectNoDifference(store.nextPageActiveTasks.count, 0)
+    expectNoDifference(store.previousPageActiveTasks.count, 0)
+    expectNoDifference(store.allPagesActiveTasks.count, 0)
+  }
+
+  @Test("Cancel All Active Tasks, Eagerly Updates Tasks In State")
+  func cancelAllActiveTasksRemovesAllTasks() async throws {
+    let store = self.client.store(for: TestYieldableInfiniteQuery())
+    let task = store.fetchNextPageTask()
+    store.cancelAllActiveTasks()
+    expectNoDifference(store.error is CancellationError, true)
+    _ = task
+  }
+
+  @Test("Cancel All Active Tasks, Does Not Set Cancellation Error When No Tasks Are Active")
+  func cancelAllActiveTasksDoesNotSetCancellationErrorWhenNoTasksAreActive() async throws {
+    let store = self.client.store(for: TestYieldableInfiniteQuery())
+    store.cancelAllActiveTasks()
+    expectNoDifference(store.error == nil, true)
+  }
 }

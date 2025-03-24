@@ -97,6 +97,16 @@ extension InfiniteQueryState: QueryStateProtocol {
   }
 
   public mutating func cancelAllActiveTasks(using context: QueryContext) {
+    guard self.isLoading else { return }
+    self.initialPageActiveTasks.forEach { $0.cancel() }
+    self.nextPageActiveTasks.forEach { $0.cancel() }
+    self.previousPageActiveTasks.forEach { $0.cancel() }
+    self.allPagesActiveTasks.forEach { $0.cancel() }
+    self.initialPageActiveTasks.removeAll()
+    self.nextPageActiveTasks.removeAll()
+    self.previousPageActiveTasks.removeAll()
+    self.allPagesActiveTasks.removeAll()
+    self.updateError(CancellationError(), using: context)
   }
 
   public mutating func update(
@@ -145,10 +155,14 @@ extension InfiniteQueryState: QueryStateProtocol {
       self.valueLastUpdatedAt = task.configuration.context.queryClock.now()
       self.error = nil
     case let .failure(error):
-      self.error = error
-      self.errorUpdateCount += 1
-      self.errorLastUpdatedAt = task.configuration.context.queryClock.now()
+      self.updateError(error, using: task.configuration.context)
     }
+  }
+
+  private mutating func updateError(_ error: any Error, using context: QueryContext) {
+    self.error = error
+    self.errorUpdateCount += 1
+    self.errorLastUpdatedAt = context.queryClock.now()
   }
 
   public mutating func finishFetchTask(_ task: QueryTask<InfiniteQueryValue<PageID, PageValue>>) {
