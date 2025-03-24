@@ -37,8 +37,8 @@ extension OpaqueQueryState: QueryStateProtocol {
     open(state: &self.base)
   }
 
-  public mutating func cancelAllActiveTasks(using context: QueryContext) {
-    self.base.cancelAllActiveTasks(using: context)
+  public mutating func reset(using context: QueryContext) {
+    self.base.reset(using: context)
   }
 
   public mutating func update(

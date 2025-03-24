@@ -97,16 +97,8 @@ extension InfiniteQueryStore {
 // MARK: - Reset
 
 extension InfiniteQueryStore {
-  public func reset() {
-    self.base.reset()
-  }
-}
-
-// MARK: - Cancel Active Tasks
-
-extension InfiniteQueryStore {
-  public func cancelAllActiveTasks() {
-    self.base.cancelAllActiveTasks()
+  public func reset(using context: QueryContext? = nil) {
+    self.base.reset(using: context)
   }
 }
 
@@ -136,10 +128,8 @@ extension InfiniteQueryStore {
     from value: InfiniteQueryValue<PageID, PageValue>
   ) -> InfiniteQueryPages<PageID, PageValue> {
     switch value.response {
-    case let .allPages(pages):
-      return pages
-    default:
-      return self.state.currentValue
+    case let .allPages(pages): pages
+    default: self.state.currentValue
     }
   }
 
@@ -189,12 +179,9 @@ extension InfiniteQueryStore {
     from value: InfiniteQueryValue<PageID, PageValue>
   ) -> InfiniteQueryPage<PageID, PageValue>? {
     switch value.response {
-    case let .nextPage(next):
-      return next?.page
-    case let .initialPage(page):
-      return page
-    default:
-      return nil
+    case let .nextPage(next): next?.page
+    case let .initialPage(page): page
+    default: nil
     }
   }
 
@@ -244,12 +231,9 @@ extension InfiniteQueryStore {
     from value: InfiniteQueryValue<PageID, PageValue>
   ) -> InfiniteQueryPage<PageID, PageValue>? {
     switch value.response {
-    case let .previousPage(previous):
-      return previous?.page
-    case let .initialPage(page):
-      return page
-    default:
-      return nil
+    case let .previousPage(previous): previous?.page
+    case let .initialPage(page): page
+    default: nil
     }
   }
 

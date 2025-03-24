@@ -485,38 +485,41 @@ struct MutationStoreTests {
     )
   }
 
-  @Test("Cancel All Active Tasks, Eagerly Updates Error State")
-  func cancelAllActiveTasksUpdatesErrorState() async throws {
-    let store = self.client.store(for: EmptyMutation())
-    let task = store.mutateTask(with: "blob")
-    store.cancelAllActiveTasks()
-    expectNoDifference(store.error is CancellationError, true)
-    _ = task
-  }
-
-  @Test("Cancel All Active Tasks, Eagerly Task History Entry")
+  @Test("Reset State, Empties Task History")
   func cancelAllActiveTasksUpdatesTaskHistoryEntry() async throws {
     let store = self.client.store(for: EmptyMutation())
-    let task = store.mutateTask(with: "blob")
-    store.cancelAllActiveTasks()
-    expectNoDifference(store.history[id: task.id]?.status.isCancelled, true)
+    try await store.mutate(with: "blob")
+    store.reset()
+    expectNoDifference(store.history.isEmpty, true)
   }
 
-  @Test("Cancel All Active Tasks, Cancels Tasks")
+  @Test("Reset State, Cancels Tasks")
   func cancelAllActiveTasksCancelsTasks() async throws {
     let store = self.client.store(for: EmptyMutation())
     let task = store.mutateTask(with: "blob")
-    store.cancelAllActiveTasks()
+    store.reset()
     await #expect(throws: CancellationError.self) {
       try await task.runIfNeeded()
     }
   }
 
-  @Test("Cancel All Active Tasks, Does Not Set Cancellation Error When No Tasks Are Active")
-  func cancelAllActiveTasksDoesNotSetCancellationErrorWhenNoTasksAreActive() async throws {
+  @Test("Reset State, Current Value Is Initial")
+  func resetStateCurrentValueIsInitial() async throws {
     let store = self.client.store(for: EmptyMutation())
     try await store.mutate(with: "blob")
-    store.cancelAllActiveTasks()
+    store.reset()
+    expectNoDifference(store.currentValue, nil)
+    expectNoDifference(store.valueLastUpdatedAt, nil)
+    expectNoDifference(store.valueUpdateCount, 0)
+  }
+
+  @Test("Reset State, Current Error Is Nil")
+  func resetStateCurrentErrorIsNil() async throws {
+    let store = self.client.store(for: FailableMutation())
+    _ = try? await store.mutate(with: "blob")
+    store.reset()
     expectNoDifference(store.error == nil, true)
+    expectNoDifference(store.errorLastUpdatedAt, nil)
+    expectNoDifference(store.errorUpdateCount, 0)
   }
 }

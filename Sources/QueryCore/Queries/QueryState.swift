@@ -37,13 +37,17 @@ extension QueryState: QueryStateProtocol {
     self.activeTasks.append(task)
   }
 
-  public mutating func cancelAllActiveTasks(using context: QueryContext) {
-    guard !self.activeTasks.isEmpty else { return }
+  public mutating func reset(using context: QueryContext) {
     for task in self.activeTasks {
       task.cancel()
     }
     self.activeTasks.removeAll()
-    self.update(with: .failure(CancellationError()), using: context)
+    self.currentValue = self.initialValue
+    self.valueUpdateCount = 0
+    self.valueLastUpdatedAt = nil
+    self.error = nil
+    self.errorUpdateCount = 0
+    self.errorLastUpdatedAt = nil
   }
 
   public mutating func update(

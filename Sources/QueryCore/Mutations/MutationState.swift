@@ -90,19 +90,16 @@ extension MutationState: QueryStateProtocol {
     self.history.append(HistoryEntry(task: task, args: args))
   }
 
-  public mutating func cancelAllActiveTasks(using context: QueryContext) {
-    var count = 0
+  public mutating func reset(using context: QueryContext) {
     for entry in self.history {
-      guard !entry.task.isFinished else { continue }
       entry.task.cancel()
-      self.history[id: entry.id]?.update(with: .failure(CancellationError()))
-      self.history[id: entry.id]?.finish()
-      count += 1
     }
-    if count > 0 {
-      self.yielded = .failure(CancellationError(), context.queryClock.now())
-      self.errorUpdateCount += 1
-    }
+    self.history.removeAll()
+    self.yielded = nil
+    self.valueUpdateCount = 0
+    self.historyValueLastUpdatedAt = nil
+    self.errorUpdateCount = 0
+    self.historyErrorLastUpdatedAt = nil
   }
 
   public mutating func update(

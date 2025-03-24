@@ -1004,20 +1004,18 @@ struct InfiniteQueryStoreTests {
     )
   }
 
-  @Test("Cancel All Active Tasks, Cancels Tasks")
-  func cancelAllActiveTasksCancelsTasks() async throws {
+  @Test("Reset State, Cancels All Active Tasks")
+  func resetStateCancelsAllActiveTasks() async throws {
     let store = self.client.store(for: TestYieldableInfiniteQuery())
     let task = store.fetchNextPageTask()
-    expectNoDifference(store.initialPageActiveTasks.count, 1)
-    store.cancelAllActiveTasks()
-    expectNoDifference(store.initialPageActiveTasks.count, 0)
+    store.reset()
     await #expect(throws: CancellationError.self) {
       try await task.runIfNeeded()
     }
   }
 
-  @Test("Cancel All Active Tasks, Removes All Active Tasks")
-  func cancelAllActiveTasksRemovesAllActiveTasks() async throws {
+  @Test("Reset State, Removes All Active Tasks")
+  func resetStateRemovesAllActiveTasks() async throws {
     let store = self.client.store(for: TestYieldableInfiniteQuery())
     try await store.fetchNextPage()
     let task = store.fetchNextPageTask()
@@ -1026,7 +1024,7 @@ struct InfiniteQueryStoreTests {
     expectNoDifference(store.nextPageActiveTasks.count, 1)
     expectNoDifference(store.previousPageActiveTasks.count, 1)
     expectNoDifference(store.allPagesActiveTasks.count, 1)
-    store.cancelAllActiveTasks()
+    store.reset()
     expectNoDifference(store.nextPageActiveTasks.count, 0)
     expectNoDifference(store.previousPageActiveTasks.count, 0)
     expectNoDifference(store.allPagesActiveTasks.count, 0)
@@ -1035,19 +1033,16 @@ struct InfiniteQueryStoreTests {
     _ = task3
   }
 
-  @Test("Cancel All Active Tasks, Eagerly Updates Error State")
-  func cancelAllActiveTasksUpdatesErrorState() async throws {
+  @Test("Reset State, Resets State Values")
+  func resetStateResetsStateValues() async throws {
     let store = self.client.store(for: TestYieldableInfiniteQuery())
-    let task = store.fetchNextPageTask()
-    store.cancelAllActiveTasks()
-    expectNoDifference(store.error is CancellationError, true)
-    _ = task
-  }
-
-  @Test("Cancel All Active Tasks, Does Not Set Cancellation Error When No Tasks Are Active")
-  func cancelAllActiveTasksDoesNotSetCancellationErrorWhenNoTasksAreActive() async throws {
-    let store = self.client.store(for: TestYieldableInfiniteQuery())
-    store.cancelAllActiveTasks()
-    expectNoDifference(store.error == nil, true)
+    try await store.fetchNextPage()
+    expectNoDifference(store.currentValue, [TestYieldableInfiniteQuery.finalPage(for: 0)])
+    expectNoDifference(store.valueUpdateCount, 1)
+    expectNoDifference(store.valueLastUpdatedAt != nil, true)
+    store.reset()
+    expectNoDifference(store.currentValue, [])
+    expectNoDifference(store.valueUpdateCount, 0)
+    expectNoDifference(store.valueLastUpdatedAt == nil, true)
   }
 }

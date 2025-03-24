@@ -62,16 +62,8 @@ extension OpaqueQueryStore {
 // MARK: - Reset
 
 extension OpaqueQueryStore {
-  public func reset() {
-    self._base.reset()
-  }
-}
-
-// MARK: - Cancel All Active Tasks
-
-extension OpaqueQueryStore {
-  public func cancelAllActiveTasks() {
-    self._base.cancelAllActiveTasks()
+  public func reset(using context: QueryContext? = nil) {
+    self._base.reset(using: context)
   }
 }
 
@@ -120,8 +112,7 @@ private protocol OpaqueableQueryStore: Sendable {
     handler: OpaqueQueryEventHandler
   ) async throws -> any Sendable
 
-  func reset()
-  func cancelAllActiveTasks()
+  func reset(using context: QueryContext?)
 
   func opaqueFetchTask(using configuration: QueryTaskConfiguration?) -> QueryTask<any Sendable>
 

@@ -163,24 +163,11 @@ extension QueryStore {
 // MARK: - Reset
 
 extension QueryStore {
-  public func reset() {
+  public func reset(using context: QueryContext? = nil) {
     self.editValuesWithStateChangeEvent { values in
-      self.cancelAllActiveTasks(for: &values)
-      values.query = self.initialState
+      values.query.reset(using: context ?? values.context)
+      values.taskCohortId += 1
     }
-  }
-}
-
-// MARK: - Cancel All Active Tasks
-
-extension QueryStore {
-  public func cancelAllActiveTasks() {
-    self.editValuesWithStateChangeEvent { self.cancelAllActiveTasks(for: &$0) }
-  }
-
-  private func cancelAllActiveTasks(for values: inout Values) {
-    values.query.cancelAllActiveTasks(using: values.context)
-    values.taskCohortId += 1
   }
 }
 
