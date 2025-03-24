@@ -18,7 +18,6 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
     controllerSubscriptions: [QuerySubscription]
   )
 
-  private let initialState: State
   private let query: any QueryRequest<State.QueryValue>
   private let values: LockedBox<Values>
   private let subscriptions: QuerySubscriptions<QueryEventHandler<State>>
@@ -30,7 +29,6 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
   ) where State == Query.State, State.QueryValue == Query.Value {
     var context = initialContext
     query.setup(context: &context)
-    self.initialState = initialState
     self.query = query
     self.values = LockedBox(
       value: (
