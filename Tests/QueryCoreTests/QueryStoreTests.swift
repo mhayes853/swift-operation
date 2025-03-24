@@ -168,7 +168,7 @@ struct QueryStoreTests {
     let collector = QueryStoreEventsCollector<FailingQuery.State>()
     let store = self.client.store(for: FailingQuery())
     var subscription = store.subscribe(with: collector.eventHandler())
-    _ = try? await store.tasks.first?.runIfNeeded()
+    _ = try? await store.activeTasks.first?.runIfNeeded()
     await Task.megaYield()
     collector.expectEventsMatch([
       .stateChanged,
@@ -180,7 +180,7 @@ struct QueryStoreTests {
     subscription.cancel()
     collector.reset()
     subscription = store.subscribe(with: collector.eventHandler())
-    _ = try? await store.tasks.first?.runIfNeeded()
+    _ = try? await store.activeTasks.first?.runIfNeeded()
     await Task.megaYield()
     collector.expectEventsMatch([
       .stateChanged,
@@ -197,7 +197,7 @@ struct QueryStoreTests {
     let collector = QueryStoreEventsCollector<FailingQuery.State>()
     let store = self.client.store(for: FailingQuery())
     let subscription = store.subscribe(with: collector.eventHandler())
-    _ = try? await store.tasks.first?.runIfNeeded()
+    _ = try? await store.activeTasks.first?.runIfNeeded()
     await Task.megaYield()
     collector.expectEventsMatch([
       .stateChanged,
@@ -215,7 +215,7 @@ struct QueryStoreTests {
     let collector = QueryStoreEventsCollector<TestQuery.State>()
     let store = self.client.store(for: query)
     let subscription = store.subscribe(with: collector.eventHandler())
-    _ = try await store.tasks.first?.runIfNeeded()
+    _ = try await store.activeTasks.first?.runIfNeeded()
     await Task.megaYield()
     collector.expectEventsMatch([
       .stateChanged,
@@ -320,7 +320,7 @@ struct QueryStoreTests {
   func cancelFetchQueryStatusIsCancelled() async throws {
     let query = SleepingQuery(clock: TestClock(), duration: .seconds(1))
     let store = self.client.store(for: query)
-    query.didBeginSleeping = { store.tasks.first?.cancel() }
+    query.didBeginSleeping = { store.activeTasks.first?.cancel() }
     _ = try? await store.fetch()
     expectNoDifference(store.status.isCancelled, true)
   }
@@ -484,7 +484,7 @@ struct QueryStoreTests {
     let task = store.fetchTask()
     let task2 = store.fetchTask()
     store.reset()
-    expectNoDifference(store.tasks, [])
+    expectNoDifference(store.activeTasks, [])
     await #expect(throws: CancellationError.self) {
       try await task.runIfNeeded()
     }
@@ -522,9 +522,9 @@ struct QueryStoreTests {
     let store = self.client.store(for: TestQuery())
     let task = store.fetchTask()
     let task2 = store.fetchTask()
-    expectNoDifference(store.tasks, [task, task2])
+    expectNoDifference(store.activeTasks, [task, task2])
     store.cancelAllActiveTasks()
-    expectNoDifference(store.tasks, [])
+    expectNoDifference(store.activeTasks, [])
     expectNoDifference(store.error is CancellationError, true)
   }
 

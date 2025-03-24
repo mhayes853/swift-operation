@@ -11,7 +11,7 @@ public struct QueryState<StateValue: Sendable, QueryValue: Sendable> {
   public private(set) var error: (any Error)?
   public private(set) var errorUpdateCount = 0
   public private(set) var errorLastUpdatedAt: Date?
-  public private(set) var tasks = IdentifiedArrayOf<QueryTask<QueryValue>>()
+  public private(set) var activeTasks = IdentifiedArrayOf<QueryTask<QueryValue>>()
 
   public init(initialValue: StateValue) where StateValue == QueryValue? {
     self.currentValue = initialValue
@@ -30,19 +30,19 @@ extension QueryState: QueryStateProtocol {
   public typealias StatusValue = QueryValue
 
   public var isLoading: Bool {
-    !self.tasks.isEmpty
+    !self.activeTasks.isEmpty
   }
 
   public mutating func scheduleFetchTask(_ task: inout QueryTask<QueryValue>) {
-    self.tasks.append(task)
+    self.activeTasks.append(task)
   }
 
   public mutating func cancelAllActiveTasks(using context: QueryContext) {
-    guard !self.tasks.isEmpty else { return }
-    for task in self.tasks {
+    guard !self.activeTasks.isEmpty else { return }
+    for task in self.activeTasks {
       task.cancel()
     }
-    self.tasks.removeAll()
+    self.activeTasks.removeAll()
     self.update(with: .failure(CancellationError()), using: context)
   }
 
@@ -71,6 +71,6 @@ extension QueryState: QueryStateProtocol {
   }
 
   public mutating func finishFetchTask(_ task: QueryTask<QueryValue>) {
-    self.tasks.remove(id: task.id)
+    self.activeTasks.remove(id: task.id)
   }
 }
