@@ -101,18 +101,7 @@ extension InfiniteQueryState: QueryStateProtocol {
     self.nextPageActiveTasks.forEach { $0.cancel() }
     self.previousPageActiveTasks.forEach { $0.cancel() }
     self.allPagesActiveTasks.forEach { $0.cancel() }
-    self.initialPageActiveTasks.removeAll()
-    self.nextPageActiveTasks.removeAll()
-    self.previousPageActiveTasks.removeAll()
-    self.allPagesActiveTasks.removeAll()
-    self.currentValue = self.initialValue
-    self.valueUpdateCount = 0
-    self.valueLastUpdatedAt = nil
-    self.error = nil
-    self.errorUpdateCount = 0
-    self.errorLastUpdatedAt = nil
-    self.nextPageId = nil
-    self.previousPageId = nil
+    self = Self(initialValue: self.initialValue, initialPageId: self.initialPageId)
   }
 
   public mutating func update(

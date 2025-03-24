@@ -14,13 +14,16 @@ public struct QueryState<StateValue: Sendable, QueryValue: Sendable> {
   public private(set) var activeTasks = IdentifiedArrayOf<QueryTask<QueryValue>>()
 
   public init(initialValue: StateValue) where StateValue == QueryValue? {
-    self.currentValue = initialValue
-    self.initialValue = initialValue
+    self.init(_initialValue: initialValue)
   }
 
   public init(initialValue: StateValue) where StateValue == QueryValue {
-    self.currentValue = initialValue
-    self.initialValue = initialValue
+    self.init(_initialValue: initialValue)
+  }
+
+  private init(_initialValue: StateValue) {
+    self.currentValue = _initialValue
+    self.initialValue = _initialValue
   }
 }
 
@@ -41,13 +44,7 @@ extension QueryState: QueryStateProtocol {
     for task in self.activeTasks {
       task.cancel()
     }
-    self.activeTasks.removeAll()
-    self.currentValue = self.initialValue
-    self.valueUpdateCount = 0
-    self.valueLastUpdatedAt = nil
-    self.error = nil
-    self.errorUpdateCount = 0
-    self.errorLastUpdatedAt = nil
+    self = Self(_initialValue: self.initialValue)
   }
 
   public mutating func update(

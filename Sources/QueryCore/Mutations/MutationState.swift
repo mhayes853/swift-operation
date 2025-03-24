@@ -94,12 +94,7 @@ extension MutationState: QueryStateProtocol {
     for entry in self.history {
       entry.task.cancel()
     }
-    self.history.removeAll()
-    self.yielded = nil
-    self.valueUpdateCount = 0
-    self.historyValueLastUpdatedAt = nil
-    self.errorUpdateCount = 0
-    self.historyErrorLastUpdatedAt = nil
+    self = Self()
   }
 
   public mutating func update(
