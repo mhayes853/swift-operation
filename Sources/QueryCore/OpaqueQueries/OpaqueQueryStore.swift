@@ -59,6 +59,34 @@ extension OpaqueQueryStore {
   }
 }
 
+// MARK: - Current Value
+
+extension OpaqueQueryStore {
+  public var currentValue: (any Sendable)? {
+    get { self.state.currentValue }
+    @available(*, unavailable, message: "Call `uncheckedSetCurrentValue` instead.")
+    set { self.uncheckedSetCurrentValue(newValue) }
+  }
+
+  public func uncheckedSetCurrentValue(
+    _ value: (any Sendable)?,
+    using context: QueryContext? = nil
+  ) {
+    self.uncheckedSetResult(to: .success(value), using: context)
+  }
+}
+
+// MARK: - Set Result
+
+extension OpaqueQueryStore {
+  public func uncheckedSetResult(
+    to result: Result<(any Sendable)?, any Error>,
+    using context: QueryContext? = nil
+  ) {
+    self._base.opaqueSetResult(to: result, using: context)
+  }
+}
+
 // MARK: - Reset
 
 extension OpaqueQueryStore {
@@ -107,20 +135,25 @@ private protocol OpaqueableQueryStore: Sendable {
   var context: QueryContext { get nonmutating set }
   var subscriberCount: Int { get }
 
+  func opaqueSetResult(to result: Result<(any Sendable)?, any Error>, using context: QueryContext?)
   func opaqueFetch(
     using configuration: QueryTaskConfiguration?,
     handler: OpaqueQueryEventHandler
   ) async throws -> any Sendable
-
   func reset(using context: QueryContext?)
-
   func opaqueFetchTask(using configuration: QueryTaskConfiguration?) -> QueryTask<any Sendable>
-
   func opaqueSubscribe(with handler: OpaqueQueryEventHandler) -> QuerySubscription
 }
 
 extension QueryStore: OpaqueableQueryStore {
   var opaqueState: OpaqueQueryState { OpaqueQueryState(self.state) }
+
+  func opaqueSetResult(
+    to result: Result<(any Sendable)?, any Error>,
+    using context: QueryContext?
+  ) {
+    self.setResult(to: result.map { $0 as! State.StateValue }, using: context)
+  }
 
   func opaqueFetch(
     using configuration: QueryTaskConfiguration?,

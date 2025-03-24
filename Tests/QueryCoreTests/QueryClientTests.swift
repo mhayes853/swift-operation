@@ -110,6 +110,33 @@ struct QueryClientTests {
     expectNoDifference(stores[q1.path] == nil, true)
   }
 
+  @Test("Sets Value For Store Through Path")
+  func setValueForStoreThroughPath() async throws {
+    let client = QueryClient()
+    let q1 = PathableQuery(value: 1, path: [1, 2]).defaultValue(10)
+    let store = client.store(for: q1)
+    let opaqueStore = try #require(client.stores(matching: []).first?.value)
+
+    opaqueStore.uncheckedSetCurrentValue(20)
+    expectNoDifference(store.currentValue, 20)
+  }
+
+  @Test("Sets Result For Store Through Path")
+  func setResultForStoreThroughPath() async throws {
+    struct SomeError: Equatable, Error {}
+
+    let client = QueryClient()
+    let q1 = PathableQuery(value: 1, path: [1, 2]).defaultValue(10)
+    let store = client.store(for: q1)
+    let opaqueStore = try #require(client.stores(matching: []).first?.value)
+
+    opaqueStore.uncheckedSetResult(to: .success(20))
+    expectNoDifference(store.currentValue, 20)
+
+    opaqueStore.uncheckedSetResult(to: .failure(SomeError()))
+    expectNoDifference(store.error as? SomeError, SomeError())
+  }
+
   @Test("Uses Default Value For AnyQueryStore")
   func defaultAnyQueryStoreValue() async throws {
     let client = QueryClient()
