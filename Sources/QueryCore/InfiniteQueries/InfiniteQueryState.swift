@@ -82,6 +82,8 @@ extension InfiniteQueryState: QueryStateProtocol {
       task.schedule(after: self.initialPageActiveTasks)
       task.schedule(after: self.nextPageActiveTasks)
       task.schedule(after: self.previousPageActiveTasks)
+      task.configuration.context.infiniteValues.currentPagesTracker =
+        InfiniteQueryContextValues.PagesTracker()
       self.allPagesActiveTasks.append(task)
     case .initialPage:
       self.initialPageActiveTasks.append(task)

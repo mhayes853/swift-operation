@@ -52,6 +52,31 @@ struct RetryQueryTests {
     expectNoDifference(value, SucceedOnNthRefetchQuery.value)
   }
 
+  @Test("Does Not Retry Every Page Fetch When Fetching All Pages")
+  func doesNotRetryEveryPageFetchWhenFetchingAllPages() async throws {
+    let query = FlakeyInfiniteQuery()
+    query.values.withLock { $0.failOnPageId = -1 }
+    let store = InfiniteQueryStore.detached(
+      query: query.retry(limit: 3, backoff: .noBackoff, delayer: .noDelay)
+    )
+    try await store.fetchNextPage()
+    try await store.fetchNextPage()
+    try await store.fetchNextPage()
+
+    query.values.withLock {
+      $0.failOnPageId = 2
+      $0.fetchCount = 0
+    }
+    _ = try? await store.fetchAllPages()
+    query.values.withLock {
+      expectNoDifference(
+        $0.fetchCount,
+        6,
+        "The fetch count should account for fetching the first 2 pages successfully, and then retrying just the third page 3 times after the initial attempt."
+      )
+    }
+  }
+
   @Test("Max Retries Is Based Off Of Limit")
   func maxRetriesIsBasedOffOfLimit() async throws {
     let query = FailingQuery().retry(limit: 10, backoff: .noBackoff, delayer: .noDelay)

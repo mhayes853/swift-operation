@@ -4,9 +4,28 @@ import ConcurrencyExtras
 
 struct InfiniteQueryContextValues: Sendable {
   var fetchType: FetchType?
+  var currentPagesTracker: PagesTracker?
   let subscriptions = QuerySubscriptions<
     InfiniteQueryEventHandler<AnyHashableSendable, any Sendable>
   >()
+}
+
+// MARK: - CurrentPageIdTracker
+
+extension InfiniteQueryContextValues {
+  final class PagesTracker: Sendable {
+    private let pages = Lock<(any Sendable)?>(nil)
+
+    func pages<Query: InfiniteQueryRequest>(
+      for query: Query
+    ) -> InfiniteQueryPages<Query.PageID, Query.PageValue> {
+      self.pages.withLock { $0 as? InfiniteQueryPages<Query.PageID, Query.PageValue> } ?? []
+    }
+
+    func savePages(_ pages: any Sendable) {
+      self.pages.withLock { $0 = pages }
+    }
+  }
 }
 
 // MARK: - FetchType

@@ -152,11 +152,10 @@ extension InfiniteQueryRequest {
     in context: QueryContext,
     with continuation: QueryContinuation<Value>
   ) async throws -> InfiniteQueryValue<PageID, PageValue> {
-    var newPages = InfiniteQueryPages<PageID, PageValue>(uniqueElements: [])
-    var lastPage: InfiniteQueryPage<PageID, PageValue>?
+    var newPages = context.infiniteValues.currentPagesTracker?.pages(for: self) ?? []
     for _ in 0..<paging.pages.count {
       let pageId =
-        if let lastPage {
+        if let lastPage = newPages.last {
           self.pageId(
             after: lastPage,
             using: InfiniteQueryPaging(pageId: lastPage.id, pages: newPages, request: .allPages),
@@ -181,9 +180,8 @@ extension InfiniteQueryRequest {
           )
         }
       )
-      let page = InfiniteQueryPage(id: pageId, value: pageValue)
-      lastPage = page
-      newPages.append(page)
+      newPages.append(InfiniteQueryPage(id: pageId, value: pageValue))
+      context.infiniteValues.currentPagesTracker?.savePages(newPages)
     }
     return self.allPagesValue(pages: newPages, paging: paging, in: context)
   }

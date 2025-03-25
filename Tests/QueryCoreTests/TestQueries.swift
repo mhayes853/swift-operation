@@ -371,6 +371,8 @@ final class TestInfiniteQuery: InfiniteQueryRequest {
   struct PageNotFoundError: Error {}
 }
 
+// MARK: - CountingInfiniteQuery
+
 final actor CountingInfiniteQuery: InfiniteQueryRequest {
   let initialPageId = 0
 
@@ -409,6 +411,47 @@ final actor CountingInfiniteQuery: InfiniteQueryRequest {
     self.fetchCount += 1
     return "blob"
   }
+}
+
+// MARK: - FlakeyInfiniteQuery
+
+final class FlakeyInfiniteQuery: InfiniteQueryRequest {
+  typealias PageValue = String
+  typealias PageID = Int
+
+  typealias Values = (failOnPageId: Int, fetchCount: Int)
+
+  let values = Lock<Values>((failOnPageId: 0, fetchCount: 0))
+
+  let initialPageId = 0
+
+  var path: QueryPath {
+    [ObjectIdentifier(self)]
+  }
+
+  func pageId(
+    after page: InfiniteQueryPage<PageID, PageValue>,
+    using paging: InfiniteQueryPaging<PageID, PageValue>,
+    in context: QueryContext
+  ) -> PageID? {
+    page.id + 1
+  }
+
+  func fetchPage(
+    using paging: InfiniteQueryPaging<PageID, PageValue>,
+    in context: QueryContext,
+    with continuation: QueryContinuation<PageValue>
+  ) async throws -> PageValue {
+    try self.values.withLock { values in
+      values.fetchCount += 1
+      if values.failOnPageId == paging.pageId {
+        throw SomeError()
+      }
+      return "blob"
+    }
+  }
+
+  struct SomeError: Equatable, Error {}
 }
 
 // MARK: - TestYieldableInfiniteQuery
