@@ -19,7 +19,7 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
   )
 
   private let query: any QueryRequest<State.QueryValue>
-  private let values: LockedBox<Values>
+  private let values: Lock<Values>
   private let subscriptions: QuerySubscriptions<QueryEventHandler<State>>
 
   private init<Query: QueryRequest>(
@@ -30,22 +30,22 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
     var context = initialContext
     query.setup(context: &context)
     self.query = query
-    self.values = LockedBox(
-      value: (query: initialState, taskCohortId: 0, context: context, controllerSubscriptions: [])
+    self.values = Lock(
+      (query: initialState, taskCohortId: 0, context: context, controllerSubscriptions: [])
     )
     self.subscriptions = QuerySubscriptions()
     self.setupQuery(with: context)
   }
 
   deinit {
-    self.values.inner.withLock {
+    self.values.withLock {
       $0.controllerSubscriptions.forEach { $0.cancel() }
     }
   }
 
   private func setupQuery(with initialContext: QueryContext) {
     let controls = QueryControls<State>(
-      context: { [weak self] in self?.values.inner.withLock { $0.context } ?? initialContext },
+      context: { [weak self] in self?.values.withLock { $0.context } ?? initialContext },
       onResult: { [weak self] in self?.setResult(to: $0, using: $1) },
       refetchTask: { [weak self] configuration in
         guard self?.isAutomaticFetchingEnabled == true else { return nil }
@@ -53,7 +53,7 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
       },
       onReset: { [weak self] in self?.reset(using: $0) }
     )
-    self.values.inner.withLock { state in
+    self.values.withLock { state in
       for controller in state.context.queryControllers {
         func open<C: QueryController>(_ controller: C) -> QuerySubscription {
           controller.control(with: controls as! QueryControls<C.State>)
@@ -112,8 +112,8 @@ extension QueryStore {
 
 extension QueryStore {
   public var context: QueryContext {
-    get { self.values.inner.withLock { $0.context } }
-    set { self.values.inner.withLock { $0.context = newValue } }
+    get { self.values.withLock { $0.context } }
+    set { self.values.withLock { $0.context = newValue } }
   }
 }
 
@@ -129,7 +129,7 @@ extension QueryStore {
 
 extension QueryStore {
   public var state: State {
-    self.values.inner.withLock { $0.query }
+    self.values.withLock { $0.query }
   }
 
   public subscript<NewValue: Sendable>(
@@ -297,7 +297,7 @@ extension QueryStore {
     in context: QueryContext? = nil,
     _ fn: @Sendable (inout Values) -> T
   ) -> T {
-    self.values.inner.withLock { values in
+    self.values.withLock { values in
       let value = fn(&values)
       self.subscriptions.forEach {
         $0.onStateChanged?(values.query, context ?? values.context)
