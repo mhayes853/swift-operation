@@ -113,6 +113,19 @@ struct EndlessQuery: QueryRequest, Hashable {
   }
 }
 
+// MARK: - NonCancellingEndlessQuery
+
+struct NonCancellingEndlessQuery: QueryRequest, Hashable {
+  func fetch(
+    in context: QueryContext,
+    with continuation: QueryContinuation<String>
+  ) async throws -> String {
+    try? await Task.never()
+    continuation.yield("blob")
+    return ""
+  }
+}
+
 // MARK: - FailableQuery
 
 actor FlakeyQuery: QueryRequest {

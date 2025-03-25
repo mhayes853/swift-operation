@@ -547,6 +547,17 @@ struct QueryStoreTests {
     expectNoDifference(store.error == nil, true)
     expectNoDifference(store.currentValue, nil)
   }
+
+  @Test("Reset State, Does Not Update With Finished Task State When No Cooperative Cancellation")
+  func resetStateDoesNotUpdateWithFinishedTaskStateWhenNoCooperativeCancellation() async throws {
+    let store = self.client.store(for: NonCancellingEndlessQuery())
+    let task = Task { try await store.fetch() }
+    await Task.megaYield()
+    store.reset()
+    _ = try? await task.value
+    expectNoDifference(store.error == nil, true)
+    expectNoDifference(store.currentValue, nil)
+  }
 }
 
 extension QueryContext {

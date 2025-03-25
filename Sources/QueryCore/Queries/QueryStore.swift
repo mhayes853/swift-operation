@@ -216,38 +216,52 @@ extension QueryStore {
       do {
         let value = try await self.query.fetch(
           in: info.configuration.context,
-          with: self.queryContinuation(task: task, context: info.configuration.context)
+          with: self.queryContinuation(
+            task: task,
+            initialHerdId: initialHerdId,
+            context: info.configuration.context
+          )
         )
-        self.editValuesWithStateChangeEvent(in: info.configuration.context) { values in
-          task.inner.withLock {
-            guard let task = $0 else { return }
-            values.query.update(with: .success(value), for: task)
-            values.query.finishFetchTask(task)
-          }
-          self.subscriptions.forEach {
-            $0.onResultReceived?(.success(value), info.configuration.context)
-          }
-        }
+        self.finishTask(
+          with: .success(value),
+          task: task,
+          initialHerdId: initialHerdId,
+          context: info.configuration.context
+        )
         return value
       } catch {
-        self.editValuesWithStateChangeEvent(in: info.configuration.context) { values in
-          let herdId = values.taskHerdId
-          task.inner.withLock {
-            guard let task = $0, herdId == initialHerdId else { return }
-            values.query.update(with: .failure(error), for: task)
-            values.query.finishFetchTask(task)
-          }
-          self.subscriptions.forEach {
-            $0.onResultReceived?(.failure(error), info.configuration.context)
-          }
-        }
+        self.finishTask(
+          with: .failure(error),
+          task: task,
+          initialHerdId: initialHerdId,
+          context: info.configuration.context
+        )
         throw error
+      }
+    }
+  }
+
+  private func finishTask(
+    with result: Result<State.QueryValue, Error>,
+    task: LockedBox<QueryTask<State.QueryValue>?>,
+    initialHerdId: Int,
+    context: QueryContext
+  ) {
+    self.editValuesWithStateChangeEvent(in: context) { values in
+      task.inner.withLock {
+        guard let task = $0, values.taskHerdId == initialHerdId else { return }
+        values.query.update(with: result, for: task)
+        values.query.finishFetchTask(task)
+      }
+      self.subscriptions.forEach {
+        $0.onResultReceived?(result, context)
       }
     }
   }
 
   private func queryContinuation(
     task: LockedBox<QueryTask<State.QueryValue>?>,
+    initialHerdId: Int,
     context: QueryContext
   ) -> QueryContinuation<State.QueryValue> {
     var context = context
@@ -255,7 +269,7 @@ extension QueryStore {
     return QueryContinuation { [context] result in
       self.editValuesWithStateChangeEvent(in: context) { values in
         task.inner.withLock {
-          guard let task = $0 else { return }
+          guard let task = $0, values.taskHerdId == initialHerdId else { return }
           values.query.update(with: result, for: task)
         }
         self.subscriptions.forEach { $0.onResultReceived?(result, context) }
