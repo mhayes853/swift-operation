@@ -27,21 +27,21 @@ extension QueryClient {
 // MARK: - Store
 
 extension QueryClient {
-  public func store<Query: QueryRequest>(for query: Query) -> QueryStoreFor<Query>
+  public func store<Query: QueryRequest>(for query: Query) -> QueryStore<Query.State>
   where Query.State == QueryState<Query.Value?, Query.Value> {
     self.opaqueStore(for: query, initialState: Query.State(initialValue: nil)).base
-      as! QueryStoreFor<Query>
+      as! QueryStore<Query.State>
   }
 
   public func store<Query: QueryRequest>(
     for query: DefaultQuery<Query>
-  ) -> QueryStoreFor<DefaultQuery<Query>>
+  ) -> QueryStore<DefaultQuery<Query>.State>
   where DefaultQuery<Query>.State == QueryState<Query.Value, Query.Value> {
     self.opaqueStore(
       for: query,
       initialState: DefaultQuery<Query>.State(initialValue: query.defaultValue)
     )
-    .base as! QueryStoreFor<DefaultQuery<Query>>
+    .base as! QueryStore<DefaultQuery<Query>.State>
   }
 
   public func store<Query: InfiniteQueryRequest>(
@@ -53,7 +53,7 @@ extension QueryClient {
           for: query,
           initialState: InfiniteQueryState(initialValue: [], initialPageId: query.initialPageId)
         )
-        .base as! QueryStoreFor<Query>
+        .base as! QueryStore<Query.State>
     )
   }
 
@@ -69,7 +69,7 @@ extension QueryClient {
             initialPageId: query.initialPageId
           )
         )
-        .base as! QueryStoreFor<DefaultInfiniteQuery<Query>>
+        .base as! QueryStore<Query.State>
     )
   }
 
@@ -78,7 +78,7 @@ extension QueryClient {
   ) -> MutationStoreFor<Mutation> {
     MutationStore(
       store: self.opaqueStore(for: mutation, initialState: MutationState()).base
-        as! QueryStoreFor<Mutation>
+        as! QueryStore<Mutation.State>
     )
   }
 

@@ -7,7 +7,7 @@ struct SuspendQueryTests {
   @Test("Condition True When Query Starts, Runs Query Immediately")
   func conditionTrueWhenQueryStartsRunsQueryImmediately() async throws {
     let query = TestQuery().suspend(on: .always(true))
-    let store = QueryStoreFor<TestQuery>.detached(query: query, initialValue: nil)
+    let store = QueryStore.detached(query: query, initialValue: nil)
     let value = try await store.fetch()
     expectNoDifference(value, TestQuery.value)
   }
@@ -17,7 +17,7 @@ struct SuspendQueryTests {
     let condition = TestCondition()
     condition.send(false)
     let query = TestQuery().suspend(on: condition)
-    let store = QueryStoreFor<TestQuery>.detached(query: query, initialValue: nil)
+    let store = QueryStore.detached(query: query, initialValue: nil)
 
     let task = Task { try await store.fetch() }
     await Task.megaYield()
@@ -34,7 +34,7 @@ struct SuspendQueryTests {
     let condition = TestCondition()
     condition.send(false)
     let query = TestQuery().suspend(on: condition)
-    let store = QueryStoreFor<TestQuery>.detached(query: query, initialValue: nil)
+    let store = QueryStore.detached(query: query, initialValue: nil)
 
     let task = Task { try await store.fetch() }
     await Task.megaYield()
@@ -54,7 +54,7 @@ struct SuspendQueryTests {
     let condition = TestCondition()
     condition.send(false)
     let query = TestQuery().suspend(on: condition)
-    let store = QueryStoreFor<TestQuery>.detached(query: query, initialValue: nil)
+    let store = QueryStore.detached(query: query, initialValue: nil)
 
     let task = Task { try await store.fetch() }
     await Task.megaYield()
@@ -71,7 +71,7 @@ struct SuspendQueryTests {
     let condition = TestCondition()
     condition.send(false)
     let query = TestQuery().suspend(on: .always(false))
-    let store = QueryStoreFor<TestQuery>.detached(query: query, initialValue: nil)
+    let store = QueryStore.detached(query: query, initialValue: nil)
 
     let task = Task { try await store.fetch() }
     await Task.megaYield()
@@ -87,7 +87,7 @@ struct SuspendQueryTests {
     let condition = TestCondition()
     condition.send(false)
     let query = TestQuery().suspend(on: condition)
-    let store = QueryStoreFor<TestQuery>.detached(query: query, initialValue: nil)
+    let store = QueryStore.detached(query: query, initialValue: nil)
 
     let task = Task { try await store.fetch() }
     await Task.megaYield()
@@ -101,7 +101,7 @@ struct SuspendQueryTests {
     let condition = TestCondition()
     condition.send(false)
     let query = TestQuery().suspend(on: condition)
-    let store = QueryStoreFor<TestQuery>.detached(query: query, initialValue: nil)
+    let store = QueryStore.detached(query: query, initialValue: nil)
 
     let task = Task { try await store.fetch() }
     await Task.megaYield()

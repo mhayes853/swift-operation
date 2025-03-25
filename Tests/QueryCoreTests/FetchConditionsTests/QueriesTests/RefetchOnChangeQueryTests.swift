@@ -9,7 +9,7 @@ struct RefetchOnChangeQueryTests {
     let condition = TestCondition()
     condition.send(true)
     let query = TestQuery().refetchOnChange(of: condition)
-    let store = QueryStoreFor<TestQuery>.detached(query: query, initialValue: nil)
+    let store = QueryStore.detached(query: query, initialValue: nil)
 
     await Task.megaYield()
 
@@ -21,7 +21,7 @@ struct RefetchOnChangeQueryTests {
     let condition = TestCondition()
     condition.send(false)
     let query = TestQuery().refetchOnChange(of: condition)
-    let store = QueryStoreFor<TestQuery>.detached(query: query, initialValue: nil)
+    let store = QueryStore.detached(query: query, initialValue: nil)
 
     condition.send(true)
     await Task.megaYield()
@@ -34,7 +34,7 @@ struct RefetchOnChangeQueryTests {
     let condition = TestCondition()
     condition.send(true)
     let query = TestQuery().refetchOnChange(of: condition)
-    let store = QueryStoreFor<TestQuery>.detached(query: query, initialValue: nil)
+    let store = QueryStore.detached(query: query, initialValue: nil)
 
     condition.send(false)
     await Task.megaYield()

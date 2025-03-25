@@ -1,12 +1,6 @@
 import ConcurrencyExtras
 import Foundation
 
-// MARK: - Typealiases
-
-public typealias QueryStoreFor<Query: QueryRequest> = QueryStore<
-  Query.State
-> where Query.State.QueryValue == Query.Value
-
 // MARK: - QueryStore
 
 @dynamicMemberLookup
@@ -48,7 +42,8 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
     self.values.withLock { state in
       for controller in state.context.queryControllers {
         func open<C: QueryController>(_ controller: C) -> QuerySubscription {
-          controller.control(with: controls as! QueryControls<C.State>)
+          guard let controls = controls as? QueryControls<C.State> else { return .empty }
+          return controller.control(with: controls)
         }
         state.controllerSubscriptions.append(open(controller))
       }
@@ -63,16 +58,25 @@ extension QueryStore {
     query: Query,
     initialState: Query.State,
     initialContext: QueryContext = QueryContext()
-  ) -> QueryStoreFor<Query> {
-    QueryStoreFor<Query>(query: query, initialState: initialState, initialContext: initialContext)
+  ) -> QueryStore<Query.State>
+  where State == Query.State, State.QueryValue == Query.Value {
+    QueryStore<Query.State>(
+      query: query,
+      initialState: initialState,
+      initialContext: initialContext
+    )
   }
 
   public static func detached<Query: QueryRequest>(
     query: Query,
     initialValue: Query.State.StateValue,
     initialContext: QueryContext = QueryContext()
-  ) -> QueryStoreFor<Query> where Query.State == QueryState<Query.Value?, Query.Value> {
-    QueryStoreFor<Query>(
+  ) -> QueryStore<Query.State>
+  where
+    Query.State == QueryState<Query.Value?, Query.Value>,
+    State == QueryState<Query.Value?, Query.Value>
+  {
+    QueryStore<Query.State>(
       query: query,
       initialState: Query.State(initialValue: initialValue),
       initialContext: initialContext
@@ -82,9 +86,12 @@ extension QueryStore {
   public static func detached<Query: QueryRequest>(
     query: DefaultQuery<Query>,
     initialContext: QueryContext = QueryContext()
-  ) -> QueryStoreFor<DefaultQuery<Query>>
-  where DefaultQuery<Query>.State == QueryState<Query.Value, Query.Value> {
-    QueryStoreFor<DefaultQuery<Query>>(
+  ) -> QueryStore<DefaultQuery<Query>.State>
+  where
+    DefaultQuery<Query>.State == QueryState<Query.Value, Query.Value>,
+    State == DefaultQuery<Query>.State
+  {
+    QueryStore<DefaultQuery<Query>.State>(
       query: query,
       initialState: DefaultQuery<Query>.State(initialValue: query.defaultValue),
       initialContext: initialContext

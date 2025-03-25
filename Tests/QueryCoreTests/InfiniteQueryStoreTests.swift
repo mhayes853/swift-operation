@@ -511,7 +511,7 @@ struct InfiniteQueryStoreTests {
     try await infiniteStore.fetchNextPage()
     try await infiniteStore.fetchPreviousPage()
 
-    let store = self.client.store(with: query.path)!.base as! QueryStoreFor<TestInfiniteQuery>
+    let store = self.client.store(with: query.path)!.base as! QueryStore<TestInfiniteQuery.State>
 
     query.state.withLock { $0 = [0: "a", 1: "c", -1: "d"] }
     try await store.fetch()
@@ -531,7 +531,7 @@ struct InfiniteQueryStoreTests {
   func fetchFromRegularQueryStoreFetchesInitialPage() async throws {
     let query = TestInfiniteQuery()
     _ = self.client.store(for: query)
-    let store = self.client.store(with: query.path)!.base as! QueryStoreFor<TestInfiniteQuery>
+    let store = self.client.store(with: query.path)!.base as! QueryStore<TestInfiniteQuery.State>
 
     query.state.withLock { $0 = [0: "a", 1: "c", -1: "d"] }
     try await store.fetch()

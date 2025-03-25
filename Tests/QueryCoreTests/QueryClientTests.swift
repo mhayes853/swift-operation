@@ -166,7 +166,7 @@ struct QueryClientTests {
   func setCustomQueryClientInContext() async throws {
     let client = QueryClient()
     let query = ContextReadingQuery()
-    let store = QueryStoreFor<ContextReadingQuery>.detached(query: query, initialValue: nil)
+    let store = QueryStore.detached(query: query, initialValue: nil)
     store.context.queryClient = client
     try await store.fetch()
 

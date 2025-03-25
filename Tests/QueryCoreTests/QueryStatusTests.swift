@@ -8,7 +8,7 @@ import Testing
 struct QueryStatusTests {
   @Test("QueryState Produces Idle Status When Initialized")
   func queryStateProducesIdleStatusWhenInitialized() {
-    let store = QueryStoreFor<TestQuery>.detached(query: TestQuery(), initialValue: TestQuery.value)
+    let store = QueryStore.detached(query: TestQuery(), initialValue: TestQuery.value)
     expectNoDifference(store.status.isIdle, true)
     expectNoDifference(store.status.isSuccessful, false)
     expectNoDifference(store.status.isFailure, false)
@@ -18,7 +18,7 @@ struct QueryStatusTests {
   @Test("QueryState Produces Loading Status When Fetching")
   func queryStateProducesLoadingStatusWhenFetching() async throws {
     let query = SleepingQuery(clock: ImmediateClock(), duration: .seconds(1))
-    let store = QueryStoreFor<SleepingQuery>.detached(query: query, initialValue: "")
+    let store = QueryStore.detached(query: query, initialValue: "")
     query.didBeginSleeping = {
       store.status.expectLoading()
     }
@@ -27,8 +27,7 @@ struct QueryStatusTests {
 
   @Test("QueryState Produces Successful Result Status When Successful")
   func queryStateProducesSuccessfulResultStatusWhenSuccessful() async throws {
-    let store = QueryStoreFor<TestQuery>
-      .detached(query: TestQuery().defaultValue(TestQuery.value))
+    let store = QueryStore.detached(query: TestQuery().defaultValue(TestQuery.value))
     try await store.fetch()
     expectNoDifference(store.status.resultValue, TestQuery.value)
     expectNoDifference(store.status.isSuccessful, true)
@@ -39,7 +38,7 @@ struct QueryStatusTests {
 
   @Test("QueryState Produces Failed Result Status When Unsuccesful")
   func queryStateProducesFailedResultStatusWhenUnsuccessful() async throws {
-    let store = QueryStoreFor<FailingQuery>.detached(query: FailingQuery(), initialValue: nil)
+    let store = QueryStore.detached(query: FailingQuery(), initialValue: nil)
     _ = try? await store.fetch()
     expectNoDifference(store.status.resultValue, nil)
     expectNoDifference(store.status.isSuccessful, false)
@@ -52,7 +51,7 @@ struct QueryStatusTests {
   func fetchSuccessfullyThenFetchAgainIsLoading() async throws {
     let clock = TestClock()
     let query = SleepingQuery(clock: clock, duration: .seconds(1))
-    let store = QueryStoreFor<SleepingQuery>.detached(query: query.defaultValue("blob"))
+    let store = QueryStore.detached(query: query.defaultValue("blob"))
     query.didBeginSleeping = {
       store.status.expectLoading()
       Task { await clock.advance(by: .seconds(1)) }
@@ -66,7 +65,7 @@ struct QueryStatusTests {
   func fetchSuccessfullyThenFetchUnsuccessfullyIsFailure() async throws {
     let query = FlakeyQuery()
     await query.ensureSuccess(result: "blob")
-    let store = QueryStoreFor<SleepingQuery>.detached(query: query.defaultValue("blob"))
+    let store = QueryStore.detached(query: query.defaultValue("blob"))
     store.context.queryClock = .custom { .distantPast }
     try await store.fetch()
     expectNoDifference(store.status.isSuccessful, true)
@@ -81,7 +80,7 @@ struct QueryStatusTests {
   func fetchUnsuccessfullyThenFetchSuccessfullyIsSuccess() async throws {
     let query = FlakeyQuery()
     await query.ensureFailure()
-    let store = QueryStoreFor<SleepingQuery>.detached(query: query.defaultValue("blob"))
+    let store = QueryStore.detached(query: query.defaultValue("blob"))
     store.context.queryClock = .custom { .distantPast }
     _ = try? await store.fetch()
     expectNoDifference(store.status.isSuccessful, false)
