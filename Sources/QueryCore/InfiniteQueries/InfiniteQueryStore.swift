@@ -26,7 +26,7 @@ extension InfiniteQueryStore {
     initialValue: Query.State.StateValue = [],
     initialContext: QueryContext = QueryContext()
   ) -> InfiniteQueryStoreFor<Query> {
-    InfiniteQueryStoreFor<Query>(
+    InfiniteQueryStore(
       store: .detached(
         query: query,
         initialState: InfiniteQueryState(

@@ -1,6 +1,6 @@
 // MARK: - MutationRequest
 
-public protocol MutationRequest<Arguments>: QueryRequest
+public protocol MutationRequest<Arguments, Value>: QueryRequest
 where State == MutationState<Arguments, Value> {
   associatedtype Arguments: Sendable
 

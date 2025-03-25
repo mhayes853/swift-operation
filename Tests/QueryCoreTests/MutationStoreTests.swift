@@ -453,10 +453,7 @@ struct MutationStoreTests {
       .mutatingEnded("foo")
     ])
     expectNoDifference(value, ContinuingErrorQuery.finalValue)
-    expectNoDifference(
-      store.error as? ContinuingErrorQuery.SomeError,
-      nil
-    )
+    expectNoDifference(store.error as? ContinuingErrorQuery.SomeError, nil)
     expectNoDifference(store.errorLastUpdatedAt != nil, true)
   }
 

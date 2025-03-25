@@ -18,11 +18,11 @@ public final class MutationStore<Arguments: Sendable, Value: Sendable>: Sendable
 // MARK: - Detached
 
 extension MutationStore {
-  public static func detached<Mutation: MutationRequest>(
+  public static func detached<Mutation: MutationRequest<Arguments, Value>>(
     mutation: Mutation,
     initialContext: QueryContext = QueryContext()
-  ) -> MutationStoreFor<Mutation> where Arguments == Mutation.Arguments, Value == Mutation.Value {
-    MutationStoreFor<Mutation>(
+  ) -> MutationStoreFor<Mutation> {
+    MutationStore(
       store: .detached(
         query: mutation,
         initialState: MutationState(),
