@@ -13,7 +13,7 @@ public typealias QueryStoreFor<Query: QueryRequest> = QueryStore<
 public final class QueryStore<State: QueryStateProtocol>: Sendable {
   private typealias Values = (
     query: State,
-    taskCohortId: Int,
+    taskHerdId: Int,
     context: QueryContext,
     controllerSubscriptions: [QuerySubscription]
   )
@@ -31,7 +31,7 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
     query.setup(context: &context)
     self.query = query
     self.values = Lock(
-      (query: initialState, taskCohortId: 0, context: context, controllerSubscriptions: [])
+      (query: initialState, taskHerdId: 0, context: context, controllerSubscriptions: [])
     )
     self.subscriptions = QuerySubscriptions()
     self.setupQuery(with: context)
@@ -163,7 +163,7 @@ extension QueryStore {
   public func reset(using context: QueryContext? = nil) {
     self.editValuesWithStateChangeEvent { values in
       values.query.reset(using: context ?? values.context)
-      values.taskCohortId += 1
+      values.taskHerdId += 1
     }
   }
 }
@@ -194,7 +194,7 @@ extension QueryStore {
       let task = LockedBox<QueryTask<State.QueryValue>?>(value: nil)
       var inner = self.queryTask(
         configuration: config,
-        initialCohortId: values.taskCohortId,
+        initialCohortId: values.taskHerdId,
         using: task
       )
       task.inner.withLock { newTask in
@@ -231,7 +231,7 @@ extension QueryStore {
         return value
       } catch {
         self.editValuesWithStateChangeEvent(in: info.configuration.context) { values in
-          let cohortId = values.taskCohortId
+          let cohortId = values.taskHerdId
           task.inner.withLock {
             guard let task = $0, cohortId == initialCohortId else { return }
             values.query.update(with: .failure(error), for: task)
