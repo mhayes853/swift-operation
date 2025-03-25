@@ -9,27 +9,20 @@ public protocol QueryController<State>: Sendable {
 // MARK: - QueryControls
 
 public struct QueryControls<State: QueryStateProtocol>: Sendable {
-  private var _context: @Sendable () -> QueryContext
-  private let onResult: @Sendable (Result<State.StateValue, any Error>, QueryContext) -> Void
-  private let refetchTask: @Sendable (QueryTaskConfiguration?) -> QueryTask<State.QueryValue>?
-  private let onReset: @Sendable (QueryContext) -> Void
+  private weak var store: QueryStore<State>?
+  private let defaultContext: QueryContext
 
-  public init(
-    context: @escaping @Sendable () -> QueryContext,
-    onResult: @escaping @Sendable (Result<State.StateValue, any Error>, QueryContext) -> Void,
-    refetchTask: @escaping @Sendable (QueryTaskConfiguration?) -> QueryTask<State.QueryValue>?,
-    onReset: @escaping @Sendable (QueryContext) -> Void
-  ) {
-    self._context = context
-    self.onResult = onResult
-    self.refetchTask = refetchTask
-    self.onReset = onReset
+  init(store: QueryStore<State>, defaultContext: QueryContext) {
+    self.store = store
+    self.defaultContext = defaultContext
   }
 }
 
+// MARK: - Context
+
 extension QueryControls {
   public var context: QueryContext {
-    self._context()
+    self.store?.context ?? self.defaultContext
   }
 }
 
@@ -40,7 +33,7 @@ extension QueryControls {
     with result: Result<State.StateValue, any Error>,
     using context: QueryContext? = nil
   ) {
-    self.onResult(result, context ?? self.context)
+    self.store?.setResult(to: result, using: context ?? self.context)
   }
 
   public func yield(throwing error: Error, using context: QueryContext? = nil) {
@@ -65,7 +58,8 @@ extension QueryControls {
   public func yieldRefetchTask(
     with configuration: QueryTaskConfiguration? = nil
   ) -> QueryTask<State.QueryValue>? {
-    self.refetchTask(configuration)
+    guard self.store?.isAutomaticFetchingEnabled == true else { return nil }
+    return self.store?.fetchTask(using: configuration)
   }
 }
 
@@ -73,7 +67,7 @@ extension QueryControls {
 
 extension QueryControls {
   public func yieldReset(using context: QueryContext? = nil) {
-    self.onReset(context ?? self.context)
+    self.store?.reset(using: context ?? self.context)
   }
 }
 

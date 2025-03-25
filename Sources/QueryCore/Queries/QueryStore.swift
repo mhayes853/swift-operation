@@ -44,15 +44,7 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
   }
 
   private func setupQuery(with initialContext: QueryContext) {
-    let controls = QueryControls<State>(
-      context: { [weak self] in self?.values.withLock { $0.context } ?? initialContext },
-      onResult: { [weak self] in self?.setResult(to: $0, using: $1) },
-      refetchTask: { [weak self] configuration in
-        guard self?.isAutomaticFetchingEnabled == true else { return nil }
-        return self?.fetchTask(using: configuration)
-      },
-      onReset: { [weak self] in self?.reset(using: $0) }
-    )
+    let controls = QueryControls(store: self, defaultContext: initialContext)
     self.values.withLock { state in
       for controller in state.context.queryControllers {
         func open<C: QueryController>(_ controller: C) -> QuerySubscription {
