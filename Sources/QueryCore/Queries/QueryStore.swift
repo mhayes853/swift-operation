@@ -194,7 +194,7 @@ extension QueryStore {
       let task = LockedBox<QueryTask<State.QueryValue>?>(value: nil)
       var inner = self.queryTask(
         configuration: config,
-        initialCohortId: values.taskHerdId,
+        initialHerdId: values.taskHerdId,
         using: task
       )
       task.inner.withLock { newTask in
@@ -207,7 +207,7 @@ extension QueryStore {
 
   private func queryTask(
     configuration: QueryTaskConfiguration,
-    initialCohortId: Int,
+    initialHerdId: Int,
     using task: LockedBox<QueryTask<State.QueryValue>?>
   ) -> QueryTask<State.QueryValue> {
     QueryTask<State.QueryValue>(configuration: configuration) { info in
@@ -231,9 +231,9 @@ extension QueryStore {
         return value
       } catch {
         self.editValuesWithStateChangeEvent(in: info.configuration.context) { values in
-          let cohortId = values.taskHerdId
+          let herdId = values.taskHerdId
           task.inner.withLock {
-            guard let task = $0, cohortId == initialCohortId else { return }
+            guard let task = $0, herdId == initialHerdId else { return }
             values.query.update(with: .failure(error), for: task)
             values.query.finishFetchTask(task)
           }
