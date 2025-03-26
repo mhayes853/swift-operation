@@ -128,7 +128,7 @@ private struct QueryControllerModifier<
 // MARK: - QueryContext
 
 extension QueryContext {
-  public fileprivate(set) var queryControllers: [any QueryController] {
+  public var queryControllers: [any QueryController] {
     get { self[QueryControllersKey.self] }
     set { self[QueryControllersKey.self] = newValue }
   }
