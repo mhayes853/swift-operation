@@ -27,7 +27,7 @@ extension QuerySubscriptions {
   package func add(
     handler: QueryHandler,
     isTemporary: Bool = false
-  ) -> (QuerySubscription, isFirst: Bool) {
+  ) -> (subscription: QuerySubscription, isFirst: Bool) {
     self.state.withLock { state in
       let id = state.currentId
       defer { state.currentId += 1 }

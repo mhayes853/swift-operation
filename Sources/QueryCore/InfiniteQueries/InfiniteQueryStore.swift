@@ -275,8 +275,8 @@ extension InfiniteQueryStore {
     using configuration: QueryTaskConfiguration,
     handler: InfiniteQueryEventHandler<PageID, PageValue>
   ) async throws -> InfiniteQueryValue<PageID, PageValue> {
-    let (subscription, _) = context.infiniteValues.subscriptions.add(
-      handler: handler.erased(),
+    let subscription = configuration.context.infiniteValues.addRequestSubscriber(
+      from: handler,
       isTemporary: true
     )
     defer { subscription.cancel() }
@@ -293,8 +293,9 @@ extension InfiniteQueryStore {
   public func subscribe(
     with handler: InfiniteQueryEventHandler<PageID, PageValue>
   ) -> QuerySubscription {
-    let (contextSubscription, _) = context.infiniteValues.subscriptions.add(
-      handler: handler.erased()
+    let contextSubscription = context.infiniteValues.addRequestSubscriber(
+      from: handler,
+      isTemporary: false
     )
     let baseSubscription = self.base.subscribe(with: self.queryStoreHandler(for: handler))
     return QuerySubscription {

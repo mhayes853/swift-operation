@@ -45,31 +45,3 @@ public struct InfiniteQueryEventHandler<
     self.onStateChanged = onStateChanged
   }
 }
-
-// MARK: - Erased
-
-extension InfiniteQueryEventHandler {
-  func erased() -> InfiniteQueryEventHandler<AnyHashableSendable, any Sendable> {
-    InfiniteQueryEventHandler<AnyHashableSendable, any Sendable>(
-      onFetchingStarted: self.onFetchingStarted,
-      onPageFetchingStarted: { self.onPageFetchingStarted?($0.base as! PageID, $1) },
-      onPageResultReceived: { id, result, context in
-        let newResult = result.map {
-          InfiniteQueryPage(id: $0.id.base as! PageID, value: $0.value as! PageValue)
-        }
-        self.onPageResultReceived?(id.base as! PageID, newResult, context)
-      },
-      onResultReceived: { result, context in
-        let newResult = result.map { pages in
-          let array = pages.map {
-            InfiniteQueryPage(id: $0.id.base as! PageID, value: $0.value as! PageValue)
-          }
-          return InfiniteQueryPages(uniqueElements: array)
-        }
-        self.onResultReceived?(newResult, context)
-      },
-      onPageFetchingFinished: { self.onPageFetchingFinished?($0.base as! PageID, $1) },
-      onFetchingFinished: self.onFetchingFinished
-    )
-  }
-}

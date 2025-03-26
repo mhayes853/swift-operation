@@ -5,9 +5,47 @@ import ConcurrencyExtras
 struct InfiniteQueryContextValues: Sendable {
   var fetchType: FetchType?
   var currentPagesTracker: PagesTracker?
-  let subscriptions = QuerySubscriptions<
-    InfiniteQueryEventHandler<AnyHashableSendable, any Sendable>
-  >()
+  let requestSubscriptions = QuerySubscriptions<RequestSubscriber>()
+}
+
+// MARK: - RequestSubscriber
+
+extension InfiniteQueryContextValues {
+  struct RequestSubscriber: Sendable {
+    let onPageFetchingStarted: @Sendable (AnyHashableSendable, QueryContext) -> Void
+    let onPageResultReceived:
+      @Sendable (AnyHashableSendable, Result<any Sendable, any Error>, QueryContext) -> Void
+    let onPageFetchingFinished: @Sendable (AnyHashableSendable, QueryContext) -> Void
+  }
+
+  func addRequestSubscriber<PageID, PageValue>(
+    from handler: InfiniteQueryEventHandler<PageID, PageValue>,
+    isTemporary: Bool
+  ) -> QuerySubscription {
+    let subscriber = RequestSubscriber(
+      onPageFetchingStarted: { id, context in
+        guard let id = id.base as? PageID else { return }
+        handler.onPageFetchingStarted?(id, context)
+      },
+      onPageResultReceived: { id, result, context in
+        guard let id = id.base as? PageID else { return }
+        switch result {
+        case let .success(page) where page is InfiniteQueryPage<PageID, PageValue>:
+          let result = Result<InfiniteQueryPage<PageID, PageValue>, any Error>
+            .success(page as! InfiniteQueryPage<PageID, PageValue>)
+          handler.onPageResultReceived?(id, result, context)
+        case let .failure(error):
+          handler.onPageResultReceived?(id, .failure(error), context)
+        default: break
+        }
+      },
+      onPageFetchingFinished: { id, context in
+        guard let id = id.base as? PageID else { return }
+        handler.onPageFetchingFinished?(id, context)
+      }
+    )
+    return self.requestSubscriptions.add(handler: subscriber, isTemporary: isTemporary).subscription
+  }
 }
 
 // MARK: - CurrentPageIdTracker
