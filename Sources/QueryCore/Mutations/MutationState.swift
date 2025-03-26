@@ -10,6 +10,8 @@ public struct MutationState<Arguments: Sendable, Value: Sendable> {
   private var historyErrorLastUpdatedAt: Date?
   public private(set) var history = IdentifiedArrayOf<HistoryEntry>()
   private var yielded: Yielded?
+
+  public init() {}
 }
 
 // MARK: - QueryStateProtocol

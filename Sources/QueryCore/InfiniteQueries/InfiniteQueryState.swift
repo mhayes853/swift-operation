@@ -23,7 +23,7 @@ public struct InfiniteQueryState<PageID: Hashable & Sendable, PageValue: Sendabl
   public private(set) var nextPageActiveTasks = IdentifiedArrayOf<QueryTask<QueryValue>>()
   public private(set) var previousPageActiveTasks = IdentifiedArrayOf<QueryTask<QueryValue>>()
 
-  init(initialValue: StateValue, initialPageId: PageID) {
+  public init(initialValue: StateValue, initialPageId: PageID) {
     self.currentValue = initialValue
     self.initialValue = initialValue
     self.initialPageId = initialPageId
