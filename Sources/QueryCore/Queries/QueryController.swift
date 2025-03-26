@@ -11,10 +11,12 @@ public protocol QueryController<State>: Sendable {
 public struct QueryControls<State: QueryStateProtocol>: Sendable {
   private weak var store: QueryStore<State>?
   private let defaultContext: QueryContext
+  private let initialState: State
 
-  init(store: QueryStore<State>, defaultContext: QueryContext) {
+  init(store: QueryStore<State>, defaultContext: QueryContext, initialState: State) {
     self.store = store
     self.defaultContext = defaultContext
+    self.initialState = initialState
   }
 }
 
@@ -23,6 +25,24 @@ public struct QueryControls<State: QueryStateProtocol>: Sendable {
 extension QueryControls {
   public var context: QueryContext {
     self.store?.context ?? self.defaultContext
+  }
+}
+
+// MARK: - State
+
+extension QueryControls {
+  public var state: State {
+    self.store?.state ?? self.initialState
+  }
+
+  public subscript<NewValue: Sendable>(
+    dynamicMember keyPath: KeyPath<State, NewValue>
+  ) -> NewValue {
+    self.state[keyPath: keyPath]
+  }
+
+  public func withState<T: Sendable>(_ fn: (State) throws -> T) rethrows -> T {
+    try self.store?.withState(fn) ?? (try fn(self.initialState))
   }
 }
 

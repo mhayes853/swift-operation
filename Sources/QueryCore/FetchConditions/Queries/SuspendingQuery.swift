@@ -23,7 +23,7 @@ private struct SuspendModifier<Query: QueryRequest, Condition: FetchCondition>: 
 
   private func waitForTrue(in context: QueryContext) async throws {
     var subscription: QuerySubscription?
-    let state = Lock<(didFinish: Bool, continuation: UnsafeContinuation<Void, any Error>?)>(
+    let state = RecursiveLock<(didFinish: Bool, continuation: UnsafeContinuation<Void, any Error>?)>(
       (false, nil)
     )
     try await withTaskCancellationHandler {

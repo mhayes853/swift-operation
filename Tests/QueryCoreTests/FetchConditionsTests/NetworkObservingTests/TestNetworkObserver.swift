@@ -4,7 +4,7 @@ final class TestNetworkObserver: NetworkObserver {
   typealias Handler = @Sendable (NetworkStatus) -> Void
 
   private let subscriptions = QuerySubscriptions<Handler>()
-  private let status = Lock(NetworkStatus.connected)
+  private let status = RecursiveLock(NetworkStatus.connected)
 
   var currentStatus: NetworkStatus {
     self.status.withLock { $0 }

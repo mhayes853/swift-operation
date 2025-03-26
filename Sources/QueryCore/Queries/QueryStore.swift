@@ -13,7 +13,7 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
   )
 
   private let query: any QueryRequest<State.QueryValue>
-  private let values: Lock<Values>
+  private let values: RecursiveLock<Values>
   private let subscriptions: QuerySubscriptions<QueryEventHandler<State>>
 
   private init<Query: QueryRequest>(
@@ -24,11 +24,11 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
     var context = initialContext
     query.setup(context: &context)
     self.query = query
-    self.values = Lock(
+    self.values = RecursiveLock(
       (query: initialState, taskHerdId: 0, context: context, controllerSubscriptions: [])
     )
     self.subscriptions = QuerySubscriptions()
-    self.setupQuery(with: context)
+    self.setupQuery(with: context, initialState: initialState)
   }
 
   deinit {
@@ -37,8 +37,12 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
     }
   }
 
-  private func setupQuery(with initialContext: QueryContext) {
-    let controls = QueryControls(store: self, defaultContext: initialContext)
+  private func setupQuery(with initialContext: QueryContext, initialState: State) {
+    let controls = QueryControls(
+      store: self,
+      defaultContext: initialContext,
+      initialState: initialState
+    )
     self.values.withLock { state in
       for controller in state.context.queryControllers {
         func open<C: QueryController>(_ controller: C) -> QuerySubscription {
@@ -135,6 +139,10 @@ extension QueryStore {
     dynamicMember keyPath: KeyPath<State, NewValue>
   ) -> NewValue {
     self.state[keyPath: keyPath]
+  }
+
+  public func withState<T: Sendable>(_ fn: (State) throws -> T) rethrows -> T {
+    try self.values.withLock { try fn($0.query) }
   }
 }
 

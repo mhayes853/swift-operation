@@ -220,7 +220,7 @@ struct QueryClientTests {
 }
 
 private final class CountingController<State: QueryStateProtocol>: QueryController {
-  let count = Lock(0)
+  let count = RecursiveLock(0)
 
   func control(with controls: QueryControls<State>) -> QuerySubscription {
     self.count.withLock { $0 += 1 }

@@ -18,7 +18,7 @@ extension BinaryOperatorCondition: FetchCondition {
     _ observer: @escaping @Sendable (Bool) -> Void
   ) -> QuerySubscription {
     // TODO: - Flatten nested BinaryOperatorConditions in the lock to improve performance.
-    let state = Lock(
+    let state = RecursiveLock(
       (left: self.left.isSatisfied(in: context), right: self.right.isSatisfied(in: context))
     )
     let s1 = self.left.subscribe(in: context) { value in

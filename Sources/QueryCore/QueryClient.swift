@@ -7,10 +7,10 @@ import IssueReporting
 public final class QueryClient: Sendable {
   private typealias State = (stores: [QueryPath: StoreEntry], defaultContext: QueryContext)
 
-  private let state: Lock<State>
+  private let state: RecursiveLock<State>
 
   public init(defaultContext: QueryContext = QueryContext()) {
-    self.state = Lock(([:], defaultContext))
+    self.state = RecursiveLock(([:], defaultContext))
     self.state.withLock { $0.defaultContext.setWeakQueryClient(self) }
   }
 }

@@ -12,7 +12,7 @@ protocol QueryStoreEventProtocol: Sendable {
 // MARK: - QueryStoreEventCollector
 
 final class _QueryStoreEventsCollector<Event: QueryStoreEventProtocol>: Sendable {
-  private let events = Lock([Event]())
+  private let events = RecursiveLock([Event]())
 
   func reset() {
     self.events.withLock { $0.removeAll() }

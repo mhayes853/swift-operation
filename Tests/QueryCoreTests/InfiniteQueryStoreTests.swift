@@ -758,7 +758,7 @@ struct InfiniteQueryStoreTests {
     let store =
       InfiniteQueryStore.detached(query: TestInfiniteQuery().controlled(by: controller))
 
-    let date = Lock(Date())
+    let date = RecursiveLock(Date())
     store.context.queryClock = .custom { date.withLock { $0 } }
 
     controller.controls.withLock { $0?.yield([InfiniteQueryPage(id: 0, value: "blob")]) }
@@ -827,7 +827,7 @@ struct InfiniteQueryStoreTests {
     let store =
       InfiniteQueryStore.detached(query: TestInfiniteQuery().controlled(by: controller))
 
-    let date = Lock(Date())
+    let date = RecursiveLock(Date())
     store.context.queryClock = .custom { date.withLock { $0 } }
 
     struct SomeError: Equatable, Error {}

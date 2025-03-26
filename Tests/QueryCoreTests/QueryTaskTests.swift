@@ -7,7 +7,7 @@ import Testing
 struct QueryTaskTests {
   @Test("Task With Dependencies, Runs Dependent Tasks")
   func runsDependentTasks() async throws {
-    let runCount = Lock(0)
+    let runCount = RecursiveLock(0)
 
     let config = QueryTaskConfiguration(context: QueryContext())
     let task1 = QueryTask<Int>(configuration: config) { _ in 40 }

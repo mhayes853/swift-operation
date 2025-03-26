@@ -12,7 +12,7 @@ struct AsyncSequenceConditionTests {
       sequence: stream,
       initialValue: true
     )
-    let values = Lock([Bool]())
+    let values = RecursiveLock([Bool]())
     let subscription = observer.subscribe(in: QueryContext()) { value in
       values.withLock { $0.append(value) }
     }

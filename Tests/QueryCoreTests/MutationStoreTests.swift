@@ -80,7 +80,7 @@ struct MutationStoreTests {
     mutation.state.withLock { $0.willWait = true }
     let store = self.client.store(for: mutation)
 
-    let handle = Lock<QueryTask<String>?>(nil)
+    let handle = RecursiveLock<QueryTask<String>?>(nil)
     mutation.onLoading(for: "blob") {
       handle.withLock { $0 = store.history[0].task }
     }

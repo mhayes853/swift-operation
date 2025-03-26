@@ -1,10 +1,10 @@
 // MARK: - QueryStoreSubscription
 
 public final class QuerySubscription: Sendable {
-  private let onCancel: Lock<(@Sendable () -> Void)?>?
+  private let onCancel: RecursiveLock<(@Sendable () -> Void)?>?
 
   public init(onCancel: @Sendable @escaping () -> Void) {
-    self.onCancel = Lock(onCancel)
+    self.onCancel = RecursiveLock(onCancel)
   }
 
   private init() {

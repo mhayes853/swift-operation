@@ -14,7 +14,7 @@ struct InfiniteQueryContextValues: Sendable {
 
 extension InfiniteQueryContextValues {
   final class PagesTracker: Sendable {
-    private let pages = Lock<(any Sendable)?>(nil)
+    private let pages = RecursiveLock<(any Sendable)?>(nil)
 
     func pages<Query: InfiniteQueryRequest>(
       for query: Query

@@ -3,7 +3,7 @@ import Foundation
 // MARK: - Lock
 
 /// A simple lock data type.
-package struct Lock<Value: ~Copyable>: ~Copyable {
+package struct RecursiveLock<Value: ~Copyable>: ~Copyable {
   private let lock = NSRecursiveLock()
   private var value: UnsafeMutablePointer<Value>
 
@@ -20,7 +20,7 @@ package struct Lock<Value: ~Copyable>: ~Copyable {
 
 // MARK: - WithLock
 
-extension Lock {
+extension RecursiveLock {
   /// Calls the specified closure with the lock acquired and gives up ownership of the value.
   ///
   /// - Parameter body: A closure with mutable access to the underlying value.
@@ -36,4 +36,4 @@ extension Lock {
 
 // MARK: - Sendable
 
-extension Lock: @unchecked Sendable where Value: ~Copyable {}
+extension RecursiveLock: @unchecked Sendable where Value: ~Copyable {}

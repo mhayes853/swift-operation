@@ -61,6 +61,12 @@ extension MutationStore {
   ) -> NewValue {
     self.state[keyPath: keyPath]
   }
+
+  public func withState<T: Sendable>(
+    _ fn: (MutationState<Arguments, Value>) throws -> T
+  ) rethrows -> T {
+    try self.base.withState(fn)
+  }
 }
 
 // MARK: - Current Value

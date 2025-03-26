@@ -83,6 +83,12 @@ extension InfiniteQueryStore {
   ) -> NewValue {
     self.state[keyPath: keyPath]
   }
+
+  public func withState<T: Sendable>(
+    _ fn: (InfiniteQueryState<PageID, PageValue>) throws -> T
+  ) rethrows -> T {
+    try self.base.withState(fn)
+  }
 }
 
 // MARK: - Current Value

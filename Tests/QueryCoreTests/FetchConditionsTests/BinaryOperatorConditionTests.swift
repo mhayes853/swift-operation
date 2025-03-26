@@ -36,7 +36,7 @@ struct BinaryOperatorConditionTests {
   func orsSubscribedValues() {
     let c1 = TestCondition()
     let c2 = TestCondition()
-    let values = Lock([Bool]())
+    let values = RecursiveLock([Bool]())
     let subscription = (c1 || c2)
       .subscribe(in: QueryContext()) { value in
         values.withLock { $0.append(value) }
@@ -60,7 +60,7 @@ struct BinaryOperatorConditionTests {
     let c1 = TestCondition()
     let c2 = TestCondition()
     let c3 = TestCondition()
-    let values = Lock([Bool]())
+    let values = RecursiveLock([Bool]())
     let subscription = (c1 || c2 || c3)
       .subscribe(in: QueryContext()) { value in
         values.withLock { $0.append(value) }
@@ -116,7 +116,7 @@ struct BinaryOperatorConditionTests {
   func andsSubscribedValues() {
     let c1 = TestCondition()
     let c2 = TestCondition()
-    let values = Lock([Bool]())
+    let values = RecursiveLock([Bool]())
     let subscription = (c1 && c2)
       .subscribe(in: QueryContext()) { value in
         values.withLock { $0.append(value) }
@@ -139,7 +139,7 @@ struct BinaryOperatorConditionTests {
     let c1 = TestCondition()
     let c2 = TestCondition()
     let c3 = TestCondition()
-    let values = Lock([Bool]())
+    let values = RecursiveLock([Bool]())
     let subscription = (c1 && c2 && c3)
       .subscribe(in: QueryContext()) { value in
         values.withLock { $0.append(value) }
@@ -166,7 +166,7 @@ struct BinaryOperatorConditionTests {
     let c1 = TestCondition()
     let c2 = TestCondition()
     let c3 = TestCondition()
-    let values = Lock([Bool]())
+    let values = RecursiveLock([Bool]())
     let subscription = ((c1 && c2) || c3)
       .subscribe(in: QueryContext()) { value in
         values.withLock { $0.append(value) }
@@ -194,7 +194,7 @@ struct BinaryOperatorConditionTests {
     let c1 = TestCondition()
     let c2 = TestCondition()
     let c3 = TestCondition()
-    let values = Lock([Bool]())
+    let values = RecursiveLock([Bool]())
     let subscription = (c1 && (c2 || c3))
       .subscribe(in: QueryContext()) { value in
         values.withLock { $0.append(value) }

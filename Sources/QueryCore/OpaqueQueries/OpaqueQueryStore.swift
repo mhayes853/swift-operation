@@ -57,6 +57,10 @@ extension OpaqueQueryStore {
   ) -> NewValue {
     self.state[keyPath: keyPath]
   }
+
+  public func withState<T: Sendable>(_ fn: (OpaqueQueryState) throws -> T) rethrows -> T {
+    try self._base.opaqueWithState(fn)
+  }
 }
 
 // MARK: - Current Value
@@ -135,6 +139,9 @@ private protocol OpaqueableQueryStore: Sendable {
   var context: QueryContext { get nonmutating set }
   var subscriberCount: Int { get }
 
+  func opaqueWithState<T: Sendable>(
+    _ fn: (OpaqueQueryState) throws -> T
+  ) rethrows -> T
   func opaqueSetResult(to result: Result<(any Sendable)?, any Error>, using context: QueryContext?)
   func opaqueFetch(
     using configuration: QueryTaskConfiguration?,
@@ -147,6 +154,12 @@ private protocol OpaqueableQueryStore: Sendable {
 
 extension QueryStore: OpaqueableQueryStore {
   var opaqueState: OpaqueQueryState { OpaqueQueryState(self.state) }
+
+  func opaqueWithState<T: Sendable>(
+    _ fn: (OpaqueQueryState) throws -> T
+  ) rethrows -> T {
+    try self.withState { try fn(OpaqueQueryState($0)) }
+  }
 
   func opaqueSetResult(
     to result: Result<(any Sendable)?, any Error>,

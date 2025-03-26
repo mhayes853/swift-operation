@@ -2,7 +2,7 @@ import Foundation
 import QueryCore
 
 final class TestDelayer: Sendable, QueryDelayer {
-  private let _delays = Lock([TimeInterval]())
+  private let _delays = RecursiveLock([TimeInterval]())
 
   var delays: [TimeInterval] {
     self._delays.withLock { $0 }

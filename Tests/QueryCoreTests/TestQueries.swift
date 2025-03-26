@@ -333,7 +333,7 @@ struct FakeInfiniteQuery: QueryRequest, Hashable {
 final class TestInfiniteQuery: InfiniteQueryRequest {
   let initialPageId = 0
 
-  let state = Lock([Int: String]())
+  let state = RecursiveLock([Int: String]())
 
   var path: QueryPath {
     [ObjectIdentifier(self)]
@@ -421,7 +421,7 @@ final class FlakeyInfiniteQuery: InfiniteQueryRequest {
 
   typealias Values = (failOnPageId: Int, fetchCount: Int)
 
-  let values = Lock<Values>((failOnPageId: 0, fetchCount: 0))
+  let values = RecursiveLock<Values>((failOnPageId: 0, fetchCount: 0))
 
   let initialPageId = 0
 
@@ -472,7 +472,7 @@ final class TestYieldableInfiniteQuery: InfiniteQueryRequest {
     self.shouldThrow = shouldThrow
   }
 
-  let state = Lock([Int: [Result<PageValue, any Error>]]())
+  let state = RecursiveLock([Int: [Result<PageValue, any Error>]]())
 
   var path: QueryPath {
     [ObjectIdentifier(self)]
@@ -526,7 +526,7 @@ final class WaitableInfiniteQuery: InfiniteQueryRequest {
     onLoading: () -> Void
   )
 
-  let state = Lock<_Values>(([:], [:], false, [], {}))
+  let state = RecursiveLock<_Values>(([:], [:], false, [], {}))
 
   var path: QueryPath {
     [ObjectIdentifier(self)]
@@ -597,7 +597,7 @@ final class WaitableInfiniteQuery: InfiniteQueryRequest {
 final class FailableInfiniteQuery: InfiniteQueryRequest {
   let initialPageId = 0
 
-  let state = Lock<String?>(nil)
+  let state = RecursiveLock<String?>(nil)
 
   var path: QueryPath {
     [ObjectIdentifier(self)]
@@ -690,7 +690,7 @@ final class SleepingMutation: MutationRequest, @unchecked Sendable {
 final class FailableMutation: MutationRequest {
   typealias Value = String
 
-  let state = Lock<String?>(nil)
+  let state = RecursiveLock<String?>(nil)
 
   var path: QueryPath {
     [ObjectIdentifier(self)]
@@ -723,7 +723,7 @@ final class WaitableMutation: MutationRequest {
   typealias Value = String
   typealias Arguments = String
 
-  let state = Lock<_Values>((false, [:], [:]))
+  let state = RecursiveLock<_Values>((false, [:], [:]))
 
   var path: QueryPath {
     [ObjectIdentifier(self)]

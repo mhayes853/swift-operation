@@ -4,10 +4,10 @@ where S.Element == Bool {
   private typealias Handler = @Sendable (Bool) -> Void
 
   private let subscriptions = QuerySubscriptions<Handler>()
-  private let state: Lock<State>
+  private let state: RecursiveLock<State>
 
   init(sequence: S, initialValue: Bool) {
-    self.state = Lock((nil, initialValue))
+    self.state = RecursiveLock((nil, initialValue))
     self.state.withLock {
       $0.task = Task { [weak self] in
         for try await value in sequence {

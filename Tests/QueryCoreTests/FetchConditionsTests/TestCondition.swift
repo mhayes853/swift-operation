@@ -3,7 +3,7 @@ import QueryCore
 final class TestCondition: FetchCondition {
   private typealias Handler = @Sendable (Bool) -> Void
 
-  private let value = Lock(false)
+  private let value = RecursiveLock(false)
   private let subscribers = QuerySubscriptions<Handler>()
 
   var subscriberCount: Int {

@@ -45,7 +45,7 @@ struct ConnectedConditionTests {
     ]
   )
   func observesWhenStatus(status: NetworkStatus, isSatisfied: Bool) {
-    let satisfactions = Lock([Bool]())
+    let satisfactions = RecursiveLock([Bool]())
     let observer = TestNetworkObserver()
     let c: some FetchCondition = .connected(to: observer)
     let subscription = c.subscribe(in: QueryContext()) { satisfied in
@@ -68,7 +68,7 @@ struct ConnectedConditionTests {
     var context = QueryContext()
     context.satisfiedConnectionStatus = .requiresConnection
 
-    let satisfactions = Lock([Bool]())
+    let satisfactions = RecursiveLock([Bool]())
     let observer = TestNetworkObserver()
     let c: some FetchCondition = .connected(to: observer)
     let subscription = c.subscribe(in: context) { satisfied in

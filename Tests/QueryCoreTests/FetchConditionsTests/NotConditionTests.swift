@@ -15,7 +15,7 @@ struct NotConditionTests {
   @Test("Emits Opposite Of Base Condition Observed Value")
   func emitsOppositeOfBaseConditionObservedValue() {
     let condition = TestCondition()
-    let values = Lock([Bool]())
+    let values = RecursiveLock([Bool]())
     let subscription = (!condition)
       .subscribe(in: QueryContext()) { value in
         values.withLock { $0.append(value) }

@@ -8,11 +8,11 @@
     private typealias State = (cancellable: AnyCancellable?, currentValue: Bool)
 
     private let publisher: P
-    private let state: Lock<State>
+    private let state: RecursiveLock<State>
 
     init(publisher: P, initialValue: Bool) {
       self.publisher = publisher
-      self.state = Lock((nil, initialValue))
+      self.state = RecursiveLock((nil, initialValue))
       self.state.withLock {
         $0.cancellable = publisher.sink { [weak self] value in
           self?.state.withLock { $0.currentValue = value }
@@ -32,7 +32,7 @@
       in context: QueryContext,
       _ observer: @escaping @Sendable (Bool) -> Void
     ) -> QuerySubscription {
-      let cancellable = Lock(self.publisher.sink { observer($0) })
+      let cancellable = RecursiveLock(self.publisher.sink { observer($0) })
       return QuerySubscription { cancellable.withLock { $0.cancel() } }
     }
   }

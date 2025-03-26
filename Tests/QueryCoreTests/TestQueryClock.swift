@@ -2,7 +2,7 @@ import Foundation
 import QueryCore
 
 final class TestQueryClock: QueryClock {
-  private let _date: Lock<Date>
+  private let _date: RecursiveLock<Date>
 
   var date: Date {
     get { self.now() }
@@ -10,7 +10,7 @@ final class TestQueryClock: QueryClock {
   }
 
   init(date: Date) {
-    self._date = Lock(date)
+    self._date = RecursiveLock(date)
   }
 
   func now() -> Date {

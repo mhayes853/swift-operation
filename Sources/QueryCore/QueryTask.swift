@@ -81,7 +81,7 @@ public struct QueryTaskIdentifier: Hashable, Sendable {
 }
 
 extension QueryTaskIdentifier {
-  private static let counter = Lock(0)
+  private static let counter = RecursiveLock(0)
 
   fileprivate static func next() -> Self {
     counter.withLock { counter in

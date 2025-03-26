@@ -57,7 +57,7 @@ struct QueryControllerTests {
       initialValue: nil
     )
 
-    let date = Lock(Date())
+    let date = RecursiveLock(Date())
     store.context.queryClock = .custom { date.withLock { $0 } }
 
     controller.controls.withLock { $0?.yield(10) }
@@ -81,7 +81,7 @@ struct QueryControllerTests {
       initialValue: nil
     )
 
-    let date = Lock(Date())
+    let date = RecursiveLock(Date())
     store.context.queryClock = .custom { date.withLock { $0 } }
 
     controller.controls.withLock { $0?.yield(throwing: SomeError.a) }
@@ -123,6 +123,25 @@ struct QueryControllerTests {
     expectNoDifference(store.currentValue, TestQuery.value)
     controller.controls.withLock { $0?.yieldReset() }
     expectNoDifference(store.currentValue, nil)
+  }
+
+  @Test("Yield Result Based Off Of Current State")
+  func yieldResultToQueryBasedOffCurrentState() async throws {
+    let controller = TestQueryController<TestQuery>()
+    let store = QueryStore.detached(
+      query: TestQuery().controlled(by: controller),
+      initialValue: nil
+    )
+    try await store.fetch()
+
+    expectNoDifference(store.currentValue, TestQuery.value)
+    controller.controls.withLock { controls in
+      controls?
+        .withState { state in
+          controls?.yield(state.currentValue! + 10)
+        }
+    }
+    expectNoDifference(store.currentValue, TestQuery.value + 10)
   }
 }
 

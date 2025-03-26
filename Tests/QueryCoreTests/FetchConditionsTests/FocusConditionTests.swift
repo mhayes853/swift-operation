@@ -22,7 +22,7 @@ struct FocusConditionTests {
       willResignActive: _willResignActive,
       isActive: { true }
     )
-    let satisfactions = Lock([Bool]())
+    let satisfactions = RecursiveLock([Bool]())
     let subscription = observer.subscribe(in: QueryContext()) { value in
       satisfactions.withLock { $0.append(value) }
     }
@@ -38,7 +38,7 @@ struct FocusConditionTests {
       willResignActive: _willResignActive,
       isActive: { true }
     )
-    let satisfactions = Lock([Bool]())
+    let satisfactions = RecursiveLock([Bool]())
     let subscription = observer.subscribe(in: QueryContext()) { value in
       satisfactions.withLock { $0.append(value) }
     }
