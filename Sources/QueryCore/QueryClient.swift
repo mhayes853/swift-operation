@@ -27,6 +27,14 @@ extension QueryClient {
 // MARK: - Store
 
 extension QueryClient {
+  public func store<Query: QueryRequest>(
+    for query: Query,
+    initialState: Query.State
+  ) -> QueryStore<Query.State> where Query.Value == Query.State.QueryValue {
+    self.opaqueStore(for: query, initialState: initialState).base
+      as! QueryStore<Query.State>
+  }
+
   public func store<Query: QueryRequest>(for query: Query) -> QueryStore<Query.State>
   where Query.State == QueryState<Query.Value?, Query.Value> {
     self.opaqueStore(for: query, initialState: Query.State(initialValue: nil)).base
