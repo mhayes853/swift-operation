@@ -48,6 +48,10 @@ extension QueryControls {
 // MARK: - Refetching
 
 extension QueryControls {
+  public var canYieldRefetch: Bool {
+    self.store?.isAutomaticFetchingEnabled == true
+  }
+
   @discardableResult
   public func yieldRefetch(
     with configuration: QueryTaskConfiguration? = nil
@@ -58,7 +62,7 @@ extension QueryControls {
   public func yieldRefetchTask(
     with configuration: QueryTaskConfiguration? = nil
   ) -> QueryTask<State.QueryValue>? {
-    guard self.store?.isAutomaticFetchingEnabled == true else { return nil }
+    guard self.canYieldRefetch else { return nil }
     return self.store?.fetchTask(using: configuration)
   }
 }
