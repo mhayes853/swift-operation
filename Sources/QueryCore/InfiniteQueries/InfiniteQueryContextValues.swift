@@ -30,10 +30,8 @@ extension InfiniteQueryContextValues {
       onPageResultReceived: { id, result, context in
         guard let id = id.base as? PageID else { return }
         switch result {
-        case let .success(page) where page is InfiniteQueryPage<PageID, PageValue>:
-          let result = Result<InfiniteQueryPage<PageID, PageValue>, any Error>
-            .success(page as! InfiniteQueryPage<PageID, PageValue>)
-          handler.onPageResultReceived?(id, result, context)
+        case let .success(page as InfiniteQueryPage<PageID, PageValue>):
+          handler.onPageResultReceived?(id, .success(page), context)
         case let .failure(error):
           handler.onPageResultReceived?(id, .failure(error), context)
         default: break
