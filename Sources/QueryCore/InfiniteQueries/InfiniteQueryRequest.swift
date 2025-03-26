@@ -170,13 +170,14 @@ extension InfiniteQueryRequest {
       let pageValue = try await self.fetchPageWithPublishedEvents(
         using: InfiniteQueryPaging(pageId: pageId, pages: newPages, request: .allPages),
         in: context,
-        with: QueryContinuation { [newPages] result in
+        with: QueryContinuation { [newPages] result, yieldedContext in
           continuation.yield(
             with: result.map {
               var pages = newPages
               pages.append(InfiniteQueryPage(id: pageId, value: $0))
-              return self.allPagesValue(pages: pages, paging: paging, in: context)
-            }
+              return self.allPagesValue(pages: pages, paging: paging, in: yieldedContext ?? context)
+            },
+            using: yieldedContext
           )
         }
       )
@@ -206,9 +207,12 @@ extension InfiniteQueryRequest {
     let pageValue = try await self.fetchPageWithPublishedEvents(
       using: paging,
       in: context,
-      with: QueryContinuation { result in
+      with: QueryContinuation { result, yieldedContext in
         continuation.yield(
-          with: result.map { self.initialPageValue(pageValue: $0, using: paging, in: context) }
+          with: result.map {
+            self.initialPageValue(pageValue: $0, using: paging, in: yieldedContext ?? context)
+          },
+          using: yieldedContext
         )
       }
     )
@@ -237,11 +241,17 @@ extension InfiniteQueryRequest {
     let pageValue = try await self.fetchPageWithPublishedEvents(
       using: InfiniteQueryPaging(pageId: pageId, pages: paging.pages, request: paging.request),
       in: context,
-      with: QueryContinuation { result in
+      with: QueryContinuation { result, yieldedContext in
         continuation.yield(
           with: result.map {
-            self.nextPageValue(pageValue: $0, with: pageId, using: paging, in: context)
-          }
+            self.nextPageValue(
+              pageValue: $0,
+              with: pageId,
+              using: paging,
+              in: yieldedContext ?? context
+            )
+          },
+          using: yieldedContext
         )
       }
     )
@@ -273,11 +283,17 @@ extension InfiniteQueryRequest {
     let pageValue = try await self.fetchPageWithPublishedEvents(
       using: InfiniteQueryPaging(pageId: pageId, pages: paging.pages, request: paging.request),
       in: context,
-      with: QueryContinuation { result in
+      with: QueryContinuation { result, yieldedContext in
         continuation.yield(
           with: result.map {
-            self.previousPageValue(pageValue: $0, with: pageId, using: paging, in: context)
-          }
+            self.previousPageValue(
+              pageValue: $0,
+              with: pageId,
+              using: paging,
+              in: yieldedContext ?? context
+            )
+          },
+          using: yieldedContext
         )
       }
     )
@@ -309,7 +325,8 @@ extension InfiniteQueryRequest {
     context.infiniteValues.requestSubscriptions.forEach { sub in
       sub.onPageFetchingStarted(id, context)
     }
-    let continuation = QueryContinuation<PageValue> { result in
+    let continuation = QueryContinuation<PageValue> { result, yieldedContext in
+      let context = yieldedContext ?? context
       context.infiniteValues.requestSubscriptions.forEach { sub in
         sub.onPageResultReceived(
           id,

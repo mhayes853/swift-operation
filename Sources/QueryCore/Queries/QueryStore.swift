@@ -279,10 +279,10 @@ extension QueryStore {
     initialHerdId: Int,
     context: QueryContext
   ) -> QueryContinuation<State.QueryValue> {
-    var context = context
-    context.queryResultUpdateReason = .yieldedResult
-    return QueryContinuation { [context] result in
-      self.editValuesWithStateChangeEvent(in: context) { values in
+    QueryContinuation { result, yieldedContext in
+      var context = yieldedContext ?? context
+      context.queryResultUpdateReason = .yieldedResult
+      self.editValuesWithStateChangeEvent(in: context) { [context] values in
         task.inner.withLock {
           guard let task = $0, values.taskHerdId == initialHerdId else { return }
           values.query.update(with: result, for: task)
