@@ -305,13 +305,13 @@ extension InfiniteQueryStore {
     for handler: InfiniteQueryEventHandler<PageID, PageValue>
   ) -> QueryEventHandler<InfiniteQueryState<PageID, PageValue>> {
     QueryEventHandler(
+      onStateChanged: handler.onStateChanged,
       onFetchingStarted: handler.onFetchingStarted,
       onFetchingEnded: handler.onFetchingFinished,
       onResultReceived: { result, context in
         guard context.queryResultUpdateReason == .returnedFinalResult else { return }
         handler.onResultReceived?(result.map { [weak self] _ in self?.currentValue ?? [] }, context)
-      },
-      onStateChanged: handler.onStateChanged
+      }
     )
   }
 }

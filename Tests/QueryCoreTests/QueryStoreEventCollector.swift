@@ -73,12 +73,12 @@ extension MutationStoreEventsCollector {
     -> MutationEventHandler<Arguments, Value>
   where Event == MutationStoreEvent<Arguments, Value> {
     MutationEventHandler(
+      onStateChanged: { _, _ in self.events.withLock { $0.append(.stateChanged) } },
       onMutatingStarted: { args, _ in self.events.withLock { $0.append(.mutatingStarted(args)) } },
       onMutationResultReceived: { args, result, _ in
         self.events.withLock { $0.append(.mutationResultReceived(args, result)) }
       },
-      onMutatingEnded: { args, _ in self.events.withLock { $0.append(.mutatingEnded(args)) } },
-      onStateChanged: { _, _ in self.events.withLock { $0.append(.stateChanged) } }
+      onMutatingEnded: { args, _ in self.events.withLock { $0.append(.mutatingEnded(args)) } }
     )
   }
 }
@@ -144,6 +144,7 @@ extension InfiniteQueryStoreEventsCollector {
     -> InfiniteQueryEventHandler<PageID, PageValue>
   where Event == InfiniteQueryStoreEvent<PageID, PageValue> {
     InfiniteQueryEventHandler(
+      onStateChanged: { _, _ in self.events.withLock { $0.append(.stateChanged) } },
       onFetchingStarted: { _ in self.events.withLock { $0.append(.fetchingStarted) } },
       onPageFetchingStarted: { id, _ in self.events.withLock { $0.append(.pageFetchingStarted(id)) }
       },
@@ -154,8 +155,7 @@ extension InfiniteQueryStoreEventsCollector {
       },
       onPageFetchingFinished: { id, _ in self.events.withLock { $0.append(.pageFetchingEnded(id)) }
       },
-      onFetchingFinished: { _ in self.events.withLock { $0.append(.fetchingEnded) } },
-      onStateChanged: { _, _ in self.events.withLock { $0.append(.stateChanged) } }
+      onFetchingFinished: { _ in self.events.withLock { $0.append(.fetchingEnded) } }
     )
   }
 }
@@ -201,11 +201,10 @@ extension QueryStoreEventsCollector {
   func eventHandler<State>() -> QueryEventHandler<State>
   where Event == QueryStoreEvent<State> {
     QueryEventHandler(
+      onStateChanged: { _, _ in self.events.withLock { $0.append(.stateChanged) } },
       onFetchingStarted: { _ in self.events.withLock { $0.append(.fetchingStarted) } },
       onFetchingEnded: { _ in self.events.withLock { $0.append(.fetchingEnded) } },
-      onResultReceived: { result, _ in self.events.withLock { $0.append(.resultReceived(result)) }
-      },
-      onStateChanged: { _, _ in self.events.withLock { $0.append(.stateChanged) } }
+      onResultReceived: { result, _ in self.events.withLock { $0.append(.resultReceived(result)) } }
     )
   }
 }
