@@ -29,7 +29,7 @@ private final class RefetchOnChangeController<
   private func subscribeToCondition(
     in context: QueryContext
   ) -> QuerySubscription {
-    let currentValue = RecursiveLock(self.condition.isSatisfied(in: context))
+    let currentValue = Lock(self.condition.isSatisfied(in: context))
     return self.condition.subscribe(in: context) { newValue in
       let shouldRefetch = currentValue.withLock { currentValue in
         defer { currentValue = newValue }

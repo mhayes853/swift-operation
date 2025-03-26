@@ -32,7 +32,7 @@
       in context: QueryContext,
       _ observer: @escaping @Sendable (Bool) -> Void
     ) -> QuerySubscription {
-      let cancellable = RecursiveLock(self.publisher.sink { observer($0) })
+      let cancellable = Lock(self.publisher.sink { observer($0) })
       return QuerySubscription { cancellable.withLock { $0.cancel() } }
     }
   }

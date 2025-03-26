@@ -11,19 +11,19 @@ final class WeakBox<Value: AnyObject> {
 // MARK: - LockedWeakBox
 
 final class LockedWeakBox<Value: AnyObject>: Sendable {
-  let inner: RecursiveLock<WeakBox<Value>>
+  let inner: Lock<WeakBox<Value>>
 
   init(value: sending Value?) {
-    self.inner = RecursiveLock(WeakBox(value: value))
+    self.inner = Lock(WeakBox(value: value))
   }
 }
 
 // MARK: - LockedBox
 
 final class LockedBox<Value>: Sendable {
-  let inner: RecursiveLock<Value>
+  let inner: Lock<Value>
 
   init(value: sending Value) {
-    self.inner = RecursiveLock(value)
+    self.inner = Lock(value)
   }
 }

@@ -4,7 +4,7 @@ package final class QuerySubscriptions<QueryHandler: Sendable>: Sendable {
   private typealias Handler = (isTemporary: Bool, handler: QueryHandler)
   private typealias State = (currentId: Int, handlers: [Int: Handler])
 
-  private let state = RecursiveLock<State>((currentId: 0, handlers: [:]))
+  private let state = Lock<State>((currentId: 0, handlers: [:]))
 
   package init() {}
 }

@@ -7,10 +7,10 @@ import IssueReporting
 public final class QueryClient: Sendable {
   private typealias State = (stores: [QueryPath: StoreEntry], defaultContext: QueryContext)
 
-  private let state: RecursiveLock<State>
+  private let state: Lock<State>
 
   public init(defaultContext: QueryContext = QueryContext()) {
-    self.state = RecursiveLock(([:], defaultContext))
+    self.state = Lock(([:], defaultContext))
     self.state.withLock { $0.defaultContext.setWeakQueryClient(self) }
   }
 }
@@ -98,11 +98,19 @@ extension QueryClient {
       if let entry = state.stores[query.path] {
         if entry.queryType != Query.self {
           reportWarning(.duplicatePath(expectedType: entry.queryType, foundType: Query.self))
-          return self.newOpaqueStore(for: query, initialState: initialState)
+          return self.newOpaqueStore(
+            for: query,
+            initialState: initialState,
+            using: state.defaultContext
+          )
         }
         return entry.store
       }
-      let newStore = self.newOpaqueStore(for: query, initialState: initialState)
+      let newStore = self.newOpaqueStore(
+        for: query,
+        initialState: initialState,
+        using: state.defaultContext
+      )
       state.stores[query.path] = StoreEntry(queryType: Query.self, store: newStore)
       return newStore
     }
@@ -110,13 +118,14 @@ extension QueryClient {
 
   private func newOpaqueStore<Query: QueryRequest>(
     for query: Query,
-    initialState: Query.State
+    initialState: Query.State,
+    using context: QueryContext
   ) -> OpaqueQueryStore where Query.State.QueryValue == Query.Value {
     OpaqueQueryStore(
       erasing: .detached(
         query: query,
         initialState: initialState,
-        initialContext: self.defaultContext
+        initialContext: context
       )
     )
   }
