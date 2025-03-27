@@ -197,7 +197,7 @@ extension QueryClient {
     let retryDelayer: (any QueryDelayer)?
     let queryEnableAutomaticFetchingCondition: any FetchCondition
     let networkObserver: (any NetworkObserver)?
-    let focusCondition: FocusCondition?
+    let focusCondition: (any FetchCondition)?
 
     public func store<Query: QueryRequest>(
       for query: Query,
@@ -235,7 +235,7 @@ extension QueryClient {
     private var refetchOnChangeCondition: AnyFetchCondition {
       switch (self.networkObserver, self.focusCondition) {
       case let (observer?, focusCondition?):
-        return AnyFetchCondition(.connected(to: observer) && focusCondition)
+        return AnyFetchCondition(.connected(to: observer) && AnyFetchCondition(focusCondition))
       case let (observer?, _):
         return AnyFetchCondition(.connected(to: observer))
       case let (_, focusCondition?):
@@ -265,7 +265,7 @@ extension QueryClient.StoreCreator where Self == QueryClient.DefaultStoreCreator
     retryDelayer: (any QueryDelayer)? = nil,
     queryEnableAutomaticFetchingCondition: any FetchCondition = .always(true),
     networkObserver: (any NetworkObserver)? = _defaultNetworkObserver,
-    focusCondition: FocusCondition? = _defaultFocusCondition
+    focusCondition: (any FetchCondition)? = _defaultFocusCondition
   ) -> Self {
     Self(
       retryLimit: retryLimit,
@@ -286,7 +286,7 @@ public var _defaultNetworkObserver: (any NetworkObserver)? {
   #endif
 }
 
-public var _defaultFocusCondition: FocusCondition? {
+public var _defaultFocusCondition: (any FetchCondition)? {
   #if canImport(Darwin)
     .shared
   #else
