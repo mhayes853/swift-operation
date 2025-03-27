@@ -1,5 +1,5 @@
 {
-  "originHash" : "94e39d62ee2a83b4978bea83b74d19a369d199f4af749fc72b633f3a183e1474",
+  "originHash" : "eb272dfb991af9b66c4a16d9ee23571c4d4f7a234b37c55bffdb649d5c35b16b",
   "pins" : [
     {
       "identity" : "combine-schedulers",
@@ -8,6 +8,15 @@
       "state" : {
         "revision" : "5928286acce13def418ec36d05a001a9641086f2",
         "version" : "1.0.3"
+      }
+    },
+    {
+      "identity" : "javascriptkit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/swiftwasm/JavaScriptKit",
+      "state" : {
+        "revision" : "62242384daaa2f088c2a792825bc6cd5cc458991",
+        "version" : "0.26.0"
       }
     },
     {

@@ -8,7 +8,8 @@ let package = Package(
   platforms: [.iOS(.v13), .macOS(.v10_15), .tvOS(.v13), .watchOS(.v6)],
   products: [
     .library(name: "SharingQuery", targets: ["SharingQuery"]),
-    .library(name: "QueryCore", targets: ["QueryCore"])
+    .library(name: "QueryCore", targets: ["QueryCore"]),
+    .library(name: "QueryWASM", targets: ["QueryWASM"])
   ],
   dependencies: [
     .package(url: "https://github.com/pointfreeco/swift-sharing", .upToNextMajor(from: "2.0.0")),
@@ -21,7 +22,8 @@ let package = Package(
     .package(
       url: "https://github.com/pointfreeco/xctest-dynamic-overlay",
       .upToNextMajor(from: "1.2.2")
-    )
+    ),
+    .package(url: "https://github.com/swiftwasm/JavaScriptKit", .upToNextMajor(from: "0.26.0"))
   ],
   targets: [
     .target(
@@ -53,7 +55,19 @@ let package = Package(
         .product(name: "Clocks", package: "swift-clocks"),
         .product(name: "IssueReportingTestSupport", package: "xctest-dynamic-overlay")
       ]
-    )
+    ),
+    .target(
+      name: "QueryWASM",
+      dependencies: [
+        "QueryCore",
+        .product(
+          name: "JavaScriptKit",
+          package: "JavaScriptKit",
+          condition: .when(platforms: [.wasi])
+        )
+      ]
+    ),
+    .testTarget(name: "QueryWASMTests", dependencies: ["QueryWASM"])
   ],
   swiftLanguageModes: [.v6]
 )
