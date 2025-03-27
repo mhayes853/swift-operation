@@ -35,14 +35,20 @@ extension QueryControls {
     self.store?.state ?? self.initialState
   }
 
-  public subscript<NewValue: Sendable>(
-    dynamicMember keyPath: KeyPath<State, NewValue>
-  ) -> NewValue {
-    self.state[keyPath: keyPath]
-  }
-
   public func withState<T: Sendable>(_ fn: (State) throws -> T) rethrows -> T {
     try self.store?.withState(fn) ?? (try fn(self.initialState))
+  }
+}
+
+// MARK: - Is Stale
+
+extension QueryControls {
+  public var isStale: Bool {
+    self.store?.isStale ?? false
+  }
+
+  public func isStale(using context: QueryContext? = nil) -> Bool {
+    self.store?.isStale(using: context) ?? false
   }
 }
 
