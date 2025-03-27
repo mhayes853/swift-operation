@@ -6,37 +6,39 @@ public protocol QueryDelayer: Sendable {
   func delay(for seconds: TimeInterval) async throws
 }
 
-// MARK: - Dispatch Delayer
+#if canImport(Dispatch)
+  // MARK: - Dispatch Delayer
 
-public struct DispatchDelayer {
-  let queue: DispatchQueue
-}
+  public struct DispatchDelayer {
+    let queue: DispatchQueue
+  }
 
-extension DispatchDelayer: QueryDelayer {
-  public func delay(for seconds: TimeInterval) async throws {
-    nonisolated(unsafe) var state:
-      (workItem: DispatchWorkItem?, continuation: UnsafeContinuation<Void, Error>?) = (nil, nil)
-    try await withTaskCancellationHandler {
-      try await withUnsafeThrowingContinuation { continuation in
-        state.workItem = DispatchWorkItem {
-          guard !Task.isCancelled else { return }
-          continuation.resume()
+  extension DispatchDelayer: QueryDelayer {
+    public func delay(for seconds: TimeInterval) async throws {
+      nonisolated(unsafe) var state:
+        (workItem: DispatchWorkItem?, continuation: UnsafeContinuation<Void, Error>?) = (nil, nil)
+      try await withTaskCancellationHandler {
+        try await withUnsafeThrowingContinuation { continuation in
+          state.workItem = DispatchWorkItem {
+            guard !Task.isCancelled else { return }
+            continuation.resume()
+          }
+          state.continuation = continuation
+          self.queue.asyncAfter(deadline: .now() + seconds, execute: state.workItem!)
         }
-        state.continuation = continuation
-        self.queue.asyncAfter(deadline: .now() + seconds, execute: state.workItem!)
+      } onCancel: {
+        state.workItem?.cancel()
+        state.continuation?.resume(throwing: CancellationError())
       }
-    } onCancel: {
-      state.workItem?.cancel()
-      state.continuation?.resume(throwing: CancellationError())
     }
   }
-}
 
-extension QueryDelayer where Self == DispatchDelayer {
-  public static func dispatch(queue: DispatchQueue) -> Self {
-    Self(queue: queue)
+  extension QueryDelayer where Self == DispatchDelayer {
+    public static func dispatch(queue: DispatchQueue) -> Self {
+      Self(queue: queue)
+    }
   }
-}
+#endif
 
 // MARK: - Clock Delayer
 
@@ -81,7 +83,11 @@ extension QueryContext {
 
   private enum QueryDelayerKey: Key {
     static var defaultValue: any QueryDelayer {
-      .dispatch(queue: .global())
+      #if canImport(Dispatch)
+        .dispatch(queue: .global())
+      #else
+        .clock(ContinuousClock())
+      #endif
     }
   }
 }

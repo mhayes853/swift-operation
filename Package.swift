@@ -67,7 +67,17 @@ let package = Package(
         )
       ]
     ),
-    .testTarget(name: "QueryWASMTests", dependencies: ["QueryWASM"])
+    .testTarget(
+      name: "QueryWASMTests",
+      dependencies: [
+        "QueryWASM",
+        .product(
+          name: "JavaScriptEventLoopTestSupport",
+          package: "JavaScriptKit",
+          condition: .when(platforms: [.wasi])
+        )
+      ]
+    )
   ],
   swiftLanguageModes: [.v6]
 )
