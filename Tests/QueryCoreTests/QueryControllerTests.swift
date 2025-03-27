@@ -101,7 +101,7 @@ struct QueryControllerTests {
     let controller = TestQueryController<TestQuery>()
     let store = QueryStore.detached(
       query: TestQuery().controlled(by: controller)
-        .enableAutomaticFetching(when: .always(true)),
+        .enableAutomaticFetching(when: .always(false)),
       initialValue: nil
     )
     let collector = QueryStoreEventsCollector<TestQuery.State>()

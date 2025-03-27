@@ -208,20 +208,10 @@ extension QueryTask {
   }
 
   private func newTask() -> Task<any Sendable, any Error> {
-    // TODO: - Use the newly proposed task name API when available in swift 6.x.
     var info = QueryTaskInfo(id: self.id, configuration: self.configuration)
     info.configuration.context.queryRunningTaskInfo = info
-    if #available(iOS 18.0, macOS 15.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, *) {
-      return Task(
-        executorPreference: info.configuration.executorPreference,
-        priority: info.configuration.priority
-      ) {
-        try await self.performTask(using: info)
-      }
-    } else {
-      return Task(priority: info.configuration.priority) {
-        try await self.performTask(using: info)
-      }
+    return Task(configuration: info.configuration) {
+      try await self.performTask(using: info)
     }
   }
 
@@ -351,5 +341,27 @@ extension QueryCoreWarning {
       This will cause task starvation when running any of the tasks in this cycle.
       """
     )
+  }
+}
+
+// MARK: - Helper
+
+extension Task {
+  @discardableResult
+  init(
+    configuration: QueryTaskConfiguration,
+    @_inheritActorContext @_implicitSelfCapture operation:
+      sending @escaping @isolated(any) () async throws -> Success
+  ) where Failure == Error {
+    // TODO: - Use the newly proposed task name API when available in swift 6.x.
+    if #available(iOS 18.0, macOS 15.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *) {
+      self.init(
+        executorPreference: configuration.executorPreference,
+        priority: configuration.priority,
+        operation: operation
+      )
+    } else {
+      self = Task(priority: configuration.priority, operation: operation)
+    }
   }
 }

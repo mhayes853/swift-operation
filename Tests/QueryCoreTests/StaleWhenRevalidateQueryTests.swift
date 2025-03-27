@@ -131,6 +131,27 @@ struct StaleWhenRevalidateQueryTests {
       false
     )
   }
+
+  @Test("Fetches On Subscription When Stale")
+  func fetchesOnSubscriptionWhenStale() async throws {
+    let query = TestQuery().staleWhen(condition: .always(true))
+    let store = QueryStore.detached(query: query, initialValue: nil)
+
+    let subscription = store.subscribe(with: QueryEventHandler())
+    _ = try await store.activeTasks.first?.runIfNeeded()
+    expectNoDifference(store.valueUpdateCount, 1)
+    subscription.cancel()
+  }
+
+  @Test("Does Not Fetch On Subscription When Not Stale")
+  func doesNotFetchOnSubscriptionWhenNotStale() async throws {
+    let query = TestQuery().staleWhen(condition: .always(false))
+    let store = QueryStore.detached(query: query, initialValue: nil)
+
+    let subscription = store.subscribe(with: QueryEventHandler())
+    expectNoDifference(store.activeTasks, [])
+    subscription.cancel()
+  }
 }
 
 extension QueryContext {

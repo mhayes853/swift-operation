@@ -317,9 +317,10 @@ extension QueryStore {
   public func subscribe(
     with handler: QueryEventHandler<State>
   ) -> QuerySubscription {
-    let (subscription, isFirstSubscriber) = self.subscriptions.add(handler: handler)
-    if self.isAutomaticFetchingEnabled && isFirstSubscriber {
-      Task { try await self.fetchTask().runIfNeeded() }
+    let (subscription, _) = self.subscriptions.add(handler: handler)
+    if self.isAutomaticFetchingEnabled && self.isStale {
+      let task = self.fetchTask()
+      Task(configuration: task.configuration) { try await task.runIfNeeded() }
     }
     return subscription
   }
