@@ -183,6 +183,20 @@ extension QueryStore {
   }
 }
 
+// MARK: - Is Stale
+
+extension QueryStore {
+  public var isStale: Bool {
+    self.isStale(using: self.context)
+  }
+
+  public func isStale(using context: QueryContext? = nil) -> Bool {
+    self.values.withLock {
+      $0.context.staleWhenRevalidateCondition.evaluate(state: $0.query, in: context ?? $0.context)
+    }
+  }
+}
+
 // MARK: - Fetch
 
 extension QueryStore {

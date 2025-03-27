@@ -6,23 +6,38 @@ extension QueryRequest {
   public func staleWhen(
     predicate: @escaping @Sendable (State, QueryContext) -> Bool
   ) -> ModifiedQuery<Self, some QueryModifier<Self>> {
-    self.modifier(StaleWhenRevalidateModifier())
+    self.modifier(StaleWhenRevalidateModifier(predicate: predicate))
   }
 
   public func staleWhen(
     condition: some FetchCondition
   ) -> ModifiedQuery<Self, some QueryModifier<Self>> {
-    self.modifier(StaleWhenRevalidateModifier())
+    self.modifier(
+      StaleWhenRevalidateModifier { _, context in condition.isSatisfied(in: context) }
+    )
   }
 
   public func stale(after seconds: TimeInterval) -> ModifiedQuery<Self, some QueryModifier<Self>> {
-    self.modifier(StaleWhenRevalidateModifier())
+    self.modifier(
+      StaleWhenRevalidateModifier { state, context in
+        guard let date = state.valueLastUpdatedAt else { return true }
+        let now = context.queryClock.now()
+        return now.timeIntervalSince(date) > seconds
+      }
+    )
   }
 }
 
 private struct StaleWhenRevalidateModifier<Query: QueryRequest>: QueryModifier {
+  let predicate: @Sendable (Query.State, QueryContext) -> Bool
 
   func setup(context: inout QueryContext, using query: Query) {
+    context.staleWhenRevalidateCondition.add { state, context in
+      guard let state = state.base as? Query.State else {
+        return false
+      }
+      return predicate(state, context)
+    }
     query.setup(context: &context)
   }
 

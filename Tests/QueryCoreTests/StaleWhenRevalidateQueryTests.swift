@@ -1,4 +1,5 @@
 import CustomDump
+import Foundation
 @_spi(StaleWhenRevalidateCondition) import QueryCore
 import Testing
 
@@ -58,6 +59,78 @@ struct StaleWhenRevalidateQueryTests {
     }
   }
 
+  @Test("Store Is Always Stale By Default")
+  func storeIsAlwaysStaleByDefault() {
+    let store = QueryStore.detached(query: TestQuery(), initialValue: nil)
+    expectNoDifference(store.isStale, true)
+  }
+
+  @Test("Stale After Seconds")
+  func staleAfterSeconds() async throws {
+    let clock = TestQueryClock(date: Date())
+    let query = TestQuery().stale(after: 1)
+    let store = QueryStore.detached(query: query, initialValue: nil)
+    store.context.queryClock = clock
+
+    expectNoDifference(store.isStale, true)
+
+    try await store.fetch()
+    expectNoDifference(store.isStale, false)
+
+    clock.date += 2
+    expectNoDifference(store.isStale, true)
+  }
+
+  @Test("Stale When Condition")
+  func staleWhenCondition() async throws {
+    let query = TestQuery().staleWhen { state, _ in state.valueUpdateCount == 0 }
+    let store = QueryStore.detached(query: query, initialValue: nil)
+
+    expectNoDifference(store.isStale, true)
+
+    try await store.fetch()
+    expectNoDifference(store.isStale, false)
+  }
+
+  @Test("Stale When Fetch Condition")
+  func staleWhenFetchCondition() {
+    let condition = TestCondition()
+    condition.send(true)
+    let query = TestQuery().staleWhen(condition: condition)
+    let store = QueryStore.detached(query: query, initialValue: nil)
+
+    expectNoDifference(store.isStale, true)
+
+    condition.send(false)
+    expectNoDifference(store.isStale, false)
+  }
+
+  @Test("Ors Stale Modifiers Together")
+  func orsStaleModifiersTogether() async throws {
+    let clock = TestQueryClock(date: Date())
+    let query = TestQuery().stale(after: 1000).staleWhen { state, _ in state.valueUpdateCount == 0 }
+    let store = QueryStore.detached(query: query, initialValue: nil)
+    store.context.queryClock = clock
+
+    expectNoDifference(store.isStale, true)
+
+    try await store.fetch()
+    expectNoDifference(store.isStale, false)
+
+    clock.date += 1001
+    expectNoDifference(store.isStale, true)
+  }
+
+  @Test("Condition False When Incorrect State Type Evaluated")
+  func conditionFalseWhenIncorrectStateTypeEvaluated() async throws {
+    let query = TestQuery().staleWhen { state, _ in state.valueUpdateCount == 0 }
+    let store = QueryStore.detached(query: query, initialValue: nil)
+    let state = MutationState<Int, String>()
+    expectNoDifference(
+      store.context.staleWhenRevalidateCondition.evaluate(state: state, in: QueryContext()),
+      false
+    )
+  }
 }
 
 extension QueryContext {
