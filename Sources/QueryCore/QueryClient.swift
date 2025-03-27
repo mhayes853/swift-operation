@@ -264,8 +264,8 @@ extension QueryClient.StoreCreator where Self == QueryClient.DefaultStoreCreator
     retryBackoff: QueryBackoffFunction? = nil,
     retryDelayer: (any QueryDelayer)? = nil,
     queryEnableAutomaticFetchingCondition: any FetchCondition = .always(true),
-    networkObserver: (any NetworkObserver)? = NWPathMonitorObserver.shared,
-    focusCondition: FocusCondition? = FocusCondition.shared
+    networkObserver: (any NetworkObserver)? = _defaultNetworkObserver,
+    focusCondition: FocusCondition? = _defaultFocusCondition
   ) -> Self {
     Self(
       retryLimit: retryLimit,
@@ -276,6 +276,22 @@ extension QueryClient.StoreCreator where Self == QueryClient.DefaultStoreCreator
       focusCondition: focusCondition
     )
   }
+}
+
+public var _defaultNetworkObserver: (any NetworkObserver)? {
+  #if canImport(Network)
+    NWPathMonitorObserver.shared
+  #else 
+    nil
+  #endif
+}
+
+public var _defaultFocusCondition: FocusCondition? {
+  #if canImport(Darwin)
+    .shared
+  #else
+    nil
+  #endif
 }
 
 // MARK: - QueryContext
