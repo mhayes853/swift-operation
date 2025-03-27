@@ -69,6 +69,18 @@ extension MutationStore {
   }
 }
 
+// MARK: - Is Stale
+
+extension MutationStore {
+  public var isStale: Bool {
+    self.base.isStale
+  }
+
+  public func isStale(using context: QueryContext? = nil) -> Bool {
+    self.base.isStale(using: context)
+  }
+}
+
 // MARK: - Current Value
 
 extension MutationStore {
