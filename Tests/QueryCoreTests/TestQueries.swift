@@ -31,26 +31,30 @@ struct TestStringQuery: QueryRequest, Hashable {
 // MARK: - EndlessQuery
 
 final class SleepingQuery: QueryRequest, @unchecked Sendable {
-  let clock: any Clock<Duration>
-  let duration: Duration
-
   var didBeginSleeping: (() -> Void)?
 
-  init(clock: any Clock<Duration>, duration: Duration) {
-    self.clock = clock
-    self.duration = duration
-  }
+  private let continuation = Lock<UnsafeContinuation<Void, any Error>?>(nil)
 
   var path: QueryPath {
-    ["test-sleeping", self.duration]
+    ["test-sleeping"]
+  }
+
+  func resume() {
+    self.continuation.withLock { $0?.resume() }
   }
 
   func fetch(
     in context: QueryContext,
     with continuation: QueryContinuation<String>
   ) async throws -> String {
-    self.didBeginSleeping?()
-    try await self.clock.sleep(for: self.duration)
+    try await withTaskCancellationHandler {
+      try await withUnsafeThrowingContinuation { continuation in
+        self.continuation.withLock { $0 = continuation }
+        self.didBeginSleeping?()
+      }
+    } onCancel: {
+      self.continuation.withLock { $0?.resume(throwing: CancellationError()) }
+    }
     return ""
   }
 }

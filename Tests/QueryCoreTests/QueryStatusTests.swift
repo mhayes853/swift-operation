@@ -17,10 +17,11 @@ struct QueryStatusTests {
 
   @Test("QueryState Produces Loading Status When Fetching")
   func queryStateProducesLoadingStatusWhenFetching() async throws {
-    let query = SleepingQuery(clock: ImmediateClock(), duration: .seconds(1))
+    let query = SleepingQuery()
     let store = QueryStore.detached(query: query, initialValue: "")
     query.didBeginSleeping = {
       store.status.expectLoading()
+      query.resume()
     }
     try await store.fetch()
   }
@@ -49,12 +50,11 @@ struct QueryStatusTests {
 
   @Test("Fetch Successfully, Then Fetch Again, Is Loading")
   func fetchSuccessfullyThenFetchAgainIsLoading() async throws {
-    let clock = TestClock()
-    let query = SleepingQuery(clock: clock, duration: .seconds(1))
+    let query = SleepingQuery()
     let store = QueryStore.detached(query: query.defaultValue("blob"))
     query.didBeginSleeping = {
       store.status.expectLoading()
-      Task { await clock.advance(by: .seconds(1)) }
+      query.resume()
     }
     try await store.fetch()
     expectNoDifference(store.status.isSuccessful, true)

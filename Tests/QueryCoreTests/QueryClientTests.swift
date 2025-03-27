@@ -178,11 +178,12 @@ struct QueryClientTests {
   @Test("Loads AnyStore In A Loading State")
   func loadAnyStoreInLoadingState() async throws {
     let client = QueryClient()
-    let query = SleepingQuery(clock: ImmediateClock(), duration: .seconds(1))
+    let query = SleepingQuery()
     let store = client.store(for: query)
     query.didBeginSleeping = {
       let anyStore = client.store(with: query.path)
       expectNoDifference(anyStore?.isLoading, true)
+      query.resume()
     }
     try await store.fetch()
   }

@@ -30,12 +30,11 @@ struct QueryStoreTests {
 
   @Test("Is In A Loading State When Fetching")
   func loadingState() async throws {
-    let clock = TestClock()
-    let query = SleepingQuery(clock: clock, duration: .seconds(1))
+    let query = SleepingQuery()
     let store = self.client.store(for: query)
     query.didBeginSleeping = {
       expectNoDifference(store.isLoading, true)
-      Task { await clock.advance(by: .seconds(1)) }
+      query.resume()
     }
     expectNoDifference(store.isLoading, false)
     try await store.fetch()
@@ -291,19 +290,18 @@ struct QueryStoreTests {
 
   @Test("Does Not Increment Subscription Count When Fetching")
   func doesNotIncrementSubscriptionCountWhenFetching() async throws {
-    let clock = TestClock()
-    let query = SleepingQuery(clock: clock, duration: .seconds(1))
+    let query = SleepingQuery()
     let store = self.client.store(for: query)
     query.didBeginSleeping = {
       expectNoDifference(store.subscriberCount, 0)
-      Task { await clock.run() }
+      query.resume()
     }
     try await store.fetch(handler: QueryEventHandler())
   }
 
   @Test("Cancel Fetch, Query Status Is Cancelled")
   func cancelFetchQueryStatusIsCancelled() async throws {
-    let query = SleepingQuery(clock: TestClock(), duration: .seconds(1))
+    let query = SleepingQuery()
     let store = self.client.store(for: query)
     query.didBeginSleeping = { store.activeTasks.first?.cancel() }
     _ = try? await store.fetch()
@@ -312,7 +310,7 @@ struct QueryStoreTests {
 
   @Test("Cancel Fetch From Task, Query Status Is Cancelled")
   func cancelFetchFromTaskQueryStatusIsCancelled() async throws {
-    let query = SleepingQuery(clock: TestClock(), duration: .seconds(1))
+    let query = SleepingQuery()
     let store = self.client.store(for: query)
     let task = Task { try await store.fetch() }
     query.didBeginSleeping = { task.cancel() }
