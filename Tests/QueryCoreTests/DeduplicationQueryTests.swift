@@ -30,6 +30,18 @@ struct DeduplicationQueryTests {
     expectNoDifference(count, 1)
   }
 
+  @Test("Deduplication Supports Cancellation")
+  func deduplicationSupportsCancellation() async throws {
+    let query = EndlessQuery()
+    let store = self.client.store(for: query.deduplicated())
+    let task = Task { try await store.fetch() }
+    await Task.megaYield()
+    task.cancel()
+    await #expect(throws: CancellationError.self) {
+      try await task.value
+    }
+  }
+
   @Test("Fetch Initial Page Concurrently With Deduplication, Only Performs 1 Fetch")
   func fetchInitialPageConcurrentlyReturnsSamePageData() async throws {
     let query = CountingInfiniteQuery()

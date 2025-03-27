@@ -39,14 +39,14 @@ private final actor DeduplicationModifier<Query: QueryRequest>: QueryModifier {
     }
     let entry = self.entries.first { self.removeDuplicates($0.value.info, taskInfo) }?.value
     if let entry {
-      return try await entry.task.value
+      return try await entry.task.cancellableValue
     } else {
       let task = Task {
         defer { self.entries[taskInfo.id] = nil }
         return try await query.fetch(in: context, with: continuation)
       }
       self.entries[taskInfo.id] = (taskInfo, task)
-      return try await task.value
+      return try await task.cancellableValue
     }
   }
 }

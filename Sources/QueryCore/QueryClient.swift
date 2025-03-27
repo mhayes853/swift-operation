@@ -8,9 +8,14 @@ public final class QueryClient: Sendable {
   private typealias State = (stores: [QueryPath: StoreEntry], defaultContext: QueryContext)
 
   private let state: Lock<State>
+  private let storeCreator: any StoreCreator
 
-  public init(defaultContext: QueryContext = QueryContext()) {
+  public init(
+    defaultContext: QueryContext = QueryContext(),
+    storeCreator: some StoreCreator = isTesting ? .defaultTesting : .default()
+  ) {
     self.state = Lock(([:], defaultContext))
+    self.storeCreator = storeCreator
     self.state.withLock { $0.defaultContext.setWeakQueryClient(self) }
   }
 }
@@ -122,11 +127,7 @@ extension QueryClient {
     using context: QueryContext
   ) -> OpaqueQueryStore where Query.State.QueryValue == Query.Value {
     OpaqueQueryStore(
-      erasing: .detached(
-        query: query,
-        initialState: initialState,
-        initialContext: context
-      )
+      erasing: self.storeCreator.store(for: query, in: context, with: initialState)
     )
   }
 }
@@ -174,6 +175,106 @@ extension QueryClient {
   private struct StoreEntry {
     let queryType: Any.Type
     let store: OpaqueQueryStore
+  }
+}
+
+// MARK: - StoreCreator
+
+extension QueryClient {
+  public protocol StoreCreator: Sendable {
+    func store<Query: QueryRequest>(
+      for query: Query,
+      in context: QueryContext,
+      with initialState: Query.State
+    ) -> QueryStore<Query.State> where Query.State.QueryValue == Query.Value
+  }
+}
+
+extension QueryClient {
+  public struct DefaultStoreCreator: StoreCreator {
+    let retryLimit: Int
+    let retryBackoff: QueryBackoffFunction?
+    let retryDelayer: (any QueryDelayer)?
+    let queryEnableAutomaticFetchingCondition: any FetchCondition
+    let networkObserver: (any NetworkObserver)?
+    let focusCondition: FocusCondition?
+
+    public func store<Query: QueryRequest>(
+      for query: Query,
+      in context: QueryContext,
+      with initialState: Query.State
+    ) -> QueryStore<Query.State> where Query.State.QueryValue == Query.Value {
+      if query is any MutationRequest {
+        return .detached(
+          query: query.retry(
+            limit: self.retryLimit,
+            backoff: self.retryBackoff,
+            delayer: self.retryDelayer
+          ),
+          initialState: initialState,
+          initialContext: context
+        )
+      }
+      return .detached(
+        query:
+          query.retry(
+            limit: self.retryLimit,
+            backoff: self.retryBackoff,
+            delayer: self.retryDelayer
+          )
+          .enableAutomaticFetching(
+            when: AnyFetchCondition(self.queryEnableAutomaticFetchingCondition)
+          )
+          .refetchOnChange(of: self.refetchOnChangeCondition)
+          .deduplicated(),
+        initialState: initialState,
+        initialContext: context
+      )
+    }
+
+    private var refetchOnChangeCondition: AnyFetchCondition {
+      switch (self.networkObserver, self.focusCondition) {
+      case let (observer?, focusCondition?):
+        return AnyFetchCondition(.connected(to: observer) && focusCondition)
+      case let (observer?, _):
+        return AnyFetchCondition(.connected(to: observer))
+      case let (_, focusCondition?):
+        return AnyFetchCondition(focusCondition)
+      default:
+        return AnyFetchCondition(.always(false))
+      }
+    }
+  }
+}
+
+extension QueryClient.StoreCreator where Self == QueryClient.DefaultStoreCreator {
+  public static var defaultTesting: Self {
+    .default(
+      retryLimit: 0,
+      retryBackoff: .noBackoff,
+      retryDelayer: .noDelay,
+      queryEnableAutomaticFetchingCondition: .always(true),
+      networkObserver: nil,
+      focusCondition: nil
+    )
+  }
+
+  public static func `default`(
+    retryLimit: Int = 3,
+    retryBackoff: QueryBackoffFunction? = nil,
+    retryDelayer: (any QueryDelayer)? = nil,
+    queryEnableAutomaticFetchingCondition: any FetchCondition = .always(true),
+    networkObserver: (any NetworkObserver)? = NWPathMonitorObserver.shared,
+    focusCondition: FocusCondition? = FocusCondition.shared
+  ) -> Self {
+    Self(
+      retryLimit: retryLimit,
+      retryBackoff: retryBackoff,
+      retryDelayer: retryDelayer,
+      queryEnableAutomaticFetchingCondition: queryEnableAutomaticFetchingCondition,
+      networkObserver: networkObserver,
+      focusCondition: focusCondition
+    )
   }
 }
 
