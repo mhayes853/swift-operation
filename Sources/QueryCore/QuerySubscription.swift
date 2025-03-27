@@ -31,3 +31,31 @@ extension QuerySubscription {
       }
   }
 }
+
+// MARK: - Storing
+
+extension QuerySubscription {
+  public func store(in set: inout Set<QuerySubscription>) {
+    set.insert(self)
+  }
+
+  public func store(in collection: inout some RangeReplaceableCollection<QuerySubscription>) {
+    collection.append(self)
+  }
+}
+
+// MARK: - Equatable
+
+extension QuerySubscription: Equatable {
+  public static func == (lhs: QuerySubscription, rhs: QuerySubscription) -> Bool {
+    lhs === rhs
+  }
+}
+
+// MARK: - Hashable
+
+extension QuerySubscription: Hashable {
+  public func hash(into hasher: inout Hasher) {
+    hasher.combine(ObjectIdentifier(self))
+  }
+}
