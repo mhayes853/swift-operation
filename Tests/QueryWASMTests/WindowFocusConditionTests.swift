@@ -3,8 +3,6 @@
   import QueryWASM
   import XCTest
 
-  nonisolated(unsafe) let window = JSObject.global.window.object!
-
   final class WindowFocusConditionTests: XCTestCase {
     func testIsSatisfiedWhenVisibilityStateIsVisible() {
       let document = JSObject()
