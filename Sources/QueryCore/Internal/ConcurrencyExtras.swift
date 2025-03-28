@@ -1,3 +1,5 @@
+// NB: This is needed because ConcurrencyExtras seems to have some symbol issues with WASM.
+
 // MARK: - Task Mega Yield
 
 extension Task where Success == Never, Failure == Never {

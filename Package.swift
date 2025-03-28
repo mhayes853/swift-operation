@@ -52,6 +52,7 @@ let package = Package(
       name: "QueryWASMTests",
       dependencies: [
         "QueryWASM",
+        .product(name: "CustomDump", package: "swift-custom-dump"),
         .product(
           name: "JavaScriptEventLoopTestSupport",
           package: "JavaScriptKit",

@@ -83,7 +83,7 @@ extension QueryContext {
 
   private enum QueryDelayerKey: Key {
     static var defaultValue: any QueryDelayer {
-      #if canImport(Dispatch)
+      #if canImport(Darwin)
         .dispatch(queue: .global())
       #else
         .clock(ContinuousClock())
