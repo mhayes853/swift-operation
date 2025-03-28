@@ -1,4 +1,3 @@
-import ConcurrencyExtras
 import Foundation
 
 // MARK: - QueryTaskConfiguration

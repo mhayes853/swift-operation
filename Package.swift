@@ -1,6 +1,7 @@
 // swift-tools-version: 6.0
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
+import Foundation
 import PackageDescription
 
 let package = Package(
@@ -14,7 +15,6 @@ let package = Package(
   dependencies: [
     .package(url: "https://github.com/pointfreeco/swift-sharing", from: "2.3.3"),
     .package(url: "https://github.com/pointfreeco/swift-custom-dump", from: "1.3.3"),
-    .package(url: "https://github.com/pointfreeco/swift-clocks", from: "1.0.6"),
     .package(
       url: "https://github.com/pointfreeco/swift-identified-collections",
       .upToNextMajor(from: "1.1.0")
@@ -30,27 +30,11 @@ let package = Package(
         .product(name: "Sharing", package: "swift-sharing")
       ]
     ),
-    .testTarget(
-      name: "SharingQueryTests",
-      dependencies: [
-        "SharingQuery",
-        .product(name: "CustomDump", package: "swift-custom-dump")
-      ]
-    ),
     .target(
       name: "QueryCore",
       dependencies: [
         .product(name: "IssueReporting", package: "xctest-dynamic-overlay"),
         .product(name: "IdentifiedCollections", package: "swift-identified-collections")
-      ]
-    ),
-    .testTarget(
-      name: "QueryCoreTests",
-      dependencies: [
-        "QueryCore",
-        .product(name: "CustomDump", package: "swift-custom-dump"),
-        .product(name: "Clocks", package: "swift-clocks"),
-        .product(name: "IssueReportingTestSupport", package: "xctest-dynamic-overlay")
       ]
     ),
     .target(
@@ -78,3 +62,25 @@ let package = Package(
   ],
   swiftLanguageModes: [.v6]
 )
+
+if ProcessInfo.processInfo.environment["TEST_WASM"] == nil {
+  package.targets.append(
+    contentsOf: [
+      .testTarget(
+        name: "SharingQueryTests",
+        dependencies: [
+          "SharingQuery",
+          .product(name: "CustomDump", package: "swift-custom-dump")
+        ]
+      ),
+      .testTarget(
+        name: "QueryCoreTests",
+        dependencies: [
+          "QueryCore",
+          .product(name: "CustomDump", package: "swift-custom-dump"),
+          .product(name: "IssueReportingTestSupport", package: "xctest-dynamic-overlay")
+        ]
+      )
+    ]
+  )
+}

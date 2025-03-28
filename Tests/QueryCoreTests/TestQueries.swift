@@ -1,5 +1,3 @@
-import Clocks
-import ConcurrencyExtras
 import QueryCore
 
 // MARK: - TestQuery

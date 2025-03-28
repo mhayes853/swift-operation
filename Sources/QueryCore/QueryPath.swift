@@ -1,5 +1,3 @@
-import ConcurrencyExtras
-
 // MARK: - QueryPath
 
 public struct QueryPath: Hashable, Sendable {
