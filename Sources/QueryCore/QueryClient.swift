@@ -281,14 +281,14 @@ extension QueryClient.StoreCreator where Self == QueryClient.DefaultStoreCreator
 public var _defaultNetworkObserver: (any NetworkObserver)? {
   #if canImport(Network)
     NWPathMonitorObserver.shared
-  #else 
+  #else
     nil
   #endif
 }
 
 public var _defaultFocusCondition: (any FetchCondition)? {
   #if canImport(Darwin)
-    .shared
+    NotificationFocusCondition.shared
   #else
     nil
   #endif

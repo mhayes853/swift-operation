@@ -12,18 +12,15 @@ let package = Package(
     .library(name: "QueryWASM", targets: ["QueryWASM"])
   ],
   dependencies: [
-    .package(url: "https://github.com/pointfreeco/swift-sharing", .upToNextMajor(from: "2.0.0")),
+    .package(url: "https://github.com/pointfreeco/swift-sharing", from: "2.3.3"),
     .package(url: "https://github.com/pointfreeco/swift-custom-dump", from: "1.3.3"),
     .package(url: "https://github.com/pointfreeco/swift-clocks", from: "1.0.6"),
     .package(
       url: "https://github.com/pointfreeco/swift-identified-collections",
       .upToNextMajor(from: "1.1.0")
     ),
-    .package(
-      url: "https://github.com/pointfreeco/xctest-dynamic-overlay",
-      .upToNextMajor(from: "1.2.2")
-    ),
-    .package(url: "https://github.com/swiftwasm/JavaScriptKit", .upToNextMajor(from: "0.26.0"))
+    .package(url: "https://github.com/pointfreeco/xctest-dynamic-overlay", from: "1.4.3"),
+    .package(url: "https://github.com/swiftwasm/JavaScriptKit", branch: "main")
   ],
   targets: [
     .target(
