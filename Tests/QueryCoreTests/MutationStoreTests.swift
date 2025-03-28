@@ -33,7 +33,7 @@ struct MutationStoreTests {
 
   @Test("Mutation Is Loading")
   func mutationIsLoading() async throws {
-    let mutation = SleepingMutation(clock: ImmediateClock(), duration: .seconds(1))
+    let mutation = SleepingMutation()
     let store = self.client.store(for: mutation)
     mutation.didBeginSleeping = {
       expectNoDifference(store.isLoading, true)
@@ -44,7 +44,7 @@ struct MutationStoreTests {
 
   @Test("Mutation Is Loading, Adds Loading Status To History")
   func mutationIsLoadingAddsLoadingStatusToHistory() async throws {
-    let mutation = SleepingMutation(clock: ImmediateClock(), duration: .seconds(1))
+    let mutation = SleepingMutation()
     let store = self.client.store(for: mutation)
     mutation.didBeginSleeping = {
       expectNoDifference(store.history.count, 1)

@@ -64,7 +64,7 @@ let package = Package(
   swiftLanguageModes: [.v6]
 )
 
-if ProcessInfo.processInfo.environment["TEST_WASM"] == nil {
+if ProcessInfo.processInfo.environment["TEST_WASM"] != "1" {
   package.targets.append(
     contentsOf: [
       .testTarget(

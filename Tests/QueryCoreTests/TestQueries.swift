@@ -662,18 +662,10 @@ struct EmptyIntMutation: MutationRequest, Hashable {
 final class SleepingMutation: MutationRequest, @unchecked Sendable {
   typealias Value = String
 
-  let clock: any Clock<Duration>
-  let duration: Duration
-
   var didBeginSleeping: (() -> Void)?
 
-  init(clock: any Clock<Duration>, duration: Duration) {
-    self.clock = clock
-    self.duration = duration
-  }
-
   var path: QueryPath {
-    ["test-sleeping-mutation", self.duration]
+    ["test-sleeping-mutation"]
   }
 
   func mutate(
@@ -682,7 +674,6 @@ final class SleepingMutation: MutationRequest, @unchecked Sendable {
     with continuation: QueryContinuation<String>
   ) async throws -> String {
     self.didBeginSleeping?()
-    try await self.clock.sleep(for: self.duration)
     return ""
   }
 }
