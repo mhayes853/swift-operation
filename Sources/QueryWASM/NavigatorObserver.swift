@@ -2,6 +2,8 @@
   import JavaScriptKit
   import QueryCore
 
+  // MARK: - NavigatorObserver
+
   public struct NavigatorObserver: @unchecked Sendable {
     private let navigator: JSObject
     private let window: JSObject
@@ -12,12 +14,16 @@
     }
   }
 
+  // MARK: - Shared
+
   extension NavigatorObserver {
     public static let shared = Self(
       navigator: JSObject.global.navigator.object!,
       window: JSObject.global.window.object!
     )
   }
+
+  // MARK: - NetworkObserver Conformance
 
   extension NavigatorObserver: NetworkObserver {
     public var currentStatus: NetworkStatus {

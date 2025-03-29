@@ -2,10 +2,14 @@
   import JavaScriptKit
   import QueryCore
 
+  // MARK: - WindowFocusCondition
+
   public struct WindowFocusCondition: @unchecked Sendable {
     fileprivate let document: JSObject
     fileprivate let window: JSObject
   }
+
+  // MARK: - FetchCondition Conformance
 
   extension WindowFocusCondition: FetchCondition {
     public func isSatisfied(in context: QueryContext) -> Bool {
