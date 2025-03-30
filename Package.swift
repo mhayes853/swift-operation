@@ -22,7 +22,8 @@ let package = Package(
     ),
     .package(url: "https://github.com/pointfreeco/xctest-dynamic-overlay", from: "1.4.3"),
     .package(url: "https://github.com/swiftwasm/JavaScriptKit", branch: "main"),
-    .package(url: "https://github.com/pointfreeco/swift-navigation", from: "2.3.0")
+    .package(url: "https://github.com/pointfreeco/swift-navigation", from: "2.3.0"),
+    .package(url: "https://github.com/nalexn/ViewInspector", from: "0.10.1")
   ],
   targets: [
     .target(
@@ -43,6 +44,7 @@ let package = Package(
       name: "QueryObservation",
       dependencies: ["QueryCore", .product(name: "SwiftNavigation", package: "swift-navigation")]
     ),
+    .target(name: "QuerySwiftUI", dependencies: ["QueryCore"]),
     .target(name: "_TestQueries", dependencies: ["QueryCore"]),
     .target(
       name: "QueryWASM",
@@ -94,6 +96,12 @@ if ProcessInfo.processInfo.environment["TEST_WASM"] != "1" {
       .testTarget(
         name: "QueryObservationTests",
         dependencies: ["QueryObservation", "_TestQueries"]
+      ),
+      .testTarget(
+        name: "QuerySwiftUITests",
+        dependencies: [
+          "QuerySwiftUI", "_TestQueries", .product(name: "ViewInspector", package: "ViewInspector")
+        ]
       )
     ]
   )
