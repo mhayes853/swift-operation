@@ -1,7 +1,7 @@
 import CustomDump
 import QueryCore
-import _TestQueries
 import Testing
+import _TestQueries
 
 @Suite("RetryQuery tests")
 struct RetryQueryTests {
@@ -57,7 +57,7 @@ struct RetryQueryTests {
   func doesNotRetryEveryPageFetchWhenFetchingAllPages() async throws {
     let query = FlakeyInfiniteQuery()
     query.values.withLock { $0.failOnPageId = -1 }
-    let store = InfiniteQueryStore.detached(
+    let store = QueryStore.detached(
       query: query.retry(limit: 3, backoff: .noBackoff, delayer: .noDelay)
     )
     try await store.fetchNextPage()

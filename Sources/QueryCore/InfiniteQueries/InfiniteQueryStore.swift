@@ -1,144 +1,40 @@
 import Foundation
 import IdentifiedCollections
 
-// MARK: - Type Aliases
-
-public typealias InfiniteQueryStoreFor<
-  Query: InfiniteQueryRequest
-> = InfiniteQueryStore<Query.PageID, Query.PageValue>
-
-// MARK: - InfiniteQueryStore
-
-@dynamicMemberLookup
-public final class InfiniteQueryStore<PageID: Hashable & Sendable, PageValue: Sendable>: Sendable {
-  public let base: QueryStore<InfiniteQueryState<PageID, PageValue>>
-
-  public init(store: QueryStore<InfiniteQueryState<PageID, PageValue>>) {
-    self.base = store
-  }
-}
-
 // MARK: - Detached
 
-extension InfiniteQueryStore {
-  public static func detached<Query: InfiniteQueryRequest<PageID, PageValue>>(
+extension QueryStore {
+  public static func detached<Query: InfiniteQueryRequest<State.PageID, State.PageValue>>(
     query: Query,
     initialValue: Query.State.StateValue = [],
     initialContext: QueryContext = QueryContext()
-  ) -> InfiniteQueryStoreFor<Query> {
-    InfiniteQueryStore(
-      store: .detached(
-        query: query,
-        initialState: InfiniteQueryState(
-          initialValue: initialValue,
-          initialPageId: query.initialPageId
-        ),
-        initialContext: initialContext
-      )
+  ) -> QueryStore<State> where State == InfiniteQueryState<State.PageID, State.PageValue> {
+    .detached(
+      query: query,
+      initialState: InfiniteQueryState(
+        initialValue: initialValue,
+        initialPageId: query.initialPageId
+      ),
+      initialContext: initialContext
     )
   }
 
-  public static func detached<Query: InfiniteQueryRequest<PageID, PageValue>>(
+  public static func detached<Query: InfiniteQueryRequest<State.PageID, State.PageValue>>(
     query: DefaultInfiniteQuery<Query>,
     initialContext: QueryContext = QueryContext()
-  ) -> InfiniteQueryStoreFor<Query> {
+  ) -> QueryStore<State> where State == InfiniteQueryState<State.PageID, State.PageValue> {
     .detached(query: query, initialValue: query.defaultValue, initialContext: initialContext)
-  }
-}
-
-// MARK: - Path
-
-extension InfiniteQueryStore {
-  public var path: QueryPath {
-    self.base.path
-  }
-}
-
-// MARK: - Context
-
-extension InfiniteQueryStore {
-  public var context: QueryContext {
-    get { self.base.context }
-    set { self.base.context = newValue }
-  }
-}
-
-// MARK: - Automatic Fetching
-
-extension InfiniteQueryStore {
-  public var isAutomaticFetchingEnabled: Bool {
-    self.base.isAutomaticFetchingEnabled
-  }
-}
-
-// MARK: - State
-
-extension InfiniteQueryStore {
-  public var state: InfiniteQueryState<PageID, PageValue> {
-    self.base.state
-  }
-
-  public subscript<NewValue: Sendable>(
-    dynamicMember keyPath: KeyPath<InfiniteQueryState<PageID, PageValue>, NewValue>
-  ) -> NewValue {
-    self.state[keyPath: keyPath]
-  }
-
-  public func withState<T: Sendable>(
-    _ fn: (InfiniteQueryState<PageID, PageValue>) throws -> T
-  ) rethrows -> T {
-    try self.base.withState(fn)
-  }
-}
-
-// MARK: - Current Value
-
-extension InfiniteQueryStore {
-  public var currentValue: InfiniteQueryPages<PageID, PageValue> {
-    get { self.base.currentValue }
-    set { self.base.currentValue = newValue }
-  }
-}
-
-// MARK: - Set Result
-
-extension InfiniteQueryStore {
-  public func setResult(
-    to result: Result<InfiniteQueryPages<PageID, PageValue>, any Error>,
-    using context: QueryContext? = nil
-  ) {
-    self.base.setResult(to: result, using: context)
-  }
-}
-
-// MARK: - Reset
-
-extension InfiniteQueryStore {
-  public func reset(using context: QueryContext? = nil) {
-    self.base.reset(using: context)
-  }
-}
-
-// MARK: - Is Stale
-
-extension InfiniteQueryStore {
-  public var isStale: Bool {
-    self.base.isStale
-  }
-
-  public func isStale(using context: QueryContext? = nil) -> Bool {
-    self.base.isStale(using: context)
   }
 }
 
 // MARK: - Fetch All Pages
 
-extension InfiniteQueryStore {
+extension QueryStore where State: _InfiniteQueryStateProtocol {
   @discardableResult
   public func fetchAllPages(
     using configuration: QueryTaskConfiguration? = nil,
-    handler: InfiniteQueryEventHandler<PageID, PageValue> = InfiniteQueryEventHandler()
-  ) async throws -> InfiniteQueryPages<PageID, PageValue> {
+    handler: InfiniteQueryEventHandler<State.PageID, State.PageValue> = InfiniteQueryEventHandler()
+  ) async throws -> InfiniteQueryPages<State.PageID, State.PageValue> {
     let value = try await self.fetch(
       using: self.fetchAllPagesTaskConfiguration(using: configuration),
       handler: handler
@@ -148,14 +44,14 @@ extension InfiniteQueryStore {
 
   public func fetchAllPagesTask(
     using configuration: QueryTaskConfiguration? = nil
-  ) -> QueryTask<InfiniteQueryPages<PageID, PageValue>> {
-    self.base.fetchTask(using: self.fetchAllPagesTaskConfiguration(using: configuration))
+  ) -> QueryTask<InfiniteQueryPages<State.PageID, State.PageValue>> {
+    self.fetchTask(using: self.fetchAllPagesTaskConfiguration(using: configuration))
       .map(self.allPages(from:))
   }
 
   private func allPages(
-    from value: InfiniteQueryValue<PageID, PageValue>
-  ) -> InfiniteQueryPages<PageID, PageValue> {
+    from value: InfiniteQueryValue<State.PageID, State.PageValue>
+  ) -> InfiniteQueryPages<State.PageID, State.PageValue> {
     switch value.response {
     case let .allPages(pages): pages
     default: self.state.currentValue
@@ -178,12 +74,12 @@ extension InfiniteQueryStore {
 
 // MARK: - Fetch Next Page
 
-extension InfiniteQueryStore {
+extension QueryStore where State: _InfiniteQueryStateProtocol {
   @discardableResult
   public func fetchNextPage(
     using configuration: QueryTaskConfiguration? = nil,
-    handler: InfiniteQueryEventHandler<PageID, PageValue> = InfiniteQueryEventHandler()
-  ) async throws -> InfiniteQueryPage<PageID, PageValue>? {
+    handler: InfiniteQueryEventHandler<State.PageID, State.PageValue> = InfiniteQueryEventHandler()
+  ) async throws -> InfiniteQueryPage<State.PageID, State.PageValue>? {
     guard self.hasNextPage else { return nil }
     let value = try await self.fetch(
       using: self.fetchNextPageTaskConfiguration(using: configuration),
@@ -194,19 +90,19 @@ extension InfiniteQueryStore {
 
   public func fetchNextPageTask(
     using configuration: QueryTaskConfiguration? = nil
-  ) -> QueryTask<InfiniteQueryPage<PageID, PageValue>?> {
+  ) -> QueryTask<InfiniteQueryPage<State.PageID, State.PageValue>?> {
     guard self.hasNextPage else {
       return QueryTask(
         configuration: self.fetchNextPageTaskConfiguration(using: configuration)
       ) { _ in nil }
     }
-    return self.base.fetchTask(using: self.fetchNextPageTaskConfiguration(using: configuration))
+    return self.fetchTask(using: self.fetchNextPageTaskConfiguration(using: configuration))
       .map(self.nextPage(from:))
   }
 
   private func nextPage(
-    from value: InfiniteQueryValue<PageID, PageValue>
-  ) -> InfiniteQueryPage<PageID, PageValue>? {
+    from value: InfiniteQueryValue<State.PageID, State.PageValue>
+  ) -> InfiniteQueryPage<State.PageID, State.PageValue>? {
     switch value.response {
     case let .nextPage(next): next?.page
     case let .initialPage(page): page
@@ -230,12 +126,12 @@ extension InfiniteQueryStore {
 
 // MARK: - Fetch Previous Page
 
-extension InfiniteQueryStore {
+extension QueryStore where State: _InfiniteQueryStateProtocol {
   @discardableResult
   public func fetchPreviousPage(
     using configuration: QueryTaskConfiguration? = nil,
-    handler: InfiniteQueryEventHandler<PageID, PageValue> = InfiniteQueryEventHandler()
-  ) async throws -> InfiniteQueryPage<PageID, PageValue>? {
+    handler: InfiniteQueryEventHandler<State.PageID, State.PageValue> = InfiniteQueryEventHandler()
+  ) async throws -> InfiniteQueryPage<State.PageID, State.PageValue>? {
     guard self.hasPreviousPage else { return nil }
     let value = try await self.fetch(
       using: self.fetchPreviousPageTaskConfiguration(using: configuration),
@@ -246,19 +142,19 @@ extension InfiniteQueryStore {
 
   public func fetchPreviousPageTask(
     using configuration: QueryTaskConfiguration? = nil
-  ) -> QueryTask<InfiniteQueryPage<PageID, PageValue>?> {
+  ) -> QueryTask<InfiniteQueryPage<State.PageID, State.PageValue>?> {
     guard self.hasPreviousPage else {
       return QueryTask(
         configuration: self.fetchPreviousPageTaskConfiguration(using: configuration)
       ) { _ in nil }
     }
-    return self.base.fetchTask(using: self.fetchPreviousPageTaskConfiguration(using: configuration))
+    return self.fetchTask(using: self.fetchPreviousPageTaskConfiguration(using: configuration))
       .map(self.previousPage(from:))
   }
 
   private func previousPage(
-    from value: InfiniteQueryValue<PageID, PageValue>
-  ) -> InfiniteQueryPage<PageID, PageValue>? {
+    from value: InfiniteQueryValue<State.PageID, State.PageValue>
+  ) -> InfiniteQueryPage<State.PageID, State.PageValue>? {
     switch value.response {
     case let .previousPage(previous): previous?.page
     case let .initialPage(page): page
@@ -282,17 +178,17 @@ extension InfiniteQueryStore {
 
 // MARK: - Fetch
 
-extension InfiniteQueryStore {
+extension QueryStore where State: _InfiniteQueryStateProtocol {
   private func fetch(
     using configuration: QueryTaskConfiguration,
-    handler: InfiniteQueryEventHandler<PageID, PageValue>
-  ) async throws -> InfiniteQueryValue<PageID, PageValue> {
+    handler: InfiniteQueryEventHandler<State.PageID, State.PageValue>
+  ) async throws -> InfiniteQueryValue<State.PageID, State.PageValue> {
     let subscription = configuration.context.infiniteValues.addRequestSubscriber(
       from: handler,
       isTemporary: true
     )
     defer { subscription.cancel() }
-    return try await self.base.fetch(
+    return try await self.fetch(
       using: configuration,
       handler: self.queryStoreHandler(for: handler)
     )
@@ -301,15 +197,15 @@ extension InfiniteQueryStore {
 
 // MARK: - Subscribe
 
-extension InfiniteQueryStore {
+extension QueryStore where State: _InfiniteQueryStateProtocol {
   public func subscribe(
-    with handler: InfiniteQueryEventHandler<PageID, PageValue>
+    with handler: InfiniteQueryEventHandler<State.PageID, State.PageValue>
   ) -> QuerySubscription {
     let contextSubscription = context.infiniteValues.addRequestSubscriber(
       from: handler,
       isTemporary: false
     )
-    let baseSubscription = self.base.subscribe(with: self.queryStoreHandler(for: handler))
+    let baseSubscription = self.subscribe(with: self.queryStoreHandler(for: handler))
     return QuerySubscription {
       baseSubscription.cancel()
       contextSubscription.cancel()
@@ -319,12 +215,14 @@ extension InfiniteQueryStore {
 
 // MARK: - InfiniteQueryEventHandler
 
-extension InfiniteQueryStore {
+extension QueryStore where State: _InfiniteQueryStateProtocol {
   private func queryStoreHandler(
-    for handler: InfiniteQueryEventHandler<PageID, PageValue>
-  ) -> QueryEventHandler<InfiniteQueryState<PageID, PageValue>> {
+    for handler: InfiniteQueryEventHandler<State.PageID, State.PageValue>
+  ) -> QueryEventHandler<State> {
     QueryEventHandler(
-      onStateChanged: handler.onStateChanged,
+      onStateChanged: {
+        handler.onStateChanged?($0 as! InfiniteQueryState<State.PageID, State.PageValue>, $1)
+      },
       onFetchingStarted: handler.onFetchingStarted,
       onFetchingEnded: handler.onFetchingFinished,
       onResultReceived: { result, context in

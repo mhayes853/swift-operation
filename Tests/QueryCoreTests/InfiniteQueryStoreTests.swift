@@ -674,13 +674,13 @@ struct InfiniteQueryStoreTests {
   func fetchThroughNormalQueryStoreEvents() async throws {
     let collector = InfiniteQueryStoreEventsCollector<Int, String>()
     let query = TestInfiniteQuery()
-    let infiniteStore = self.client.store(for: query.enableAutomaticFetching(when: .always(false)))
+    let store = self.client.store(for: query.enableAutomaticFetching(when: .always(false)))
     query.state.withLock { $0 = [0: "a", 1: "b"] }
-    try await infiniteStore.fetchNextPage()
-    try await infiniteStore.fetchNextPage()
+    try await store.fetchNextPage()
+    try await store.fetchNextPage()
 
-    let subscription = infiniteStore.subscribe(with: collector.eventHandler())
-    try await infiniteStore.base.fetch()
+    let subscription = store.subscribe(with: collector.eventHandler())
+    try await store.fetch()
 
     collector.expectEventsMatch([
       .stateChanged,
@@ -729,7 +729,7 @@ struct InfiniteQueryStoreTests {
     let task = store.fetchAllPagesTask()
     expectNoDifference(
       task.configuration.name,
-      "InfiniteQueryStore<Int, String> Fetch All Pages Task"
+      "QueryStore<InfiniteQueryState<Int, String>> Fetch All Pages Task"
     )
   }
 
@@ -739,7 +739,7 @@ struct InfiniteQueryStoreTests {
     let task = store.fetchNextPageTask()
     expectNoDifference(
       task.configuration.name,
-      "InfiniteQueryStore<Int, String> Fetch Next Page Task"
+      "QueryStore<InfiniteQueryState<Int, String>> Fetch Next Page Task"
     )
   }
 
@@ -749,7 +749,7 @@ struct InfiniteQueryStoreTests {
     let task = store.fetchPreviousPageTask()
     expectNoDifference(
       task.configuration.name,
-      "InfiniteQueryStore<Int, String> Fetch Previous Page Task"
+      "QueryStore<InfiniteQueryState<Int, String>> Fetch Previous Page Task"
     )
   }
 
@@ -757,7 +757,7 @@ struct InfiniteQueryStoreTests {
   func yieldsNewStateValueToInfiniteQuery() async throws {
     let controller = TestQueryController<TestInfiniteQuery>()
     let store =
-      InfiniteQueryStore.detached(query: TestInfiniteQuery().controlled(by: controller))
+      QueryStore.detached(query: TestInfiniteQuery().controlled(by: controller))
 
     let date = RecursiveLock(Date())
     store.context.queryClock = .custom { date.withLock { $0 } }
@@ -783,7 +783,7 @@ struct InfiniteQueryStoreTests {
       $0.willWait = true
     }
     let store =
-      InfiniteQueryStore.detached(query: query.controlled(by: controller))
+      QueryStore.detached(query: query.controlled(by: controller))
 
     let task = Task { try await store.fetchNextPage() }
     try await query.waitForLoading()
@@ -806,7 +806,7 @@ struct InfiniteQueryStoreTests {
       $0.willWait = false
     }
     let store =
-      InfiniteQueryStore.detached(query: query.controlled(by: controller))
+      QueryStore.detached(query: query.controlled(by: controller))
     try await store.fetchNextPage()
     query.state.withLock { $0.willWait = true }
 
@@ -826,7 +826,7 @@ struct InfiniteQueryStoreTests {
   func yieldsNewErrorValueToInfiniteQuery() async throws {
     let controller = TestQueryController<TestInfiniteQuery>()
     let store =
-      InfiniteQueryStore.detached(query: TestInfiniteQuery().controlled(by: controller))
+      QueryStore.detached(query: TestInfiniteQuery().controlled(by: controller))
 
     let date = RecursiveLock(Date())
     store.context.queryClock = .custom { date.withLock { $0 } }

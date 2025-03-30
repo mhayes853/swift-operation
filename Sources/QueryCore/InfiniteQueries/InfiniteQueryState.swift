@@ -1,6 +1,21 @@
 import Foundation
 import IdentifiedCollections
 
+// MARK: - InfiniteQueryStateProtocol
+
+public protocol _InfiniteQueryStateProtocol<PageID, PageValue>: QueryStateProtocol
+where
+  StateValue == InfiniteQueryPages<PageID, PageValue>,
+  QueryValue == InfiniteQueryValue<PageID, PageValue>,
+  StatusValue == StateValue
+{
+  associatedtype PageID: Hashable & Sendable
+  associatedtype PageValue: Sendable
+
+  var hasPreviousPage: Bool { get }
+  var hasNextPage: Bool { get }
+}
+
 // MARK: - InfiniteQueryState
 
 public struct InfiniteQueryState<PageID: Hashable & Sendable, PageValue: Sendable> {
@@ -63,11 +78,7 @@ extension InfiniteQueryState {
 
 // MARK: - QueryStateProtocol Conformance
 
-extension InfiniteQueryState: QueryStateProtocol {
-  public typealias StateValue = InfiniteQueryPages<PageID, PageValue>
-  public typealias QueryValue = InfiniteQueryValue<PageID, PageValue>
-  public typealias StatusValue = StateValue
-
+extension InfiniteQueryState: _InfiniteQueryStateProtocol {
   public var isLoading: Bool {
     self.isLoadingAllPages || self.isLoadingNextPage || self.isLoadingPreviousPage
       || self.isLoadingInitialPage

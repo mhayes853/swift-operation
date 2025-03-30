@@ -40,14 +40,14 @@ extension QueryClient {
     for query: Query,
     uiTransaction: UITransaction = UITransaction()
   ) -> QueryModel<Query.State> {
-    QueryModel(store: self.store(for: query).base, uiTransaction: uiTransaction)
+    QueryModel(store: self.store(for: query), uiTransaction: uiTransaction)
   }
 
   public func model<Query: InfiniteQueryRequest>(
     for query: DefaultInfiniteQuery<Query>,
     uiTransaction: UITransaction = UITransaction()
   ) -> QueryModel<DefaultInfiniteQuery<Query>.State> {
-    QueryModel(store: self.store(for: query).base, uiTransaction: uiTransaction)
+    QueryModel(store: self.store(for: query), uiTransaction: uiTransaction)
   }
 
   public func model<Mutation: MutationRequest>(
@@ -94,14 +94,14 @@ extension QueryClient {
       for query: Query,
       animation: Animation?
     ) -> QueryModel<Query.State> {
-      QueryModel(store: self.store(for: query).base, animation: animation)
+      QueryModel(store: self.store(for: query), animation: animation)
     }
 
     public func model<Query: InfiniteQueryRequest>(
       for query: DefaultInfiniteQuery<Query>,
       animation: Animation?
     ) -> QueryModel<DefaultInfiniteQuery<Query>.State> {
-      QueryModel(store: self.store(for: query).base, animation: animation)
+      QueryModel(store: self.store(for: query), animation: animation)
     }
 
     public func model<Mutation: MutationRequest>(
@@ -145,14 +145,14 @@ extension QueryClient {
       for query: Query,
       transaction: Transaction
     ) -> QueryModel<Query.State> {
-      QueryModel(store: self.store(for: query).base, transaction: transaction)
+      QueryModel(store: self.store(for: query), transaction: transaction)
     }
 
     public func model<Query: InfiniteQueryRequest>(
       for query: DefaultInfiniteQuery<Query>,
       transaction: Transaction
     ) -> QueryModel<DefaultInfiniteQuery<Query>.State> {
-      QueryModel(store: self.store(for: query).base, transaction: transaction)
+      QueryModel(store: self.store(for: query), transaction: transaction)
     }
 
     public func model<Mutation: MutationRequest>(

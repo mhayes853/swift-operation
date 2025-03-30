@@ -58,31 +58,25 @@ extension QueryClient {
 
   public func store<Query: InfiniteQueryRequest>(
     for query: Query
-  ) -> InfiniteQueryStoreFor<Query> {
-    InfiniteQueryStore(
-      store:
-        self.opaqueStore(
-          for: query,
-          initialState: InfiniteQueryState(initialValue: [], initialPageId: query.initialPageId)
-        )
-        .base as! QueryStore<Query.State>
+  ) -> QueryStore<Query.State> {
+    self.opaqueStore(
+      for: query,
+      initialState: InfiniteQueryState(initialValue: [], initialPageId: query.initialPageId)
     )
+    .base as! QueryStore<Query.State>
   }
 
   public func store<Query: InfiniteQueryRequest>(
     for query: DefaultInfiniteQuery<Query>
-  ) -> InfiniteQueryStoreFor<DefaultInfiniteQuery<Query>> {
-    InfiniteQueryStore(
-      store:
-        self.opaqueStore(
-          for: query,
-          initialState: InfiniteQueryState(
-            initialValue: query.defaultValue,
-            initialPageId: query.initialPageId
-          )
-        )
-        .base as! QueryStore<Query.State>
+  ) -> QueryStore<DefaultInfiniteQuery<Query>.State> {
+    self.opaqueStore(
+      for: query,
+      initialState: InfiniteQueryState(
+        initialValue: query.defaultValue,
+        initialPageId: query.initialPageId
+      )
     )
+    .base as! QueryStore<DefaultInfiniteQuery<Query>.State>
   }
 
   public func store<Mutation: MutationRequest>(
