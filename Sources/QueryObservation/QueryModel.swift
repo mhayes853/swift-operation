@@ -38,6 +38,15 @@ public final class QueryModel<State: QueryStateProtocol> {
   }
 }
 
+// MARK: - UITransaction Init
+
+extension QueryModel {
+  public convenience init(store: QueryStore<State>, uiTransaction: UITransaction) {
+    self.init(store: store)
+    self.uiTransaction = uiTransaction
+  }
+}
+
 // MARK: - Dynamic Member Lookup
 
 extension QueryModel {
@@ -46,13 +55,23 @@ extension QueryModel {
   }
 }
 
-// MARK: - Animation
+// MARK: - SwiftUI
 
 #if canImport(SwiftUI)
   extension QueryModel {
     public var animation: Animation? {
       get { self.transaction.animation }
       set { self.transaction.animation = newValue }
+    }
+
+    public convenience init(store: QueryStore<State>, animation: Animation?) {
+      self.init(store: store)
+      self.animation = animation
+    }
+
+    public convenience init(store: QueryStore<State>, transaction: Transaction) {
+      self.init(store: store)
+      self.transaction = transaction
     }
   }
 #endif
