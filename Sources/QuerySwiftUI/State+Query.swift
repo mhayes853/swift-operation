@@ -6,11 +6,17 @@
   extension State where Value: QueryStateProtocol {
     @propertyWrapper
     @dynamicMemberLookup
-    public struct Query: DynamicProperty, Sendable {
+    public struct Query<Request: QueryRequest>: Sendable
+    where Request.Value == Request.State.QueryValue, Value == Request.State {
+      private let query: Request
+      private let clientOverride: QueryClient?
+
       @SwiftUI.State private var state: Value
 
-      @Environment(\.queryClient) var queryClient
-      public let store: QueryStore<Value>
+      @Environment(\.queryClient) private var queryClient
+
+      private var subscription = QuerySubscription.empty
+      private var previousClient: QueryClient?
 
       public var wrappedValue: Value {
         self.state
@@ -21,59 +27,10 @@
         set { self = newValue }
       }
 
-      public init(store: QueryStore<Value>) {
-        self.store = store
-        self._state = SwiftUI.State(initialValue: store.state)
-      }
-
-      public init<Query: QueryRequest>(
-        query: Query,
-        client: QueryClient? = nil
-      )
-      where
-        Query.State == QueryState<Query.Value?, Query.Value>,
-        Value == QueryState<Query.Value?, Query.Value>
-      {
-        @Environment(\.queryClient) var queryClient
-        self.init(store: (client ?? queryClient).store(for: query))
-      }
-
-      public init<Query: QueryRequest>(
-        wrappedValue: Value,
-        query: Query,
-        client: QueryClient? = nil
-      )
-      where Query.State.QueryValue == Query.Value, Value == Query.State {
-        @Environment(\.queryClient) var queryClient
-        self.init(store: (client ?? queryClient).store(for: query, initialState: wrappedValue))
-      }
-
-      public init<Query: QueryRequest>(
-        query: DefaultQuery<Query>,
-        client: QueryClient? = nil
-      )
-      where
-        Query.State == QueryState<Query.Value, Query.Value>,
-        Value == QueryState<Query.Value, Query.Value>
-      {
-        @Environment(\.queryClient) var queryClient
-        self.init(store: (client ?? queryClient).store(for: query))
-      }
-
-      public init<Query: InfiniteQueryRequest>(
-        query: Query,
-        client: QueryClient? = nil
-      ) where Value == Query.State {
-        @Environment(\.queryClient) var queryClient
-        self.init(store: (client ?? queryClient).store(for: query))
-      }
-
-      public init<Arguments: Sendable, V: Sendable, Query: MutationRequest<Arguments, V>>(
-        query: Query,
-        client: QueryClient? = nil
-      ) where Value == MutationState<Arguments, V> {
-        @Environment(\.queryClient) var queryClient
-        self.init(store: (client ?? queryClient).store(for: query))
+      private init(query: Request, initialState: Value, clientOverride: QueryClient?) {
+        self.query = query
+        self.clientOverride = clientOverride
+        self._state = State(initialValue: initialState)
       }
     }
   }
@@ -81,7 +38,64 @@
   // MARK: - Query Init
 
   extension State.Query {
+    public init(wrappedValue: Value, query: Request, client: QueryClient? = nil) {
+      self.init(query: query, initialState: wrappedValue, clientOverride: client)
+    }
 
+    public init<V>(query: Request, client: QueryClient? = nil)
+    where Request.Value == V, Value == QueryState<V?, V> {
+      self.init(query: query, initialState: QueryState(initialValue: nil), clientOverride: client)
+    }
+
+    public init<Query: QueryRequest>(query: DefaultQuery<Query>, client: QueryClient? = nil)
+    where Value == QueryState<Query.Value, Query.Value>, Request == DefaultQuery<Query> {
+      self.init(
+        query: query,
+        initialState: QueryState(initialValue: query.defaultValue),
+        clientOverride: client
+      )
+    }
+
+    public init(query: Request, client: QueryClient? = nil) where Request: InfiniteQueryRequest {
+      self.init(
+        query: query,
+        initialState: InfiniteQueryState(initialValue: [], initialPageId: query.initialPageId),
+        clientOverride: client
+      )
+    }
+
+    public init<Arguments: Sendable, V: Sendable>(mutation: Request, client: QueryClient? = nil)
+    where Request: MutationRequest<Arguments, V> {
+      self.init(query: mutation, initialState: MutationState(), clientOverride: client)
+    }
+  }
+
+  // MARK: - Store
+
+  extension State.Query {
+    public var store: QueryStore<Value> {
+      self.client.store(for: self.query, initialState: self.state)
+    }
+  }
+
+  // MARK: - QueryClient
+
+  extension State.Query {
+    public var client: QueryClient {
+      self.clientOverride ?? self.queryClient
+    }
+  }
+
+  // MARK: - DynamicProperty
+
+  extension State.Query: DynamicProperty {
+    public mutating func update() {
+      self.subscription = self.store.subscribe(
+        with: QueryEventHandler { [self] state, _ in
+          Task { self.state = state }
+        }
+      )
+    }
   }
 
   // MARK: - Dynamic Member Lookup
@@ -127,6 +141,7 @@
   // MARK: - Fetch
 
   extension State.Query {
+    @discardableResult
     public func fetch(
       using configuration: QueryTaskConfiguration? = nil,
       handler: QueryEventHandler<Value> = QueryEventHandler()

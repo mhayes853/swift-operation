@@ -3,6 +3,13 @@
   import SwiftUI
 
   extension EnvironmentValues {
-    @Entry public var queryClient = QueryClient()
+    public var queryClient: QueryClient {
+      get { self[QueryClientKey.self] }
+      set { self[QueryClientKey.self] = newValue }
+    }
+
+    private enum QueryClientKey: EnvironmentKey {
+      static let defaultValue = QueryClient()
+    }
   }
 #endif
