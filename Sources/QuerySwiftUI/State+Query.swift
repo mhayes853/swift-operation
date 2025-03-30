@@ -39,6 +39,16 @@
       }
 
       public init<Query: QueryRequest>(
+        wrappedValue: Value,
+        query: Query,
+        client: QueryClient? = nil
+      )
+      where Query.State.QueryValue == Query.Value, Value == Query.State {
+        @Environment(\.queryClient) var queryClient
+        self.init(store: (client ?? queryClient).store(for: query, initialState: wrappedValue))
+      }
+
+      public init<Query: QueryRequest>(
         query: DefaultQuery<Query>,
         client: QueryClient? = nil
       )
