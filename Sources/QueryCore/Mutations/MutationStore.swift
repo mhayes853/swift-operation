@@ -1,135 +1,42 @@
-// MARK: - Typealiases
-
-public typealias MutationStoreFor<
-  Mutation: MutationRequest
-> = MutationStore<Mutation.Arguments, Mutation.Value>
-
-// MARK: - MutationStore
-
-@dynamicMemberLookup
-public final class MutationStore<Arguments: Sendable, Value: Sendable>: Sendable {
-  public let base: QueryStore<MutationState<Arguments, Value>>
-
-  public init(store: QueryStore<MutationState<Arguments, Value>>) {
-    self.base = store
-  }
-}
-
 // MARK: - Detached
 
-extension MutationStore {
-  public static func detached<Mutation: MutationRequest<Arguments, Value>>(
+extension QueryStore {
+  public static func detached<Arguments, Value, Mutation: MutationRequest<Arguments, Value>>(
     mutation: Mutation,
     initialContext: QueryContext = QueryContext()
-  ) -> MutationStoreFor<Mutation> {
-    MutationStore(
-      store: .detached(
-        query: mutation,
-        initialState: MutationState(),
-        initialContext: initialContext
-      )
+  ) -> QueryStore<MutationState<Arguments, Value>> where State == MutationState<Arguments, Value> {
+    .detached(
+      query: mutation,
+      initialState: MutationState(),
+      initialContext: initialContext
     )
-  }
-}
-
-// MARK: - Path
-
-extension MutationStore {
-  public var path: QueryPath {
-    self.base.path
-  }
-}
-
-// MARK: - Context
-
-extension MutationStore {
-  public var context: QueryContext {
-    get { self.base.context }
-    set { self.base.context = newValue }
-  }
-}
-
-// MARK: - State
-
-extension MutationStore {
-  public var state: MutationState<Arguments, Value> {
-    self.base.state
-  }
-
-  public subscript<NewValue: Sendable>(
-    dynamicMember keyPath: KeyPath<MutationState<Arguments, Value>, NewValue>
-  ) -> NewValue {
-    self.state[keyPath: keyPath]
-  }
-
-  public func withState<T: Sendable>(
-    _ fn: (MutationState<Arguments, Value>) throws -> T
-  ) rethrows -> T {
-    try self.base.withState(fn)
-  }
-}
-
-// MARK: - Is Stale
-
-extension MutationStore {
-  public var isStale: Bool {
-    self.base.isStale
-  }
-
-  public func isStale(using context: QueryContext? = nil) -> Bool {
-    self.base.isStale(using: context)
-  }
-}
-
-// MARK: - Current Value
-
-extension MutationStore {
-  public var currentValue: Value? {
-    get { self.base.currentValue }
-    set { self.base.currentValue = newValue }
-  }
-}
-
-// MARK: - Set Result
-
-extension MutationStore {
-  public func setResult(to result: Result<Value?, any Error>, using context: QueryContext? = nil) {
-    self.base.setResult(to: result, using: context)
-  }
-}
-
-// MARK: - Reset
-
-extension MutationStore {
-  public func reset(using context: QueryContext? = nil) {
-    self.base.reset(using: context)
   }
 }
 
 // MARK: - Mutate
 
-extension MutationStore {
+extension QueryStore where State: _MutationStateProtocol {
   @discardableResult
   public func mutate(
-    with arguments: Arguments,
+    with arguments: State.Arguments,
     using configuration: QueryTaskConfiguration? = nil,
-    handler: MutationEventHandler<Arguments, Value> = MutationEventHandler()
-  ) async throws -> Value {
-    try await self.base.fetch(
+    handler: MutationEventHandler<State.Arguments, State.Value> = MutationEventHandler()
+  ) async throws -> State.Value {
+    try await self.fetch(
       using: self.taskConfiguration(with: arguments, using: configuration),
       handler: self.queryStoreHandler(for: handler)
     )
   }
 
   public func mutateTask(
-    with arguments: Arguments,
+    with arguments: State.Arguments,
     using configuration: QueryTaskConfiguration? = nil
-  ) -> QueryTask<Value> {
-    self.base.fetchTask(using: self.taskConfiguration(with: arguments, using: configuration))
+  ) -> QueryTask<State.Value> {
+    self.fetchTask(using: self.taskConfiguration(with: arguments, using: configuration))
   }
 
   private func taskConfiguration(
-    with arguments: Arguments,
+    with arguments: State.Arguments,
     using base: QueryTaskConfiguration?
   ) -> QueryTaskConfiguration {
     var config = base ?? QueryTaskConfiguration(context: self.context)
@@ -145,12 +52,12 @@ extension MutationStore {
 
 // MARK: - Retry Latest
 
-extension MutationStore {
+extension QueryStore where State: _MutationStateProtocol {
   public func retryLatest(
     using configuration: QueryTaskConfiguration? = nil,
-    handler: MutationEventHandler<Arguments, Value> = MutationEventHandler()
-  ) async throws -> Value {
-    try await self.base.fetch(
+    handler: MutationEventHandler<State.Arguments, State.Value> = MutationEventHandler()
+  ) async throws -> State.Value {
+    try await self.fetch(
       using: self.retryTaskConfiguration(using: configuration),
       handler: self.queryStoreHandler(for: handler)
     )
@@ -158,8 +65,8 @@ extension MutationStore {
 
   public func retryLatestTask(
     using configuration: QueryTaskConfiguration? = nil
-  ) -> QueryTask<Value> {
-    self.base.fetchTask(using: self.retryTaskConfiguration(using: configuration))
+  ) -> QueryTask<State.Value> {
+    self.fetchTask(using: self.retryTaskConfiguration(using: configuration))
   }
 
   private func retryTaskConfiguration(
@@ -177,36 +84,34 @@ extension MutationStore {
 
 // MARK: - Subscribe
 
-extension MutationStore {
-  public var subscriberCount: Int {
-    self.base.subscriberCount
-  }
-
+extension QueryStore where State: _MutationStateProtocol {
   public func subscribe(
-    with handler: MutationEventHandler<Arguments, Value>
+    with handler: MutationEventHandler<State.Arguments, State.Value>
   ) async throws -> QuerySubscription {
-    self.base.subscribe(with: self.queryStoreHandler(for: handler))
+    self.subscribe(with: self.queryStoreHandler(for: handler))
   }
 }
 
 // MARK: - Event Handler
 
-extension MutationStore {
+extension QueryStore where State: _MutationStateProtocol {
   private func queryStoreHandler(
-    for handler: MutationEventHandler<Arguments, Value>
-  ) -> QueryEventHandler<MutationState<Arguments, Value>> {
+    for handler: MutationEventHandler<State.Arguments, State.Value>
+  ) -> QueryEventHandler<State> {
     QueryEventHandler(
-      onStateChanged: handler.onStateChanged,
+      onStateChanged: {
+        handler.onStateChanged?($0 as! MutationState<State.Arguments, State.Value>, $1)
+      },
       onFetchingStarted: {
-        guard let args = $0.mutationArgs(as: Arguments.self) else { return }
+        guard let args = $0.mutationArgs(as: State.Arguments.self) else { return }
         handler.onMutatingStarted?(args, $0)
       },
       onFetchingEnded: {
-        guard let args = $0.mutationArgs(as: Arguments.self) else { return }
+        guard let args = $0.mutationArgs(as: State.Arguments.self) else { return }
         handler.onMutatingEnded?(args, $0)
       },
       onResultReceived: {
-        guard let args = $1.mutationArgs(as: Arguments.self) else { return }
+        guard let args = $1.mutationArgs(as: State.Arguments.self) else { return }
         handler.onMutationResultReceived?(args, $0, $1)
       }
     )

@@ -1,6 +1,14 @@
 import Foundation
 import IdentifiedCollections
 
+// MARK: - _MutationStateProtocol
+
+public protocol _MutationStateProtocol<Arguments, Value>: QueryStateProtocol
+where StateValue == Value?, StatusValue == Value, QueryValue == Value {
+  associatedtype Arguments: Sendable
+  associatedtype Value: Sendable
+}
+
 // MARK: - MutationState
 
 public struct MutationState<Arguments: Sendable, Value: Sendable> {
@@ -16,7 +24,7 @@ public struct MutationState<Arguments: Sendable, Value: Sendable> {
 
 // MARK: - QueryStateProtocol
 
-extension MutationState: QueryStateProtocol {
+extension MutationState: _MutationStateProtocol {
   public typealias StateValue = Value?
   public typealias StatusValue = Value
   public typealias QueryValue = Value

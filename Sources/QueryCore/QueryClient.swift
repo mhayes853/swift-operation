@@ -81,11 +81,9 @@ extension QueryClient {
 
   public func store<Mutation: MutationRequest>(
     for mutation: Mutation
-  ) -> MutationStoreFor<Mutation> {
-    MutationStore(
-      store: self.opaqueStore(for: mutation, initialState: MutationState()).base
-        as! QueryStore<Mutation.State>
-    )
+  ) -> QueryStore<Mutation.State> {
+    self.opaqueStore(for: mutation, initialState: MutationState()).base
+      as! QueryStore<Mutation.State>
   }
 
   private func opaqueStore<Query: QueryRequest>(

@@ -54,7 +54,7 @@ extension QueryClient {
     for mutation: Mutation,
     uiTransaction: UITransaction = UITransaction()
   ) -> QueryModel<Mutation.State> {
-    QueryModel(store: self.store(for: mutation).base, uiTransaction: uiTransaction)
+    QueryModel(store: self.store(for: mutation), uiTransaction: uiTransaction)
   }
 }
 
@@ -108,7 +108,7 @@ extension QueryClient {
       for mutation: Mutation,
       animation: Animation?
     ) -> QueryModel<Mutation.State> {
-      QueryModel(store: self.store(for: mutation).base, animation: animation)
+      QueryModel(store: self.store(for: mutation), animation: animation)
     }
   }
 
@@ -159,7 +159,7 @@ extension QueryClient {
       for mutation: Mutation,
       transaction: Transaction
     ) -> QueryModel<Mutation.State> {
-      QueryModel(store: self.store(for: mutation).base, transaction: transaction)
+      QueryModel(store: self.store(for: mutation), transaction: transaction)
     }
   }
 #endif
