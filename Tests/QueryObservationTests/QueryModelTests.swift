@@ -28,7 +28,7 @@ struct QueryModelTests {
   @Test("Subscribes To Query State Updates")
   func subscribesToQueryStateUpdates() async throws {
     let model = self.client.model(for: TestQuery().enableAutomaticFetching(when: .always(false)))
-    try await model.store.fetch()
+    try await model.fetch()
     await Task.megaYield()
     expectNoDifference(model.currentValue, TestQuery.value)
   }

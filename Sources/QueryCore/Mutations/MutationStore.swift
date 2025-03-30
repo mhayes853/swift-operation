@@ -53,6 +53,7 @@ extension QueryStore where State: _MutationStateProtocol {
 // MARK: - Retry Latest
 
 extension QueryStore where State: _MutationStateProtocol {
+  @discardableResult
   public func retryLatest(
     using configuration: QueryTaskConfiguration? = nil,
     handler: MutationEventHandler<State.Arguments, State.Value> = MutationEventHandler()

@@ -23,8 +23,7 @@ extension QueryClient {
   public func model<Query: QueryRequest>(
     for query: Query,
     uiTransaction: UITransaction = UITransaction()
-  ) -> QueryModel<Query.State>
-  where Query.State == QueryState<Query.Value?, Query.Value> {
+  ) -> QueryModel<Query.State> where Query.State == QueryState<Query.Value?, Query.Value> {
     QueryModel(store: self.store(for: query), uiTransaction: uiTransaction)
   }
 
