@@ -20,7 +20,8 @@ let package = Package(
       .upToNextMajor(from: "1.1.0")
     ),
     .package(url: "https://github.com/pointfreeco/xctest-dynamic-overlay", from: "1.4.3"),
-    .package(url: "https://github.com/swiftwasm/JavaScriptKit", branch: "main")
+    .package(url: "https://github.com/swiftwasm/JavaScriptKit", branch: "main"),
+    .package(url: "https://github.com/pointfreeco/swift-navigation", from: "2.3.0")
   ],
   targets: [
     .target(
@@ -36,6 +37,10 @@ let package = Package(
         .product(name: "IssueReporting", package: "xctest-dynamic-overlay"),
         .product(name: "IdentifiedCollections", package: "swift-identified-collections")
       ]
+    ),
+    .target(
+      name: "QueryObservation",
+      dependencies: ["QueryCore", .product(name: "SwiftNavigation", package: "swift-navigation")]
     ),
     .target(
       name: "QueryWASM",
@@ -81,7 +86,8 @@ if ProcessInfo.processInfo.environment["TEST_WASM"] != "1" {
           .product(name: "CustomDump", package: "swift-custom-dump"),
           .product(name: "IssueReportingTestSupport", package: "xctest-dynamic-overlay")
         ]
-      )
+      ),
+      .testTarget(name: "QueryObservationTests", dependencies: ["QueryObservation"])
     ]
   )
 }
