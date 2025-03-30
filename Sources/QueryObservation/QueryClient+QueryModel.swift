@@ -1,5 +1,6 @@
 import QueryCore
 
+@MainActor
 extension QueryClient {
   public func model<Query: QueryRequest>(
     for query: Query,
