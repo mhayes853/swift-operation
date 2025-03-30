@@ -91,6 +91,7 @@ extension QueryModel {
 // MARK: - Fetch
 
 extension QueryModel {
+  @discardableResult
   public func fetch(
     using configuration: QueryTaskConfiguration? = nil,
     handler: QueryEventHandler<State> = QueryEventHandler()
