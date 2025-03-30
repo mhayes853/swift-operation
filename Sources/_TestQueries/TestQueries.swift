@@ -2,10 +2,12 @@ import QueryCore
 
 // MARK: - TestQuery
 
-struct TestQuery: QueryRequest, Hashable {
-  static let value = 1
+package struct TestQuery: QueryRequest, Hashable {
+  package static let value = 1
 
-  func fetch(
+  package init() {}
+
+  package func fetch(
     in context: QueryContext,
     with continuation: QueryContinuation<Int>
   ) async throws -> Int {
@@ -15,10 +17,12 @@ struct TestQuery: QueryRequest, Hashable {
 
 // MARK: - TestStringQuery
 
-struct TestStringQuery: QueryRequest, Hashable {
-  static let value = "Foo"
+package struct TestStringQuery: QueryRequest, Hashable {
+  package static let value = "Foo"
 
-  func fetch(
+  package init() {}
+
+  package func fetch(
     in context: QueryContext,
     with continuation: QueryContinuation<String>
   ) async throws -> String {
@@ -28,20 +32,22 @@ struct TestStringQuery: QueryRequest, Hashable {
 
 // MARK: - EndlessQuery
 
-final class SleepingQuery: QueryRequest, @unchecked Sendable {
-  var didBeginSleeping: (() -> Void)?
+package final class SleepingQuery: QueryRequest, @unchecked Sendable {
+  package var didBeginSleeping: (() -> Void)?
 
   private let continuation = Lock<UnsafeContinuation<Void, any Error>?>(nil)
 
-  var path: QueryPath {
+  package init() {}
+
+  package var path: QueryPath {
     ["test-sleeping"]
   }
 
-  func resume() {
+  package func resume() {
     self.continuation.withLock { $0?.resume() }
   }
 
-  func fetch(
+  package func fetch(
     in context: QueryContext,
     with continuation: QueryContinuation<String>
   ) async throws -> String {
@@ -59,10 +65,14 @@ final class SleepingQuery: QueryRequest, @unchecked Sendable {
 
 // MARK: - FailingQuery
 
-struct FailingQuery: QueryRequest, Hashable {
-  struct SomeError: Equatable, Error {}
+package struct FailingQuery: QueryRequest, Hashable {
+  package struct SomeError: Equatable, Error {
+    package init() {}
+  }
 
-  func fetch(
+  package init() {}
+
+  package func fetch(
     in context: QueryContext,
     with continuation: QueryContinuation<String>
   ) async throws -> String {
@@ -72,26 +82,27 @@ struct FailingQuery: QueryRequest, Hashable {
 
 // MARK: - CountingQuery
 
-final actor CountingQuery: QueryRequest {
-  var fetchCount = 0
+package final actor CountingQuery: QueryRequest {
+  package var fetchCount = 0
   private var shouldFail = false
   private let sleep: @Sendable () async -> Void
 
-  init(sleep: @Sendable @escaping () async -> Void = { await Task.megaYield() }) {
+  package init(sleep: @Sendable @escaping () async -> Void = { await Task.megaYield() }) {
     self.sleep = sleep
   }
 
-  nonisolated var path: QueryPath {
+  nonisolated package var path: QueryPath {
     [ObjectIdentifier(self)]
   }
 
-  func ensureFails() {
+  package func ensureFails() {
     self.shouldFail = true
   }
 
-  func fetch(in context: QueryContext, with continuation: QueryContinuation<Int>) async throws
-    -> Int
-  {
+  package func fetch(
+    in context: QueryContext,
+    with continuation: QueryContinuation<Int>
+  ) async throws -> Int {
     await self.sleep()
     self.fetchCount += 1
     if self.shouldFail {
@@ -100,13 +111,17 @@ final actor CountingQuery: QueryRequest {
     return self.fetchCount
   }
 
-  struct SomeError: Equatable, Error {}
+  package struct SomeError: Equatable, Error {
+    package init() {}
+  }
 }
 
 // MARK: - EndlesQuery
 
-struct EndlessQuery: QueryRequest, Hashable {
-  func fetch(
+package struct EndlessQuery: QueryRequest, Hashable {
+  package init() {}
+
+  package func fetch(
     in context: QueryContext,
     with continuation: QueryContinuation<String>
   ) async throws -> String {
@@ -117,8 +132,10 @@ struct EndlessQuery: QueryRequest, Hashable {
 
 // MARK: - NonCancellingEndlessQuery
 
-struct NonCancellingEndlessQuery: QueryRequest, Hashable {
-  func fetch(
+package struct NonCancellingEndlessQuery: QueryRequest, Hashable {
+  package init() {}
+
+  package func fetch(
     in context: QueryContext,
     with continuation: QueryContinuation<String>
   ) async throws -> String {
@@ -130,22 +147,24 @@ struct NonCancellingEndlessQuery: QueryRequest, Hashable {
 
 // MARK: - FailableQuery
 
-actor FlakeyQuery: QueryRequest {
+package final actor FlakeyQuery: QueryRequest {
   private var result: String?
 
-  nonisolated var path: QueryPath {
+  package init() {}
+
+  nonisolated package var path: QueryPath {
     [ObjectIdentifier(self)]
   }
 
-  func ensureSuccess(result: String) {
+  package func ensureSuccess(result: String) {
     self.result = result
   }
 
-  func ensureFailure() {
+  package func ensureFailure() {
     self.result = nil
   }
 
-  func fetch(
+  package func fetch(
     in context: QueryContext,
     with continuation: QueryContinuation<String>
   ) async throws -> String {
@@ -157,11 +176,16 @@ actor FlakeyQuery: QueryRequest {
 
 // MARK: - PathableQuery
 
-struct PathableQuery: QueryRequest {
-  let value: Int
-  let path: QueryPath
+package struct PathableQuery: QueryRequest {
+  package let value: Int
+  package let path: QueryPath
 
-  func fetch(
+  package init(value: Int, path: QueryPath) {
+    self.value = value
+    self.path = path
+  }
+
+  package func fetch(
     in context: QueryContext,
     with continuation: QueryContinuation<Int>
   ) async throws -> Int {
@@ -171,12 +195,16 @@ struct PathableQuery: QueryRequest {
 
 // MARK: - SucceedOnNthRefetchQuery
 
-struct SucceedOnNthRefetchQuery: QueryRequest, Hashable {
-  static let value = "refetch success"
+package struct SucceedOnNthRefetchQuery: QueryRequest, Hashable {
+  package static let value = "refetch success"
 
-  let index: Int
+  package let index: Int
 
-  func fetch(
+  package init(index: Int) {
+    self.index = index
+  }
+
+  package func fetch(
     in context: QueryContext,
     with continuation: QueryContinuation<String>
   ) async throws -> String {
@@ -186,19 +214,23 @@ struct SucceedOnNthRefetchQuery: QueryRequest, Hashable {
     return Self.value
   }
 
-  struct SomeError: Error {}
+  package struct SomeError: Error {
+    package init() {}
+  }
 }
 
 // MARK: - ContextReadingQuery
 
-final actor ContextReadingQuery: QueryRequest {
-  var latestContext: QueryContext?
+package final actor ContextReadingQuery: QueryRequest {
+  package var latestContext: QueryContext?
 
-  nonisolated var path: QueryPath {
+  package init() {}
+
+  nonisolated package var path: QueryPath {
     [ObjectIdentifier(self)]
   }
 
-  func fetch(
+  package func fetch(
     in context: QueryContext,
     with continuation: QueryContinuation<String>
   ) async throws -> String {
@@ -209,11 +241,13 @@ final actor ContextReadingQuery: QueryRequest {
 
 // MARK: - ContinuingQuery
 
-struct ContinuingQuery: QueryRequest, Hashable {
-  static let values = ["blob", "blob jr", "blob sr"]
-  static let finalValue = "the end"
+package struct ContinuingQuery: QueryRequest, Hashable {
+  package static let values = ["blob", "blob jr", "blob sr"]
+  package static let finalValue = "the end"
 
-  func fetch(
+  package init() {}
+
+  package func fetch(
     in context: QueryContext,
     with continuation: QueryContinuation<String>
   ) async throws -> String {
@@ -226,10 +260,12 @@ struct ContinuingQuery: QueryRequest, Hashable {
 
 // MARK: - ContinuingErrorQuery
 
-struct ContinuingErrorQuery: QueryRequest, Hashable {
-  static let finalValue = "the end"
+package struct ContinuingErrorQuery: QueryRequest, Hashable {
+  package static let finalValue = "the end"
 
-  func fetch(
+  package init() {}
+
+  package func fetch(
     in context: QueryContext,
     with continuation: QueryContinuation<String>
   ) async throws -> String {
@@ -237,15 +273,19 @@ struct ContinuingErrorQuery: QueryRequest, Hashable {
     return Self.finalValue
   }
 
-  struct SomeError: Equatable, Error {}
+  package struct SomeError: Equatable, Error {
+    package init() {}
+  }
 }
 
 // MARK: - ContinuingValueThenErrorQuery
 
-struct ContinuingValueThenErrorQuery: QueryRequest, Hashable {
-  static let value = "the end"
+package struct ContinuingValueThenErrorQuery: QueryRequest, Hashable {
+  package static let value = "the end"
 
-  func fetch(
+  package init() {}
+
+  package func fetch(
     in context: QueryContext,
     with continuation: QueryContinuation<String>
   ) async throws -> String {
@@ -253,16 +293,23 @@ struct ContinuingValueThenErrorQuery: QueryRequest, Hashable {
     throw SomeError()
   }
 
-  struct SomeError: Equatable, Error {}
+  package struct SomeError: Equatable, Error {
+    package init() {}
+  }
 }
 
 // MARK: - TestInfiniteQuery
 
-struct EmptyInfiniteQuery: InfiniteQueryRequest {
-  let initialPageId: Int
-  let path: QueryPath
+package struct EmptyInfiniteQuery: InfiniteQueryRequest {
+  package let initialPageId: Int
+  package let path: QueryPath
 
-  func pageId(
+  package init(initialPageId: Int, path: QueryPath) {
+    self.initialPageId = initialPageId
+    self.path = path
+  }
+
+  package func pageId(
     after page: InfiniteQueryPage<Int, String>,
     using paging: InfiniteQueryPaging<Int, String>,
     in context: QueryContext
@@ -270,7 +317,7 @@ struct EmptyInfiniteQuery: InfiniteQueryRequest {
     nil
   }
 
-  func pageId(
+  package func pageId(
     before page: InfiniteQueryPage<Int, String>,
     using paging: InfiniteQueryPaging<Int, String>,
     in context: QueryContext
@@ -278,7 +325,7 @@ struct EmptyInfiniteQuery: InfiniteQueryRequest {
     nil
   }
 
-  func fetchPage(
+  package func fetchPage(
     using paging: InfiniteQueryPaging<PageID, PageValue>,
     in context: QueryContext,
     with continuation: QueryContinuation<String>
@@ -287,11 +334,16 @@ struct EmptyInfiniteQuery: InfiniteQueryRequest {
   }
 }
 
-struct EmptyIntInfiniteQuery: InfiniteQueryRequest {
-  let initialPageId: Int
-  let path: QueryPath
+package struct EmptyIntInfiniteQuery: InfiniteQueryRequest {
+  package let initialPageId: Int
+  package let path: QueryPath
 
-  func pageId(
+  package init(initialPageId: Int, path: QueryPath) {
+    self.initialPageId = initialPageId
+    self.path = path
+  }
+
+  package func pageId(
     after page: InfiniteQueryPage<Int, Int>,
     using paging: InfiniteQueryPaging<Int, Int>,
     in context: QueryContext
@@ -299,7 +351,7 @@ struct EmptyIntInfiniteQuery: InfiniteQueryRequest {
     nil
   }
 
-  func pageId(
+  package func pageId(
     before page: InfiniteQueryPage<Int, Int>,
     using paging: InfiniteQueryPaging<Int, Int>,
     in context: QueryContext
@@ -307,7 +359,7 @@ struct EmptyIntInfiniteQuery: InfiniteQueryRequest {
     nil
   }
 
-  func fetchPage(
+  package func fetchPage(
     using paging: InfiniteQueryPaging<Int, Int>,
     in context: QueryContext,
     with continuation: QueryContinuation<Int>
@@ -318,11 +370,13 @@ struct EmptyIntInfiniteQuery: InfiniteQueryRequest {
 
 // MARK: - FakeInfiniteQuery
 
-struct FakeInfiniteQuery: QueryRequest, Hashable {
-  typealias State = InfiniteQueryState<Int, String>
-  typealias Value = InfiniteQueryValue<Int, String>
+package struct FakeInfiniteQuery: QueryRequest, Hashable {
+  package typealias State = InfiniteQueryState<Int, String>
+  package typealias Value = InfiniteQueryValue<Int, String>
 
-  func fetch(
+  package init() {}
+
+  package func fetch(
     in context: QueryContext,
     with continuation: QueryContinuation<Value>
   ) async throws -> Value {
@@ -332,16 +386,18 @@ struct FakeInfiniteQuery: QueryRequest, Hashable {
 
 // MARK: - TestInfiniteQuery
 
-final class TestInfiniteQuery: InfiniteQueryRequest {
-  let initialPageId = 0
+package final class TestInfiniteQuery: InfiniteQueryRequest {
+  package let initialPageId = 0
 
-  let state = RecursiveLock([Int: String]())
+  package let state = RecursiveLock([Int: String]())
 
-  var path: QueryPath {
+  package init() {}
+
+  package var path: QueryPath {
     [ObjectIdentifier(self)]
   }
 
-  func pageId(
+  package func pageId(
     after page: InfiniteQueryPage<Int, String>,
     using paging: InfiniteQueryPaging<Int, String>,
     in context: QueryContext
@@ -349,7 +405,7 @@ final class TestInfiniteQuery: InfiniteQueryRequest {
     self.state.withLock { $0[page.id + 1] != nil ? page.id + 1 : nil }
   }
 
-  func pageId(
+  package func pageId(
     before page: InfiniteQueryPage<Int, String>,
     using paging: InfiniteQueryPaging<Int, String>,
     in context: QueryContext
@@ -357,7 +413,7 @@ final class TestInfiniteQuery: InfiniteQueryRequest {
     self.state.withLock { $0[page.id - 1] != nil ? page.id - 1 : nil }
   }
 
-  func fetchPage(
+  package func fetchPage(
     using paging: InfiniteQueryPaging<Int, String>,
     in context: QueryContext,
     with continuation: QueryContinuation<String>
@@ -370,25 +426,29 @@ final class TestInfiniteQuery: InfiniteQueryRequest {
     }
   }
 
-  struct PageNotFoundError: Error {}
+  package struct PageNotFoundError: Error {
+    package init() {}
+  }
 }
 
 // MARK: - CountingInfiniteQuery
 
-final actor CountingInfiniteQuery: InfiniteQueryRequest {
-  let initialPageId = 0
+package final actor CountingInfiniteQuery: InfiniteQueryRequest {
+  package let initialPageId = 0
 
-  var fetchCount = 0
+  package var fetchCount = 0
 
-  func resetCount() {
+  package init() {}
+
+  package func resetCount() {
     self.fetchCount = 0
   }
 
-  nonisolated var path: QueryPath {
+  nonisolated package var path: QueryPath {
     [ObjectIdentifier(self)]
   }
 
-  nonisolated func pageId(
+  nonisolated package func pageId(
     after page: InfiniteQueryPage<Int, String>,
     using paging: InfiniteQueryPaging<Int, String>,
     in context: QueryContext
@@ -396,7 +456,7 @@ final actor CountingInfiniteQuery: InfiniteQueryRequest {
     page.id + 1
   }
 
-  nonisolated func pageId(
+  nonisolated package func pageId(
     before page: InfiniteQueryPage<Int, String>,
     using paging: InfiniteQueryPaging<Int, String>,
     in context: QueryContext
@@ -404,7 +464,7 @@ final actor CountingInfiniteQuery: InfiniteQueryRequest {
     page.id - 1
   }
 
-  func fetchPage(
+  package func fetchPage(
     using paging: InfiniteQueryPaging<Int, String>,
     in context: QueryContext,
     with continuation: QueryContinuation<String>
@@ -417,21 +477,23 @@ final actor CountingInfiniteQuery: InfiniteQueryRequest {
 
 // MARK: - FlakeyInfiniteQuery
 
-final class FlakeyInfiniteQuery: InfiniteQueryRequest {
-  typealias PageValue = String
-  typealias PageID = Int
+package final class FlakeyInfiniteQuery: InfiniteQueryRequest {
+  package typealias PageValue = String
+  package typealias PageID = Int
 
-  typealias Values = (failOnPageId: Int, fetchCount: Int)
+  package typealias Values = (failOnPageId: Int, fetchCount: Int)
 
-  let values = RecursiveLock<Values>((failOnPageId: 0, fetchCount: 0))
+  package let values = RecursiveLock<Values>((failOnPageId: 0, fetchCount: 0))
 
-  let initialPageId = 0
+  package let initialPageId = 0
 
-  var path: QueryPath {
+  package init() {}
+
+  package var path: QueryPath {
     [ObjectIdentifier(self)]
   }
 
-  func pageId(
+  package func pageId(
     after page: InfiniteQueryPage<PageID, PageValue>,
     using paging: InfiniteQueryPaging<PageID, PageValue>,
     in context: QueryContext
@@ -439,7 +501,7 @@ final class FlakeyInfiniteQuery: InfiniteQueryRequest {
     page.id + 1
   }
 
-  func fetchPage(
+  package func fetchPage(
     using paging: InfiniteQueryPaging<PageID, PageValue>,
     in context: QueryContext,
     with continuation: QueryContinuation<PageValue>
@@ -453,34 +515,36 @@ final class FlakeyInfiniteQuery: InfiniteQueryRequest {
     }
   }
 
-  struct SomeError: Equatable, Error {}
+  package struct SomeError: Equatable, Error {
+    package init() {}
+  }
 }
 
 // MARK: - TestYieldableInfiniteQuery
 
-final class TestYieldableInfiniteQuery: InfiniteQueryRequest {
-  static func finalValue(for id: PageID) -> String {
+package final class TestYieldableInfiniteQuery: InfiniteQueryRequest {
+  package static func finalValue(for id: PageID) -> String {
     "page final value \(id)"
   }
 
-  static func finalPage(for id: PageID) -> InfiniteQueryPage<Int, String> {
+  package static func finalPage(for id: PageID) -> InfiniteQueryPage<Int, String> {
     InfiniteQueryPage(id: id, value: finalValue(for: id))
   }
 
-  let initialPageId = 0
+  package let initialPageId = 0
   let shouldThrow: Bool
 
-  init(shouldThrow: Bool = false) {
+  package init(shouldThrow: Bool = false) {
     self.shouldThrow = shouldThrow
   }
 
-  let state = RecursiveLock([Int: [Result<PageValue, any Error>]]())
+  package let state = RecursiveLock([Int: [Result<PageValue, any Error>]]())
 
-  var path: QueryPath {
+  package var path: QueryPath {
     [ObjectIdentifier(self)]
   }
 
-  func pageId(
+  package func pageId(
     after page: InfiniteQueryPage<Int, String>,
     using paging: InfiniteQueryPaging<Int, String>,
     in context: QueryContext
@@ -488,7 +552,7 @@ final class TestYieldableInfiniteQuery: InfiniteQueryRequest {
     page.id + 1
   }
 
-  func pageId(
+  package func pageId(
     before page: InfiniteQueryPage<Int, String>,
     using paging: InfiniteQueryPaging<Int, String>,
     in context: QueryContext
@@ -496,7 +560,7 @@ final class TestYieldableInfiniteQuery: InfiniteQueryRequest {
     page.id - 1
   }
 
-  func fetchPage(
+  package func fetchPage(
     using paging: InfiniteQueryPaging<Int, String>,
     in context: QueryContext,
     with continuation: QueryContinuation<String>
@@ -512,15 +576,17 @@ final class TestYieldableInfiniteQuery: InfiniteQueryRequest {
     return Self.finalValue(for: paging.pageId)
   }
 
-  struct SomeError: Equatable, Error {}
+  package struct SomeError: Equatable, Error {
+    package init() {}
+  }
 }
 
 // MARK: - WaitableInfiniteQuery
 
-final class WaitableInfiniteQuery: InfiniteQueryRequest {
-  let initialPageId = 0
+package final class WaitableInfiniteQuery: InfiniteQueryRequest {
+  package let initialPageId = 0
 
-  typealias _Values = (
+  package typealias _Values = (
     values: [Int: String],
     nextPageIds: [Int: Int],
     willWait: Bool,
@@ -528,20 +594,22 @@ final class WaitableInfiniteQuery: InfiniteQueryRequest {
     onLoading: () -> Void
   )
 
-  let state = RecursiveLock<_Values>(([:], [:], false, [], {}))
+  package let state = RecursiveLock<_Values>(([:], [:], false, [], {}))
 
-  var path: QueryPath {
+  package init() {}
+
+  package var path: QueryPath {
     [ObjectIdentifier(self)]
   }
 
-  func waitForLoading() async throws {
+  package func waitForLoading() async throws {
     await withUnsafeContinuation { continuation in
       self.state.withLock { $0.continuations.append(continuation) }
     }
     await Task.megaYield()
   }
 
-  func advance() async {
+  package func advance() async {
     await Task.megaYield()
     self.state.withLock {
       for c in $0.continuations {
@@ -551,7 +619,7 @@ final class WaitableInfiniteQuery: InfiniteQueryRequest {
     }
   }
 
-  func pageId(
+  package func pageId(
     after page: InfiniteQueryPage<Int, String>,
     using paging: InfiniteQueryPaging<Int, String>,
     in context: QueryContext
@@ -562,7 +630,7 @@ final class WaitableInfiniteQuery: InfiniteQueryRequest {
     }
   }
 
-  func pageId(
+  package func pageId(
     before page: InfiniteQueryPage<Int, String>,
     using paging: InfiniteQueryPaging<Int, String>,
     in context: QueryContext
@@ -573,7 +641,7 @@ final class WaitableInfiniteQuery: InfiniteQueryRequest {
     }
   }
 
-  func fetchPage(
+  package func fetchPage(
     using paging: InfiniteQueryPaging<Int, String>,
     in context: QueryContext,
     with continuation: QueryContinuation<String>
@@ -591,21 +659,25 @@ final class WaitableInfiniteQuery: InfiniteQueryRequest {
     }
   }
 
-  struct PageNotFoundError: Error {}
+  package struct PageNotFoundError: Error {
+    package init() {}
+  }
 }
 
 // MARK: - FailingInfiniteQuery
 
-final class FailableInfiniteQuery: InfiniteQueryRequest {
-  let initialPageId = 0
+package final class FailableInfiniteQuery: InfiniteQueryRequest {
+  package let initialPageId = 0
 
-  let state = RecursiveLock<String?>(nil)
+  package let state = RecursiveLock<String?>(nil)
 
-  var path: QueryPath {
+  package init() {}
+
+  package var path: QueryPath {
     [ObjectIdentifier(self)]
   }
 
-  func pageId(
+  package func pageId(
     after page: InfiniteQueryPage<Int, String>,
     using paging: InfiniteQueryPaging<Int, String>,
     in context: QueryContext
@@ -613,7 +685,7 @@ final class FailableInfiniteQuery: InfiniteQueryRequest {
     page.id + 1
   }
 
-  func fetchPage(
+  package func fetchPage(
     using paging: InfiniteQueryPaging<Int, String>,
     in context: QueryContext,
     with continuation: QueryContinuation<String>
@@ -626,15 +698,19 @@ final class FailableInfiniteQuery: InfiniteQueryRequest {
     }
   }
 
-  struct SomeError: Error {}
+  package struct SomeError: Error {
+    package init() {}
+  }
 }
 
 // MARK: - EmptyMutation
 
-struct EmptyMutation: MutationRequest, Hashable {
-  typealias Value = String
+package struct EmptyMutation: MutationRequest, Hashable {
+  package typealias Value = String
 
-  func mutate(
+  package init() {}
+
+  package func mutate(
     with arguments: String,
     in context: QueryContext,
     with continuation: QueryContinuation<String>
@@ -645,10 +721,12 @@ struct EmptyMutation: MutationRequest, Hashable {
 
 // MARK: - EmptyIntMutation
 
-struct EmptyIntMutation: MutationRequest, Hashable {
-  typealias Value = Int
+package struct EmptyIntMutation: MutationRequest, Hashable {
+  package typealias Value = Int
 
-  func mutate(
+  package init() {}
+
+  package func mutate(
     with arguments: Int,
     in context: QueryContext,
     with continuation: QueryContinuation<Int>
@@ -659,16 +737,18 @@ struct EmptyIntMutation: MutationRequest, Hashable {
 
 // MARK: - SleepingMutation
 
-final class SleepingMutation: MutationRequest, @unchecked Sendable {
-  typealias Value = String
+package final class SleepingMutation: MutationRequest, @unchecked Sendable {
+  package typealias Value = String
 
-  var didBeginSleeping: (() -> Void)?
+  package var didBeginSleeping: (() -> Void)?
 
-  var path: QueryPath {
+  package init() {}
+
+  package var path: QueryPath {
     ["test-sleeping-mutation"]
   }
 
-  func mutate(
+  package func mutate(
     with arguments: String,
     in context: QueryContext,
     with continuation: QueryContinuation<String>
@@ -680,16 +760,18 @@ final class SleepingMutation: MutationRequest, @unchecked Sendable {
 
 // MARK: - FailableMutation
 
-final class FailableMutation: MutationRequest {
-  typealias Value = String
+package final class FailableMutation: MutationRequest {
+  package typealias Value = String
 
-  let state = RecursiveLock<String?>(nil)
+  package let state = RecursiveLock<String?>(nil)
 
-  var path: QueryPath {
+  package init() {}
+
+  package var path: QueryPath {
     [ObjectIdentifier(self)]
   }
 
-  func mutate(
+  package func mutate(
     with arguments: String,
     in context: QueryContext,
     with continuation: QueryContinuation<String>
@@ -702,38 +784,42 @@ final class FailableMutation: MutationRequest {
     }
   }
 
-  struct MutateError: Equatable, Error {}
+  package struct MutateError: Equatable, Error {
+    package init() {}
+  }
 }
 
 // MARK: - WaitableMutation
 
-final class WaitableMutation: MutationRequest {
-  typealias _Values = (
+package final class WaitableMutation: MutationRequest {
+  package typealias _Values = (
     willWait: Bool,
     continuations: [String: UnsafeContinuation<Void, any Error>],
     onLoading: [String: @Sendable () -> Void]
   )
-  typealias Value = String
-  typealias Arguments = String
+  package typealias Value = String
+  package typealias Arguments = String
 
-  let state = RecursiveLock<_Values>((false, [:], [:]))
+  package let state = RecursiveLock<_Values>((false, [:], [:]))
 
-  var path: QueryPath {
+  package init() {}
+
+  package var path: QueryPath {
     [ObjectIdentifier(self)]
   }
 
-  func onLoading(for args: String, _ onLoading: @escaping @Sendable () -> Void) {
+  package func onLoading(for args: String, _ onLoading: @escaping @Sendable () -> Void) {
     self.state.withLock { $0.onLoading[args] = onLoading }
   }
 
-  func waitForLoading(on args: String) async throws {
+  package func waitForLoading(on args: String) async throws {
     try await withUnsafeThrowingContinuation { continuation in
       self.state.withLock { $0.continuations[args] = continuation }
     }
     await Task.megaYield()
   }
 
-  func advance(on args: String, with error: (any Error)? = nil) async {
+  package func advance(on args: String, with error: (any Error)? = nil) async {
     await Task.megaYield()
     self.state.withLock {
       if let error {
@@ -745,7 +831,7 @@ final class WaitableMutation: MutationRequest {
     }
   }
 
-  func mutate(
+  package func mutate(
     with arguments: String,
     in context: QueryContext,
     with continuation: QueryContinuation<String>
@@ -761,13 +847,15 @@ final class WaitableMutation: MutationRequest {
 
 // MARK: - ContinuingMutation
 
-struct ContinuingMutation: MutationRequest, Hashable {
-  typealias Value = String
+package struct ContinuingMutation: MutationRequest, Hashable {
+  package typealias Value = String
 
-  static let values = ["blob", "blob jr", "blob sr"]
-  static let finalValue = "the end"
+  package static let values = ["blob", "blob jr", "blob sr"]
+  package static let finalValue = "the end"
 
-  func mutate(
+  package init() {}
+
+  package func mutate(
     with arguments: String,
     in context: QueryContext,
     with continuation: QueryContinuation<String>
@@ -781,12 +869,14 @@ struct ContinuingMutation: MutationRequest, Hashable {
 
 // MARK: - ContinuingErrorMutation
 
-struct ContinuingErrorMutation: MutationRequest, Hashable {
-  typealias Value = String
+package struct ContinuingErrorMutation: MutationRequest, Hashable {
+  package typealias Value = String
 
-  static let finalValue = "the end"
+  package static let finalValue = "the end"
 
-  func mutate(
+  package init() {}
+
+  package func mutate(
     with arguments: String,
     in context: QueryContext,
     with continuation: QueryContinuation<String>
@@ -795,17 +885,21 @@ struct ContinuingErrorMutation: MutationRequest, Hashable {
     return Self.finalValue
   }
 
-  struct SomeError: Equatable, Error {}
+  package struct SomeError: Equatable, Error {
+    package init() {}
+  }
 }
 
 // MARK: - ContinuingValueThenErrorMutation
 
-struct ContinuingValueThenErrorMutation: MutationRequest, Hashable {
-  typealias Value = String
+package struct ContinuingValueThenErrorMutation: MutationRequest, Hashable {
+  package typealias Value = String
 
-  static let value = "the end"
+  package static let value = "the end"
 
-  func mutate(
+  package init() {}
+
+  package func mutate(
     with arguments: String,
     in context: QueryContext,
     with continuation: QueryContinuation<String>
@@ -814,5 +908,7 @@ struct ContinuingValueThenErrorMutation: MutationRequest, Hashable {
     throw SomeError()
   }
 
-  struct SomeError: Equatable, Error {}
+  package struct SomeError: Equatable, Error {
+    package init() {}
+  }
 }

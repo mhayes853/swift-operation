@@ -2,6 +2,7 @@ import CustomDump
 import Foundation
 import QueryCore
 import Testing
+import _TestQueries
 
 @Suite("QueryStatus tests")
 struct QueryStatusTests {

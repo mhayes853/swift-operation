@@ -1,5 +1,6 @@
 import CustomDump
 import QueryCore
+import _TestQueries
 import Testing
 
 @Suite("RetryQuery tests")

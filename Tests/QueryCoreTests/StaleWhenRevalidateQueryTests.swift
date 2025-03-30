@@ -2,6 +2,7 @@ import CustomDump
 import Foundation
 @_spi(StaleWhenRevalidateCondition) import QueryCore
 import Testing
+import _TestQueries
 
 @Suite("StaleWhenRevalidateQuery tests")
 struct StaleWhenRevalidateQueryTests {

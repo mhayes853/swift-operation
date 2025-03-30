@@ -2,6 +2,7 @@ import CustomDump
 import IssueReporting
 @_spi(Warnings) import QueryCore
 import Testing
+import _TestQueries
 
 @Suite("QueryClient tests")
 struct QueryClientTests {

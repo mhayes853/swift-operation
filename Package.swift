@@ -10,7 +10,8 @@ let package = Package(
   products: [
     .library(name: "SharingQuery", targets: ["SharingQuery"]),
     .library(name: "QueryCore", targets: ["QueryCore"]),
-    .library(name: "QueryWASM", targets: ["QueryWASM"])
+    .library(name: "QueryWASM", targets: ["QueryWASM"]),
+    .library(name: "QueryObservation", targets: ["QueryObservation"])
   ],
   dependencies: [
     .package(url: "https://github.com/pointfreeco/swift-sharing", from: "2.3.3"),
@@ -42,6 +43,7 @@ let package = Package(
       name: "QueryObservation",
       dependencies: ["QueryCore", .product(name: "SwiftNavigation", package: "swift-navigation")]
     ),
+    .target(name: "_TestQueries", dependencies: ["QueryCore"]),
     .target(
       name: "QueryWASM",
       dependencies: [
@@ -76,6 +78,7 @@ if ProcessInfo.processInfo.environment["TEST_WASM"] != "1" {
         name: "SharingQueryTests",
         dependencies: [
           "SharingQuery",
+          "_TestQueries",
           .product(name: "CustomDump", package: "swift-custom-dump")
         ]
       ),
@@ -83,11 +86,15 @@ if ProcessInfo.processInfo.environment["TEST_WASM"] != "1" {
         name: "QueryCoreTests",
         dependencies: [
           "QueryCore",
+          "_TestQueries",
           .product(name: "CustomDump", package: "swift-custom-dump"),
           .product(name: "IssueReportingTestSupport", package: "xctest-dynamic-overlay")
         ]
       ),
-      .testTarget(name: "QueryObservationTests", dependencies: ["QueryObservation"])
+      .testTarget(
+        name: "QueryObservationTests",
+        dependencies: ["QueryObservation", "_TestQueries"]
+      )
     ]
   )
 }

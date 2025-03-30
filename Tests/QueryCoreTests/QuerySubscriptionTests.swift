@@ -1,6 +1,7 @@
 import CustomDump
 import QueryCore
 import Testing
+import _TestQueries
 
 @Suite("QuerySubscription tests")
 struct QuerySubscriptionTests {

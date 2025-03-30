@@ -2,6 +2,7 @@ import CustomDump
 import Foundation
 @_spi(Warnings) import QueryCore
 import Testing
+import _TestQueries
 
 @Suite("MutationStore tests")
 struct MutationStoreTests {

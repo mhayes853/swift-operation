@@ -1,6 +1,7 @@
 import CustomDump
 import Foundation
 import Testing
+import _TestQueries
 
 @testable import QueryCore
 
