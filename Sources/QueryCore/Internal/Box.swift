@@ -1,3 +1,13 @@
+// MARK: - Box
+
+final class Box<Value: Sendable>: Sendable {
+  let value: Value
+
+  init(value: Value) {
+    self.value = value
+  }
+}
+
 // MARK: - WeakBox
 
 final class WeakBox<Value: AnyObject> {
