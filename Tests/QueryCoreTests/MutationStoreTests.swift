@@ -326,6 +326,7 @@ struct MutationStoreTests {
 
     collector.expectEventsMatch([
       .stateChanged,
+      .stateChanged,
       .mutatingStarted("blob"),
       .mutationResultReceived("blob", .success("blob")),
       .stateChanged,

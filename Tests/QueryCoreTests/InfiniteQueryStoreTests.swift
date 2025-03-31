@@ -684,6 +684,7 @@ struct InfiniteQueryStoreTests {
 
     collector.expectEventsMatch([
       .stateChanged,
+      .stateChanged,
       .fetchingStarted,
       .pageFetchingStarted(0),
       .pageResultReceived(0, .success(InfiniteQueryPage(id: 0, value: "a"))),
@@ -711,6 +712,7 @@ struct InfiniteQueryStoreTests {
     await Task.megaYield()
 
     collector.expectEventsMatch([
+      .stateChanged,
       .stateChanged,
       .fetchingStarted,
       .pageFetchingStarted(0),

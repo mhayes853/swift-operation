@@ -108,7 +108,7 @@ struct QueryControllerTests {
     let collector = QueryStoreEventsCollector<TestQuery.State>()
     let subscription = store.subscribe(with: collector.eventHandler())
     controller.controls.withLock { $0?.yield(10) }
-    collector.expectEventsMatch([.stateChanged])
+    collector.expectEventsMatch([.stateChanged, .stateChanged])
     subscription.cancel()
   }
 

@@ -139,6 +139,7 @@ struct QueryStoreTests {
     await Task.megaYield()
     collector.expectEventsMatch([
       .stateChanged,
+      .stateChanged,
       .fetchingStarted,
       .resultReceived(.success(TestQuery.value)),
       .stateChanged,
@@ -156,6 +157,7 @@ struct QueryStoreTests {
     await Task.megaYield()
     collector.expectEventsMatch([
       .stateChanged,
+      .stateChanged,
       .fetchingStarted,
       .resultReceived(.failure(FailingQuery.SomeError())),
       .stateChanged,
@@ -167,6 +169,7 @@ struct QueryStoreTests {
     _ = try? await store.activeTasks.first?.runIfNeeded()
     await Task.megaYield()
     collector.expectEventsMatch([
+      .stateChanged,
       .stateChanged,
       .fetchingStarted,
       .resultReceived(.failure(FailingQuery.SomeError())),
@@ -184,6 +187,7 @@ struct QueryStoreTests {
     _ = try? await store.activeTasks.first?.runIfNeeded()
     await Task.megaYield()
     collector.expectEventsMatch([
+      .stateChanged,
       .stateChanged,
       .fetchingStarted,
       .resultReceived(.failure(FailingQuery.SomeError())),
@@ -203,6 +207,7 @@ struct QueryStoreTests {
     await Task.megaYield()
     collector.expectEventsMatch([
       .stateChanged,
+      .stateChanged,
       .fetchingStarted,
       .resultReceived(.success(TestQuery.value)),
       .stateChanged,
@@ -218,7 +223,7 @@ struct QueryStoreTests {
     let store = self.client.store(for: query)
     let subscription = store.subscribe(with: collector.eventHandler())
     await Task.megaYield()  // NB: Give some time for any potential fetching to start.
-    collector.expectEventsMatch([])
+    collector.expectEventsMatch([.stateChanged])  // NB: This one event is for the current state.
     subscription.cancel()
   }
 
@@ -230,6 +235,7 @@ struct QueryStoreTests {
     let subscription = store.subscribe(with: collector.eventHandler())
     try await store.fetch()
     collector.expectEventsMatch([
+      .stateChanged,
       .stateChanged,
       .fetchingStarted,
       .resultReceived(.success(TestQuery.value)),
@@ -247,7 +253,7 @@ struct QueryStoreTests {
     let subscription = store.subscribe(with: collector.eventHandler())
     subscription.cancel()
     try await store.fetch()
-    collector.expectEventsMatch([])
+    collector.expectEventsMatch([.stateChanged])
     subscription.cancel()
   }
 
@@ -426,7 +432,7 @@ struct QueryStoreTests {
     let collector = QueryStoreEventsCollector<TestQuery.State>()
     let subscription = store.subscribe(with: collector.eventHandler())
     store.currentValue = TestQuery.value
-    collector.expectEventsMatch([.stateChanged])
+    collector.expectEventsMatch([.stateChanged, .stateChanged])
     subscription.cancel()
   }
 
@@ -438,7 +444,7 @@ struct QueryStoreTests {
     let collector = QueryStoreEventsCollector<TestQuery.State>()
     let subscription = store.subscribe(with: collector.eventHandler())
     store.setResult(to: .failure(SomeError()))
-    collector.expectEventsMatch([.stateChanged])
+    collector.expectEventsMatch([.stateChanged, .stateChanged])
     subscription.cancel()
   }
 
@@ -503,7 +509,7 @@ struct QueryStoreTests {
     let collector = QueryStoreEventsCollector<TestQuery.State>()
     let subscription = store.subscribe(with: collector.eventHandler())
     store.reset()
-    collector.expectEventsMatch([.stateChanged])
+    collector.expectEventsMatch([.stateChanged, .stateChanged])
     subscription.cancel()
   }
 
