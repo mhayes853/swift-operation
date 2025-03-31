@@ -17,6 +17,15 @@ struct QueryClientTests {
     expectNoDifference(store2.currentValue, TestQuery.value)
   }
 
+  @Test("Returns Same Store Reference For Same Query")
+  func returnsSameStoreReferenceForSameQuery() async throws {
+    let client = QueryClient()
+    let store1 = client.store(for: TestQuery())
+    let store2 = client.store(for: TestQuery())
+
+    expectNoDifference(store1 === store2, true)
+  }
+
   @Test("Reports Issue When Different Query Type Has The Same Path As Another Query")
   func cannotHaveDuplicatePaths() async throws {
     let client = QueryClient()
