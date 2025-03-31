@@ -1,7 +1,3 @@
-#if canImport(Combine)
-  import Combine
-#endif
-
 // MARK: - QueryStoreSubscription
 
 public final class QuerySubscription: Sendable {
@@ -63,11 +59,3 @@ extension QuerySubscription: Hashable {
     hasher.combine(ObjectIdentifier(self))
   }
 }
-
-// MARK: - Combine
-
-#if canImport(Combine)
-  extension QuerySubscription: Subscription {
-    public func request(_ demand: Subscribers.Demand) {}
-  }
-#endif
