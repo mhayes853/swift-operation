@@ -9,8 +9,7 @@ let package = Package(
   platforms: [.iOS(.v13), .macOS(.v10_15), .tvOS(.v13), .watchOS(.v6)],
   products: [
     .library(name: "SharingQuery", targets: ["SharingQuery"]),
-    .library(name: "QueryCore", targets: ["QueryCore"]),
-    .library(name: "QueryObservation", targets: ["QueryObservation"])
+    .library(name: "QueryCore", targets: ["QueryCore"])
   ],
   dependencies: [
     .package(url: "https://github.com/pointfreeco/swift-sharing", from: "2.3.3"),
@@ -27,26 +26,20 @@ let package = Package(
   targets: [
     .target(
       name: "SharingQuery",
-      dependencies: [
-        "QueryCore",
-        .product(name: "Sharing", package: "swift-sharing")
-      ]
+      dependencies: ["QueryCore", .product(name: "Sharing", package: "swift-sharing")]
     ),
     .target(
       name: "QueryCore",
       dependencies: [
         .product(name: "IssueReporting", package: "xctest-dynamic-overlay"),
         .product(name: "IdentifiedCollections", package: "swift-identified-collections"),
+        .product(name: "SwiftNavigation", package: "swift-navigation"),
         .product(
           name: "JavaScriptKit",
           package: "JavaScriptKit",
           condition: .when(platforms: [.wasi])
         )
       ]
-    ),
-    .target(
-      name: "QueryObservation",
-      dependencies: ["QueryCore", .product(name: "SwiftNavigation", package: "swift-navigation")]
     ),
     .target(name: "_TestQueries", dependencies: ["QueryCore"]),
     .testTarget(
@@ -87,11 +80,7 @@ if ProcessInfo.processInfo.environment["TEST_WASM"] != "1" {
           .product(name: "CustomDump", package: "swift-custom-dump")
         ]
       ),
-      .testTarget(name: "QueryCoreTests", dependencies: queryCoreTestsDependencies),
-      .testTarget(
-        name: "QueryObservationTests",
-        dependencies: ["QueryObservation", "_TestQueries"]
-      )
+      .testTarget(name: "QueryCoreTests", dependencies: queryCoreTestsDependencies)
     ]
   )
 }

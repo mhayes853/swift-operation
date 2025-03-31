@@ -1,4 +1,3 @@
-import QueryCore
 import SwiftNavigation
 
 #if canImport(SwiftUI)

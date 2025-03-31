@@ -1,5 +1,5 @@
 import CustomDump
-import QueryObservation
+import QueryCore
 import SwiftNavigation
 import Testing
 import _TestQueries

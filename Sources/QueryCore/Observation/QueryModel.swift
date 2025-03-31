@@ -1,6 +1,5 @@
 import IdentifiedCollections
 import Perception
-import QueryCore
 import SwiftNavigation
 
 #if canImport(SwiftUI)
