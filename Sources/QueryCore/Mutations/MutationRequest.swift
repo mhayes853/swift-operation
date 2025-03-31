@@ -12,10 +12,6 @@ where State == MutationState<Arguments, Value> {
 }
 
 extension MutationRequest {
-  public func setup(context: inout QueryContext) {
-    context.enableAutomaticFetchingCondition = .always(false)
-  }
-
   public func fetch(
     in context: QueryContext,
     with continuation: QueryContinuation<Value>

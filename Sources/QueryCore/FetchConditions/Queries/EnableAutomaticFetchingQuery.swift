@@ -34,6 +34,6 @@ extension QueryContext {
   }
 
   private enum EnableAutomaticFetchingKey: Key {
-    static var defaultValue: any FetchCondition { .always(true) }
+    static var defaultValue: any FetchCondition { .always(false) }
   }
 }

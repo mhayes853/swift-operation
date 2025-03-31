@@ -21,7 +21,8 @@ struct RefetchOnChangeQueryTests {
   func refetchesWhenConditionChangesToTrue() async {
     let condition = TestCondition()
     condition.send(false)
-    let query = TestQuery().refetchOnChange(of: condition)
+    let query = TestQuery().enableAutomaticFetching(when: .always(true))
+      .refetchOnChange(of: condition)
     let store = QueryStore.detached(query: query, initialValue: nil)
 
     condition.send(true)
