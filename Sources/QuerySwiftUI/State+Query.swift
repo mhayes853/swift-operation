@@ -42,9 +42,13 @@
       self.init(query: query, initialState: wrappedValue, clientOverride: client)
     }
 
-    public init<V>(query: Request, client: QueryClient? = nil)
+    public init<V>(query: Request, initialValue: V? = nil, client: QueryClient? = nil)
     where Request.Value == V, Value == QueryState<V?, V> {
-      self.init(query: query, initialState: QueryState(initialValue: nil), clientOverride: client)
+      self.init(
+        query: query,
+        initialState: QueryState(initialValue: initialValue),
+        clientOverride: client
+      )
     }
 
     public init<Query: QueryRequest>(query: DefaultQuery<Query>, client: QueryClient? = nil)
