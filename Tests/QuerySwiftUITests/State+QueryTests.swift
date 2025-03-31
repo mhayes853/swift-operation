@@ -61,26 +61,5 @@
       }
       await self.fulfillment(of: [expectation], timeout: 0.1)
     }
-
-    //@Test("Updates Query State When Client Changes")
-    //func updatesQueryStateWhenClientChanges() async throws {
-    //  let view = ClientWithQueryView()
-    //  ViewHosting.host(view: view)
-    //  defer { ViewHosting.expel() }
-
-    //  try await view.inspection.inspect { try $0.find(button: "Fetch").tap() }
-    //  view.inspection.inspect(after: 0.1) { view in
-    //    #expect(throws: Never.self) {
-    //      try view.find(text: "Success: \(TestStateQuery.successValue)")
-    //    }
-    //  }
-
-    //  try await view.inspection.inspect { try $0.find(button: "Reset Client").tap() }
-    //  try await view.inspection.inspect { view in
-    //    #expect(throws: Never.self) {
-    //      try view.find(text: "Idle")
-    //    }
-    //  }
-    //}
   }
 #endif

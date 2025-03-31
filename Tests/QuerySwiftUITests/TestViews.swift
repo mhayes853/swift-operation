@@ -2,23 +2,6 @@
   import SwiftUI
   import QuerySwiftUI
 
-  struct ClientWithQueryView: View {
-    @State private var client = QueryClient()
-
-    let inspection = Inspection<Self>()
-
-    var body: some View {
-      VStack {
-        QueryView()
-          .environment(\.queryClient, self.client)
-        Button("Reset Client") {
-          self.client = QueryClient()
-        }
-      }
-      .onReceive(inspection.notice) { self.inspection.visit(self, $0) }
-    }
-  }
-
   enum TestQueryStatusID: Hashable {
     case loading
     case idle
@@ -33,7 +16,6 @@
 
     var body: some View {
       VStack {
-        let _ = print("Status", self.query.status)
         switch self.query.status {
         case .idle:
           Text("Idle").id(TestQueryStatusID.idle)
@@ -52,7 +34,7 @@
           Task { try await self.$query.fetch() }
         }
       }
-      .onReceive(inspection.notice) { self.inspection.visit(self, $0) }
+      .onReceive(self.inspection.notice) { self.inspection.visit(self, $0) }
     }
   }
 #endif

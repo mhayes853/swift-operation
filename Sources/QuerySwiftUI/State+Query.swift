@@ -94,11 +94,16 @@
 
   extension State.Query: DynamicProperty {
     public mutating func update() {
-      self.subscription = self.store.subscribe(
-        with: QueryEventHandler { [self] state, _ in
-          Task { self.state = state }
-        }
-      )
+      defer { self.previousClient = self.client }
+      if self.previousClient == nil || self.previousClient !== self.client {
+        self.subscription.cancel()
+        self.subscription = self.store.subscribe(
+          with: QueryEventHandler { [self] state, _ in
+            Task { self.state = state }
+          }
+        )
+        self.state = self.store.state
+      }
     }
   }
 
