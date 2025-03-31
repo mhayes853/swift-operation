@@ -281,7 +281,7 @@ public var defaultNetworkObserver: (any NetworkObserver)? {
 
 public var defaultFocusCondition: (any FetchCondition)? {
   #if canImport(Darwin)
-    NotificationFocusCondition.shared
+    .notificationFocus
   #elseif canImport(JavaScriptKit)
     .windowFocus
   #else

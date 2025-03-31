@@ -8,20 +8,20 @@
   struct NotificationFocusConditionTests {
     @Test("Uses Default Activity State", arguments: [true, false])
     func defaultActivityState(isActive: Bool) {
-      let observer = NotificationFocusCondition(
+      let observer: some FetchCondition = .notificationFocus(
         didBecomeActive: _didBecomeActive,
         willResignActive: _willResignActive,
-        isActive: { isActive }
+        isActive: { @Sendable in isActive }
       )
       expectNoDifference(observer.isSatisfied(in: QueryContext()), isActive)
     }
 
     @Test("Emits True When Becomes Active")
     func emitsTrueWhenBecomesActive() {
-      let observer = NotificationFocusCondition(
+      let observer: some FetchCondition = .notificationFocus(
         didBecomeActive: _didBecomeActive,
         willResignActive: _willResignActive,
-        isActive: { true }
+        isActive: { @Sendable in true }
       )
       let satisfactions = RecursiveLock([Bool]())
       let subscription = observer.subscribe(in: QueryContext()) { value in
@@ -34,10 +34,10 @@
 
     @Test("Emits False When Resigns Active")
     func emitsFalseWhenResignsActive() {
-      let observer = NotificationFocusCondition(
+      let observer: some FetchCondition = .notificationFocus(
         didBecomeActive: _didBecomeActive,
         willResignActive: _willResignActive,
-        isActive: { true }
+        isActive: { @Sendable in true }
       )
       let satisfactions = RecursiveLock([Bool]())
       let subscription = observer.subscribe(in: QueryContext()) { value in

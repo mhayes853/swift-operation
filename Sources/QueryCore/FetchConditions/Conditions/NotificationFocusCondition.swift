@@ -18,7 +18,7 @@ import Foundation
     private let willResignActive: Notification.Name
     private let isActive: @Sendable () -> Bool
 
-    public init(
+    fileprivate init(
       didBecomeActive: Notification.Name,
       willResignActive: Notification.Name,
       isActive: @escaping @Sendable () -> Bool
@@ -27,31 +27,6 @@ import Foundation
       self.willResignActive = willResignActive
       self.isActive = isActive
     }
-  }
-
-  // MARK: - Shared Instance
-
-  extension NotificationFocusCondition {
-    #if os(iOS) || os(tvOS) || os(visionOS)
-      public static let shared = NotificationFocusCondition(
-        didBecomeActive: UIApplication.didBecomeActiveNotification,
-        willResignActive: UIApplication.willResignActiveNotification,
-        isActive: { MainActor.runSync { UIApplication.shared.applicationState == .active } }
-      )
-    #elseif os(macOS)
-      public static let shared = NotificationFocusCondition(
-        didBecomeActive: NSApplication.didBecomeActiveNotification,
-        willResignActive: NSApplication.willResignActiveNotification,
-        isActive: { MainActor.runSync { NSApplication.shared.isActive } }
-      )
-    #elseif os(watchOS)
-      @available(watchOS 7.0, *)
-      public static let shared = NotificationFocusCondition(
-        didBecomeActive: WKExtension.didBecomeActiveNotification,
-        willResignActive: WKExtension.willResignActiveNotification,
-        isActive: { MainActor.runSync { WKExtension.shared().applicationState == .active } }
-      )
-    #endif
   }
 
   // MARK: - FetchConditionObserver Conformance
@@ -79,6 +54,47 @@ import Foundation
         NotificationCenter.default.removeObserver(didBecomeActiveObserver)
         NotificationCenter.default.removeObserver(willResignActiveObserver)
       }
+    }
+  }
+
+  extension FetchCondition where Self == NotificationFocusCondition {
+    #if os(iOS) || os(tvOS) || os(visionOS)
+      public static var notificationFocus: Self {
+        .notificationFocus(
+          didBecomeActive: UIApplication.didBecomeActiveNotification,
+          willResignActive: UIApplication.willResignActiveNotification,
+          isActive: { MainActor.runSync { UIApplication.shared.applicationState == .active } }
+        )
+      }
+    #elseif os(macOS)
+      public static var notificationFocus: Self {
+        .notificationFocus(
+          didBecomeActive: NSApplication.didBecomeActiveNotification,
+          willResignActive: NSApplication.willResignActiveNotification,
+          isActive: { MainActor.runSync { NSApplication.shared.isActive } }
+        )
+      }
+    #elseif os(watchOS)
+      @available(watchOS 7.0, *)
+      public static var notificationFocus: Self {
+        .notificationFocus(
+          didBecomeActive: WKExtension.didBecomeActiveNotification,
+          willResignActive: WKExtension.willResignActiveNotification,
+          isActive: { MainActor.runSync { WKExtension.shared().applicationState == .active } }
+        )
+      }
+    #endif
+
+    public static func notificationFocus(
+      didBecomeActive: Notification.Name,
+      willResignActive: Notification.Name,
+      isActive: @escaping @Sendable () -> Bool
+    ) -> Self {
+      NotificationFocusCondition(
+        didBecomeActive: didBecomeActive,
+        willResignActive: willResignActive,
+        isActive: isActive
+      )
     }
   }
 #endif
