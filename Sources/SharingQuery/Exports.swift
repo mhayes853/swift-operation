@@ -1,2 +1,2 @@
-@_exported import QueryCore
+@_exported import Query
 @_exported import Sharing

@@ -1,5 +1,5 @@
 import Dependencies
-import QueryCore
+import Query
 
 extension DependencyValues {
   public var queryClient: QueryClient {

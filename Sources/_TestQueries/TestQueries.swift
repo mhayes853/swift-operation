@@ -1,4 +1,4 @@
-import QueryCore
+import Query
 
 // MARK: - TestQuery
 
@@ -54,8 +54,8 @@ package struct TestStateQuery: QueryRequest, Hashable {
   }
 
   package func fetch(
-    in context: QueryCore.QueryContext,
-    with continuation: QueryCore.QueryContinuation<Value>
+    in context: QueryContext,
+    with continuation: QueryContinuation<Value>
   ) async throws -> Value {
     let task = Self.action.withLock { action in
       switch action {

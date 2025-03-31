@@ -9,7 +9,7 @@ let package = Package(
   platforms: [.iOS(.v13), .macOS(.v10_15), .tvOS(.v13), .watchOS(.v6)],
   products: [
     .library(name: "SharingQuery", targets: ["SharingQuery"]),
-    .library(name: "QueryCore", targets: ["QueryCore"])
+    .library(name: "Query", targets: ["Query"])
   ],
   dependencies: [
     .package(url: "https://github.com/pointfreeco/swift-sharing", from: "2.3.3"),
@@ -26,10 +26,10 @@ let package = Package(
   targets: [
     .target(
       name: "SharingQuery",
-      dependencies: ["QueryCore", .product(name: "Sharing", package: "swift-sharing")]
+      dependencies: ["Query", .product(name: "Sharing", package: "swift-sharing")]
     ),
     .target(
-      name: "QueryCore",
+      name: "Query",
       dependencies: [
         .product(name: "IssueReporting", package: "xctest-dynamic-overlay"),
         .product(name: "IdentifiedCollections", package: "swift-identified-collections"),
@@ -41,11 +41,11 @@ let package = Package(
         )
       ]
     ),
-    .target(name: "_TestQueries", dependencies: ["QueryCore"]),
+    .target(name: "_TestQueries", dependencies: ["Query"]),
     .testTarget(
       name: "QueryWASMTests",
       dependencies: [
-        "QueryCore",
+        "Query",
         .product(name: "CustomDump", package: "swift-custom-dump"),
         .product(
           name: "JavaScriptEventLoopTestSupport",
@@ -58,15 +58,15 @@ let package = Package(
   swiftLanguageModes: [.v6]
 )
 
-var queryCoreTestsDependencies: [Target.Dependency] = [
-  "QueryCore",
+var queryTestsDependencies: [Target.Dependency] = [
+  "Query",
   "_TestQueries",
   .product(name: "CustomDump", package: "swift-custom-dump"),
   .product(name: "IssueReportingTestSupport", package: "xctest-dynamic-overlay")
 ]
 
 #if canImport(SwiftUI)
-  queryCoreTestsDependencies.append(.product(name: "ViewInspector", package: "ViewInspector"))
+  queryTestsDependencies.append(.product(name: "ViewInspector", package: "ViewInspector"))
 #endif
 
 if ProcessInfo.processInfo.environment["TEST_WASM"] != "1" {
@@ -80,7 +80,7 @@ if ProcessInfo.processInfo.environment["TEST_WASM"] != "1" {
           .product(name: "CustomDump", package: "swift-custom-dump")
         ]
       ),
-      .testTarget(name: "QueryCoreTests", dependencies: queryCoreTestsDependencies)
+      .testTarget(name: "QueryTests", dependencies: queryTestsDependencies)
     ]
   )
 }

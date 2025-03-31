@@ -1,6 +1,6 @@
 import Dependencies
 import Foundation
-import QueryCore
+import Query
 
 extension DateGenerator: QueryClock {
   public func now() -> Date {
