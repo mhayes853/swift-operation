@@ -10,7 +10,6 @@ let package = Package(
   products: [
     .library(name: "SharingQuery", targets: ["SharingQuery"]),
     .library(name: "QueryCore", targets: ["QueryCore"]),
-    .library(name: "QueryWASM", targets: ["QueryWASM"]),
     .library(name: "QueryObservation", targets: ["QueryObservation"])
   ],
   dependencies: [
@@ -37,7 +36,12 @@ let package = Package(
       name: "QueryCore",
       dependencies: [
         .product(name: "IssueReporting", package: "xctest-dynamic-overlay"),
-        .product(name: "IdentifiedCollections", package: "swift-identified-collections")
+        .product(name: "IdentifiedCollections", package: "swift-identified-collections"),
+        .product(
+          name: "JavaScriptKit",
+          package: "JavaScriptKit",
+          condition: .when(platforms: [.wasi])
+        )
       ]
     ),
     .target(
@@ -46,21 +50,10 @@ let package = Package(
     ),
     .target(name: "QuerySwiftUI", dependencies: ["QueryCore"]),
     .target(name: "_TestQueries", dependencies: ["QueryCore"]),
-    .target(
-      name: "QueryWASM",
-      dependencies: [
-        "QueryCore",
-        .product(
-          name: "JavaScriptKit",
-          package: "JavaScriptKit",
-          condition: .when(platforms: [.wasi])
-        )
-      ]
-    ),
     .testTarget(
       name: "QueryWASMTests",
       dependencies: [
-        "QueryWASM",
+        "QueryCore",
         .product(name: "CustomDump", package: "swift-custom-dump"),
         .product(
           name: "JavaScriptEventLoopTestSupport",
