@@ -1,5 +1,4 @@
 #if canImport(SwiftUI)
-  import QueryCore
   import SwiftUI
 
   extension EnvironmentValues {

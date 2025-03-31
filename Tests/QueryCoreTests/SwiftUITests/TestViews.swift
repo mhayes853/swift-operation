@@ -1,6 +1,7 @@
 #if canImport(SwiftUI)
   import SwiftUI
-  import QuerySwiftUI
+  import _TestQueries
+  import QueryCore
 
   enum TestQueryStatusID: Hashable {
     case loading

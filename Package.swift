@@ -48,7 +48,6 @@ let package = Package(
       name: "QueryObservation",
       dependencies: ["QueryCore", .product(name: "SwiftNavigation", package: "swift-navigation")]
     ),
-    .target(name: "QuerySwiftUI", dependencies: ["QueryCore"]),
     .target(name: "_TestQueries", dependencies: ["QueryCore"]),
     .testTarget(
       name: "QueryWASMTests",
@@ -66,6 +65,17 @@ let package = Package(
   swiftLanguageModes: [.v6]
 )
 
+var queryCoreTestsDependencies: [Target.Dependency] = [
+  "QueryCore",
+  "_TestQueries",
+  .product(name: "CustomDump", package: "swift-custom-dump"),
+  .product(name: "IssueReportingTestSupport", package: "xctest-dynamic-overlay")
+]
+
+#if canImport(SwiftUI)
+  queryCoreTestsDependencies.append(.product(name: "ViewInspector", package: "ViewInspector"))
+#endif
+
 if ProcessInfo.processInfo.environment["TEST_WASM"] != "1" {
   package.targets.append(
     contentsOf: [
@@ -77,24 +87,10 @@ if ProcessInfo.processInfo.environment["TEST_WASM"] != "1" {
           .product(name: "CustomDump", package: "swift-custom-dump")
         ]
       ),
-      .testTarget(
-        name: "QueryCoreTests",
-        dependencies: [
-          "QueryCore",
-          "_TestQueries",
-          .product(name: "CustomDump", package: "swift-custom-dump"),
-          .product(name: "IssueReportingTestSupport", package: "xctest-dynamic-overlay")
-        ]
-      ),
+      .testTarget(name: "QueryCoreTests", dependencies: queryCoreTestsDependencies),
       .testTarget(
         name: "QueryObservationTests",
         dependencies: ["QueryObservation", "_TestQueries"]
-      ),
-      .testTarget(
-        name: "QuerySwiftUITests",
-        dependencies: [
-          "QuerySwiftUI", "_TestQueries", .product(name: "ViewInspector", package: "ViewInspector")
-        ]
       )
     ]
   )

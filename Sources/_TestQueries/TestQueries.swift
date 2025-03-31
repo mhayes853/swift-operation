@@ -30,6 +30,52 @@ package struct TestStringQuery: QueryRequest, Hashable {
   }
 }
 
+// MARK: - TestStateQuery
+
+package struct TestStateQuery: QueryRequest, Hashable {
+  package enum Action {
+    case load, suspend, fail
+  }
+
+  package static let action = Lock(Action.load)
+
+  package static let successValue = "Success"
+
+  package typealias Value = String
+
+  package init() {}
+
+  package struct SomeError: Hashable, Error {
+    package init() {}
+  }
+
+  package func setup(context: inout QueryContext) {
+    context.enableAutomaticFetchingCondition = .always(false)
+  }
+
+  package func fetch(
+    in context: QueryCore.QueryContext,
+    with continuation: QueryCore.QueryContinuation<Value>
+  ) async throws -> Value {
+    let task = Self.action.withLock { action in
+      switch action {
+      case .load:
+        return Task { () async throws -> String in
+          return Self.successValue
+        }
+      case .suspend:
+        return Task {
+          try await Task.never()
+          throw SomeError()
+        }
+      case .fail:
+        return Task { throw SomeError() }
+      }
+    }
+    return try await task.value
+  }
+}
+
 // MARK: - EndlessQuery
 
 package final class SleepingQuery: QueryRequest, @unchecked Sendable {

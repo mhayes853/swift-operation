@@ -2,7 +2,8 @@
   import SwiftUI
   import ViewInspector
   import XCTest
-  import QuerySwiftUI
+  import QueryCore
+  import _TestQueries
   import CustomDump
   import Combine
 

@@ -1,6 +1,5 @@
 #if canImport(SwiftUI)
   import SwiftUI
-  import QueryCore
   import IdentifiedCollections
 
   extension State where Value: QueryStateProtocol {
