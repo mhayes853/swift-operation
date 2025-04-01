@@ -2,26 +2,21 @@
   import CustomDump
   import Foundation
   import Query
-  import Testing
+  import XCTest
 
-  @Suite("DispatchQueryDelayer tests")
-  struct DispatchQueryDelayerTests {
-    @Test("Cancellation")
-    func cancellation() async throws {
+  final class DispatchQueryDelayerTests: XCTestCase {
+    func testCancellation() async throws {
       let delayer: some QueryDelayer = .dispatch(queue: .global())
       let task = Task { try await delayer.delay(for: 0.2) }
       let startTime = Date()
       try await delayer.delay(for: 0.1)
       task.cancel()
-      await #expect(throws: CancellationError.self) {
-        try await task.value
-      }
+      await XCTAssertThrows(try await task.value, error: CancellationError.self)
       let duration = Date().timeIntervalSince(startTime)
       expectNoDifference(duration < 0.2, true)
     }
 
-    @Test("Sleeps For Specified Duration")
-    func sleepsForSpecifiedDuration() async throws {
+    func testSleepsForSpecifiedDuration() async throws {
       let delayer: some QueryDelayer = .dispatch(queue: .global())
       let startTime = Date()
       try await delayer.delay(for: 0.1)
