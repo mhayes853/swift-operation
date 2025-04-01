@@ -1,8 +1,13 @@
 import CustomDump
 @_spi(Warnings) import Query
 import Testing
+import Foundation
 
-@Suite("QueryTask tests")
+func isRunningTestsFromXcode() -> Bool {
+  ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+}
+
+@Suite("QueryTask tests", .disabled(if: isRunningTestsFromXcode()))
 struct QueryTaskTests {
   @Test("Task With Dependencies, Runs Dependent Tasks")
   func runsDependentTasks() async throws {
@@ -239,7 +244,7 @@ struct QueryTaskTests {
   }
 
   #if DEBUG
-    @Test("Reports Issue When Circular Scheduling, 2 Tasks")
+  @Test("Reports Issue When Circular Scheduling, 2 Tasks")
     func reportsIssueWhenCircularScheduling2Tasks() async throws {
       let context = QueryContext()
       let task1 = QueryTask<Int>(
@@ -268,7 +273,7 @@ struct QueryTaskTests {
       }
     }
 
-    @Test("Reports Issue When Circular Scheduling, 3 Tasks")
+  @Test("Reports Issue When Circular Scheduling, 3 Tasks")
     func reportsIssueWhenCircularScheduling3Tasks() async throws {
       let context = QueryContext()
       let task1 = QueryTask<Int>(

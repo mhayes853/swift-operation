@@ -97,9 +97,10 @@
       if self.previousClient == nil || self.previousClient !== self.client {
         self.subscription.cancel()
         self.subscription = self.store.subscribe(
-          with: QueryEventHandler { [self] state, _ in self.state = state }
+          with: QueryEventHandler { [self] state, _ in
+            Task { @MainActor in self.state = state }
+          }
         )
-        self.state = self.store.state
       }
     }
   }
