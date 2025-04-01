@@ -3,6 +3,8 @@ import Foundation
 import Query
 import Sharing
 
+// MARK: - NetworkStatusKey
+
 extension SharedReaderKey where Self == NetworkStatusKey {
   public static var networkStatus: NetworkStatusKey {
     NetworkStatusKey(observer: nil)
@@ -40,6 +42,8 @@ public struct NetworkStatusKey: SharedReaderKey {
     return SharedSubscription { subscription.cancel() }
   }
 }
+
+// MARK: - NetworkStatusKeyID
 
 public struct NetworkStatusKeyID: Hashable, Sendable {
   private let observerIdentifier: ObjectIdentifier
