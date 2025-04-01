@@ -3,7 +3,7 @@ import XCTest
 func XCTAssertThrows<E: Error>(
   _ expression: @autoclosure () async throws -> Void,
   error eType: E.Type,
-  file: StaticString = #file,
+  file: StaticString = #filePath,
   line: UInt = #line
 ) async {
   do {
