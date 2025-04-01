@@ -22,7 +22,7 @@ extension QueryWarning: ExpressibleByStringInterpolation {
 // MARK: - Report Warning
 
 @_transparent
-func reportWarning(
+@_spi(Warnings) public func reportWarning(
   _ warning: QueryWarning,
   fileID: StaticString = #fileID,
   filePath: StaticString = #filePath,
