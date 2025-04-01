@@ -3,7 +3,7 @@
 
   // MARK: - NavigatorObserver
 
-  public struct NavigatorObserver: @unchecked Sendable {
+  public final class NavigatorObserver: @unchecked Sendable {
     private let navigator: JSObject
     private let window: JSObject
 
