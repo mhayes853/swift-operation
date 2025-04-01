@@ -15,16 +15,20 @@ extension SharedReaderKey where Self == NetworkStatusKey {
   }
 }
 
-public struct NetworkStatusKey: SharedReaderKey {
+public struct NetworkStatusKey {
   private let observer: any NetworkObserver
 
   init(observer: (any NetworkObserver)?) {
     @Dependency(\.networkObserver) var networkObserver
     self.observer = observer ?? networkObserver
   }
+}
 
-  public var id: NetworkStatusKeyID {
-    NetworkStatusKeyID(observer: self.observer)
+// MARK: - SharedReaderKey Conformance
+
+extension NetworkStatusKey: SharedReaderKey {
+  public var id: ID {
+    ID(observer: self.observer)
   }
 
   public func load(
@@ -43,12 +47,14 @@ public struct NetworkStatusKey: SharedReaderKey {
   }
 }
 
-// MARK: - NetworkStatusKeyID
+// MARK: - ID
 
-public struct NetworkStatusKeyID: Hashable, Sendable {
-  private let observerIdentifier: ObjectIdentifier
+extension NetworkStatusKey {
+  public struct ID: Hashable, Sendable {
+    private let observerIdentifier: ObjectIdentifier
 
-  fileprivate init(observer: any NetworkObserver) {
-    self.observerIdentifier = ObjectIdentifier(observer as AnyObject)
+    fileprivate init(observer: any NetworkObserver) {
+      self.observerIdentifier = ObjectIdentifier(observer as AnyObject)
+    }
   }
 }
