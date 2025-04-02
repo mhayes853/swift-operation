@@ -20,7 +20,7 @@ let package = Package(
       .upToNextMajor(from: "1.1.0")
     ),
     .package(url: "https://github.com/pointfreeco/xctest-dynamic-overlay", from: "1.4.3"),
-    .package(url: "https://github.com/swiftwasm/JavaScriptKit", branch: "main"),
+    .package(url: "https://github.com/swiftwasm/JavaScriptKit", from: "0.26.1"),
     .package(url: "https://github.com/pointfreeco/swift-navigation", from: "2.3.0"),
     .package(url: "https://github.com/nalexn/ViewInspector", from: "0.10.1")
   ],
