@@ -70,6 +70,20 @@
       )
     }
 
+    public init<Query: InfiniteQueryRequest>(
+      query: DefaultInfiniteQuery<Query>,
+      client: QueryClient? = nil
+    ) where Value == Query.State, Request == DefaultInfiniteQuery<Query> {
+      self.init(
+        wrappedValue: InfiniteQueryState(
+          initialValue: query.defaultValue,
+          initialPageId: query.initialPageId
+        ),
+        query: query,
+        client: client
+      )
+    }
+
     public init<Arguments: Sendable, V: Sendable>(mutation: Request, client: QueryClient? = nil)
     where Request: MutationRequest<Arguments, V> {
       self.init(wrappedValue: MutationState(), query: mutation, client: client)
