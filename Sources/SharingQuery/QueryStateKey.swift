@@ -64,12 +64,12 @@ extension SharedReaderKey {
     .queryState(query: mutation, initialState: MutationState(), client: client)
   }
 
-  public static func queryState<State, Query: QueryRequest>(
+  public static func queryState<Query: QueryRequest>(
     query: Query,
-    initialState: State,
+    initialState: Query.State,
     client: QueryClient? = nil
   ) -> Self
-  where Self == QueryStateKey<State>, State == Query.State, State.QueryValue == Query.Value {
+  where Self == QueryStateKey<Query.State>, Query.State.QueryValue == Query.Value {
     @Dependency(\.queryClient) var queryClient
     return .queryState(store: (client ?? queryClient).store(for: query, initialState: initialState))
   }
@@ -82,6 +82,10 @@ extension SharedReaderKey {
 
 public struct QueryStateKey<State: QueryStateProtocol> {
   public let store: QueryStore<State>
+
+  public init(store: QueryStore<State>) {
+    self.store = store
+  }
 }
 
 extension QueryStateKey: SharedReaderKey {
