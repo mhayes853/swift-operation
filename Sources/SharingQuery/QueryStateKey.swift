@@ -19,11 +19,7 @@ extension SharedReaderKey {
     _ query: DefaultQuery<Query>,
     client: QueryClient? = nil
   ) -> Self where Self == QueryStateKey<DefaultQuery<Query>.State> {
-    .queryState(
-      query,
-      initialState: QueryState(initialValue: query.defaultValue),
-      client: client
-    )
+    .queryState(query, initialState: QueryState(initialValue: query.defaultValue), client: client)
   }
 
   public static func infiniteQueryState<Query: InfiniteQueryRequest>(

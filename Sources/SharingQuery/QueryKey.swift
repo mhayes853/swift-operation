@@ -91,3 +91,17 @@ extension QueryKey: SharedKey {
 public struct QueryKeyID: Hashable {
   fileprivate let inner: QueryStateKeyID
 }
+
+// MARK: - Shared Inits
+
+extension Shared {
+  public init<State>(_ key: QueryKey<State>) where Value == State.StateValue {
+    self.init(wrappedValue: key.base.store.currentValue, key)
+  }
+}
+
+extension SharedReader {
+  public init<State>(_ key: QueryKey<State>) where Value == State.StateValue {
+    self.init(wrappedValue: key.base.store.currentValue, key)
+  }
+}
