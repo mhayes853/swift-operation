@@ -33,10 +33,7 @@ extension BinaryOperatorCondition: FetchCondition {
         observer(self.op.evaluate($0.left, $0.right))
       }
     }
-    return QuerySubscription {
-      s1.cancel()
-      s2.cancel()
-    }
+    return .combined(s1, s2)
   }
 }
 

@@ -1,34 +1,51 @@
 // MARK: - QueryStoreSubscription
 
-public final class QuerySubscription: Sendable {
-  private let onCancel: Lock<(@Sendable () -> Void)?>?
+public struct QuerySubscription: Sendable {
+  private let storage: Storage
 
+  private init(storage: Storage) {
+    self.storage = storage
+  }
+}
+
+// MARK: - Closure Init
+
+extension QuerySubscription {
   public init(onCancel: @Sendable @escaping () -> Void) {
-    self.onCancel = Lock(onCancel)
+    self.init(storage: .box(Box(onCancel: onCancel)))
+  }
+}
+
+// MARK: - Combined
+
+extension QuerySubscription {
+  public static func combined(_ subscriptions: [QuerySubscription]) -> QuerySubscription {
+    QuerySubscription(storage: .combined(subscriptions))
   }
 
-  private init() {
-    self.onCancel = nil
+  public static func combined(_ subscriptions: QuerySubscription...) -> QuerySubscription {
+    QuerySubscription(storage: .combined(subscriptions))
   }
-
-  deinit { self.cancel() }
 }
 
 // MARK: - Empty
 
 extension QuerySubscription {
-  public static let empty = QuerySubscription()
+  public static let empty = QuerySubscription(storage: .empty)
 }
 
 // MARK: - Cancel
 
 extension QuerySubscription {
   public func cancel() {
-    self.onCancel?
-      .withLock { cancel in
-        defer { cancel = nil }
-        cancel?()
-      }
+    switch self.storage {
+    case .empty:
+      break
+    case let .box(box):
+      box.cancel()
+    case let .combined(subscriptions):
+      subscriptions.forEach { $0.cancel() }
+    }
   }
 }
 
@@ -48,7 +65,16 @@ extension QuerySubscription {
 
 extension QuerySubscription: Equatable {
   public static func == (lhs: QuerySubscription, rhs: QuerySubscription) -> Bool {
-    lhs === rhs
+    switch (lhs.storage, rhs.storage) {
+    case (.empty, .empty):
+      return true
+    case let (.box(lhsBox), .box(rhsBox)):
+      return lhsBox === rhsBox
+    case let (.combined(lhsSubs), .combined(rhsSubs)):
+      return lhsSubs == rhsSubs
+    default:
+      return false
+    }
   }
 }
 
@@ -56,6 +82,44 @@ extension QuerySubscription: Equatable {
 
 extension QuerySubscription: Hashable {
   public func hash(into hasher: inout Hasher) {
-    hasher.combine(ObjectIdentifier(self))
+    switch self.storage {
+    case .empty:
+      break
+    case let .box(box):
+      hasher.combine(ObjectIdentifier(box))
+    case let .combined(subscriptions):
+      hasher.combine(subscriptions)
+    }
+  }
+}
+
+// MARK: - Storage
+
+extension QuerySubscription {
+  private enum Storage: Sendable {
+    case empty
+    case box(Box)
+    case combined([QuerySubscription])
+  }
+}
+
+// MARK: - Box
+
+extension QuerySubscription {
+  private final class Box: Sendable {
+    let onCancel: Lock<(@Sendable () -> Void)?>
+
+    init(onCancel: @escaping @Sendable () -> Void) {
+      self.onCancel = Lock(onCancel)
+    }
+
+    deinit { self.cancel() }
+
+    func cancel() {
+      self.onCancel.withLock { cancel in
+        defer { cancel = nil }
+        cancel?()
+      }
+    }
   }
 }

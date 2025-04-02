@@ -20,10 +20,7 @@ private final class RefetchOnChangeController<
   func control(with controls: QueryControls<State>) -> QuerySubscription {
     let (controlsSubscription, _) = self.subscriptions.add(handler: controls)
     let conditionSubscription = self.subscribeToCondition(in: controls.context)
-    return QuerySubscription {
-      controlsSubscription.cancel()
-      conditionSubscription.cancel()
-    }
+    return .combined(controlsSubscription, conditionSubscription)
   }
 
   private func subscribeToCondition(
