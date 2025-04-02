@@ -214,9 +214,12 @@ package final actor FlakeyQuery: QueryRequest {
     in context: QueryContext,
     with continuation: QueryContinuation<String>
   ) async throws -> String {
-    struct SomeError: Error {}
     guard let result else { throw SomeError() }
     return result
+  }
+
+  package struct SomeError: Equatable, Error {
+    package init() {}
   }
 }
 
@@ -287,11 +290,17 @@ package final actor ContextReadingQuery: QueryRequest {
 
 // MARK: - ContinuingQuery
 
-package struct ContinuingQuery: QueryRequest, Hashable {
+package final class ContinuingQuery: QueryRequest, @unchecked Sendable {
   package static let values = ["blob", "blob jr", "blob sr"]
   package static let finalValue = "the end"
 
+  package var onYield: ((String) -> Void)?
+
   package init() {}
+
+  package var path: QueryPath {
+    [ObjectIdentifier(self)]
+  }
 
   package func fetch(
     in context: QueryContext,

@@ -90,14 +90,35 @@ extension QueryStateKey: SharedReaderKey {
   }
 
   public func load(context: LoadContext<State>, continuation: LoadContinuation<State>) {
-
+    switch context {
+    case .initialValue:
+      continuation.resumeReturningInitialValue()
+    case .userInitiated:
+      Task<Void, Never> {
+        do {
+          try await self.store.fetch()
+          continuation.resume(returning: self.store.state)
+        } catch {
+          continuation.resume(throwing: error)
+        }
+      }
+    }
   }
 
   public func subscribe(
     context: LoadContext<State>,
     subscriber: SharedSubscriber<State>
   ) -> SharedSubscription {
-    SharedSubscription {}
+    let subscription = self.store.subscribe(
+      with: QueryEventHandler { state, _ in
+        subscriber.yield(state)
+        if let error = state.error {
+          subscriber.yield(throwing: error)
+        }
+        subscriber.yieldLoading(state.isLoading)
+      }
+    )
+    return SharedSubscription { subscription.cancel() }
   }
 }
 
