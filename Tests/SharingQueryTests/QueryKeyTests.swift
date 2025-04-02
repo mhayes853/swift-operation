@@ -46,7 +46,7 @@ struct QueryKeyTests {
 
     let query = TestQuery().enableAutomaticFetching(when: .always(false))
     @Shared(.query(query, initialValue: nil)) var value
-    @SharedReader(.queryState(query: query, initialValue: nil)) var state
+    @SharedReader(.queryState(query, initialValue: nil)) var state
 
     $value.withLock { $0 = TestQuery.value + 1 }
     expectNoDifference(value, TestQuery.value + 1)

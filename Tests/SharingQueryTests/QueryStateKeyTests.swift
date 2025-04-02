@@ -10,7 +10,7 @@ struct QueryStateKeyTests {
 
   @Test("Fetches Value")
   func fetchesValues() async throws {
-    @SharedReader(.queryState(query: TestQuery(), initialValue: nil, client: self.client)) var state
+    @SharedReader(.queryState(TestQuery(), initialValue: nil, client: self.client)) var state
 
     expectNoDifference(state.status.isSuccessful, false)
     _ = try await self.client.store(for: TestQuery()).activeTasks.first?.runIfNeeded()
@@ -19,7 +19,7 @@ struct QueryStateKeyTests {
 
   @Test("Fetches Error")
   func fetchesError() async throws {
-    @SharedReader(.queryState(query: FailingQuery(), initialValue: nil, client: self.client))
+    @SharedReader(.queryState(FailingQuery(), initialValue: nil, client: self.client))
     var state
 
     expectNoDifference($state.loadError as? FailingQuery.SomeError, nil)
@@ -30,7 +30,7 @@ struct QueryStateKeyTests {
   @Test("Refetches Error")
   func refetchesError() async throws {
     let query = FlakeyQuery()
-    @SharedReader(.queryState(query: query, initialValue: nil, client: self.client))
+    @SharedReader(.queryState(query, initialValue: nil, client: self.client))
     var state
 
     _ = try? await self.client.store(for: FlakeyQuery()).activeTasks.first?.runIfNeeded()
@@ -46,7 +46,7 @@ struct QueryStateKeyTests {
 
   @Test("Only Has One Active Task When Loading Initial Data")
   func onlyHasOneActiveTaskWhenLoadingInitialData() async throws {
-    @SharedReader(.queryState(query: EndlessQuery(), initialValue: nil, client: self.client))
+    @SharedReader(.queryState(EndlessQuery(), initialValue: nil, client: self.client))
     var state
 
     let store = self.client.store(for: EndlessQuery())
@@ -57,7 +57,7 @@ struct QueryStateKeyTests {
 
   @Test("Refetches Value")
   func refetchesValues() async throws {
-    @SharedReader(.queryState(query: TestQuery(), initialValue: nil, client: self.client)) var state
+    @SharedReader(.queryState(TestQuery(), initialValue: nil, client: self.client)) var state
     let store = self.client.store(for: TestQuery())
 
     _ = try await store.activeTasks.first?.runIfNeeded()

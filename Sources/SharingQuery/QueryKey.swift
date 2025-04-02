@@ -31,7 +31,7 @@ extension SharedKey {
     client: QueryClient? = nil
   ) -> Self
   where Self == QueryKey<Query.State>, Query.State.QueryValue == Query.Value {
-    QueryKey(base: .queryState(query: query, initialState: initialState, client: client))
+    QueryKey(base: .queryState(query, initialState: initialState, client: client))
   }
 
   public static func query<State>(store: QueryStore<State>) -> Self where Self == QueryKey<State> {
