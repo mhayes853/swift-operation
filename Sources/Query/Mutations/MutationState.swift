@@ -198,12 +198,12 @@ extension QueryWarning {
     """
     The latest mutation attempt was retried, but the retried mutation has no history.
 
-    Calling `fetch` on a QueryStore, or `retryLatest` on a `MutationStore` that uses a mutation
-    will retry the latest mutation attempt in the history (ie. recalling `mutate`, but with the
-    same arguments), but this is impossible if there is no history for the mutation.
+    Calling `fetch` or `retryLatest` on a `QueryStore` that uses a mutation will retry the latest \
+    mutation attempt in the history (ie. recalling `mutate`, but with the same arguments), but \
+    this is impossible if there is no history for the mutation.
 
-    Make sure to call `mutate` on a `MutationStore` instance first before calling `fetch` on the
-    `QueryStore` instance, or before calling `retryLatest` on the `MutationStore`.
+    Make sure to call `mutate` on the store first before calling `fetch` on the `QueryStore` \
+    instance, or before calling `retryLatest` on the `MutationStore`.
     """
   )
 }
