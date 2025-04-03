@@ -65,8 +65,7 @@ extension SharedReaderKey {
     _ query: Query,
     initialState: Query.State,
     client: QueryClient? = nil
-  ) -> Self
-  where Self == QueryStateKey<Query.State>, Query.State.QueryValue == Query.Value {
+  ) -> Self where Self == QueryStateKey<Query.State>, Query.State.QueryValue == Query.Value {
     @Dependency(\.queryClient) var queryClient
     return .queryState(store: (client ?? queryClient).store(for: query, initialState: initialState))
   }

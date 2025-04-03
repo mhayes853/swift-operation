@@ -2,18 +2,6 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "group:Package.resolved">
-   </FileRef>
-   <FileRef
-      location = "group:Package.swift">
-   </FileRef>
-   <FileRef
-      location = "group:Sources">
-   </FileRef>
-   <FileRef
-      location = "group:test-wasm.sh">
-   </FileRef>
-   <FileRef
-      location = "group:Tests">
+      location = "self:Package.swift">
    </FileRef>
 </Workspace>
