@@ -78,8 +78,8 @@ import Foundation
       @available(watchOS 7.0, *)
       public static var notificationFocus: Self {
         .notificationFocus(
-          didBecomeActive: WKExtension.didBecomeActiveNotification,
-          willResignActive: WKExtension.willResignActiveNotification,
+          didBecomeActive: WKExtension.applicationDidBecomeActiveNotification,
+          willResignActive: WKExtension.applicationWillResignActiveNotification,
           isActive: { MainActor.runSync { WKExtension.shared().applicationState == .active } }
         )
       }

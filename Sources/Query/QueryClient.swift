@@ -225,11 +225,11 @@ extension QueryClient {
 
     private var refetchOnChangeCondition: AnyFetchCondition {
       switch (self.networkObserver, self.focusCondition) {
-      case let (observer?, focusCondition?):
+      case (let observer?, let focusCondition?):
         return AnyFetchCondition(.connected(to: observer) && AnyFetchCondition(focusCondition))
-      case let (observer?, _):
+      case (let observer?, _):
         return AnyFetchCondition(.connected(to: observer))
-      case let (_, focusCondition?):
+      case (_, let focusCondition?):
         return AnyFetchCondition(focusCondition)
       default:
         return AnyFetchCondition(.always(false))
@@ -280,8 +280,14 @@ public var defaultNetworkObserver: (any NetworkObserver)? {
 }
 
 public var defaultFocusCondition: (any FetchCondition)? {
-  #if canImport(Darwin)
+  #if os(iOS) || os(macOS) || os(tvOS) || os(visionOS)
     .notificationFocus
+  #elseif os(watchOS)
+    if #available(watchOS 7.0, *) {
+      .notificationFocus
+    } else {
+      nil
+    }
   #elseif canImport(JavaScriptKit)
     .windowFocus
   #else
@@ -307,8 +313,8 @@ extension QueryContext {
 
     var client: QueryClient? {
       switch self {
-      case let .strong(client): client
-      case let .weak(box): box.inner.withLock { $0.value }
+      case .strong(let client): client
+      case .weak(let box): box.inner.withLock { $0.value }
       }
     }
   }
