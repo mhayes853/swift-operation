@@ -753,7 +753,7 @@ package final class FailableInfiniteQuery: InfiniteQueryRequest {
     }
   }
 
-  package struct SomeError: Error {
+  package struct SomeError: Equatable, Error {
     package init() {}
   }
 }

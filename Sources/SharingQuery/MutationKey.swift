@@ -114,23 +114,33 @@ extension SharedMutationValue {
 
 extension SharedMutationValue {
   @discardableResult
-  public func mutate(with arguments: Arguments) async throws -> Value {
-    try await self.store.mutate(with: arguments)
+  public func mutate(
+    with arguments: Arguments,
+    using configuration: QueryTaskConfiguration? = nil
+  ) async throws -> Value {
+    try await self.store.mutate(with: arguments, using: configuration)
   }
 
-  public func mutateTask(with arguments: Arguments) -> QueryTask<Value> {
-    self.store.mutateTask(with: arguments)
+  public func mutateTask(
+    with arguments: Arguments,
+    using configuration: QueryTaskConfiguration? = nil
+  ) -> QueryTask<Value> {
+    self.store.mutateTask(with: arguments, using: configuration)
   }
 }
 
 extension SharedMutationValue {
   @discardableResult
-  public func retryLatest() async throws -> Value {
-    try await self.store.retryLatest()
+  public func retryLatest(
+    using configuration: QueryTaskConfiguration? = nil
+  ) async throws -> Value {
+    try await self.store.retryLatest(using: configuration)
   }
 
-  public func retryLatestTask() -> QueryTask<Value> {
-    self.store.retryLatestTask()
+  public func retryLatestTask(
+    using configuration: QueryTaskConfiguration? = nil
+  ) -> QueryTask<Value> {
+    self.store.retryLatestTask(using: configuration)
   }
 }
 
