@@ -280,7 +280,10 @@ extension QueryStore {
     context: QueryContext
   ) {
     self.editValuesWithStateChangeEvent(in: context) { values in
+      var context = context
+      context.queryResultUpdateReason = .returnedFinalResult
       task.inner.withLock {
+        $0?.configuration.context = context
         guard let task = $0, values.taskHerdId == initialHerdId else { return }
         values.query.update(with: result, for: task)
         values.query.finishFetchTask(task)
