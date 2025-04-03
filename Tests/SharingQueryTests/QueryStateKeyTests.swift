@@ -141,4 +141,14 @@ struct QueryStateKeyTests {
     expectNoDifference($state.isLoading, false)
     expectNoDifference(state.currentValue, ContinuingQuery.finalValue)
   }
+
+  @Test("Makes Separate Subscribers When Using QueryStateKeys With The Same Query")
+  func makesSeparateSubscribersWhenUsingQueryStateKeysWithTheSameQuery() async throws {
+    let query = TestQuery().enableAutomaticFetching(when: .always(false))
+    @SharedReader(.queryState(query, initialValue: nil, client: self.client)) var value
+    @SharedReader(.queryState(query, initialValue: nil, client: self.client)) var state
+
+    let store = self.client.store(for: query)
+    expectNoDifference(store.subscriberCount, 2)
+  }
 }

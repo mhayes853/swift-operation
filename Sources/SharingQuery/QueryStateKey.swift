@@ -79,20 +79,14 @@ extension SharedReaderKey {
 
 public struct QueryStateKey<State: QueryStateProtocol> {
   public let store: QueryStore<State>
-  private let tracker: StoreSubscriptionTracker
+  public let id = QueryStateKeyID()
 
   public init(store: QueryStore<State>) {
-    @Dependency(StoreSubscriptionTracker.self) var tracker
     self.store = store
-    self.tracker = tracker
   }
 }
 
 extension QueryStateKey: SharedReaderKey {
-  public var id: QueryStateKeyID {
-    QueryStateKeyID(storeIdentifier: ObjectIdentifier(store))
-  }
-
   public func load(context: LoadContext<State>, continuation: LoadContinuation<State>) {
     switch context {
     case .initialValue:
@@ -113,8 +107,7 @@ extension QueryStateKey: SharedReaderKey {
     context: LoadContext<State>,
     subscriber: SharedSubscriber<State>
   ) -> SharedSubscription {
-    let subscription = self.tracker.subscribe(
-      to: self.store,
+    let subscription = self.store.subscribe(
       with: QueryEventHandler { state, _ in
         subscriber.yield(state)
         if let error = state.error {
@@ -129,8 +122,24 @@ extension QueryStateKey: SharedReaderKey {
 
 // MARK: - QueryStateKeyID
 
-public struct QueryStateKeyID: Hashable, Sendable {
-  fileprivate let storeIdentifier: ObjectIdentifier
+public struct QueryStateKeyID: Sendable {
+  fileprivate let inner = Inner()
+}
+
+extension QueryStateKeyID {
+  fileprivate final class Inner: Sendable {}
+}
+
+extension QueryStateKeyID: Equatable {
+  public static func == (lhs: QueryStateKeyID, rhs: QueryStateKeyID) -> Bool {
+    lhs.inner === rhs.inner
+  }
+}
+
+extension QueryStateKeyID: Hashable {
+  public func hash(into hasher: inout Hasher) {
+    hasher.combine(ObjectIdentifier(inner))
+  }
 }
 
 // MARK: - SharedReader Init
