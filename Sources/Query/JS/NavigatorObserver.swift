@@ -16,7 +16,7 @@
   // MARK: - Shared
 
   extension NavigatorObserver {
-    public static let shared = Self(
+    public static let shared = NavigatorObserver(
       navigator: JSObject.global.navigator.object!,
       window: JSObject.global.window.object!
     )
