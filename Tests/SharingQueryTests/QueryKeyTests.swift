@@ -52,4 +52,16 @@ struct QueryKeyTests {
     expectNoDifference(value, TestQuery.value + 1)
     expectNoDifference(state.currentValue, value)
   }
+
+  @Test("Only Uses 1 Subscriber When Using QueryKey And QueryStateKey In Conjunction")
+  func onlyUsesOneSubscriberWhenUsingQueryKeyAndQueryStateKeyInConjunction() async throws {
+    @Dependency(\.queryClient) var client
+
+    let query = TestQuery().enableAutomaticFetching(when: .always(false))
+    @Shared(.query(query, initialValue: nil)) var value
+    @SharedReader(.queryState(query, initialValue: nil)) var state
+
+    let store = client.store(for: query)
+    expectNoDifference(store.subscriberCount, 1)
+  }
 }

@@ -8,6 +8,17 @@ import _TestQueries
 struct QueryStateKeyTests {
   private let client = QueryClient()
 
+  @Test("Uses Current Store State")
+  func usesCurrentStoreState() async throws {
+    let query = TestQuery().enableAutomaticFetching(when: .always(false))
+    let store = self.client.store(for: query)
+    try await store.fetch()
+
+    @SharedReader(.queryState(query, initialValue: nil, client: self.client)) var state
+
+    expectNoDifference(state.currentValue, TestQuery.value)
+  }
+
   @Test("Fetches Value")
   func fetchesValues() async throws {
     @SharedReader(.queryState(TestQuery(), initialValue: nil, client: self.client)) var state

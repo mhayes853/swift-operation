@@ -1,4 +1,5 @@
 import Dependencies
+import Foundation
 import IdentifiedCollections
 import Query
 import Sharing
@@ -78,9 +79,12 @@ extension SharedReaderKey {
 
 public struct QueryStateKey<State: QueryStateProtocol> {
   public let store: QueryStore<State>
+  private let tracker: StoreSubscriptionTracker
 
   public init(store: QueryStore<State>) {
+    @Dependency(StoreSubscriptionTracker.self) var tracker
     self.store = store
+    self.tracker = tracker
   }
 }
 
@@ -92,7 +96,7 @@ extension QueryStateKey: SharedReaderKey {
   public func load(context: LoadContext<State>, continuation: LoadContinuation<State>) {
     switch context {
     case .initialValue:
-      continuation.resumeReturningInitialValue()
+      continuation.resume(returning: self.store.state)
     case .userInitiated:
       Task<Void, Never> {
         do {
@@ -109,7 +113,8 @@ extension QueryStateKey: SharedReaderKey {
     context: LoadContext<State>,
     subscriber: SharedSubscriber<State>
   ) -> SharedSubscription {
-    let subscription = self.store.subscribe(
+    let subscription = self.tracker.subscribe(
+      to: self.store,
       with: QueryEventHandler { state, _ in
         subscriber.yield(state)
         if let error = state.error {

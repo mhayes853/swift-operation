@@ -72,4 +72,16 @@ struct MutationKeyTests {
     try await value2.mutate(with: expected)
     expectNoDifference(value1, value2)
   }
+
+  @Test("Only Uses 1 Subscriber When Using MutationKey And QueryStateKey In Conjunction")
+  func onlyUsesOneSubscriberWhenUsingMutationKeyAndQueryStateKeyInConjunction() async throws {
+    @Dependency(\.queryClient) var client
+
+    let mutation = EmptyMutation()
+    @Shared(.mutation(mutation)) var value
+    @SharedReader(.mutationState(mutation)) var state
+
+    let store = client.store(for: mutation)
+    expectNoDifference(store.subscriberCount, 1)
+  }
 }
