@@ -283,9 +283,10 @@ extension QueryStore {
       var context = context
       context.queryResultUpdateReason = .returnedFinalResult
       task.inner.withLock {
-        $0?.configuration.context = context
-        guard let task = $0, values.taskHerdId == initialHerdId else { return }
+        guard var task = $0, values.taskHerdId == initialHerdId else { return }
+        task.configuration.context.queryResultUpdateReason = .returnedFinalResult
         values.query.update(with: result, for: task)
+        task.configuration.context.queryResultUpdateReason = nil
         values.query.finishFetchTask(task)
       }
       self.subscriptions.forEach {

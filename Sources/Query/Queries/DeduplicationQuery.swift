@@ -12,20 +12,19 @@ extension QueryRequest {
   }
 
   public func deduplicated(
-    by removeDuplicates: @escaping @Sendable (QueryTaskInfo, QueryTaskInfo) -> Bool
+    by removeDuplicates: @escaping @Sendable (QueryContext, QueryContext) -> Bool
   ) -> ModifiedQuery<Self, some QueryModifier<Self>> {
     self.modifier(DeduplicationModifier(removeDuplicates: removeDuplicates))
   }
 }
 
 private final actor DeduplicationModifier<Query: QueryRequest>: QueryModifier {
-  private let removeDuplicates: @Sendable (QueryTaskInfo, QueryTaskInfo) -> Bool
+  private let removeDuplicates: @Sendable (QueryContext, QueryContext) -> Bool
 
-  private var entries = [
-    QueryTaskIdentifier: (info: QueryTaskInfo, task: Task<Query.Value, any Error>)
-  ]()
+  private var idCounter = 0
+  private var entries = [(id: Int, context: QueryContext, task: Task<Query.Value, any Error>)]()
 
-  init(removeDuplicates: @escaping @Sendable (QueryTaskInfo, QueryTaskInfo) -> Bool) {
+  init(removeDuplicates: @escaping @Sendable (QueryContext, QueryContext) -> Bool) {
     self.removeDuplicates = removeDuplicates
   }
 
@@ -34,18 +33,16 @@ private final actor DeduplicationModifier<Query: QueryRequest>: QueryModifier {
     using query: Query,
     with continuation: QueryContinuation<Query.Value>
   ) async throws -> Query.Value {
-    guard let taskInfo = context.queryRunningTaskInfo else {
-      return try await query.fetch(in: context, with: continuation)
-    }
-    let entry = self.entries.first { self.removeDuplicates($0.value.info, taskInfo) }?.value
-    if let entry {
+    if let entry = self.entries.first(where: { self.removeDuplicates($0.context, context) }) {
       return try await entry.task.cancellableValue
     } else {
+      defer { self.idCounter += 1 }
+      let id = self.idCounter
       let task = Task {
-        defer { self.entries[taskInfo.id] = nil }
+        defer { self.entries.removeAll { $0.id == id } }
         return try await query.fetch(in: context, with: continuation)
       }
-      self.entries[taskInfo.id] = (taskInfo, task)
+      self.entries.append((id, context, task))
       return try await task.cancellableValue
     }
   }
