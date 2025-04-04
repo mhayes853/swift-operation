@@ -1,8 +1,6 @@
-# ``SwiftQuery``
+# ``Query``
 
-## Overview
-
-SwiftQuery is a lightweight cross-platform library for fetching and managing asynchronous data in Swift, SwiftUI, Sharing, WASM, Linux, and more.
+A lightweight cross-platform library for fetching and managing asynchronous data in Swift, SwiftUI, Sharing, WASM, Linux, and more.
 
 ## Getting Started
 
@@ -89,6 +87,8 @@ struct PostView: View {
 ### Sharing
 
 With [Sharing](https://github.com/pointfreeco/swift-sharing), you can easily observe the state of your query using the `@Shared` property wrapper.
+
+> Note: This functionallity requires you to import the `SharingQuery` product of this package.
 
 ```swift
 import SharingQuery

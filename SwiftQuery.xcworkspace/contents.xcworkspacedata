@@ -2,6 +2,9 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:Sources/Query/Documentation.docc/Articles/InspirationAndPrinciples.md">
+   </FileRef>
+   <FileRef
       location = "self:Package.swift">
    </FileRef>
 </Workspace>
