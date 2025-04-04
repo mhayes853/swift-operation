@@ -1,5 +1,5 @@
 {
-  "originHash" : "88104427fa2b6bd07afab5051a6148c8f40328a6b054c97cf7031d2b824c1363",
+  "originHash" : "b7a7012bc2f16c243965b84805441bd35f10eb9aa9fec0b0ee5513aa9f56d1b1",
   "pins" : [
     {
       "identity" : "combine-schedulers",
@@ -71,6 +71,24 @@
       "state" : {
         "revision" : "7d2eb4ad20efb2838269645410d26b64ca48d8aa",
         "version" : "1.6.1"
+      }
+    },
+    {
+      "identity" : "swift-docc-plugin",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/swiftlang/swift-docc-plugin",
+      "state" : {
+        "revision" : "85e4bb4e1cd62cec64a4b8e769dcefdf0c5b9d64",
+        "version" : "1.4.3"
+      }
+    },
+    {
+      "identity" : "swift-docc-symbolkit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/swiftlang/swift-docc-symbolkit",
+      "state" : {
+        "revision" : "b45d1f2ed151d057b54504d653e0da5552844e34",
+        "version" : "1.0.0"
       }
     },
     {
