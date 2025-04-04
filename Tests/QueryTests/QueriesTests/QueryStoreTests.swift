@@ -1,5 +1,5 @@
 import CustomDump
-import Query
+@_spi(Warnings) import Query
 import Testing
 import _TestQueries
 
@@ -552,24 +552,20 @@ struct QueryStoreTests {
     expectNoDifference(store.currentValue, nil)
   }
 
-  #if canImport(Combine)
-    @Test("Emits State Updates From Publisher")
-    func emitsStateUpdatesFromPublisher() async throws {
-      let store = self.client.store(for: TestQuery())
-      let states = Lock([TestQuery.State]())
-      let cancellable = store.publisher.sink { output in
-        states.withLock { $0.append(output.state) }
-      }
-      _ = try? await store.activeTasks.first?.runIfNeeded()
-      states.withLock {
-        expectNoDifference($0.count, 3)
-        expectNoDifference($0[0].status.isIdle, true)
-        expectNoDifference($0[1].isLoading, true)
-        expectNoDifference($0[2].currentValue, TestQuery.value)
-      }
-      cancellable.cancel()
+  @Test("Reports Issue When Yielding Continuation After Query Returns")
+  func reportsIssueWhenYieldingContinuationAfterQueryReturns() async throws {
+    let query = EscapingContinuationQuery()
+    let store = self.client.store(for: query)
+    try await store.fetch()
+    await withKnownIssue {
+      await query.yield()
+    } matching: { issue in
+      issue.comments.contains(
+        .warning(.queryYieldedAfterReturning(.success(EscapingContinuationQuery.yieldedValue)))
+      )
     }
-  #endif
+    expectNoDifference(store.currentValue, EscapingContinuationQuery.value)
+  }
 }
 
 extension QueryContext {

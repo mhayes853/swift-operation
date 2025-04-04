@@ -223,7 +223,7 @@ extension QueryStore {
       config.context.currentQueryStore = OpaqueQueryStore(erasing: self)
       config.name =
         config.name ?? "\(typeName(Self.self, qualified: true, genericsAbbreviated: false)) Task"
-      let task = LockedBox<QueryTask<State.QueryValue>?>(value: nil)
+      let task = LockedBox<TaskState>(value: .initial)
       var inner = self.queryTask(
         configuration: config,
         initialHerdId: values.taskHerdId,
@@ -231,7 +231,7 @@ extension QueryStore {
       )
       task.inner.withLock { newTask in
         values.query.scheduleFetchTask(&inner)
-        newTask = inner
+        newTask = .running(inner)
       }
       return inner
     }
@@ -240,11 +240,14 @@ extension QueryStore {
   private func queryTask(
     configuration: QueryTaskConfiguration,
     initialHerdId: Int,
-    using task: LockedBox<QueryTask<State.QueryValue>?>
+    using task: LockedBox<TaskState>
   ) -> QueryTask<State.QueryValue> {
     QueryTask<State.QueryValue>(configuration: configuration) { info in
       self.subscriptions.forEach { $0.onFetchingStarted?(info.configuration.context) }
-      defer { self.subscriptions.forEach { $0.onFetchingEnded?(info.configuration.context) } }
+      defer {
+        self.subscriptions.forEach { $0.onFetchingEnded?(info.configuration.context) }
+        task.inner.withLock { $0 = .finished }
+      }
       do {
         let value = try await self.query.fetch(
           in: info.configuration.context,
@@ -275,7 +278,7 @@ extension QueryStore {
 
   private func finishTask(
     with result: Result<State.QueryValue, Error>,
-    task: LockedBox<QueryTask<State.QueryValue>?>,
+    task: LockedBox<TaskState>,
     initialHerdId: Int,
     context: QueryContext
   ) {
@@ -283,7 +286,7 @@ extension QueryStore {
       var context = context
       context.queryResultUpdateReason = .returnedFinalResult
       task.inner.withLock {
-        guard var task = $0, values.taskHerdId == initialHerdId else { return }
+        guard case .running(var task) = $0, values.taskHerdId == initialHerdId else { return }
         task.configuration.context.queryResultUpdateReason = .returnedFinalResult
         values.query.update(with: result, for: task)
         task.configuration.context.queryResultUpdateReason = nil
@@ -296,7 +299,7 @@ extension QueryStore {
   }
 
   private func queryContinuation(
-    task: LockedBox<QueryTask<State.QueryValue>?>,
+    task: LockedBox<TaskState>,
     initialHerdId: Int,
     context: QueryContext
   ) -> QueryContinuation<State.QueryValue> {
@@ -305,12 +308,24 @@ extension QueryStore {
       context.queryResultUpdateReason = .yieldedResult
       self.editValuesWithStateChangeEvent(in: context) { [context] values in
         task.inner.withLock {
-          guard let task = $0, values.taskHerdId == initialHerdId else { return }
-          values.query.update(with: result, for: task)
+          switch $0 {
+          case .finished:
+            reportWarning(.queryYieldedAfterReturning(result))
+          case .running(let task) where values.taskHerdId == initialHerdId:
+            values.query.update(with: result, for: task)
+            self.subscriptions.forEach { $0.onResultReceived?(result, context) }
+          default:
+            break
+          }
         }
-        self.subscriptions.forEach { $0.onResultReceived?(result, context) }
       }
     }
+  }
+
+  private enum TaskState {
+    case initial
+    case running(QueryTask<State.QueryValue>)
+    case finished
   }
 }
 
@@ -361,5 +376,21 @@ extension QueryContext {
 
   private enum CurrentQueryStoreKey: Key {
     static var defaultValue: OpaqueQueryStore? { nil }
+  }
+}
+
+// MARK: - Warnings
+
+extension QueryWarning {
+  public static func queryYieldedAfterReturning<T>(_ result: Result<T, any Error>) -> Self {
+    """
+    A query yielded a result to its continuation after returning.
+
+        Result: \(result)
+
+    This will not update the state of the query inside its QueryStore. Avoid escaping \
+    `QueryContinuation`s that are passed to a query. If you would like to yield a result \
+    after returning, consider using a `QueryController` instead.
+    """
   }
 }

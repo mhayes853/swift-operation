@@ -353,6 +353,33 @@ package struct ContinuingValueThenErrorQuery: QueryRequest, Hashable {
   }
 }
 
+// MARK: - EscapingContinuationQuery
+
+package final actor EscapingContinuationQuery: QueryRequest {
+  package static let value = "the end"
+  package static let yieldedValue = "the beginning"
+
+  private var continuation: QueryContinuation<String>?
+
+  package init() {}
+
+  package nonisolated var path: QueryPath {
+    [ObjectIdentifier(self)]
+  }
+
+  package func fetch(
+    in context: QueryContext,
+    with continuation: QueryContinuation<String>
+  ) async throws -> String {
+    self.continuation = continuation
+    return Self.value
+  }
+
+  package func yield() {
+    self.continuation?.yield(Self.yieldedValue)
+  }
+}
+
 // MARK: - TestInfiniteQuery
 
 package struct EmptyInfiniteQuery: InfiniteQueryRequest {
