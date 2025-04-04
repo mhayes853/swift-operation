@@ -9,7 +9,7 @@ import Sharing
 extension SharedReaderKey {
   public static func queryState<Query: QueryRequest>(
     _ query: Query,
-    initialValue: Query.State.StateValue,
+    initialValue: Query.State.StateValue = nil,
     client: QueryClient? = nil
   ) -> Self
   where Self == QueryStateKey<Query.State>, Query.State == QueryState<Query.Value?, Query.Value> {

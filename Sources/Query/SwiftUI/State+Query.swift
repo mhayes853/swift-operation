@@ -26,7 +26,7 @@
         set { self = newValue }
       }
 
-      public init(wrappedValue: Value, query: Request, client: QueryClient? = nil) {
+      public init(wrappedValue: Value, _ query: Request, client: QueryClient? = nil) {
         self.query = query
         self.clientOverride = client
         self._state = State(initialValue: wrappedValue)
@@ -37,26 +37,26 @@
   // MARK: - Query Init
 
   extension State.Query {
-    public init<V>(query: Request, initialValue: V? = nil, client: QueryClient? = nil)
+    public init<V>(_ query: Request, initialValue: V? = nil, client: QueryClient? = nil)
     where Request.Value == V, Value == QueryState<V?, V> {
       self.init(
         wrappedValue: QueryState(initialValue: initialValue),
-        query: query,
+        query,
         client: client
       )
     }
 
-    public init<Query: QueryRequest>(query: DefaultQuery<Query>, client: QueryClient? = nil)
+    public init<Query: QueryRequest>(_ query: DefaultQuery<Query>, client: QueryClient? = nil)
     where Value == QueryState<Query.Value, Query.Value>, Request == DefaultQuery<Query> {
       self.init(
         wrappedValue: QueryState(initialValue: query.defaultValue),
-        query: query,
+        query,
         client: client
       )
     }
 
     public init(
-      query: Request,
+      _ query: Request,
       initialValue: Request.State.StateValue = [],
       client: QueryClient? = nil
     ) where Request: InfiniteQueryRequest {
@@ -65,13 +65,13 @@
           initialValue: initialValue,
           initialPageId: query.initialPageId
         ),
-        query: query,
+        query,
         client: client
       )
     }
 
     public init<Query: InfiniteQueryRequest>(
-      query: DefaultInfiniteQuery<Query>,
+      _ query: DefaultInfiniteQuery<Query>,
       client: QueryClient? = nil
     ) where Value == Query.State, Request == DefaultInfiniteQuery<Query> {
       self.init(
@@ -79,14 +79,14 @@
           initialValue: query.defaultValue,
           initialPageId: query.initialPageId
         ),
-        query: query,
+        query,
         client: client
       )
     }
 
-    public init<Arguments: Sendable, V: Sendable>(mutation: Request, client: QueryClient? = nil)
+    public init<Arguments: Sendable, V: Sendable>(_ mutation: Request, client: QueryClient? = nil)
     where Request: MutationRequest<Arguments, V> {
-      self.init(wrappedValue: MutationState(), query: mutation, client: client)
+      self.init(wrappedValue: MutationState(), mutation, client: client)
     }
   }
 

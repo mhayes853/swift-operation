@@ -11,7 +11,7 @@
   }
 
   struct QueryView: View {
-    @State.Query(query: TestStateQuery()) private var query
+    @State.Query(TestStateQuery()) private var query
 
     let inspection = Inspection<Self>()
 
@@ -22,9 +22,9 @@
           Text("Idle").id(TestQueryStatusID.idle)
         case .loading:
           Text("Loading").id(TestQueryStatusID.loading)
-        case let .result(.success(data)):
+        case .result(.success(let data)):
           Text("Success: \(data)").id(TestQueryStatusID.success(data))
-        case let .result(.failure(error as TestStateQuery.SomeError)):
+        case .result(.failure(let error as TestStateQuery.SomeError)):
           Text("Failure: \(error.localizedDescription)")
             .id(TestQueryStatusID.error(error))
         default:

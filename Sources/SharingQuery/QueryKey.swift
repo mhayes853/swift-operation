@@ -7,7 +7,7 @@ import Sharing
 extension SharedKey {
   public static func query<Query: QueryRequest>(
     _ query: Query,
-    initialValue: Query.State.StateValue,
+    initialValue: Query.State.StateValue = nil,
     client: QueryClient? = nil
   ) -> Self
   where Self == QueryKey<Query.State>, Query.State == QueryState<Query.Value?, Query.Value> {
