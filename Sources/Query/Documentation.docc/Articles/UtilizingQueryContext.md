@@ -40,7 +40,7 @@ struct PlayerQuery: QueryRequest, Hashable {
 
 Yet the power of `QueryContext` is greater.
 
-## Adding Custom Properties to `QueryContext`
+## Adding Custom Properties to QueryContext
 
 `QueryContext` behaves a lot like SwiftUI's `EnvironmentValues`, and you can extend it with custom properties in a very similar manner to `EnvironmentValues`.
 
