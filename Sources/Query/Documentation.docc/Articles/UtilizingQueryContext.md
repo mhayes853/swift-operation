@@ -1,4 +1,4 @@
-# Utilizing the `QueryContext`
+# Utilizing the QueryContext
 
 Learn how to best use the `QueryContext` to facilitate dependency injection, customizing query behavior, and much more.
 
