@@ -1,0 +1,296 @@
+# Utilizing the `QueryContext`
+
+Learn how to best use the `QueryContext` to facilitate dependency injection, customizing query behavior, and much more.
+
+## Overview
+
+The `QueryContext` is a powerful tool utilized by many types in the library. In fact, every `QueryRequest` you create gets access to it.
+
+```swift
+struct PlayerQuery: QueryRequest, Hashable {
+  let id: Int
+
+  func fetch(
+    in context: QueryContext,
+    using continuation: QueryContinuation<Player>
+  ) async throws -> Player {
+    // We can use the context in here...
+  }
+}
+```
+
+Inside a query, the `QueryContext` provides many different properties for the current execution context. For instance, you can access the current retry index allowing you to adjust your fetching behavior based on the number of retries.
+
+```swift
+struct PlayerQuery: QueryRequest, Hashable {
+  let id: Int
+
+  func fetch(
+    in context: QueryContext,
+    using continuation: QueryContinuation<Player>
+  ) async throws -> Player {
+    if context.retryIndex > 0 {
+      // Fetch considering how many times we've retried...
+    } else {
+      // Fetch normally...
+    }
+  }
+}
+```
+
+Yet the power of `QueryContext` is greater.
+
+## Adding Custom Properties to `QueryContext`
+
+`QueryContext` behaves a lot like SwiftUI's `EnvironmentValues`, and you can extend it with custom properties in a very similar manner to `EnvironmentValues`.
+
+```swift
+import Query
+import SwiftUI
+
+// 🟢 SwiftUI
+
+extension EnvironmentValues {
+  var customProperty: String {
+    get { self[CustomPropertyKey.self] }
+    set { self[CustomPropertyKey.self] = newValue }
+  }
+
+  private enum CustomPropertyKey: EnvironmentKey {
+    static let defaultValue: String = "hello!"
+  }
+}
+
+// 🟢 QueryContext
+
+extension QueryContext {
+  var customProperty: String {
+    get { self[CustomPropertyKey.self] }
+    set { self[CustomPropertyKey.self] = newValue }
+  }
+
+  private enum CustomPropertyKey: Key {
+    static let defaultValue: String = "hello!"
+  }
+}
+```
+
+Now you can access your custom property inside of queries.
+
+```swift
+struct PlayerQuery: QueryRequest, Hashable {
+  let id: Int
+
+  func fetch(
+    in context: QueryContext,
+    using continuation: QueryContinuation<Player>
+  ) async throws -> Player {
+    if context.customProperty == "hello!" {
+      // Fetch...
+    } else {
+      // Fetch Differently...
+    }
+  }
+}
+```
+
+As can be seen here, we're able to customize the behavior of `PlayerQuery` based on a custom context property. Utilizing this technique allows you to use the `QueryContext` in a variety of ways, some of which we will talk about later.
+
+The `defaultValue` of a `QueryContext.Key` is lazily evaluated by the `QueryContext` instance. Additionally, the default value is only computed once, and then cached in the context. In other words, the following code will only evaluate the default value once per context.
+
+```swift
+extension QueryContext {
+  var myProperty: String {
+    get { self[MyPropertyKey.self] }
+    set { self[MyPropertyKey.self] = newValue }
+  }
+
+  private enum MyPropertyKey: Key {
+    static var defaultValue: String {
+      someExpensiveComputation() // Only computed once per context instance.
+    }
+  }
+}
+```
+
+Provided that you do not make a brand new `QueryContext` instance, this default value will be cached in the context, and will be present in any other contexts that are mutated from the base context. In other words, the default value will also be cached in the mutated context of this example.
+
+```swift
+let context = QueryContext()
+print(context.myProperty) // Computes and caches the default value.
+
+var context2 = context
+context2.someOtherProperty = "world!"
+print(context2.myProperty) // Utilizes the cached default value from the original context.
+```
+
+> Note: `QueryContext` supports copy on write semantics similar to `Array` and `Dictionary`. In other words `context2.someOtherProperty != context.someOtherProperty` in the above example.
+
+Now that you have a basic understanding of how to add custom properties to `QueryContext`, let's explore how we can utilize this customization to implement more advanced features.
+
+## Setting Up The Context
+
+The `QueryRequest` protocol has an optional requirement to setup a `QueryContext` in a way that the query likes. This method is ran a single time when a `QueryStore` for the query is initialized.
+
+```swift
+struct SomeQuery: QueryRequest, Hashable {
+  func setup(context: inout QueryContext) {
+    context.customProperty = "new value"
+  }
+
+  // ...
+}
+```
+
+When the query runs, the value of `customProperty` will be `"new value"`.
+
+This strategy is used for many query modifiers. For instance, retries do this to setup the context with the maximum number of retries allowed for the query. By setting this value in the context, it's possible to disable retries like so.
+
+```swift
+struct NoRetryQuery: QueryRequest, Hashable {
+  func setup(context: inout QueryContext) {
+    context.maxRetries = 0 // Disable retries for this query.
+  }
+
+  // ...
+}
+```
+
+## Dependency Injection
+
+While making a query like this is easy.
+
+```swift
+struct PostQuery: QueryRequest, Hashable {
+  let id: Int
+
+  func fetch(
+    in context: QueryContext,
+    with continuation: QueryContinuation<Post>
+  ) async throws -> Post {
+    let url = URL(string: "https://jsonplaceholder.typicode.com/posts/\(id)")!
+    let (data, _) = try await URLSession.shared.data(url: url)
+    return try JSONDecoder().decode(Post.self, from: data)
+  }
+}
+```
+
+Writing reliable and deterministic tests for code that utilizes this query is not as straightforward. Since we utilize `URLSession.shared` here, we are essentially forced to make a real network call that won't return deterministic data every time we try to test code that utilizes this query. Sometimes, this is a fine as we may want to test end-to-end flows. Yet often we may want to simulate failures, or return mock data that tests a specific edge case of the code utilizing this query.
+
+A simple start to this would be to make a custom context property for `URLSession`.
+
+```swift
+extension QueryContext {
+  var urlSession: URLSession {
+    get { self[URLSessionKey.self] }
+    set { self[URLSessionKey.self] = newValue }
+  }
+
+  private enum URLSessionKey: Key {
+    static let defaultValue = URLSession.shared
+  }
+}
+```
+
+Then we can make a simple change to `PostQuery` to make it not dependent on the `URLSession` singleton.
+
+```diff
+struct PostQuery: QueryRequest, Hashable {
+  let id: Int
+
+  func fetch(
+    in context: QueryContext,
+    with continuation: QueryContinuation<Post>
+  ) async throws -> Post {
+    let url = URL(string: "https://jsonplaceholder.typicode.com/posts/\(id)")!
+-    let (data, _) = try await URLSession.shared.data(url: url)
++    let (data, _) = try await context.urlSession.data(url: url)
+    return try JSONDecoder().decode(Post.self, from: data)
+  }
+}
+```
+
+If we want to return some mock data for testing purposes, we can now leverage `URLProtocol` with a custom `URLSession` instance in our tests.
+
+```swift
+@Test
+func returnsPost() async throws {
+  let store = QueryStore.detached(query: PostQuery(id: 1), initialValue: nil)
+  let config = URLSessionConfiguration.ephemeral
+  config.protocolClasses = [MockPostURLProtocol.self]
+  store.context.urlSession = URLSession(configuration: config)
+
+  let post = try await store.fetch()
+  let expectedPost = Post(
+    id: 1,
+    userId: 1,
+    title: "Mock Title",
+    body: "This is the body of the mock post."
+  )
+  #expect(post == expectedPost)
+}
+
+class MockPostURLProtocol: URLProtocol {
+  override class func canInit(with request: URLRequest) -> Bool {
+    true
+  }
+
+  override class func canonicalRequest(for request: URLRequest) -> URLRequest {
+    request
+  }
+
+  override func startLoading() {
+    let mockJSON = """
+    {
+      "userId": 1,
+      "id": 1,
+      "title": "Mock Title",
+      "body": "This is the body of the mock post."
+    }
+    """
+
+    let data = mockJSON.data(using: .utf8)!
+    let response = HTTPURLResponse(
+      url: request.url!,
+      statusCode: 200,
+      httpVersion: nil,
+      headerFields: ["Content-Type": "application/json"]
+    )!
+    client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+    client?.urlProtocol(self, didLoad: data)
+    client?.urlProtocolDidFinishLoading(self)
+  }
+
+  override func stopLoading() {}
+}
+```
+
+### Overriding Time
+
+The `valueLastUpdatedAt` and `errorLastUpdatedAt` properties on `QueryStateProtocol` conformances are computed using the `QueryClock` protocol. The clock lives on the context, and can be overridden. Therefore, if you want to ensure a deterministic date calculations for various reasons (time freeze, testing, etc.), you can do the following.
+
+```swift
+let store = QueryStore.detached(query: PostQuery(id: 1), initialValue: nil)
+store.context.queryClock = .custom { Date(timeIntervalSince1970: 1234567890) }
+
+try await store.fetch()
+
+#expect(store.valueLastUpdatedAt == Date(timeIntervalSince1970: 1234567890))
+```
+
+### Overriding Delays
+
+The `QueryDelayer` protocol is used to artificially delay queries in the case of retries. By default, query retries utilize [Fibonacci Backoff](https://thuc.space/posts/retry_strategies/#fibonacci-backoff) where the query will be artificially delayed by an increasing amount of time based on the current retry index.
+
+For testing, this delay may be unacceptable, but thankfully you can override the `QueryDelayer` on the context to remove delays.
+
+```swift
+let store = QueryStore.detached(query: PostQuery(id: 1), initialValue: nil)
+store.context.queryDelayer = .noDelay
+
+try await store.fetch() // Will incur no retry delays.
+```
+
+## Conclusion
+
+In this article, we explored how to utilize the `QueryContext` to customize query behavior, and even use it as a tool for dependency injection within queries. `QueryContext` can be extended with custom properties like the SwiftUI `EnvironmentValues`, and queries even have the opportunity to setup the context before fetching.
