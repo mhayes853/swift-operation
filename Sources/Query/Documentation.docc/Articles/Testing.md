@@ -4,16 +4,17 @@ Learn how to best use the library in your app's test suite.
 
 ## Overview
 
-Given that testing is sometimes considered a crucial practice, it would be wise to test how your queries interact with your app. In general, reliably testing code that utilizes async await can be challenging due to the challenges of managing the time of a Task's execution. However, depending on your usage, you can utilize the tools in the library to make this process easier.
+Given that testing is only sometimes considered a crucial software development practice, it would be wise to test how your queries interact with your app. In general, reliably testing code that utilizes async await can be challenging due to the challenges of managing the time of a Task's execution. However, depending on your usage, you can utilize the tools in the library to make this process easier.
 
-By default, query retries are disabled when running queries in a test environment, additionally no backoff or delays are applied to any query.
+If your queries rely on the default initializer of `QueryClient`, then retries, backoff, artificial delays, refetching on network reconnection, and refetching on the app reentering from the background are disabled when running queries in a test environment.
 
 Let's take a look at how we can test queries depending on your usage of the library.
 
-## Sharing
+## Reliable and Deterministic Tests
 
-If you utilize the Sharing library to observe your query's state, your code may look like this.
+Depending on your usage of the library, you may implement a class `SomeModel` that utilizes `SomeQuery` in the following ways.
 
+**Sharing**
 ```swift
 import Observation
 import SharingQuery
@@ -26,84 +27,21 @@ final class SomeModel {
 }
 ```
 
-In a test suite, your first instinct may be to assert on `value`. However, `value` will likely be in a loading state once the test begins, and it's difficult to determine when it will have been loaded.
-
-```swift
-@MainActor
-@Test
-func valueLoads() {
-  let model = SomeModel()
-  #expect(model.$value.isLoading)
-  #expect(model.value == nil)
-
-  // Wait for value to load...
-
-  #expect(!model.$value.isLoading)
-  #expect(model.value == "loaded")
-}
-```
-
-The main issue here is the "Wait for value to load..." comment as it's not exactly clear when `model.value` will have been loaded. To get around this, you can technically reach into the `QueryStore` for `SomeQuery`, and await the first active task in the store.
-
-```swift
-@MainActor
-@Test
-func valueLoads() async throws {
-  @Dependency(\.queryClient) var client
-
-  let model = SomeModel()
-  #expect(model.$value.isLoading)
-  #expect(model.value == nil)
-
-  _ = try await client.store(for: SomeQuery()).activeTasks.first?.runIfNeeded()
-
-  #expect(!model.$value.isLoading)
-  #expect(model.value == "loaded")
-}
-```
-
-This will work, yet it's a quite annoying syntax.
-
-Another approach is to override the defaults applied to each query in the `QueryClient` such that automatic fetching is disabled. That way, you can manually trigger the query's execution. This can be done by overriding `@Dependency(\.queryClient)` with a client that disables automatic fetching.
-
-```swift
-@MainActor
-@Test(.dependencies {
-  $0.queryClient = QueryClient(
-    storeCreator: .defaults(retryLimit: 0, queryEnableAutomaticFetchingCondition: .always(false))
-  )
-})
-func valueLoads() async throws {
-  let model = SomeModel()
-  #expect(model.$value.isLoading)
-  #expect(model.value == nil)
-
-  try await model.$value.load()
-
-  #expect(!model.$value.isLoading)
-  #expect(model.value == "loaded")
-}
-```
-
-Now you can manually trigger execution of the query, ensuring that we have a deterministic way to assert on the model's value.
-
-## Combine
-
-If you utilize combine to observe your query's state, your code may look like this.
-
+**Combine**
 ```swift
 import Query
 import Combine
 
 @MainActor
-final class SomeViewModel: ObservableObject {
+final class SomeModel: ObservableObject {
   @Published var value: String?
   private var cancellables = Set<AnyCancellable>()
 
-  init(client: QueryClient) {
-    let store = client.store(for: SomeStringQuery())
+  init(client: QueryClient, scheduler: some Scheduler = DispatchQueue.main) {
+    let store = client.store(for: SomeQuery())
     store
       .publisher
+      .receive(on: scheduler)
       .sink { [weak self] output in
         self?.value = output.state.currentValue
       }
@@ -112,72 +50,17 @@ final class SomeViewModel: ObservableObject {
 }
 ```
 
-In a test suite, your first instinct may be to assert on `value`. However, `value` will likely be in a loading state once the test begins, and it's difficult to determine when it will have been loaded.
-
+**Pure Swift (With Observation)**
 ```swift
-@MainActor
-@Test
-func valueLoads() {
-  let model = SomeViewModel(client: QueryClient())
-  #expect(model.value == nil)
-
-  // Wait for value to load...
-
-  #expect(model.value == "loaded")
-}
-```
-
-The main issue here is the "Wait for value to load..." comment as it's not exactly clear when `model.value` will have been loaded. To get around this, you can technically reach into the `QueryStore` for `SomeQuery`, and await the first active task in the store.
-
-```swift
-@MainActor
-@Test
-func valueLoads() async throws {
-  let client = QueryClient()
-
-  let model = SomeViewModel(client: client)
-  #expect(model.value == nil)
-
-  _ = try await client.store(for: SomeQuery()).activeTasks.first?.runIfNeeded()
-
-  #expect(model.value == "loaded")
-}
-```
-
-This will work, yet it's a quite annoying syntax.
-
-Another approach is to override the defaults applied to each query in the `QueryClient` such that automatic fetching is disabled. That way, you can manually trigger the query's execution.
-
-```swift
-@MainActor
-@Test
-func valueLoads() async throws {
-  let client = QueryClient(
-    storeCreator: .defaults(retryLimit: 0, queryEnableAutomaticFetchingCondition: .always(false))
-  )
-
-  let model = SomeViewModel(client: client)
-  #expect(model.value == nil)
-
-  try await client.store(for: SomeQuery()).fetch()
-
-  #expect(model.value == "loaded")
-}
-```
-
-Now you can manually trigger execution of the query, ensuring that we have a deterministic way to assert on the model's value.
-
-## Pure Swift
-
-If you utilize `QueryStore` directly to observe your query's state, your code may look like this.
-
-```swift
+import Observation
 import Query
 
 @MainActor
-final class SomeClass {
+@Observable
+final class SomeModel {
   var value: String?
-  private var subscriptions = Set<QuerySubscription>()
+
+  @ObservationIgnored private var subscriptions = Set<QuerySubscription>()
 
   init(client: QueryClient) {
     let store = client.store(for: SomeQuery())
@@ -195,11 +78,13 @@ final class SomeClass {
 
 In a test suite, your first instinct may be to assert on `value`. However, `value` will likely be in a loading state once the test begins, and it's difficult to determine when it will have been loaded.
 
+> Note: If you're code follows the Sharing example, you will override `@Dependency(\.queryClient)` instead of passing a `QueryClient` to `SomeModel`'s initializer.
+
 ```swift
-@MainActor
 @Test
+@MainActor
 func valueLoads() {
-  let model = SomeClass(client: QueryClient())
+  let model = SomeModel(client: QueryClient())
   #expect(model.value == nil)
 
   // Wait for value to load...
@@ -211,12 +96,12 @@ func valueLoads() {
 The main issue here is the "Wait for value to load..." comment as it's not exactly clear when `model.value` will have been loaded. To get around this, you can technically reach into the `QueryStore` for `SomeQuery`, and await the first active task in the store.
 
 ```swift
-@MainActor
 @Test
+@MainActor
 func valueLoads() async throws {
   let client = QueryClient()
 
-  let model = SomeClass(client: client)
+  let model = SomeModel(client: client)
   #expect(model.value == nil)
 
   _ = try await client.store(for: SomeQuery()).activeTasks.first?.runIfNeeded()
@@ -227,17 +112,24 @@ func valueLoads() async throws {
 
 This will work, yet it's a quite annoying syntax.
 
-Another approach is to override the defaults applied to each query in the `QueryClient` such that automatic fetching is disabled. That way, you can manually trigger the query's execution.
+Another approach is to override the defaults applied to each query in the `QueryClient` such that automatic fetching is disabled. That way, you can manually trigger the query's execution. You can do this by providing a custom value to the `storeCreator` parameter in `QueryClient`'s initializer.
 
 ```swift
-@MainActor
 @Test
+@MainActor
 func valueLoads() async throws {
   let client = QueryClient(
-    storeCreator: .defaults(retryLimit: 0, queryEnableAutomaticFetchingCondition: .always(false))
+    storeCreator: .default(
+      retryLimit: 0,
+      retryBackoff: .noBackoff,
+      retryDelayer: .noDelay,
+      queryEnableAutomaticFetchingCondition: .always(false),
+      networkObserver: nil,
+      focusCondition: nil
+    )
   )
 
-  let model = SomeClass(client: client)
+  let model = SomeModel(client: client)
   #expect(model.value == nil)
 
   try await client.store(for: SomeQuery()).fetch()

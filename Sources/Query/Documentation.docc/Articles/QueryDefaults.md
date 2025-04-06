@@ -56,7 +56,7 @@ You can configure these defaults by utilizing the `storeCreator` parameter in th
 
 ```swift
 let client = QueryClient(
-  storeCreator: .defaults(retryLimit: 10, networkObserver: MockNetworkObserver())
+  storeCreator: .default(retryLimit: 10, networkObserver: MockNetworkObserver())
 )
 ```
 
