@@ -11,7 +11,6 @@ let package = Package(
     .library(name: "SharingQuery", targets: ["SharingQuery"]),
     .library(name: "Query", targets: ["Query"])
   ],
-  traits: ["observation"],
   dependencies: [
     .package(url: "https://github.com/pointfreeco/swift-sharing", from: "2.4.0"),
     .package(url: "https://github.com/pointfreeco/swift-custom-dump", from: "1.3.3"),
@@ -21,7 +20,6 @@ let package = Package(
     ),
     .package(url: "https://github.com/pointfreeco/xctest-dynamic-overlay", from: "1.4.3"),
     .package(url: "https://github.com/swiftwasm/JavaScriptKit", from: "0.26.1"),
-    .package(url: "https://github.com/pointfreeco/swift-navigation", from: "2.3.0"),
     .package(url: "https://github.com/nalexn/ViewInspector", from: "0.10.1"),
     .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.4.3")
   ],
@@ -35,11 +33,6 @@ let package = Package(
       dependencies: [
         .product(name: "IssueReporting", package: "xctest-dynamic-overlay"),
         .product(name: "IdentifiedCollections", package: "swift-identified-collections"),
-        .product(
-          name: "SwiftNavigation",
-          package: "swift-navigation",
-          condition: .when(traits: ["observation"])
-        ),
         .product(
           name: "JavaScriptKit",
           package: "JavaScriptKit",

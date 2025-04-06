@@ -109,32 +109,7 @@ You can learn more about using queries with Sharing [here](TODO).
 
 ### In a View Model
 
-If you're using a pattern like MVVM with the Observation framework, you can nest a `QueryModel` directly inside your view model to have access to the query's state.
-
-> Note: This functionallity requires you to enable the `observation` trait on this package.
-
-```swift
-import Observation
-
-@MainActor
-@Observable
-final class PostViewModel {
-  var post: QueryModel<PostQuery.State>
-
-  // ...
-
-  init(id: Int, client: QueryClient) {
-    // This will begin fetching the post.
-    self.post = client.model(for: PostQuery(id: id))
-  }
-
-  // ...
-}
-```
-
-#### Pre-Observation Framework
-
-If you want to observe your query in view model that pre-dates the Observation framework, or an `ObservableObject`, you can utilize the built-in combine publisher on the `QueryStore`.
+If you want to observe your query in view model, you can utilize the built-in combine publisher on the `QueryStore`.
 
 ```swift
 import Combine
@@ -150,7 +125,8 @@ final class PostViewModel: ObservableObject {
 
   init(id: Int, client: QueryClient) {
     // This will begin fetching the post.
-    client.store(for: PostQuery(id: id))
+    let store = client.store(for: PostQuery(id: id))
+    store
       .publisher
       .sink { [weak self] output in
         self?.post = output.state
