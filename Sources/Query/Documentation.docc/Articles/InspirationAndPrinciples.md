@@ -4,7 +4,7 @@ Learn about what inspired the creation of this library, and it's core design pri
 
 ## Inspirations
 
-This library was mainly inspired by the popular [Tanstack Query](https://tanstack.com/query/latest) in the JavaScript ecosystem, [Sharing](https://github.com/pointfreeco/swift-sharing), and [SharingGRDB](https://github.com/pointfreeco/sharing-grdb).
+This library was mainly inspired by the popular [Tanstack Query](https://tanstack.com/query/latest) library in the JavaScript ecosystem, [Sharing](https://github.com/pointfreeco/swift-sharing), and [SharingGRDB](https://github.com/pointfreeco/sharing-grdb).
 
 ## History
 
