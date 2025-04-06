@@ -35,9 +35,9 @@ struct Player: Codable, FetchableRecord, MutablePersistableRecord {
 struct AllPlayersByName: FetchKeyRequest {
   func fetch(_ db: Database) throws -> [Player] {
     try Player.fetchAll(
-	  db,
-	  sql: "SELECT * FROM players ORDER BY name DESC",
-	  arguements: []
+      db,
+      sql: "SELECT * FROM players ORDER BY name DESC",
+      arguements: []
     )
   }
 }
