@@ -83,16 +83,15 @@ private struct SendFriendRequestMutation: MutationRequest, Hashable {
     for (_, store) in client.stores(matching: ["user-friends"]) {
       guard let store = store.base as? QueryStore<UserFriendsQuery.State> else { continue }
       let pages = store.currentValue.map { page in
-        InfiniteQueryPage(
-          id: page.id,
-          value: page.value.map { user in
-            var user = user
-            if user.id == arguments.userId {
-              user.relationship = .friendRequestSent
-            }
-            return user
+        var page = page
+        page.value = page.value.map { user in
+          var user = user
+          if user.id == arguments.userId {
+            user.relationship = .friendRequestSent
           }
-        )
+          return user
+        }
+        return page
       }
       store.currentValue = InfiniteQueryPages(uniqueElements: pages)
     }

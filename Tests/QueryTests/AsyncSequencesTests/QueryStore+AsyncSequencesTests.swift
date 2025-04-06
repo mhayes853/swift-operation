@@ -11,11 +11,11 @@ struct QueryStoreAsyncSequencesTests {
   func emitsStateUpdatesFromSequence() async throws {
     let store = self.client.store(for: TestQuery())
     let task = Task {
-      try await store.states.prefix(3).reduce(into: [TestQuery.State]()) { $0.append($1.state) }
+      await store.states.prefix(3).reduce(into: [TestQuery.State]()) { $0.append($1.state) }
     }
     await Task.megaYield()
     _ = try? await store.activeTasks.first?.runIfNeeded()
-    let value = try await task.value
+    let value = await task.value
     expectNoDifference(value.count, 3)
     expectNoDifference(value[0].status.isIdle, true)
     expectNoDifference(value[1].isLoading, true)
