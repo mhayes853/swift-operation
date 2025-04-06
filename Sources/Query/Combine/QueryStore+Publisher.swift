@@ -19,7 +19,7 @@
             conduit.send(Output(state: state, context: context))
           }
         )
-        subscriber.receive(subscription: subscription)
+        subscriber.receive(subscription: CombineQuerySubscription(subscription))
       }
     }
 
