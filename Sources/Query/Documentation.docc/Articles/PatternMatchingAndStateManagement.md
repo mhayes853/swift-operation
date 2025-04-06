@@ -29,6 +29,7 @@ struct UserFriendsQuery: InfiniteQueryRequest, Hashable {
   typealias PageValue = [User]
 
   let userId: Int
+  let initialPageId = 0
 
   func pageId(
     after page: InfiniteQueryPage<Int, [User]>,
@@ -48,6 +49,8 @@ struct UserFriendsQuery: InfiniteQueryRequest, Hashable {
 }
 
 struct SendFriendRequestMutation: MutationRequest, Hashable {
+  typealias Value = Void
+
   struct Arguments: Sendable {
     let userId: Int
   }
@@ -72,9 +75,7 @@ When a user sends a friend request to a user, we'll want to update the friends l
 
 ```swift
 struct SendFriendRequestMutation: MutationRequest, Hashable {
-  struct Arguments: Sendable {
-    let userId: Int
-  }
+  // ...
 
   func mutate(
     with arguments: Arguments,
@@ -159,9 +160,7 @@ With a basic understanding of `QueryPath`, it is actually quite simple to update
 
 ```swift
 struct SendFriendRequestMutation: MutationRequest, Hashable {
-  struct Arguments: Sendable {
-    let userId: Int
-  }
+  // ...
 
   func mutate(
     with arguments: Arguments,
@@ -199,9 +198,7 @@ The above examples demonstrate how to directly update the state for queries duri
 
 ```swift
 struct SendFriendRequestMutation: MutationRequest, Hashable {
-  struct Arguments: Sendable {
-    let userId: Int
-  }
+  // ...
 
   func mutate(
     with arguments: Arguments,
