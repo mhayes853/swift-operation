@@ -29,7 +29,9 @@ Then, we can extend `QueryRequest` with a method that applies our custom modifie
 
 ```swift
 extension QueryRequest {
-  func delay(for seconds: TimeInterval) -> ModifiedQuery<Self, some QueryModifier<Self>> {
+  func delay(
+    for seconds: TimeInterval
+  ) -> ModifiedQuery<Self, some QueryModifier<Self>> {
     self.modifier(DelayModifier(seconds: seconds))
   }
 }

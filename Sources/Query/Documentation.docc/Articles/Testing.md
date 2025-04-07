@@ -37,7 +37,10 @@ final class SomeModel: ObservableObject {
   @Published var value: String?
   private var cancellables = Set<AnyCancellable>()
 
-  init(client: QueryClient, scheduler: some Scheduler = DispatchQueue.main) {
+  init(
+    client: QueryClient,
+    scheduler: some Scheduler = DispatchQueue.main
+  ) {
     let store = client.store(for: SomeQuery())
     store
       .publisher
@@ -104,7 +107,8 @@ func valueLoads() async throws {
   let model = SomeModel(client: client)
   #expect(model.value == nil)
 
-  _ = try await client.store(for: SomeQuery()).activeTasks.first?.runIfNeeded()
+  let store = client.store(for: SomeQuery())
+  _ = try await store.activeTasks.first?.runIfNeeded()
 
   #expect(model.value == "loaded")
 }

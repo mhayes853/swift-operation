@@ -107,7 +107,8 @@ extension QueryContext {
 
   private enum MyPropertyKey: Key {
     static var defaultValue: String {
-      someExpensiveComputation() // Only computed once per context instance.
+      // Only computed once per context instance.
+      someExpensiveComputation()
     }
   }
 }
@@ -117,11 +118,15 @@ Provided that you do not make a brand new `QueryContext` instance, this default 
 
 ```swift
 let context = QueryContext()
-print(context.myProperty) // Computes and caches the default value.
+
+// Computes and caches the default value.
+print(context.myProperty)
 
 var context2 = context
 context2.someOtherProperty = "world!"
-print(context2.myProperty) // Utilizes the cached default value from the original context.
+
+// Utilizes the cached default value from the original context.
+print(context2.myProperty)
 ```
 
 > Note: `QueryContext` supports copy on write semantics similar to `Array` and `Dictionary`. In other words `context2.someOtherProperty != context.someOtherProperty` in the above example.
@@ -168,7 +173,9 @@ struct PostQuery: QueryRequest, Hashable {
     in context: QueryContext,
     with continuation: QueryContinuation<Post>
   ) async throws -> Post {
-    let url = URL(string: "https://jsonplaceholder.typicode.com/posts/\(id)")!
+    let url = URL(
+      string: "https://jsonplaceholder.typicode.com/posts/\(id)"
+    )!
     let (data, _) = try await URLSession.shared.data(url: url)
     return try JSONDecoder().decode(Post.self, from: data)
   }
@@ -202,7 +209,9 @@ struct PostQuery: QueryRequest, Hashable {
     in context: QueryContext,
     with continuation: QueryContinuation<Post>
   ) async throws -> Post {
-    let url = URL(string: "https://jsonplaceholder.typicode.com/posts/\(id)")!
+    let url = URL(
+      string: "https://jsonplaceholder.typicode.com/posts/\(id)"
+    )!
 -    let (data, _) = try await URLSession.shared.data(url: url)
 +    let (data, _) = try await context.urlSession.data(url: url)
     return try JSONDecoder().decode(Post.self, from: data)
@@ -215,7 +224,10 @@ If we want to return some mock data for testing purposes, we can now leverage `U
 ```swift
 @Test
 func returnsPost() async throws {
-  let store = QueryStore.detached(query: PostQuery(id: 1), initialValue: nil)
+  let store = QueryStore.detached(
+    query: PostQuery(id: 1),
+    initialValue: nil
+  )
   let config = URLSessionConfiguration.ephemeral
   config.protocolClasses = [MockPostURLProtocol.self]
   store.context.urlSession = URLSession(configuration: config)
@@ -235,7 +247,9 @@ class MockPostURLProtocol: URLProtocol {
     true
   }
 
-  override class func canonicalRequest(for request: URLRequest) -> URLRequest {
+  override class func canonicalRequest(
+    for request: URLRequest
+  ) -> URLRequest {
     request
   }
 
@@ -256,7 +270,11 @@ class MockPostURLProtocol: URLProtocol {
       httpVersion: nil,
       headerFields: ["Content-Type": "application/json"]
     )!
-    client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+    client?.urlProtocol(
+      self,
+      didReceive: response,
+      cacheStoragePolicy: .notAllowed
+    )
     client?.urlProtocol(self, didLoad: data)
     client?.urlProtocolDidFinishLoading(self)
   }
@@ -270,12 +288,16 @@ class MockPostURLProtocol: URLProtocol {
 The `valueLastUpdatedAt` and `errorLastUpdatedAt` properties on `QueryStateProtocol` conformances are computed using the `QueryClock` protocol. The clock lives on the context, and can be overridden. Therefore, if you want to ensure a deterministic date calculations for various reasons (time freeze, testing, etc.), you can do the following.
 
 ```swift
-let store = QueryStore.detached(query: PostQuery(id: 1), initialValue: nil)
-store.context.queryClock = .custom { Date(timeIntervalSince1970: 1234567890) }
+let store = QueryStore.detached(
+  query: PostQuery(id: 1),
+  initialValue: nil
+)
+let date = Date(timeIntervalSince1970: 1234567890)
+store.context.queryClock = .custom { date }
 
 try await store.fetch()
 
-#expect(store.valueLastUpdatedAt == Date(timeIntervalSince1970: 1234567890))
+#expect(store.valueLastUpdatedAt == date)
 ```
 
 ### Overriding Delays
@@ -285,7 +307,10 @@ The `QueryDelayer` protocol is used to artificially delay queries in the case of
 For testing, this delay may be unacceptable, but thankfully you can override the `QueryDelayer` on the context to remove delays.
 
 ```swift
-let store = QueryStore.detached(query: PostQuery(id: 1), initialValue: nil)
+let store = QueryStore.detached(
+  query: PostQuery(id: 1),
+  initialValue: nil
+)
 store.context.queryDelayer = .noDelay
 
 try await store.fetch() // Will incur no retry delays.

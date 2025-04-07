@@ -1,4 +1,4 @@
-# Query Defaults
+# Defaults Values, Contexts, and Modifiers
 
 Learn how to best configure default values, contexts, and modifiers for your queries.
 
@@ -56,11 +56,14 @@ You can configure these defaults by utilizing the `storeCreator` parameter in th
 
 ```swift
 let client = QueryClient(
-  storeCreator: .default(retryLimit: 10, networkObserver: MockNetworkObserver())
+  storeCreator: .default(
+    retryLimit: 10,
+    networkObserver: MockNetworkObserver()
+  )
 )
 ```
 
-If you want to apply a custom modifier on all of your queries by default, you can make a conformance to the `QueryClient.StoreCreator` protocol.
+If you want to apply a custom modifier on all of your queries by default, you can make a conformance to the `QueryClient.StoreCreator` protocol. The protocol gives you the entirety of control over how a `QueryClient` constructs a store for a query, giving you the chance to apply whatever modifiers that your query needs.
 
 ```swift
 struct MyStoreCreator: QueryClient.StoreCreator {
@@ -68,7 +71,8 @@ struct MyStoreCreator: QueryClient.StoreCreator {
     for query: Query,
     in context: QueryContext,
     with initialState: Query.State
-  ) -> QueryStore<Query.State> where Query.State.QueryValue == Query.Value {
+  ) -> QueryStore<Query.State>
+  where Query.State.QueryValue == Query.Value {
     if query is any MutationRequest {
       // Modifiers applied only to mutations
       return .detached(
@@ -91,8 +95,6 @@ struct MyStoreCreator: QueryClient.StoreCreator {
 
 let client = QueryClient(storeCreator: MyStoreCreator())
 ```
-
-Your conformance receives a query, the initial context to use for its `QueryStore`, and the initial state to use for its `QueryStore`. All you need to do is create a `QueryStore` utilizing those parameters, which gives you the change to apply any modifiers that you want on your queries by default.
 
 ## Conclusion
 

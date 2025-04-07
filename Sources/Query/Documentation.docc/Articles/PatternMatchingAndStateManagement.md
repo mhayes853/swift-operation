@@ -86,7 +86,8 @@ struct SendFriendRequestMutation: MutationRequest, Hashable {
 
     // Friend request sent successfully, now update the friends list.
     guard let client = context.queryClient else { return }
-    let store = client.store(for: UserFriendsQuery(userId: arguments.userId))
+    let query = UserFriendsQuery(userId: arguments.userId)
+    let store = client.store(for: query)
     let pages = store.currentValue.map { page in
       var page = page
       page.value = page.value.map { user in
@@ -169,10 +170,12 @@ struct SendFriendRequestMutation: MutationRequest, Hashable {
   ) async throws {
     try await sendFriendRequest(userId: arguments.userId)
 
-    // Friend request sent successfully, now update all friends lists in the app.
+    // Friend request sent successfully, now update all
+    // friends lists in the app.
     guard let client = context.queryClient else { return }
     for (_, store) in client.stores(matching: ["user-friends"]) {
-      guard let store = store.base as? QueryStore<UserFriendsQuery.State> else { continue }
+      let store = store.base as? QueryStore<UserFriendsQuery.State>
+      guard let store else { continue }
       let pages = store.currentValue.map { page in
         var page = page
         page.value = page.value.map { user in
@@ -207,7 +210,8 @@ struct SendFriendRequestMutation: MutationRequest, Hashable {
   ) async throws {
     try await sendFriendRequest(userId: arguments.userId)
 
-    // Friend request sent successfully, now refetch all friends lists in the app.
+    // Friend request sent successfully, now refetch all
+    // friends lists in the app.
     guard let client = context.queryClient else { return }
     Task {
       try await withThrowingTaskGroup(of: Void.self) { group in

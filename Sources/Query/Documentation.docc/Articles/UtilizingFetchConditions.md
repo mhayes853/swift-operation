@@ -31,7 +31,9 @@ let query = MyQuery().enableAutomaticFetching(when: .always(false))
 However, it's also possible to disable it when the network is down by using `ConnectedCondition`.
 
 ```swift
-let query = MyQuery().enableAutomaticFetching(when: .connected(to: NWPathMonitorObserver.shared))
+let query = MyQuery().enableAutomaticFetching(
+  when: .connected(to: NWPathMonitorObserver.shared)
+)
 ```
 
 > Note: In browser applications (WASM), you can use `NavigatorObserver.shared` which utilizes [`window.navigator`](https://developer.mozilla.org/en-US/docs/Web/API/Navigator) under the hood to observe network connectivity changes.
@@ -41,7 +43,9 @@ let query = MyQuery().enableAutomaticFetching(when: .connected(to: NWPathMonitor
 Another modifier that utilizes fetch conditions is the `refetchOnChangeOf` modifier. This modifier allows you to specify a `FetchCondition` that will trigger a refetch when the condition changed to true.
 
 ```swift
-let query = MyQuery().refetchOnChange(of: .connected(to: NWPathMonitorObserver.shared))
+let query = MyQuery().refetchOnChange(
+  of: .connected(to: NWPathMonitorObserver.shared)
+)
 ```
 
 The example above will refetch the query whenever the network comes back online after being down.
@@ -54,17 +58,35 @@ The example above will refetch the query whenever the network comes back online 
 import Combine
 
 let subject = PassthroughSubject<Bool, Never>()
-let query = MyQuery().staleWhen(condition: .observing(publisher: subject, initialValue: true))
+let query = MyQuery().staleWhen(
+  condition: .observing(publisher: subject, initialValue: true)
+)
 ```
 
 In this example, the query will be considered stale when the subject emits a value of `true`.
+
+> Note: Chaining multiple modifiers prefixed with `stale` will mark the query as stale when any one of those modifiers' conditions are met. In other words, the following code snippets are functionality equivalent.
+> ```swift
+> // query and query2 are functionality equivalent.
+>
+> let query = MyQuery()
+>   .staleWhen(condition: .notificationFocus)
+>   .staleWhen(condition: .connected(to: NWPathMonitorObserver.shared))
+>
+> let query2 = MyQuery().staleWhen(
+>   condition:
+>     .notificationFocus || .connected(to: NWPathMonitorObserver.shared)
+> )
+> ```
 
 ## Suspending Queries
 
 It's also possible to keep a query in a loading state while some condition is false. This can be achieved with the `suspending` modifier.
 
 ```swift
-let query = MyQuery().suspending(on: .connected(to: NWPathMonitorObserver.shared))
+let query = MyQuery().suspending(
+  on: .connected(to: NWPathMonitorObserver.shared)
+)
 
 let store = client.store(for: query)
 try await store.fetch() // Will suspend while the network is down.
@@ -79,7 +101,10 @@ In this example, the query will be stuck in a loading state while the network is
 The `!`, `||`, and `&&` operators have been overloaded for the `FetchConditon` protocol. This allows you to compose conditions just like you would with booleans.
 
 ```swift
-let query = MyQuery().staleWhen(condition: .connected(to: NWPathMonitorObserver.shared) && .notificationFocus)
+let query = MyQuery().staleWhen(
+  condition:
+    .connected(to: NWPathMonitorObserver.shared) && .notificationFocus
+)
 ```
 
 This condition marks the query as stale when both the network is connected and when the app is currently active in the foreground.
@@ -91,7 +116,9 @@ You can also define your own fetch conditions by conforming to the `FetchConditi
 ```swift
 protocol UserAuthentication {
   var accessToken: String? { get }
-  func subscribe(_ observer: @escaping @Sendable (String?) -> Void) -> Cancellable
+  func subscribe(
+    _ observer: @escaping @Sendable (String?) -> Void
+  ) -> Cancellable
 }
 
 struct UserLoggedInCondition<Auth: UserAuthentication>: FetchCondition {
@@ -121,7 +148,9 @@ final class FirebaseAuthentication: UserAuthentication {
   // ...
 }
 
-let query = MyQuery().refetchOnChange(of: UserLoggedInCondition(auth: FirebaseAuthentication()))
+let query = MyQuery().refetchOnChange(
+  of: UserLoggedInCondition(auth: FirebaseAuthentication())
+)
 ```
 
 ## Conclusion
