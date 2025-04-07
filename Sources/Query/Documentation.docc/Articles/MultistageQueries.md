@@ -199,8 +199,8 @@ struct NearbyEventsQuery: QueryRequest {
     guard let client = context.queryClient else {
       return try await fetchActualEventList(region)
     }
-    // Look for all stores using NearbyEventsQuery in the QueryClient and compare their regions
-    // to this query's region.
+    // Look for other EventLists we've fetched and use the data from any that
+    // are within the distance threshold.
     for (_, store) in client.stores(matching: ["nearby-events"]) {
       guard let list = store.currentValue as? EventsList else { continue }
       if list.region.distance(to: region) < context.distanceThreshold {
