@@ -2,6 +2,10 @@
 
 A lightweight cross-platform library for fetching and managing asynchronous data in Swift, SwiftUI, Sharing, WASM, Linux, and more.
 
+## Motivation
+
+TODO
+
 ## Getting Started
 
 The first thing you'll need to do is create a data type and a `QueryRequest` for the data you want to fetch.
@@ -137,6 +141,15 @@ final class PostViewModel: ObservableObject {
   // ...
 }
 ```
+
+## When Not To Use Swift Query
+
+Swift Query is a powerful library for fetching and managing asynchronous data, but it's not suitable for every problem. For these kinds of applications, consider using another library, or even just rolling your own solution.
+
+- Applications with primarily local data stored with SQLite, Core/Swift Data, Realm, etc.
+  - For these applications, you'll be better off using the SDKs directly that manage the local data, or if you're using SQLite you may look into [SharingGRDB](https://github.com/pointfreeco/sharing-grdb) instead. Swift Query adds a lot of extra noise such as loading states and multistage queries that isn't really necessary if all of your data is stored locally on disk, and can be fetched incredibly quickly.
+- Applications that primarily stream data such as websockets.
+  - Swift Query can work well with live data such as websockets via yielding live updates from the query using a `QueryController`. However, if you're data is mostly "streamed" and not really "fetched", then you may be able to skip the noise of Swift Query and utilize [Sharing](https://github.com/pointfreeco/swift-sharing) directly for managing state.
 
 ## Topics
 
