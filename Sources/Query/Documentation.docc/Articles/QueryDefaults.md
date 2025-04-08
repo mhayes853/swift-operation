@@ -45,7 +45,8 @@ The default `QueryClient` already applies a set of default modifiers for both qu
 - Deduplication
 - Retries
 - Automatic Fetching
-- Refetching when the network comes back online and when the app reenters from the background.
+- Refetching when the network comes back online
+- Refetching when the app reenters from the background
 
 **Mutations**
 - Retries
@@ -59,6 +60,7 @@ let client = QueryClient(
   storeCreator: .default(
     retryLimit: 10,
     networkObserver: MockNetworkObserver()
+    // More defaults...
   )
 )
 ```
