@@ -195,6 +195,64 @@ struct SendFriendRequestMutation: MutationRequest, Hashable {
 
 Now, any screen in our app that displays a friends list will automatically update to reflect the new user relationship status.
 
+## Optimistic UI Updates
+
+In our above example, we only update all the friends lists after we've successfully managed to send a friend request through our API. However, we can also use a similar technique to apply optimistic UI updates, such that the result of the mutation is immediately visible in the UI, but if it fails then it gets reverted.
+
+```swift
+struct SendFriendRequestMutation: MutationRequest, Hashable {
+  // ...
+
+  func mutate(
+    with arguments: Arguments,
+    in context: QueryContext,
+    with continuation: QueryContinuation<Void>
+  ) async throws {
+    // Optimistically update the user relationships, and reste them to the
+    // default state if the mutation fails.
+    do {
+      updateRelationships(
+        to: .friendRequestSent,
+        userId: arguments.userId,
+        in: context
+      )
+      try await sendFriendRequest(userId: arguments.userId)
+    } catch {
+      updateRelationships(
+        to: .notFriends,
+        userId: arguments.userId,
+        in: context
+      )
+      throw error
+    }
+  }
+
+  private func updateRelationships(
+    to relationship: User.Relationship,
+    userId: Int,
+    in context: QueryContext
+  ) {
+    guard let client = context.queryClient else { return }
+    for (_, store) in client.stores(matching: ["user-friends"]) {
+      let store = store.base as? QueryStore<UserFriendsQuery.State>
+      guard let store else { continue }
+      let pages = store.currentValue.map { page in
+        var page = page
+        page.value = page.value.map { user in
+          var user = user
+          if user.id == arguments.userId {
+            user.relationship = .friendRequestSent
+          }
+          return user
+        }
+        return page
+      }
+      store.currentValue = InfiniteQueryPages(uniqueElements: pages)
+    }
+  }
+}
+```
+
 ## Refetching Queries
 
 The above examples demonstrate how to directly update the state for queries during a mutation. However, sometimes it's for the best to just refetch the affected queries instead of updating the state directly. For instance, maybe the updated state cannot be determined solely based on the mutation data, and the only the server has the ability to determine the updated state. Regardless of reason, it's quite easy to perform refetching using the same pattern matching technique shown above.
