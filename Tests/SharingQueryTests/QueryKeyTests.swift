@@ -32,7 +32,7 @@ struct QueryKeyTests {
   func setValueUpdatesValueInStore() async throws {
     @Dependency(\.queryClient) var client
 
-    let query = TestQuery().enableAutomaticFetching(when: .always(false))
+    let query = TestQuery().enableAutomaticFetching(onlyWhen: .always(false))
     @Shared(.query(query)) var value
 
     $value.withLock { $0 = TestQuery.value + 1 }
@@ -44,7 +44,7 @@ struct QueryKeyTests {
   func sharesStateWithQueryStateKey() async throws {
     @Dependency(\.queryClient) var client
 
-    let query = TestQuery().enableAutomaticFetching(when: .always(false))
+    let query = TestQuery().enableAutomaticFetching(onlyWhen: .always(false))
     @Shared(.query(query)) var value
     @SharedReader(.queryState(query)) var state
 
@@ -57,7 +57,7 @@ struct QueryKeyTests {
   func makesSeparateSubscribersWhenUsingQueryKeyAndQueryStateKeyInConjunction() async throws {
     @Dependency(\.queryClient) var client
 
-    let query = TestQuery().enableAutomaticFetching(when: .always(false))
+    let query = TestQuery().enableAutomaticFetching(onlyWhen: .always(false))
     @Shared(.query(query)) var value
     @SharedReader(.queryState(query)) var state
 
@@ -69,7 +69,7 @@ struct QueryKeyTests {
   func makesSeparateSubscribersWhenUsingQueryKeysWithTheSameQuery() async throws {
     @Dependency(\.queryClient) var client
 
-    let query = TestQuery().enableAutomaticFetching(when: .always(false))
+    let query = TestQuery().enableAutomaticFetching(onlyWhen: .always(false))
     @Shared(.query(query)) var value
     @SharedReader(.queryState(query)) var state
 

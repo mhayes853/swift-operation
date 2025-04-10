@@ -135,7 +135,7 @@ struct StaleWhenRevalidateQueryTests {
 
   @Test("Fetches On Subscription When Stale")
   func fetchesOnSubscriptionWhenStale() async throws {
-    let query = TestQuery().enableAutomaticFetching(when: .always(true))
+    let query = TestQuery().enableAutomaticFetching(onlyWhen: .always(true))
       .staleWhen(condition: .always(true))
     let store = QueryStore.detached(query: query, initialValue: nil)
 

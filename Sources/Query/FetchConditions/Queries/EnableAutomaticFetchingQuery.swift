@@ -2,7 +2,7 @@
 
 extension QueryRequest {
   public func enableAutomaticFetching(
-    when condition: some FetchCondition
+    onlyWhen condition: some FetchCondition
   ) -> ModifiedQuery<Self, some QueryModifier<Self>> {
     self.modifier(EnableAutomaticFetchingModifier(condition: condition))
   }

@@ -214,7 +214,7 @@ extension QueryClient {
             delayer: self.retryDelayer
           )
           .enableAutomaticFetching(
-            when: AnyFetchCondition(self.queryEnableAutomaticFetchingCondition)
+            onlyWhen: AnyFetchCondition(self.queryEnableAutomaticFetchingCondition)
           )
           .refetchOnChange(of: self.refetchOnChangeCondition)
           .deduplicated(),

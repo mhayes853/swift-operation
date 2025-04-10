@@ -25,7 +25,7 @@ struct MyQuery: QueryRequest {
 }
 
 // Automatic fetching is always disabled for this query.
-let query = MyQuery().enableAutomaticFetching(when: .always(false))
+let query = MyQuery().enableAutomaticFetching(onlyWhen: .always(false))
 ```
 
 However, it's also possible to disable it when the network is down by using `ConnectedCondition`.

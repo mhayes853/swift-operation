@@ -25,7 +25,7 @@ struct QueryControllerTests {
     let controller = TestQueryController<TestQuery>()
     let store = QueryStore.detached(
       query: TestQuery().controlled(by: controller)
-        .enableAutomaticFetching(when: .always(false)),
+        .enableAutomaticFetching(onlyWhen: .always(false)),
       initialValue: nil
     )
 
@@ -39,7 +39,7 @@ struct QueryControllerTests {
     let controller = TestQueryController<TestQuery>()
     let store = QueryStore.detached(
       query: TestQuery().controlled(by: controller)
-        .enableAutomaticFetching(when: .always(true)),
+        .enableAutomaticFetching(onlyWhen: .always(true)),
       initialValue: nil
     )
 
@@ -54,7 +54,7 @@ struct QueryControllerTests {
     let controller = TestQueryController<TestQuery>()
     let store = QueryStore.detached(
       query: TestQuery().controlled(by: controller)
-        .enableAutomaticFetching(when: .always(true)),
+        .enableAutomaticFetching(onlyWhen: .always(true)),
       initialValue: nil
     )
 
@@ -78,7 +78,7 @@ struct QueryControllerTests {
     let controller = TestQueryController<TestQuery>()
     let store = QueryStore.detached(
       query: TestQuery().controlled(by: controller)
-        .enableAutomaticFetching(when: .always(true)),
+        .enableAutomaticFetching(onlyWhen: .always(true)),
       initialValue: nil
     )
 
@@ -102,7 +102,7 @@ struct QueryControllerTests {
     let controller = TestQueryController<TestQuery>()
     let store = QueryStore.detached(
       query: TestQuery().controlled(by: controller)
-        .enableAutomaticFetching(when: .always(false)),
+        .enableAutomaticFetching(onlyWhen: .always(false)),
       initialValue: nil
     )
     let collector = QueryStoreEventsCollector<TestQuery.State>()

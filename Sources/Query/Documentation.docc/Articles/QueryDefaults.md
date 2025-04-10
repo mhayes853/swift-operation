@@ -86,7 +86,7 @@ struct MyStoreCreator: QueryClient.StoreCreator {
     // Modifiers applied only to queries and infinite queries
     return .detached(
       query: query.retry(limit: 3)
-        .enableAutomaticFetching(when: .always(true))
+        .enableAutomaticFetching(onlyWhen: .always(true))
         .customModifier()
         .deduplicated(),
       initialState: initialState,

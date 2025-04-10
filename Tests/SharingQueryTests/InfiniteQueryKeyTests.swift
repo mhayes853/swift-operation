@@ -10,7 +10,7 @@ struct InfiniteQueryKeyTests {
   func fetchesForValue() async throws {
     let query = TestInfiniteQuery()
     query.state.withLock { $0 = [0: "hello", 1: "world"] }
-    @Shared(.infiniteQuery(query.enableAutomaticFetching(when: .always(false)))) var value
+    @Shared(.infiniteQuery(query.enableAutomaticFetching(onlyWhen: .always(false)))) var value
 
     expectNoDifference(value.currentValue, [])
 
@@ -26,7 +26,9 @@ struct InfiniteQueryKeyTests {
 
   @Test("Fetches For Error")
   func fetchesForError() async throws {
-    @Shared(.infiniteQuery(FailableInfiniteQuery().enableAutomaticFetching(when: .always(false))))
+    @Shared(
+      .infiniteQuery(FailableInfiniteQuery().enableAutomaticFetching(onlyWhen: .always(false)))
+    )
     var value
 
     expectNoDifference($value.loadError as? FailableInfiniteQuery.SomeError, nil)
@@ -41,7 +43,7 @@ struct InfiniteQueryKeyTests {
   func setValueUpdatesValueInStore() async throws {
     @Dependency(\.queryClient) var client
 
-    let query = TestInfiniteQuery().enableAutomaticFetching(when: .always(false))
+    let query = TestInfiniteQuery().enableAutomaticFetching(onlyWhen: .always(false))
     @Shared(.infiniteQuery(query)) var value
 
     let expected = InfiniteQueryPagesFor<TestInfiniteQuery>(
@@ -56,7 +58,7 @@ struct InfiniteQueryKeyTests {
   func sharesStateWithQueryStateKey() async throws {
     @Dependency(\.queryClient) var client
 
-    let query = TestInfiniteQuery().enableAutomaticFetching(when: .always(false))
+    let query = TestInfiniteQuery().enableAutomaticFetching(onlyWhen: .always(false))
     @Shared(.infiniteQuery(query)) var value
     @SharedReader(.infiniteQueryState(query)) var state
 
@@ -91,7 +93,7 @@ struct InfiniteQueryKeyTests {
   func makesSeparateSubscribersWhenUsingMutationKeyAndQueryStateKeyInConjunction() async throws {
     @Dependency(\.queryClient) var client
 
-    let query = TestInfiniteQuery().enableAutomaticFetching(when: .always(false))
+    let query = TestInfiniteQuery().enableAutomaticFetching(onlyWhen: .always(false))
     @Shared(.infiniteQuery(query)) var value
     @SharedReader(.infiniteQuery(query)) var state
 
@@ -103,7 +105,7 @@ struct InfiniteQueryKeyTests {
   func makesSeparateSubscribersWhenUsingMutationKeysWithTheSameMutation() async throws {
     @Dependency(\.queryClient) var client
 
-    let query = TestInfiniteQuery().enableAutomaticFetching(when: .always(false))
+    let query = TestInfiniteQuery().enableAutomaticFetching(onlyWhen: .always(false))
     @Shared(.infiniteQuery(query)) var value1
     @Shared(.infiniteQuery(query)) var value2
 
