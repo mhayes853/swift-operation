@@ -2,12 +2,19 @@ import Foundation
 
 // MARK: - QueryClock
 
+/// A protocol for controlling the current date in queries.
+///
+/// You can override the ``QueryContext/queryClock`` context value to control the values of
+/// ``QueryStateProtocol/valueLastUpdatedAt`` and ``QueryStateProtocol/errorLastUpdatedAt``
+/// whenever your query yields a result.
 public protocol QueryClock: Sendable {
+  /// Returns the current date according to the clock.
   func now() -> Date
 }
 
 // MARK: - QueryClock
 
+/// A ``QueryClock`` that returns the system's current time.
 public struct SystemTimeClock: QueryClock {
   public func now() -> Date {
     Date()
@@ -15,6 +22,7 @@ public struct SystemTimeClock: QueryClock {
 }
 
 extension QueryClock where Self == SystemTimeClock {
+  /// A ``QueryClock`` that returns the system's current time.
   public static var systemTime: Self {
     SystemTimeClock()
   }
@@ -22,6 +30,7 @@ extension QueryClock where Self == SystemTimeClock {
 
 // MARK: - CustomQueryClock
 
+/// A ``QueryClock`` that returns the current date based on a specified closure.
 public struct CustomQueryClock: QueryClock {
   let _now: @Sendable () -> Date
 
@@ -31,6 +40,10 @@ public struct CustomQueryClock: QueryClock {
 }
 
 extension QueryClock where Self == CustomQueryClock {
+  /// A ``QueryClock`` that returns the current date based on the return value of `now`.
+  ///
+  /// - Parameter now: A closure to compute the current date.
+  /// - Returns: A ``CustomQueryClock``.
   public static func custom(_ now: @escaping @Sendable () -> Date) -> Self {
     CustomQueryClock(_now: now)
   }
@@ -38,6 +51,7 @@ extension QueryClock where Self == CustomQueryClock {
 
 // MARK: - TimeFreezeClock
 
+/// A ``QueryClock`` that returns a constant date.
 public struct TimeFreezeClock: QueryClock {
   @usableFromInline
   let date: Date
@@ -49,16 +63,24 @@ public struct TimeFreezeClock: QueryClock {
 }
 
 extension QueryClock where Self == TimeFreezeClock {
+  /// A ``QueryClock`` that computes the current date upon creation, and always returns that date.
   public static var timeFreeze: Self {
     TimeFreezeClock(date: Date())
   }
-
+  
+  /// A ``QueryClock`` that always returns the provided `date`.
+  ///
+  /// - Parameter date: The date to return.
+  /// - Returns: A ``TimeFreezeClock``.
   public static func timeFreeze(_ date: Date) -> Self {
     TimeFreezeClock(date: date)
   }
 }
 
 extension QueryClock {
+  /// Freezes this clock.
+  ///
+  /// - Returns: A ``TimeFreezeClock`` based on this clock's ``now()`` return value.
   public func frozen() -> TimeFreezeClock {
     .timeFreeze(self.now())
   }
@@ -67,6 +89,9 @@ extension QueryClock {
 // MARK: - QueryContext
 
 extension QueryContext {
+  /// The current ``QueryClock`` in this context.
+  ///
+  /// The default value is ``QueryClock/systemTime``.
   public var queryClock: any QueryClock {
     get { self[QueryClockKey.self] }
     set { self[QueryClockKey.self] = newValue }
