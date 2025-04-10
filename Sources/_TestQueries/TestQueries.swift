@@ -288,6 +288,21 @@ package final actor ContextReadingQuery: QueryRequest {
   }
 }
 
+// MARK: - TaskLocalQuery
+
+package struct TaskLocalQuery: QueryRequest, Hashable {
+  @TaskLocal package static var value = 0
+
+  package init() {}
+
+  package func fetch(
+    in context: QueryContext,
+    with continuation: QueryContinuation<Int>
+  ) async throws -> Int {
+    Self.value
+  }
+}
+
 // MARK: - ContinuingQuery
 
 package final class ContinuingQuery: QueryRequest, @unchecked Sendable {
