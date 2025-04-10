@@ -152,10 +152,14 @@ struct LinesQuery: QueryRequest, Hashable {
     in context: QueryContext,
     with continuation: QueryContinuation<[String]>
   ) async throws -> [String] {
+    // Apply a time freeze to the context so that valueLastUpdatedAt remains
+    // consistent when many chunks of data are yielded.
+    var context = context
+    context.queryClock = context.queryClock.frozen()
     var lines = [String]()
     for try await line in url.lines {
       lines.append(line)
-      continuation.yield(lines)
+      continuation.yield(lines, context)
     }
     return lines
   }
