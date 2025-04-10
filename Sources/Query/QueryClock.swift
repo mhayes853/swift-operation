@@ -36,6 +36,34 @@ extension QueryClock where Self == CustomQueryClock {
   }
 }
 
+// MARK: - TimeFreezeClock
+
+public struct TimeFreezeClock: QueryClock {
+  @usableFromInline
+  let date: Date
+
+  @inlinable
+  public func now() -> Date {
+    self.date
+  }
+}
+
+extension QueryClock where Self == TimeFreezeClock {
+  public static var timeFreeze: Self {
+    TimeFreezeClock(date: Date())
+  }
+
+  public static func timeFreeze(_ date: Date) -> Self {
+    TimeFreezeClock(date: date)
+  }
+}
+
+extension QueryClock {
+  public func frozen() -> TimeFreezeClock {
+    .timeFreeze(self.now())
+  }
+}
+
 // MARK: - QueryContext
 
 extension QueryContext {
