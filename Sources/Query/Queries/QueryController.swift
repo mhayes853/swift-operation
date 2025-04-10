@@ -46,10 +46,6 @@ extension QueryControls {
   public var isStale: Bool {
     self.store?.isStale ?? false
   }
-
-  public func isStale(using context: QueryContext? = nil) -> Bool {
-    self.store?.isStale(using: context) ?? false
-  }
 }
 
 // MARK: - Yielding Values

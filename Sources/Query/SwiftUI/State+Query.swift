@@ -154,14 +154,6 @@
     }
   }
 
-  // MARK: - Is Stale
-
-  extension State.Query {
-    public func isStale(using context: QueryContext? = nil) -> Bool {
-      self.store.isStale(using: context)
-    }
-  }
-
   // MARK: - Fetch
 
   extension State.Query {

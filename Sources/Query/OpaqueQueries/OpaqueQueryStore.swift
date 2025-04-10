@@ -104,10 +104,6 @@ extension OpaqueQueryStore {
   public var isStale: Bool {
     self._base.isStale
   }
-
-  public func isStale(using context: QueryContext? = nil) -> Bool {
-    self._base.isStale(using: context)
-  }
 }
 
 // MARK: - Fetch
@@ -151,7 +147,6 @@ private protocol OpaqueableQueryStore: Sendable {
   var subscriberCount: Int { get }
   var isStale: Bool { get }
 
-  func isStale(using context: QueryContext?) -> Bool
   func opaqueWithState<T: Sendable>(
     _ fn: (OpaqueQueryState) throws -> T
   ) rethrows -> T
