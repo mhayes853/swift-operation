@@ -572,6 +572,15 @@ struct QueryStoreTests {
     }
     expectNoDifference(store.currentValue, EscapingContinuationQuery.value)
   }
+
+  @Test("Propagates Task Local To Query")
+  func propagatesTaskLocal() async throws {
+    let store = self.client.store(for: TaskLocalQuery())
+    let value = try await TaskLocalQuery.$value.withValue(10) {
+      try await store.fetch()
+    }
+    expectNoDifference(value, 10)
+  }
 }
 
 extension QueryContext {
