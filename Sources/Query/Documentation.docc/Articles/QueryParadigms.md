@@ -607,7 +607,7 @@ struct RecursiveQueryState<Value: RecursiveValue>: QueryStateProtocol {
     with result: Result<QueryValue, any Error>,
     for task: QueryTask<QueryValue>
   ) {
-  switch result {
+-  switch result {
 -   case let .success(value):
 -     self.currentValue[id: value.nodeId] = value
 -     self.valueUpdateCount += 1
