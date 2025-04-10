@@ -16,7 +16,7 @@ Let's dive into the basics of each paradigm, and even show an example how you ca
 
 ## Queries
 
-Queries are the most basic fetching paradigm the library offers. Just creating a conformance to the `QueryRequest` protocol already unlocks a lot of power, such as retries and more.
+Queries are the most basic fetching paradigm the library offers. Just creating a conformance to the ``QueryRequest`` protocol already unlocks a lot of power, such as retries and more.
 
 ```swift
 struct PlayerQuery: QueryRequest, Hashable {
@@ -41,7 +41,7 @@ All that you must do is fetch your data inside `PlayerQuery`, and the library gi
 
 ## Infinite Queries
 
-If you have a paginated or infinitely scrollable list in your app, infinite queries are the paradigm for you. Conforming to the `InfiniteQueryRequest` protocol is a little bit more work than `QueryRequest`, but that is only because you need to provide a notion of how pages are to be fetched. Despite this, know that `InfiniteQueryRequest` inherits from `QueryRequest`, so modifiers that work on traditional queries will also work on infinite queries.
+If you have a paginated or infinitely scrollable list in your app, infinite queries are the paradigm for you. Conforming to the ``InfiniteQueryRequest`` protocol is a little bit more work than `QueryRequest`, but that is only because you need to provide a notion of how pages are to be fetched. Despite this, know that `InfiniteQueryRequest` inherits from `QueryRequest`, so modifiers that work on traditional queries will also work on infinite queries.
 
 ```swift
 struct PlayersPage: Sendable, Codable {
@@ -96,7 +96,7 @@ struct PlayersQuery: InfiniteQueryRequest, Hashable {
 }
 ```
 
-With this now, you're nearly up and running. You control how pages are fetched through a `QueryStore` instance, when the state for the store is `InfiniteQueryState`, the store provides a few additional methods for fetching parts of the query.
+With this now, you're nearly up and running. You control how pages are fetched through a ``QueryStore`` instance, when the state for the store is ``InfiniteQueryState``, the store provides a few additional methods for fetching parts of the query.
 
 ```swift
 let store = client.store(for: PlayersQuery(listId: 20))
@@ -114,7 +114,7 @@ try await store.fetchNextPage()
 try await store.fetchPreviousPage()
 ```
 
-> Note: It should be noted that if you're using SwiftUI, then you can access these methods through the projected value of `@State.Query`.
+> Note: It should be noted that if you're using SwiftUI, then you can access these methods through the projected value of ``SwiftUICore/State/Query``.
 > ```swift
 > import SwiftUI
 > import Query
@@ -142,7 +142,7 @@ try await store.fetchPreviousPage()
 > }
 > ```
 
-The state value of infinite query is an `InfiniteQueryPages` type, which is just an [`IdentifiedArray`](https://github.com/pointfreeco/swift-identified-collections) under the hood. Each element of the array is of type `InfiniteQueryPage`, which contains a field for the page id along with the value of the page.
+The state value of infinite query is an ``InfiniteQueryPages`` type, which is just an [`IdentifiedArray`](https://github.com/pointfreeco/swift-identified-collections) under the hood. Each element of the array is of type ``InfiniteQueryPage``, which contains a field for the page id along with the value of the page.
 
 ```swift
 let store = client.store(for: PlayersQuery(listId: 20))
@@ -172,7 +172,7 @@ try await store.fetchAllPages()
 
 ## Mutations
 
-Mutations are a query paradigm for performing updates on your data's remote source. A clear example of this would be a POST request to an API that creates a new record of something. Conforming to the `MutationRequest` protocol is quite straightforward, and just like `InfiniteQueryRequest` the protocol also inherits from `QueryRequest` enabling modifiers that work for traditional queries to also work for mutations.
+Mutations are a query paradigm for performing updates on your data's remote source. A clear example of this would be a POST request to an API that creates a new record of something. Conforming to the ``MutationRequest`` protocol is quite straightforward, and just like `InfiniteQueryRequest` the protocol also inherits from `QueryRequest` enabling modifiers that work for traditional queries to also work for mutations.
 
 ```swift
 struct CreatePlayerMutation: MutationRequest, Hashable {
@@ -191,7 +191,7 @@ struct CreatePlayerMutation: MutationRequest, Hashable {
 }
 ```
 
-You'll notice that unlike `QueryRequest` and `InfiniteQueryRequest` conformances, providing arguments is represented through the `Arguments` associated type rather than member variables the mutation itself. Additionally, just like `InfiniteQueryState`, the `QueryStore` provides special data fetching methods when its state is `MutationState`.
+You'll notice that unlike `QueryRequest` and `InfiniteQueryRequest` conformances, providing arguments is represented through the `Arguments` associated type rather than member variables the mutation itself. Additionally, just like `InfiniteQueryState`, the `QueryStore` provides special data fetching methods when its state is ``MutationState``.
 
 ```swift
 let store = client.store(for: CreatePlayerMutation())
@@ -344,7 +344,7 @@ where Value: RecursiveValue<NodeID> {
 }
 ```
 
-At this point, we've defined how recursive requests work on the data fetching level. Yet we haven't described how managing the state for the query works. All other query paradigms come with a value type that conforms to the `QueryStateProtocol` such as `InfiniteQueryState`. Similarly, we'll need a state type that describes how the state is managed for our recursive query.
+At this point, we've defined how recursive requests work on the data fetching level. Yet we haven't described how managing the state for the query works. All other query paradigms come with a value type that conforms to the ``QueryStateProtocol`` such as `InfiniteQueryState`. Similarly, we'll need a state type that describes how the state is managed for our recursive query.
 
 ```swift
 struct RecursiveQueryState<Value: RecursiveValue>: QueryStateProtocol {
@@ -431,7 +431,7 @@ extension QueryStore where State: _RecursiveQueryStateProtocol {
 }
 ```
 
-`QueryStore` by default only has a `fetch` method for fetching data that generally is designed to fetch the entirety of the data at once. However, in our case we're merely trying to fetch a part of the overall data by focusing on a subtree. To get around this, we'll need to rely on the `QueryContext` present in the `QueryTaskConfiguration` parameter in `fetchTree`. If no task configuration is provided, we can simply create one with our store's context.
+`QueryStore` by default only has a `fetch` method for fetching data that generally is designed to fetch the entirety of the data at once. However, in our case we're merely trying to fetch a part of the overall data by focusing on a subtree. To get around this, we'll need to rely on the ``QueryContext`` present in the ``QueryTaskConfiguration`` parameter in `fetchTree`. If no task configuration is provided, we can simply create one with our store's context.
 
 ```swift
 extension QueryStore where State: _RecursiveQueryStateProtocol {
@@ -499,7 +499,7 @@ struct RecursiveQueryState<Value: RecursiveValue>: QueryStateProtocol {
 }
 ```
 
-> Note: In a real implementation, we may want to see if we are also fetching subtrees for the parent nodes and wait for those tasks to finish first before fetching the subtree. For that we can use the `schedule(after:)` API on `QueryTask`.
+> Note: In a real implementation, we may want to see if we are also fetching subtrees for the parent nodes and wait for those tasks to finish first before fetching the subtree. For that we can use the ``QueryTask/schedule(after:)`` API.
 
 As we can see here, we just need to append the task to our list of active tasks on the state, and we can even compute `isLoading` by checking if there are any active tasks on the state.
 
@@ -523,7 +523,7 @@ extension RecursiveQueryRequest {
 }
 ```
 
-As the query runs, results will be yielded from the query either through `QueryContinuation` or through returning the final value. When this happens, the `QueryStore` will invoke a method on the `State` signifying that a result was yielded from the query. Therefore, we'll implement the `update` requirement for `RecursiveQueryState` that handles a result paired with the associated `QueryTask`.
+As the query runs, results will be yielded from the query either through ``QueryContinuation`` or through returning the final value. When this happens, the `QueryStore` will invoke a method on the `State` signifying that a result was yielded from the query. Therefore, we'll implement the `update` requirement for `RecursiveQueryState` that handles a result paired with the associated ``QueryTask``.
 
 ```swift
 struct RecursiveQueryState<Value: RecursiveValue>: QueryStateProtocol {
@@ -627,7 +627,7 @@ struct RecursiveQueryState<Value: RecursiveValue>: QueryStateProtocol {
 
 ### Resetting State
 
-It's also possible to reset the entire `State` on a `QueryStore` via the `reset` method. When doing this, the store calls out to the `State` to reset itself, which is represented via a `reset` requirement on `QueryStateProtocol`. When implementing this protocol, you generally will cancel all active tasks on the state, and then reset all of the values.
+It's also possible to reset the entire `State` on a `QueryStore` via ``QueryStore/reset(using:)``. When doing this, the store calls out to the `State` to reset itself, which is represented via a `reset` requirement on `QueryStateProtocol`. When implementing this protocol, you generally will cancel all active tasks on the state, and then reset all of the values.
 
 ```swift
 struct RecursiveQueryState<Value: RecursiveValue>: QueryStateProtocol {

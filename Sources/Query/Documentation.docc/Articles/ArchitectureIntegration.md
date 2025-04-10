@@ -38,7 +38,7 @@ struct MyView: View {
 }
 ```
 
-Under the hood, `@State.Query` utilizes a `QueryClient` instance in the SwiftUI environment. You can access and override this environment value.
+Under the hood, ``SwiftUICore/State/Query`` utilizes a ``QueryClient`` instance in the SwiftUI environment. You can access and override this environment value.
 
 ```swift
 struct MyView: View {
@@ -74,7 +74,7 @@ struct ChildView: View {
 }
 ```
 
-In this example, the query state between the parent and child views is shared. Under the hood, this will create 2 separate subscriptions to the underlying `QueryStore` at the same time, and thus initially spawn 2 active `QueryTask` instances on the state. However, query fetches are deduplicated by default, so this will result in only 1 actual fetch being performed.
+In this example, the query state between the parent and child views is shared. Under the hood, this will create 2 separate subscriptions to the underlying ``QueryStore`` at the same time, and thus initially spawn 2 active ``QueryTask`` instances on the state. However, query fetches are deduplicated by default, so this will result in only 1 actual fetch being performed.
 
 ## MVVM
 
@@ -115,7 +115,7 @@ View     ->     View Model     ->     Use Case     ->     Domain
 ---swift-query operates here---
 ```
 
-The library would operate in the view or view model layers depending on your use case. Any `QueryRequest` types you make can simply wrap a call to your repository or use case. You can even use the `QueryContext` to inject your use case into the query such that a mock can be provided in tests.
+The library would operate in the view or view model layers depending on your use case. Any `QueryRequest` types you make can simply wrap a call to your repository or use case. You can even use the ``QueryContext`` to inject your use case into the query such that a mock can be provided in tests.
 
 ```swift
 import Query
@@ -180,7 +180,7 @@ struct MyReducer {
 }
 ```
 
-> Note: By default, any declaration of `@Shared(.query(_))` will add a subscription to the underlying `QueryStore` which may refetch the query. By default, query fetches are deduplicated, so 2 declarations in quick succession will incur 1 real fetch. However, if you would like to opt out of this behavior, use the `enableAutomaticFetching` or `staleWhen` modifiers on your query to indicate to the underlying `QueryStore` when it is ok to refetch the query.
+> Note: By default, any declaration of `@Shared(.query(_))` will add a subscription to the underlying `QueryStore` which may refetch the query. By default, query fetches are deduplicated, so 2 declarations in quick succession will incur 1 real fetch. However, if you would like to opt out of this behavior, use the ``QueryRequest/enableAutomaticFetching(onlyWhen:)`` or ``QueryRequest/staleWhen(predicate:)`` modifiers on your query to indicate to the underlying `QueryStore` when it is ok to refetch the query.
 
 You can also access and override the underlying `QueryClient` used by the `QueryKey` by overriding the `queryClient` dependency.
 

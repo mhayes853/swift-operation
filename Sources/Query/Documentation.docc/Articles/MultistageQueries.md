@@ -1,6 +1,6 @@
 # Multistage Queries
 
-Learn how to utilize `QueryContinuation` to yield multiple data updates from your query when fetching.
+Learn how to utilize ``QueryContinuation`` to yield multiple data updates from your query when fetching.
 
 ## Overview
 
@@ -47,7 +47,7 @@ struct CacheableQuery: QueryRequest, Hashable {
 }
 ```
 
-> Note: Instead of using a singleton for `Cache`, you may consider using a custom property on the `QueryContext` allowing you to do things like reliably running tests in parallel no matter what key is used.
+> Note: Instead of using a singleton for `Cache`, you may consider using a custom property on the ``QueryContext`` allowing you to do things like reliably running tests in parallel no matter what key is used.
 > ```swift
 > extension QueryContext {
 >   var cache: Cache {
@@ -232,7 +232,7 @@ extension QueryContext {
 }
 ```
 
-In `NearbyEventsQuery` we utilize the pattern matching ability of `QueryClient` and `QueryPath` to find previous event lists that we've fetched around the query's region. If the event lists's `region` is within some distance threshold to the query's distance, then we can yield the events from that list whilst we fetch the actual events list for the query's region.
+In `NearbyEventsQuery` we utilize the pattern matching ability of ``QueryClient`` and ``QueryPath`` to find previous event lists that we've fetched around the query's region. If the event lists's `region` is within some distance threshold to the query's distance, then we can yield the events from that list whilst we fetch the actual events list for the query's region.
 
 ## Conclusion
 

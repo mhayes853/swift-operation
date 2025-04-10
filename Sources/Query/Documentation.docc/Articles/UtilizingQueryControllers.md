@@ -1,10 +1,10 @@
 # Utilizing QueryControllers
 
-Learn how to use the `QueryController` protocol to automate fetching and state updates on your queries.
+Learn how to use the ``QueryController`` protocol to automate fetching and state updates on your queries.
 
 ## Overview
 
-The `QueryController` protocol gives you control over the state of a query from within a `QueryModifier` perspective itself. For instance, the `refetchOnChange` modifier uses a `QueryController` under the hood to refetch your query whenever a `FetchCondition` changes from false to true. This makes it easy to declaratively describe whenever a query should be refetched.
+The `QueryController` protocol gives you control over the state of a query from within a ``QueryModifier`` perspective itself. For instance, the ``QueryRequest/refetchOnChange(of:)`` modifier uses a `QueryController` under the hood to refetch your query whenever a `FetchCondition` changes from false to true. This makes it easy to declaratively describe whenever a query should be refetched.
 
 ```swift
 struct MyQuery: QueryRequest, Hashable {
@@ -19,7 +19,7 @@ You too can utilize the `QueryController` protocol to build such automations.
 
 ## Creating a QueryController
 
-The `QueryController` protocol has a single function requirement that hands you an instance of `QueryControls`, and forces you to return a `QuerySubscription` to perform any cleanup work in your controller.
+The `QueryController` protocol has a single function requirement that hands you an instance of ``QueryControls``, and forces you to return a ``QuerySubscription`` to perform any cleanup work in your controller.
 
 ```swift
 final class MyController<State: QueryStateProtocol>: QueryController {
@@ -29,7 +29,7 @@ final class MyController<State: QueryStateProtocol>: QueryController {
 }
 ```
 
-The `QueryControls` data type is effectively a limited version of `QueryStore` that allows you to yield state updates from the query, and perform refetches.
+The `QueryControls` data type is effectively a limited version of ``QueryStore`` that allows you to yield state updates from the query, and perform refetches.
 
 ```swift
 final class MyController<State: QueryStateProtocol>: QueryController {
@@ -49,15 +49,15 @@ final class MyController<State: QueryStateProtocol>: QueryController {
 }
 ```
 
-> Note: `yieldRefetch` returns nil when automatic fetching is disabled on the query. In other words, if the `QueryStore`'s `isAutomaticFetchingEnabled` property is false, then you cannot yield a refetch on the query. You can check if yielding a refetch is possible on `QueryControls` via `canYieldRefetch`.
+> Note: ``QueryControls/yieldRefetch(with:)`` returns nil when automatic fetching is disabled on the query. In other words, if ``QueryStore/isAutomaticFetchingEnabled`` property is false, then you cannot yield a refetch on the query. You can check if yielding a refetch is possible on `QueryControls` via ``QueryControls/canYieldRefetch``.
 
 Now that we understand the basics of creating a `QueryController`, let's delve into some use cases.
 
 ## Firestore Subscriptions
 
-Firebase allows you to both fetch and observe your data at the same time from Firestore. Using the sdk, you can model a `QueryRequest` around fetching the data, and then use a `QueryController` to subscribe to data changes and yield them from the query.
+Firebase allows you to both fetch and observe your data at the same time from Firestore. Using the sdk, you can model a ``QueryRequest`` around fetching the data, and then use a `QueryController` to subscribe to data changes and yield them from the query.
 
-To start, we'll create a `QueryContext` property for the firestore database instance. Doing so will allow you to inject an instance of firestore that connects to a local firebase emulator for testing and development purposes.
+To start, we'll create a ``QueryContext`` property for the firestore database instance. Doing so will allow you to inject an instance of firestore that connects to a local firebase emulator for testing and development purposes.
 
 ```swift
 extension QueryContext {
@@ -141,11 +141,11 @@ We've just explored how to create `QueryController`s, and even a usecase of wher
 
 As stated previously, the `QueryControls` can be thought of as a limited version of `QueryStore`. In fact, it uses a weak reference to a `QueryStore` under the hood, and only exposes a select few APIs from the store to give you control over the query.
 
-From a design perspective, this makes sense considering the notion of automatic fetching. When automatic fetching is disabled on a query store, all state updates to the query must come either from updating the state manually, or by explicitly calling `fetch` on the store manually. Controllers are inherently "running in the background" and are not guaranteed to refetch the query based on manual user interactions, therefore `yieldRefetch` falls under the bin of automatic fetching.
+From a design perspective, this makes sense considering the notion of automatic fetching. When automatic fetching is disabled on a query store, all state updates to the query must come either from updating the state manually, or by explicitly calling `fetch` on the store manually. Controllers are inherently "running in the background" and are not guaranteed to refetch the query based on manual user interactions, therefore ``QueryControls/yieldRefetch(with:)`` falls under the bin of automatic fetching.
 
 ### The QueryController Modifier
 
-Controllers are powered by the `QueryModifier` system. In fact, the modifier is quite simple.
+Controllers are powered by the ``QueryModifier`` system. In fact, the modifier is quite simple.
 
 ```swift
 struct QueryControllerModifier<
@@ -184,7 +184,7 @@ extension QueryContext {
 }
 ```
 
-This context property is used by a `QueryStore` to find all the controllers for your query, create an appropriate `QueryControls` instance, and then call `control` on them. This happens when a `QueryStore` is initialized. When the `QueryStore` is deallocated, it will cancel the subscription returned from `control`.
+This context property is used by a `QueryStore` to find all the controllers for your query, create an appropriate `QueryControls` instance, and then call ``QueryController/control(with:)`` on them. This happens when a `QueryStore` is initialized. When the `QueryStore` is deallocated, it will cancel the subscription returned from `control`.
 
 ## Conclusion
 

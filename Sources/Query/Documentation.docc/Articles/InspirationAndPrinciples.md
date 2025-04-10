@@ -57,17 +57,17 @@ At its core, this library provides all the functionallity that one can find in T
 
 So in no particular order, here are the primary design principles of this library:
 1. **Queries should be easy to create and compose together.**
-   1. The former is achieved through making `QueryRequest` only having 1 primary requirement, and the latter through `QueryModifier`.
+   1. The former is achieved through making ``QueryRequest`` only having 1 primary requirement, and the latter through ``QueryModifier``.
 2. **Different parts of the library should be entirely decoupled from each other.**
-   1. For instance, if you just want to use the `QueryRequest` in a headless fashion and not care about the state management provided by `QueryStore`, you can write your own code that just uses `QueryRequest` directly.
-   2. You may also not want to use the `QueryClient` for some reason (eg. you want 2 separate store instances for the same query), as such you can create stores directly through `QueryStore.detached`.
+   1. For instance, if you just want to use the `QueryRequest` in a headless fashion and not care about the state management provided by ``QueryStore``, you can write your own code that just uses `QueryRequest` directly.
+   2. You may also not want to use the ``QueryClient`` for some reason (eg. you want 2 separate store instances for the same query), as such you can create stores directly through ``QueryStore/detached(query:initialValue:initialContext:)-8q2pv``.
    3. You also may not like how some of the built-in query modifiers are implemented, say retries, and thus you could write your own retry `QueryModifier`.
 3. **Essential functionallity should be built on top of generic extendable abstractions, and should not just be baked into the library.**
-   1. For instance, checking whether the network is down, or if the app is currently focused are built on top of `FetchCondition`. This is unlike Tanstack Query, which bakes the notion of connectivity and application focus state directly into the queries themselves.
+   1. For instance, checking whether the network is down, or if the app is currently focused are built on top of ``FetchCondition``. This is unlike Tanstack Query, which bakes the notion of connectivity and application focus state directly into the queries themselves.
    2. Another case would be common query modifiers such as retries. Retries are built on top of the generic `QueryModifier` system, and unlike Tanstack Query is not baked into the query itself.
-   3. Even `QueryModifier` is built on top of `QueryRequest`, as under the hood a `ModifiedQuery` is used to represent a query which has a modifier attached to it.
+   3. Even `QueryModifier` is built on top of `QueryRequest`, as under the hood a ``ModifiedQuery`` is used to represent a query which has a modifier attached to it.
 4. **Custom Query Paradigms should be possible.**
-   1. The library provides 3 paradigms, the base query paradigm represented by `QueryRequest`, infinite/paginated queries represented by `InfiniteQueryRequest`, and mutations (eg. making a POST to an API) represented by `MutationRequest`.
+   1. The library provides 3 paradigms, the base query paradigm represented by `QueryRequest`, infinite/paginated queries represented by ``InfiniteQueryRequest``, and mutations (eg. making a POST to an API) represented by ``MutationRequest``.
    2. You should be able to create your own query paradigm for your own purposes. For instance, one could theoretically create a query paradigm for fetching recursive data, and that could be represented via some `RecursiveQueryRequest` protocol.
 5. **Custom Query Paradigms should be derived from the base Query Paradigm.**
    1. `MutationRequest` and `InfiniteQueryRequest` are built directly on top of `QueryRequest` itself. This allows all 3 query paradigms to share query logic such as retries. By implementing the retry modifier once, we can reuse it with ordinary queries, paginated infinite queries, and mutations.

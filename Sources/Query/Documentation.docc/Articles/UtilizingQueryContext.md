@@ -1,10 +1,10 @@
 # Utilizing the QueryContext
 
-Learn how to best use the `QueryContext` to facilitate dependency injection, customizing query behavior, and much more.
+Learn how to best use the ``QueryContext`` to facilitate dependency injection, customizing query behavior, and much more.
 
 ## Overview
 
-The `QueryContext` is a powerful tool utilized by many types in the library. In fact, every `QueryRequest` you create gets access to it.
+The `QueryContext` is a powerful tool utilized by many types in the library. In fact, every ``QueryRequest`` you create gets access to it.
 
 ```swift
 struct PlayerQuery: QueryRequest, Hashable {
@@ -96,7 +96,7 @@ struct PlayerQuery: QueryRequest, Hashable {
 
 As can be seen here, we're able to customize the behavior of `PlayerQuery` based on a custom context property. Utilizing this technique allows you to use the `QueryContext` in a variety of ways, some of which we will talk about later.
 
-The `defaultValue` of a `QueryContext.Key` is lazily evaluated by the `QueryContext` instance. Additionally, the default value is only computed once, and then cached in the context. In other words, the following code will only evaluate the default value once per context.
+The `defaultValue` of a ``QueryContext/Key`` is lazily evaluated by the `QueryContext` instance. Additionally, the default value is only computed once, and then cached in the context. In other words, the following code will only evaluate the default value once per context.
 
 ```swift
 extension QueryContext {
@@ -135,7 +135,7 @@ Now that you have a basic understanding of how to add custom properties to `Quer
 
 ## Setting Up The Context
 
-The `QueryRequest` protocol has an optional requirement to setup a `QueryContext` in a way that the query likes. This method is ran a single time when a `QueryStore` for the query is initialized.
+The `QueryRequest` protocol has an optional requirement to setup a `QueryContext` in a way that the query likes. This method is ran a single time when a ``QueryStore`` for the query is initialized.
 
 ```swift
 struct SomeQuery: QueryRequest, Hashable {
@@ -285,7 +285,7 @@ class MockPostURLProtocol: URLProtocol {
 
 ### Overriding Time
 
-The `valueLastUpdatedAt` and `errorLastUpdatedAt` properties on `QueryStateProtocol` conformances are computed using the `QueryClock` protocol. The clock lives on the context, and can be overridden. Therefore, if you want to ensure a deterministic date calculations for various reasons (time freeze, testing, etc.), you can do the following.
+``QueryStateProtocol/valueLastUpdatedAt`` and ``QueryStateProtocol/errorLastUpdatedAt`` properties on ``QueryStateProtocol`` conformances are computed using the ``QueryClock`` protocol. The clock lives on the context, and can be overridden. Therefore, if you want to ensure a deterministic date calculations for various reasons (time freeze, testing, etc.), you can do the following.
 
 ```swift
 let store = QueryStore.detached(
@@ -302,7 +302,7 @@ try await store.fetch()
 
 ### Overriding Delays
 
-The `QueryDelayer` protocol is used to artificially delay queries in the case of retries. By default, query retries utilize [Fibonacci Backoff](https://thuc.space/posts/retry_strategies/#fibonacci-backoff) where the query will be artificially delayed by an increasing amount of time based on the current retry index.
+The ``QueryDelayer`` protocol is used to artificially delay queries in the case of retries. By default, query retries utilize [Fibonacci Backoff](https://thuc.space/posts/retry_strategies/#fibonacci-backoff) where the query will be artificially delayed by an increasing amount of time based on the current retry index.
 
 For testing, this delay may be unacceptable, but thankfully you can override the `QueryDelayer` on the context to remove delays.
 

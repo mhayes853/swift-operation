@@ -1,6 +1,6 @@
 # Query Pattern Matching and State Management
 
-Learn how to utilize `QueryPath` and `QueryClient` to pattern match queries and manage state.
+Learn how to utilize ``QueryPath`` and ``QueryClient`` to pattern match queries and manage state.
 
 ## Overview
 
@@ -71,7 +71,7 @@ Managing this kind of asynchronous data consistency is where the library truly b
 
 ## Updating Query State After a Mutation
 
-When a user sends a friend request to a user, we'll want to update the friends list query of the receiving user. The most basic approach for handling this is to reach into the `QueryContext` that's passed to the mutation, and then grab the `QueryClient` from it. From there, we can peak into the `QueryStore` for the corresponding friend list query and update its state.
+When a user sends a friend request to a user, we'll want to update the friends list query of the receiving user. The most basic approach for handling this is to reach into the ``QueryContext`` that's passed to the mutation, and then grab the `QueryClient` from it. From there, we can peak into the ``QueryStore`` for the corresponding friend list query and update its state.
 
 ```swift
 struct SendFriendRequestMutation: MutationRequest, Hashable {
@@ -110,7 +110,7 @@ This works, however it's considerably likely that we'll have multiple instances 
 
 To get around the aforementioned performance issue, we can utilize a `QueryPath` to pattern match the existing `QueryStore`s inside the `QueryClient`.
 
-`QueryRequest`, and all protocols that inherit from it such as `InfiniteQueryRequest` and `MutationRequest` have an optional `path` requirement. When your query type conforms to Hashable, this requirement is automatically implemented as follows.
+``QueryRequest``, and all protocols that inherit from it such as ``InfiniteQueryRequest`` and ``MutationRequest`` have an optional `path` requirement. When your query type conforms to Hashable, this requirement is automatically implemented as follows.
 
 ```swift
 extension QueryRequest where Self: Hashable {
@@ -151,7 +151,7 @@ let stores = queryClient.stores(matching: ["user-friends"])
 
 This will return back a `[QueryPath: OpaqueQueryStore]` that you can use to access the current state of all friends list queries in our app.
 
-> Note: An `OpaqueQueryStore` is a fully type erased `QueryStore`. You can still access and mutate the state on the store, but you will have to make the appropriate casts from `any Sendable` to the type of data you're working with.
+> Note: An ``OpaqueQueryStore`` is a fully type erased `QueryStore`. You can still access and mutate the state on the store, but you will have to make the appropriate casts from `any Sendable` to the type of data you're working with.
 
 Now that we have a basic understanding of `QueryPath`, we can explore how to use it effectively in our social app.
 

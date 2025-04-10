@@ -6,7 +6,7 @@ Learn how to best use the library in your app's test suite.
 
 Given that testing is only sometimes considered a crucial software development practice, it would be wise to test how your queries interact with your app. In general, reliably testing code that utilizes async await can be challenging due to the challenges of managing the time of a Task's execution. However, depending on your usage, you can utilize the tools in the library to make this process easier.
 
-If your queries rely on the default initializer of `QueryClient`, then retries, backoff, artificial delays, refetching on network reconnection, and refetching on the app reentering from the background are disabled when running queries in a test environment.
+If your queries rely on the default initializer of ``QueryClient``, then retries, backoff, artificial delays, refetching on network reconnection, and refetching on the app reentering from the background are disabled when running queries in a test environment.
 
 Let's take a look at how we can test queries depending on your usage of the library.
 
@@ -96,7 +96,7 @@ func valueLoads() {
 }
 ```
 
-The main issue here is the "Wait for value to load..." comment as it's not exactly clear when `model.value` will have been loaded. To get around this, you can technically reach into the `QueryStore` for `SomeQuery`, and await the first active task in the store.
+The main issue here is the "Wait for value to load..." comment as it's not exactly clear when `model.value` will have been loaded. To get around this, you can technically reach into the ``QueryStore`` for `SomeQuery`, and await the first active task in the store.
 
 ```swift
 @Test
@@ -146,4 +146,4 @@ Now you can manually trigger execution of the query, ensuring that we have a det
 
 ## Conclusion
 
-The biggest hurdle in testing how your code interacts with your queries is managing to have control over the query's execution. To clear this hurdle, you can either reach into the `QueryStore` and await the first active `QueryTask`, or you can override the `QueryClient` to disable automatic fetching.
+The biggest hurdle in testing how your code interacts with your queries is managing to have control over the query's execution. To clear this hurdle, you can either reach into the `QueryStore` and await the first active ``QueryTask``, or you can override the `QueryClient` to disable automatic fetching.

@@ -26,14 +26,14 @@ let value: String = client.store(for: query).currentValue // ✅ Compiles
 
 ## Default QueryContext
 
-The `QueryClient` holds onto a default `QueryContext` that is used to initialize every store it holds. By overriding this context, you can provide default contexts for your queries.
+The ``QueryClient`` holds onto a default ``QueryContext`` that is used to initialize every store it holds. By overriding this context, you can provide default contexts for your queries.
 
 ```swift
 let client = QueryClient()
 client.defaultContext.maxRetries = 0
 ```
 
-The above example effectively disables retries for all queries since all future `QueryStore`'s created by the client will use the default context.
+The above example effectively disables retries for all queries since all future ``QueryStore``'s created by the client will use the default context.
 
 > Note: Mutating the default context like this has no effect on stores that have already been created within the query client. It only affects stores created afterwards.
 
@@ -65,7 +65,7 @@ let client = QueryClient(
 )
 ```
 
-If you want to apply a custom modifier on all of your queries by default, you can make a conformance to the `QueryClient.StoreCreator` protocol. The protocol gives you the entirety of control over how a `QueryClient` constructs a store for a query, giving you the chance to apply whatever modifiers that your query needs.
+If you want to apply a custom modifier on all of your queries by default, you can make a conformance to the ``QueryClient/StoreCreator`` protocol. The protocol gives you the entirety of control over how a `QueryClient` constructs a store for a query, giving you the chance to apply whatever modifiers that your query needs.
 
 ```swift
 struct MyStoreCreator: QueryClient.StoreCreator {

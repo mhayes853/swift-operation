@@ -63,7 +63,7 @@ Yet, removing the need to manage loading and error states is just the beginning,
 
 ## Getting Started
 
-The first thing you'll need to do is create a data type and a `QueryRequest` for the data you want to fetch.
+The first thing you'll need to do is create a data type and a ``QueryRequest`` for the data you want to fetch.
 
 ```swift
 import Query
@@ -98,7 +98,7 @@ let query = PostQuery(id: 1)
   .deduplicated()
 ```
 
-> Note: You typically don't need to use all of the above modifiers unless you want to override the default behavior. By default, a `QueryClient` instance will automatically add these modifiers to your queries.
+> Note: You typically don't need to use all of the above modifiers unless you want to override the default behavior. By default, a ``QueryClient`` instance will automatically add these modifiers to your queries.
 
 Then, you can proceed depending on what libraries, frameworks, or architectural patterns you're using.
 
@@ -184,7 +184,7 @@ You can learn more about using queries with Sharing [here](TODO).
 
 ### In a View Model
 
-If you want to observe your query in view model, you can utilize the built-in combine publisher on the `QueryStore`.
+If you want to observe your query in view model, you can utilize the built-in combine publisher on the ``QueryStore``.
 
 ```swift
 import Combine
@@ -220,4 +220,4 @@ Swift Query is a powerful library for fetching and managing asynchronous data, b
 - Applications with primarily local data stored with SQLite, Core/Swift Data, Realm, etc.
   - For these applications, you'll be better off using the SDKs directly that manage the local data, or if you're using SQLite you may look into [SharingGRDB](https://github.com/pointfreeco/sharing-grdb) instead. Swift Query adds a lot of extra noise such as loading states and multistage queries that isn't really necessary if all of your data is stored locally on disk, and can be fetched with little delay.
 - Applications that primarily stream live data such from sources such as websockets.
-  - Swift Query can work well with live data such as websockets via yielding live updates from the query using a `QueryController`. However, if your data is mostly "streamed" and not really "fetched", then you may be able to skip the noise of Swift Query and utilize [Sharing](https://github.com/pointfreeco/swift-sharing) directly for managing state.
+  - Swift Query can work well with live data such as websockets via yielding live updates from the query using a ``QueryController``. However, if your data is mostly "streamed" and not really "fetched", then you may be able to skip the noise of Swift Query and utilize [Sharing](https://github.com/pointfreeco/swift-sharing) directly for managing state.

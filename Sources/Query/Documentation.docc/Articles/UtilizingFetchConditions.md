@@ -1,23 +1,23 @@
 # Utilizing Fetch Conditions
 
-Learn how to best use the `FetchCondition` protocol to control how and when queries can fetch their data.
+Learn how to best use the ``FetchCondition`` protocol to control how and when queries can fetch their data.
 
 ## Overview
 
-The `FetchCondition` protocol describes a set of conditions that can be used to determine when a query should fetch its data. For instance, `ConnectedCondition` utilizes a `NetworkObserver` to determine whether or not the current network connection status is suitable for fetching data. Additionally, `NotificationFocusCondition` (or `WindowFocusCondition` on WASM) listens for changes in the app's resign active state, which allows for automatic refetching when the app becomes active again.
+The `FetchCondition` protocol describes a set of conditions that can be used to determine when a query should fetch its data. For instance, ``ConnectedCondition`` utilizes a ``NetworkObserver`` to determine whether or not the current network connection status is suitable for fetching data. Additionally, ``NotificationFocusCondition`` (or `WindowFocusCondition` on WASM) listens for changes in the app's resign active state, which allows for automatic refetching when the app becomes active again.
 
 The library provides many built-in modifiers that utilize fetch conditions. Let's explore how some of these modifiers work, and how you can create your own `FetchCondition` conformances that take advantage of these modifiers.
 
 ## Automatic Fetching
 
-`QueryStore` has a notion of automatic fetching, which essentially means that the data for the query in the store can be fetched without having to manually call `fetch` on the store. You can check whether or not automatic fetching is enabled on your `QueryStore` via the `isAutomaticFetchingEnabled` property. By default, all `QueryRequest` conformances have automatic fetching enabled, and all `MutationRequest` conformances have automatic fetching disabled.
+``QueryStore`` has a notion of automatic fetching, which essentially means that the data for the query in the store can be fetched without having to manually call `fetch` on the store. You can check whether or not automatic fetching is enabled on your `QueryStore` via the `isAutomaticFetchingEnabled` property. By default, all ``QueryRequest`` conformances have automatic fetching enabled, and all ``MutationRequest`` conformances have automatic fetching disabled.
 
 Automatic fetching covers the following scenarios:
-- Fetching when a new subscription to the store is added via `subscribe`.
-- Fetching from within a `QueryController`.
+- Fetching when a new subscription to the store is added via ``QueryStore/subscribe(with:)-7rsdv``.
+- Fetching from within a ``QueryController``.
   - This includes automatically refetching based on changes to `FetchCondition`s.
 
-To control whether or not automatic fetching is enabled, you can utilize the `enableAutomaticFetching` modifier alongside a `FetchCondition`.
+To control whether or not automatic fetching is enabled, you can utilize the ``QueryRequest/enableAutomaticFetching(onlyWhen:)`` modifier alongside a `FetchCondition`.
 
 ```swift
 struct MyQuery: QueryRequest {
@@ -40,7 +40,7 @@ let query = MyQuery().enableAutomaticFetching(
 
 ## Refetching On Change Of Conditions
 
-Another modifier that utilizes fetch conditions is the `refetchOnChangeOf` modifier. This modifier allows you to specify a `FetchCondition` that will trigger a refetch when the condition changed to true.
+Another modifier that utilizes fetch conditions is the ``QueryRequest/refetchOnChange(of:)`` modifier. This modifier allows you to specify a `FetchCondition` that will trigger a refetch when the condition changed to true.
 
 ```swift
 let query = MyQuery().refetchOnChange(
@@ -52,7 +52,7 @@ The example above will refetch the query whenever the network comes back online 
 
 ## Stale When Revalidate
 
-`QueryStore` has a notion of stale-when-revalidate when fetching data. When a new subscriber is added to the store via `subscribe`, the store will refetch the data if both `isStale` and `isAutomaticFetchingEnabled` are true. You can control the value of `isStale` via a `FetchCondition`.
+`QueryStore` has a notion of stale-when-revalidate when fetching data. When a new subscriber is added to the store via ``QueryStore/subscribe(with:)-7rsdv``, the store will refetch the data if both ``QueryStore/isStale`` and ``QueryStore/isAutomaticFetchingEnabled`` are true. You can control the value of `isStale` via a `FetchCondition`.
 
 ```swift
 import Combine
@@ -81,7 +81,7 @@ In this example, the query will be considered stale when the subject emits a val
 
 ## Suspending Queries
 
-It's also possible to keep a query in a loading state while some condition is false. This can be achieved with the `suspending` modifier.
+It's also possible to keep a query in a loading state while some condition is false. This can be achieved with the ``QueryRequest/suspend(on:)`` modifier.
 
 ```swift
 let query = MyQuery().suspending(
@@ -98,7 +98,7 @@ In this example, the query will be stuck in a loading state while the network is
 
 ## Boolean Operators
 
-The `!`, `||`, and `&&` operators have been overloaded for the `FetchConditon` protocol. This allows you to compose conditions just like you would with booleans.
+The ``!(_:)``, ``||(_:_:)``, and ``&&(_:_:)`` operators have been overloaded for the `FetchConditon` protocol. This allows you to compose conditions just like you would with booleans.
 
 ```swift
 let query = MyQuery().staleWhen(

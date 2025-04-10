@@ -1,6 +1,6 @@
 # Customizing Queries with Modifiers
 
-Learn how to use the `QueryModifier` protocol to reuse and compose query logic.
+Learn how to use the ``QueryModifier`` protocol to reuse and compose query logic.
 
 ## Overviews
 
@@ -37,7 +37,7 @@ extension QueryRequest {
 }
 ```
 
-> Note: It's essential that we have `ModifiedQuery<Self, some QueryModifier<Self>>` as the return type instead of `some QueryRequest<Value>`. The former style ensures that infinite queries and mutations can use our modifier whilst still being recognized as their respective `InfiniteQueryRequest` or `MutationRequest` conformances by the compiler.
+> Note: It's essential that we have `ModifiedQuery<Self, some QueryModifier<Self>>` as the return type instead of `some QueryRequest<Value>`. The former style ensures that infinite queries and mutations can use our modifier whilst still being recognized as their respective ``InfiniteQueryRequest`` or ``MutationRequest`` conformances by the compiler.
 
 This allows us to use our modifer for any query that we create.
 
@@ -58,7 +58,7 @@ With this, we now have a reusable modifier that can apply an artificial delay to
 
 ## Setting Up the Context
 
-Your modifier may want to set up the `QueryContext` it's handed in a certain way. For instance, the retry, query controller, and stale-when-revalidate modifiers use this technique to set overrideable values in the `QueryContext`, such that you can override the context values before running the query.
+Your modifier may want to set up the ``QueryContext`` it's handed in a certain way. For instance, the retry, query controller, and stale-when-revalidate modifiers use this technique to set overrideable values in the `QueryContext`, such that you can override the context values before running the query.
 
 Let's apply this technique to our custom `DelayModifier`.
 
@@ -93,7 +93,7 @@ extension QueryContext {
 }
 ```
 
-This now allows you to override the `queryDelay` value like so.
+This now allows you to override the `queryDelay` value.
 
 ```swift
 let query = SomeQuery().delay(for: 1)
@@ -101,7 +101,7 @@ let store = client.store(for: query)
 store.context.queryDelay = 0
 ```
 
-When a `QueryStore` is created, it will run the `setup` method of the `DelayModifier` once which will set the `queryDelay` property to 1 second in the above example. However, after the store is created, the `queryDelay` value is set to 0 which effectively disables the artificial delay.
+When a ``QueryStore`` is created, it will run the `setup` method of the `DelayModifier` once which will set the `queryDelay` property to 1 second in the above example. However, after the store is created, the `queryDelay` value is set to 0 which effectively disables the artificial delay.
 
 ## Conclusion
 
