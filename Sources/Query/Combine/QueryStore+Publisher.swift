@@ -3,6 +3,9 @@
   import Foundation
 
   extension QueryStore {
+    /// A Combine `Publisher` that emits state updates from a ``QueryStore``.
+    ///
+    /// This publisher will add a new subscription to the underlying store when subscribed to.
     public struct Publisher: Combine.Publisher, @unchecked Sendable {
       public struct Output: Sendable {
         public let state: State
@@ -23,6 +26,9 @@
       }
     }
 
+    /// A Combine `Publisher` that emits state updates from this store.
+    ///
+    /// The publisher will add a new subscription to this store when subscribed to.
     public var publisher: Publisher {
       Publisher(store: self)
     }

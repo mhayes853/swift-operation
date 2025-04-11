@@ -3,6 +3,15 @@
 
   // MARK: - PublisherObserver
 
+  /// A ``FetchCondition`` that observes the value of a Combine `Publisher`.
+  ///
+  /// To create this condition, provide a thread-safe `Publisher` that emits a `Bool` and an
+  /// initial `Bool` value. If your publisher is a `CurrentValueSubject`, you can omit the initial
+  /// value.
+  ///
+  /// When initialized, this condition will immediately subscribe to your publisher, and will
+  /// manually store the latest output. Only 1 subscription is made to your publisher, and changes
+  /// from the single subscription are propagated to all subscribers of this condition.
   public final class PublisherCondition<P: Publisher & Sendable>
   where P.Output == Bool, P.Failure == Never {
     private typealias State = (cancellable: AnyCancellable?, currentValue: Bool)
@@ -39,7 +48,13 @@
 
   // MARK: - FetchConditionObserver Extensions
 
-  extension FetchCondition {
+extension FetchCondition {
+    /// A ``FetchCondition`` that observes the value of a Combine `Publisher`.
+    ///
+    /// - Parameters:
+    ///   - publisher: The `Publisher` to observe.
+    ///   - initialValue: The initial value of this condition.
+    /// - Returns: A ``PublisherCondition``.
     public static func observing<P: Publisher>(
       publisher: P,
       initialValue: Bool
@@ -47,6 +62,10 @@
       PublisherCondition(publisher: publisher, initialValue: initialValue)
     }
 
+    /// A ``FetchCondition`` that observes the value of a `CurrentValueSubject`.
+    ///
+    /// - Parameter subject: The `CurrentValueSubject` to observe.
+    /// - Returns: A ``PublisherCondition``.
     public static func observing(
       subject: CurrentValueSubject<Bool, Never>
     ) -> Self where Self == PublisherCondition<CurrentValueSubject<Bool, Never>> {
