@@ -499,7 +499,7 @@ struct RecursiveQueryState<Value: RecursiveValue>: QueryStateProtocol {
 }
 ```
 
-> Note: In a real implementation, we may want to see if we are also fetching subtrees for the parent nodes and wait for those tasks to finish first before fetching the subtree. For that we can use the ``QueryTask/schedule(after:)`` API.
+> Note: In a real implementation, we may want to see if we are also fetching subtrees for the parent nodes and wait for those tasks to finish first before fetching the subtree. For that we can use the ``QueryTask/schedule(after:)-(QueryTask<V>)`` API.
 
 As we can see here, we just need to append the task to our list of active tasks on the state, and we can even compute `isLoading` by checking if there are any active tasks on the state.
 

@@ -5,7 +5,7 @@ import IdentifiedCollections
 /// An enum representing the current status of a query.
 ///
 /// You generally don't create instances of this enum directly, and instead you can access it via
-/// ``QueryStateProtocol/status`` on your query's state.
+/// ``QueryStateProtocol/status-5632c`` on your query's state.
 public enum QueryStatus<Value: Sendable>: Sendable {
   /// The query has never been fetched.
   case idle
