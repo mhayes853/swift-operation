@@ -6,8 +6,8 @@
   /// A ``FetchCondition`` that observes the value of a Combine `Publisher`.
   ///
   /// To create this condition, provide a thread-safe `Publisher` that emits a `Bool` and an
-  /// initial `Bool` value. If your publisher is a `CurrentValueSubject`, you can omit the initial
-  /// value.
+  /// initial `Bool` value that is used when your publisher has not emitted a value. If your
+  /// publisher is a `CurrentValueSubject`, you can omit the initial value.
   ///
   /// When initialized, this condition will immediately subscribe to your publisher, and will
   /// manually store the latest output. Only 1 subscription is made to your publisher, and changes
@@ -53,7 +53,7 @@ extension FetchCondition {
     ///
     /// - Parameters:
     ///   - publisher: The `Publisher` to observe.
-    ///   - initialValue: The initial value of this condition.
+    ///   - initialValue: The initial value of this condition that is used while your publisher hasn't emitted anything.
     /// - Returns: A ``PublisherCondition``.
     public static func observing<P: Publisher>(
       publisher: P,

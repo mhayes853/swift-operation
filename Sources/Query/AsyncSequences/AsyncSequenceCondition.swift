@@ -1,3 +1,14 @@
+/// A ``FetchCondition`` that observes an `AsyncSequence`.
+///
+/// To create this condition, provide a Sendable `AsyncSequence` and initial `Bool` value that is
+/// used for when your sequence hasn't emitted an element.
+///
+/// When initialized, this condition will immediately begin iterating over your sequence, and will
+/// store the iterated value internally. Additionally, each iteration will broadcast its result to
+/// all subscribers of this condition.
+///
+/// When this condition is deallocated, iteration stops on your sequence provided that you opt into
+/// cooperative cancellation.
 public final class AsyncSequenceCondition<S: AsyncSequence & Sendable>: Sendable
 where S.Element == Bool {
   private typealias State = (task: Task<Void, any Error>?, currentValue: Bool)
@@ -37,6 +48,12 @@ extension AsyncSequenceCondition: FetchCondition {
 }
 
 extension FetchCondition {
+  /// A ``FetchCondition`` that observes an `AsyncSequence`.
+  ///
+  /// - Parameters:
+  ///   - sequence: The sequence to observe.
+  ///   - initialValue: The intial boolean value that is used while your sequence hasn't emitted anything.
+  /// - Returns: A ``AsyncSequenceCondition``.
   public static func observing<S: AsyncSequence>(
     sequence: S,
     initialValue: Bool
