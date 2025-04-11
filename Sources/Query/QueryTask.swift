@@ -2,12 +2,26 @@ import Foundation
 
 // MARK: - QueryTaskConfiguration
 
+/// A configuration data type for a ``QueryTask`` that holds information on how the task runs, and
+/// the ``QueryContext`` used to run the task.
 public struct QueryTaskConfiguration: Sendable {
+  /// The name of the task.
   public var name: String?
+  
+  /// The priority of the underlying raw `Task` value used by the task.
   public var priority: TaskPriority?
+  
+  /// The ``QueryContext`` of the task.
   public var context: QueryContext
+  
   private var _executorPreference: (any Sendable)?
-
+  
+  /// Creates a task configuration.
+  ///
+  /// - Parameters:
+  ///   - name: The name of the task.
+  ///   - priority: The priority of the underlying raw `Task` value used by the task.
+  ///   - context: The ``QueryContext`` of the task.
   public init(name: String? = nil, priority: TaskPriority? = nil, context: QueryContext) {
     self.name = name
     self.priority = priority
@@ -18,11 +32,19 @@ public struct QueryTaskConfiguration: Sendable {
 
 @available(iOS 18.0, macOS 15.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, *)
 extension QueryTaskConfiguration {
+  /// The `TaskExecutor` preference of the underlying raw `Task` value used by the task.
   public var executorPreference: (any TaskExecutor)? {
     get { self._executorPreference as? any TaskExecutor }
     set { self._executorPreference = newValue }
   }
 
+  /// Creates a task configuration.
+  ///
+  /// - Parameters:
+  ///   - name: The name of the task.
+  ///   - priority: The priority of the underlying raw `Task` value used by the task.
+  ///   - executorPreference: The `TaskExecutor` preference of the underlying raw `Task` value used by the task.
+  ///   - context: The ``QueryContext`` of the task.
   public init(
     name: String? = nil,
     priority: TaskPriority? = nil,
@@ -49,10 +71,39 @@ private protocol _QueryTask: Sendable, Identifiable {
 
 // MARK: - QueryTask
 
+/// A unit of work for systems that manage the execution and state of a ``QueryRequest``.
+///
+/// Generally, `QueryTask`s are created by ``QueryStore``s, and then are retained within the
+/// store's state. In other words, you generally do not create tasks directly, but you can
+/// retrieve tasks from the store and configure their creation through ``QueryTaskConfiguration``.
+///
+/// Unlike a traditional `Task` in Swift, a `QueryTask` does not immediately begin scheduling its
+/// work on its preferred executor when initialized. Instead, you must explicitly schedule and
+/// run the task using ``runIfNeeded()``, and you can check the running state via ``isRunning``
+/// and ``hasStarted``. Once `runIfNeeded` has been called, subsequent calls to
+/// `runIfNeeded` will await an underyling `Task` created by the first call. You can configure
+/// the properties for this underlying task through `QueryTaskConfiguration`.
+///
+/// `QueryTask` itself is a value type, and contains mutable properties (most notable
+/// ``configuration``). However, the underlying mechanism for the scheduling and run state is
+/// managed via a reference. Therefore, copied values of a task will point to the same underlying
+/// reference for the task's run state, including those returned from helpers such as ``map(_:)``.
+/// Once a task has begun running, any mutations to the task's mutable properties will have no
+/// effect on the active work.
+///
+/// Each `QueryTask` is paired with a unique ``QueryTaskIdentifier``, allowing it to conform to
+/// `Identifiable`. This identifier is also used to implement `Hashable` and `Equatable` just like
+/// the way it works for traditional Swift `Task` values. Copied tasks, including those from
+/// helpers such as `map` will retain the same id, and therefore are equal.
 public struct QueryTask<Value: Sendable>: _QueryTask {
   private typealias State = (task: TaskState?, dependencies: [any _QueryTask])
 
   public let id: QueryTaskIdentifier
+  
+  /// The current ``QueryTaskConfiguration`` for this task.
+  ///
+  /// > Note: Mutating this property after calling ``runIfNeeded()`` has no effect on the
+  /// > active work.
   public var configuration: QueryTaskConfiguration
 
   private let work: @Sendable (QueryTaskInfo) async throws -> any Sendable
@@ -61,6 +112,11 @@ public struct QueryTask<Value: Sendable>: _QueryTask {
 }
 
 extension QueryTask {
+  /// Creates a task.
+  ///
+  /// - Parameters:
+  ///   - configuration: The ``QueryTaskConfiguration`` for the task.
+  ///   - work: The task's actual work.
   public init(
     configuration: QueryTaskConfiguration,
     work: @escaping @Sendable (QueryTaskInfo) async throws -> Value
@@ -75,12 +131,16 @@ extension QueryTask {
 
 // MARK: - QueryTaskID
 
+/// An opaque identifier for a ``QueryTask``.
+///
+/// Each new `QueryTask` is assigned a unique identifier when it is initialized, you do not create
+/// instances of this identifier.
 public struct QueryTaskIdentifier: Hashable, Sendable {
   private let number: Int
 }
 
 extension QueryTaskIdentifier {
-  private static let counter = RecursiveLock(0)
+  private static let counter = Lock(0)
 
   fileprivate static func next() -> Self {
     counter.withLock { counter in
@@ -115,6 +175,11 @@ extension QueryTask: Hashable {
 // MARK: - Task Dependencies
 
 extension QueryTask {
+  /// Schedules the execution of this task to take place after another task.
+  ///
+  /// > Note: Calling this method after calling ``runIfNeeded()`` has no effect.
+  ///
+  /// - Parameter task: The task to schedule this task's execution after.
   public func schedule<V: Sendable>(after task: QueryTask<V>) {
     self.withDependencies {
       $0.removeAll { $0.id == task.id }
@@ -122,6 +187,11 @@ extension QueryTask {
     }
   }
 
+  /// Schedules the execution of this task to take place after a sequence of other tasks.
+  ///
+  /// > Note: Calling this method after calling ``runIfNeeded()`` has no effect.
+  ///
+  /// - Parameter tasks: The sequence of tasks to schedule this task's execution after.
   public func schedule<V: Sendable>(after tasks: some Sequence<QueryTask<V>>) {
     self.withDependencies {
       let ids = Set(tasks.map(\.id))
@@ -161,10 +231,18 @@ extension QueryTask {
 // MARK: - Run
 
 extension QueryTask {
+  /// Whether or not the task has been started in some capacity.
+  ///
+  /// The difference between this property, and ``isRunning`` is that this property will remain
+  /// true after a task has finished.
   public var hasStarted: Bool {
     self.box.inner.withLock { $0.task != nil }
   }
 
+  /// Whether or not the task is actively running.
+  ///
+  /// The difference between this property, and ``hasStarted`` is that this property will return
+  /// false after a task has finished.
   public var isRunning: Bool {
     self.box.inner.withLock {
       switch $0.task {
@@ -173,7 +251,21 @@ extension QueryTask {
       }
     }
   }
-
+  
+  /// Runs this task if it has not already been started.
+  ///
+  /// If the task has already been started, then this method will await the active work instead of
+  /// spinning up a new instance of the work. If the task has already finished, then the finished
+  /// result is returned immediately instead of spinning up a new instance of the work.
+  ///
+  /// Calling this method mutates a shared reference under the hood to indicate that the task is
+  /// running. While `QueryTask` is a value type, all of its copies, even those produced by helpers
+  /// such as ``map(_:)``, will be in a running state.
+  ///
+  /// > Note: After calling this method, mutations to the task's mutable properties will have no
+  /// > effect on the task's active work.
+  ///
+  /// - Returns: The return value of the active work.
   public func runIfNeeded() async throws -> Value {
     try await self.transforms(self._runIfNeeded())
   }
@@ -238,6 +330,7 @@ extension QueryTask {
 // MARK: - Cancellation
 
 extension QueryTask {
+  /// Whether or not this task has been finished with a `CancellationError`.
   public var isCancelled: Bool {
     self.box.inner.withLock {
       switch $0.task {
@@ -246,7 +339,19 @@ extension QueryTask {
       }
     }
   }
-
+  
+  /// Cancels this task.
+  ///
+  /// `QueryTask` cancellation behaves differently based on the running state of the task.
+  ///
+  /// - If the task is not running, and ``hasStarted`` is false, then the running state of the task
+  /// is immediately set to a finished state with a `CancellationError`.
+  ///
+  /// - If the task is running (ie. ``isRunning`` is true), the underlying `Task` value is
+  /// cancelled normally.
+  ///
+  /// - If the task has already finished (ie. ``isFinished`` is true), then this method has no
+  /// effect.
   public func cancel() {
     self.box.inner.withLock {
       switch $0.task {
@@ -262,6 +367,7 @@ extension QueryTask {
 // MARK: - Is Finished
 
 extension QueryTask {
+  /// Whether or not this task has finished running.
   public var isFinished: Bool {
     self.box.inner.withLock {
       switch $0.task {
@@ -282,6 +388,16 @@ private enum TaskState {
 // MARK: - Map
 
 extension QueryTask {
+  /// Returns a new `QueryTask` that applies a transformation to this work's return value of this
+  /// task.
+  ///
+  /// The new `QueryTask` has the same ``QueryTaskIdentifier``, and points to the same underlying
+  /// reference as this task. This means that the 2 tasks remain equivalent with each other
+  /// according to `Hashable` and `Equatable`, and that their running states will be equivalent.
+  /// When ``runIfNeeded()`` is called on either task, both will be in a running state.
+  ///
+  /// - Parameter transform: A closure to transform the work's return value from this task.
+  /// - Returns: A new `QueryTask` with the new work return value that has the same underlying reference an identifier as this task.
   public func map<T: Sendable>(
     _ transform: @escaping @Sendable (Value) throws -> T
   ) -> QueryTask<T> {
@@ -297,8 +413,15 @@ extension QueryTask {
 
 // MARK: - Info
 
+/// Info about an existing ``QueryTask``.
+///
+/// You cannot directly create instances of this type. You must get an instance from an existing
+/// ``QueryTask``, or you can access the info of a running task from within
+/// ``QueryRequest/fetch(in:with:)`` via the ``QueryContext/queryRunningTaskInfo`` context value.
 public struct QueryTaskInfo: Sendable, Identifiable {
   public let id: QueryTaskIdentifier
+  
+  /// The ``QueryTaskConfiguration`` of the task.
   public var configuration: QueryTaskConfiguration
 }
 
@@ -309,12 +432,16 @@ extension QueryTaskInfo: CustomStringConvertible {
 }
 
 extension QueryTask {
+  /// This task's info.
   public var info: QueryTaskInfo {
     QueryTaskInfo(id: self.id, configuration: self.configuration)
   }
 }
 
 extension QueryContext {
+  /// The ``QueryTaskInfo`` of the currently running ``QueryTask`` in this context.
+  ///
+  /// This value is non-nil when accessed from a context within ``QueryRequest/fetch(in:with:)``.
   public var queryRunningTaskInfo: QueryTaskInfo? {
     get { self[QueryTaskInfoKey.self] }
     set { self[QueryTaskInfoKey.self] = newValue }
