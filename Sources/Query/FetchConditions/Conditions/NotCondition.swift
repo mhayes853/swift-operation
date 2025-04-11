@@ -1,5 +1,7 @@
 // MARK: - NotCondition
 
+/// A ``FetchCondition`` that negates the value of a base condition by applying a boolean NOT
+/// operator to the base condition.
 public struct NotCondition<Base: FetchCondition>: FetchCondition {
   @usableFromInline
   let base: Base
@@ -25,6 +27,10 @@ public struct NotCondition<Base: FetchCondition>: FetchCondition {
 
 // MARK: - Not Operator
 
+/// Applies a boolean NOT operation on the specified ``FetchCondition``.
+///
+/// - Parameter base: The condition to negate.
+/// - Returns: A ``NotCondition``.
 @inlinable
 public prefix func ! <Base: FetchCondition>(
   _ base: Base

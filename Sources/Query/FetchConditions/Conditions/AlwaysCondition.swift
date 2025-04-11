@@ -1,3 +1,4 @@
+/// A ``FetchCondition`` that returns a static value.
 public struct AlwaysCondition: FetchCondition {
   @usableFromInline
   let isTrue: Bool
@@ -29,6 +30,12 @@ public struct AlwaysCondition: FetchCondition {
 }
 
 extension FetchCondition where Self == AlwaysCondition {
+  /// A ``FetchCondition`` that returns a static value.
+  ///
+  /// - Parameters:
+  ///   - value: The static value to always return from the condition.
+  ///   - shouldEmitInitialValue: Whether or not the condition should emit `value` when intially subscribed to.
+  /// - Returns: An ``AlwaysCondition``.
   @inlinable
   public static func always(_ value: Bool, shouldEmitInitialValue: Bool = false) -> Self {
     Self(isTrue: value, shouldEmitInitialValue: shouldEmitInitialValue)

@@ -1,5 +1,6 @@
 // MARK: - BinaryOperatorConditions
 
+/// A ``FetchCondition`` that applies a binary boolean operator between 2 conditions.
 public struct BinaryOperatorCondition<Left: FetchCondition, Right: FetchCondition> {
   fileprivate let left: Left
   fileprivate let right: Right
@@ -39,6 +40,12 @@ extension BinaryOperatorCondition: FetchCondition {
 
 // MARK: - Operators
 
+/// Applies a boolean AND operation between the 2 specified ``FetchCondition``s.
+///
+/// - Parameters:
+///   - left: The left hand side condition.
+///   - right: The right hand side condition.
+/// - Returns: A ``BinaryOperatorCondition`` that applies a boolean AND.
 public func && <Left: FetchCondition, Right: FetchCondition>(
   _ left: Left,
   _ right: Right
@@ -46,6 +53,13 @@ public func && <Left: FetchCondition, Right: FetchCondition>(
   BinaryOperatorCondition(left: left, right: right, op: .and)
 }
 
+
+/// Applies a boolean OR operation between the 2 specified ``FetchCondition``s.
+///
+/// - Parameters:
+///   - left: The left hand side condition.
+///   - right: The right hand side condition.
+/// - Returns: A ``BinaryOperatorCondition`` that applies a boolean OR.
 public func || <Left: FetchCondition, Right: FetchCondition>(
   _ left: Left,
   _ right: Right
