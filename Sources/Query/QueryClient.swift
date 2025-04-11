@@ -269,6 +269,11 @@ extension QueryClient.StoreCreator where Self == QueryClient.DefaultStoreCreator
   }
 }
 
+/// The default ``NetworkObserver`` to use for observing the user's connection status.
+///
+/// - On Darwin platforms, `NWPathMonitorObserver.shared` is used.
+/// - On Broswer platforms (WASI), `NavigatorObserver.shared` is used.
+/// - On other platforms, the value is nil.
 public var defaultNetworkObserver: (any NetworkObserver)? {
   #if canImport(Network)
     NWPathMonitorObserver.shared
@@ -279,6 +284,11 @@ public var defaultNetworkObserver: (any NetworkObserver)? {
   #endif
 }
 
+/// The default ``FetchCondition`` to use for detetcing whether or not the app is active.
+///
+/// - On Darwin platforms, the ``FetchCondition/notificationFocus`` condition is used.
+/// - On Broswer platforms (WASI), the ``FetchCondition/windowFocus`` condition is used.
+/// - On other platforms, the value is nil.
 public var defaultFocusCondition: (any FetchCondition)? {
   #if os(iOS) || os(macOS) || os(tvOS) || os(visionOS)
     .notificationFocus
