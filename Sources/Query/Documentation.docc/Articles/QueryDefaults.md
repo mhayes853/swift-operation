@@ -73,8 +73,7 @@ struct MyStoreCreator: QueryClient.StoreCreator {
     for query: Query,
     in context: QueryContext,
     with initialState: Query.State
-  ) -> QueryStore<Query.State>
-  where Query.State.QueryValue == Query.Value {
+  ) -> QueryStore<Query.State> {
     if query is any MutationRequest {
       // Modifiers applied only to mutations
       return .detached(

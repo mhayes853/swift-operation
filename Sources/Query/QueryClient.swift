@@ -89,7 +89,7 @@ extension QueryClient {
   private func opaqueStore<Query: QueryRequest>(
     for query: Query,
     initialState: Query.State
-  ) -> OpaqueQueryStore where Query.State.QueryValue == Query.Value {
+  ) -> OpaqueQueryStore {
     self.state.withLock { state in
       if let entry = state.stores[query.path] {
         if entry.queryType != Query.self {
@@ -116,7 +116,7 @@ extension QueryClient {
     for query: Query,
     initialState: Query.State,
     using context: QueryContext
-  ) -> OpaqueQueryStore where Query.State.QueryValue == Query.Value {
+  ) -> OpaqueQueryStore {
     OpaqueQueryStore(
       erasing: self.storeCreator.store(for: query, in: context, with: initialState)
     )
@@ -177,7 +177,7 @@ extension QueryClient {
       for query: Query,
       in context: QueryContext,
       with initialState: Query.State
-    ) -> QueryStore<Query.State> where Query.State.QueryValue == Query.Value
+    ) -> QueryStore<Query.State>
   }
 }
 
@@ -194,7 +194,7 @@ extension QueryClient {
       for query: Query,
       in context: QueryContext,
       with initialState: Query.State
-    ) -> QueryStore<Query.State> where Query.State.QueryValue == Query.Value {
+    ) -> QueryStore<Query.State> {
       if query is any MutationRequest {
         return .detached(
           query: query.retry(
