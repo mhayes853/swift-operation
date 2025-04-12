@@ -82,6 +82,16 @@ struct StaleWhenRevalidateQueryTests {
     expectNoDifference(store.isStale, true)
   }
 
+  @Test("Stale When No Value")
+  func staleWhenHasValue() async throws {
+    let query = TestQuery().staleWhenNoValue()
+    let store = QueryStore.detached(query: query, initialValue: nil)
+
+    expectNoDifference(store.isStale, true)
+    try await store.fetch()
+    expectNoDifference(store.isStale, false)
+  }
+
   @Test("Stale When Condition")
   func staleWhenCondition() async throws {
     let query = TestQuery().staleWhen { state, _ in state.valueUpdateCount == 0 }

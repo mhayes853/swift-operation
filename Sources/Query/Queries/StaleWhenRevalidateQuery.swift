@@ -17,6 +17,11 @@ extension QueryRequest {
     )
   }
 
+  public func staleWhenNoValue() -> ModifiedQuery<Self, some QueryModifier<Self>>
+  where State.StateValue == Value? {
+    self.staleWhen { state, _ in state.currentValue == nil }
+  }
+
   public func stale(after seconds: TimeInterval) -> ModifiedQuery<Self, some QueryModifier<Self>> {
     self.modifier(
       StaleWhenRevalidateModifier { state, context in
