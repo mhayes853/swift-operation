@@ -1,15 +1,15 @@
 extension QueryRequest {
-  public func suspend(
-    on condition: some FetchCondition
-  ) -> ModifiedQuery<Self, some QueryModifier<Self>> {
+  public func suspend<Condition: FetchCondition>(
+    on condition: Condition
+  ) -> ModifiedQuery<Self, SuspendModifier<Self, Condition>> {
     self.modifier(SuspendModifier(condition: condition))
   }
 }
 
-private struct SuspendModifier<Query: QueryRequest, Condition: FetchCondition>: QueryModifier {
+public struct SuspendModifier<Query: QueryRequest, Condition: FetchCondition>: QueryModifier {
   let condition: Condition
 
-  func fetch(
+  public func fetch(
     in context: QueryContext,
     using query: Query,
     with continuation: QueryContinuation<Query.Value>

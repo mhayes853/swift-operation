@@ -5,22 +5,22 @@ extension QueryRequest {
     limit: Int,
     backoff: QueryBackoffFunction? = nil,
     delayer: (any QueryDelayer)? = nil
-  ) -> ModifiedQuery<Self, some QueryModifier<Self>> {
-    self.modifier(RetryModifier(limit: limit, backoff: backoff, delayer: delayer))
+  ) -> ModifiedQuery<Self, _RetryModifier<Self>> {
+    self.modifier(_RetryModifier(limit: limit, backoff: backoff, delayer: delayer))
   }
 }
 
-private struct RetryModifier<Query: QueryRequest>: QueryModifier {
+public struct _RetryModifier<Query: QueryRequest>: QueryModifier {
   let limit: Int
   let backoff: QueryBackoffFunction?
   let delayer: (any QueryDelayer)?
 
-  func setup(context: inout QueryContext, using query: Query) {
+  public func setup(context: inout QueryContext, using query: Query) {
     context.queryMaxRetries = self.limit
     query.setup(context: &context)
   }
 
-  func fetch(
+  public func fetch(
     in context: QueryContext,
     using query: Query,
     with continuation: QueryContinuation<Query.Value>

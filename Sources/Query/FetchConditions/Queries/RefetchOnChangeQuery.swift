@@ -1,12 +1,14 @@
 extension QueryRequest {
-  public func refetchOnChange(
-    of condition: some FetchCondition
-  ) -> ModifiedQuery<Self, some QueryModifier<Self>> {
+  public func refetchOnChange<Condition: FetchCondition>(
+    of condition: Condition
+  ) -> ModifiedQuery<
+    Self, QueryControllerModifier<Self, RefetchOnChangeController<State, Condition>>
+  > {
     self.controlled(by: RefetchOnChangeController(condition: condition))
   }
 }
 
-private final class RefetchOnChangeController<
+public final class RefetchOnChangeController<
   State: QueryStateProtocol,
   Condition: FetchCondition
 >: QueryController {
@@ -17,7 +19,7 @@ private final class RefetchOnChangeController<
     self.condition = condition
   }
 
-  func control(with controls: QueryControls<State>) -> QuerySubscription {
+  public func control(with controls: QueryControls<State>) -> QuerySubscription {
     let (controlsSubscription, _) = self.subscriptions.add(handler: controls)
     let conditionSubscription = self.subscribeToCondition(in: controls.context)
     return .combined(controlsSubscription, conditionSubscription)

@@ -100,25 +100,25 @@ extension QueryControls {
 // MARK: - QueryProtocol
 
 extension QueryRequest {
-  public func controlled(
-    by controller: some QueryController<State>
-  ) -> ModifiedQuery<Self, some QueryModifier<Self>> {
+  public func controlled<Controller: QueryController<State>>(
+    by controller: Controller
+  ) -> ModifiedQuery<Self, QueryControllerModifier<Self, Controller>> {
     self.modifier(QueryControllerModifier(controller: controller))
   }
 }
 
-private struct QueryControllerModifier<
+public struct QueryControllerModifier<
   Query: QueryRequest,
   Controller: QueryController<Query.State>
 >: QueryModifier {
   let controller: Controller
 
-  func setup(context: inout QueryContext, using query: Query) {
+  public func setup(context: inout QueryContext, using query: Query) {
     context.queryControllers.append(self.controller)
     query.setup(context: &context)
   }
 
-  func fetch(
+  public func fetch(
     in context: QueryContext,
     using query: Query,
     with continuation: QueryContinuation<Query.Value>

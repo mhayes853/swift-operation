@@ -1,22 +1,25 @@
 // MARK: - QueryProtocol
 
 extension QueryRequest {
-  public func enableAutomaticFetching(
-    onlyWhen condition: some FetchCondition
-  ) -> ModifiedQuery<Self, some QueryModifier<Self>> {
+  public func enableAutomaticFetching<Condition: FetchCondition>(
+    onlyWhen condition: Condition
+  ) -> ModifiedQuery<Self, EnableAutomaticFetchingModifier<Self, Condition>> {
     self.modifier(EnableAutomaticFetchingModifier(condition: condition))
   }
 }
 
-private struct EnableAutomaticFetchingModifier<Query: QueryRequest>: QueryModifier {
+public struct EnableAutomaticFetchingModifier<
+  Query: QueryRequest,
+  Condition: FetchCondition
+>: QueryModifier {
   let condition: any FetchCondition
 
-  func setup(context: inout QueryContext, using query: Query) {
+  public func setup(context: inout QueryContext, using query: Query) {
     context.enableAutomaticFetchingCondition = self.condition
     query.setup(context: &context)
   }
 
-  func fetch(
+  public func fetch(
     in context: QueryContext,
     using query: Query,
     with continuation: QueryContinuation<Query.Value>

@@ -5,26 +5,26 @@ import Foundation
 extension QueryRequest {
   public func staleWhen(
     predicate: @escaping @Sendable (State, QueryContext) -> Bool
-  ) -> ModifiedQuery<Self, some QueryModifier<Self>> {
-    self.modifier(StaleWhenRevalidateModifier(predicate: predicate))
+  ) -> ModifiedQuery<Self, StaleWhenModifier<Self>> {
+    self.modifier(StaleWhenModifier(predicate: predicate))
   }
 
   public func staleWhen(
     condition: some FetchCondition
-  ) -> ModifiedQuery<Self, some QueryModifier<Self>> {
+  ) -> ModifiedQuery<Self, StaleWhenModifier<Self>> {
     self.modifier(
-      StaleWhenRevalidateModifier { _, context in condition.isSatisfied(in: context) }
+      StaleWhenModifier { _, context in condition.isSatisfied(in: context) }
     )
   }
 
-  public func staleWhenNoValue() -> ModifiedQuery<Self, some QueryModifier<Self>>
+  public func staleWhenNoValue() -> ModifiedQuery<Self, StaleWhenModifier<Self>>
   where State.StateValue == Value? {
     self.staleWhen { state, _ in state.currentValue == nil }
   }
 
-  public func stale(after seconds: TimeInterval) -> ModifiedQuery<Self, some QueryModifier<Self>> {
+  public func stale(after seconds: TimeInterval) -> ModifiedQuery<Self, StaleWhenModifier<Self>> {
     self.modifier(
-      StaleWhenRevalidateModifier { state, context in
+      StaleWhenModifier { state, context in
         guard let date = state.valueLastUpdatedAt else { return true }
         let now = context.queryClock.now()
         return now.timeIntervalSince(date) > seconds
@@ -33,10 +33,10 @@ extension QueryRequest {
   }
 }
 
-private struct StaleWhenRevalidateModifier<Query: QueryRequest>: QueryModifier {
+public struct StaleWhenModifier<Query: QueryRequest>: QueryModifier {
   let predicate: @Sendable (Query.State, QueryContext) -> Bool
 
-  func setup(context: inout QueryContext, using query: Query) {
+  public func setup(context: inout QueryContext, using query: Query) {
     context.staleWhenRevalidateCondition.add { state, context in
       guard let state = state.base as? Query.State else {
         return false
@@ -46,7 +46,7 @@ private struct StaleWhenRevalidateModifier<Query: QueryRequest>: QueryModifier {
     query.setup(context: &context)
   }
 
-  func fetch(
+  public func fetch(
     in context: QueryContext,
     using query: Query,
     with continuation: QueryContinuation<Query.Value>

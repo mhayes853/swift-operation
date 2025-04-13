@@ -65,8 +65,7 @@ extension QueryStore {
     query: Query,
     initialState: Query.State,
     initialContext: QueryContext = QueryContext()
-  ) -> QueryStore<Query.State>
-  where State == Query.State {
+  ) -> QueryStore<Query.State> where State == Query.State {
     QueryStore<Query.State>(
       query: query,
       initialState: initialState,
