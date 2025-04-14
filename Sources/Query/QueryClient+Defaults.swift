@@ -114,7 +114,7 @@ extension QueryClient.StoreCreator where Self == QueryClient.DefaultStoreCreator
 public var defaultNetworkObserver: (any NetworkObserver)? {
   #if canImport(Network)
     NWPathMonitorObserver.shared
-  #elseif canImport(JavaScriptKit)
+  #elseif browser && canImport(JavaScriptKit)
     NavigatorObserver.shared
   #else
     nil
@@ -135,7 +135,7 @@ public var defaultFocusCondition: (any FetchCondition)? {
     } else {
       nil
     }
-  #elseif canImport(JavaScriptKit)
+  #elseif browser && canImport(JavaScriptKit)
     .windowFocus
   #else
     nil
