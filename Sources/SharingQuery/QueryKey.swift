@@ -29,8 +29,7 @@ extension SharedKey {
     _ query: Query,
     initialState: Query.State,
     client: QueryClient? = nil
-  ) -> Self
-  where Self == QueryKey<Query.State>, Query.State.QueryValue == Query.Value {
+  ) -> Self where Self == QueryKey<Query.State> {
     QueryKey(base: .queryState(query, initialState: initialState, client: client))
   }
 
