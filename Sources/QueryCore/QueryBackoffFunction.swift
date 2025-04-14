@@ -5,7 +5,7 @@ import Foundation
 /// A backoff function to use for retrying queries.
 public struct QueryBackoffFunction: Sendable {
   private let backoff: @Sendable (Int) -> TimeInterval
-  
+
   /// Creates a backoff function using a closure you specify.
   ///
   /// The current retry index is passed to your closure, and you must compute a `TimeInterval` for
@@ -22,7 +22,7 @@ public struct QueryBackoffFunction: Sendable {
 extension QueryBackoffFunction {
   /// A backoff function that returns no backoff.
   public static let noBackoff = Self.constant(0)
-  
+
   /// A constant backoff function that always returns the specified `interval`.
   ///
   /// - Parameter interval: The backoff value/
@@ -64,7 +64,7 @@ extension QueryBackoffFunction {
   /// - Parameter interval: The base interval of backoff.
   /// - Returns: A fibonacci backoff function.
   public static func fibonacci(_ interval: TimeInterval) -> Self {
-    Self { TimeInterval(Query.fibonacci($0)) * interval }
+    Self { TimeInterval(QueryCore.fibonacci($0)) * interval }
   }
 }
 

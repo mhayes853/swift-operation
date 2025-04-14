@@ -1,6 +1,7 @@
 #if canImport(JavaScriptKit)
   import JavaScriptKit
-  import Query
+  import QueryBrowser
+  import QueryCore
   import XCTest
 
   final class NavigatorObserverTests: XCTestCase {
@@ -9,7 +10,7 @@
       navigator.onLine = .boolean(true)
       let observer = NavigatorObserver(navigator: navigator, window: window)
 
-      XCTAssertEqual(observer.currentStatus, .connected)
+      XCTAssertEqual(observer.currentStatus, NetworkStatus.connected)
     }
 
     func testDisconnectedWhenOnlineFalse() {
@@ -17,7 +18,7 @@
       navigator.onLine = .boolean(false)
       let observer = NavigatorObserver(navigator: navigator, window: window)
 
-      XCTAssertEqual(observer.currentStatus, .disconnected)
+      XCTAssertEqual(observer.currentStatus, NetworkStatus.disconnected)
     }
 
     func testObservesOnlineChanges() {
@@ -37,7 +38,7 @@
       window.dispatchEvent!(offlineEvent)
 
       values.withLock {
-        XCTAssertEqual($0, [.connected, .disconnected, .connected, .disconnected])
+        XCTAssertEqual($0, [NetworkStatus.connected, .disconnected, .connected, .disconnected])
       }
 
       subscription.cancel()

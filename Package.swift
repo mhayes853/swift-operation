@@ -11,6 +11,7 @@ let package = Package(
     .library(name: "SharingQuery", targets: ["SharingQuery"]),
     .library(name: "Query", targets: ["Query"])
   ],
+  traits: ["browser"],
   dependencies: [
     .package(url: "https://github.com/pointfreeco/swift-sharing", from: "2.4.0"),
     .package(url: "https://github.com/pointfreeco/swift-custom-dump", from: "1.3.3"),
@@ -31,8 +32,14 @@ let package = Package(
     .target(
       name: "Query",
       dependencies: [
-        .product(name: "IssueReporting", package: "xctest-dynamic-overlay"),
-        .product(name: "IdentifiedCollections", package: "swift-identified-collections"),
+        "QueryCore",
+        .target(name: "QueryBrowser", condition: .when(traits: ["browser"]))
+      ]
+    ),
+    .target(
+      name: "QueryBrowser",
+      dependencies: [
+        "QueryCore",
         .product(
           name: "JavaScriptKit",
           package: "JavaScriptKit",
@@ -40,11 +47,18 @@ let package = Package(
         )
       ]
     ),
+    .target(
+      name: "QueryCore",
+      dependencies: [
+        .product(name: "IssueReporting", package: "xctest-dynamic-overlay"),
+        .product(name: "IdentifiedCollections", package: "swift-identified-collections")
+      ]
+    ),
     .target(name: "_TestQueries", dependencies: ["Query"]),
     .testTarget(
       name: "QueryWASMTests",
       dependencies: [
-        "Query",
+        "QueryBrowser",
         .product(
           name: "JavaScriptEventLoopTestSupport",
           package: "JavaScriptKit",

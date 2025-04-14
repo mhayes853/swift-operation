@@ -1,5 +1,6 @@
 #if canImport(JavaScriptKit)
   import JavaScriptKit
+  import QueryCore
 
   // MARK: - NavigatorObserver
 

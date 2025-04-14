@@ -15,7 +15,7 @@ extension QueryContext {
 
     init(type: Any.Type) {
       self.id = ObjectIdentifier(type)
-      self.typeName = Query.typeName(type)
+      self.typeName = QueryCore.typeName(type)
     }
   }
 }

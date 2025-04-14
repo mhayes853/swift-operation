@@ -1,1 +1,5 @@
-@_exported import IdentifiedCollections
+@_exported import QueryCore
+
+#if browser
+  @_exported import QueryBrowser
+#endif

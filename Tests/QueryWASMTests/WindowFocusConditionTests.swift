@@ -1,6 +1,7 @@
 #if canImport(JavaScriptKit)
   import JavaScriptKit
-  import Query
+  import QueryBrowser
+  import QueryCore
   import XCTest
 
   final class WindowFocusConditionTests: XCTestCase {
