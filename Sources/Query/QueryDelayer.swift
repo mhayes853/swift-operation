@@ -24,6 +24,7 @@ public protocol QueryDelayer: Sendable {
 
   extension DispatchDelayer: QueryDelayer {
     public func delay(for seconds: TimeInterval) async throws {
+      try Task.checkCancellation()
       nonisolated(unsafe) var state:
         (workItem: DispatchWorkItem?, continuation: UnsafeContinuation<Void, Error>?) = (nil, nil)
       try await withTaskCancellationHandler {
@@ -87,6 +88,7 @@ extension QueryDelayer {
 public struct NoDelayer: QueryDelayer {
   @inlinable
   public func delay(for seconds: TimeInterval) async throws {
+    try Task.checkCancellation()
   }
 }
 
