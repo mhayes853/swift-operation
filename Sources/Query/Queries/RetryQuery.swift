@@ -29,6 +29,7 @@ public struct _RetryModifier<Query: QueryRequest>: QueryModifier {
     let backoff = self.backoff ?? context.queryBackoffFunction
     let delayer = self.delayer ?? context.queryDelayer
     for index in 0..<context.queryMaxRetries {
+      try Task.checkCancellation()
       do {
         context.queryRetryIndex = index
         return try await query.fetch(in: context, with: continuation)
@@ -36,6 +37,7 @@ public struct _RetryModifier<Query: QueryRequest>: QueryModifier {
         try await delayer.delay(for: backoff(index + 1))
       }
     }
+    try Task.checkCancellation()
     context.queryRetryIndex = context.queryMaxRetries
     return try await query.fetch(in: context, with: continuation)
   }
