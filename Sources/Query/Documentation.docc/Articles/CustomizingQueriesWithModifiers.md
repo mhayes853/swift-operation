@@ -31,13 +31,13 @@ Then, we can extend `QueryRequest` with a method that applies our custom modifie
 extension QueryRequest {
   func delay(
     for seconds: TimeInterval
-  ) -> ModifiedQuery<Self, some QueryModifier<Self>> {
+  ) -> ModifiedQuery<Self, DelayModifier<Self>> {
     self.modifier(DelayModifier(seconds: seconds))
   }
 }
 ```
 
-> Note: It's essential that we have `ModifiedQuery<Self, some QueryModifier<Self>>` as the return type instead of `some QueryRequest<Value>`. The former style ensures that infinite queries and mutations can use our modifier whilst still being recognized as their respective ``InfiniteQueryRequest`` or ``MutationRequest`` conformances by the compiler.
+> Note: It's essential that we have `ModifiedQuery<Self, DelayModifier<Self>>` as the return type instead of `some QueryRequest<Value>`. The former style ensures that infinite queries and mutations can use our modifier whilst still being recognized as their respective ``InfiniteQueryRequest`` or ``MutationRequest`` conformances by the compiler.
 
 This allows us to use our modifer for any query that we create.
 
