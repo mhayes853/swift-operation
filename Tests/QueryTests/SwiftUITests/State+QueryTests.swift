@@ -19,7 +19,7 @@
 
     func testIdleByDefault() throws {
       let view = QueryView()
-      ViewHosting.host(view: view)
+      ViewHosting.host(view: view.queryClient(QueryClient()))
 
       XCTAssertNoThrow(try view.inspect().find(viewWithId: TestQueryStatusID.idle))
     }

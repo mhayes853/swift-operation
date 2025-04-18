@@ -23,7 +23,7 @@
     }
 
     private enum QueryClientKey: EnvironmentKey {
-      static let defaultValue = QueryClient()
+      static let defaultValue = QueryClient.shared
     }
   }
 #endif

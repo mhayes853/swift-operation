@@ -13,7 +13,7 @@ extension DependencyValues {
 
   private enum QueryClientKey: DependencyKey {
     static var liveValue: QueryClient {
-      QueryClient()
+      QueryClient.shared
     }
 
     static var testValue: QueryClient {
