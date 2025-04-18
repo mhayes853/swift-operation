@@ -15,7 +15,7 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
     controllerSubscriptions: [QuerySubscription]
   )
 
-  private let query: any QueryRequest<State.QueryValue>
+  private let query: any QueryRequest<State.QueryValue, State>
   private let values: RecursiveLock<Values>
   private let subscriptions: QuerySubscriptions<QueryEventHandler<State>>
 

@@ -1,6 +1,6 @@
 // MARK: - QueryRequest
 
-public protocol QueryRequest<Value>: Sendable where State.QueryValue == Value {
+public protocol QueryRequest<Value, State>: Sendable where State.QueryValue == Value {
   associatedtype Value: Sendable
   associatedtype State: QueryStateProtocol = QueryState<Value?, Value>
 
