@@ -2,7 +2,7 @@
   import SwiftUI
   import ViewInspector
   import XCTest
-  import Query
+  import QuerySwiftUI
   import _TestQueries
   import CustomDump
   import Combine

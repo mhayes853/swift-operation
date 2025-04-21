@@ -9,7 +9,8 @@ let package = Package(
   platforms: [.iOS(.v13), .macOS(.v10_15), .tvOS(.v13), .watchOS(.v6)],
   products: [
     .library(name: "SharingQuery", targets: ["SharingQuery"]),
-    .library(name: "Query", targets: ["Query"])
+    .library(name: "Query", targets: ["Query"]),
+    .library(name: "QuerySwiftUI", targets: ["QuerySwiftUI"])
   ],
   traits: ["browser"],
   dependencies: [
@@ -54,6 +55,7 @@ let package = Package(
         .product(name: "IdentifiedCollections", package: "swift-identified-collections")
       ]
     ),
+    .target(name: "QuerySwiftUI", dependencies: ["Query"]),
     .target(name: "_TestQueries", dependencies: ["Query"]),
     .testTarget(
       name: "QueryWASMTests",
@@ -77,10 +79,6 @@ var queryTestsDependencies: [Target.Dependency] = [
   .product(name: "IssueReportingTestSupport", package: "xctest-dynamic-overlay")
 ]
 
-#if canImport(SwiftUI)
-  queryTestsDependencies.append(.product(name: "ViewInspector", package: "ViewInspector"))
-#endif
-
 if ProcessInfo.processInfo.environment["TEST_WASM"] != "1" {
   package.targets.append(
     contentsOf: [
@@ -93,7 +91,16 @@ if ProcessInfo.processInfo.environment["TEST_WASM"] != "1" {
           .product(name: "IssueReportingTestSupport", package: "xctest-dynamic-overlay")
         ]
       ),
-      .testTarget(name: "QueryTests", dependencies: queryTestsDependencies)
+      .testTarget(name: "QueryTests", dependencies: queryTestsDependencies),
+      .testTarget(
+        name: "QuerySwiftUITests",
+        dependencies: [
+          "QuerySwiftUI",
+          "_TestQueries",
+          .product(name: "CustomDump", package: "swift-custom-dump"),
+          .product(name: "ViewInspector", package: "ViewInspector")
+        ]
+      )
     ]
   )
 }

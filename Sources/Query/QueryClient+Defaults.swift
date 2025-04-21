@@ -16,12 +16,6 @@ extension QueryClient {
   }
 }
 
-// MARK: - Shared
-
-extension QueryClient {
-  public static let shared = QueryClient()
-}
-
 // MARK: - DefaultStoreCreator
 
 extension QueryClient {
