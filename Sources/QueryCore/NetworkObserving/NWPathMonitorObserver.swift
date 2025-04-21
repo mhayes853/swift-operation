@@ -11,7 +11,7 @@
     private let monitor: NWPathMonitor
     private let subscriptions = QuerySubscriptions<Handler>()
     private let queue: DispatchQueue
-    
+
     /// Creates a path monitor observer.
     ///
     /// This initializer updates the `pathUpdateHandler` of the specifed `monitor` by first calling

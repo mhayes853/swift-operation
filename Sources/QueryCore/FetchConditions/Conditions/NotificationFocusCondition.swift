@@ -94,7 +94,7 @@ import Foundation
           isActive: { MainActor.runSync { WKExtension.shared().applicationState == .active } }
         )
       }
-    
+
       /// A ``FetchCondition`` that is statisfied when `WKApplication` indicates that the app
       /// is active.
       @available(watchOS 7.0, *)
@@ -108,7 +108,7 @@ import Foundation
         }
       }
     #endif
-    
+
     /// Creates a ``NotificationFocusCondition`` using a `Notification` for whenever the app
     /// becomes active and will resign being active, and a predicate that determines whether or
     /// not the app is in an active state.
