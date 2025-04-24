@@ -12,7 +12,14 @@ let package = Package(
     .library(name: "Query", targets: ["Query"]),
     .library(name: "QuerySwiftUI", targets: ["QuerySwiftUI"])
   ],
-  traits: ["browser"],
+  traits: [
+    .trait(
+      name: "webBrowser",
+      description:
+        "Integrates web browser APIs with the library. (Only enable for WASM Browser Applications)",
+      enabledTraits: []
+    )
+  ],
   dependencies: [
     .package(url: "https://github.com/pointfreeco/swift-sharing", from: "2.4.0"),
     .package(url: "https://github.com/pointfreeco/swift-custom-dump", from: "1.3.3"),
