@@ -270,14 +270,10 @@ package struct SucceedOnNthRefetchQuery: QueryRequest, Hashable {
 
 // MARK: - ContextReadingQuery
 
-package final actor ContextReadingQuery: QueryRequest {
+package final actor ContextReadingQuery: QueryRequest, Identifiable {
   package var latestContext: QueryContext?
 
   package init() {}
-
-  nonisolated package var path: QueryPath {
-    [ObjectIdentifier(self)]
-  }
 
   package func fetch(
     in context: QueryContext,

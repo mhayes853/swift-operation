@@ -21,3 +21,7 @@ extension QueryRequest {
 extension QueryRequest where Self: Hashable {
   public var path: QueryPath { [self] }
 }
+
+extension QueryRequest where Self: Identifiable, ID: Sendable {
+  public var path: QueryPath { [self.id] }
+}
