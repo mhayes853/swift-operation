@@ -21,7 +21,7 @@ let package = Package(
     )
   ],
   dependencies: [
-    .package(url: "https://github.com/mhayes853/swift-sharing", branch: "yield-keep-loading"),
+    .package(url: "https://github.com/pointfreeco/swift-sharing", from: "2.4.0"),
     .package(url: "https://github.com/pointfreeco/swift-custom-dump", from: "1.3.3"),
     .package(
       url: "https://github.com/pointfreeco/swift-identified-collections",

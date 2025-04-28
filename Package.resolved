@@ -1,5 +1,5 @@
 {
-  "originHash" : "8cbbb07046504491c4e46e7fb903eca25ff909afaa01b9efa495740c5d3acd01",
+  "originHash" : "e80fe1b881d23bd11a96693c1f8cf8d8932c1d8ccddcd2457d54d2e1e2aa8065",
   "pins" : [
     {
       "identity" : "combine-schedulers",
@@ -60,8 +60,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-dependencies",
       "state" : {
-        "revision" : "4c90d6b2b9bf0911af87b103bb40f41771891596",
-        "version" : "1.9.2"
+        "revision" : "7d2eb4ad20efb2838269645410d26b64ca48d8aa",
+        "version" : "1.6.1"
       }
     },
     {
@@ -96,17 +96,17 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-perception",
       "state" : {
-        "revision" : "d924c62a70fca5f43872f286dbd7cef0957f1c01",
-        "version" : "1.6.0"
+        "revision" : "671fa54b279fd73933b4a8b34782ebf6c8869145",
+        "version" : "1.5.1"
       }
     },
     {
       "identity" : "swift-sharing",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/mhayes853/swift-sharing",
+      "location" : "https://github.com/pointfreeco/swift-sharing",
       "state" : {
-        "branch" : "yield-keep-loading",
-        "revision" : "76686e5bd8ee7af841a5057a2d656ce2e7525661"
+        "revision" : "732871fabfc6b38fcdff5ad2f7336327dbf78e81",
+        "version" : "2.4.0"
       }
     },
     {
@@ -114,8 +114,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swiftlang/swift-syntax",
       "state" : {
-        "revision" : "f99ae8aa18f0cf0d53481901f88a0991dc3bd4a2",
-        "version" : "601.0.1"
+        "revision" : "0687f71944021d616d34d922343dcef086855920",
+        "version" : "600.0.1"
       }
     },
     {

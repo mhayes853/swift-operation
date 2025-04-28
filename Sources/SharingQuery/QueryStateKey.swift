@@ -108,10 +108,11 @@ extension QueryStateKey: SharedReaderKey {
   ) -> SharedSubscription {
     let subscription = self.store.subscribe(
       with: QueryEventHandler { state, _ in
-        subscriber.yield(state, isLoading: state.isLoading)
+        subscriber.yield(state)
         if let error = state.error {
-          subscriber.yield(throwing: error, isLoading: state.isLoading)
+          subscriber.yield(throwing: error)
         }
+        subscriber.yieldLoading(state.isLoading)
       }
     )
     return SharedSubscription { subscription.cancel() }
