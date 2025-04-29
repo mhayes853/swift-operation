@@ -11,7 +11,13 @@ import Sharing
 @propertyWrapper
 @dynamicMemberLookup
 public struct SharedQuery<State: QueryStateProtocol>: Sendable {
-  @Shared private var value: QueryStateKeyValue<State>
+  #if canImport(SwiftUI)
+    @SwiftUI.State private var valueState: Shared<QueryStateKeyValue<State>>
+    private var value: QueryStateKeyValue<State> { self.valueState.wrappedValue }
+  #else
+    @Shared private var value: QueryStateKeyValue<State>
+    private var valueState: Shared<QueryStateKeyValue<State>> { self.$value }
+  #endif
 
   public var wrappedValue: State.StateValue {
     get { self.value.currentValue }
@@ -27,7 +33,7 @@ public struct SharedQuery<State: QueryStateProtocol>: Sendable {
 
   public var projectedValue: Self {
     get { self }
-    nonmutating set { self.$value = newValue.$value }
+    nonmutating set { self.valueState.projectedValue = newValue.valueState.projectedValue }
   }
 }
 
@@ -35,10 +41,15 @@ public struct SharedQuery<State: QueryStateProtocol>: Sendable {
 
 extension SharedQuery {
   public init(store: QueryStore<State>) {
-    self._value = Shared(
+    let shared = Shared(
       wrappedValue: QueryStateKeyValue(store: store),
       QueryStateKey(store: store)
     )
+    #if canImport(SwiftUI)
+      self._valueState = SwiftUI.State(initialValue: shared)
+    #else
+      self._value = shared
+    #endif
   }
 }
 
@@ -69,7 +80,7 @@ extension SharedQuery {
     line: UInt = #line,
     column: UInt = #column
   ) rethrows -> R {
-    try self.$value.withLock { try operation(&$0.currentValue) }
+    try self.valueState.withLock { try operation(&$0.currentValue) }
   }
 }
 
@@ -139,6 +150,16 @@ extension SharedQuery: Equatable where State.StateValue: Equatable {
     lhs.value.currentValue == rhs.value.currentValue
   }
 }
+
+// MARK: - DynamicProperty
+
+#if canImport(SwiftUI)
+  extension SharedQuery: DynamicProperty {
+    public func update() {
+      self.valueState.update()
+    }
+  }
+#endif
 
 // MARK: - Queries
 
