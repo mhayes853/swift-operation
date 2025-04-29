@@ -10,7 +10,7 @@ import Sharing
 
 @propertyWrapper
 @dynamicMemberLookup
-public struct SharedQuery<State: QueryStateProtocol> {
+public struct SharedQuery<State: QueryStateProtocol>: Sendable {
   @Shared private var value: QueryStateKeyValue<State>
 
   public var wrappedValue: State.StateValue {
