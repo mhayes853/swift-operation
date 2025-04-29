@@ -1,4 +1,4 @@
-#if canImport(Combine)
+#if canImport(Combine) && canImport(ViewInspector)
   import Combine
   import ViewInspector
 

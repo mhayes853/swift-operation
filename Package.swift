@@ -105,7 +105,11 @@ if ProcessInfo.processInfo.environment["TEST_WASM"] != "1" {
           "QuerySwiftUI",
           "_TestQueries",
           .product(name: "CustomDump", package: "swift-custom-dump"),
-          .product(name: "ViewInspector", package: "ViewInspector")
+          .product(
+            name: "ViewInspector", 
+            package: "ViewInspector", 
+            condition: .when(platforms: [.iOS, .macOS, .watchOS, .tvOS, .visionOS])
+          )
         ]
       )
     ]
