@@ -14,51 +14,48 @@ struct QueryStateKeyTests {
     let store = self.client.store(for: query)
     try await store.fetch()
 
-    @SharedReader(.queryState(query, initialValue: nil, client: self.client)) var state
+    @SharedQuery(query, client: self.client) var state
 
-    expectNoDifference(state.currentValue, TestQuery.value)
+    expectNoDifference(state, TestQuery.value)
   }
 
   @Test("Fetches Value")
   func fetchesValues() async throws {
-    @SharedReader(.queryState(TestQuery(), initialValue: nil, client: self.client)) var state
+    @SharedQuery(TestQuery(), client: self.client) var state
 
-    expectNoDifference(state.status.isSuccessful, false)
+    expectNoDifference($state.status.isSuccessful, false)
     _ = try await self.client.store(for: TestQuery()).activeTasks.first?.runIfNeeded()
-    expectNoDifference(state.status.isSuccessful, true)
+    expectNoDifference($state.status.isSuccessful, true)
   }
 
   @Test("Fetches Error")
   func fetchesError() async throws {
-    @SharedReader(.queryState(FailingQuery(), initialValue: nil, client: self.client))
-    var state
+    @SharedQuery(FailingQuery(), client: self.client) var state
 
-    expectNoDifference($state.loadError as? FailingQuery.SomeError, nil)
+    expectNoDifference($state.error as? FailingQuery.SomeError, nil)
     _ = try? await self.client.store(for: FailingQuery()).activeTasks.first?.runIfNeeded()
-    expectNoDifference($state.loadError as? FailingQuery.SomeError, FailingQuery.SomeError())
+    expectNoDifference($state.error as? FailingQuery.SomeError, FailingQuery.SomeError())
   }
 
   @Test("Refetches Error")
   func refetchesError() async throws {
     let query = FlakeyQuery()
-    @SharedReader(.queryState(query, initialValue: nil, client: self.client))
-    var state
+    @SharedQuery(query, client: self.client) var state
 
     _ = try? await self.client.store(for: FlakeyQuery()).activeTasks.first?.runIfNeeded()
 
     await query.ensureFailure()
-    expectNoDifference($state.loadError as? FlakeyQuery.SomeError, nil)
+    expectNoDifference($state.error as? FlakeyQuery.SomeError, nil)
 
     await #expect(throws: Error.self) {
-      try await $state.load()
+      try await $state.fetch()
     }
-    expectNoDifference($state.loadError as? FlakeyQuery.SomeError, FlakeyQuery.SomeError())
+    expectNoDifference($state.error as? FlakeyQuery.SomeError, FlakeyQuery.SomeError())
   }
 
   @Test("Only Has One Active Task When Loading Initial Data")
   func onlyHasOneActiveTaskWhenLoadingInitialData() async throws {
-    @SharedReader(.queryState(EndlessQuery(), initialValue: nil, client: self.client))
-    var state
+    @SharedQuery(EndlessQuery(), client: self.client) var state
 
     let store = self.client.store(for: EndlessQuery())
     await Task.megaYield()
@@ -68,15 +65,15 @@ struct QueryStateKeyTests {
 
   @Test("Refetches Value")
   func refetchesValues() async throws {
-    @SharedReader(.queryState(TestQuery(), initialValue: nil, client: self.client)) var state
+    @SharedQuery(TestQuery(), client: self.client) var state
     let store = self.client.store(for: TestQuery())
 
     _ = try await store.activeTasks.first?.runIfNeeded()
     store.currentValue = nil
-    expectNoDifference(state.currentValue, nil)
+    expectNoDifference(state, nil)
 
-    try await $state.load()
-    expectNoDifference(state.currentValue, TestQuery.value)
+    try await $state.fetch()
+    expectNoDifference(state, TestQuery.value)
   }
 
   @Test("Does Not Start Fetch Task When Automatic Fetching Is Disabled")
@@ -84,7 +81,7 @@ struct QueryStateKeyTests {
     let query = TestQuery().enableAutomaticFetching(onlyWhen: .always(false))
     let store = self.client.store(for: query)
 
-    @SharedReader(.queryState(store: store)) var state
+    @SharedQuery(store: store) var state
 
     expectNoDifference(store.activeTasks, [])
   }
@@ -94,7 +91,7 @@ struct QueryStateKeyTests {
     let query = EndlessQuery().enableAutomaticFetching(onlyWhen: .always(false))
     let store = self.client.store(for: query)
 
-    @SharedReader(.queryState(store: store)) var state
+    @SharedQuery(store: store) var state
 
     expectNoDifference($state.isLoading, false)
     Task { try await store.fetch() }
@@ -107,7 +104,7 @@ struct QueryStateKeyTests {
     let query = TestQuery().enableAutomaticFetching(onlyWhen: .always(false))
     let store = self.client.store(for: query)
 
-    @SharedReader(.queryState(store: store)) var state
+    @SharedQuery(store: store) var state
 
     expectNoDifference($state.isLoading, false)
   }
@@ -117,7 +114,7 @@ struct QueryStateKeyTests {
     let query = EndlessQuery().enableAutomaticFetching(onlyWhen: .always(true))
     let store = self.client.store(for: query)
 
-    @SharedReader(.queryState(store: store)) var state
+    @SharedQuery(store: store) var state
 
     expectNoDifference($state.isLoading, true)
   }
@@ -127,26 +124,26 @@ struct QueryStateKeyTests {
     let query = ContinuingQuery()
     let store = self.client.store(for: query.enableAutomaticFetching(onlyWhen: .always(true)))
 
-    @SharedReader(.queryState(store: store)) var state
+    @SharedQuery(store: store) var state
     query.onYield = { _ in
-      expectNoDifference(state.currentValue != nil, true)
-      expectNoDifference(state.currentValue != ContinuingQuery.finalValue, true)
+      expectNoDifference(state != nil, true)
+      expectNoDifference(state != ContinuingQuery.finalValue, true)
       expectNoDifference($state.isLoading, true)
     }
 
-    expectNoDifference(state.currentValue, nil)
+    expectNoDifference(state, nil)
 
     _ = try await store.activeTasks.first?.runIfNeeded()
 
     expectNoDifference($state.isLoading, false)
-    expectNoDifference(state.currentValue, ContinuingQuery.finalValue)
+    expectNoDifference(state, ContinuingQuery.finalValue)
   }
 
   @Test("Makes Separate Subscribers When Using QueryStateKeys With The Same Query")
   func makesSeparateSubscribersWhenUsingQueryStateKeysWithTheSameQuery() async throws {
     let query = TestQuery().enableAutomaticFetching(onlyWhen: .always(false))
-    @SharedReader(.queryState(query, initialValue: nil, client: self.client)) var value
-    @SharedReader(.queryState(query, initialValue: nil, client: self.client)) var state
+    @SharedQuery(query, client: self.client) var value
+    @SharedQuery(query, client: self.client) var state
 
     let store = self.client.store(for: query)
     expectNoDifference(store.subscriberCount, 2)

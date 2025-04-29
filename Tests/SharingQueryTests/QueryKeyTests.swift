@@ -10,7 +10,7 @@ struct QueryKeyTests {
   func fetchesValue() async throws {
     @Dependency(\.queryClient) var client
 
-    @Shared(.query(TestQuery())) var value
+    @SharedQuery(TestQuery()) var value
 
     expectNoDifference(value, nil)
     _ = try await client.store(for: TestQuery()).activeTasks.first?.runIfNeeded()
@@ -21,11 +21,11 @@ struct QueryKeyTests {
   func fetchesError() async throws {
     @Dependency(\.queryClient) var client
 
-    @Shared(.query(FailingQuery())) var value
+    @SharedQuery(FailingQuery()) var value
 
-    expectNoDifference($value.loadError as? FailingQuery.SomeError, nil)
+    expectNoDifference($value.error as? FailingQuery.SomeError, nil)
     _ = try? await client.store(for: FailingQuery()).activeTasks.first?.runIfNeeded()
-    expectNoDifference($value.loadError as? FailingQuery.SomeError, FailingQuery.SomeError())
+    expectNoDifference($value.error as? FailingQuery.SomeError, FailingQuery.SomeError())
   }
 
   @Test("Set Value, Updates Value In Store")
@@ -33,24 +33,24 @@ struct QueryKeyTests {
     @Dependency(\.queryClient) var client
 
     let query = TestQuery().enableAutomaticFetching(onlyWhen: .always(false))
-    @Shared(.query(query)) var value
+    @SharedQuery(query) var value
 
     $value.withLock { $0 = TestQuery.value + 1 }
     expectNoDifference(value, TestQuery.value + 1)
     expectNoDifference(client.store(for: query).currentValue, value)
   }
 
-  @Test("Shares State With QueryStateKey")
-  func sharesStateWithQueryStateKey() async throws {
+  @Test("Shares State With Shared Queries")
+  func sharesStateWithSharedQueries() async throws {
     @Dependency(\.queryClient) var client
 
     let query = TestQuery().enableAutomaticFetching(onlyWhen: .always(false))
-    @Shared(.query(query)) var value
-    @SharedReader(.queryState(query)) var state
+    @SharedQuery(query) var value
+    @SharedQuery(query) var state
 
     $value.withLock { $0 = TestQuery.value + 1 }
     expectNoDifference(value, TestQuery.value + 1)
-    expectNoDifference(state.currentValue, value)
+    expectNoDifference(state, value)
   }
 
   @Test("Makes Separate Subscribers When Using QueryKey And QueryStateKey In Conjunction")
@@ -58,8 +58,8 @@ struct QueryKeyTests {
     @Dependency(\.queryClient) var client
 
     let query = TestQuery().enableAutomaticFetching(onlyWhen: .always(false))
-    @Shared(.query(query)) var value
-    @SharedReader(.queryState(query)) var state
+    @SharedQuery(query) var value
+    @SharedQuery(query) var state
 
     let store = client.store(for: query)
     expectNoDifference(store.subscriberCount, 2)
@@ -70,8 +70,8 @@ struct QueryKeyTests {
     @Dependency(\.queryClient) var client
 
     let query = TestQuery().enableAutomaticFetching(onlyWhen: .always(false))
-    @Shared(.query(query)) var value
-    @SharedReader(.queryState(query)) var state
+    @SharedQuery(query) var value
+    @SharedQuery(query) var state
 
     let store = client.store(for: query)
     expectNoDifference(store.subscriberCount, 2)
