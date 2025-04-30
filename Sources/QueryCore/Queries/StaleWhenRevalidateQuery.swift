@@ -77,9 +77,12 @@ extension StaleWhenRevalidateCondition {
 extension StaleWhenRevalidateCondition {
   public func evaluate(state: some QueryStateProtocol, in context: QueryContext) -> Bool {
     let opaqueState = OpaqueQueryState(state)
-    var current = self.predicates.first?(opaqueState, context) ?? true
-    for predicate in self.predicates.dropFirst() {
+    var current = true
+    for predicate in self.predicates {
       current = predicate(opaqueState, context)
+      if current {
+        return current
+      }
     }
     return current
   }

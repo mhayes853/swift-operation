@@ -54,8 +54,8 @@ struct StaleWhenRevalidateQueryTests {
       let context = QueryContext()
       condition.add { _, c in c.testCount > 0 }
       condition.add { _, c in c.testCount == 0 }
+      condition.add { _, c in c.testCount < 0 }
       let state = QueryState<Int?, Int>(initialValue: nil)
-      expectNoDifference(condition.evaluate(state: state, in: context), true)
       expectNoDifference(condition.evaluate(state: state, in: context), true)
     }
   }
