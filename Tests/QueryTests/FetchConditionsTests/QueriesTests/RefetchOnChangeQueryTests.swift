@@ -21,26 +21,63 @@ struct RefetchOnChangeQueryTests {
   func refetchesWhenConditionChangesToTrue() async {
     let condition = TestCondition()
     condition.send(false)
-    let query = TestQuery().enableAutomaticFetching(onlyWhen: .always(true))
-      .refetchOnChange(of: condition)
-    let store = QueryStore.detached(query: query, initialValue: nil)
+
+    let automaticCondition = TestCondition()
+    automaticCondition.send(false)
+    let store = QueryStore.detached(
+      query: TestQuery().enableAutomaticFetching(onlyWhen: automaticCondition)
+        .refetchOnChange(of: condition),
+      initialValue: nil
+    )
+    let subscription = store.subscribe(with: QueryEventHandler())
+    automaticCondition.send(true)
 
     condition.send(true)
     await Task.megaYield()
 
     expectNoDifference(store.currentValue, TestQuery.value)
+
+    subscription.cancel()
   }
 
   @Test("Does Not Refetch When Condition Changes To False")
   func doesNotRefetchWhenConditionChangesToFalse() async {
     let condition = TestCondition()
     condition.send(true)
-    let query = TestQuery().refetchOnChange(of: condition)
-    let store = QueryStore.detached(query: query, initialValue: nil)
+
+    let automaticCondition = TestCondition()
+    automaticCondition.send(false)
+    let store = QueryStore.detached(
+      query: TestQuery().enableAutomaticFetching(onlyWhen: automaticCondition)
+        .refetchOnChange(of: condition),
+      initialValue: nil
+    )
+    let subscription = store.subscribe(with: QueryEventHandler())
+    automaticCondition.send(true)
 
     condition.send(false)
     await Task.megaYield()
 
+    expectNoDifference(store.currentValue, nil)
+    subscription.cancel()
+  }
+
+  @Test("Does Not Refetch When No Subscribers On QueryStore")
+  func doesNotRefetchWhenNoSubscribersOnQueryStore() async {
+    let condition = TestCondition()
+    condition.send(false)
+
+    let query = CountingQuery {}
+    let store = QueryStore.detached(
+      query: query.enableAutomaticFetching(onlyWhen: .always(true)).refetchOnChange(of: condition),
+      initialValue: nil
+    )
+
+    condition.send(true)
+    await Task.megaYield()
+
+    let count = await query.fetchCount
+    expectNoDifference(count, 0)
     expectNoDifference(store.currentValue, nil)
   }
 }

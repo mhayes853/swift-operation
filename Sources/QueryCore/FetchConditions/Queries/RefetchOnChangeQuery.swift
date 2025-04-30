@@ -30,14 +30,15 @@ public final class RefetchOnChangeController<
   ) -> QuerySubscription {
     let currentValue = Lock(self.condition.isSatisfied(in: context))
     return self.condition.subscribe(in: context) { newValue in
-      let shouldRefetch = currentValue.withLock { currentValue in
+      let didValueChange = currentValue.withLock { currentValue in
         defer { currentValue = newValue }
         return newValue && (newValue != currentValue)
       }
-      guard shouldRefetch else { return }
+      guard didValueChange else { return }
       Task {
         await withTaskGroup(of: Void.self) { group in
           self.subscriptions.forEach { controls in
+            guard controls.subscriberCount > 0 else { return }
             group.addTask { _ = try? await controls.yieldRefetch() }
           }
         }

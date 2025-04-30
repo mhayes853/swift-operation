@@ -89,6 +89,14 @@ extension QueryControls {
   }
 }
 
+// MARK: - Subscriber Count
+
+extension QueryControls {
+  public var subscriberCount: Int {
+    self.store?.subscriberCount ?? 0
+  }
+}
+
 // MARK: - Resetting
 
 extension QueryControls {
