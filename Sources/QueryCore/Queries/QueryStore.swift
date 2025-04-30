@@ -12,7 +12,8 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
     query: State,
     taskHerdId: Int,
     context: QueryContext,
-    controllerSubscriptions: [QuerySubscription]
+    controllerSubscriptions: [QuerySubscription],
+    subscribeTask: Task<State.QueryValue, any Error>?
   )
 
   private let query: any QueryRequest<State.QueryValue, State>
@@ -28,7 +29,13 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
     query.setup(context: &context)
     self.query = query
     self.values = RecursiveLock(
-      (query: initialState, taskHerdId: 0, context: context, controllerSubscriptions: [])
+      (
+        query: initialState,
+        taskHerdId: 0,
+        context: context,
+        controllerSubscriptions: [],
+        subscribeTask: nil
+      )
     )
     self.subscriptions = QuerySubscriptions()
     self.setupQuery(with: context, initialState: initialState)
@@ -334,13 +341,25 @@ extension QueryStore {
   public func subscribe(
     with handler: QueryEventHandler<State>
   ) -> QuerySubscription {
-    handler.onStateChanged?(self.state, self.context)
-    let (subscription, isFirst) = self.subscriptions.add(handler: handler)
-    if isFirst && self.isAutomaticFetchingEnabled && self.isStale {
-      let task = self.fetchTask()
-      Task(configuration: task.configuration) { try await task.runIfNeeded() }
+    let subscription = self.values.withLock { values in
+      handler.onStateChanged?(self.state, self.context)
+      let (subscription, isFirst) = self.subscriptions.add(handler: handler)
+      if isFirst && self.isAutomaticFetchingEnabled && self.isStale {
+        let task = self.fetchTask()
+        values.subscribeTask = Task(configuration: task.configuration) {
+          try await task.runIfNeeded()
+        }
+      }
+      return subscription
     }
-    return subscription
+    return QuerySubscription {
+      self.values.withLock { values in
+        subscription.cancel()
+        if self.subscriptions.count < 1 {
+          values.subscribeTask?.cancel()
+        }
+      }
+    }
   }
 }
 

@@ -131,9 +131,9 @@ package struct FailingQuery: QueryRequest, Hashable {
 package final actor CountingQuery: QueryRequest {
   package var fetchCount = 0
   private var shouldFail = false
-  private let sleep: @Sendable () async -> Void
+  private let sleep: @Sendable () async throws -> Void
 
-  package init(sleep: @Sendable @escaping () async -> Void = { await Task.megaYield() }) {
+  package init(sleep: @Sendable @escaping () async throws -> Void = { await Task.megaYield() }) {
     self.sleep = sleep
   }
 
@@ -149,7 +149,7 @@ package final actor CountingQuery: QueryRequest {
     in context: QueryContext,
     with continuation: QueryContinuation<Int>
   ) async throws -> Int {
-    await self.sleep()
+    try await self.sleep()
     self.fetchCount += 1
     if self.shouldFail {
       throw SomeError()

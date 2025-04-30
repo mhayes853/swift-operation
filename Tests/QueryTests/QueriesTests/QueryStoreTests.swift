@@ -246,6 +246,24 @@ struct QueryStoreTests {
     s3.cancel()
   }
 
+  @Test("Cancels Automatic Subscription Fetch When All Subscribers Cancel")
+  func cancelsAutomaticSubscriptionFetchWhenAllSubscribersCancel() async throws {
+    let query = CountingQuery { try await Task.never() }
+    let store = self.client.store(for: query)
+    let s1 = store.subscribe(with: QueryEventHandler())
+    let s2 = store.subscribe(with: QueryEventHandler())
+
+    await Task.megaYield()
+    s1.cancel()
+
+    await Task.megaYield()
+    expectNoDifference(store.status.isCancelled, false)
+    s2.cancel()
+
+    await Task.megaYield()
+    expectNoDifference(store.status.isCancelled, true)
+  }
+
   @Test("Emits Fetch Events When fetch Manually Called")
   func emitsFetchEventsWhenFetchManuallyCalled() async throws {
     let collector = QueryStoreEventsCollector<TestQuery.State>()
