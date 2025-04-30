@@ -80,4 +80,27 @@ struct RefetchOnChangeQueryTests {
     expectNoDifference(count, 0)
     expectNoDifference(store.currentValue, nil)
   }
+
+  @Test("Does Not Refetch When Query Is Not Stale")
+  func doesNotRefetchWhenQueryIsNotStale() async {
+    let condition = TestCondition()
+    condition.send(false)
+
+    let automaticCondition = TestCondition()
+    automaticCondition.send(false)
+    let store = QueryStore.detached(
+      query: TestQuery().enableAutomaticFetching(onlyWhen: automaticCondition)
+        .refetchOnChange(of: condition)
+        .staleWhen { _, _ in false },
+      initialValue: nil
+    )
+    let subscription = store.subscribe(with: QueryEventHandler())
+    automaticCondition.send(true)
+
+    condition.send(true)
+    await Task.megaYield()
+
+    expectNoDifference(store.currentValue, nil)
+    subscription.cancel()
+  }
 }

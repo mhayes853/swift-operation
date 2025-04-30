@@ -35,13 +35,15 @@ public final class RefetchOnChangeController<
         return newValue && (newValue != currentValue)
       }
       guard didValueChange else { return }
-      Task {
-        await withTaskGroup(of: Void.self) { group in
-          self.subscriptions.forEach { controls in
-            guard controls.subscriberCount > 0 else { return }
-            group.addTask { _ = try? await controls.yieldRefetch() }
-          }
-        }
+      Task { try await self.refetchIfAble() }
+    }
+  }
+
+  private func refetchIfAble() async throws {
+    await withTaskGroup(of: Void.self) { group in
+      self.subscriptions.forEach { controls in
+        guard controls.subscriberCount > 0 && controls.isStale else { return }
+        group.addTask { _ = try? await controls.yieldRefetch() }
       }
     }
   }
