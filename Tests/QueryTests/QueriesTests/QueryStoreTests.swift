@@ -231,6 +231,21 @@ struct QueryStoreTests {
     subscription.cancel()
   }
 
+  @Test("Only Starts Fetching On Subscription For The First Query Subscriber")
+  func startsFetchingOnFirstSubscription() async throws {
+    let query = CountingQuery {}
+    let store = self.client.store(for: query)
+    let s1 = store.subscribe(with: QueryEventHandler())
+    let s2 = store.subscribe(with: QueryEventHandler())
+    let s3 = store.subscribe(with: QueryEventHandler())
+    await Task.megaYield()
+    let count = await query.fetchCount
+    expectNoDifference(count, 1)
+    s1.cancel()
+    s2.cancel()
+    s3.cancel()
+  }
+
   @Test("Emits Fetch Events When fetch Manually Called")
   func emitsFetchEventsWhenFetchManuallyCalled() async throws {
     let collector = QueryStoreEventsCollector<TestQuery.State>()

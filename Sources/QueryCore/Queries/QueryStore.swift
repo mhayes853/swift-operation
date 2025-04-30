@@ -335,8 +335,8 @@ extension QueryStore {
     with handler: QueryEventHandler<State>
   ) -> QuerySubscription {
     handler.onStateChanged?(self.state, self.context)
-    let (subscription, _) = self.subscriptions.add(handler: handler)
-    if self.isAutomaticFetchingEnabled && self.isStale {
+    let (subscription, isFirst) = self.subscriptions.add(handler: handler)
+    if isFirst && self.isAutomaticFetchingEnabled && self.isStale {
       let task = self.fetchTask()
       Task(configuration: task.configuration) { try await task.runIfNeeded() }
     }
