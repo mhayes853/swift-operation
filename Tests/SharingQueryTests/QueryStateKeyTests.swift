@@ -28,6 +28,21 @@ struct QueryStateKeyTests {
     expectNoDifference($state.status.isSuccessful, true)
   }
 
+  #if canImport(SwiftUI)
+    @Test("Fetches Value With Animation, Completes Synchronously For Testing")
+    func fetchesValuesWithAnimationCompletesSynchronouslyForTesting() async throws {
+      @SharedQuery(
+        TestQuery().enableAutomaticFetching(onlyWhen: .always(false)),
+        client: self.client,
+        animation: .bouncy()
+      ) var state
+
+      expectNoDifference($state.status.isSuccessful, false)
+      _ = try await $state.load()
+      expectNoDifference($state.status.isSuccessful, true)
+    }
+  #endif
+
   @Test("Fetches Error")
   func fetchesError() async throws {
     @SharedQuery(FailingQuery(), client: self.client) var state

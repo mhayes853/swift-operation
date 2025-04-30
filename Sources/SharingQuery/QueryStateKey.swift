@@ -4,16 +4,35 @@ import IdentifiedCollections
 import Query
 import Sharing
 
+#if canImport(SwiftUI)
+  import SwiftUI
+#endif
+
 // MARK: - QueryStateKey
 
 struct QueryStateKey<State: QueryStateProtocol> {
   private let store: QueryStore<State>
   let id = QueryStateKeyID()
+  #if canImport(SwiftUI)
+    private let animation: Animation?
+  #endif
 
   init(store: QueryStore<State>) {
     self.store = store
+    #if canImport(SwiftUI)
+      self.animation = nil
+    #endif
   }
 }
+
+#if canImport(SwiftUI)
+  extension QueryStateKey {
+    init(store: QueryStore<State>, animation: Animation) {
+      self.store = store
+      self.animation = animation
+    }
+  }
+#endif
 
 extension QueryStateKey: SharedKey {
   typealias Value = QueryStateKeyValue<State>
@@ -26,9 +45,9 @@ extension QueryStateKey: SharedKey {
       Task<Void, Never> {
         do {
           try await self.store.fetch()
-          continuation.resume(returning: Value(store: self.store))
+          self.scheduleYield { continuation.resume(returning: Value(store: self.store)) }
         } catch {
-          continuation.resume(throwing: error)
+          self.scheduleYield { continuation.resume(throwing: error) }
         }
       }
     }
@@ -45,10 +64,28 @@ extension QueryStateKey: SharedKey {
   ) -> SharedSubscription {
     let subscription = self.store.subscribe(
       with: QueryEventHandler { _, _ in
-        subscriber.yield(Value(store: self.store))
+        self.scheduleYield {
+          subscriber.yield(Value(store: self.store))
+        }
       }
     )
     return SharedSubscription { subscription.cancel() }
+  }
+
+  private func scheduleYield(_ fn: @escaping @Sendable () -> Void) {
+    #if canImport(SwiftUI)
+      if let animation {
+        Task { @MainActor in
+          withAnimation(animation) {
+            fn()
+          }
+        }
+      } else {
+        fn()
+      }
+    #else
+      fn()
+    #endif
   }
 }
 
