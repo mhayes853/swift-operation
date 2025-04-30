@@ -24,8 +24,10 @@ struct QueryStateKeyTests {
     @SharedQuery(TestQuery(), client: self.client) var state
 
     expectNoDifference($state.status.isSuccessful, false)
+    expectNoDifference($state.shared.wrappedValue, nil)
     _ = try await self.client.store(for: TestQuery()).activeTasks.first?.runIfNeeded()
     expectNoDifference($state.status.isSuccessful, true)
+    expectNoDifference($state.shared.wrappedValue, TestQuery.value)
   }
 
   #if canImport(SwiftUI)
@@ -48,8 +50,10 @@ struct QueryStateKeyTests {
     @SharedQuery(FailingQuery(), client: self.client) var state
 
     expectNoDifference($state.error as? FailingQuery.SomeError, nil)
+    expectNoDifference($state.shared.loadError as? FailingQuery.SomeError, nil)
     _ = try? await self.client.store(for: FailingQuery()).activeTasks.first?.runIfNeeded()
     expectNoDifference($state.error as? FailingQuery.SomeError, FailingQuery.SomeError())
+    expectNoDifference($state.shared.loadError as? FailingQuery.SomeError, FailingQuery.SomeError())
   }
 
   @Test("Refetches Error")
@@ -109,9 +113,11 @@ struct QueryStateKeyTests {
     @SharedQuery(store: store) var state
 
     expectNoDifference($state.isLoading, false)
+    expectNoDifference($state.shared.isLoading, false)
     Task { try await store.fetch() }
     await Task.megaYield()
     expectNoDifference($state.isLoading, true)
+    expectNoDifference($state.shared.isLoading, true)
   }
 
   @Test("Is Not In Initial Loading State When Automatic Fetching Is Disabled")

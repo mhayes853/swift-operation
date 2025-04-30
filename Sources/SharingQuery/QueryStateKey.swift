@@ -63,9 +63,14 @@ extension QueryStateKey: SharedKey {
     subscriber: SharedSubscriber<Value>
   ) -> SharedSubscription {
     let subscription = self.store.subscribe(
-      with: QueryEventHandler { _, _ in
+      with: QueryEventHandler { state, _ in
         self.scheduleYield {
-          subscriber.yield(Value(store: self.store))
+          let value = Value(store: self.store)
+          subscriber.yield(value)
+          if let error = state.error {
+            subscriber.yield(throwing: error)
+          }
+          subscriber.yieldLoading(state.isLoading)
         }
       }
     )

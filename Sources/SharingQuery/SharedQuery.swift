@@ -101,6 +101,18 @@ extension SharedQuery {
   }
 }
 
+// MARK: - Shared
+
+extension SharedQuery {
+  public var shared: Shared<State.StateValue> {
+    self.$value.currentValue
+  }
+
+  public var sharedReader: SharedReader<State.StateValue> {
+    self.$value.currentValue
+  }
+}
+
 // MARK: - Dynamic Member Lookup
 
 extension SharedQuery {
@@ -119,6 +131,18 @@ extension SharedQuery {
   ) -> Value {
     get { self.value.store[keyPath: keyPath] }
     set { self.value.store[keyPath: keyPath] = newValue }
+  }
+
+  public subscript<Value: Sendable>(
+    dynamicMember keyPath: KeyPath<State.StateValue, Value>
+  ) -> SharedReader<Value> {
+    self.shared[dynamicMember: keyPath]
+  }
+
+  public subscript<Value: Sendable>(
+    dynamicMember keyPath: WritableKeyPath<State.StateValue, Value>
+  ) -> Shared<Value> {
+    self.shared[dynamicMember: keyPath]
   }
 }
 
