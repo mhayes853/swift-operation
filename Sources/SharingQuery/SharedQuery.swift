@@ -320,7 +320,6 @@ extension SharedQuery {
       )
     }
   }
-
 #endif
 
 extension SharedQuery where State: _InfiniteQueryStateProtocol {

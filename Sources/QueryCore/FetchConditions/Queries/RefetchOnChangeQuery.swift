@@ -14,6 +14,7 @@ public final class RefetchOnChangeController<
 >: QueryController {
   private let condition: Condition
   private let subscriptions = QuerySubscriptions<QueryControls<State>>()
+  private let task = Lock<Task<Void, any Error>?>(nil)
 
   init(condition: Condition) {
     self.condition = condition
@@ -32,10 +33,14 @@ public final class RefetchOnChangeController<
     return self.condition.subscribe(in: context) { newValue in
       let didValueChange = currentValue.withLock { currentValue in
         defer { currentValue = newValue }
-        return newValue && (newValue != currentValue)
+        return newValue != currentValue
       }
       guard didValueChange else { return }
-      Task { try await self.refetchIfAble() }
+      if newValue {
+        self.task.withLock { $0 = Task { try await self.refetchIfAble() } }
+      } else {
+        self.task.withLock { $0?.cancel() }
+      }
     }
   }
 
