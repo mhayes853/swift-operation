@@ -34,7 +34,7 @@ extension DependencyValues {
     static var liveValue: NetworkObserver {
       #if canImport(Network)
         NWPathMonitorObserver.shared
-      #elseif browser && canImport(JavaScriptKit)
+      #elseif WebBrowser && canImport(JavaScriptKit)
         NavigatorObserver.shared
       #else
         reportWarning(.noDefaultNetworkObserver)

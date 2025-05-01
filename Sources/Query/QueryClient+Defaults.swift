@@ -1,7 +1,7 @@
 import IssueReporting
 import QueryCore
 
-#if webBrowser
+#if WebBrowser
   import QueryBrowser
 #endif
 
@@ -114,7 +114,7 @@ extension QueryClient.StoreCreator where Self == QueryClient.DefaultStoreCreator
 public var defaultNetworkObserver: (any NetworkObserver)? {
   #if canImport(Network)
     NWPathMonitorObserver.shared
-  #elseif webBrowser && canImport(JavaScriptKit)
+  #elseif WebBrowser && canImport(JavaScriptKit)
     NavigatorObserver.shared
   #else
     nil
@@ -135,7 +135,7 @@ public var defaultFocusCondition: (any FetchCondition)? {
     } else {
       nil
     }
-  #elseif webBrowser && canImport(JavaScriptKit)
+  #elseif WebBrowser && canImport(JavaScriptKit)
     .windowFocus
   #else
     nil

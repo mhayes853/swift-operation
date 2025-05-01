@@ -14,7 +14,7 @@ let package = Package(
   ],
   traits: [
     .trait(
-      name: "webBrowser",
+      name: "WebBrowser",
       description:
         "Integrates web browser APIs with the library. (Only enable for WASM Browser Applications)",
       enabledTraits: []
@@ -106,8 +106,8 @@ if ProcessInfo.processInfo.environment["TEST_WASM"] != "1" {
           "_TestQueries",
           .product(name: "CustomDump", package: "swift-custom-dump"),
           .product(
-            name: "ViewInspector", 
-            package: "ViewInspector", 
+            name: "ViewInspector",
+            package: "ViewInspector",
             condition: .when(platforms: [.iOS, .macOS, .watchOS, .tvOS, .visionOS])
           )
         ]
