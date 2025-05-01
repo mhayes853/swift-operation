@@ -6,14 +6,7 @@
 
   extension SharedQuery {
     public init(store: QueryStore<State>, transaction: UITransaction) {
-      let shared = Shared(
-        wrappedValue: QueryStateKeyValue(store: store),
-        QueryStateKey(
-          store: store,
-          scheduler: UITransactionStateScheduler(transaction: transaction)
-        )
-      )
-      self.init(value: shared)
+      self.init(store: store, scheduler: .transaction(transaction))
     }
   }
 
@@ -26,10 +19,11 @@
       client: QueryClient? = nil,
       transaction: UITransaction
     ) where State == Query.State {
-      @Dependency(\.defaultQueryClient) var queryClient
       self.init(
-        store: (client ?? queryClient).store(for: query, initialState: initialState),
-        transaction: transaction
+        query,
+        initialState: initialState,
+        client: client,
+        scheduler: .transaction(transaction)
       )
     }
   }
@@ -44,10 +38,10 @@
       transaction: UITransaction
     ) where State == Query.State {
       self.init(
+        wrappedValue: wrappedValue,
         query,
-        initialState: QueryState(initialValue: wrappedValue),
         client: client,
-        transaction: transaction
+        scheduler: .transaction(transaction)
       )
     }
 
@@ -56,12 +50,7 @@
       client: QueryClient? = nil,
       transaction: UITransaction
     ) where State == DefaultQuery<Query>.State {
-      self.init(
-        query,
-        initialState: QueryState(initialValue: query.defaultValue),
-        client: client,
-        transaction: transaction
-      )
+      self.init(query, client: client, scheduler: .transaction(transaction))
     }
   }
 
@@ -75,13 +64,10 @@
       transaction: UITransaction
     ) where State == InfiniteQueryState<Query.PageID, Query.PageValue> {
       self.init(
+        wrappedValue: wrappedValue,
         query,
-        initialState: InfiniteQueryState(
-          initialValue: wrappedValue,
-          initialPageId: query.initialPageId
-        ),
         client: client,
-        transaction: transaction
+        scheduler: .transaction(transaction)
       )
     }
 
@@ -90,15 +76,7 @@
       client: QueryClient? = nil,
       transaction: UITransaction
     ) where State == InfiniteQueryState<Query.PageID, Query.PageValue> {
-      self.init(
-        query,
-        initialState: InfiniteQueryState(
-          initialValue: query.defaultValue,
-          initialPageId: query.initialPageId
-        ),
-        client: client,
-        transaction: transaction
-      )
+      self.init(query, client: client, scheduler: .transaction(transaction))
     }
   }
 
@@ -111,7 +89,7 @@
       Mutation: MutationRequest<Arguments, Value>
     >(_ mutation: Mutation, client: QueryClient? = nil, transaction: UITransaction)
     where State == MutationState<Arguments, Value> {
-      self.init(mutation, initialState: MutationState(), client: client, transaction: transaction)
+      self.init(mutation, client: client, scheduler: .transaction(transaction))
     }
   }
 #endif

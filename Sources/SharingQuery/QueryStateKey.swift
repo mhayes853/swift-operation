@@ -6,7 +6,7 @@ import Sharing
 
 // MARK: - QueryStateKey
 
-struct QueryStateKey<State: QueryStateProtocol, Scheduler: QueryStateScheduler> {
+struct QueryStateKey<State: QueryStateProtocol, Scheduler: SharedQueryStateScheduler> {
   private let store: QueryStore<State>
   let id = QueryStateKeyID()
   private let scheduler: Scheduler

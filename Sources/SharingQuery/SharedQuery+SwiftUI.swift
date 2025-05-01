@@ -6,11 +6,7 @@
 
   extension SharedQuery {
     public init(store: QueryStore<State>, animation: Animation) {
-      let shared = Shared(
-        wrappedValue: QueryStateKeyValue(store: store),
-        QueryStateKey(store: store, scheduler: AnimationStateScheduler(animation: animation))
-      )
-      self.init(value: shared)
+      self.init(store: store, scheduler: .animation(animation))
     }
   }
 
@@ -23,10 +19,11 @@
       client: QueryClient? = nil,
       animation: Animation
     ) where State == Query.State {
-      @Dependency(\.defaultQueryClient) var queryClient
       self.init(
-        store: (client ?? queryClient).store(for: query, initialState: initialState),
-        animation: animation
+        query,
+        initialState: initialState,
+        client: client,
+        scheduler: .animation(animation)
       )
     }
   }
@@ -41,10 +38,10 @@
       animation: Animation
     ) where State == Query.State {
       self.init(
+        wrappedValue: wrappedValue,
         query,
-        initialState: QueryState(initialValue: wrappedValue),
         client: client,
-        animation: animation
+        scheduler: .animation(animation)
       )
     }
 
@@ -53,12 +50,7 @@
       client: QueryClient? = nil,
       animation: Animation
     ) where State == DefaultQuery<Query>.State {
-      self.init(
-        query,
-        initialState: QueryState(initialValue: query.defaultValue),
-        client: client,
-        animation: animation
-      )
+      self.init(query, client: client, scheduler: .animation(animation))
     }
   }
 
@@ -72,13 +64,10 @@
       animation: Animation
     ) where State == InfiniteQueryState<Query.PageID, Query.PageValue> {
       self.init(
+        wrappedValue: wrappedValue,
         query,
-        initialState: InfiniteQueryState(
-          initialValue: wrappedValue,
-          initialPageId: query.initialPageId
-        ),
         client: client,
-        animation: animation
+        scheduler: .animation(animation)
       )
     }
 
@@ -87,15 +76,7 @@
       client: QueryClient? = nil,
       animation: Animation
     ) where State == InfiniteQueryState<Query.PageID, Query.PageValue> {
-      self.init(
-        query,
-        initialState: InfiniteQueryState(
-          initialValue: query.defaultValue,
-          initialPageId: query.initialPageId
-        ),
-        client: client,
-        animation: animation
-      )
+      self.init(query, client: client, scheduler: .animation(animation))
     }
   }
 
@@ -108,7 +89,7 @@
       Mutation: MutationRequest<Arguments, Value>
     >(_ mutation: Mutation, client: QueryClient? = nil, animation: Animation)
     where State == MutationState<Arguments, Value> {
-      self.init(mutation, initialState: MutationState(), client: client, animation: animation)
+      self.init(mutation, client: client, scheduler: .animation(animation))
     }
   }
 

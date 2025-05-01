@@ -30,10 +30,10 @@ public struct SharedQuery<State: QueryStateProtocol>: Sendable {
 // MARK: - Store Initializer
 
 extension SharedQuery {
-  public init(store: QueryStore<State>) {
+  public init(store: QueryStore<State>, scheduler: some SharedQueryStateScheduler = .synchronous) {
     self._value = Shared(
       wrappedValue: QueryStateKeyValue(store: store),
-      QueryStateKey(store: store, scheduler: SynchronousStateScheduler())
+      QueryStateKey(store: store, scheduler: scheduler)
     )
   }
 }
@@ -44,10 +44,14 @@ extension SharedQuery {
   public init<Query: QueryRequest>(
     _ query: Query,
     initialState: Query.State,
-    client: QueryClient? = nil
+    client: QueryClient? = nil,
+    scheduler: some SharedQueryStateScheduler = .synchronous
   ) where State == Query.State {
     @Dependency(\.defaultQueryClient) var queryClient
-    self.init(store: (client ?? queryClient).store(for: query, initialState: initialState))
+    self.init(
+      store: (client ?? queryClient).store(for: query, initialState: initialState),
+      scheduler: scheduler
+    )
   }
 }
 
@@ -166,16 +170,28 @@ extension SharedQuery {
   public init<Value: Sendable, Query: QueryRequest<Value, QueryState<Value?, Value>>>(
     wrappedValue: Query.State.StateValue = nil,
     _ query: Query,
-    client: QueryClient? = nil
+    client: QueryClient? = nil,
+    scheduler: some SharedQueryStateScheduler = .synchronous
   ) where State == Query.State {
-    self.init(query, initialState: QueryState(initialValue: wrappedValue), client: client)
+    self.init(
+      query,
+      initialState: QueryState(initialValue: wrappedValue),
+      client: client,
+      scheduler: scheduler
+    )
   }
 
   public init<Query: QueryRequest>(
     _ query: DefaultQuery<Query>,
-    client: QueryClient? = nil
+    client: QueryClient? = nil,
+    scheduler: some SharedQueryStateScheduler = .synchronous
   ) where State == DefaultQuery<Query>.State {
-    self.init(query, initialState: QueryState(initialValue: query.defaultValue), client: client)
+    self.init(
+      query,
+      initialState: QueryState(initialValue: query.defaultValue),
+      client: client,
+      scheduler: scheduler
+    )
   }
 }
 
@@ -185,7 +201,8 @@ extension SharedQuery {
   public init<Query: InfiniteQueryRequest>(
     wrappedValue: Query.State.StateValue = [],
     _ query: Query,
-    client: QueryClient? = nil
+    client: QueryClient? = nil,
+    scheduler: some SharedQueryStateScheduler = .synchronous
   ) where State == InfiniteQueryState<Query.PageID, Query.PageValue> {
     self.init(
       query,
@@ -193,13 +210,15 @@ extension SharedQuery {
         initialValue: wrappedValue,
         initialPageId: query.initialPageId
       ),
-      client: client
+      client: client,
+      scheduler: scheduler
     )
   }
 
   public init<Query: InfiniteQueryRequest>(
     _ query: DefaultInfiniteQuery<Query>,
-    client: QueryClient? = nil
+    client: QueryClient? = nil,
+    scheduler: some SharedQueryStateScheduler = .synchronous
   ) where State == InfiniteQueryState<Query.PageID, Query.PageValue> {
     self.init(
       query,
@@ -207,7 +226,8 @@ extension SharedQuery {
         initialValue: query.defaultValue,
         initialPageId: query.initialPageId
       ),
-      client: client
+      client: client,
+      scheduler: scheduler
     )
   }
 }
@@ -263,9 +283,13 @@ extension SharedQuery {
     Arguments: Sendable,
     Value: Sendable,
     Mutation: MutationRequest<Arguments, Value>
-  >(_ mutation: Mutation, client: QueryClient? = nil)
+  >(
+    _ mutation: Mutation,
+    client: QueryClient? = nil,
+    scheduler: some SharedQueryStateScheduler = .synchronous
+  )
   where State == MutationState<Arguments, Value> {
-    self.init(mutation, initialState: MutationState(), client: client)
+    self.init(mutation, initialState: MutationState(), client: client, scheduler: scheduler)
   }
 }
 
