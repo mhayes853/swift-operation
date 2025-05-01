@@ -287,8 +287,7 @@ extension SharedQuery {
     _ mutation: Mutation,
     client: QueryClient? = nil,
     scheduler: some SharedQueryStateScheduler = .synchronous
-  )
-  where State == MutationState<Arguments, Value> {
+  ) where State == MutationState<Arguments, Value> {
     self.init(mutation, initialState: MutationState(), client: client, scheduler: scheduler)
   }
 }

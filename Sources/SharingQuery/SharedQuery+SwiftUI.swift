@@ -87,8 +87,11 @@
       Arguments: Sendable,
       Value: Sendable,
       Mutation: MutationRequest<Arguments, Value>
-    >(_ mutation: Mutation, client: QueryClient? = nil, animation: Animation)
-    where State == MutationState<Arguments, Value> {
+    >(
+      _ mutation: Mutation,
+      client: QueryClient? = nil,
+      animation: Animation
+    ) where State == MutationState<Arguments, Value> {
       self.init(mutation, client: client, scheduler: .animation(animation))
     }
   }

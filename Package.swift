@@ -22,6 +22,11 @@ let package = Package(
     .trait(
       name: "SwiftNavigation",
       description: "Integrates SwiftNavigation's UITransaction with SharingQuery."
+    ),
+    .trait(
+      name: "UIKitNavigation",
+      description: "Integrates UIKitNavigation's UIKitAnimation with SharingQuery.",
+      enabledTraits: ["SwiftNavigation"]
     )
   ],
   dependencies: [
@@ -47,6 +52,14 @@ let package = Package(
           name: "SwiftNavigation",
           package: "swift-navigation",
           condition: .when(traits: ["SwiftNavigation"])
+        ),
+        .product(
+          name: "UIKitNavigation",
+          package: "swift-navigation",
+          condition: .when(
+            platforms: [.iOS, .tvOS, .visionOS, .macCatalyst],
+            traits: ["UIKitNavigation"]
+          )
         )
       ]
     ),
