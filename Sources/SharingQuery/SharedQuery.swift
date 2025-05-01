@@ -46,7 +46,7 @@ extension SharedQuery {
     initialState: Query.State,
     client: QueryClient? = nil
   ) where State == Query.State {
-    @Dependency(\.queryClient) var queryClient
+    @Dependency(\.defaultQueryClient) var queryClient
     self.init(store: (client ?? queryClient).store(for: query, initialState: initialState))
   }
 }

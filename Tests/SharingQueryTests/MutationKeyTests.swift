@@ -30,7 +30,7 @@ struct MutationKeyTests {
 
   @Test("Equatability Is True When Values From Separate Stores Are Equal")
   func equatability() async throws {
-    @Dependency(\.queryClient) var client
+    @Dependency(\.defaultQueryClient) var client
 
     let s1 = QueryStore.detached(mutation: EmptyMutation())
     let s2 = QueryStore.detached(mutation: EmptyMutation())

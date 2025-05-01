@@ -6,7 +6,7 @@ import IssueReporting
 // MARK: - QueryClient
 
 extension DependencyValues {
-  public var queryClient: QueryClient {
+  public var defaultQueryClient: QueryClient {
     get { self[QueryClientKey.self] }
     set { self[QueryClientKey.self] = newValue }
   }
@@ -25,7 +25,7 @@ extension DependencyValues {
 // MARK: - NetworkObserver
 
 extension DependencyValues {
-  public var networkObserver: NetworkObserver {
+  public var defaultNetworkObserver: NetworkObserver {
     get { self[NetworkObserverKey.self] }
     set { self[NetworkObserverKey.self] = newValue }
   }

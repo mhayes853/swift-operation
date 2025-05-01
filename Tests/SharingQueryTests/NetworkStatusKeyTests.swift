@@ -9,7 +9,7 @@ struct NetworkStatusKeyTests {
   func observesChanges() {
     let observer = MockNetworkObserver()
     withDependencies {
-      $0.networkObserver = observer
+      $0.defaultNetworkObserver = observer
     } operation: {
       @SharedReader(.networkStatus) var status = .connected
 

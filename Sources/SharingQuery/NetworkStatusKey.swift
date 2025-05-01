@@ -19,7 +19,7 @@ public struct NetworkStatusKey {
   private let observer: any NetworkObserver
 
   init(observer: (any NetworkObserver)?) {
-    @Dependency(\.networkObserver) var networkObserver
+    @Dependency(\.defaultNetworkObserver) var networkObserver
     self.observer = observer ?? networkObserver
   }
 }

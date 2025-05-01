@@ -23,7 +23,7 @@
       client: QueryClient? = nil,
       animation: Animation
     ) where State == Query.State {
-      @Dependency(\.queryClient) var queryClient
+      @Dependency(\.defaultQueryClient) var queryClient
       self.init(
         store: (client ?? queryClient).store(for: query, initialState: initialState),
         animation: animation

@@ -8,7 +8,7 @@ import _TestQueries
 struct QueryKeyTests {
   @Test("Fetches Value")
   func fetchesValue() async throws {
-    @Dependency(\.queryClient) var client
+    @Dependency(\.defaultQueryClient) var client
 
     @SharedQuery(TestQuery()) var value
 
@@ -19,7 +19,7 @@ struct QueryKeyTests {
 
   @Test("Fetches Error")
   func fetchesError() async throws {
-    @Dependency(\.queryClient) var client
+    @Dependency(\.defaultQueryClient) var client
 
     @SharedQuery(FailingQuery()) var value
 
@@ -30,7 +30,7 @@ struct QueryKeyTests {
 
   @Test("Set Value, Updates Value In Store")
   func setValueUpdatesValueInStore() async throws {
-    @Dependency(\.queryClient) var client
+    @Dependency(\.defaultQueryClient) var client
 
     let query = TestQuery().enableAutomaticFetching(onlyWhen: .always(false))
     @SharedQuery(query) var value
@@ -42,7 +42,7 @@ struct QueryKeyTests {
 
   @Test("Shares State With Shared Queries")
   func sharesStateWithSharedQueries() async throws {
-    @Dependency(\.queryClient) var client
+    @Dependency(\.defaultQueryClient) var client
 
     let query = TestQuery().enableAutomaticFetching(onlyWhen: .always(false))
     @SharedQuery(query) var value
@@ -55,7 +55,7 @@ struct QueryKeyTests {
 
   @Test("Makes Separate Subscribers When Using QueryKey And QueryStateKey In Conjunction")
   func makesSeparateSubscribersWhenUsingQueryKeyAndQueryStateKeyInConjunction() async throws {
-    @Dependency(\.queryClient) var client
+    @Dependency(\.defaultQueryClient) var client
 
     let query = TestQuery().enableAutomaticFetching(onlyWhen: .always(false))
     @SharedQuery(query) var value
@@ -67,7 +67,7 @@ struct QueryKeyTests {
 
   @Test("Makes Separate Subscribers When Using QueryKeys With The Same Query")
   func makesSeparateSubscribersWhenUsingQueryKeysWithTheSameQuery() async throws {
-    @Dependency(\.queryClient) var client
+    @Dependency(\.defaultQueryClient) var client
 
     let query = TestQuery().enableAutomaticFetching(onlyWhen: .always(false))
     @SharedQuery(query) var value
