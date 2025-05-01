@@ -2,16 +2,12 @@ import Dependencies
 import Query
 import Sharing
 
-#if canImport(SwiftUI)
-  import SwiftUI
-#endif
-
 // MARK: - SharedQuery
 
 @propertyWrapper
 @dynamicMemberLookup
 public struct SharedQuery<State: QueryStateProtocol>: Sendable {
-  @Shared private var value: QueryStateKeyValue<State>
+  @Shared var value: QueryStateKeyValue<State>
 
   public var wrappedValue: State.StateValue {
     get { self.value.currentValue }
@@ -37,21 +33,10 @@ extension SharedQuery {
   public init(store: QueryStore<State>) {
     self._value = Shared(
       wrappedValue: QueryStateKeyValue(store: store),
-      QueryStateKey(store: store)
+      QueryStateKey(store: store, scheduler: SynchronousStateScheduler())
     )
   }
 }
-
-#if canImport(SwiftUI)
-  extension SharedQuery {
-    public init(store: QueryStore<State>, animation: Animation) {
-      self._value = Shared(
-        wrappedValue: QueryStateKeyValue(store: store),
-        QueryStateKey(store: store, animation: animation)
-      )
-    }
-  }
-#endif
 
 // MARK: - QueryState Initializer
 
@@ -65,23 +50,6 @@ extension SharedQuery {
     self.init(store: (client ?? queryClient).store(for: query, initialState: initialState))
   }
 }
-
-#if canImport(SwiftUI)
-  extension SharedQuery {
-    public init<Query: QueryRequest>(
-      _ query: Query,
-      initialState: Query.State,
-      client: QueryClient? = nil,
-      animation: Animation
-    ) where State == Query.State {
-      @Dependency(\.queryClient) var queryClient
-      self.init(
-        store: (client ?? queryClient).store(for: query, initialState: initialState),
-        animation: animation
-      )
-    }
-  }
-#endif
 
 // MARK: - Shared Properties
 
@@ -192,16 +160,6 @@ extension SharedQuery: Equatable where State.StateValue: Equatable {
   }
 }
 
-// MARK: - DynamicProperty
-
-#if canImport(SwiftUI)
-  extension SharedQuery: DynamicProperty {
-    public func update() {
-      self.$value.update()
-    }
-  }
-#endif
-
 // MARK: - Queries
 
 extension SharedQuery {
@@ -220,37 +178,6 @@ extension SharedQuery {
     self.init(query, initialState: QueryState(initialValue: query.defaultValue), client: client)
   }
 }
-
-#if canImport(SwiftUI)
-  extension SharedQuery {
-    public init<Value: Sendable, Query: QueryRequest<Value, QueryState<Value?, Value>>>(
-      wrappedValue: Query.State.StateValue = nil,
-      _ query: Query,
-      client: QueryClient? = nil,
-      animation: Animation
-    ) where State == Query.State {
-      self.init(
-        query,
-        initialState: QueryState(initialValue: wrappedValue),
-        client: client,
-        animation: animation
-      )
-    }
-
-    public init<Query: QueryRequest>(
-      _ query: DefaultQuery<Query>,
-      client: QueryClient? = nil,
-      animation: Animation
-    ) where State == DefaultQuery<Query>.State {
-      self.init(
-        query,
-        initialState: QueryState(initialValue: query.defaultValue),
-        client: client,
-        animation: animation
-      )
-    }
-  }
-#endif
 
 // MARK: - InfiniteQueries
 
@@ -284,43 +211,6 @@ extension SharedQuery {
     )
   }
 }
-
-#if canImport(SwiftUI)
-  extension SharedQuery {
-    public init<Query: InfiniteQueryRequest>(
-      wrappedValue: Query.State.StateValue = [],
-      _ query: Query,
-      client: QueryClient? = nil,
-      animation: Animation
-    ) where State == InfiniteQueryState<Query.PageID, Query.PageValue> {
-      self.init(
-        query,
-        initialState: InfiniteQueryState(
-          initialValue: wrappedValue,
-          initialPageId: query.initialPageId
-        ),
-        client: client,
-        animation: animation
-      )
-    }
-
-    public init<Query: InfiniteQueryRequest>(
-      _ query: DefaultInfiniteQuery<Query>,
-      client: QueryClient? = nil,
-      animation: Animation
-    ) where State == InfiniteQueryState<Query.PageID, Query.PageValue> {
-      self.init(
-        query,
-        initialState: InfiniteQueryState(
-          initialValue: query.defaultValue,
-          initialPageId: query.initialPageId
-        ),
-        client: client,
-        animation: animation
-      )
-    }
-  }
-#endif
 
 extension SharedQuery where State: _InfiniteQueryStateProtocol {
   @discardableResult
@@ -378,19 +268,6 @@ extension SharedQuery {
     self.init(mutation, initialState: MutationState(), client: client)
   }
 }
-
-#if canImport(SwiftUI)
-  extension SharedQuery {
-    public init<
-      Arguments: Sendable,
-      Value: Sendable,
-      Mutation: MutationRequest<Arguments, Value>
-    >(_ mutation: Mutation, client: QueryClient? = nil, animation: Animation)
-    where State == MutationState<Arguments, Value> {
-      self.init(mutation, initialState: MutationState(), client: client, animation: animation)
-    }
-  }
-#endif
 
 extension SharedQuery where State: _MutationStateProtocol {
   @discardableResult

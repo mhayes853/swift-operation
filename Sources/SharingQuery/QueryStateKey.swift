@@ -4,35 +4,18 @@ import IdentifiedCollections
 import Query
 import Sharing
 
-#if canImport(SwiftUI)
-  import SwiftUI
-#endif
-
 // MARK: - QueryStateKey
 
-struct QueryStateKey<State: QueryStateProtocol> {
+struct QueryStateKey<State: QueryStateProtocol, Scheduler: QueryStateScheduler> {
   private let store: QueryStore<State>
   let id = QueryStateKeyID()
-  #if canImport(SwiftUI)
-    private let animation: Animation?
-  #endif
+  private let scheduler: Scheduler
 
-  init(store: QueryStore<State>) {
+  init(store: QueryStore<State>, scheduler: Scheduler) {
     self.store = store
-    #if canImport(SwiftUI)
-      self.animation = nil
-    #endif
+    self.scheduler = scheduler
   }
 }
-
-#if canImport(SwiftUI)
-  extension QueryStateKey {
-    init(store: QueryStore<State>, animation: Animation) {
-      self.store = store
-      self.animation = animation
-    }
-  }
-#endif
 
 extension QueryStateKey: SharedKey {
   typealias Value = QueryStateKeyValue<State>
@@ -45,9 +28,9 @@ extension QueryStateKey: SharedKey {
       Task<Void, Never> {
         do {
           try await self.store.fetch()
-          self.scheduleYield { continuation.resume(returning: Value(store: self.store)) }
+          self.scheduler.schedule { continuation.resume(returning: Value(store: self.store)) }
         } catch {
-          self.scheduleYield { continuation.resume(throwing: error) }
+          self.scheduler.schedule { continuation.resume(throwing: error) }
         }
       }
     }
@@ -64,7 +47,7 @@ extension QueryStateKey: SharedKey {
   ) -> SharedSubscription {
     let subscription = self.store.subscribe(
       with: QueryEventHandler { state, _ in
-        self.scheduleYield {
+        self.scheduler.schedule {
           let value = Value(store: self.store)
           subscriber.yield(value)
           if let error = state.error {
@@ -75,22 +58,6 @@ extension QueryStateKey: SharedKey {
       }
     )
     return SharedSubscription { subscription.cancel() }
-  }
-
-  private func scheduleYield(_ fn: @escaping @Sendable () -> Void) {
-    #if canImport(SwiftUI)
-      if let animation {
-        Task { @MainActor in
-          withAnimation(animation) {
-            fn()
-          }
-        }
-      } else {
-        fn()
-      }
-    #else
-      fn()
-    #endif
   }
 }
 
