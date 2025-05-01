@@ -2,6 +2,10 @@
   import SwiftUI
 #endif
 
+#if SwiftNavigation
+  import SwiftNavigation
+#endif
+
 // MARK: - QueryStateScheduler
 
 protocol QueryStateScheduler: Sendable {
@@ -26,6 +30,20 @@ struct SynchronousStateScheduler: QueryStateScheduler {
     func schedule(work: @escaping @Sendable () -> Void) {
       Task { @MainActor in
         withAnimation(self.animation) { work() }
+      }
+    }
+  }
+#endif
+
+// MARK: - UITransactionStateScheduler
+
+#if SwiftNavigation
+  struct UITransactionStateScheduler: QueryStateScheduler {
+    let transaction: UITransaction
+
+    func schedule(work: @escaping @Sendable () -> Void) {
+      Task { @MainActor in
+        withUITransaction(self.transaction) { work() }
       }
     }
   }

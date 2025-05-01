@@ -18,6 +18,10 @@ let package = Package(
       description:
         "Integrates web browser APIs with the library. (Only enable for WASM Browser Applications)",
       enabledTraits: []
+    ),
+    .trait(
+      name: "SwiftNavigation",
+      description: "Integrates SwiftNavigation's UITransaction with SharingQuery."
     )
   ],
   dependencies: [
@@ -30,12 +34,21 @@ let package = Package(
     .package(url: "https://github.com/pointfreeco/xctest-dynamic-overlay", from: "1.4.3"),
     .package(url: "https://github.com/swiftwasm/JavaScriptKit", from: "0.26.1"),
     .package(url: "https://github.com/nalexn/ViewInspector", from: "0.10.1"),
-    .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.4.3")
+    .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.4.3"),
+    .package(url: "https://github.com/pointfreeco/swift-navigation", from: "2.3.0")
   ],
   targets: [
     .target(
       name: "SharingQuery",
-      dependencies: ["Query", .product(name: "Sharing", package: "swift-sharing")]
+      dependencies: [
+        "Query",
+        .product(name: "Sharing", package: "swift-sharing"),
+        .product(
+          name: "SwiftNavigation",
+          package: "swift-navigation",
+          condition: .when(traits: ["SwiftNavigation"])
+        )
+      ]
     ),
     .target(
       name: "Query",
