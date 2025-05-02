@@ -2,20 +2,6 @@
 
 A lightweight cross-platform library for fetching and managing asynchronous data in Swift, SwiftUI, Sharing, WASM, Linux, and more.
 
-## Motivation
-
-An essential component of building modern applications stems from fetching and managing asynchronous data located on various remote sources such as REST APIs and more.
-
-Fetching remote data is inherently flakey, therefore it's essential that your code is robust such that when things go wrong your users aren't angry. To solve this, your application may need to track loading states, track error states, perform retries, add exponential backoff, track the user's network connection state, and much more.
-
-Additionally, keeping remote data in your app consistent with the data from a remote source is also incredibly difficult, perhaps more so than fetching the data itself. For instance, if one screen in your app displays a list of friends, and the user unfriends someone on another screen, it would be in your best interest to update active screens that display the full list of friends.
-
-Your app may also display long lists of fetched data that support infinite scrolling. As a result, you'll need to implement a pagination system for the data you're fetching.
-
-All of this can require lots of boilerplate code to manage, and is not code that generally relates directly to the features of your application.
-
-***Swift Query, provides a simple framework to manage this complexity, with the flexibility to adapt to any data fetching needs for your app.***
-
 ## Getting Started
 
 The first thing you'll need to do is create a data type and a ``QueryRequest`` for the data you want to fetch.
@@ -33,13 +19,13 @@ struct Post: Codable, Sendable, Identifiable {
 }
 
 extension Post {
-  static func query(for id: ID) -> Query {
-    PostQuery(id: id)
+  static func query(for id: ID) -> some QueryRequest<Post, Query.State> {
+    Query(id: id)
   }
 
   struct Query: QueryRequest, Hashable {
     let id: Int
-  
+
     func fetch(
       in context: QueryContext,
       with continuation: QueryContinuation<Post>
@@ -55,10 +41,13 @@ extension Post {
 Already, creating a simple data type that conforms to the `QueryRequest` protocol gives you a lot of power. For instance, you can chain on modifiers to add retries, deduplication, and even automatic refetching when the network comes back online.
 
 ```swift
-let query = Post.query(for: 1)
-  .retry(limit: 3)
-  .refetchOnChange(of: .connected(to: NWPathMonitorObserver.shared))
-  .deduplicated()
+extension Post {
+  static func query(for id: ID) -> some QueryRequest<Post, Query.State> {
+    Query(id: id).retry(limit: 3)
+      .refetchOnChange(of: .connected(to: NWPathMonitorObserver.shared))
+      .deduplicated()
+  }
+}
 ```
 
 > Note: You typically don't need to use all of the above modifiers unless you want to override the default behavior. The default initialization of a ``QueryClient`` instance will automatically add these modifiers to your queries.
@@ -67,7 +56,7 @@ From here, there are a variety of ways that you can proceed depending on what te
 - SwiftUI
 - [Sharing](https://github.com/pointfreeco/swift-sharing)
 - Combine
-- Async Sequences
+- AsyncSequence
 - Pure Swift
 
 ### SwiftUI Usage
@@ -221,7 +210,7 @@ struct PostsPage: Sendable {
 }
 
 extension PostsPage {
-  static func listQuery(for feedId: Int) -> FeedQuery {
+  static func listQuery(for feedId: Int) -> some InfiniteQueryRequest<String, PostsPage> {
     FeedQuery(feedId: feedId)
   }
 
@@ -232,19 +221,19 @@ extension PostsPage {
     let feedId: Int
 
     let initialPageId = "initial"
- 
+
     func pageId(
-      after page: InfiniteQueryPage<String, PlayersPage>,
-      using paging: InfiniteQueryPaging<String, PlayersPage>,
+      after page: InfiniteQueryPage<String, PostsPage>,
+      using paging: InfiniteQueryPaging<String, PostsPage>,
       in context: QueryContext
     ) -> String? {
       page.value.nextPageToken
     }
 
     func fetchPage(
-      using paging: InfiniteQueryPaging<String, PlayersPage>,
+      using paging: InfiniteQueryPaging<String, PostsPage>,
       in context: QueryContext,
-      with continuation: QueryContinuation<PlayersPage>
+      with continuation: QueryContinuation<PostsPage>
     ) async throws -> PostsPage {
       try await self.fetchFeedPage(for: paging.pageId)
     }
@@ -267,7 +256,7 @@ struct FeedView: View {
       ForEach(page.value.posts) { post in
         PostCardView(post: post)
       }
-    
+
       Button {
         Task { try await self.$state.fetchNextPage() }
       } label: {
@@ -277,12 +266,3 @@ struct FeedView: View {
   }
 }
 ```
-
-## When Not To Use Swift Query
-
-Swift Query is a powerful library for fetching and managing asynchronous data, but it's not suitable for every problem. For these kinds of applications, consider using another library, or even just rolling your own solution.
-
-- Applications with primarily local data stored with SQLite, Core/Swift Data, Realm, etc.
-  - For these applications, you'll be better off using the SDKs directly that manage the local data, or if you're using SQLite you may look into [SharingGRDB](https://github.com/pointfreeco/sharing-grdb) instead. Swift Query adds lots of extra noise such as loading states and multistage queries that isn't necessary if all of your data is stored locally on disk, and can be fetched with little delay.
-- Applications that primarily stream live data such from sources such as websockets.
-  - Swift Query can work well with live data such as websockets via yielding live updates from the query using a ``QueryController``. However, if your data is mostly "streamed" and not really "fetched", then you may be able to skip the noise of Swift Query and utilize [Sharing](https://github.com/pointfreeco/swift-sharing) directly for managing state.
