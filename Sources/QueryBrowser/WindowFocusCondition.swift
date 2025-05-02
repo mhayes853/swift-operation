@@ -11,6 +11,8 @@
 
   // MARK: - FetchCondition Conformance
 
+  // TODO: - Use isFocusRefetchingEnabled in Subscribe
+
   extension WindowFocusCondition: FetchCondition {
     public func isSatisfied(in context: QueryContext) -> Bool {
       context.isFocusRefetchingEnabled && self.document.visibilityState == .string("visible")
