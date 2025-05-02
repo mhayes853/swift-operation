@@ -47,8 +47,8 @@
       let subscription = condition.subscribe(in: context) { value in
         satisfactions.withLock { $0.append(value) }
       }
-      expectNoDifference(subscription, .empty)
-      satisfactions.withLock { expectNoDifference($0, [false]) }
+      XCTAssertEqual(subscription, .empty)
+      satisfactions.withLock { XCTAssertEqual($0, [false]) }
       subscription.cancel()
     }
 
