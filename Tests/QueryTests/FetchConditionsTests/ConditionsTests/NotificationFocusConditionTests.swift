@@ -16,6 +16,18 @@
       expectNoDifference(observer.isSatisfied(in: QueryContext()), isActive)
     }
 
+    @Test("Is Always False When Context Disables Focus Fetching", arguments: [true, false])
+    func alwaysFalseWhenContextDisablesFocusFetching(isActive: Bool) {
+      let observer: some FetchCondition = .notificationFocus(
+        didBecomeActive: _didBecomeActive,
+        willResignActive: _willResignActive,
+        isActive: { @Sendable in isActive }
+      )
+      var context = QueryContext()
+      context.isFocusRefetchingEnabled = false
+      expectNoDifference(observer.isSatisfied(in: context), false)
+    }
+
     @Test("Emits True When Becomes Active")
     func emitsTrueWhenBecomesActive() {
       let observer: some FetchCondition = .notificationFocus(
