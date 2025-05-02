@@ -280,7 +280,7 @@ struct FeedView: View {
 
 ## Documentation and Further Reading
 
-This barely scratches the surface of what is possible with the library, yet the usage shown above should account for nearly all common cases you encounter. The library ships with many additional advanced tools that can adapt to the variety of interesting ways of how your app needs to fetch data. The documentation has many articles that cover common advanced data fetching patterns, and how the library integrates with those patterns.
+The usage shown above should account for nearly all common cases you encounter. Yet, the library ships with many additional advanced tools that can adapt to the variety of interesting ways of how your app needs to fetch data. The documentation has many articles that cover common advanced data fetching patterns, and how the library integrates with those patterns.
 
 ## Examples
 
@@ -288,7 +288,7 @@ TODO
 
 ## Inspirations and Design Principles
 
-This library was mainly inspired by the popular [Tanstack Query](https://tanstack.com/query/latest) library in the JavaScript ecosystem, and serves as an equivalent in the Swift ecosystem. Additionally the library seeks to improve on the tools that tanstack query provides, but for Swift applications.
+This library was mainly inspired by the popular [Tanstack Query](https://tanstack.com/query/latest) library in the JavaScript ecosystem, and serves as an equivalent in the Swift ecosystem. Additionally the library seeks to improve on the tools that tanstack query provides, but for Swift applications. Like Tanstack Query, the learning curve of the library is meant to be easy to get started with, and increases in difficultly as you seek its more advanced functionallity.
 
 So in no particular order, here are the primary design principles of this library:
 1. **Queries should be easy to create and compose together.**
