@@ -13,7 +13,7 @@
 
   extension WindowFocusCondition: FetchCondition {
     public func isSatisfied(in context: QueryContext) -> Bool {
-      self.document.visibilityState == .string("visible")
+      context.isFocusRefetchingEnabled && self.document.visibilityState == .string("visible")
     }
 
     public func subscribe(

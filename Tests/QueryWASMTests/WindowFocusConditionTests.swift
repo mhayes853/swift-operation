@@ -21,6 +21,20 @@
       XCTAssertFalse(condition.isSatisfied(in: QueryContext()))
     }
 
+    func testNeverSatisfiedWhenFocusRefetchingDisabled() {
+      var context = QueryContext()
+      context.isFocusRefetchingEnabled = false
+
+      let document = JSObject()
+      document.visibilityState = .string("visible")
+
+      let condition: some FetchCondition = .windowFocus(document: document, window: window)
+      XCTAssertFalse(condition.isSatisfied(in: context))
+
+      document.visibilityState = .string("hidden")
+      XCTAssertFalse(condition.isSatisfied(in: context))
+    }
+
     func testSubscribesToVisibilityStateChanges() {
       let document = JSObject()
       document.visibilityState = .string("visible")

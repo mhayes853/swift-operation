@@ -11,3 +11,4 @@ DerivedData/
 *.o
 *.swiftdeps
 *.swiftdeps~
+node_modules/
