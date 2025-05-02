@@ -64,7 +64,7 @@ extension Post {
 }
 ```
 
-> [NOTE!]
+> [!NOTE]
 > You typically don't need to use all of the above modifiers unless you want to override the default behavior. The default initialization of a `QueryClient` instance will automatically add these modifiers to your queries when you use the library in conjunction with your preferred technology.
 
 From here, there are a variety of ways that you can proceed depending on what technologies you're using. The library natively supports observing queries with the following technologies:
