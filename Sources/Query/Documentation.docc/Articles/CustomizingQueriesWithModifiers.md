@@ -37,7 +37,7 @@ extension QueryRequest {
 }
 ```
 
-> Note: It's essential that we have `ModifiedQuery<Self, DelayModifier<Self>>` as the return type instead of `some QueryRequest<Value>`. The former style ensures that infinite queries and mutations can use our modifier whilst still being recognized as their respective ``InfiniteQueryRequest`` or ``MutationRequest`` conformances by the compiler.
+> Note: It's essential that we have `ModifiedQuery<Self, DelayModifier<Self>>` as the return type instead of `some QueryRequest<Value, State>`. The former style ensures that infinite queries and mutations can use our modifier whilst still being recognized as their respective ``InfiniteQueryRequest`` or ``MutationRequest`` conformances by the compiler.
 
 This allows us to use our modifer for any query that we create.
 
@@ -96,7 +96,7 @@ extension QueryContext {
 This now allows you to override the `queryDelay` value.
 
 ```swift
-let query = SomeQuery().delay(for: 1)
+let query = SomeData.query.delay(for: 1)
 let store = client.store(for: query)
 store.context.queryDelay = 0
 ```

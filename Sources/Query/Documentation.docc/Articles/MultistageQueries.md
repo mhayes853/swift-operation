@@ -13,10 +13,6 @@ All of this is possible by utilizing the `QueryContinuation` that's passed to yo
 Let's start with a simple workflow. Fetching data from your server may be expensive, so you may want to yield in-memory or placeholder data while you fetch fresh data from your server.
 
 ```swift
-struct QueryData: Codable, Sendable {
-  // ...
-}
-
 final class Cache: Sendable {
   static let shared = Cache()
 
@@ -30,19 +26,29 @@ final class Cache: Sendable {
   }
 }
 
-struct CacheableQuery: QueryRequest, Hashable {
-  let key: String
+struct QueryData: Codable, Sendable {
+  // ...
+}
 
-  func fetch(
-    in context: QueryContext,
-    with continuation: QueryContinuation<QueryData>
-  ) async throws -> QueryData {
-    if let cachedData = Cache.shared[key] {
-      continuation.yield(cachedData)
+extension QueryData {
+  static func cacheableQuery(for key: String) -> some QueryRequest<Self, CacheableQuery.State> {
+    CacheableQuery(key: key)
+  }
+
+  struct CacheableQuery: QueryRequest, Hashable {
+    let key: String
+
+    func fetch(
+      in context: QueryContext,
+      with continuation: QueryContinuation<QueryData>
+    ) async throws -> QueryData {
+      if let cachedData = Cache.shared[key] {
+        continuation.yield(cachedData)
+      }
+      let freshData = try await fetchFreshData()
+      Cache.shared[key] = freshData
+      return freshData
     }
-    let freshData = try await fetchFreshData()
-    Cache.shared[key] = freshData
-    return freshData
   }
 }
 ```
@@ -92,7 +98,7 @@ import SwiftUI
 import Query
 
 struct ContentView: View {
-  @State.Query(CacheableQuery(key: "example")) var state
+  @State.Query(QueryData.cacheableQuery(for: "example")) var state
 
   var body: some View {
     VStack {
@@ -192,31 +198,35 @@ struct EventsList: Sendable {
   let events: [Event]
 }
 
-struct NearbyEventsQuery: QueryRequest {
-  let region: Region
-
-  var path: QueryPath {
-    ["nearby-events", region]
+extension EventsList {
+  static func nearbyQuery(for region: Region) -> some QueryRequest<Self, NearbyEventsQuery.State> {
+    NearbyEventsQuery(region: region)
   }
 
-  func fetch(
-    in context: QueryContext,
-    with continuation: QueryContinuation<EventsList>
-  ) async throws -> EventsList {
-    guard let client = context.queryClient else {
+  struct NearbyEventsQuery: QueryRequest {
+    let region: Region
+
+    var path: QueryPath {
+      ["nearby-events", region]
+    }
+
+    func fetch(
+      in context: QueryContext,
+      with continuation: QueryContinuation<EventsList>
+    ) async throws -> EventsList {
+      guard let client = context.queryClient else {
+        return try await fetchActualEventList(region)
+      }
+      // Look for other EventLists we've fetched and use the data from
+      // any that are within the distance threshold.
+      for (_, store) in client.stores(matching: ["nearby-events"]) {
+        guard let list = store.currentValue as? EventsList else { continue }
+        if list.region.distance(to: region) < context.distanceThreshold {
+          continuation.yield(EventsList(region: region, events: list.events))
+        }
+      }
       return try await fetchActualEventList(region)
     }
-    // Look for other EventLists we've fetched and use the data from
-    // any that are within the distance threshold.
-    for (_, store) in client.stores(matching: ["nearby-events"]) {
-      guard let list = store.currentValue as? EventsList else { continue }
-      if list.region.distance(to: region) < context.distanceThreshold {
-        continuation.yield(
-          EventsList(region: region, events: list.events)
-        )
-      }
-    }
-    return try await fetchActualEventList(region)
   }
 }
 

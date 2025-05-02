@@ -1,6 +1,6 @@
-# Queries, Infinite Queries, and Mutations
+# Creating a Custom Fetching Paradigm
 
-Learn about the different paradigms of fetching and managing data with the library, and how you can even create your own paradigms using the tools in the library.
+Learn about how to create a custom data fetching paradigm. In this article, we'll explore a simple recursive fetching paradigm.
 
 ## Overview
 
@@ -12,268 +12,11 @@ The library provides 3 query paradigms that are applicable to different situatio
 
 Infinite queries and mutations are both built directly on top of ordinary queries, and so all modifiers and functionallity that works with traditional queries will also work with those 2 paradigms.
 
-Let's dive into the basics of each paradigm, and even show an example how you can create your own paradigm.
+You can also build your own data fetching paradigms to support cases that the built-in paradigms don't support. We'll explore how one could make a simplified paradigm for fetching recursive data such as nested comments in a comment thread. This is an advanced topic, but the built-in paradigms should support nearly every case you encounter in your app, so implementing your own paradigm should be relatively rare. Nevertheless, this article still serves as insight into how the built-in paradigms work under the hood, and should further your understanding of the internals of the library.
 
-## Queries
+## Building a Recursive Data Fetching Paradigm
 
-Queries are the most basic fetching paradigm the library offers. Just creating a conformance to the ``QueryRequest`` protocol already unlocks a lot of power, such as retries and more.
-
-```swift
-struct PlayerQuery: QueryRequest, Hashable {
-  let id: Int
-
-  func fetch(
-    in context: QueryContext,
-    using continuation: QueryContinuation<Player>
-  ) async throws -> Player {
-    // Fetch player with id...
-  }
-}
-
-let query = PlayerQuery(id: 200)
-  .retry(limit: 3)
-  .deduplicated()
-  .stale(after: fiveMinutes)
-  .refetchOnChange(of: .loggedInUser)
-```
-
-All that you must do is fetch your data inside `PlayerQuery`, and the library gives you powerful tools that work directly on top of that logic. Though the query paradigm is by far the most basic, it serves as the baseline for implementing other paradigms such as infinite queries and mutations.
-
-## Infinite Queries
-
-If you have a paginated or infinitely scrollable list in your app, infinite queries are the paradigm for you. Conforming to the ``InfiniteQueryRequest`` protocol is a little bit more work than `QueryRequest`, but that is only because you need to provide a notion of how pages are to be fetched. Despite this, know that `InfiniteQueryRequest` inherits from `QueryRequest`, so modifiers that work on traditional queries will also work on infinite queries.
-
-```swift
-struct PlayersPage: Sendable, Codable {
-  let players: [Player]
-  let nextPageKey: String?
-  let previousPageKey: String?
-
-  var isLastPage: Bool { nextPageKey == nil }
-  var isFirstPage: Bool { previousPageKey == nil }
-}
-
-struct PlayersQuery: InfiniteQueryRequest, Hashable {
-  typealias PageID = String
-  typealias PageValue = PlayersPage
-
-  let listId: Int
-
-  // Requirement 1 (Provide the initial page index that can be any Hashable
-  // and Sendable type.)
-  let initialPageId = "initial"
-
-  // Requirement 2 (Provide a way to determine the next page id from the
-  // previous page, which can be the next page token that your API
-  // returns for the previous page.)
-  func pageId(
-    after page: InfiniteQueryPage<String, PlayersPage>,
-    using paging: InfiniteQueryPaging<String, PlayersPage>,
-    in context: QueryContext
-  ) -> String? {
-    page.value.isLastPage ? nil : page.value.nextPageKey
-  }
-
-  // [OPTIONAL] Requirement 3 (Provide a way to determine the previous page id
-  // from the first page, which can be the previous page token that your API
-  // returns for the previous page.)
-  func pageId(
-    before page: InfiniteQueryPage<String, PlayersPage>,
-    using paging: InfiniteQueryPaging<String, PlayersPage>,
-    in context: QueryContext
-  ) -> String? {
-    page.value.isFirstPage ? nil : page.value.previousPageKey
-  }
-
-  // Requirement 4 (Fetch the data for a page.)
-  func fetchPage(
-    using paging: InfiniteQueryPaging<String, PlayersPage>,
-    in context: QueryContext,
-    with continuation: QueryContinuation<PlayersPage>
-  ) async throws -> PlayersPage {
-    // Fetch the list of players for the page...
-  }
-}
-```
-
-With this now, you're nearly up and running. You control how pages are fetched through a ``QueryStore`` instance, when the state for the store is ``InfiniteQueryState``, the store provides a few additional methods for fetching parts of the query.
-
-```swift
-let store = client.store(for: PlayersQuery(listId: 20))
-
-// Fetching all pages.
-try await store.fetch() // Fetches initial page if no pages have been fetched yet.
-try await store.fetchAllPages()
-
-// Fetching next page.
-// Fetches initial page if no pages have been fetched yet.
-try await store.fetchNextPage()
-
-// Fetching previous page.
-// Fetches initial page if no pages have been fetched yet.
-try await store.fetchPreviousPage()
-```
-
-> Note: It should be noted that if you're using SwiftUI, then you can access these methods through the projected value of ``SwiftUICore/State/Query``.
-> ```swift
-> import SwiftUI
-> import Query
->
-> struct PlayersView: View {
->   @State.Query(PlayersQuery(listId: 20)) private var state
->
->   var body: some View {
->     // ...
->   }
->
->   private func fetch() async throws {
->     // Fetching all pages.
->     try await $state.fetch() // Fetches initial page if no pages have been fetched yet.
->     try await $state.fetchAllPages()
->
->     // Fetching next page.
->     // Fetches initial page if no pages have been fetched yet.
->     try await $state.fetchNextPage()
->
->     // Fetching previous page.
->     // Fetches initial page if no pages have been fetched yet.
->     try await $state.fetchPreviousPage()
->   }
-> }
-> ```
-
-The state value of infinite query is an ``InfiniteQueryPages`` type, which is just an [`IdentifiedArray`](https://github.com/pointfreeco/swift-identified-collections) under the hood. Each element of the array is of type ``InfiniteQueryPage``, which contains a field for the page id along with the value of the page.
-
-```swift
-let store = client.store(for: PlayersQuery(listId: 20))
-
-for page in store.currentValue {
-  print("Page Id", page.id)
-  print("Players", page.value.players)
-}
-```
-
-### Infinite Query Concurrency
-
-The previous and next page of an infinite query can be fetched at the same time. However, requests to fetch all pages will have to wait for all next and previous page requests to finish. Likewise, requests to fetch the next or previous pages must wait for requests to fetch all pages to finish. Furthermore, when the intial page is being fetched, requests for all, the next, and previous pages must wait for the initial page to be fetched. The initial page is only fetched when there are no pages present in the state.
-
-```swift
-let store = client.store(for: PlayersQuery(listId: 20))
-
-// Can fetch at the same time, but will first wait for any active
-// "all pages" or "initial page" requests to finish.
-try await store.fetchNextPage()
-try await store.fetchPreviousPage()
-
-// Will wait for all "next page", "previous page", or "initial page"
-// requests to finish before fetching.
-try await store.fetchAllPages()
-```
-
-## Mutations
-
-Mutations are a query paradigm for performing updates on your data's remote source. A clear example of this would be a POST request to an API that creates a new record of something. Conforming to the ``MutationRequest`` protocol is quite straightforward, and just like `InfiniteQueryRequest` the protocol also inherits from `QueryRequest` enabling modifiers that work for traditional queries to also work for mutations.
-
-```swift
-struct CreatePlayerMutation: MutationRequest, Hashable {
-  struct Arguments: Sendable {
-    let name: String
-    let number: Int
-  }
-
-  func mutate(
-    with arguments: Arguments,
-    in context: QueryContext,
-    with continuation: QueryContinuation<Player>
-  ) async throws -> Player {
-    // POST to the API to create a player...
-  }
-}
-```
-
-You'll notice that unlike `QueryRequest` and `InfiniteQueryRequest` conformances, providing arguments is represented through the `Arguments` associated type rather than member variables the mutation itself. Additionally, just like `InfiniteQueryState`, the `QueryStore` provides special data fetching methods when its state is ``MutationState``.
-
-```swift
-let store = client.store(for: CreatePlayerMutation())
-
-// Retry latest argument set.
-try await store.fetch()
-try await store.retryLatest()
-
-// Mutate with arguments.
-try await store.mutate(
-  with: CreatePlayerMutation.Arguments(name: "Blob", number: 42)
-)
-```
-
-> Note: It should be noted that if you're using SwiftUI, then you can access these methods through the projected value of `@State.Query`.
-> ```swift
-> import SwiftUI
-> import Query
->
-> struct CreatePlayerView: View {
->   @State.Query(CreatePlayerMutation()) private var state
->   @State private var name = ""
->   @State private var number = 0
->
->   var body: some View {
->     // ...
->   }
->
->   private func createPlayer() async throws {
->     try await $state.mutate(
->       with: CreatePlayerMutation.Arguments(name: name, number: number)
->     )
->   }
-> }
-> ```
-
-### Mutation History
-
-Another superpower of utilizing an associated type for arguments on `MutationRequest` is for the ability of `MutationState` to hold onto an entire history of mutate attempts and their results. This makes it easy to write logic based on the number of subsmission attempts and previously submitted data of a form for instance.
-
-```swift
-import SwiftUI
-import Query
-
-struct CreatePlayerView: View {
-  @State.Query(CreatePlayerMutation()) private var state
-  @State private var name = ""
-  @State private var number = 0
-
-  // We know many previous attempts to create a player with this name failed,
-  // so we can mark the name as problematic.
-
-  private var isInvalidName: Bool {
-    state.history.count { $0.arguments.name == name && $0.status.isFailure } >= 3
-  }
-
-  var body: some View {
-    Form {
-      // ...
-
-      if isInvalidName {
-        Text("\(name) is an invalid name.")
-      }
-
-      Button("Submit") {
-        Task { try await createPlayer() }
-      }
-      .disabled(isInvalidName)
-    }
-  }
-
-  // ...
-}
-```
-
-In the above example, we can see that if we've tried to unsuccessfully submit a player with a certain name more than 3 times, we no longer allow the player name to be submitted. This is possible because the mutation keeps track of the entire history of successful and unsuccessful attempts.
-
-## Building Your Own Data Fetching Paradigm
-
-The library provides 3 very common data fetching paradigms, but you can also build your own if needed. This topic is considerably more advanced than other topics in the library, but in general this should be quite rare. Regardless, it does show how the library is quite flexible, and with a little work can be adapted to your needs.
-
-For this example, let's try to build a query paradigm for "recursive queries". In other words, a paradigm that works well for fetching recursive data like comment threads on a social media app. In such a case, the query data is tree-like, and we'll need the ability to fetch subtrees of each branch. Inherently, this means that we'll need to be able to identify a node of the tree in our query.
+We'll first note that our query data is tree-like, and we'll need the ability to fetch subtrees of each branch. Inherently, this means that we'll need to be able to identify a node of the tree in our query.
 
 Therefore, our first move will be to create a protocol that inherits from `QueryRequest`, as doing so will ensure that base functionallity on typical queries will also work on our new paradigm.
 
@@ -296,8 +39,8 @@ protocol RecursiveValue<NodeID>: Sendable {
 extension RecursiveValue {
   // Convenience subscript to get and set any node in the tree.
   subscript(id nodeId: NodeID) -> Self? {
-    get { /* ... */ }
-    set { /* ... */ }
+    get { /* Do a tree traversal... */ }
+    set { /* Do a tree traversal... */ }
   }
 }
 ```
@@ -798,24 +541,30 @@ struct Comment: RecursiveValue, Sendable {
   var children = [Comment]()
 }
 
-struct CommentThreadQuery: RecursiveQueryRequest, Hashable {
-  typealias Value = Comment
-  typealias NodeID = Int
+extension Comment {
+  static func threadQuery(for id: Int) -> some RecursiveQueryRequest<Comment, Int> {
+    ThreadQuery(rootNodeId: id)
+  }
 
-  let rootNodeId: Int
+  struct ThreadQuery: RecursiveQueryRequest, Hashable {
+    typealias Value = Comment
+    typealias NodeID = Int
 
-  func fetchTree(
-    for id: Int,
-    in context: QueryContext,
-    with continuation: QueryContinuation<Comment>
-  ) async throws -> Comment {
-    // Fetch the sub-thread from our API...
+    let rootNodeId: Int
+
+    func fetchTree(
+      for id: Int,
+      in context: QueryContext,
+      with continuation: QueryContinuation<Comment>
+    ) async throws -> Comment {
+      // Fetch the sub-thread from our API...
+    }
   }
 }
 
 let client = QueryClient()
 let store = client.store(
-  for: CommentThreadQuery(rootNodeId: 0),
+  for: Comment.threadQuery(for: 0),
   initialState: RecursiveQueryState(initialValue: Comment(nodeId: 0))
 )
 
@@ -826,4 +575,4 @@ As you can see, with a bit of work we were able to extend the library with a new
 
 ## Conclusion
 
-In this article, you learned about the 3 main paradigms of fetching data in the library. Furthermore, you also learned how you can create your own paradigm, though this is a significantly advanced topic, and generally having to do this should be rare. In the process, you learned one of the core design principles of the library, which is to derive all paradigms from ordinary queries.
+In this article, you learned about how to create a custom data fetching paradigm that can be integrated with the library. Whilst an advanced topic, and not a feature that you would use in day-to-day usage of the library, it serves as a tool to further your understanding of how the built-in paradigms work in the library.

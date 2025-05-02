@@ -12,7 +12,7 @@ Let's take a look at how we can test queries depending on your usage of the libr
 
 ## Reliable and Deterministic Tests
 
-Depending on your usage of the library, you may implement a class `SomeModel` that utilizes `SomeQuery` in the following ways.
+Depending on your usage of the library, you may implement a class `SomeModel` that utilizes `SomeData.query` in the following ways.
 
 **Sharing**
 ```swift
@@ -23,7 +23,7 @@ import SharingQuery
 @Observable
 final class SomeModel {
   @ObservationIgnored
-  @Shared(.query(SomeQuery())) var value
+  @SharedQuery(SomeData.query) var value
 }
 ```
 
@@ -41,7 +41,7 @@ final class SomeModel: ObservableObject {
     client: QueryClient,
     scheduler: some Scheduler = DispatchQueue.main
   ) {
-    let store = client.store(for: SomeQuery())
+    let store = client.store(for: SomeData.query)
     store
       .publisher
       .receive(on: scheduler)
@@ -66,7 +66,7 @@ final class SomeModel {
   @ObservationIgnored private var subscriptions = Set<QuerySubscription>()
 
   init(client: QueryClient) {
-    let store = client.store(for: SomeQuery())
+    let store = client.store(for: SomeData.query)
     store.subscribe(
       with: QueryEventHandler { [weak self] state, _ in
         Task { @MainActor in
@@ -96,7 +96,7 @@ func valueLoads() {
 }
 ```
 
-The main issue here is the "Wait for value to load..." comment as it's not exactly clear when `model.value` will have been loaded. To get around this, you can technically reach into the ``QueryStore`` for `SomeQuery`, and await the first active task in the store.
+The main issue here is the "Wait for value to load..." comment as it's not exactly clear when `model.value` will have been loaded. To get around this, you can technically reach into the ``QueryStore`` for `SomeData.query`, and await the first active task in the store.
 
 ```swift
 @Test
@@ -107,7 +107,7 @@ func valueLoads() async throws {
   let model = SomeModel(client: client)
   #expect(model.value == nil)
 
-  let store = client.store(for: SomeQuery())
+  let store = client.store(for: SomeData.query)
   _ = try await store.activeTasks.first?.runIfNeeded()
 
   #expect(model.value == "loaded")
@@ -136,11 +136,37 @@ func valueLoads() async throws {
   let model = SomeModel(client: client)
   #expect(model.value == nil)
 
-  try await client.store(for: SomeQuery()).fetch()
+  try await client.store(for: SomeData.query).fetch()
 
   #expect(model.value == "loaded")
 }
 ```
+
+> Note: If your code follows the Sharing example, you can use the `@SharedQuery` property wrapper directly to fetch the data.
+>
+> ```swift
+> @Test
+> @MainActor
+> func valueLoads() async throws {
+>   let client = QueryClient(
+>     storeCreator: .default(
+>       retryLimit: 0,
+>       retryBackoff: .noBackoff,
+>       retryDelayer: .noDelay,
+>       queryEnableAutomaticFetchingCondition: .always(false),
+>       networkObserver: nil,
+>       focusCondition: nil
+>     )
+>   )
+>
+>   let model = SomeModel(client: client)
+>   #expect(model.value == nil)
+>
+>   try await model.$value.load()
+>
+>   #expect(model.value == "loaded")
+> }
+> ```
 
 Now you can manually trigger execution of the query, ensuring that we have a deterministic way to assert on the model's value.
 

@@ -82,16 +82,22 @@ struct User: Codable {
   // Other fields...
 }
 
-struct FirestoreUserQuery: QueryRequest, Hashable {
-  let userId: String
+extension User {
+  static func query(for id: String) -> some QueryRequest<Self, Query.State> {
+    // More to come...
+  }
 
-  func fetch(
-    in context: QueryContext,
-    with continuation: QueryContinuation<User>
-  ) async throws -> User {
-    try await context.firestore.collection("users")
-      .document(userId)
-      .getDocument(as: User.self)
+  struct Query: QueryRequest, Hashable {
+    let userId: String
+
+    func fetch(
+      in context: QueryContext,
+      with continuation: QueryContinuation<User>
+    ) async throws -> User {
+      try await context.firestore.collection("users")
+        .document(userId)
+        .getDocument(as: User.self)
+    }
   }
 }
 ```
@@ -125,67 +131,15 @@ final class FirestoreUserController<State: QueryStateProtocol>: QueryController 
 Then, we can put it all together.
 
 ```swift
-func userQuery(for id: String) -> some QueryRequest<User> {
-  FirestoreUserQuery(userId: id)
-    .controlled(by: FirestoreUserController(userId: id))
-}
-
-let query = userQuery(for: "123")
-```
-
-## How QueryControllers Work
-
-We've just explored how to create `QueryController`s, and even a usecase of where you might want to use one. However, it isn't quite clear how they work internally just by seeing them attached as modifier on a query. So let's jump into how the protocol works.
-
-### QueryControls
-
-As stated previously, the `QueryControls` can be thought of as a limited version of `QueryStore`. In fact, it uses a weak reference to a `QueryStore` under the hood, and only exposes a select few APIs from the store to give you control over the query.
-
-From a design perspective, this makes sense considering the notion of automatic fetching. When automatic fetching is disabled on a query store, all state updates to the query must come either from updating the state manually, or by explicitly calling `fetch` on the store manually. Controllers are inherently "running in the background" and are not guaranteed to refetch the query based on manual user interactions, therefore ``QueryControls/yieldRefetch(with:)`` falls under the bin of automatic fetching.
-
-### The QueryController Modifier
-
-Controllers are powered by the ``QueryModifier`` system. In fact, the modifier is quite simple.
-
-```swift
-struct QueryControllerModifier<
-  Query: QueryRequest,
-  Controller: QueryController<Query.State>
->: QueryModifier {
-  let controller: Controller
-
-  func setup(context: inout QueryContext, using query: Query) {
-    context.queryControllers.append(self.controller)
-    query.setup(context: &context)
+extension User {
+  static func query(for id: String) -> some QueryRequest<Self, Query.State> {
+    Query(userId: id).controlled(by: FirestoreUserController(userId: id))
   }
 
-  func fetch(
-    in context: QueryContext,
-    using query: Query,
-    with continuation: QueryContinuation<Query.Value>
-  ) async throws -> Query.Value {
-    try await query.fetch(in: context, with: continuation)
-  }
+  // ...
 }
 ```
-
-All we do here is append to a context property that holds all the controllers. In fact, you can even access this property yourself.
-
-```swift
-extension QueryContext {
-  public var queryControllers: [any QueryController] {
-    get { self[QueryControllersKey.self] }
-    set { self[QueryControllersKey.self] = newValue }
-  }
-
-  private enum QueryControllersKey: Key {
-    static var defaultValue: [any QueryController] { [] }
-  }
-}
-```
-
-This context property is used by a `QueryStore` to find all the controllers for your query, create an appropriate `QueryControls` instance, and then call ``QueryController/control(with:)`` on them. This happens when a `QueryStore` is initialized. When the `QueryStore` is deallocated, it will cancel the subscription returned from `control`.
 
 ## Conclusion
 
-In this article, you learned about the `QueryController` protocol, and what it represents in the library. You learned how to create controllers, and when to use them. You even learned the basics of how they work under the hood.
+In this article, you learned about the `QueryController` protocol, and what it represents in the library. You learned how to create controllers, and how they can be utilized to create reusable pieces of logic that invoke your queries.

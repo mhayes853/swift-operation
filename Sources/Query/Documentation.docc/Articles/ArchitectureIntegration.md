@@ -19,7 +19,7 @@ import SwiftUI
 import Query
 
 struct MyView: View {
-  @State.Query(SomeQuery()) var state
+  @State.Query(SomeData.query) var state
 
   var body: some View {
     VStack {
@@ -55,7 +55,7 @@ import SwiftUI
 import Query
 
 struct ParentView: View {
-  @State.Query(SomeQuery()) var state
+  @State.Query(SomeData.query) var state
 
   var body: some View {
     VStack {
@@ -66,7 +66,7 @@ struct ParentView: View {
 }
 
 struct ChildView: View {
-  @State.Query(SomeQuery()) var state
+  @State.Query(SomeData.query) var state
 
   var body: some View {
     // ...
@@ -87,11 +87,11 @@ import Observation
 @MainActor
 @Observable
 final class MyViewModel {
-  var state = SomeQuery.State(initialValue: nil)
+  var state = SomeData.Query.State(initialValue: nil)
   @ObservationIgnored private var subscriptions = Set<QuerySubscription>()
 
   init(client: QueryClient) {
-    let store = client.store(for: SomeQuery())
+    let store = client.store(for: SomeData.query)
     store.subscribe(
       with: QueryEventHandler { [weak self] state, _ in
         Task { @MainActor in
@@ -143,18 +143,24 @@ extension QueryContext {
   }
 }
 
-struct UserQuery: QueryRequest {
-  let id: UserID
+extension User {
+  static func query(for id: UserID) -> some QueryRequest<Self, Query.State> {
+    Query(id: id)
+  }
 
-  func fetch(
-    in context: QueryContext,
-    with continuation: QueryContinuation<User>
-  ) async throws -> User {
-    let user = try await context.loadUserUseCase.execute(id: id)
+  struct Query: QueryRequest {
+    let id: UserID
 
-    guard let client = context.queryClient else { return user }
-    // Update the state of any queries here using the QueryClient...
-    return user
+    func fetch(
+      in context: QueryContext,
+      with continuation: QueryContinuation<User>
+    ) async throws -> User {
+      let user = try await context.loadUserUseCase.execute(id: id)
+
+      guard let client = context.queryClient else { return user }
+      // Update the state of any queries here using the QueryClient...
+      return user
+    }
   }
 }
 ```
@@ -173,14 +179,15 @@ import SharingQuery
 struct MyReducer {
   @ObservableState
   struct State: Equatable {
-    @Shared(.query(SomeQuery())) var value
+    @ObservationStateIgnored
+    @SharedQuery(SomeData.query) var value
   }
 
   // ...
 }
 ```
 
-> Note: By default, any declaration of `@Shared(.query(_))` will add a subscription to the underlying `QueryStore` which may refetch the query. By default, query fetches are deduplicated, so 2 declarations in quick succession will incur 1 real fetch. However, if you would like to opt out of this behavior, use the ``QueryRequest/enableAutomaticFetching(onlyWhen:)`` or ``QueryRequest/staleWhen(predicate:)`` modifiers on your query to indicate to the underlying `QueryStore` when it is ok to refetch the query.
+> Note: By default, any declaration of `@SharedQuery(_)` will add a subscription directly to the underlying `QueryStore` instead of using the cached subscription from Sharing. This allows you to check the total number of components that observe your query.
 
 You can also access and override the underlying `QueryClient` used by the `QueryKey` by overriding the `queryClient` dependency.
 

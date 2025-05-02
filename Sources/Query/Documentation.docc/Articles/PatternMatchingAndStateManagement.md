@@ -274,7 +274,7 @@ struct SendFriendRequestMutation: MutationRequest, Hashable {
     Task {
       try await withThrowingTaskGroup(of: Void.self) { group in
         for (_, store) in client.stores(matching: ["user-friends"]) {
-          group.addTask { _ = try await store.fetch() }
+          group.addTask { try await store.fetch() }
         }
       }
     }

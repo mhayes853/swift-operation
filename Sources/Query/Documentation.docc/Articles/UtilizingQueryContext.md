@@ -166,43 +166,59 @@ struct NoRetryQuery: QueryRequest, Hashable {
 While making a query like this is easy.
 
 ```swift
-struct PostQuery: QueryRequest, Hashable {
-  let id: Int
+struct Post: Sendable {
+  // ...
+}
 
-  func fetch(
-    in context: QueryContext,
-    with continuation: QueryContinuation<Post>
-  ) async throws -> Post {
-    let url = URL(
-      string: "https://jsonplaceholder.typicode.com/posts/\(id)"
-    )!
-    let (data, _) = try await URLSession.shared.data(url: url)
-    return try JSONDecoder().decode(Post.self, from: data)
+extension Post {
+  static func query(for id: Int) -> some QueryRequest<Self, Query.State> {
+    Query(id: id)
+  }
+
+  struct Query: QueryRequest, Hashable {
+    let id: Int
+
+    func fetch(
+      in context: QueryContext,
+      with continuation: QueryContinuation<Post>
+    ) async throws -> Post {
+      let url = URL(
+        string: "https://jsonplaceholder.typicode.com/posts/\(id)"
+      )!
+      let (data, _) = try await URLSession.shared.data(url: url)
+      return try JSONDecoder().decode(Post.self, from: data)
+    }
   }
 }
 ```
 
 Writing reliable and deterministic tests for code that utilizes this query is not as straightforward. Since we utilize `URLSession.shared` here, we are essentially forced to make a real network call that won't return deterministic data every time we try to test code that utilizes this query. Sometimes, this is a fine as we may want to test end-to-end flows. Yet often we may want to simulate failures, or return mock data that tests a specific edge case of the code utilizing this query.
 
-A simple start to this would be to make a custom context property for `URLSession`.
+A simple start to this would be to make a custom context property that allows us to mock the network behavior in the query. You may think that you can utilize a custom `URLProtocol` for this. While this can work, this can be quite cumbersome as creating a mock `URLProtocol` can be somewhat challenging. Doing this is generally [not recommended](https://forums.swift.org/t/mock-urlprotocol-with-strict-swift-6-concurrency/77135/15) as `URLSession` behaves quite differently based on the `URLProtocol`s provided to it. Instead, we'll introduce a lightweight protocol that wraps one of `URLSession`'s methods, and conform `URLSession` to the protocol. Then, we'll expose a context property that defaults to `URLSession.shared`.
 
 ```swift
+protocol HTTPDataTransport: Sendable {
+  func data(for request: URLRequest) async throws -> (Data, URLResponse)
+}
+
+extension URLSession: HTTPDataTransport {}
+
 extension QueryContext {
-  var urlSession: URLSession {
-    get { self[URLSessionKey.self] }
-    set { self[URLSessionKey.self] = newValue }
+  var dataTransport: any HTTPDataTransport {
+    get { self[DataTransportKey.self] }
+    set { self[DataTransportKey.self] = newValue }
   }
 
-  private enum URLSessionKey: Key {
+  private enum DataTransportKey: Key {
     static let defaultValue = URLSession.shared
   }
 }
 ```
 
-Then we can make a simple change to `PostQuery` to make it not dependent on the `URLSession` singleton.
+Then we can make a simple change to `Post.Query` to make it not dependent on the `URLSession` singleton.
 
 ```diff
-struct PostQuery: QueryRequest, Hashable {
+struct Query: QueryRequest, Hashable {
   let id: Int
 
   func fetch(
@@ -213,7 +229,7 @@ struct PostQuery: QueryRequest, Hashable {
       string: "https://jsonplaceholder.typicode.com/posts/\(id)"
     )!
 -    let (data, _) = try await URLSession.shared.data(url: url)
-+    let (data, _) = try await context.urlSession.data(url: url)
++    let (data, _) = try await context.dataTransport.data(url: url)
     return try JSONDecoder().decode(Post.self, from: data)
   }
 }
@@ -224,13 +240,8 @@ If we want to return some mock data for testing purposes, we can now leverage `U
 ```swift
 @Test
 func returnsPost() async throws {
-  let store = QueryStore.detached(
-    query: PostQuery(id: 1),
-    initialValue: nil
-  )
-  let config = URLSessionConfiguration.ephemeral
-  config.protocolClasses = [MockPostURLProtocol.self]
-  store.context.urlSession = URLSession(configuration: config)
+  let store = QueryStore.detached(query: Post.query(for: 1), initialValue: nil)
+  store.context.dataTransport = MockDataTransport()
 
   let post = try await store.fetch()
   let expectedPost = Post(
@@ -242,18 +253,8 @@ func returnsPost() async throws {
   #expect(post == expectedPost)
 }
 
-class MockPostURLProtocol: URLProtocol {
-  override class func canInit(with request: URLRequest) -> Bool {
-    true
-  }
-
-  override class func canonicalRequest(
-    for request: URLRequest
-  ) -> URLRequest {
-    request
-  }
-
-  override func startLoading() {
+struct MockDataTransport: HTTPDataTransport {
+  func data(for request: URLRequest) async throws -> (Data, URLResponse) {
     let mockJSON = """
     {
       "userId": 1,
@@ -262,7 +263,6 @@ class MockPostURLProtocol: URLProtocol {
       "body": "This is the body of the mock post."
     }
     """
-
     let data = mockJSON.data(using: .utf8)!
     let response = HTTPURLResponse(
       url: request.url!,
@@ -270,16 +270,8 @@ class MockPostURLProtocol: URLProtocol {
       httpVersion: nil,
       headerFields: ["Content-Type": "application/json"]
     )!
-    client?.urlProtocol(
-      self,
-      didReceive: response,
-      cacheStoragePolicy: .notAllowed
-    )
-    client?.urlProtocol(self, didLoad: data)
-    client?.urlProtocolDidFinishLoading(self)
+    return (data, response)
   }
-
-  override func stopLoading() {}
 }
 ```
 
@@ -288,10 +280,7 @@ class MockPostURLProtocol: URLProtocol {
 ``QueryStateProtocol/valueLastUpdatedAt`` and ``QueryStateProtocol/errorLastUpdatedAt`` properties on ``QueryStateProtocol`` conformances are computed using the ``QueryClock`` protocol. The clock lives on the context, and can be overridden. Therefore, if you want to ensure a deterministic date calculations for various reasons (time freeze, testing, etc.), you can do the following.
 
 ```swift
-let store = QueryStore.detached(
-  query: PostQuery(id: 1),
-  initialValue: nil
-)
+let store = QueryStore.detached(query: Post.query(for: 1), initialValue: nil)
 let date = Date(timeIntervalSince1970: 1234567890)
 store.context.queryClock = .custom { date }
 
@@ -307,10 +296,7 @@ The ``QueryDelayer`` protocol is used to artificially delay queries in the case 
 For testing, this delay may be unacceptable, but thankfully you can override the `QueryDelayer` on the context to remove delays.
 
 ```swift
-let store = QueryStore.detached(
-  query: PostQuery(id: 1),
-  initialValue: nil
-)
+let store = QueryStore.detached(query: Post.query(for: 1), initialValue: nil)
 store.context.queryDelayer = .noDelay
 
 try await store.fetch() // Will incur no retry delays.
