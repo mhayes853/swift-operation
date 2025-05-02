@@ -35,6 +35,23 @@
       XCTAssertFalse(condition.isSatisfied(in: context))
     }
 
+    func testEmitsFalseWithEmptySubscripitionWhenFocusFetchingDisabled() {
+      let document = JSObject()
+      document.visibilityState = .string("visible")
+
+      let condition: some FetchCondition = .windowFocus(document: document, window: window)
+
+      let satisfactions = Lock([Bool]())
+      var context = QueryContext()
+      context.isFocusRefetchingEnabled = false
+      let subscription = condition.subscribe(in: context) { value in
+        satisfactions.withLock { $0.append(value) }
+      }
+      expectNoDifference(subscription, .empty)
+      satisfactions.withLock { expectNoDifference($0, [false]) }
+      subscription.cancel()
+    }
+
     func testSubscribesToVisibilityStateChanges() {
       let document = JSObject()
       document.visibilityState = .string("visible")

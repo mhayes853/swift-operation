@@ -11,8 +11,6 @@
 
   // MARK: - FetchCondition Conformance
 
-  // TODO: - Use isFocusRefetchingEnabled in Subscribe
-
   extension WindowFocusCondition: FetchCondition {
     public func isSatisfied(in context: QueryContext) -> Bool {
       context.isFocusRefetchingEnabled && self.document.visibilityState == .string("visible")
@@ -22,6 +20,11 @@
       in context: QueryContext,
       _ observer: @escaping @Sendable (Bool) -> Void
     ) -> QuerySubscription {
+      guard context.isFocusRefetchingEnabled else {
+        observer(false)
+        return .empty
+      }
+
       observer(self.isSatisfied(in: context))
       nonisolated(unsafe) let listener = JSClosure { _ in
         observer(self.isSatisfied(in: context))

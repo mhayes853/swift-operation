@@ -36,8 +36,6 @@ import Foundation
 
   // MARK: - FetchConditionObserver Conformance
 
-  // TODO: - Make sure isFocusRefetchingEnabled is used in subscribe.
-
   extension NotificationFocusCondition: FetchCondition {
     public func isSatisfied(in context: QueryContext) -> Bool {
       context.isFocusRefetchingEnabled && self.isActive()
@@ -47,6 +45,11 @@ import Foundation
       in context: QueryContext,
       _ observer: @escaping @Sendable (Bool) -> Void
     ) -> QuerySubscription {
+      guard context.isFocusRefetchingEnabled else {
+        observer(false)
+        return .empty
+      }
+
       nonisolated(unsafe) let didBecomeActiveObserver = NotificationCenter.default.addObserver(
         forName: self.didBecomeActive,
         object: nil,

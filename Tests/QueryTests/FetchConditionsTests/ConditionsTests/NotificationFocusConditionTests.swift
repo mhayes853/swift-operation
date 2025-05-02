@@ -28,6 +28,24 @@
       expectNoDifference(observer.isSatisfied(in: context), false)
     }
 
+    @Test("Emits False With Empty Subscription When Subscription Context Disables Focus Fetching")
+    func emitsFalseWithEmptySubscripitionWhenFocusFetchingDisabled() {
+      let observer: some FetchCondition = .notificationFocus(
+        didBecomeActive: _didBecomeActive,
+        willResignActive: _willResignActive,
+        isActive: { @Sendable in true }
+      )
+      let satisfactions = Lock([Bool]())
+      var context = QueryContext()
+      context.isFocusRefetchingEnabled = false
+      let subscription = observer.subscribe(in: context) { value in
+        satisfactions.withLock { $0.append(value) }
+      }
+      expectNoDifference(subscription, .empty)
+      satisfactions.withLock { expectNoDifference($0, [false]) }
+      subscription.cancel()
+    }
+
     @Test("Emits True When Becomes Active")
     func emitsTrueWhenBecomesActive() {
       let observer: some FetchCondition = .notificationFocus(
