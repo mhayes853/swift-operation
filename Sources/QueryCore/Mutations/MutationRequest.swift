@@ -24,3 +24,12 @@ extension MutationRequest {
 }
 
 private struct MutationNoArgumentsError: Error {}
+
+extension MutationRequest where Arguments == Void {
+  public func mutate(
+    in context: QueryContext,
+    with continuation: QueryContinuation<Value>
+  ) async throws -> Value {
+    try await self.mutate(with: (), in: context, with: continuation)
+  }
+}

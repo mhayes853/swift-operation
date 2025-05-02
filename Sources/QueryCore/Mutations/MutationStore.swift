@@ -50,6 +50,22 @@ extension QueryStore where State: _MutationStateProtocol {
   }
 }
 
+extension QueryStore where State: _MutationStateProtocol, State.Arguments == Void {
+  @discardableResult
+  public func mutate(
+    using configuration: QueryTaskConfiguration? = nil,
+    handler: MutationEventHandler<State.Arguments, State.Value> = MutationEventHandler()
+  ) async throws -> State.Value {
+    try await self.mutate(with: (), using: configuration, handler: handler)
+  }
+
+  public func mutateTask(
+    using configuration: QueryTaskConfiguration? = nil
+  ) -> QueryTask<State.Value> {
+    self.mutateTask(with: (), using: configuration)
+  }
+}
+
 // MARK: - Retry Latest
 
 extension QueryStore where State: _MutationStateProtocol {
