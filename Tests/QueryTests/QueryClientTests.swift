@@ -119,6 +119,23 @@ struct QueryClientTests {
     expectNoDifference(stores[q1.path] == nil, true)
   }
 
+  @Test("Only Retrieves Stores Of Specified State Type When Pattern Matching")
+  func onlyRetrievesStoresOfSpecifiedStateTypeWhenPatternMatching() {
+    let client = QueryClient()
+    let q1 = TaggedPathableQuery<Int>(value: 1, path: [1, 2])
+    let q2 = TaggedPathableQuery<Int>(value: 2, path: [2, 3])
+    let q3 = TaggedPathableQuery<String>(value: "foo", path: [1, 4])
+    _ = client.store(for: q1)
+    _ = client.store(for: q2)
+    _ = client.store(for: q3)
+
+    let stores = client.stores(matching: [1], of: TaggedPathableQuery<Int>.State.self)
+    expectNoDifference(stores.count, 1)
+    expectNoDifference(stores[q1.path] != nil, true)
+    expectNoDifference(stores[q2.path] == nil, true)
+    expectNoDifference(stores[q3.path] == nil, true)
+  }
+
   @Test("Sets Value For Store Through Path")
   func setValueForStoreThroughPath() async throws {
     let client = QueryClient()

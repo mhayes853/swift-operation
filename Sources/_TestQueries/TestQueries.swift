@@ -242,6 +242,25 @@ package struct PathableQuery: QueryRequest {
   }
 }
 
+// MARK: - TaggedPathableQuery
+
+package struct TaggedPathableQuery<Value: Sendable>: QueryRequest {
+  package let value: Value
+  package let path: QueryPath
+
+  package init(value: Value, path: QueryPath) {
+    self.value = value
+    self.path = path
+  }
+
+  package func fetch(
+    in context: QueryContext,
+    with continuation: QueryContinuation<Value>
+  ) async throws -> Value {
+    self.value
+  }
+}
+
 // MARK: - SucceedOnNthRefetchQuery
 
 package struct SucceedOnNthRefetchQuery: QueryRequest, Hashable {

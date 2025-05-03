@@ -141,6 +141,22 @@ extension QueryClient {
       return newValues
     }
   }
+
+  public func stores<State: QueryStateProtocol>(
+    matching path: QueryPath,
+    of stateType: State.Type
+  ) -> [QueryPath: QueryStore<State>] {
+    self.state.withLock { state in
+      var newValues = [QueryPath: QueryStore<State>]()
+      for (queryPath, entry) in state.stores {
+        guard path.prefixMatches(other: queryPath) else { continue }
+        if let store = entry.store.base as? QueryStore<State> {
+          newValues[queryPath] = store
+        }
+      }
+      return newValues
+    }
+  }
 }
 
 // MARK: - Clearing Queries
