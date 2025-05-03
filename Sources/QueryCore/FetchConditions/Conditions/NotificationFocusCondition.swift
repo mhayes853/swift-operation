@@ -22,15 +22,18 @@ import Foundation
     private let didBecomeActive: Notification.Name
     private let willResignActive: Notification.Name
     private let isActive: @Sendable () -> Bool
+    private let center: NotificationCenter
 
     fileprivate init(
       didBecomeActive: Notification.Name,
       willResignActive: Notification.Name,
+      center: NotificationCenter = .default,
       isActive: @escaping @Sendable () -> Bool
     ) {
       self.didBecomeActive = didBecomeActive
       self.willResignActive = willResignActive
       self.isActive = isActive
+      self.center = center
     }
   }
 
@@ -50,19 +53,19 @@ import Foundation
         return .empty
       }
 
-      nonisolated(unsafe) let didBecomeActiveObserver = NotificationCenter.default.addObserver(
+      nonisolated(unsafe) let didBecomeActiveObserver = self.center.addObserver(
         forName: self.didBecomeActive,
         object: nil,
         queue: nil
       ) { _ in observer(true) }
-      nonisolated(unsafe) let willResignActiveObserver = NotificationCenter.default.addObserver(
+      nonisolated(unsafe) let willResignActiveObserver = self.center.addObserver(
         forName: self.willResignActive,
         object: nil,
         queue: nil
       ) { _ in observer(false) }
       return QuerySubscription {
-        NotificationCenter.default.removeObserver(didBecomeActiveObserver)
-        NotificationCenter.default.removeObserver(willResignActiveObserver)
+        self.center.removeObserver(didBecomeActiveObserver)
+        self.center.removeObserver(willResignActiveObserver)
       }
     }
   }
@@ -121,11 +124,13 @@ import Foundation
     /// - Parameters:
     ///   - didBecomeActive: A `Notification` for whether or not the app became active.
     ///   - willResignActive: A `Notification` for whether or not the app will resign being active.
+    ///   - center: The `NotificationCenter` instance to use to listen for the notifications.
     ///   - isActive: A predicate checking whether or not the app is active.
     /// - Returns: A ``NotificationFocusCondition``.
     public static func notificationFocus(
       didBecomeActive: Notification.Name,
       willResignActive: Notification.Name,
+      center: NotificationCenter = .default,
       isActive: @escaping @Sendable () -> Bool
     ) -> Self {
       NotificationFocusCondition(
