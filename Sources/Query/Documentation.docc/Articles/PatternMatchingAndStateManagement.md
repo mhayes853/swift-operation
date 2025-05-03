@@ -9,7 +9,7 @@ While the library provides powerful tools to help you fetch data, managing consi
 For example, let's consider the scenario of a typical social platform where users can send friend requests to each other, and where users can see their and others' list of friends and requested friends. The `relationship` field for each user in the list will represent the current active user's relationship to that user. We may model 1 query and 1 mutation in this scenario. For the friends list, we may utilize an infinite query, and sending a friend request could be modeled as a mutation.
 
 ```swift
-struct User {
+struct User: Sendable {
   enum Relationship {
     case notFriends
     case friendRequestSent
@@ -24,48 +24,58 @@ struct User {
   // ...
 }
 
-struct UserFriendsQuery: InfiniteQueryRequest, Hashable {
-  typealias PageID = Int
-  typealias PageValue = [User]
-
-  let userId: Int
-  let initialPageId = 0
-
-  func pageId(
-    after page: InfiniteQueryPage<Int, [User]>,
-    using paging: InfiniteQueryPaging<Int, [User]>,
-    in context: QueryContext
-  ) -> Int? {
-    page.id + 1
+extension User {
+  static func friendsQuery(for id: Int) -> some InfiniteQueryRequest<Int, [Self]> {
+    FriendsQuery(userId: id)
   }
 
-  func fetchPage(
-    using paging: InfiniteQueryPaging<Int, [User]>,
-    in context: QueryContext,
-    with continuation: QueryContinuation<[User]>
-  ) async throws -> [User] {
-    try await fetchFriends(userId: userId, page: paging.pageId)
+  struct FriendsQuery: InfiniteQueryRequest, Hashable {
+    typealias PageID = Int
+    typealias PageValue = [User]
+  
+    let userId: Int
+    let initialPageId = 0
+  
+    func pageId(
+      after page: InfiniteQueryPage<Int, [User]>,
+      using paging: InfiniteQueryPaging<Int, [User]>,
+      in context: QueryContext
+    ) -> Int? {
+      page.id + 1
+    }
+  
+    func fetchPage(
+      using paging: InfiniteQueryPaging<Int, [User]>,
+      in context: QueryContext,
+      with continuation: QueryContinuation<[User]>
+    ) async throws -> [User] {
+      try await fetchFriends(userId: userId, page: paging.pageId)
+    }
   }
 }
 
-struct SendFriendRequestMutation: MutationRequest, Hashable {
-  typealias Value = Void
+extension User {
+  static let sendFriendRequestMutation = SendFriendRequestMutation()
 
-  struct Arguments: Sendable {
-    let userId: Int
-  }
-
-  func mutate(
-    with arguments: Arguments,
-    in context: QueryContext,
-    with continuation: QueryContinuation<Void>
-  ) async throws {
-    try await sendFriendRequest(userId: arguments.userId)
+  struct SendFriendRequestMutation: MutationRequest, Hashable {
+    typealias Value = Void
+  
+    struct Arguments: Sendable {
+      let userId: Int
+    }
+  
+    func mutate(
+      with arguments: Arguments,
+      in context: QueryContext,
+      with continuation: QueryContinuation<Void>
+    ) async throws {
+      try await sendFriendRequest(userId: arguments.userId)
+    }
   }
 }
 ```
 
-The problem here is that when `SendFriendRequestMutation` runs successfully, all screens that utilize `UserFriendsQuery` are now displaying outdated data as we haven't explicitly updated the query state.
+The problem here is that when `User.SendFriendRequestMutation` runs successfully, all screens that utilize `User.FriendsQuery` are now displaying outdated data as we haven't explicitly updated the query state.
 
 Managing this kind of asynchronous data consistency is where the library truly begins to shine.
 
@@ -104,7 +114,7 @@ struct SendFriendRequestMutation: MutationRequest, Hashable {
 }
 ```
 
-This works, however it's considerably likely that we'll have multiple instances of `UserFriendsQuery` that need to display the relationship status between the current user and the receiving user. Unfortunately, taking stores off the `QueryClient` in a loop is quite inefficient, however the library provides better tools for managing this.
+This works, however it's considerably likely that we'll have multiple instances of `User.FriendsQuery` that need to display the relationship status between the current user and the receiving user. Unfortunately, taking stores off the `QueryClient` in a loop is quite inefficient, however the library provides better tools for managing this.
 
 ## QueryPath and Store Pattern Matching
 
@@ -124,10 +134,10 @@ This implementation, while convenient, does not take advantage of the full power
 
 At the very least, you can think of a `QueryPath` as an identifier for a query. This identifier is essentially an array of `Hashable` elements that uniquely identify the query. Under the hood, `QueryClient` utilizes a query's path as key into a dictionary of `QueryStore`s. If you're familiar with [Tanstack Query](https://tanstack.com/query/latest/docs/framework/react/guides/query-keys), `QueryPath` is analogous to the `queryKey` property.
 
-If we remove the conformance to `Hashable` on `UserFriendsQuery`, we'll be forced to fill in a custom `QueryPath`.
+If we remove the conformance to `Hashable` on `User.FriendsQuery`, we'll be forced to fill in a custom `QueryPath`.
 
 ```swift
-struct UserFriendsQuery: InfiniteQueryRequest {
+struct FriendsQuery: InfiniteQueryRequest {
   typealias PageID = Int
   typealias PageValue = [User]
 
@@ -146,10 +156,10 @@ In this case, we have 2 identifying components of the query. First, we use a str
 The real power of splitting the path into an array of multiple components is that you can pattern match the query utilizing a prefix. For instance, you can get access to the `QueryStore`s for all user friend list queries on a `QueryClient` by checking if the path starts with `["user-friends"]`.
 
 ```swift
-let stores = queryClient.stores(matching: ["user-friends"])
+queryClient.stores(matching: ["user-friends"], of: User.FriendsQuery.State.self)
 ```
 
-This will return back a `[QueryPath: OpaqueQueryStore]` that you can use to access the current state of all friends list queries in our app.
+This will return back a `[QueryPath: QueryStore<User.FriendsQuery.State>]` that you can use to access the current state of all friends list queries in our app.
 
 > Note: An ``OpaqueQueryStore`` is a fully type erased `QueryStore`. You can still access and mutate the state on the store, but you will have to make the appropriate casts from `any Sendable` to the type of data you're working with.
 
@@ -157,7 +167,7 @@ Now that we have a basic understanding of `QueryPath`, we can explore how to use
 
 ### Pattern Matching in SendFriendRequestMutation
 
-With a basic understanding of `QueryPath`, it is actually quite simple to update the state for all `UserFriendsQuery` instances in our app when sending a friend request succeeds.
+With a basic understanding of `QueryPath`, it is actually quite simple to update the state for all `User.FriendsQuery` instances in our app when sending a friend request succeeds.
 
 ```swift
 struct SendFriendRequestMutation: MutationRequest, Hashable {
@@ -173,9 +183,11 @@ struct SendFriendRequestMutation: MutationRequest, Hashable {
     // Friend request sent successfully, now update all
     // friends lists in the app.
     guard let client = context.queryClient else { return }
-    for (_, store) in client.stores(matching: ["user-friends"]) {
-      let store = store.base as? QueryStore<UserFriendsQuery.State>
-      guard let store else { continue }
+    let stores = client.stores(
+      matching: ["user-friends"], 
+      of: User.FriendsQuery.State.self
+    )
+    for (_, store) in stores {
       let pages = store.currentValue.map { page in
         var page = page
         page.value = page.value.map { user in
@@ -233,9 +245,11 @@ struct SendFriendRequestMutation: MutationRequest, Hashable {
     in context: QueryContext
   ) {
     guard let client = context.queryClient else { return }
-    for (_, store) in client.stores(matching: ["user-friends"]) {
-      let store = store.base as? QueryStore<UserFriendsQuery.State>
-      guard let store else { continue }
+    let stores = client.stores(
+      matching: ["user-friends"], 
+      of: User.FriendsQuery.State.self
+    )
+    for (_, store) in stores {
       let pages = store.currentValue.map { page in
         var page = page
         page.value = page.value.map { user in

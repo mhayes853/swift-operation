@@ -112,7 +112,7 @@ The Clean Architecture tends to have more layers of abstraction, and tries to fo
 Clean Architecture Layers:
 
 View     ->     View Model     ->     Use Case     ->     Domain
----swift-query operates here---
+---Swift Query operates here---
 ```
 
 The library would operate in the view or view model layers depending on your use case. Any `QueryRequest` types you make can simply wrap a call to your repository or use case. You can even use the ``QueryContext`` to inject your use case into the query such that a mock can be provided in tests.
