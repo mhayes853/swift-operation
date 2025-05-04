@@ -115,7 +115,11 @@ extension QueryContext {
   private enum QueryDelayerKey: Key {
     static var defaultValue: any QueryDelayer {
       #if canImport(Darwin)
-        .dispatch(queue: .global())
+        if #available(iOS 16.0, macOS 13.0, watchOS 9.0, tvOS 16.0, *) {
+          .clock(ContinuousClock())
+        } else {
+          .dispatch(queue: .global())
+        }
       #else
         .clock(ContinuousClock())
       #endif
