@@ -147,6 +147,8 @@ let subscription = store.subscribe(
   }
 )
 
+import Combine
+
 // Step 3 (Combine Style): Sink the store publisher (by default this will begin fetching the post).
 let cancellable = store.publisher.sink { output in
   print("Post", output.state.currentValue)
