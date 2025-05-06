@@ -1,11 +1,10 @@
-import Foundation
 import IdentifiedCollections
 import IssueReporting
 
 // MARK: - QueryClient
 
 public final class QueryClient: Sendable {
-  private typealias State = (stores: StoreCache, defaultContext: QueryContext)
+  private typealias State = (stores: [QueryPath: StoreEntry], defaultContext: QueryContext)
 
   private let state: Lock<State>
   private let storeCreator: any StoreCreator
@@ -14,7 +13,7 @@ public final class QueryClient: Sendable {
     defaultContext: QueryContext = QueryContext(),
     storeCreator: some StoreCreator
   ) {
-    self.state = Lock((StoreCache(), defaultContext))
+    self.state = Lock(([:], defaultContext))
     self.storeCreator = storeCreator
     self.state.withLock { $0.defaultContext.setWeakQueryClient(self) }
   }
@@ -92,8 +91,7 @@ extension QueryClient {
     initialState: Query.State
   ) -> OpaqueQueryStore {
     self.state.withLock { state in
-      let storeKey = StoreKey(path: query.path)
-      if let entry = state.stores.object(forKey: storeKey) {
+      if let entry = state.stores[query.path] {
         if entry.queryType != Query.self {
           reportWarning(.duplicatePath(expectedType: entry.queryType, foundType: Query.self))
           return self.newOpaqueStore(
@@ -109,7 +107,7 @@ extension QueryClient {
         initialState: initialState,
         using: state.defaultContext
       )
-      state.stores.setObject(StoreEntry(queryType: Query.self, store: newStore), forKey: storeKey)
+      state.stores[query.path] = StoreEntry(queryType: Query.self, store: newStore)
       return newStore
     }
   }
@@ -129,15 +127,15 @@ extension QueryClient {
 
 extension QueryClient {
   public func store(with path: QueryPath) -> OpaqueQueryStore? {
-    self.state.withLock { $0.stores.object(forKey: StoreKey(path: path))?.store }
+    self.state.withLock { $0.stores[path]?.store }
   }
 
   public func stores(matching path: QueryPath) -> [QueryPath: OpaqueQueryStore] {
     self.state.withLock { state in
       var newValues = [QueryPath: OpaqueQueryStore]()
-      for (key, entry) in state.stores.entries() {
-        if path.prefixMatches(other: key.path) {
-          newValues[key.path] = entry.store
+      for (queryPath, entry) in state.stores {
+        if path.prefixMatches(other: queryPath) {
+          newValues[queryPath] = entry.store
         }
       }
       return newValues
@@ -150,10 +148,10 @@ extension QueryClient {
   ) -> [QueryPath: QueryStore<State>] {
     self.state.withLock { state in
       var newValues = [QueryPath: QueryStore<State>]()
-      for (key, entry) in state.stores.entries() {
-        guard path.prefixMatches(other: key.path) else { continue }
+      for (queryPath, entry) in state.stores {
+        guard path.prefixMatches(other: queryPath) else { continue }
         if let store = entry.store.base as? QueryStore<State> {
-          newValues[key.path] = store
+          newValues[queryPath] = store
         }
       }
       return newValues
@@ -166,78 +164,24 @@ extension QueryClient {
 extension QueryClient {
   public func clearStores(matching path: QueryPath = []) {
     self.state.withLock { state in
-      let keys = state.stores.keys
-        .filter { path.prefixMatches(other: $0.path) }
-      for key in keys {
-        state.stores.removeObject(forKey: key)
-      }
+      state.stores = state.stores.filter { !path.prefixMatches(other: $0.key) }
     }
   }
 
   @discardableResult
   public func clearStore(with path: QueryPath) -> OpaqueQueryStore? {
     self.state.withLock { state in
-      let storeKey = StoreKey(path: path)
-      guard let entry = state.stores.object(forKey: storeKey) else { return nil }
-      state.stores.removeObject(forKey: storeKey)
-      return entry.store
+      state.stores.removeValue(forKey: path)?.store
     }
   }
 }
 
-// MARK: - Cache
+// MARK: - Store Entry
 
 extension QueryClient {
-  private final class StoreCache: NSCache<StoreKey, StoreEntry> {
-    private(set) var keys = Set<StoreKey>()
-
-    override func setObject(_ obj: StoreEntry, forKey key: QueryClient.StoreKey) {
-      super.setObject(obj, forKey: key)
-      self.keys.insert(key)
-    }
-
-    override func removeObject(forKey key: StoreKey) {
-      super.removeObject(forKey: key)
-      self.keys.remove(key)
-    }
-
-    func entries() -> [(key: StoreKey, value: StoreEntry)] {
-      self.keys.compactMap { key in
-        guard let entry = self.object(forKey: key) else { return nil }
-        return (key, entry)
-      }
-    }
-  }
-}
-
-extension QueryClient {
-  @objc private final class StoreKey: NSObject {
-    let path: QueryPath
-
-    init(path: QueryPath) {
-      self.path = path
-    }
-
-    override var hash: Int { self.path.hashValue }
-
-    override func isEqual(_ object: Any?) -> Bool {
-      guard let value = object as? StoreKey else {
-        return false
-      }
-      return value.path == self.path
-    }
-  }
-}
-
-extension QueryClient {
-  @objc private final class StoreEntry: NSObject {
+  private struct StoreEntry {
     let queryType: Any.Type
     let store: OpaqueQueryStore
-
-    init(queryType: any Any.Type, store: OpaqueQueryStore) {
-      self.queryType = queryType
-      self.store = store
-    }
   }
 }
 
