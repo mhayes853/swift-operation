@@ -4,7 +4,7 @@
 
 // MARK: - MemoryPressure
 
-public struct MemoryPressure: OptionSet, RawRepresentable, Sendable, Hashable {
+public struct MemoryPressure: RawRepresentable, Sendable, Hashable {
   public let rawValue: Int
 
   public init(rawValue: Int) {
