@@ -322,11 +322,11 @@ Swift Query is a powerful library for fetching and managing asynchronous data, b
 
 ## Installation
 
-You can add StructuredQueriesTagged to an Xcode project by adding it to your project as a package.
+You can add Swift Query to an Xcode project by adding it to your project as a package.
 
-> https://github.com/mhayes853/structured-queries-tagged
+> https://github.com/mhayes853/swift-query
 
-If you want to use StructuredQueriesTagged in a [SwiftPM](https://swift.org/package-manager/) project,
+If you want to use Swift Query in a [SwiftPM](https://swift.org/package-manager/) project,
 it's as simple as adding it to your `Package.swift`:
 
 ``` swift
