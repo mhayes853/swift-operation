@@ -136,6 +136,7 @@ import Foundation
       NotificationFocusCondition(
         didBecomeActive: didBecomeActive,
         willResignActive: willResignActive,
+        center: center,
         isActive: isActive
       )
     }

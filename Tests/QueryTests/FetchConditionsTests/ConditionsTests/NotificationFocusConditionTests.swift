@@ -63,7 +63,7 @@
       let subscription = observer.subscribe(in: QueryContext()) { value in
         satisfactions.withLock { $0.append(value) }
       }
-      NotificationCenter.default.post(name: .fakeDidBecomeActive, object: nil)
+      self.center.post(name: .fakeDidBecomeActive, object: nil)
       satisfactions.withLock { expectNoDifference($0, [true]) }
       subscription.cancel()
     }
@@ -80,7 +80,7 @@
       let subscription = observer.subscribe(in: QueryContext()) { value in
         satisfactions.withLock { $0.append(value) }
       }
-      NotificationCenter.default.post(name: .fakeWillResignActive, object: nil)
+      self.center.post(name: .fakeWillResignActive, object: nil)
       satisfactions.withLock { expectNoDifference($0, [false]) }
       subscription.cancel()
     }
