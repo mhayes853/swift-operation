@@ -42,4 +42,11 @@ struct QueryClientDefaultStoreCacheTests {
     expectNoDifference(self.client.stores(matching: store.path).count, 1)
     subscription.cancel()
   }
+
+  @Test("Does Not Evict Non-Evictable Queries")
+  func doesNotEvictQueriesThatAreNonEvictable() {
+    let store = self.client.store(for: TestQuery().evictWhen(pressure: []))
+    self.source.send(pressure: .critical)
+    expectNoDifference(self.client.stores(matching: store.path).count, 1)
+  }
 }

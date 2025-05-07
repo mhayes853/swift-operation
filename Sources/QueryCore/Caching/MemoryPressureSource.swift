@@ -4,7 +4,7 @@
 
 // MARK: - MemoryPressure
 
-public struct MemoryPressure: RawRepresentable, Sendable, Hashable {
+public struct MemoryPressure: OptionSet, RawRepresentable, Sendable, Hashable {
   public let rawValue: Int
 
   public init(rawValue: Int) {
@@ -16,6 +16,9 @@ extension MemoryPressure {
   public static let normal = Self(rawValue: 1 << 0)
   public static let warning = Self(rawValue: 1 << 1)
   public static let critical = Self(rawValue: 1 << 2)
+
+  public static let defaultEvictable: Self = [.warning, .critical]
+  public static let all: Self = [.normal, .warning, .critical]
 }
 
 // MARK: - MemoryPressureSource

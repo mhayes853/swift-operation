@@ -18,10 +18,12 @@ extension QueryClient {
       self.stores = box
       let subscription = memoryPressureSource?
         .subscribe { pressure in
-          guard pressure != .normal else { return }
           box.inner.withLock { stores in
             for (path, store) in stores {
-              guard store.subscriberCount == 0 else { continue }
+              guard
+                store.subscriberCount == 0
+                  && store.context.evictableMemoryPressure.contains(pressure)
+              else { continue }
               stores.removeValue(forKey: path)
             }
           }
