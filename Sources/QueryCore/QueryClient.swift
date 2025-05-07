@@ -4,17 +4,20 @@ import IssueReporting
 // MARK: - QueryClient
 
 public final class QueryClient: Sendable {
-  private typealias State = (stores: [QueryPath: StoreEntry], defaultContext: QueryContext)
+  private typealias State = (queryTypes: [QueryPath: Any.Type], defaultContext: QueryContext)
 
   private let state: Lock<State>
+  private let storeCache: any StoreCache
   private let storeCreator: any StoreCreator
 
   public init(
     defaultContext: QueryContext = QueryContext(),
+    storeCache: some StoreCache = DefaultStoreCache(),
     storeCreator: some StoreCreator
   ) {
     self.state = Lock(([:], defaultContext))
     self.storeCreator = storeCreator
+    self.storeCache = storeCache
     self.state.withLock { $0.defaultContext.setWeakQueryClient(self) }
   }
 }
@@ -90,25 +93,28 @@ extension QueryClient {
     for query: Query,
     initialState: Query.State
   ) -> OpaqueQueryStore {
-    self.state.withLock { state in
-      if let entry = state.stores[query.path] {
-        if entry.queryType != Query.self {
-          reportWarning(.duplicatePath(expectedType: entry.queryType, foundType: Query.self))
-          return self.newOpaqueStore(
-            for: query,
-            initialState: initialState,
-            using: state.defaultContext
-          )
+    self.storeCache.withStores { stores in
+      self.state.withLock { state in
+        if let store = stores[query.path], let queryType = state.queryTypes[query.path] {
+          if queryType != Query.self {
+            reportWarning(.duplicatePath(expectedType: queryType, foundType: Query.self))
+            return self.newOpaqueStore(
+              for: query,
+              initialState: initialState,
+              using: state.defaultContext
+            )
+          }
+          return store
         }
-        return entry.store
+        let newStore = self.newOpaqueStore(
+          for: query,
+          initialState: initialState,
+          using: state.defaultContext
+        )
+        state.queryTypes[query.path] = Query.self
+        stores[query.path] = newStore
+        return newStore
       }
-      let newStore = self.newOpaqueStore(
-        for: query,
-        initialState: initialState,
-        using: state.defaultContext
-      )
-      state.stores[query.path] = StoreEntry(queryType: Query.self, store: newStore)
-      return newStore
     }
   }
 
@@ -127,15 +133,15 @@ extension QueryClient {
 
 extension QueryClient {
   public func store(with path: QueryPath) -> OpaqueQueryStore? {
-    self.state.withLock { $0.stores[path]?.store }
+    self.storeCache.withStores { $0[path] }
   }
 
   public func stores(matching path: QueryPath) -> [QueryPath: OpaqueQueryStore] {
-    self.state.withLock { state in
+    self.storeCache.withStores { stores in
       var newValues = [QueryPath: OpaqueQueryStore]()
-      for (queryPath, entry) in state.stores {
+      for (queryPath, store) in stores {
         if path.prefixMatches(other: queryPath) {
-          newValues[queryPath] = entry.store
+          newValues[queryPath] = store
         }
       }
       return newValues
@@ -146,11 +152,11 @@ extension QueryClient {
     matching path: QueryPath,
     of stateType: State.Type
   ) -> [QueryPath: QueryStore<State>] {
-    self.state.withLock { state in
+    self.storeCache.withStores { stores in
       var newValues = [QueryPath: QueryStore<State>]()
-      for (queryPath, entry) in state.stores {
+      for (queryPath, store) in stores {
         guard path.prefixMatches(other: queryPath) else { continue }
-        if let store = entry.store.base as? QueryStore<State> {
+        if let store = store.base as? QueryStore<State> {
           newValues[queryPath] = store
         }
       }
@@ -163,16 +169,14 @@ extension QueryClient {
 
 extension QueryClient {
   public func clearStores(matching path: QueryPath = []) {
-    self.state.withLock { state in
-      state.stores = state.stores.filter { !path.prefixMatches(other: $0.key) }
+    self.storeCache.withStores { stores in
+      stores = stores.filter { !path.prefixMatches(other: $0.key) }
     }
   }
 
   @discardableResult
   public func clearStore(with path: QueryPath) -> OpaqueQueryStore? {
-    self.state.withLock { state in
-      state.stores.removeValue(forKey: path)?.store
-    }
+    self.storeCache.withStores { $0.removeValue(forKey: path) }
   }
 }
 
