@@ -10,15 +10,29 @@ extension QueryClient {
 
 extension QueryClient {
   public final class DefaultStoreCache: StoreCache {
-    private let stores = Lock([QueryPath: OpaqueQueryStore]())
+    private let stores: LockedBox<[QueryPath: OpaqueQueryStore]>
+    private let subscription: QuerySubscription
 
     public init(memoryPressureSource: (any MemoryPressureSource)? = defaultMemoryPressureSource) {
+      let box = LockedBox(value: [QueryPath: OpaqueQueryStore]())
+      self.stores = box
+      let subscription = memoryPressureSource?
+        .subscribe { pressure in
+          guard pressure != .normal else { return }
+          box.inner.withLock { stores in
+            for (path, store) in stores {
+              guard store.subscriberCount == 0 else { continue }
+              stores.removeValue(forKey: path)
+            }
+          }
+        }
+      self.subscription = subscription ?? .empty
     }
 
     public func withStores<T>(
       _ fn: (inout sending [QueryPath: OpaqueQueryStore]) -> sending T
     ) -> T {
-      self.stores.withLock(fn)
+      self.stores.inner.withLock(fn)
     }
   }
 }

@@ -8,9 +8,13 @@ import QueryCore
 // MARK: - Default Init
 
 extension QueryClient {
-  public convenience init(defaultContext: QueryContext = QueryContext()) {
+  public convenience init(
+    defaultContext: QueryContext = QueryContext(),
+    storeCache: some StoreCache = DefaultStoreCache()
+  ) {
     self.init(
       defaultContext: defaultContext,
+      storeCache: storeCache,
       storeCreator: isTesting ? .defaultTesting : .default()
     )
   }
