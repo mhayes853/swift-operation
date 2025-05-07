@@ -4,10 +4,18 @@
 
 // MARK: - MemoryPressure
 
-public enum MemoryPressure: Sendable {
-  case normal
-  case warning
-  case critical
+public struct MemoryPressure: OptionSet, RawRepresentable, Sendable, Hashable {
+  public let rawValue: Int
+
+  public init(rawValue: Int) {
+    self.rawValue = rawValue
+  }
+}
+
+extension MemoryPressure {
+  public static let normal = Self(rawValue: 1 << 0)
+  public static let warning = Self(rawValue: 1 << 1)
+  public static let critical = Self(rawValue: 1 << 2)
 }
 
 // MARK: - MemoryPressureSource
