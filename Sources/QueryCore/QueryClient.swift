@@ -204,8 +204,10 @@ extension QueryClient {
 // MARK: - StoreCache
 
 extension QueryClient {
+  public typealias StoreCacheEntries = [QueryPath: OpaqueQueryStore]
+
   public protocol StoreCache: Sendable {
-    func withStores<T>(_ fn: (inout sending [QueryPath: OpaqueQueryStore]) -> sending T) -> T
+    func withStores<T>(_ fn: (inout sending StoreCacheEntries) -> sending T) -> T
   }
 }
 
@@ -213,20 +215,17 @@ extension QueryClient {
 
 extension QueryClient {
   public final class DefaultStoreCache: StoreCache {
-    private let stores: LockedBox<[QueryPath: OpaqueQueryStore]>
+    private let stores: LockedBox<StoreCacheEntries>
     private let subscription: QuerySubscription
 
     public init(memoryPressureSource: (any MemoryPressureSource)? = defaultMemoryPressureSource) {
-      let box = LockedBox(value: [QueryPath: OpaqueQueryStore]())
+      let box = LockedBox(value: StoreCacheEntries())
       self.stores = box
       let subscription = memoryPressureSource?
         .subscribe { pressure in
           box.inner.withLock { stores in
             for (path, store) in stores {
-              guard
-                store.subscriberCount == 0
-                  && store.context.evictableMemoryPressure.contains(pressure)
-              else { continue }
+              guard store.isEvictable(from: pressure) else { continue }
               stores.removeValue(forKey: path)
             }
           }
@@ -234,11 +233,15 @@ extension QueryClient {
       self.subscription = subscription ?? .empty
     }
 
-    public func withStores<T>(
-      _ fn: (inout sending [QueryPath: OpaqueQueryStore]) -> sending T
-    ) -> T {
+    public func withStores<T>(_ fn: (inout sending StoreCacheEntries) -> sending T) -> T {
       self.stores.inner.withLock(fn)
     }
+  }
+}
+
+extension OpaqueQueryStore {
+  fileprivate func isEvictable(from pressure: MemoryPressure) -> Bool {
+    self.subscriberCount == 0 && self.context.evictableMemoryPressure.contains(pressure)
   }
 }
 
