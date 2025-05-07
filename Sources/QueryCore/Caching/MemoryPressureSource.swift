@@ -2,25 +2,6 @@
   import Dispatch
 #endif
 
-// MARK: - MemoryPressure
-
-public struct MemoryPressure: OptionSet, RawRepresentable, Sendable, Hashable {
-  public let rawValue: Int
-
-  public init(rawValue: Int) {
-    self.rawValue = rawValue
-  }
-}
-
-extension MemoryPressure {
-  public static let normal = Self(rawValue: 1 << 0)
-  public static let warning = Self(rawValue: 1 << 1)
-  public static let critical = Self(rawValue: 1 << 2)
-
-  public static let defaultEvictable: Self = [.warning, .critical]
-  public static let all: Self = [.normal, .warning, .critical]
-}
-
 // MARK: - MemoryPressureSource
 
 public protocol MemoryPressureSource: Sendable {
@@ -36,32 +17,9 @@ public protocol MemoryPressureSource: Sendable {
     public func subscribe(
       with handler: @escaping @Sendable (MemoryPressure) -> Void
     ) -> QuerySubscription {
-      let normalSource = DispatchSource.makeMemoryPressureSource(
-        eventMask: .normal,
-        queue: self.queue
-      )
-      normalSource.setEventHandler { handler(.normal) }
-      normalSource.resume()
-
-      let warningSource = DispatchSource.makeMemoryPressureSource(
-        eventMask: .warning,
-        queue: self.queue
-      )
-      warningSource.setEventHandler { handler(.warning) }
-      warningSource.resume()
-
-      let criticalSource = DispatchSource.makeMemoryPressureSource(
-        eventMask: .critical,
-        queue: self.queue
-      )
-      criticalSource.setEventHandler { handler(.critical) }
-      criticalSource.resume()
-
-      return QuerySubscription {
-        normalSource.cancel()
-        warningSource.cancel()
-        criticalSource.cancel()
-      }
+      let source = DispatchSource.makeMemoryPressureSource(eventMask: .all, queue: self.queue)
+      source.setEventHandler { handler(MemoryPressure(from: source.data)) }
+      return QuerySubscription { source.cancel() }
     }
   }
 
