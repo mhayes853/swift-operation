@@ -38,7 +38,7 @@ struct MyView: View {
 }
 ```
 
-Under the hood, ``SwiftUICore/State/Query`` utilizes a ``QueryClient`` instance in the SwiftUI environment. You can access and override this environment value.
+Under the hood, `@State.Query` utilizes a ``QueryClient`` instance in the SwiftUI environment. You can access and override this environment value.
 
 ```swift
 struct MyView: View {
@@ -144,7 +144,9 @@ extension QueryContext {
 }
 
 extension User {
-  static func query(for id: UserID) -> some QueryRequest<Self, Query.State> {
+  static func query(
+    for id: UserID
+  ) -> some QueryRequest<Self, Query.State> {
     Query(id: id)
   }
 

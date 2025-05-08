@@ -182,7 +182,8 @@ extension QueryStore where State: _RecursiveQueryStateProtocol {
     for id: State.NodeID,
     using configuration: QueryTaskConfiguration? = nil
   ) async throws -> State.QueryValue {
-    var configuration = configuration ?? QueryTaskConfiguration(context: context)
+    var configuration = configuration 
+      ?? QueryTaskConfiguration(context: context)
     // More to come...
   }
 }
@@ -217,7 +218,8 @@ extension QueryStore where State: _RecursiveQueryStateProtocol {
     for id: State.NodeID,
     using configuration: QueryTaskConfiguration? = nil
   ) async throws -> State.QueryValue {
-    var configuration = configuration ?? QueryTaskConfiguration(context: context)
+    var configuration = configuration 
+      ?? QueryTaskConfiguration(context: context)
     configuration.context.recursiveValues.nodeId = id
     return try await fetch(using: configuration)
   }
@@ -255,12 +257,20 @@ extension RecursiveQueryRequest {
     with continuation: QueryContinuation<Value>
   ) async throws -> Value {
     if let nodeId = context.recursiveValues.nodeId as? NodeID {
-      return try await fetchTree(for: nodeId, in: context, with: continuation)
+      return try await fetchTree(
+        for: nodeId, 
+        in: context, 
+        with: continuation
+      )
     } else {
-      // If we have no node id in the context (eg. We called `fetch` directly
-      // the `QueryStore` instead of `fetchTree`), we'll assume we're refetching
-      // from the root.
-      return try await fetchTree(for: rootNodeId, in: context, with: continuation)
+      // If we have no node id in the context (eg. We called 
+      // `fetch` directly the `QueryStore` instead of `fetchTree`), 
+      // we'll assume we're refetching from the root.
+      return try await fetchTree(
+        for: rootNodeId, 
+        in: context, 
+        with: continuation
+      )
     }
   }
 }
@@ -276,16 +286,17 @@ struct RecursiveQueryState<Value: RecursiveValue>: QueryStateProtocol {
     with result: Result<QueryValue, any Error>,
     for task: QueryTask<QueryValue>
   ) {
+    let context = task.configuration.context
     switch result {
     case let .success(value):
       self.currentValue[id: value.nodeId] = value
       self.valueUpdateCount += 1
-      self.valueLastUpdatedAt = task.configuration.context.queryClock.now()
+      self.valueLastUpdatedAt = context.queryClock.now()
       self.error = nil
     case let .failure(error):
       self.error = error
       self.errorUpdateCount += 1
-      self.errorLastUpdatedAt = task.configuration.context.queryClock.now()
+      self.errorLastUpdatedAt = context.queryClock.now()
     }
   }
 
@@ -425,9 +436,17 @@ extension RecursiveQueryRequest {
     with continuation: QueryContinuation<Value>
   ) async throws -> Value {
     if let nodeId = context.recursiveValues.nodeId as? NodeID {
-      return try await fetchTree(for: nodeId, in: context, with: continuation)
+      return try await fetchTree(
+        for: nodeId, 
+        in: context, 
+        with: continuation
+      )
     } else {
-      return try await fetchTree(for: rootNodeId, in: context, with: continuation)
+      return try await fetchTree(
+        for: rootNodeId, 
+        in: context, 
+        with: continuation
+      )
     }
   }
 }
@@ -441,7 +460,9 @@ where
   associatedtype NodeID: Sendable
 }
 
-struct RecursiveQueryState<Value: RecursiveValue>: _RecursiveQueryStateProtocol {
+struct RecursiveQueryState<
+  Value: RecursiveValue
+>: _RecursiveQueryStateProtocol {
   typealias StateValue = Value
   typealias QueryValue = Value
   typealias StatusValue = Value
@@ -509,7 +530,8 @@ extension QueryStore where State: _RecursiveQueryStateProtocol {
     for id: State.NodeID,
     using configuration: QueryTaskConfiguration? = nil
   ) async throws -> State.QueryValue {
-    var configuration = configuration ?? QueryTaskConfiguration(context: context)
+    var configuration = configuration 
+      ?? QueryTaskConfiguration(context: context)
     configuration.context.recursiveValues.nodeId = id
     return try await fetch(using: configuration)
   }
@@ -542,7 +564,9 @@ struct Comment: RecursiveValue, Sendable {
 }
 
 extension Comment {
-  static func threadQuery(for id: Int) -> some RecursiveQueryRequest<Comment, Int> {
+  static func threadQuery(
+    for id: Int
+  ) -> some RecursiveQueryRequest<Comment, Int> {
     ThreadQuery(rootNodeId: id)
   }
 

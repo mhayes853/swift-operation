@@ -25,17 +25,19 @@ struct User: Sendable {
 }
 
 extension User {
-  static func friendsQuery(for id: Int) -> some InfiniteQueryRequest<Int, [Self]> {
+  static func friendsQuery(
+    for id: Int
+  ) -> some InfiniteQueryRequest<Int, [Self]> {
     FriendsQuery(userId: id)
   }
 
   struct FriendsQuery: InfiniteQueryRequest, Hashable {
     typealias PageID = Int
     typealias PageValue = [User]
-  
+
     let userId: Int
     let initialPageId = 0
-  
+
     func pageId(
       after page: InfiniteQueryPage<Int, [User]>,
       using paging: InfiniteQueryPaging<Int, [User]>,
@@ -43,7 +45,7 @@ extension User {
     ) -> Int? {
       page.id + 1
     }
-  
+
     func fetchPage(
       using paging: InfiniteQueryPaging<Int, [User]>,
       in context: QueryContext,
@@ -59,11 +61,11 @@ extension User {
 
   struct SendFriendRequestMutation: MutationRequest, Hashable {
     typealias Value = Void
-  
+
     struct Arguments: Sendable {
       let userId: Int
     }
-  
+
     func mutate(
       with arguments: Arguments,
       in context: QueryContext,
@@ -75,9 +77,34 @@ extension User {
 }
 ```
 
-The problem here is that when `User.SendFriendRequestMutation` runs successfully, all screens that utilize `User.FriendsQuery` are now displaying outdated data as we haven't explicitly updated the query state.
+The problem here is that when `User.SendFriendRequestMutation` runs successfully, all screens that utilize `User.FriendsQuery` are now displaying outdated data as we haven't explicitly updated the query state of those screens to indicate that the friend request was sent.
 
-Managing this kind of asynchronous data consistency is where the library truly begins to shine.
+Utilizing both ``QueryClient`` in conjunction with ``QueryPath`` will make managing this state straight forward.
+
+## Marking Friend Requests As Sent
+
+To start, we'll want to define a reusable transformation on the value of `User.FriendsQuery` that transforms the appropriate user relationship inside the infinite query pages. When updating the state of the query directly, we'll call this reusable transform method.
+
+```swift
+extension InfiniteQueryPages<Int, [User]> {
+  func updateRelationship(
+    for userId: Int, 
+    to relationship: User.Relationship
+  ) -> Self {
+    self.map { page in
+      var page = page
+      page.value = page.value.map { user in
+        var user = user
+        if user.id == userId {
+          user.relationship = relationship
+        }
+        return user
+      }
+      return page
+    }
+  }
+}
+```
 
 ## Updating Query State After a Mutation
 
@@ -98,18 +125,10 @@ struct SendFriendRequestMutation: MutationRequest, Hashable {
     guard let client = context.queryClient else { return }
     let query = UserFriendsQuery(userId: arguments.userId)
     let store = client.store(for: query)
-    let pages = store.currentValue.map { page in
-      var page = page
-      page.value = page.value.map { user in
-        var user = user
-        if user.id == arguments.userId {
-          user.relationship = .friendRequestSent
-        }
-        return user
-      }
-      return page
-    }
-    store.currentValue = InfiniteQueryPages(uniqueElements: pages)
+    store.currentValue = store.currentValue.updateRelationship(
+      for: arguments.userId,
+      to: .friendRequestSent
+    )
   }
 }
 ```
@@ -156,7 +175,10 @@ In this case, we have 2 identifying components of the query. First, we use a str
 The real power of splitting the path into an array of multiple components is that you can pattern match the query utilizing a prefix. For instance, you can get access to the `QueryStore`s for all user friend list queries on a `QueryClient` by checking if the path starts with `["user-friends"]`.
 
 ```swift
-queryClient.stores(matching: ["user-friends"], of: User.FriendsQuery.State.self)
+queryClient.stores(
+  matching: ["user-friends"], 
+  of: User.FriendsQuery.State.self
+)
 ```
 
 This will return back a `[QueryPath: QueryStore<User.FriendsQuery.State>]` that you can use to access the current state of all friends list queries in our app.
@@ -184,22 +206,14 @@ struct SendFriendRequestMutation: MutationRequest, Hashable {
     // friends lists in the app.
     guard let client = context.queryClient else { return }
     let stores = client.stores(
-      matching: ["user-friends"], 
+      matching: ["user-friends"],
       of: User.FriendsQuery.State.self
     )
     for (_, store) in stores {
-      let pages = store.currentValue.map { page in
-        var page = page
-        page.value = page.value.map { user in
-          var user = user
-          if user.id == arguments.userId {
-            user.relationship = .friendRequestSent
-          }
-          return user
-        }
-        return page
-      }
-      store.currentValue = InfiniteQueryPages(uniqueElements: pages)
+      store.currentValue = store.currentValue.updateRelationship(
+        for: arguments.userId,
+        to: .friendRequestSent
+      )
     }
   }
 }
@@ -220,19 +234,19 @@ struct SendFriendRequestMutation: MutationRequest, Hashable {
     in context: QueryContext,
     with continuation: QueryContinuation<Void>
   ) async throws {
-    // Optimistically update the user relationships, and reste them to the
+    // Optimistically update the user relationships, and reset them to the
     // default state if the mutation fails.
     do {
       updateRelationships(
+        for: arguments.userId,
         to: .friendRequestSent,
-        userId: arguments.userId,
         in: context
       )
       try await sendFriendRequest(userId: arguments.userId)
     } catch {
       updateRelationships(
+        for: arguments.userId,
         to: .notFriends,
-        userId: arguments.userId,
         in: context
       )
       throw error
@@ -246,22 +260,14 @@ struct SendFriendRequestMutation: MutationRequest, Hashable {
   ) {
     guard let client = context.queryClient else { return }
     let stores = client.stores(
-      matching: ["user-friends"], 
+      matching: ["user-friends"],
       of: User.FriendsQuery.State.self
     )
     for (_, store) in stores {
-      let pages = store.currentValue.map { page in
-        var page = page
-        page.value = page.value.map { user in
-          var user = user
-          if user.id == arguments.userId {
-            user.relationship = .friendRequestSent
-          }
-          return user
-        }
-        return page
-      }
-      store.currentValue = InfiniteQueryPages(uniqueElements: pages)
+      store.currentValue = store.currentValue.updateRelationship(
+        for: arguments.userId,
+        to: relationship
+      )
     }
   }
 }

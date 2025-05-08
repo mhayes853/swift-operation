@@ -12,7 +12,9 @@ struct MyQuery: QueryRequest, Hashable {
 }
 
 // Refetch whenever the network comes back online.
-let query = MyQuery().refetchOnChange(of: .connected(to: NWPathMonitorObserver.shared))
+let query = MyQuery().refetchOnChange(
+  of: .connected(to: NWPathMonitorObserver.shared)
+)
 ```
 
 You too can utilize the `QueryController` protocol to build such automations.
@@ -83,7 +85,9 @@ struct User: Codable {
 }
 
 extension User {
-  static func query(for id: String) -> some QueryRequest<Self, Query.State> {
+  static func query(
+    for id: String
+  ) -> some QueryRequest<Self, Query.State> {
     // More to come...
   }
 
@@ -107,7 +111,9 @@ In the meantime, we'll also subscribe to the publisher of a `DocumentSnapshot` i
 ```swift
 import Combine
 
-final class FirestoreUserController<State: QueryStateProtocol>: QueryController {
+final class FirestoreUserController<
+  State: QueryStateProtocol
+>: QueryController {
   let userId: String
 
   init(userId: String) {
@@ -132,7 +138,9 @@ Then, we can put it all together.
 
 ```swift
 extension User {
-  static func query(for id: String) -> some QueryRequest<Self, Query.State> {
+  static func query(
+    for id: String
+  ) -> some QueryRequest<Self, Query.State> {
     Query(userId: id).controlled(by: FirestoreUserController(userId: id))
   }
 

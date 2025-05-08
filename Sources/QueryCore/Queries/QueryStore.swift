@@ -338,6 +338,7 @@ extension QueryStore {
     self.subscriptions.count
   }
 
+  /// ``QueryStore/subscribe(with:)-93jyd``
   public func subscribe(
     with handler: QueryEventHandler<State>
   ) -> QuerySubscription {

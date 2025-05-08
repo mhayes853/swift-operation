@@ -31,7 +31,9 @@ struct QueryData: Codable, Sendable {
 }
 
 extension QueryData {
-  static func cacheableQuery(for key: String) -> some QueryRequest<Self, CacheableQuery.State> {
+  static func cacheableQuery(
+    for key: String
+  ) -> some QueryRequest<Self, CacheableQuery.State> {
     CacheableQuery(key: key)
   }
 
@@ -158,8 +160,9 @@ struct LinesQuery: QueryRequest, Hashable {
     in context: QueryContext,
     with continuation: QueryContinuation<[String]>
   ) async throws -> [String] {
-    // Apply a time freeze to the context so that valueLastUpdatedAt remains
-    // consistent when many chunks of data are yielded.
+    // Apply a time freeze to the context so that 
+    // valueLastUpdatedAt remains consistent when 
+    // many chunks of data are yielded.
     var context = context
     context.queryClock = context.queryClock.frozen()
     var lines = [String]()
@@ -199,7 +202,9 @@ struct EventsList: Sendable {
 }
 
 extension EventsList {
-  static func nearbyQuery(for region: Region) -> some QueryRequest<Self, NearbyEventsQuery.State> {
+  static func nearbyQuery(
+    for region: Region
+  ) -> some QueryRequest<Self, NearbyEventsQuery.State> {
     NearbyEventsQuery(region: region)
   }
 
@@ -220,9 +225,13 @@ extension EventsList {
       // Look for other EventLists we've fetched and use the data from
       // any that are within the distance threshold.
       for (_, store) in client.stores(matching: ["nearby-events"]) {
-        guard let list = store.currentValue as? EventsList else { continue }
+        guard let list = store.currentValue as? EventsList else { 
+          continue 
+        }
         if list.region.distance(to: region) < context.distanceThreshold {
-          continuation.yield(EventsList(region: region, events: list.events))
+          continuation.yield(
+            EventsList(region: region, events: list.events)
+          )
         }
       }
       return try await fetchActualEventList(region)

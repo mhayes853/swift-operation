@@ -240,7 +240,10 @@ If we want to return some mock data for testing purposes, we can now leverage `U
 ```swift
 @Test
 func returnsPost() async throws {
-  let store = QueryStore.detached(query: Post.query(for: 1), initialValue: nil)
+  let store = QueryStore.detached(
+    query: Post.query(for: 1), 
+    initialValue: nil
+  )
   store.context.dataTransport = MockDataTransport()
 
   let post = try await store.fetch()
@@ -280,7 +283,10 @@ struct MockDataTransport: HTTPDataTransport {
 ``QueryStateProtocol/valueLastUpdatedAt`` and ``QueryStateProtocol/errorLastUpdatedAt`` properties on ``QueryStateProtocol`` conformances are computed using the ``QueryClock`` protocol. The clock lives on the context, and can be overridden. Therefore, if you want to ensure a deterministic date calculations for various reasons (time freeze, testing, etc.), you can do the following.
 
 ```swift
-let store = QueryStore.detached(query: Post.query(for: 1), initialValue: nil)
+let store = QueryStore.detached(
+  query: Post.query(for: 1), 
+  initialValue: nil
+)
 let date = Date(timeIntervalSince1970: 1234567890)
 store.context.queryClock = .custom { date }
 
@@ -296,7 +302,10 @@ The ``QueryDelayer`` protocol is used to artificially delay queries in the case 
 For testing, this delay may be unacceptable, but thankfully you can override the `QueryDelayer` on the context to remove delays.
 
 ```swift
-let store = QueryStore.detached(query: Post.query(for: 1), initialValue: nil)
+let store = QueryStore.detached(
+  query: Post.query(for: 1), 
+  initialValue: nil
+)
 store.context.queryDelayer = .noDelay
 
 try await store.fetch() // Will incur no retry delays.
