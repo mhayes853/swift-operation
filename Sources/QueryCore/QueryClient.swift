@@ -95,8 +95,9 @@ extension QueryClient {
   ) -> OpaqueQueryStore {
     self.storeCache.withStores { stores in
       self.state.withLock { state in
-        if let store = stores[query.path], let queryType = state.queryTypes[query.path] {
-          if queryType != Query.self {
+        defer { state.queryTypes[query.path] = Query.self }
+        if let store = stores[query.path] {
+          if let queryType = state.queryTypes[query.path], queryType != Query.self {
             reportWarning(.duplicatePath(expectedType: queryType, foundType: Query.self))
             return self.newOpaqueStore(
               for: query,
@@ -111,7 +112,6 @@ extension QueryClient {
           initialState: initialState,
           using: state.defaultContext
         )
-        state.queryTypes[query.path] = Query.self
         stores[query.path] = newStore
         return newStore
       }

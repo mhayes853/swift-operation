@@ -248,10 +248,12 @@ struct QueryClientTests {
   @Suite("QueryClient+DefaultStoreCache tests")
   struct DefaultStoreCacheTests {
     private let source = TestMemoryPressureSource()
+    private let storeCache: any QueryClient.StoreCache
     private let client: QueryClient
 
     init() {
       let cache = QueryClient.DefaultStoreCache(memoryPressureSource: source)
+      self.storeCache = cache
       self.client = QueryClient(storeCache: cache)
     }
 
@@ -290,6 +292,16 @@ struct QueryClientTests {
       let store = self.client.store(for: TestQuery().evictWhen(pressure: []))
       self.source.send(pressure: .critical)
       expectNoDifference(self.client.stores(matching: store.path).count, 1)
+    }
+
+    @Test("Recognizes Store Retroactively Added To Cache")
+    func recognizesStoreRetroactivelyAddedToCache() {
+      let store = QueryStore.detached(query: TestQuery(), initialValue: nil)
+      self.storeCache.withStores { entries in
+        entries[store.path] = OpaqueQueryStore(erasing: store)
+      }
+      let clientStore = self.client.store(for: TestQuery())
+      expectNoDifference(store === clientStore, true)
     }
   }
 }
