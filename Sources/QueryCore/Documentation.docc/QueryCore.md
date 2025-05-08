@@ -1,4 +1,4 @@
-# ``Query``
+# ``QueryCore``
 
 A lightweight cross-platform library for fetching and managing asynchronous data in Swift, SwiftUI, Sharing, WASM, Linux, and more.
 
