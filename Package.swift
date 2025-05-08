@@ -35,6 +35,7 @@ let package = Package(
     )
   ],
   dependencies: [
+    .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.9.0"),
     .package(url: "https://github.com/pointfreeco/swift-sharing", from: "2.4.0"),
     .package(url: "https://github.com/pointfreeco/swift-custom-dump", from: "1.3.3"),
     .package(
@@ -53,6 +54,7 @@ let package = Package(
       dependencies: [
         "Query",
         .product(name: "Sharing", package: "swift-sharing"),
+        .product(name: "Dependencies", package: "swift-dependencies"),
         .product(
           name: "SwiftNavigation",
           package: "swift-navigation",

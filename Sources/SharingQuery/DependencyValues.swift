@@ -32,14 +32,13 @@ extension DependencyValues {
 
   private enum NetworkObserverKey: DependencyKey {
     static var liveValue: NetworkObserver {
-      #if canImport(Network)
-        NWPathMonitorObserver.shared
-      #elseif WebBrowser && canImport(JavaScriptKit)
-        NavigatorObserver.shared
-      #else
+      if let observer = QueryClient.defaultNetworkObserver {
+        return observer
+      }
+      if shouldReportUnimplemented {
         reportWarning(.noDefaultNetworkObserver)
-        return MockNetworkObserver()
-      #endif
+      }
+      return MockNetworkObserver()
     }
   }
 }

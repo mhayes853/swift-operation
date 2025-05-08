@@ -96,8 +96,8 @@ extension QueryClient.StoreCreator where Self == QueryClient.DefaultStoreCreator
     retryBackoff: QueryBackoffFunction? = nil,
     retryDelayer: (any QueryDelayer)? = nil,
     queryEnableAutomaticFetchingCondition: any FetchCondition = .always(true),
-    networkObserver: (any NetworkObserver)? = defaultNetworkObserver,
-    focusCondition: (any FetchCondition)? = defaultFocusCondition
+    networkObserver: (any NetworkObserver)? = QueryClient.defaultNetworkObserver,
+    focusCondition: (any FetchCondition)? = QueryClient.defaultFocusCondition
   ) -> Self {
     Self(
       retryLimit: retryLimit,
@@ -110,38 +110,42 @@ extension QueryClient.StoreCreator where Self == QueryClient.DefaultStoreCreator
   }
 }
 
-/// The default ``NetworkObserver`` to use for observing the user's connection status.
-///
-/// - On Darwin platforms, `NWPathMonitorObserver.shared` is used.
-/// - On Broswer platforms (WASI), `NavigatorObserver.shared` is used.
-/// - On other platforms, the value is nil.
-public var defaultNetworkObserver: (any NetworkObserver)? {
-  #if canImport(Network)
-    NWPathMonitorObserver.shared
-  #elseif WebBrowser && canImport(JavaScriptKit)
-    NavigatorObserver.shared
-  #else
-    nil
-  #endif
-}
+// MARK: - Defaults
 
-/// The default ``FetchCondition`` to use for detetcing whether or not the app is active.
-///
-/// - On Darwin platforms, the ``FetchCondition/notificationFocus`` condition is used.
-/// - On Broswer platforms (WASI), the ``FetchCondition/windowFocus`` condition is used.
-/// - On other platforms, the value is nil.
-public var defaultFocusCondition: (any FetchCondition)? {
-  #if os(iOS) || os(macOS) || os(tvOS) || os(visionOS)
-    .notificationFocus
-  #elseif os(watchOS)
-    if #available(watchOS 7.0, *) {
-      .notificationFocus
-    } else {
+extension QueryClient {
+  /// The default ``NetworkObserver`` to use for observing the user's connection status.
+  ///
+  /// - On Darwin platforms, `NWPathMonitorObserver.shared` is used.
+  /// - On Broswer platforms (WASI), `NavigatorObserver.shared` is used.
+  /// - On other platforms, the value is nil.
+  public static var defaultNetworkObserver: (any NetworkObserver)? {
+    #if canImport(Network)
+      NWPathMonitorObserver.shared
+    #elseif WebBrowser && canImport(JavaScriptKit)
+      NavigatorObserver.shared
+    #else
       nil
-    }
-  #elseif WebBrowser && canImport(JavaScriptKit)
-    .windowFocus
-  #else
-    nil
-  #endif
+    #endif
+  }
+
+  /// The default ``FetchCondition`` to use for detetcing whether or not the app is active.
+  ///
+  /// - On Darwin platforms, the ``FetchCondition/notificationFocus`` condition is used.
+  /// - On Broswer platforms (WASI), the ``FetchCondition/windowFocus`` condition is used.
+  /// - On other platforms, the value is nil.
+  public static var defaultFocusCondition: (any FetchCondition)? {
+    #if os(iOS) || os(macOS) || os(tvOS) || os(visionOS)
+      .notificationFocus
+    #elseif os(watchOS)
+      if #available(watchOS 7.0, *) {
+        .notificationFocus
+      } else {
+        nil
+      }
+    #elseif WebBrowser && canImport(JavaScriptKit)
+      .windowFocus
+    #else
+      nil
+    #endif
+  }
 }

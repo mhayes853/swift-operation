@@ -243,12 +243,14 @@ extension OpaqueQueryStore {
 
 // MARK: - Default Memory Pressure Source
 
-public var defaultMemoryPressureSource: (any MemoryPressureSource)? {
-  #if canImport(Dispatch)
-    .dispatch
-  #else
-    nil
-  #endif
+extension QueryClient {
+  public static var defaultMemoryPressureSource: (any MemoryPressureSource)? {
+    #if canImport(Dispatch)
+      .dispatch
+    #else
+      nil
+    #endif
+  }
 }
 
 // MARK: - QueryContext
