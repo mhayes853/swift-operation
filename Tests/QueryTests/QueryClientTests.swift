@@ -245,6 +245,59 @@ struct QueryClientTests {
     expectNoDifference(store.currentValue, nil)
   }
 
+  @Test("Mutate OpaqueStore Entries")
+  func mutateOpaqueStoreEntries() {
+    let client = QueryClient()
+    let q1 = PathableQuery(value: 1, path: [1, 2]).defaultValue(10)
+    let q2 = PathableQuery(value: 2, path: [1, 3]).defaultValue(20)
+    let q3 = PathableQuery(value: 3, path: [2, 4]).defaultValue(30)
+    let q4 = PathableQuery(value: 3, path: [2, 5]).defaultValue(40)
+    _ = client.store(for: q1)
+    _ = client.store(for: q2)
+    _ = client.store(for: q3)
+
+    client.withStores(matching: [1]) { entries in
+      expectNoDifference(entries.count, 2)
+      entries[q1.path]?.uncheckedSetCurrentValue(50)
+      entries[q4.path] = OpaqueQueryStore(erasing: .detached(query: q4))
+      entries.removeValue(forKey: q2.path)
+    }
+
+    expectNoDifference(client.stores(matching: []).count, 3)
+    expectNoDifference(client.store(for: q1).currentValue, 50)
+    expectNoDifference(client.store(with: q2.path) == nil, true)
+    expectNoDifference(client.store(for: q4).currentValue, 40)
+  }
+
+  @Test("Mutate Store Entries")
+  func mutateStoreEntries() {
+    let client = QueryClient()
+    let q1 = TaggedPathableQuery(value: 1, path: [1, 2]).defaultValue(10)
+    let q2 = TaggedPathableQuery(value: 2, path: [1, 3]).defaultValue(20)
+    let q3 = TaggedPathableQuery(value: "blob", path: [1, 4]).defaultValue("blob")
+    let q4 = TaggedPathableQuery(value: 3, path: [2, 4]).defaultValue(30)
+    let q5 = TaggedPathableQuery(value: 3, path: [2, 5]).defaultValue(40)
+    _ = client.store(for: q1)
+    _ = client.store(for: q2)
+    _ = client.store(for: q3)
+    _ = client.store(for: q4)
+
+    client.withStores(
+      matching: [1],
+      of: DefaultQuery<TaggedPathableQuery<Int>>.State.self
+    ) { entries in
+      expectNoDifference(entries.count, 2)
+      entries[q1.path]?.currentValue = 50
+      entries[q5.path] = .detached(query: q5)
+      entries.removeValue(forKey: q2.path)
+    }
+
+    expectNoDifference(client.stores(matching: []).count, 4)
+    expectNoDifference(client.store(for: q1).currentValue, 50)
+    expectNoDifference(client.store(with: q2.path) == nil, true)
+    expectNoDifference(client.store(for: q5).currentValue, 40)
+  }
+
   @Suite("QueryClient+DefaultStoreCache tests")
   struct DefaultStoreCacheTests {
     private let source = TestMemoryPressureSource()

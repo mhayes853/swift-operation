@@ -180,6 +180,56 @@ extension QueryClient {
   }
 }
 
+// MARK: - Direct Store Access
+
+extension QueryClient {
+  public func withStores<T>(
+    matching path: QueryPath,
+    perform fn: (inout sending OpaqueStoreEntries) throws -> sending T
+  ) rethrows -> T {
+    try self.storeCache.withStores { entries in
+      let beforeEntries = entries.matching(to: path)
+      var afterEntries = beforeEntries
+      let result = try fn(&afterEntries)
+      for (path, store) in afterEntries {
+        if beforeEntries[path] == nil {
+          entries[path] = store
+        }
+      }
+      for (path, _) in beforeEntries {
+        if afterEntries[path] == nil {
+          entries.removeValue(forKey: path)
+        }
+      }
+      return result
+    }
+  }
+
+  public func withStores<T, State: QueryStateProtocol>(
+    matching path: QueryPath,
+    of stateType: State.Type,
+    perform fn: (inout sending StoreEntries<State>) throws -> sending T
+  ) rethrows -> T {
+    try self.storeCache.withStores { entries in
+      let beforeEntries = entries.matching(to: path)
+        .compactMapValues { $0.base as? QueryStore<State> }
+      var afterEntries = beforeEntries
+      let result = try fn(&afterEntries)
+      for (path, store) in afterEntries {
+        if beforeEntries[path] == nil {
+          entries[path] = OpaqueQueryStore(erasing: store)
+        }
+      }
+      for (path, _) in beforeEntries {
+        if afterEntries[path] == nil {
+          entries.removeValue(forKey: path)
+        }
+      }
+      return result
+    }
+  }
+}
+
 // MARK: - Store Entries
 
 extension QueryClient {
@@ -203,7 +253,7 @@ extension QueryClient {
 
 extension QueryClient {
   public protocol StoreCache: Sendable {
-    func withStores<T>(_ fn: (inout sending OpaqueStoreEntries) -> sending T) -> T
+    func withStores<T>(_ fn: (inout sending OpaqueStoreEntries) throws -> sending T) rethrows -> T
   }
 }
 
@@ -229,8 +279,10 @@ extension QueryClient {
       self.subscription = subscription ?? .empty
     }
 
-    public func withStores<T>(_ fn: (inout sending OpaqueStoreEntries) -> sending T) -> T {
-      self.stores.inner.withLock(fn)
+    public func withStores<T>(
+      _ fn: (inout sending OpaqueStoreEntries) throws -> sending T
+    ) rethrows -> T {
+      try self.stores.inner.withLock(fn)
     }
   }
 }
@@ -250,6 +302,20 @@ extension QueryClient {
     #else
       nil
     #endif
+  }
+}
+
+// MARK: - Helpers
+
+extension QueryClient.OpaqueStoreEntries {
+  fileprivate func matching(to path: QueryPath) -> Self {
+    var newValues = Self()
+    for (queryPath, store) in self {
+      if path.prefixMatches(other: queryPath) {
+        newValues[queryPath] = store
+      }
+    }
+    return newValues
   }
 }
 
