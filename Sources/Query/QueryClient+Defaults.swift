@@ -131,7 +131,7 @@ extension QueryClient {
   /// The default ``FetchCondition`` to use for detetcing whether or not the app is active.
   ///
   /// - On Darwin platforms, the ``FetchCondition/notificationFocus`` condition is used.
-  /// - On Broswer platforms (WASI), the ``FetchCondition/windowFocus`` condition is used.
+  /// - On Broswer platforms (WASI), the `WindowFocusCondition` condition is used.
   /// - On other platforms, the value is nil.
   public static var defaultFocusCondition: (any FetchCondition)? {
     #if os(iOS) || os(macOS) || os(tvOS) || os(visionOS)
