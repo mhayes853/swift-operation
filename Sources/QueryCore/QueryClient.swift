@@ -136,9 +136,9 @@ extension QueryClient {
     self.storeCache.withStores { $0[path] }
   }
 
-  public func stores(matching path: QueryPath) -> [QueryPath: OpaqueQueryStore] {
+  public func stores(matching path: QueryPath) -> OpaqueStoreEntries {
     self.storeCache.withStores { stores in
-      var newValues = [QueryPath: OpaqueQueryStore]()
+      var newValues = OpaqueStoreEntries()
       for (queryPath, store) in stores {
         if path.prefixMatches(other: queryPath) {
           newValues[queryPath] = store
@@ -151,9 +151,9 @@ extension QueryClient {
   public func stores<State: QueryStateProtocol>(
     matching path: QueryPath,
     of stateType: State.Type
-  ) -> [QueryPath: QueryStore<State>] {
+  ) -> StoreEntries<State> {
     self.storeCache.withStores { stores in
-      var newValues = [QueryPath: QueryStore<State>]()
+      var newValues = StoreEntries<State>()
       for (queryPath, store) in stores {
         guard path.prefixMatches(other: queryPath) else { continue }
         if let store = store.base as? QueryStore<State> {
@@ -180,13 +180,11 @@ extension QueryClient {
   }
 }
 
-// MARK: - Store Entry
+// MARK: - Store Entries
 
 extension QueryClient {
-  private struct StoreEntry {
-    let queryType: Any.Type
-    let store: OpaqueQueryStore
-  }
+  public typealias OpaqueStoreEntries = [QueryPath: OpaqueQueryStore]
+  public typealias StoreEntries<State: QueryStateProtocol> = [QueryPath: QueryStore<State>]
 }
 
 // MARK: - StoreCreator
@@ -204,10 +202,8 @@ extension QueryClient {
 // MARK: - StoreCache
 
 extension QueryClient {
-  public typealias StoreCacheEntries = [QueryPath: OpaqueQueryStore]
-
   public protocol StoreCache: Sendable {
-    func withStores<T>(_ fn: (inout sending StoreCacheEntries) -> sending T) -> T
+    func withStores<T>(_ fn: (inout sending OpaqueStoreEntries) -> sending T) -> T
   }
 }
 
@@ -215,11 +211,11 @@ extension QueryClient {
 
 extension QueryClient {
   public final class DefaultStoreCache: StoreCache {
-    private let stores: LockedBox<StoreCacheEntries>
+    private let stores: LockedBox<OpaqueStoreEntries>
     private let subscription: QuerySubscription
 
     public init(memoryPressureSource: (any MemoryPressureSource)? = defaultMemoryPressureSource) {
-      let box = LockedBox(value: StoreCacheEntries())
+      let box = LockedBox(value: OpaqueStoreEntries())
       self.stores = box
       let subscription = memoryPressureSource?
         .subscribe { pressure in
@@ -233,7 +229,7 @@ extension QueryClient {
       self.subscription = subscription ?? .empty
     }
 
-    public func withStores<T>(_ fn: (inout sending StoreCacheEntries) -> sending T) -> T {
+    public func withStores<T>(_ fn: (inout sending OpaqueStoreEntries) -> sending T) -> T {
       self.stores.inner.withLock(fn)
     }
   }
