@@ -1,14 +1,27 @@
 extension QueryRequest {
+  /// Refetches this query when the specified ``FetchCondition`` changes to true.
+  ///
+  /// This modifier is used to power automatic refetching when your app re-enters from the
+  /// background, and automatic fetching when the user's network connection comes back online.
+  ///
+  /// This query is only refetched if all of these conditions hold:
+  /// 1. `condition` changes its value to true.
+  /// 2. The query must have at least 1 subscriber.
+  /// 3. The query must be stale.
+  /// 4. Automatic fetching is enabled for this query.
+  ///
+  /// - Parameter condition: The ``FetchCondition`` to observe for query refetching.
+  /// - Returns: A ``ModifiedQuery``.
   public func refetchOnChange<Condition: FetchCondition>(
     of condition: Condition
   ) -> ModifiedQuery<
-    Self, QueryControllerModifier<Self, RefetchOnChangeController<State, Condition>>
+    Self, QueryControllerModifier<Self, _RefetchOnChangeController<State, Condition>>
   > {
-    self.controlled(by: RefetchOnChangeController(condition: condition))
+    self.controlled(by: _RefetchOnChangeController(condition: condition))
   }
 }
 
-public final class RefetchOnChangeController<
+public final class _RefetchOnChangeController<
   State: QueryStateProtocol,
   Condition: FetchCondition
 >: QueryController {

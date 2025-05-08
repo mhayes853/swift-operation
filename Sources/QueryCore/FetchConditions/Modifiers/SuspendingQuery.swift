@@ -1,12 +1,23 @@
 extension QueryRequest {
+  /// Suspends this query's execution while the specified ``FetchCondition`` is false.
+  ///
+  /// When this query is suspended, it will remain in a perpetual loading state in your UI until
+  /// the specified `condition` changes to true.
+  ///
+  /// > Note: If this query utilizes `URLSession` under the hood, and you wish to suspend it based on a
+  /// > ``ConnectedCondition``, consider using [waitsForConnectivity](https://developer.apple.com/documentation/foundation/urlsessionconfiguration/waitsforconnectivity)
+  /// > instead.
+  ///
+  /// - Parameter condition: The ``FetchCondition`` to suspend on.
+  /// - Returns: A ``ModifiedQuery``.
   public func suspend<Condition: FetchCondition>(
     on condition: Condition
-  ) -> ModifiedQuery<Self, SuspendModifier<Self, Condition>> {
-    self.modifier(SuspendModifier(condition: condition))
+  ) -> ModifiedQuery<Self, _SuspendModifier<Self, Condition>> {
+    self.modifier(_SuspendModifier(condition: condition))
   }
 }
 
-public struct SuspendModifier<Query: QueryRequest, Condition: FetchCondition>: QueryModifier {
+public struct _SuspendModifier<Query: QueryRequest, Condition: FetchCondition>: QueryModifier {
   let condition: Condition
 
   public func fetch(

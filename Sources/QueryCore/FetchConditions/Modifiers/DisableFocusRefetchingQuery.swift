@@ -1,14 +1,18 @@
 // MARK: - QueryRequest
 
 extension QueryRequest {
+  /// Disables refetching this query when the app re-enters from the background.
+  ///
+  /// - Parameter isDisabled: Whether or not to disable the refetching.
+  /// - Returns: A ``ModifiedQuery``.
   public func disableFocusRefetching(
     _ isDisabled: Bool = true
-  ) -> ModifiedQuery<Self, DisableFocusRefetchingModifier<Self>> {
-    self.modifier(DisableFocusRefetchingModifier(isDisabled: isDisabled))
+  ) -> ModifiedQuery<Self, _DisableFocusRefetchingModifier<Self>> {
+    self.modifier(_DisableFocusRefetchingModifier(isDisabled: isDisabled))
   }
 }
 
-public struct DisableFocusRefetchingModifier<Query: QueryRequest>: QueryModifier {
+public struct _DisableFocusRefetchingModifier<Query: QueryRequest>: QueryModifier {
   let isDisabled: Bool
 
   public func setup(context: inout QueryContext, using query: Query) {
@@ -27,6 +31,13 @@ public struct DisableFocusRefetchingModifier<Query: QueryRequest>: QueryModifier
 // MARK: - QueryContext
 
 extension QueryContext {
+  /// Whether or not a query will refetch its data when the app re-enters from the background.
+  ///
+  /// > Note: Setting this property through a ``QueryStore``'s ``QueryStore/context`` property has
+  /// > no effect, rather use the ``QueryRequest/disableFocusRefetching(_:)`` modifier on your
+  /// > query.
+  ///
+  /// The default value is true.
   public var isFocusRefetchingEnabled: Bool {
     get { self[IsFocusRefetchingEnabledKey.self] }
     set { self[IsFocusRefetchingEnabledKey.self] = newValue }
