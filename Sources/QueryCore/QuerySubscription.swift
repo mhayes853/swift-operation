@@ -5,8 +5,19 @@
 /// This type is akin to `AnyCancellable` from Combine, but it provides a few optimized usage and
 /// equality tools.
 ///
-/// For instance, if you need to return a subscription that performs no logic when
-/// cancelled, use ``QuerySubscription/empty``.
+/// You can create a subscription with a closure that runs when ``cancel()`` is called.
+///
+/// ```swift
+/// let subscription = QuerySubscription {
+///   print("Cancelled, performing cleanup work!")
+/// }
+/// ```
+///
+/// The above closure is guaranteed to be invoked at most a single time, so you do not need to
+/// consider the case where cancellation is invoked more than once.
+///
+/// If you need to return a subscription that performs no logic when cancelled, use
+/// ``QuerySubscription/empty``.
 ///
 /// ```swift
 /// let badSubscription = QuerySubscription {} // 🔴
