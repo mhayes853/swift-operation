@@ -140,7 +140,7 @@ extension QueryClient {
     self.storeCache.withStores { stores in
       var newValues = OpaqueStoreEntries()
       for (queryPath, store) in stores {
-        if path.prefixMatches(other: queryPath) {
+        if path.isPrefix(of: queryPath) {
           newValues[queryPath] = store
         }
       }
@@ -155,7 +155,7 @@ extension QueryClient {
     self.storeCache.withStores { stores in
       var newValues = StoreEntries<State>()
       for (queryPath, store) in stores {
-        guard path.prefixMatches(other: queryPath) else { continue }
+        guard path.isPrefix(of: queryPath) else { continue }
         if let store = store.base as? QueryStore<State> {
           newValues[queryPath] = store
         }
@@ -170,7 +170,7 @@ extension QueryClient {
 extension QueryClient {
   public func clearStores(matching path: QueryPath = []) {
     self.storeCache.withStores { stores in
-      stores = stores.filter { !path.prefixMatches(other: $0.key) }
+      stores = stores.filter { !path.isPrefix(of: $0.key) }
     }
   }
 
@@ -311,7 +311,7 @@ extension QueryClient.OpaqueStoreEntries {
   fileprivate func matching(to path: QueryPath) -> Self {
     var newValues = Self()
     for (queryPath, store) in self {
-      if path.prefixMatches(other: queryPath) {
+      if path.isPrefix(of: queryPath) {
         newValues[queryPath] = store
       }
     }

@@ -21,7 +21,7 @@ struct QueryPathTests {
     ]
   )
   func prefixMatches(a: QueryPath, b: QueryPath, doesMatch: Bool) {
-    expectNoDifference(a.prefixMatches(other: b), doesMatch)
+    expectNoDifference(a.isPrefix(of: b), doesMatch)
   }
 
   @Test(
