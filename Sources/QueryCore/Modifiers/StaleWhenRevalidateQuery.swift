@@ -3,28 +3,91 @@ import Foundation
 // MARK: - StaleWhenRevalidateQuery
 
 extension QueryRequest {
+  /// Marks ``QueryStore/isStale`` as true for this query whenever the specified predicate is true.
+  ///
+  /// Chaining multiple instances of any modifier that begins with `stale` will result in an OR
+  /// operation being applied between the diffent conditions. For instance, the following queries
+  /// are equivalent:
+  ///
+  /// ```swift
+  /// let q1 = MyQuery().staleWhen { state, _ in state.currentValue.isMultiple(of: 3) }
+  ///   .staleWhen { state, _ in state.currentValue.isMultiple(of: 2) }
+  ///
+  /// let q2 = MyQuery().staleWhen { state, _ in
+  ///   state.currentValue.isMultiple(of: 3) || state.currentValue.isMultiple(of: 2)
+  /// }
+  /// ```
+  ///
+  /// - Parameter predicate: A predicate to evaluate whether or not ``QueryStore/isStale`` is true.
+  /// - Returns: A ``ModifiedQuery``.
   public func staleWhen(
     predicate: @escaping @Sendable (State, QueryContext) -> Bool
-  ) -> ModifiedQuery<Self, StaleWhenModifier<Self>> {
-    self.modifier(StaleWhenModifier(predicate: predicate))
+  ) -> ModifiedQuery<Self, _StaleWhenModifier<Self>> {
+    self.modifier(_StaleWhenModifier(predicate: predicate))
   }
 
+  /// Marks ``QueryStore/isStale`` as true for this query whenever the specified ``FetchCondition`` is true.
+  ///
+  /// Chaining multiple instances of any modifier that begins with `stale` will result in an OR
+  /// operation being applied between the diffent conditions. For instance, the following queries
+  /// are equivalent:
+  ///
+  /// ```swift
+  /// let q1 = MyQuery().staleWhen(condition: cond1)
+  ///   .staleWhen(condition: cond2)
+  ///
+  /// let q2 = MyQuery().staleWhen(condition: cond1 || cond2)
+  /// ```
+  ///
+  /// - Parameter condition: A ``FetchCondition`` to indicate whether or not ``QueryStore/isStale`` is true.
+  /// - Returns: A ``ModifiedQuery``.
   public func staleWhen(
     condition: some FetchCondition
-  ) -> ModifiedQuery<Self, StaleWhenModifier<Self>> {
+  ) -> ModifiedQuery<Self, _StaleWhenModifier<Self>> {
     self.modifier(
-      StaleWhenModifier { _, context in condition.isSatisfied(in: context) }
+      _StaleWhenModifier { _, context in condition.isSatisfied(in: context) }
     )
   }
 
-  public func staleWhenNoValue() -> ModifiedQuery<Self, StaleWhenModifier<Self>>
+  /// Marks ``QueryStore/isStale`` as true for this query whenever its current value is nil.
+  ///
+  /// Chaining multiple instances of any modifier that begins with `stale` will result in an OR
+  /// operation being applied between the diffent conditions. For instance, the following queries
+  /// are equivalent:
+  ///
+  /// ```swift
+  /// let q1 = MyQuery().staleWhenNoValue()
+  ///   .staleWhen { state, _ in state.currentValue == 1 }
+  ///
+  /// let q2 = MyQuery().staleWhen { state, _ in
+  ///   state.currentValue == nil || state.currentValue == 1
+  /// }
+  /// ```
+  ///
+  /// - Returns: A ``ModifiedQuery``.
+  public func staleWhenNoValue() -> ModifiedQuery<Self, _StaleWhenModifier<Self>>
   where State.StateValue == Value? {
     self.staleWhen { state, _ in state.currentValue == nil }
   }
 
-  public func stale(after seconds: TimeInterval) -> ModifiedQuery<Self, StaleWhenModifier<Self>> {
+  /// Marks ``QueryStore/isStale`` as true for this query when the specified number of seconds has
+  /// elapsed since the last time this query was successfully fetched..
+  ///
+  /// Chaining multiple instances of any modifier that begins with `stale` will result in an OR
+  /// operation being applied between the diffent conditions. For instance:
+  ///
+  /// ```swift
+  /// // This query is stale whenever 5 minutes have elapsed since its last
+  /// // successful fetch, OR when its current value is 1.
+  /// let query = MyQuery().stale(after: fiveMinutes)
+  ///   .staleWhen { state, _ in state.currentValue == 1 }
+  /// ```
+  ///
+  /// - Parameter seconds: A `TimeInterval` at which ``QueryStore/isStale`` is true after a successful fetch.
+  /// - Returns: A ``ModifiedQuery``.
+  public func stale(after seconds: TimeInterval) -> ModifiedQuery<Self, _StaleWhenModifier<Self>> {
     self.modifier(
-      StaleWhenModifier { state, context in
+      _StaleWhenModifier { state, context in
         guard let date = state.valueLastUpdatedAt else { return true }
         let now = context.queryClock.now()
         return now.timeIntervalSince(date) > seconds
@@ -33,7 +96,7 @@ extension QueryRequest {
   }
 }
 
-public struct StaleWhenModifier<Query: QueryRequest>: QueryModifier {
+public struct _StaleWhenModifier<Query: QueryRequest>: QueryModifier {
   let predicate: @Sendable (Query.State, QueryContext) -> Bool
 
   public func setup(context: inout QueryContext, using query: Query) {

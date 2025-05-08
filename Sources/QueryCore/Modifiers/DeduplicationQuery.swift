@@ -1,7 +1,13 @@
 extension QueryRequest {
-  public func deduplicated() -> ModifiedQuery<Self, DeduplicationModifier<Self>> {
+  /// Deduplicates fetches to this query.
+  ///
+  /// When 2 fetches on this query occur at the same time, the second fetch will not invoke this
+  /// query, but rather wait for the result of the first fetch.
+  ///
+  /// - Returns: A ``ModifiedQuery``.
+  public func deduplicated() -> ModifiedQuery<Self, _DeduplicationModifier<Self>> {
     self.modifier(
-      DeduplicationModifier { i1, i2 in
+      _DeduplicationModifier { i1, i2 in
         if let query = self as? any InfiniteQueryRequest {
           return removeDuplicateInfiniteQueries(i1, i2, using: query)
         } else {
@@ -11,14 +17,21 @@ extension QueryRequest {
     )
   }
 
+  /// Deduplicates fetches to this query based on a predicate.
+  ///
+  /// When 2 fetches on this query occur at the same time, the second fetch will not invoke this
+  /// query, but rather wait for the result of the first fetch.
+  ///
+  /// - Parameter removeDuplicates: A predicate to distinguish duplicate fetch attempts.
+  /// - Returns: A ``ModifiedQuery``.
   public func deduplicated(
     by removeDuplicates: @escaping @Sendable (QueryContext, QueryContext) -> Bool
-  ) -> ModifiedQuery<Self, DeduplicationModifier<Self>> {
-    self.modifier(DeduplicationModifier(removeDuplicates: removeDuplicates))
+  ) -> ModifiedQuery<Self, _DeduplicationModifier<Self>> {
+    self.modifier(_DeduplicationModifier(removeDuplicates: removeDuplicates))
   }
 }
 
-public struct DeduplicationModifier<Query: QueryRequest>: QueryModifier {
+public struct _DeduplicationModifier<Query: QueryRequest>: QueryModifier {
   private let storage: Storage
 
   init(removeDuplicates: @escaping @Sendable (QueryContext, QueryContext) -> Bool) {
@@ -38,7 +51,7 @@ public struct DeduplicationModifier<Query: QueryRequest>: QueryModifier {
   }
 }
 
-extension DeduplicationModifier {
+extension _DeduplicationModifier {
   private final actor Storage {
     private let removeDuplicates: @Sendable (QueryContext, QueryContext) -> Bool
 

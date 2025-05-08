@@ -1,6 +1,13 @@
 // MARK: - RetryModifier
 
 extension QueryRequest {
+  /// Applies a retry strategy to this query.
+  ///
+  /// - Parameters:
+  ///   - limit: The maximum number of retries.
+  ///   - backoff: The ``QueryBackoffFunction`` to use for delay calculation (defaults to ``QueryContext/queryBackoffFunction``).
+  ///   - delayer: The ``QueryDelayer`` to use for delaying retry attempts (defaults to ``QueryContext/queryDelayer``)
+  /// - Returns: A ``ModifiedQuery``.
   public func retry(
     limit: Int,
     backoff: QueryBackoffFunction? = nil,
@@ -46,6 +53,10 @@ public struct _RetryModifier<Query: QueryRequest>: QueryModifier {
 // MARK: - QueryContext
 
 extension QueryContext {
+  /// The current retry attempt for a query.
+  ///
+  /// This value starts at 0, but increments every time ``QueryRequest/retry(limit:backoff:delayer:)``
+  /// retries a query.
   public var queryRetryIndex: Int {
     get { self[RetryIndexKey.self] }
     set { self[RetryIndexKey.self] = newValue }
@@ -55,6 +66,10 @@ extension QueryContext {
     static let defaultValue = 0
   }
 
+  /// The maximum number of retries for a query.
+  ///
+  /// The default value of this context property is 0. However, using
+  /// ``QueryRequest/retry(limit:backoff:delayer:)`` will set this value to the `limit` parameter.
   public var queryMaxRetries: Int {
     get { self[MaxRetriesKey.self] }
     set { self[MaxRetriesKey.self] = newValue }

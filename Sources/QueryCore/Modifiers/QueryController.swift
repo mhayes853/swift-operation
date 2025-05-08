@@ -110,12 +110,12 @@ extension QueryControls {
 extension QueryRequest {
   public func controlled<Controller: QueryController<State>>(
     by controller: Controller
-  ) -> ModifiedQuery<Self, QueryControllerModifier<Self, Controller>> {
-    self.modifier(QueryControllerModifier(controller: controller))
+  ) -> ModifiedQuery<Self, _QueryControllerModifier<Self, Controller>> {
+    self.modifier(_QueryControllerModifier(controller: controller))
   }
 }
 
-public struct QueryControllerModifier<
+public struct _QueryControllerModifier<
   Query: QueryRequest,
   Controller: QueryController<Query.State>
 >: QueryModifier {
