@@ -11,6 +11,13 @@ where StateValue == Value?, StatusValue == Value, QueryValue == Value {
 
 // MARK: - MutationState
 
+/// A state type for ``MutationRequest``.
+///
+/// Mutation states allow you to view the history of attempts via ``history``. This can be useful
+/// for implementing UI flows that prevent certain actions based on previous failed mutation
+/// attempts, such as not allowing an input to a form if it was tried in a previous unsuccessful
+/// attempt and much more.
+///
 /// > Warning: You should not call any of the `mutating` methods directly on this type, rather a
 /// > ``QueryStore`` will call them at the appropriate time for you.
 public struct MutationState<Arguments: Sendable, Value: Sendable> {
@@ -18,10 +25,25 @@ public struct MutationState<Arguments: Sendable, Value: Sendable> {
   private var historyValueLastUpdatedAt: Date?
   public private(set) var errorUpdateCount = 0
   private var historyErrorLastUpdatedAt: Date?
-  public private(set) var history = IdentifiedArrayOf<HistoryEntry>()
   private var yielded: Yielded?
+  public let initialValue: StateValue
+  
+  /// The history of this mutation.
+  ///
+  /// This array stores all ongoing and previous attempts of fetching a mutation. Each attempt is
+  /// marked by a ``HistoryEntry`` that contains the ``QueryTask`` used by the attempt,
+  /// and information on the outcome of the attempt such as its ``QueryStatus``.
+  ///
+  /// You can use the history to implement UI flows that block known invalid inputs, prevent users
+  /// from performing actions after they're known to fail, and much more.
+  public private(set) var history = IdentifiedArrayOf<HistoryEntry>()
 
-  public init() {}
+  /// Creates a mutation state.
+  ///
+  /// - Parameter initialValue: The initial value of this state.
+  public init(initialValue: StateValue = nil) {
+    self.initialValue = initialValue
+  }
 }
 
 // MARK: - QueryStateProtocol
@@ -30,8 +52,6 @@ extension MutationState: _MutationStateProtocol {
   public typealias StateValue = Value?
   public typealias StatusValue = Value
   public typealias QueryValue = Value
-
-  public var initialValue: StateValue { nil }
 
   public var currentValue: StateValue {
     switch (self.history.last?.status.resultValue, self.yielded) {
@@ -147,12 +167,24 @@ extension MutationState: _MutationStateProtocol {
 // MARK: - History Entry
 
 extension MutationState {
+  /// An entry of history for a ``MutationState``.
   public struct HistoryEntry: Sendable {
+    /// The ``QueryTask`` for this entry.
     public let task: QueryTask<Value>
+    
+    /// The arguments passed to the mutation attempt represented by this entry.
     public let arguments: Arguments
+    
+    /// The `Date` of when this entry was added.
     public let startDate: Date
+    
+    /// The current and ongoing result of the mutation attempt represented by this entry.
     public private(set) var currentResult: Result<Value, any Error>?
+    
+    /// The date this entry was last modified.
     public private(set) var lastUpdatedAt: Date?
+    
+    /// The current ``QueryStatus`` of the mutation attempt represented by this entry.
     public private(set) var status: QueryStatus<StatusValue>
 
     fileprivate init(task: QueryTask<Value>, args: Arguments) {
