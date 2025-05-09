@@ -133,35 +133,18 @@ extension QueryClient {
 
 extension QueryClient {
   public func store(with path: QueryPath) -> OpaqueQueryStore? {
-    self.storeCache.withStores { $0[path] }
+    self.withStores(matching: path) { $0[path] }
   }
 
   public func stores(matching path: QueryPath) -> OpaqueStoreEntries {
-    self.storeCache.withStores { stores in
-      var newValues = OpaqueStoreEntries()
-      for (queryPath, store) in stores {
-        if path.isPrefix(of: queryPath) {
-          newValues[queryPath] = store
-        }
-      }
-      return newValues
-    }
+    self.withStores(matching: path) { $0 }
   }
 
   public func stores<State: QueryStateProtocol>(
     matching path: QueryPath,
     of stateType: State.Type
   ) -> StoreEntries<State> {
-    self.storeCache.withStores { stores in
-      var newValues = StoreEntries<State>()
-      for (queryPath, store) in stores {
-        guard path.isPrefix(of: queryPath) else { continue }
-        if let store = store.base as? QueryStore<State> {
-          newValues[queryPath] = store
-        }
-      }
-      return newValues
-    }
+    self.withStores(matching: path, of: stateType) { $0 }
   }
 }
 
@@ -169,14 +152,12 @@ extension QueryClient {
 
 extension QueryClient {
   public func clearStores(matching path: QueryPath = []) {
-    self.storeCache.withStores { stores in
-      stores = stores.filter { !path.isPrefix(of: $0.key) }
-    }
+    self.withStores(matching: path) { $0.removeAll() }
   }
 
   @discardableResult
   public func clearStore(with path: QueryPath) -> OpaqueQueryStore? {
-    self.storeCache.withStores { $0.removeValue(forKey: path) }
+    self.withStores(matching: path) { $0.removeValue(forKey: path) }
   }
 }
 
@@ -190,18 +171,19 @@ extension QueryClient {
     try self.storeCache.withStores { entries in
       let beforeEntries = entries.matching(to: path)
       var afterEntries = beforeEntries
-      let result = try fn(&afterEntries)
-      for (path, store) in afterEntries {
-        if beforeEntries[path] == nil {
-          entries[path] = store
+      defer {
+        for (path, store) in afterEntries {
+          if beforeEntries[path] == nil {
+            entries[path] = store
+          }
+        }
+        for (path, _) in beforeEntries {
+          if afterEntries[path] == nil {
+            entries.removeValue(forKey: path)
+          }
         }
       }
-      for (path, _) in beforeEntries {
-        if afterEntries[path] == nil {
-          entries.removeValue(forKey: path)
-        }
-      }
-      return result
+      return try fn(&afterEntries)
     }
   }
 
@@ -214,18 +196,19 @@ extension QueryClient {
       let beforeEntries = entries.matching(to: path)
         .compactMapValues { $0.base as? QueryStore<State> }
       var afterEntries = beforeEntries
-      let result = try fn(&afterEntries)
-      for (path, store) in afterEntries {
-        if beforeEntries[path] == nil {
-          entries[path] = OpaqueQueryStore(erasing: store)
+      defer {
+        for (path, store) in afterEntries {
+          if beforeEntries[path] == nil {
+            entries[path] = OpaqueQueryStore(erasing: store)
+          }
+        }
+        for (path, _) in beforeEntries {
+          if afterEntries[path] == nil {
+            entries.removeValue(forKey: path)
+          }
         }
       }
-      for (path, _) in beforeEntries {
-        if afterEntries[path] == nil {
-          entries.removeValue(forKey: path)
-        }
-      }
-      return result
+      return try fn(&afterEntries)
     }
   }
 }
@@ -309,6 +292,7 @@ extension QueryClient {
 
 extension QueryClient.OpaqueStoreEntries {
   fileprivate func matching(to path: QueryPath) -> Self {
+    guard path != [] else { return self }
     var newValues = Self()
     for (queryPath, store) in self {
       if path.isPrefix(of: queryPath) {
