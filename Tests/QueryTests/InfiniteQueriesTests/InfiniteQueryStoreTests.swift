@@ -1011,7 +1011,7 @@ struct InfiniteQueryStoreTests {
   func resetStateCancelsAllActiveTasks() async throws {
     let store = self.client.store(for: TestYieldableInfiniteQuery())
     let task = store.fetchNextPageTask()
-    store.reset()
+    store.resetState()
     await #expect(throws: CancellationError.self) {
       try await task.runIfNeeded()
     }
@@ -1027,7 +1027,7 @@ struct InfiniteQueryStoreTests {
     expectNoDifference(store.nextPageActiveTasks.count, 1)
     expectNoDifference(store.previousPageActiveTasks.count, 1)
     expectNoDifference(store.allPagesActiveTasks.count, 1)
-    store.reset()
+    store.resetState()
     expectNoDifference(store.nextPageActiveTasks.count, 0)
     expectNoDifference(store.previousPageActiveTasks.count, 0)
     expectNoDifference(store.allPagesActiveTasks.count, 0)
@@ -1043,7 +1043,7 @@ struct InfiniteQueryStoreTests {
     expectNoDifference(store.currentValue, [TestYieldableInfiniteQuery.finalPage(for: 0)])
     expectNoDifference(store.valueUpdateCount, 1)
     expectNoDifference(store.valueLastUpdatedAt != nil, true)
-    store.reset()
+    store.resetState()
     expectNoDifference(store.currentValue, [])
     expectNoDifference(store.valueUpdateCount, 0)
     expectNoDifference(store.valueLastUpdatedAt == nil, true)

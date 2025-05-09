@@ -241,7 +241,7 @@ struct QueryClientTests {
 
     let opaqueStore = try #require(client.stores(matching: [1]).first?.value)
     expectNoDifference(store.currentValue, 10)
-    opaqueStore.reset()
+    opaqueStore.resetState()
     expectNoDifference(store.currentValue, nil)
   }
 

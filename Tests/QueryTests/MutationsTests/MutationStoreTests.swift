@@ -492,7 +492,7 @@ struct MutationStoreTests {
   func cancelAllActiveTasksUpdatesTaskHistoryEntry() async throws {
     let store = self.client.store(for: EmptyMutation())
     try await store.mutate(with: "blob")
-    store.reset()
+    store.resetState()
     expectNoDifference(store.history.isEmpty, true)
   }
 
@@ -500,7 +500,7 @@ struct MutationStoreTests {
   func cancelAllActiveTasksCancelsTasks() async throws {
     let store = self.client.store(for: EmptyMutation())
     let task = store.mutateTask(with: "blob")
-    store.reset()
+    store.resetState()
     await #expect(throws: CancellationError.self) {
       try await task.runIfNeeded()
     }
@@ -510,7 +510,7 @@ struct MutationStoreTests {
   func resetStateCurrentValueIsInitial() async throws {
     let store = self.client.store(for: EmptyMutation())
     try await store.mutate(with: "blob")
-    store.reset()
+    store.resetState()
     expectNoDifference(store.currentValue, nil)
     expectNoDifference(store.valueLastUpdatedAt, nil)
     expectNoDifference(store.valueUpdateCount, 0)
@@ -520,7 +520,7 @@ struct MutationStoreTests {
   func resetStateCurrentErrorIsNil() async throws {
     let store = self.client.store(for: FailableMutation())
     _ = try? await store.mutate(with: "blob")
-    store.reset()
+    store.resetState()
     expectNoDifference(store.error == nil, true)
     expectNoDifference(store.errorLastUpdatedAt, nil)
     expectNoDifference(store.errorUpdateCount, 0)

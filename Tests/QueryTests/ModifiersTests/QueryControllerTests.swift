@@ -122,7 +122,7 @@ struct QueryControllerTests {
     try await store.fetch()
 
     expectNoDifference(store.currentValue, TestQuery.value)
-    controller.controls.withLock { $0?.yieldReset() }
+    controller.controls.withLock { $0?.yieldResetState() }
     expectNoDifference(store.currentValue, nil)
   }
 

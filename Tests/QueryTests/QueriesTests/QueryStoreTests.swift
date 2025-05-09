@@ -495,7 +495,7 @@ struct QueryStoreTests {
     try await store.fetch()
 
     expectNoDifference(store.currentValue, TestQuery.value)
-    store.reset()
+    store.resetState()
     expectNoDifference(store.currentValue, nil)
   }
 
@@ -505,7 +505,7 @@ struct QueryStoreTests {
     _ = try? await store.fetch()
 
     expectNoDifference(store.error as? FailingQuery.SomeError, FailingQuery.SomeError())
-    store.reset()
+    store.resetState()
     expectNoDifference(store.error as? FailingQuery.SomeError, nil)
   }
 
@@ -515,7 +515,7 @@ struct QueryStoreTests {
     try await store.fetch()
 
     expectNoDifference(store.valueUpdateCount, 1)
-    store.reset()
+    store.resetState()
     expectNoDifference(store.valueUpdateCount, 0)
   }
 
@@ -525,7 +525,7 @@ struct QueryStoreTests {
     _ = try? await store.fetch()
 
     expectNoDifference(store.errorUpdateCount, 1)
-    store.reset()
+    store.resetState()
     expectNoDifference(store.errorUpdateCount, 0)
   }
 
@@ -534,7 +534,7 @@ struct QueryStoreTests {
     let store = self.client.store(for: TestQuery())
     let task = store.fetchTask()
     let task2 = store.fetchTask()
-    store.reset()
+    store.resetState()
     expectNoDifference(store.activeTasks, [])
     await #expect(throws: CancellationError.self) {
       try await task.runIfNeeded()
@@ -551,7 +551,7 @@ struct QueryStoreTests {
     )
     let collector = QueryStoreEventsCollector<TestQuery.State>()
     let subscription = store.subscribe(with: collector.eventHandler())
-    store.reset()
+    store.resetState()
     collector.expectEventsMatch([.stateChanged, .stateChanged])
     subscription.cancel()
   }
@@ -561,7 +561,7 @@ struct QueryStoreTests {
     let store = self.client.store(for: TestQuery())
     let task = store.fetchTask()
     let task2 = store.fetchTask()
-    store.reset()
+    store.resetState()
     await #expect(throws: CancellationError.self) {
       try await task.runIfNeeded()
     }
@@ -574,7 +574,7 @@ struct QueryStoreTests {
   func resetStateDoesNotUpdateWithFinishedTaskState() async throws {
     let store = self.client.store(for: TestQuery())
     let task = store.fetchTask()
-    store.reset()
+    store.resetState()
     _ = try? await task.runIfNeeded()
     expectNoDifference(store.error == nil, true)
     expectNoDifference(store.currentValue, nil)
@@ -585,7 +585,7 @@ struct QueryStoreTests {
     let store = self.client.store(for: NonCancellingEndlessQuery())
     let task = Task { try await store.fetch() }
     await Task.megaYield()
-    store.reset()
+    store.resetState()
     _ = try? await task.value
     expectNoDifference(store.error == nil, true)
     expectNoDifference(store.currentValue, nil)

@@ -6,6 +6,64 @@ import Foundation
 
 // MARK: - QueryStore
 
+/// The runtime for a ``QueryRequest``.
+///
+/// `QueryStore`s are the runtime for your queries, and they manage its state and interactions to
+/// make your queries usable in your UI. If you're using SwiftUI, `@State.Query` subscribes to a store
+/// under the hood to always have the latest data. If you're using [Sharing](https://github.com/pointfreeco/swift-sharing),
+/// `@SharedQuery` also subscribes to a store under the hood to always have the latest data.
+///
+/// You generally create `QueryStore` instances through ``QueryClient``, however you can also
+/// create stand alone stores through one of the ``detached(query:initialState:initialContext:)``
+/// static initializers.
+///
+/// ```swift
+/// let client = QueryClient()
+/// let store = client.store(for: MyQuery())
+///
+/// let detachedStore = QueryStore.detached(MyQuery(), initialValue: nil)
+/// ```
+///
+/// > Note: Stores created through a one of the `detached` initializers are not stored in a
+/// > `QueryClient`. As a result, you will not be able to manage state on detached stores without
+/// > keeping a direct reference to the store instance. See
+/// > <doc:PatternMatchingAndStateManagement> for more.
+///
+/// Through a `QueryStore`, you can fetch your query's data.
+///
+/// ```swift
+/// let data = try await store.fetch()
+/// ```
+///
+/// You can also subscribe to any query state updates from the store using ``subscribe(with:)-93jyd``.
+///
+/// ```swift
+/// let subscription = store.subscribe(
+///   with: QueryEventHandler { state, context in
+///     print("State Changed", state)
+///   }
+/// )
+/// ```
+///
+/// > Note: Subscribing to the store will trigger the store to fetch data if the
+/// > subscription is the first active subscription on the store and both ``isStale`` and
+/// > ``isAutomaticFetchingEnabled`` are true.
+///
+/// > Note: You can also subscribe to state updates via the Combine ``publisher-swift.property``
+/// > or ``states`` `AsyncSequence`.
+///
+/// You can also set the ``currentValue`` of the query directly through the store. Setting the
+/// value will push a state update to all subscribers of a store, which can keep your UI in sync.
+///
+/// ```swift
+/// store.currentValue = MyQueryData()
+/// ```
+///
+/// You can also place the query in an error state via ``setResult(to:using:)``.
+///
+/// ```swift
+/// store.setResult(to: .failure(SomeError()))
+/// ```
 @dynamicMemberLookup
 public final class QueryStore<State: QueryStateProtocol>: Sendable {
   private typealias Values = (
@@ -68,6 +126,17 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
 // MARK: - Detached
 
 extension QueryStore {
+  /// Creates a detached store.
+  ///
+  /// Detached stores are not connected to a ``QueryClient``. As such, accessing the
+  /// ``QueryContext/queryClient`` context property in your query will always yield a nil value.
+  /// Only use a detached store if you want a separate instances of a query runtime for the same query.
+  ///
+  /// - Parameters:
+  ///   - query: The ``QueryRequest``.
+  ///   - initialState: The initial state.
+  ///   - initialContext: The default ``QueryContext``.
+  /// - Returns: A store.
   public static func detached<Query: QueryRequest>(
     query: Query,
     initialState: Query.State,
@@ -80,6 +149,17 @@ extension QueryStore {
     )
   }
 
+  /// Creates a detached store.
+  ///
+  /// Detached stores are not connected to a ``QueryClient``. As such, accessing the
+  /// ``QueryContext/queryClient`` context property in your query will always yield a nil value.
+  /// Only use a detached store if you want a separate instances of a query runtime for the same query.
+  ///
+  /// - Parameters:
+  ///   - query: The ``QueryRequest``.
+  ///   - initialValue: The initial value.
+  ///   - initialContext: The default ``QueryContext``.
+  /// - Returns: A store.
   public static func detached<Query: QueryRequest>(
     query: Query,
     initialValue: Query.State.StateValue,
@@ -96,6 +176,16 @@ extension QueryStore {
     )
   }
 
+  /// Creates a detached store.
+  ///
+  /// Detached stores are not connected to a ``QueryClient``. As such, accessing the
+  /// ``QueryContext/queryClient`` context property in your query will always yield a nil value.
+  /// Only use a detached store if you want a separate instances of a query runtime for the same query.
+  ///
+  /// - Parameters:
+  ///   - query: The default ``QueryRequest``.
+  ///   - initialContext: The default ``QueryContext``.
+  /// - Returns: A store.
   public static func detached<Query: QueryRequest>(
     query: DefaultQuery<Query>,
     initialContext: QueryContext = QueryContext()
@@ -115,6 +205,7 @@ extension QueryStore {
 // MARK: - Path
 
 extension QueryStore {
+  /// The ``QueryPath`` of the query managed by this store.
   public var path: QueryPath {
     self.query.path
   }
@@ -123,6 +214,8 @@ extension QueryStore {
 // MARK: - Context
 
 extension QueryStore {
+  /// The ``QueryContext`` that is passed to the query every time ``fetch(using:handler:)`` is
+  /// called.
   public var context: QueryContext {
     get { self.values.withLock { $0.context } }
     set { self.values.withLock { $0.context = newValue } }
@@ -132,6 +225,24 @@ extension QueryStore {
 // MARK: - Automatic Fetching
 
 extension QueryStore {
+  /// Whether or not automatic fetching is enabled for this query.
+  ///
+  /// Automatic fetching is defined as the process of data being fetched from this query without
+  /// explicitly calling ``QueryStore/fetch(using:handler:)``. This includes, but not limited to:
+  /// 1. Automatically fetching from this query when subscribed to via ``QueryStore/subscribe(with:)-93jyd``.
+  /// 2. Automatically fetching from this query when the app re-enters from the background.
+  /// 3. Automatically fetching from this query when the user's network connection comes back online.
+  /// 4. Automatically fetching from this query via a ``QueryController``.
+  /// 5. Automatically fetching from this query via ``QueryRequest/refetchOnChange(of:)``.
+  ///
+  /// When automatic fetching is disabled, you are responsible for manually calling
+  /// ``QueryStore/fetch(using:handler:)`` to ensure that your query always has the latest data.
+  ///
+  /// When you use the default initializer of a ``QueryClient``, automatic fetching is enabled for all
+  /// ``QueryRequest`` conformances, and disabled for all ``MutationRequest`` conformances.
+  ///
+  /// Queries can individually enable or disable automatic fetching through the
+  /// ``QueryRequest/enableAutomaticFetching(onlyWhen:)`` modifier.
   public var isAutomaticFetchingEnabled: Bool {
     self.context.enableAutomaticFetchingCondition.isSatisfied(in: self.context)
   }
@@ -140,6 +251,7 @@ extension QueryStore {
 // MARK: - State
 
 extension QueryStore {
+  /// The current state of this query.
   public var state: State {
     self.values.withLock { $0.query }
   }
@@ -149,7 +261,11 @@ extension QueryStore {
   ) -> NewValue {
     self.state[keyPath: keyPath]
   }
-
+  
+  /// Exclusively accesses the current query state inside the specified closure.
+  ///
+  /// - Parameter fn: A closure with exclusive access to the query state.
+  /// - Returns: Whatever `fn` returns.
   public func withState<T: Sendable>(_ fn: (State) throws -> T) rethrows -> T {
     try self.values.withLock { try fn($0.query) }
   }
@@ -158,6 +274,7 @@ extension QueryStore {
 // MARK: - Current Value
 
 extension QueryStore {
+  /// The current value of the query.
   public var currentValue: State.StateValue {
     get { self.state.currentValue }
     set {
@@ -171,6 +288,11 @@ extension QueryStore {
 // MARK: - Set Result
 
 extension QueryStore {
+  /// Directly sets the result of a query.
+  ///
+  /// - Parameters:
+  ///   - result: The `Result`.
+  ///   - context: The ``QueryContext`` to set the result in.
   public func setResult(
     to result: Result<State.StateValue, any Error>,
     using context: QueryContext? = nil
@@ -184,7 +306,13 @@ extension QueryStore {
 // MARK: - Reset
 
 extension QueryStore {
-  public func reset(using context: QueryContext? = nil) {
+  /// Resets the state of the query to its original values.
+  ///
+  /// > Warn: This will cancel all active ``QueryTask``s on the query. Those cancellations will not be
+  /// > reflected in the reset query state.
+  ///
+  /// - Parameter context: The ``QueryContext`` to reset the query in.
+  public func resetState(using context: QueryContext? = nil) {
     self.editValuesWithStateChangeEvent { values in
       values.query.reset(using: context ?? values.context)
       values.taskHerdId += 1
@@ -195,6 +323,14 @@ extension QueryStore {
 // MARK: - Is Stale
 
 extension QueryStore {
+  /// Whether or not the currently fetched data from the query is considered stale.
+  ///
+  /// When this value is true, you should generally try to refetch the query data as soon as
+  /// possible. ``subscribe(with:)-93jyd`` will use this property to decide whether or not to
+  /// automatically fetch the query's data when the first active subscription is made to this store.
+  ///
+  /// A query can customize the value of this property via the
+  /// ``QueryRequest/staleWhen(predicate:)`` modifier.
   public var isStale: Bool {
     self.values.withLock {
       $0.context.staleWhenRevalidateCondition.evaluate(state: $0.query, in: $0.context)
@@ -205,6 +341,12 @@ extension QueryStore {
 // MARK: - Fetch
 
 extension QueryStore {
+  /// Fetches the query's data.
+  ///
+  /// - Parameters:
+  ///   - configuration: The ``QueryTaskConfiguration`` to use for the underlying ``QueryTask``.
+  ///   - handler: A ``QueryEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
+  /// - Returns: The fetched data.
   @discardableResult
   public func fetch(
     using configuration: QueryTaskConfiguration? = nil,
@@ -215,7 +357,14 @@ extension QueryStore {
     let task = self.fetchTask(using: configuration)
     return try await task.runIfNeeded()
   }
-
+  
+  /// Creates a ``QueryTask`` to fetch the query's data.
+  ///
+  /// The returned task does not begin fetching immediately. Rather you must call
+  /// ``QueryTask/runIfNeeded()`` to fetch the data.
+  ///
+  /// - Parameter configuration: The ``QueryTaskConfiguration`` for the task.
+  /// - Returns: A task to fetch the query's data.
   @discardableResult
   public func fetchTask(
     using configuration: QueryTaskConfiguration? = nil
@@ -334,11 +483,20 @@ extension QueryStore {
 // MARK: - Subscribe
 
 extension QueryStore {
+  /// The total number of subscribers on this store.
   public var subscriberCount: Int {
     self.subscriptions.count
   }
-
-  /// ``QueryStore/subscribe(with:)-93jyd``
+  
+  /// Subscribes to events from this store using a ``QueryEventHandler``.
+  ///
+  /// If the subscription is the first active subscription on this store, this method will begin
+  /// fetching the query's data if both ``isStale`` and ``isAutomaticFetchingEnabled`` are true. If
+  /// the subscriber count drops to 0 whilst performing this data fetch, then the fetch is
+  /// cancelled and a `CancellationError` will be present on the ``state`` property.
+  ///
+  /// - Parameter handler: The event handler.
+  /// - Returns: A ``QuerySubscription``.
   public func subscribe(
     with handler: QueryEventHandler<State>
   ) -> QuerySubscription {

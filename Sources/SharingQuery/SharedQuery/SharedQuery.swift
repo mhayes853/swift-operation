@@ -141,7 +141,7 @@ extension SharedQuery {
 
 extension SharedQuery {
   public func reset(using context: QueryContext? = nil) {
-    self.value.store.reset(using: context)
+    self.value.store.resetState(using: context)
   }
 }
 

@@ -11,7 +11,7 @@
 public protocol QueryController<State>: Sendable {
   /// The state type of the query to control.
   associatedtype State: QueryStateProtocol
-  
+
   /// A method that hands the controls for a query to this controller.
   ///
   /// Here, you can subscribe to any external data sources, or store `controls` inside your
@@ -57,7 +57,7 @@ extension QueryControls {
   public var state: State {
     self.store?.state ?? self.initialState
   }
-  
+
   /// Exclusively accesses the current query state inside the specified closure.
   ///
   /// - Parameter fn: A closure with exclusive access to the query state.
@@ -120,7 +120,7 @@ extension QueryControls {
   public var canYieldRefetch: Bool {
     self.store?.isAutomaticFetchingEnabled == true
   }
-  
+
   /// Yields a refetch to the query.
   ///
   /// - Parameter configuration: The ``QueryTaskConfiguration`` to use for the underlying ``QueryTask``.
@@ -131,7 +131,7 @@ extension QueryControls {
   ) async throws -> State.QueryValue? {
     try await self.yieldRefetchTask(with: configuration)?.runIfNeeded()
   }
-  
+
   /// Creates a ``QueryTask`` to refetch the query.
   ///
   /// - Parameter configuration: The ``QueryTaskConfiguration`` to use for the ``QueryTask``.
@@ -158,9 +158,12 @@ extension QueryControls {
 extension QueryControls {
   /// Yields a reset to the query's state.
   ///
+  /// > Warn: This will cancel all active ``QueryTask``s on the query. Those cancellations will not be
+  /// > reflected in the reset query state.
+  ///
   /// - Parameter context: The ``QueryContext`` to yield the reset in.
-  public func yieldReset(using context: QueryContext? = nil) {
-    self.store?.reset(using: context ?? self.context)
+  public func yieldResetState(using context: QueryContext? = nil) {
+    self.store?.resetState(using: context ?? self.context)
   }
 }
 

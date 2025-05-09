@@ -150,7 +150,7 @@
     }
 
     public func reset(using context: QueryContext? = nil) {
-      self.store.reset(using: context)
+      self.store.resetState(using: context)
     }
   }
 

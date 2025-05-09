@@ -93,8 +93,8 @@ extension OpaqueQueryStore {
 // MARK: - Reset
 
 extension OpaqueQueryStore {
-  public func reset(using context: QueryContext? = nil) {
-    self._base.reset(using: context)
+  public func resetState(using context: QueryContext? = nil) {
+    self._base.resetState(using: context)
   }
 }
 
@@ -155,7 +155,7 @@ private protocol OpaqueableQueryStore: Sendable {
     using configuration: QueryTaskConfiguration?,
     handler: OpaqueQueryEventHandler
   ) async throws -> any Sendable
-  func reset(using context: QueryContext?)
+  func resetState(using context: QueryContext?)
   func opaqueFetchTask(using configuration: QueryTaskConfiguration?) -> QueryTask<any Sendable>
   func opaqueSubscribe(with handler: OpaqueQueryEventHandler) -> QuerySubscription
 }
