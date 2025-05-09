@@ -4,6 +4,8 @@
 
   // MARK: - WindowFocusCondition
 
+  /// A `FetchCondition` that is satisfied whenever the app is active in the foreground based on
+  /// when the browser tab visibility changes.
   public struct WindowFocusCondition: @unchecked Sendable {
     fileprivate let document: JSObject
     fileprivate let window: JSObject
@@ -38,6 +40,8 @@
   }
 
   extension FetchCondition where Self == WindowFocusCondition {
+    /// A `FetchCondition` that is satisfied whenever the app is active in the foreground based on
+    /// when the browser tab visibility changes.
     public static var windowFocus: Self {
       WindowFocusCondition(
         document: JSObject.global.document.object!,
@@ -45,6 +49,13 @@
       )
     }
 
+    /// A `FetchCondition` that is satisfied whenever the app is active in the foreground based on
+    /// when the browser tab visibility changes.
+    ///
+    /// - Parameters:
+    ///   - document: The global document object.
+    ///   - window: The global window object.
+    /// - Returns: A `FetchCondition`
     public static func windowFocus(document: JSObject, window: JSObject) -> Self {
       WindowFocusCondition(document: document, window: window)
     }

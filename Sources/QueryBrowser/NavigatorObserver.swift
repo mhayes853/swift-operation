@@ -4,10 +4,16 @@
 
   // MARK: - NavigatorObserver
 
+  /// A `NetworkObserver` that uses the window navigator.
   public final class NavigatorObserver: @unchecked Sendable {
     private let navigator: JSObject
     private let window: JSObject
-
+    
+    /// Creates an obsever.
+    ///
+    /// - Parameters:
+    ///   - navigator: The global navigator object.
+    ///   - window: The global window object.
     public init(navigator: JSObject, window: JSObject) {
       self.navigator = navigator
       self.window = window
@@ -17,6 +23,7 @@
   // MARK: - Shared
 
   extension NavigatorObserver {
+    /// The shared navigator observer.
     public static let shared = NavigatorObserver(
       navigator: JSObject.global.navigator.object!,
       window: JSObject.global.window.object!
