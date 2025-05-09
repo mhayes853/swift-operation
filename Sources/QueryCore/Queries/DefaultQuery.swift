@@ -10,12 +10,19 @@ extension QueryRequest {
   }
 }
 
-public struct DefaultQuery<Query: QueryRequest>: QueryRequest {
+/// A query that provides a default value to a ``QueryRequest``.
+///
+/// You create instances of this query through ``QueryRequest/defaultValue(_:)``.
+public struct DefaultQuery<Query: QueryRequest>: QueryRequest
+where Query.State == QueryState<Query.Value?, Query.Value> {
   public typealias State = QueryState<Query.Value, Query.Value>
 
   let _defaultValue: @Sendable () -> Query.Value
+  
+  /// The base query.
   public let query: Query
 
+  /// The default value of this query.
   public var defaultValue: Query.Value {
     self._defaultValue()
   }
