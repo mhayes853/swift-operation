@@ -64,6 +64,15 @@ import Foundation
 /// ```swift
 /// store.setResult(to: .failure(SomeError()))
 /// ```
+///
+/// The store also implements dynamic member lookup on its state. This allows you to access
+/// state properties directly on the store like so.
+///
+/// ```swift
+/// print("Is Loading", store.isLoading)
+/// print("Error", store.error)
+/// // ...
+/// ```
 @dynamicMemberLookup
 public final class QueryStore<State: QueryStateProtocol>: Sendable {
   private typealias Values = (
