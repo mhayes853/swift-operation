@@ -18,8 +18,8 @@ public struct MutationEventHandler<Arguments: Sendable, Value: Sendable>: Sendab
   /// - Parameters:
   ///   - onStateChanged: A callback that is invoked when the mutation state changes.
   ///   - onMutatingStarted: A callback that is invoked when a mutation is started on the ``QueryStore``.
-  ///   - onMutationResultReceived: A callback that is invoked when a mutation ends on the ``QueryStore``.
-  ///   - onMutatingEnded: A callback that is invoked when a mutation emits a result.
+  ///   - onMutationResultReceived: A callback that is invoked when a mutation emits a result.
+  ///   - onMutatingEnded: A callback that is invoked when a mutation ends on the ``QueryStore``.
   public init(
     onStateChanged: (@Sendable (MutationState<Arguments, Value>, QueryContext) -> Void)? = nil,
     onMutatingStarted: (@Sendable (Arguments, QueryContext) -> Void)? = nil,

@@ -37,7 +37,7 @@ extension InfiniteQueryContextValues {
       },
       onPageFetchingFinished: { id, context in
         guard let id = id.base as? PageID else { return }
-        handler.onPageFetchingFinished?(id, context)
+        handler.onPageFetchingEnded?(id, context)
       }
     )
     return self.requestSubscriptions.add(handler: subscriber, isTemporary: isTemporary).subscription

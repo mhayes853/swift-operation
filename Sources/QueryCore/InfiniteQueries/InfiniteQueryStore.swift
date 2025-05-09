@@ -224,7 +224,7 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
         handler.onStateChanged?($0 as! InfiniteQueryState<State.PageID, State.PageValue>, $1)
       },
       onFetchingStarted: handler.onFetchingStarted,
-      onFetchingEnded: handler.onFetchingFinished,
+      onFetchingEnded: handler.onFetchingEnded,
       onResultReceived: { result, context in
         guard context.queryResultUpdateReason == .returnedFinalResult else { return }
         handler.onResultReceived?(result.map { [weak self] _ in self?.currentValue ?? [] }, context)

@@ -153,9 +153,9 @@ extension InfiniteQueryStoreEventsCollector {
       },
       onResultReceived: { result, _ in self.events.withLock { $0.append(.resultReceived(result)) }
       },
-      onPageFetchingFinished: { id, _ in self.events.withLock { $0.append(.pageFetchingEnded(id)) }
+      onPageFetchingEnded: { id, _ in self.events.withLock { $0.append(.pageFetchingEnded(id)) }
       },
-      onFetchingFinished: { _ in self.events.withLock { $0.append(.fetchingEnded) } }
+      onFetchingEnded: { _ in self.events.withLock { $0.append(.fetchingEnded) } }
     )
   }
 }
