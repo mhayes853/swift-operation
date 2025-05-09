@@ -13,10 +13,14 @@ public protocol QueryRequest<Value, State>: Sendable where State.QueryValue == V
   ) async throws -> Value
 }
 
+// MARK: - Setup
+
 extension QueryRequest {
   public func setup(context: inout QueryContext) {
   }
 }
+
+// MARK: - Path Defaults
 
 extension QueryRequest where Self: Hashable {
   public var path: QueryPath { [self] }

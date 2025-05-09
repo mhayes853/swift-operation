@@ -11,6 +11,8 @@ where State == MutationState<Arguments, Value> {
   ) async throws -> Value
 }
 
+// MARK: - Fetch
+
 extension MutationRequest {
   public func fetch(
     in context: QueryContext,
@@ -24,6 +26,8 @@ extension MutationRequest {
 }
 
 private struct MutationNoArgumentsError: Error {}
+
+// MARK: - Void Mutate
 
 extension MutationRequest where Arguments == Void {
   public func mutate(
