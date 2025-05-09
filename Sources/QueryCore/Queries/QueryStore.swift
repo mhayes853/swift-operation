@@ -383,8 +383,10 @@ extension QueryStore {
 
 // MARK: - Access QueryStore In Query
 
+// TODO: - Make public in a way that makes sense.
+
 extension QueryContext {
-  public var currentQueryStore: OpaqueQueryStore? {
+  var currentQueryStore: OpaqueQueryStore? {
     get { self[CurrentQueryStoreKey.self] }
     set { self[CurrentQueryStoreKey.self] = newValue }
   }
