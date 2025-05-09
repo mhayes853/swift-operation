@@ -6,10 +6,10 @@ import IdentifiedCollections
 public struct InfiniteQueryPage<ID: Hashable & Sendable, Value: Sendable>: Sendable, Identifiable {
   /// The unique id of this page.
   public var id: ID
-  
+
   /// The value of this page.
   public var value: Value
-  
+
   /// Creates a page.
   ///
   /// - Parameters:
@@ -42,10 +42,10 @@ public typealias InfiniteQueryPages<PageID: Hashable & Sendable, PageValue: Send
 public struct InfiniteQueryPaging<PageID: Hashable & Sendable, PageValue: Sendable>: Sendable {
   /// The page id that you must perform the required action for in ``InfiniteQueryRequest``.
   public let pageId: PageID
-  
+
   /// The current list of pages from the query.
   public let pages: InfiniteQueryPages<PageID, PageValue>
-  
+
   /// The ``InfiniteQueryPagingRequest`` that will be carried out when fetching page data.
   public let request: InfiniteQueryPagingRequest<PageID>
 }
@@ -59,13 +59,13 @@ extension InfiniteQueryPaging: Hashable where PageValue: Hashable {}
 public enum InfiniteQueryPagingRequest<PageID: Hashable & Sendable>: Hashable, Sendable {
   /// The query is requesting the next page.
   case nextPage(PageID)
-  
+
   /// The query is requesting the page that will be placed at the beginning of the list.
   case previousPage(PageID)
-  
+
   /// The query is requesting the initial page.
   case initialPage
-  
+
   /// The query is requesting that all pages be refetched.
   case allPages
 }
@@ -92,13 +92,13 @@ extension InfiniteQueryValue {
 
 extension InfiniteQueryValue {
   struct NextPage: Sendable {
-    public let page: InfiniteQueryPage<PageID, PageValue>
-    public let lastPage: InfiniteQueryPage<PageID, PageValue>
+    let page: InfiniteQueryPage<PageID, PageValue>
+    let lastPage: InfiniteQueryPage<PageID, PageValue>
   }
 
   struct PreviousPage: Sendable {
-    public let page: InfiniteQueryPage<PageID, PageValue>
-    public let firstPage: InfiniteQueryPage<PageID, PageValue>
+    let page: InfiniteQueryPage<PageID, PageValue>
+    let firstPage: InfiniteQueryPage<PageID, PageValue>
   }
 }
 
@@ -180,7 +180,7 @@ where
 {
   /// The data type of each page that you're fetching.
   associatedtype PageValue: Sendable
-  
+
   /// The type to identify the data in a page.
   ///
   /// This is typically the `nextPageToken`/`previousPageToken` from your API, an integer
@@ -189,7 +189,7 @@ where
 
   /// The id of the initial page to fetch.
   var initialPageId: PageID { get }
-  
+
   /// Retrieves the page id after the last page in the list.
   ///
   /// If nil is returned, then it is assumed that the query will no longer be fetching pages after
@@ -221,7 +221,7 @@ where
     using paging: InfiniteQueryPaging<PageID, PageValue>,
     in context: QueryContext
   ) -> PageID?
-  
+
   /// Fetches the data for a specified page.
   ///
   /// - Parameters:
