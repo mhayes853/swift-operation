@@ -308,7 +308,7 @@ extension QueryStore {
 extension QueryStore {
   /// Resets the state of the query to its original values.
   ///
-  /// > Warn: This will cancel all active ``QueryTask``s on the query. Those cancellations will not be
+  /// > Important: This will cancel all active ``QueryTask``s on the query. Those cancellations will not be
   /// > reflected in the reset query state.
   ///
   /// - Parameter context: The ``QueryContext`` to reset the query in.

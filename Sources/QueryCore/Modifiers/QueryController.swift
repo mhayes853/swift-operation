@@ -158,7 +158,7 @@ extension QueryControls {
 extension QueryControls {
   /// Yields a reset to the query's state.
   ///
-  /// > Warn: This will cancel all active ``QueryTask``s on the query. Those cancellations will not be
+  /// > Important: This will cancel all active ``QueryTask``s on the query. Those cancellations will not be
   /// > reflected in the reset query state.
   ///
   /// - Parameter context: The ``QueryContext`` to yield the reset in.
