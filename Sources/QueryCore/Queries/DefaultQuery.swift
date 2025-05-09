@@ -1,7 +1,11 @@
 extension QueryRequest {
+  /// Adds a default value to this query.
+  ///
+  /// - Parameter value: The default value for this query.
+  /// - Returns: A ``DefaultQuery``.
   public func defaultValue(
     _ value: @autoclosure @escaping @Sendable () -> Value
-  ) -> DefaultQuery<Self> {
+  ) -> DefaultQuery<Self> where State == QueryState<Value?, Value> {
     DefaultQuery(_defaultValue: value, query: self)
   }
 }
