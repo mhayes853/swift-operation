@@ -308,10 +308,7 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
       isTemporary: false
     )
     let baseSubscription = self.subscribe(with: self.queryStoreHandler(for: handler))
-    return QuerySubscription {
-      baseSubscription.cancel()
-      contextSubscription.cancel()
-    }
+    return .combined([baseSubscription, contextSubscription])
   }
 }
 

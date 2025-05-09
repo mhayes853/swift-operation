@@ -127,7 +127,7 @@ extension QueryStore where State: _MutationStateProtocol, State.Arguments == Voi
   ///
   /// - Parameters:
   ///   - configuration: The ``QueryTaskConfiguration`` used by the underlying ``QueryTask``.
-  ///   - handler: A ``QueryEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
+  ///   - handler: A ``MutationEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: The mutated value.
   @discardableResult
   public func mutate(
@@ -163,7 +163,7 @@ extension QueryStore where State: _MutationStateProtocol {
   ///
   /// - Parameters:
   ///   - configuration: The ``QueryTaskConfiguration`` used by the underlying ``QueryTask``.
-  ///   - handler: A ``QueryEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
+  ///   - handler: A ``MutationEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: The mutated value.
   @discardableResult
   public func retryLatest(
