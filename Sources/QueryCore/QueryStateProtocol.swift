@@ -14,6 +14,9 @@ import Foundation
 /// You can also create your own conformance to this protocol if you need to create a custom
 /// state type for your query. Generally, you should only need to do this if you want to define a
 /// new fetching paradigmn, which is rare. See <doc:CustomParadigms> to learn how to do this.
+///
+/// > Warning: You should not call any of the `mutating` methods directly on this type, rather a
+/// > ``QueryStore`` will call them at the appropriate time for you.
 public protocol QueryStateProtocol<StateValue, QueryValue>: Sendable {
   /// The type of value that is held in the state directly.
   ///

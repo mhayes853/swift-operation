@@ -11,6 +11,8 @@ where StateValue == Value?, StatusValue == Value, QueryValue == Value {
 
 // MARK: - MutationState
 
+/// > Warning: You should not call any of the `mutating` methods directly on this type, rather a
+/// > ``QueryStore`` will call them at the appropriate time for you.
 public struct MutationState<Arguments: Sendable, Value: Sendable> {
   public private(set) var valueUpdateCount = 0
   private var historyValueLastUpdatedAt: Date?

@@ -18,6 +18,8 @@ where
 
 // MARK: - InfiniteQueryState
 
+/// > Warning: You should not call any of the `mutating` methods directly on this type, rather a
+/// > ``QueryStore`` will call them at the appropriate time for you.
 public struct InfiniteQueryState<PageID: Hashable & Sendable, PageValue: Sendable> {
   public let initialPageId: PageID
   public private(set) var currentValue: StateValue
