@@ -6,15 +6,21 @@ import Sharing
 // MARK: - NetworkStatusKey
 
 extension SharedReaderKey where Self == NetworkStatusKey {
+  /// A `SharedReaderKey` that observes the current user's network connection status.
   public static var networkStatus: NetworkStatusKey {
     NetworkStatusKey(observer: nil)
   }
-
+  
+  /// A `SharedReaderKey` that observes the current user's network connection status.
+  ///
+  /// - Parameter observer: The `NetworkObserver` to use.
+  /// - Returns: A ``NetworkStatusKey``.
   public static func networkStatus(observer: some NetworkObserver) -> NetworkStatusKey {
     NetworkStatusKey(observer: observer)
   }
 }
 
+/// A `SharedReaderKey` that observes the current user's network connection status.
 public struct NetworkStatusKey {
   private let observer: any NetworkObserver
 
