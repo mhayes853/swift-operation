@@ -1,10 +1,18 @@
 import Foundation
 
-// MARK: - AnyQueryState
+// MARK: - OpaqueQueryState
 
+/// An untyped state type that type erases any ``QueryStateProtocol`` conformance.
+///
+/// Generally, you only access this type from an ``OpaqueQueryStore``, which is typically accessed
+/// via pattern matching on a ``QueryClient``. See <doc:PatternMatchingAndStateManagement> for more.
 public struct OpaqueQueryState {
+  /// The underlying base state.
   public private(set) var base: any QueryStateProtocol
 
+  /// Creates an opaque state.
+  ///
+  /// - Parameter base: The base state to erase.
   public init(_ base: any QueryStateProtocol) {
     self.base = base
   }
