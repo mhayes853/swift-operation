@@ -16,12 +16,12 @@ extension QueryRequest {
   /// - Returns: A ``ModifiedQuery``.
   public func evictWhen(
     pressure: MemoryPressure
-  ) -> ModifiedQuery<Self, EvictWhenPressureModifier<Self>> {
-    self.modifier(EvictWhenPressureModifier(pressure: pressure))
+  ) -> ModifiedQuery<Self, _EvictWhenPressureModifier<Self>> {
+    self.modifier(_EvictWhenPressureModifier(pressure: pressure))
   }
 }
 
-public struct EvictWhenPressureModifier<Query: QueryRequest>: QueryModifier {
+public struct _EvictWhenPressureModifier<Query: QueryRequest>: QueryModifier {
   let pressure: MemoryPressure
 
   public func setup(context: inout QueryContext, using query: Query) {
