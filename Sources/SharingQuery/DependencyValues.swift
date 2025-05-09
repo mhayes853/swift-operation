@@ -6,6 +6,7 @@ import IssueReporting
 // MARK: - QueryClient
 
 extension DependencyValues {
+  /// The default `QueryClient` to use with ``SharedQuery``.
   public var defaultQueryClient: QueryClient {
     get { self[QueryClientKey.self] }
     set { self[QueryClientKey.self] = newValue }
@@ -25,6 +26,7 @@ extension DependencyValues {
 // MARK: - NetworkObserver
 
 extension DependencyValues {
+  /// The default `NetworkObserver` to use with ``Sharing/SharedReaderKey/networkStatus``.
   public var defaultNetworkObserver: NetworkObserver {
     get { self[NetworkObserverKey.self] }
     set { self[NetworkObserverKey.self] = newValue }
@@ -35,7 +37,7 @@ extension DependencyValues {
       if let observer = QueryClient.defaultNetworkObserver {
         return observer
       }
-      if shouldReportUnimplemented {
+      if Self.shouldReportUnimplemented {
         reportWarning(.noDefaultNetworkObserver)
       }
       return MockNetworkObserver()
@@ -73,6 +75,7 @@ extension QueryWarning {
 
 // MARK: - DateDependencyClock
 
+/// A `QueryClock` that uses `@Depenendency(\.date)` to compute the current date.
 public struct DateDependencyClock: QueryClock {
   @Dependency(\.date) private var date
 
@@ -82,6 +85,7 @@ public struct DateDependencyClock: QueryClock {
 }
 
 extension QueryClock where Self == DateDependencyClock {
+  /// A `QueryClock` that uses `@Depenendency(\.date)` to compute the current date.
   public static var dateDependency: Self {
     DateDependencyClock()
   }
