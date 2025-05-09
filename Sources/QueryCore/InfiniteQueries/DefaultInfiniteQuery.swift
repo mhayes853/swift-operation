@@ -1,6 +1,10 @@
 import IdentifiedCollections
 
 extension InfiniteQueryRequest {
+  /// Adds a default value to this query.
+  ///
+  /// - Parameter value: The default value for this query.
+  /// - Returns: A ``DefaultInfiniteQuery``.
   public func defaultValue(
     _ value: @autoclosure @escaping @Sendable () -> State.StateValue
   ) -> DefaultInfiniteQuery<Self> {
@@ -8,10 +12,16 @@ extension InfiniteQueryRequest {
   }
 }
 
+/// A query that provides a default value to an ``InfiniteQueryRequest``.
+///
+/// You create instances of this query through ``InfiniteQueryRequest/defaultValue(_:)``.
 public struct DefaultInfiniteQuery<Query: InfiniteQueryRequest>: QueryRequest {
   let _defaultValue: @Sendable () -> Query.State.StateValue
+  
+  /// The base query.
   public let query: Query
 
+  /// The default value of this query.
   public var defaultValue: Query.State.StateValue {
     self._defaultValue()
   }
