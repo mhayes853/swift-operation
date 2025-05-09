@@ -18,6 +18,22 @@ where
 
 // MARK: - InfiniteQueryState
 
+/// A state type for ``InfiniteQueryRequest``.
+///
+/// Infinite queries can have tasks that either:
+/// 1. Fetch the initial page of data.
+/// 2. Fetch the next page of data.
+///   - This can run concurrently with fetching the previous page of data.
+/// 3. Fetch the previous page (ie. The page at the beginning of the list of pages.) of data.
+///   - This can run concurrently with fetching the next page of data.
+/// 4. Refetching all pages.
+///
+/// You can access all of these active tasks through ``allPagesActiveTasks``,
+/// ``initialPageActiveTasks``, ``nextPageActiveTasks``, and ``previousPageActiveTasks``.
+///
+/// Additionally, the state keeps track of both ``nextPageId`` and ``previousPageId`` which are
+/// obtained by calling the appropriate methods on ``InfiniteQueryRequest``.
+///
 /// > Warning: You should not call any of the `mutating` methods directly on this type, rather a
 /// > ``QueryStore`` will call them at the appropriate time for you.
 public struct InfiniteQueryState<PageID: Hashable & Sendable, PageValue: Sendable> {
@@ -31,12 +47,25 @@ public struct InfiniteQueryState<PageID: Hashable & Sendable, PageValue: Sendabl
   public private(set) var errorUpdateCount = 0
   public private(set) var errorLastUpdatedAt: Date?
 
+  /// The page id that will be passed to the driving query when
+  /// ``QueryStore/fetchNextPage(using:handler:)`` is called.
   public private(set) var nextPageId: PageID?
+  
+  /// The page id that will be passed to the driving query when
+  /// ``QueryStore/fetchPreviousPage(using:handler:)`` is called.
   public private(set) var previousPageId: PageID?
 
+  /// The active ``QueryTask``s for refetching all pages of data.
   public private(set) var allPagesActiveTasks = IdentifiedArrayOf<QueryTask<QueryValue>>()
+  
+  /// The active ``QueryTask``s for fetching the initial page of data.
   public private(set) var initialPageActiveTasks = IdentifiedArrayOf<QueryTask<QueryValue>>()
+  
+  /// The active ``QueryTask``s for fetching the next page of data.
   public private(set) var nextPageActiveTasks = IdentifiedArrayOf<QueryTask<QueryValue>>()
+  
+  /// The active ``QueryTask``s for fetching the page of data that will be presented at the
+  /// beginning of ``currentValue``.
   public private(set) var previousPageActiveTasks = IdentifiedArrayOf<QueryTask<QueryValue>>()
 
   public init(initialValue: StateValue, initialPageId: PageID) {
@@ -49,18 +78,22 @@ public struct InfiniteQueryState<PageID: Hashable & Sendable, PageValue: Sendabl
 // MARK: - Is Loading
 
 extension InfiniteQueryState {
+  /// Whether or not the next page is loading.
   public var isLoadingNextPage: Bool {
     !self.nextPageActiveTasks.isEmpty
   }
 
+  /// Whether or not the next page that will be presented at the beginning of ``currentValue`` is loading.
   public var isLoadingPreviousPage: Bool {
     !self.previousPageActiveTasks.isEmpty
   }
 
+  /// Whether or not all pages are being refetched.
   public var isLoadingAllPages: Bool {
     !self.allPagesActiveTasks.isEmpty
   }
 
+  /// Whether or not the initial page is loading.
   public var isLoadingInitialPage: Bool {
     !self.initialPageActiveTasks.isEmpty
   }
@@ -69,10 +102,12 @@ extension InfiniteQueryState {
 // MARK: - Has Page
 
 extension InfiniteQueryState {
+  /// Whether or not a next page can be fetched.
   public var hasNextPage: Bool {
     self.currentValue.isEmpty || self.nextPageId != nil
   }
 
+  /// Whether or not a page before the first page in ``currentValue`` list can be fetched.
   public var hasPreviousPage: Bool {
     self.currentValue.isEmpty || self.previousPageId != nil
   }
