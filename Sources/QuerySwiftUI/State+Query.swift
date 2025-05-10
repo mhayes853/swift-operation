@@ -2,23 +2,23 @@
   import SwiftUI
   import IdentifiedCollections
 
-  extension State where Value: QueryStateProtocol {
+  extension State {
+    @MainActor
     @propertyWrapper
     @dynamicMemberLookup
-    public struct Query<Request: QueryRequest>: Sendable
-    where Request.Value == Request.State.QueryValue, Value == Request.State {
-      private let query: Request
-      private let clientOverride: QueryClient?
-
-      @SwiftUI.State private var state: Value
+    public struct Query<State: QueryStateProtocol> where Value == State.StateValue {
+      @SwiftUI.State private var state: State
 
       @Environment(\.queryClient) private var queryClient
 
+      private let _store: @Sendable (QueryClient) -> QueryStore<State>
+      private let transaction: MainActorTransaction
       private var subscription = QuerySubscription.empty
       private var previousClient: QueryClient?
 
       public var wrappedValue: Value {
-        self.state
+        get { self.state.currentValue }
+        nonmutating set { self.store.currentValue = newValue }
       }
 
       public var projectedValue: Self {
@@ -26,116 +26,110 @@
         set { self = newValue }
       }
 
-      public init(wrappedValue: Value, _ query: Request, client: QueryClient? = nil) {
-        self.query = query
-        self.clientOverride = client
-        self._state = State(initialValue: wrappedValue)
+      public init(store: QueryStore<State>, transaction: Transaction? = nil) {
+        self._store = { _ in store }
+        self._state = SwiftUI.State(initialValue: store.state)
+        self.transaction = MainActorTransaction(transaction: transaction)
       }
+
+      public init<Query: QueryRequest>(
+        _ query: Query,
+        initialState: Query.State,
+        client: QueryClient? = nil,
+        transaction: Transaction? = nil
+      ) where State == Query.State {
+        self._store = { (client ?? $0).store(for: query, initialState: initialState) }
+        self._state = SwiftUI.State(initialValue: initialState)
+        self.transaction = MainActorTransaction(transaction: transaction)
+      }
+    }
+  }
+
+  // MARK: - Store Inits
+
+  @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
+  extension State.Query {
+    public init(store: QueryStore<State>, animation: Animation) {
+      self.init(store: store, transaction: Transaction(animation: animation))
     }
   }
 
   // MARK: - Query Init
 
+  @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
   extension State.Query {
-    public init<V>(_ query: Request, initialValue: V? = nil, client: QueryClient? = nil)
-    where Request.Value == V, Value == QueryState<V?, V> {
+    public init<V: Sendable, Query: QueryRequest<V, QueryState<V?, V>>>(
+      wrappedValue: Value = nil,
+      _ query: Query,
+      client: QueryClient? = nil,
+      transaction: Transaction? = nil
+    ) where State == Query.State {
       self.init(
-        wrappedValue: QueryState(initialValue: initialValue),
         query,
-        client: client
+        initialState: QueryState(initialValue: wrappedValue),
+        client: client,
+        transaction: transaction
       )
     }
 
-    public init<Query: QueryRequest>(_ query: DefaultQuery<Query>, client: QueryClient? = nil)
-    where Value == QueryState<Query.Value, Query.Value>, Request == DefaultQuery<Query> {
+    public init<V: Sendable, Query: QueryRequest<V, QueryState<V?, V>>>(
+      wrappedValue: Value = nil,
+      _ query: Query,
+      client: QueryClient? = nil,
+      animation: Animation
+    ) where State == Query.State {
       self.init(
-        wrappedValue: QueryState(initialValue: query.defaultValue),
+        wrappedValue: wrappedValue,
         query,
-        client: client
+        client: client,
+        transaction: Transaction(animation: animation)
       )
-    }
-
-    public init(
-      _ query: Request,
-      initialValue: Request.State.StateValue = [],
-      client: QueryClient? = nil
-    ) where Request: InfiniteQueryRequest {
-      self.init(
-        wrappedValue: InfiniteQueryState(
-          initialValue: initialValue,
-          initialPageId: query.initialPageId
-        ),
-        query,
-        client: client
-      )
-    }
-
-    public init<Query: InfiniteQueryRequest>(
-      _ query: DefaultInfiniteQuery<Query>,
-      client: QueryClient? = nil
-    ) where Value == Query.State, Request == DefaultInfiniteQuery<Query> {
-      self.init(
-        wrappedValue: InfiniteQueryState(
-          initialValue: query.defaultValue,
-          initialPageId: query.initialPageId
-        ),
-        query,
-        client: client
-      )
-    }
-
-    public init<Arguments: Sendable, V: Sendable>(_ mutation: Request, client: QueryClient? = nil)
-    where Request: MutationRequest<Arguments, V> {
-      self.init(wrappedValue: MutationState(), mutation, client: client)
     }
   }
 
   // MARK: - Store
 
   extension State.Query {
-    public var store: QueryStore<Value> {
-      self.client.store(for: self.query, initialState: self.state)
-    }
-  }
-
-  // MARK: - QueryClient
-
-  extension State.Query {
-    public var client: QueryClient {
-      self.clientOverride ?? self.queryClient
+    public var store: QueryStore<State> {
+      self._store(self.queryClient)
     }
   }
 
   // MARK: - DynamicProperty
 
-  extension State.Query: DynamicProperty {
+  extension State.Query: @preconcurrency DynamicProperty {
     public mutating func update() {
-      defer { self.previousClient = self.client }
-      if self.previousClient == nil || self.previousClient !== self.client {
-        self.subscription.cancel()
-        self.subscription = self.store.subscribe(
-          with: QueryEventHandler { [self] state, _ in
-            Task { @MainActor in self.state = state }
+      defer { self.previousClient = self.queryClient }
+      guard self.subscription == .empty || self.previousClient !== self.queryClient else { return }
+      self.subscription.cancel()
+      let stateValue = self._state
+      let transaction = self.transaction
+      self.subscription = self.store.subscribe(
+        with: QueryEventHandler { state, _ in
+          Task { @MainActor in
+            withTransaction(transaction) { stateValue.wrappedValue = state }
           }
-        )
-      }
+        }
+      )
     }
   }
 
   // MARK: - Dynamic Member Lookup
 
   extension State.Query {
-    public var currentValue: Value.StateValue {
-      get { self.state.currentValue }
-      nonmutating set { self.store.currentValue = newValue }
-    }
-
-    public subscript<V>(dynamicMember keyPath: KeyPath<Value, V>) -> V {
+    public subscript<V>(dynamicMember keyPath: KeyPath<State, V>) -> V {
       self.state[keyPath: keyPath]
     }
 
-    public subscript<V>(dynamicMember keyPath: KeyPath<QueryStore<Value>, V>) -> V {
+    public subscript<V>(dynamicMember keyPath: KeyPath<QueryStore<State>, V>) -> V {
       self.store[keyPath: keyPath]
+    }
+
+    public subscript<V>(
+      dynamicMember keyPath: ReferenceWritableKeyPath<QueryStore<State>, V>
+    ) -> V {
+      get { self.store[keyPath: keyPath] }
+      set { self.store[keyPath: keyPath] = newValue }
     }
   }
 
@@ -143,7 +137,7 @@
 
   extension State.Query {
     public func setResult(
-      to result: Result<Value.StateValue, any Error>,
+      to result: Result<Value, any Error>,
       using context: QueryContext? = nil
     ) {
       self.store.setResult(to: result, using: context)
@@ -160,94 +154,114 @@
     @discardableResult
     public func fetch(
       using configuration: QueryTaskConfiguration? = nil,
-      handler: QueryEventHandler<Value> = QueryEventHandler()
-    ) async throws -> Value.QueryValue {
+      handler: QueryEventHandler<State> = QueryEventHandler()
+    ) async throws -> State.QueryValue {
       try await self.store.fetch(using: configuration, handler: handler)
     }
 
     public func fetchTask(
       using configuration: QueryTaskConfiguration? = nil
-    ) -> QueryTask<Value.QueryValue> {
+    ) -> QueryTask<State.QueryValue> {
       self.store.fetchTask(using: configuration)
     }
   }
 
-  extension State.Query where Value: _InfiniteQueryStateProtocol {
+  // MARK: - Infinite Queries
+
+  extension State.Query where State: _InfiniteQueryStateProtocol {
     @discardableResult
     public func fetchAllPages(
       using configuration: QueryTaskConfiguration? = nil,
-      handler: InfiniteQueryEventHandler<Value.PageID, Value.PageValue> =
+      handler: InfiniteQueryEventHandler<State.PageID, State.PageValue> =
         InfiniteQueryEventHandler()
-    ) async throws -> InfiniteQueryPages<Value.PageID, Value.PageValue> {
+    ) async throws -> InfiniteQueryPages<State.PageID, State.PageValue> {
       try await self.store.fetchAllPages(using: configuration, handler: handler)
     }
 
     public func fetchAllPagesTask(
       using configuration: QueryTaskConfiguration? = nil
-    ) -> QueryTask<InfiniteQueryPages<Value.PageID, Value.PageValue>> {
+    ) -> QueryTask<InfiniteQueryPages<State.PageID, State.PageValue>> {
       self.store.fetchAllPagesTask(using: configuration)
     }
 
     @discardableResult
     public func fetchNextPage(
       using configuration: QueryTaskConfiguration? = nil,
-      handler: InfiniteQueryEventHandler<Value.PageID, Value.PageValue> =
+      handler: InfiniteQueryEventHandler<State.PageID, State.PageValue> =
         InfiniteQueryEventHandler()
-    ) async throws -> InfiniteQueryPage<Value.PageID, Value.PageValue>? {
+    ) async throws -> InfiniteQueryPage<State.PageID, State.PageValue>? {
       try await self.store.fetchNextPage(using: configuration, handler: handler)
     }
 
     public func fetchNextPageTask(
       using configuration: QueryTaskConfiguration? = nil
-    ) -> QueryTask<InfiniteQueryPage<Value.PageID, Value.PageValue>?> {
+    ) -> QueryTask<InfiniteQueryPage<State.PageID, State.PageValue>?> {
       self.store.fetchNextPageTask(using: configuration)
     }
 
     @discardableResult
     public func fetchPreviousPage(
       using configuration: QueryTaskConfiguration? = nil,
-      handler: InfiniteQueryEventHandler<Value.PageID, Value.PageValue> =
+      handler: InfiniteQueryEventHandler<State.PageID, State.PageValue> =
         InfiniteQueryEventHandler()
-    ) async throws -> InfiniteQueryPage<Value.PageID, Value.PageValue>? {
+    ) async throws -> InfiniteQueryPage<State.PageID, State.PageValue>? {
       try await self.store.fetchPreviousPage(using: configuration, handler: handler)
     }
 
     public func fetchPreviousPageTask(
       using configuration: QueryTaskConfiguration? = nil
-    ) -> QueryTask<InfiniteQueryPage<Value.PageID, Value.PageValue>?> {
+    ) -> QueryTask<InfiniteQueryPage<State.PageID, State.PageValue>?> {
       self.store.fetchPreviousPageTask(using: configuration)
     }
   }
 
-  extension State.Query where Value: _MutationStateProtocol {
+  // MARK: - Mutations
+
+  extension State.Query where State: _MutationStateProtocol {
     @discardableResult
     public func mutate(
-      with arguments: Value.Arguments,
+      with arguments: State.Arguments,
       using configuration: QueryTaskConfiguration? = nil,
-      handler: MutationEventHandler<Value.Arguments, Value.Value> = MutationEventHandler()
-    ) async throws -> Value.Value {
+      handler: MutationEventHandler<State.Arguments, State.Value> = MutationEventHandler()
+    ) async throws -> State.Value {
       try await self.store.mutate(with: arguments, using: configuration, handler: handler)
     }
 
     public func mutateTask(
-      with arguments: Value.Arguments,
+      with arguments: State.Arguments,
       using configuration: QueryTaskConfiguration? = nil
-    ) -> QueryTask<Value.Value> {
+    ) -> QueryTask<State.Value> {
       self.store.mutateTask(with: arguments, using: configuration)
     }
 
     @discardableResult
     public func retryLatest(
       using configuration: QueryTaskConfiguration? = nil,
-      handler: MutationEventHandler<Value.Arguments, Value.Value> = MutationEventHandler()
-    ) async throws -> Value.Value {
+      handler: MutationEventHandler<State.Arguments, State.Value> = MutationEventHandler()
+    ) async throws -> State.Value {
       try await self.store.retryLatest(using: configuration, handler: handler)
     }
 
     public func retryLatestTask(
       using configuration: QueryTaskConfiguration? = nil
-    ) -> QueryTask<Value.Value> {
+    ) -> QueryTask<State.Value> {
       self.store.retryLatestTask(using: configuration)
+    }
+  }
+
+  extension State.Query where State: _MutationStateProtocol, State.Arguments == Void {
+    @discardableResult
+    public func mutate(
+      using configuration: QueryTaskConfiguration? = nil,
+      handler: MutationEventHandler<State.Arguments, State.Value> = MutationEventHandler()
+    ) async throws -> State.Value {
+      try await self.store.mutate(using: configuration, handler: handler)
+    }
+
+    public func mutateTask(
+      using configuration: QueryTaskConfiguration? = nil
+    ) -> QueryTask<State.Value> {
+      self.store.mutateTask(using: configuration)
     }
   }
 #endif

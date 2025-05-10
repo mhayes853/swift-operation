@@ -108,7 +108,7 @@ extension SharedQuery {
   public func load() async throws {
     try await self.fetch()
   }
-  
+
   /// Perform an operation on shared state with isolated access to the underlying value.
   ///
   /// - Parameters
@@ -140,6 +140,15 @@ extension SharedQuery {
   /// The underyling `SharedReader` powering the property wrapper.
   public var sharedReader: SharedReader<State.StateValue> {
     self.$value.currentValue
+  }
+}
+
+// MARK: - Store
+
+extension SharedQuery {
+  /// The backing `QueryStore` for this shared query.
+  public var store: QueryStore<State> {
+    self.value.store
   }
 }
 
@@ -484,7 +493,7 @@ extension SharedQuery {
       scheduler: scheduler
     )
   }
-  
+
   /// Creates a shared query.
   ///
   /// - Parameters:

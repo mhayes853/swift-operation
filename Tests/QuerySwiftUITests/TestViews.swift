@@ -17,7 +17,7 @@
 
     var body: some View {
       VStack {
-        switch self.query.status {
+        switch self.$query.status {
         case .idle:
           Text("Idle").id(TestQueryStatusID.idle)
         case .loading:
