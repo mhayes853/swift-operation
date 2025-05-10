@@ -47,7 +47,6 @@
 
   // MARK: - Store Inits
 
-  @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
   extension State.Query {
     public init(store: QueryStore<State>, animation: Animation) {
       self.init(store: store, transaction: Transaction(animation: animation))
@@ -56,7 +55,6 @@
 
   // MARK: - Query Init
 
-  @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
   extension State.Query {
     public init<V: Sendable, Query: QueryRequest<V, QueryState<V?, V>>>(
       wrappedValue: Value = nil,

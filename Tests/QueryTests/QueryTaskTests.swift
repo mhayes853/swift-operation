@@ -1,11 +1,13 @@
 import CustomDump
+import Foundation
 @_spi(Warnings) import Query
 import Testing
-import Foundation
 
 func isRunningTestsFromXcode() -> Bool {
   ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
 }
+
+// TODO: - These tests seem to pass, even in Xcode, but the Xcode test runner exits with code 74 afterwards.
 
 @Suite("QueryTask tests", .disabled(if: isRunningTestsFromXcode()))
 struct QueryTaskTests {
@@ -244,7 +246,7 @@ struct QueryTaskTests {
   }
 
   #if DEBUG
-  @Test("Reports Issue When Circular Scheduling, 2 Tasks")
+    @Test("Reports Issue When Circular Scheduling, 2 Tasks")
     func reportsIssueWhenCircularScheduling2Tasks() async throws {
       let context = QueryContext()
       let task1 = QueryTask<Int>(
@@ -273,7 +275,7 @@ struct QueryTaskTests {
       }
     }
 
-  @Test("Reports Issue When Circular Scheduling, 3 Tasks")
+    @Test("Reports Issue When Circular Scheduling, 3 Tasks")
     func reportsIssueWhenCircularScheduling3Tasks() async throws {
       let context = QueryContext()
       let task1 = QueryTask<Int>(
