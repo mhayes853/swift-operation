@@ -280,7 +280,7 @@ extension OpaqueQueryStore {
 
 extension QueryClient {
   public static var defaultMemoryPressureSource: (any MemoryPressureSource)? {
-    #if canImport(Dispatch)
+    #if canImport(Darwin)
       .dispatch
     #else
       nil

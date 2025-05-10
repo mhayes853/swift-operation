@@ -35,7 +35,7 @@ extension MemoryPressure: OptionSet {
 
 // MARK: - Dispatch Helpers
 
-#if canImport(Dispatch)
+#if canImport(Darwin)
   extension MemoryPressure {
     /// Creates pressure from dispatch pressure.
     ///

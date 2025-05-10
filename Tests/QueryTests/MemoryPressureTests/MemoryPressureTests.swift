@@ -1,4 +1,4 @@
-#if canImport(Dispatch)
+#if canImport(Darwin)
   import Query
   import Testing
   import CustomDump

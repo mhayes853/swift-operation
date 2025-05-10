@@ -18,7 +18,7 @@ public protocol MemoryPressureSource: Sendable {
 
 // MARK: - DispatchMemoryPressureSource
 
-#if canImport(Dispatch)
+#if canImport(Darwin)
   /// A ``MemoryPressureSource`` that uses `DispatchSource.makeMemoryPressureSource` to subscribe
   /// to memory pressure notifications.
   public struct DispatchMemoryPressureSource: MemoryPressureSource {
