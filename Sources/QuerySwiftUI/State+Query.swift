@@ -143,7 +143,7 @@
       self.store.setResult(to: result, using: context)
     }
 
-    public func reset(using context: QueryContext? = nil) {
+    public func resetState(using context: QueryContext? = nil) {
       self.store.resetState(using: context)
     }
   }
