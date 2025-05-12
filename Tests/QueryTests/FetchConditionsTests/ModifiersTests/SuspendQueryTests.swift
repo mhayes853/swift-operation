@@ -15,35 +15,52 @@ struct SuspendQueryTests {
 
   @Test("Condition False When Query Starts, Waits Until Condition Is True To Run The Query")
   func conditionFalseWhenQueryStartsWaitsUntilConditionIsTrueToRunTheQuery() async throws {
+    let (substream, subcontinuation) = AsyncStream<Void>.makeStream()
+    var subIter = substream.makeAsyncIterator()
+
     let condition = TestCondition()
     condition.send(false)
-    let query = TestQuery().suspend(on: condition)
+
+    let query = TestQuery().enableAutomaticFetching(onlyWhen: .always(false)).suspend(on: condition)
     let store = QueryStore.detached(query: query, initialValue: nil)
+    let subscription = store.subscribe(
+      with: QueryEventHandler(onFetchingStarted: { _ in subcontinuation.yield() })
+    )
 
     let task = Task { try await store.fetch() }
-    await Task.megaYield()
+    await subIter.next()
     expectNoDifference(store.isLoading, true)
 
     condition.send(true)
     let value = try await task.value
     expectNoDifference(value, TestQuery.value)
     expectNoDifference(store.isLoading, false)
+
+    subscription.cancel()
   }
 
   @Test("Condition False When Query Starts, Unsubscribes After Condition Is True")
   func conditionFalseWhenQueryStartsUnsubscribesAfterConditionIsTrue() async throws {
+    let (substream, subcontinuation) = AsyncStream<Void>.makeStream()
+    var subIter = substream.makeAsyncIterator()
+
     let condition = TestCondition()
     condition.send(false)
-    let query = TestQuery().suspend(on: condition)
+    let query = TestQuery().enableAutomaticFetching(onlyWhen: .always(false)).suspend(on: condition)
     let store = QueryStore.detached(query: query, initialValue: nil)
+    let subscription = store.subscribe(
+      with: QueryEventHandler(onFetchingStarted: { _ in subcontinuation.yield() })
+    )
 
     let task = Task { try await store.fetch() }
-    await Task.megaYield()
+    await subIter.next()
     expectNoDifference(condition.subscriberCount, 1)
 
     condition.send(true)
     _ = try await task.value
     expectNoDifference(condition.subscriberCount, 0)
+
+    subscription.cancel()
   }
 
   @Test(
@@ -52,13 +69,19 @@ struct SuspendQueryTests {
   func conditionFalseWhenQueryStartsConditionSignalsTrueTwiceInARowQuicklyDoesNotCrash()
     async throws
   {
+    let (substream, subcontinuation) = AsyncStream<Void>.makeStream()
+    var subIter = substream.makeAsyncIterator()
+
     let condition = TestCondition()
     condition.send(false)
-    let query = TestQuery().suspend(on: condition)
+    let query = TestQuery().enableAutomaticFetching(onlyWhen: .always(false)).suspend(on: condition)
     let store = QueryStore.detached(query: query, initialValue: nil)
+    let subscription = store.subscribe(
+      with: QueryEventHandler(onFetchingStarted: { _ in subcontinuation.yield() })
+    )
 
     let task = Task { try await store.fetch() }
-    await Task.megaYield()
+    await subIter.next()
     expectNoDifference(condition.subscriberCount, 1)
 
     condition.send(true)
@@ -75,7 +98,6 @@ struct SuspendQueryTests {
     let store = QueryStore.detached(query: query, initialValue: nil)
 
     let task = Task { try await store.fetch() }
-    await Task.megaYield()
     task.cancel()
     await #expect(throws: CancellationError.self) {
       try await task.value
@@ -91,7 +113,6 @@ struct SuspendQueryTests {
     let store = QueryStore.detached(query: query, initialValue: nil)
 
     let task = Task { try await store.fetch() }
-    await Task.megaYield()
     task.cancel()
     _ = try? await task.value
     expectNoDifference(condition.subscriberCount, 0)
@@ -105,7 +126,6 @@ struct SuspendQueryTests {
     let store = QueryStore.detached(query: query, initialValue: nil)
 
     let task = Task { try await store.fetch() }
-    await Task.megaYield()
     task.cancel()
     condition.send(true)
     _ = try? await task.value
