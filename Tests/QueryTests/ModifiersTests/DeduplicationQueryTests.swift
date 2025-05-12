@@ -35,9 +35,10 @@ struct DeduplicationQueryTests {
   func deduplicationSupportsCancellation() async throws {
     let query = EndlessQuery()
     let store = self.client.store(for: query.deduplicated())
-    let task = Task { try await store.fetch() }
-    await Task.megaYield()
-    task.cancel()
+    let task = Task {
+      withUnsafeCurrentTask { $0?.cancel() }
+      try await store.fetch()
+    }
     await #expect(throws: CancellationError.self) {
       try await task.value
     }
