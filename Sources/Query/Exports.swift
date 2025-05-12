@@ -1,5 +1,5 @@
 @_exported import QueryCore
 
-#if browser
+#if WebBrowser
   @_exported import QueryBrowser
 #endif
