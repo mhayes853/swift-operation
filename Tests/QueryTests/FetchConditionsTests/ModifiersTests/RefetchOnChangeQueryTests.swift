@@ -115,6 +115,8 @@ final class RefetchOnChangeQueryTests: XCTestCase {
 
     condition.send(true)
     await self.fulfillment(of: [expectation], timeout: 0.05)
+
+    _ = store
   }
 
   func testDoesNotRefetchWhenQueryIsNotStale() async {

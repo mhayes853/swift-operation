@@ -88,6 +88,8 @@ struct SuspendQueryTests {
     condition.send(true)
     let value = try await task.value
     expectNoDifference(value, TestQuery.value)
+
+    subscription.cancel()
   }
 
   @Test("Cancellation While Suspended")
