@@ -124,7 +124,6 @@ struct MutationStoreTests {
     mutation.onLoading(for: "blob jr") {
       expectNoDifference(store.isLoading, true)
       Task {
-        await Task.megaYield()
         await mutation.advance(on: "blob")
       }
     }
@@ -152,7 +151,6 @@ struct MutationStoreTests {
     }
     mutation.onLoading(for: "blob jr") {
       Task {
-        await Task.megaYield()
         await mutation.advance(on: "blob")
       }
     }
@@ -182,7 +180,6 @@ struct MutationStoreTests {
     mutation.onLoading(for: "blob jr") {
       expectNoDifference(store.isLoading, true)
       Task {
-        await Task.megaYield()
         await mutation.advance(on: "blob")
       }
     }
@@ -212,7 +209,6 @@ struct MutationStoreTests {
     }
     mutation.onLoading(for: "blob jr") {
       Task {
-        await Task.megaYield()
         await mutation.advance(on: "blob", with: SomeError())
       }
     }
