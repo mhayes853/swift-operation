@@ -3,7 +3,7 @@
   import Combine
   import Testing
   import CustomDump
-  import _TestQueries
+  import QueryTestHelpers
 
   @Suite("QueryStore+Publisher tests")
   struct QueryStorePublisherTests {

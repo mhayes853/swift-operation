@@ -3,7 +3,7 @@
   import XCTest
   import SharingQuery
   import CustomDump
-  import _TestQueries
+  import QueryTestHelpers
 
   @MainActor
   final class SwiftNavigationTests: XCTestCase {

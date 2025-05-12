@@ -1,8 +1,8 @@
 import CustomDump
 import Dependencies
+import QueryTestHelpers
 import SharingQuery
 import Testing
-import _TestQueries
 
 @Suite("MutationKey tests")
 struct MutationKeyTests {

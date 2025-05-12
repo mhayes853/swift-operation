@@ -1,8 +1,8 @@
 import CustomDump
 import Foundation
 @_spi(StaleWhenRevalidateCondition) import Query
+import QueryTestHelpers
 import Testing
-import _TestQueries
 
 @Suite("StaleWhenRevalidateQuery tests")
 struct StaleWhenRevalidateQueryTests {

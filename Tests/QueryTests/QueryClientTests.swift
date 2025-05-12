@@ -1,8 +1,8 @@
 import CustomDump
 import IssueReporting
 @_spi(Warnings) import Query
+import QueryTestHelpers
 import Testing
-import _TestQueries
 
 @Suite("QueryClient tests")
 struct QueryClientTests {

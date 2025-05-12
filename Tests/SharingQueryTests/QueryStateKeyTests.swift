@@ -1,8 +1,8 @@
 import CustomDump
 import IssueReporting
+import QueryTestHelpers
 import SharingQuery
 import Testing
-import _TestQueries
 
 @Suite("QueryStateKey tests")
 struct QueryStateKeyTests {

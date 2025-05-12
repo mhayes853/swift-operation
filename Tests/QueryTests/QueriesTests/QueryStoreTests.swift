@@ -1,7 +1,7 @@
 import CustomDump
 @_spi(Warnings) import Query
+import QueryTestHelpers
 import Testing
-import _TestQueries
 
 #if canImport(Combine)
   import Combine

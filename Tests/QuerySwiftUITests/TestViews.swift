@@ -1,6 +1,6 @@
 #if canImport(SwiftUI)
   import SwiftUI
-  import _TestQueries
+  import QueryTestHelpers
   import Query
 
   enum TestQueryStatusID: Hashable {

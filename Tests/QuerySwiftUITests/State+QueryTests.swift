@@ -3,7 +3,7 @@
   import ViewInspector
   import XCTest
   import QuerySwiftUI
-  import _TestQueries
+  import QueryTestHelpers
   import CustomDump
   import Combine
 

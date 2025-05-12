@@ -1,8 +1,8 @@
 import CustomDump
 import Dependencies
+import QueryTestHelpers
 import SharingQuery
 import Testing
-import _TestQueries
 
 @Suite("InfiniteQueryKey tests")
 struct InfiniteQueryKeyTests {

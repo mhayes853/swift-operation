@@ -1,8 +1,8 @@
 import CustomDump
 import Foundation
 @_spi(Warnings) import Query
+import QueryTestHelpers
 import Testing
-import _TestQueries
 
 @Suite("MutationStore tests")
 struct MutationStoreTests {

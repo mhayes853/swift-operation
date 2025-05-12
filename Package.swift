@@ -101,7 +101,7 @@ let package = Package(
       ]
     ),
     .target(name: "QuerySwiftUI", dependencies: ["Query"]),
-    .target(name: "_TestQueries", dependencies: ["Query"]),
+    .target(name: "QueryTestHelpers", dependencies: ["Query"]),
     .testTarget(
       name: "QueryWASMTests",
       dependencies: [
@@ -119,7 +119,7 @@ let package = Package(
 
 var queryTestsDependencies: [Target.Dependency] = [
   "Query",
-  "_TestQueries",
+  "QueryTestHelpers",
   .product(name: "CustomDump", package: "swift-custom-dump"),
   .product(name: "IssueReportingTestSupport", package: "xctest-dynamic-overlay")
 ]
@@ -131,7 +131,7 @@ if ProcessInfo.processInfo.environment["TEST_WASM"] != "1" {
         name: "SharingQueryTests",
         dependencies: [
           "SharingQuery",
-          "_TestQueries",
+          "QueryTestHelpers",
           .product(name: "CustomDump", package: "swift-custom-dump"),
           .product(name: "IssueReportingTestSupport", package: "xctest-dynamic-overlay")
         ]
@@ -141,7 +141,7 @@ if ProcessInfo.processInfo.environment["TEST_WASM"] != "1" {
         name: "QuerySwiftUITests",
         dependencies: [
           "QuerySwiftUI",
-          "_TestQueries",
+          "QueryTestHelpers",
           .product(name: "CustomDump", package: "swift-custom-dump"),
           .product(
             name: "ViewInspector",

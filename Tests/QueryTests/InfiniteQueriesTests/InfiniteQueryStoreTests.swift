@@ -1,7 +1,7 @@
 import CustomDump
 import Foundation
+import QueryTestHelpers
 import Testing
-import _TestQueries
 
 @testable import Query
 
