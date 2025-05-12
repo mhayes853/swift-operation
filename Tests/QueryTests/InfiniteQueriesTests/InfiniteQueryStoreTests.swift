@@ -709,7 +709,6 @@ struct InfiniteQueryStoreTests {
     query.state.withLock { $0 = [0: "a"] }
     let subscription = store.subscribe(with: collector.eventHandler())
     _ = try? await store.initialPageActiveTasks.first?.runIfNeeded()
-    await Task.megaYield()
 
     collector.expectEventsMatch([
       .stateChanged,
