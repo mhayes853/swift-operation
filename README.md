@@ -1,5 +1,7 @@
 # Swift Query
 
+[![CI](https://github.com/mhayes853/swift-query/actions/workflows/ci.yml/badge.svg)](https://github.com/mhayes853/swift-query/actions/workflows/ci.yml)
+
 Powerful asynchronous state management for Swift, SwiftUI, Linux, WASM, and more.
 
 ## Motivation
