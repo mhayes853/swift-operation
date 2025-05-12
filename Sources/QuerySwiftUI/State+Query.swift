@@ -14,7 +14,7 @@
       private let _store: @Sendable (QueryClient) -> QueryStore<State>
       private let transaction: MainActorTransaction
       private var subscription = QuerySubscription.empty
-      private var previousClient: QueryClient?
+      private var previousStore: QueryStore<State>?
 
       public var wrappedValue: Value {
         get { self.state.currentValue }
@@ -97,8 +97,8 @@
 
   extension State.Query: @preconcurrency DynamicProperty {
     public mutating func update() {
-      defer { self.previousClient = self.queryClient }
-      guard self.subscription == .empty || self.previousClient !== self.queryClient else { return }
+      defer { self.previousStore = self.store }
+      guard self.subscription == .empty || self.previousStore !== self.store else { return }
       self.subscription.cancel()
       let stateValue = self._state
       let transaction = self.transaction
