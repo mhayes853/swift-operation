@@ -133,7 +133,7 @@ package final actor CountingQuery: QueryRequest {
   private var shouldFail = false
   private let sleep: @Sendable () async throws -> Void
 
-  package init(sleep: @Sendable @escaping () async throws -> Void = { await Task.megaYield() }) {
+  package init(sleep: @Sendable @escaping () async throws -> Void = {}) {
     self.sleep = sleep
   }
 
@@ -581,7 +581,6 @@ package final actor CountingInfiniteQuery: InfiniteQueryRequest {
     in context: QueryContext,
     with continuation: QueryContinuation<String>
   ) async throws -> String {
-    await Task.megaYield()
     self.fetchCount += 1
     return "blob"
   }
@@ -718,11 +717,9 @@ package final class WaitableInfiniteQuery: InfiniteQueryRequest {
     await withUnsafeContinuation { continuation in
       self.state.withLock { $0.continuations.append(continuation) }
     }
-    await Task.megaYield()
   }
 
   package func advance() async {
-    await Task.megaYield()
     self.state.withLock {
       for c in $0.continuations {
         c.resume()
@@ -928,11 +925,9 @@ package final class WaitableMutation: MutationRequest {
     try await withUnsafeThrowingContinuation { continuation in
       self.state.withLock { $0.continuations[args] = continuation }
     }
-    await Task.megaYield()
   }
 
   package func advance(on args: String, with error: (any Error)? = nil) async {
-    await Task.megaYield()
     self.state.withLock {
       if let error {
         $0.continuations[args]?.resume(throwing: error)
