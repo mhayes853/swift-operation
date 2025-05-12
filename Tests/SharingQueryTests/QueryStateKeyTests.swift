@@ -76,10 +76,7 @@ struct QueryStateKeyTests {
   func onlyHasOneActiveTaskWhenLoadingInitialData() async throws {
     @SharedQuery(EndlessQuery(), client: self.client) var state
 
-    let store = self.client.store(for: EndlessQuery())
-    await Task.megaYield()
-
-    expectNoDifference(store.activeTasks.count, 1)
+    expectNoDifference($state.activeTasks.count, 1)
   }
 
   @Test("Refetches Value")
@@ -107,17 +104,24 @@ struct QueryStateKeyTests {
 
   @Test("Restarts Loading State When Triggering Fetch On Store")
   func restartsLoadingStateWhenTriggeringFetchOnStore() async throws {
-    let query = EndlessQuery().enableAutomaticFetching(onlyWhen: .always(false))
+    let query = TestQuery().enableAutomaticFetching(onlyWhen: .always(false))
     let store = self.client.store(for: query)
 
     @SharedQuery(store: store) var state
 
     expectNoDifference($state.isLoading, false)
     expectNoDifference($state.shared.isLoading, false)
-    Task { try await store.fetch() }
-    await Task.megaYield()
-    expectNoDifference($state.isLoading, true)
-    expectNoDifference($state.shared.isLoading, true)
+
+    let subscriber = store.subscribe(
+      with: QueryEventHandler(
+        onFetchingStarted: { [s = $state] _ in
+          expectNoDifference(s.isLoading, true)
+          expectNoDifference(s.shared.isLoading, true)
+        }
+      )
+    )
+    try await store.fetch()
+    subscriber.cancel()
   }
 
   @Test("Is Not In Initial Loading State When Automatic Fetching Is Disabled")
