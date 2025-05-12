@@ -9,11 +9,18 @@ struct QueryStoreAsyncSequencesTests {
 
   @Test("Emits State Updates From Sequence")
   func emitsStateUpdatesFromSequence() async throws {
+    let (substream, subcontinuation) = AsyncStream<Void>.makeStream()
+    var subIter = substream.makeAsyncIterator()
+
     let store = self.client.store(for: TestQuery())
     let task = Task {
-      await store.states.prefix(3).reduce(into: [TestQuery.State]()) { $0.append($1.state) }
+      await store.states.prefix(3)
+        .reduce(into: [TestQuery.State]()) {
+          $0.append($1.state)
+          subcontinuation.yield()
+        }
     }
-    await Task.megaYield()
+    await subIter.next()
     _ = try? await store.activeTasks.first?.runIfNeeded()
     let value = await task.value
     expectNoDifference(value.count, 3)
