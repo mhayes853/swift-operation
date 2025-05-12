@@ -1,10 +1,14 @@
-name: Build and Test
+name: CI
 
 on:
   push:
     branches: ["main"]
   pull_request:
     branches: ["main"]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   macos:
@@ -40,6 +44,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: bytecodealliance/actions/wasmtime/setup@v1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
       - name: Install Swift and Swift SDK for WebAssembly
         run: |
           PREFIX=/opt/swift
@@ -49,6 +56,6 @@ jobs:
           $PREFIX/usr/bin/swift sdk install https://github.com/swiftwasm/swift/releases/download/swift-wasm-6.1-RELEASE/swift-wasm-6.1-RELEASE-wasm32-unknown-wasi.artifactbundle.zip --checksum 7550b4c77a55f4b637c376f5d192f297fe185607003a6212ad608276928db992
           echo "$PREFIX/usr/bin" >> $GITHUB_PATH
       - name: Install Playwright
-        run: npx install playwright
+        run: npx install playwright --with-deps
       - name: Run tests
         run: ./test-wasm.sh
