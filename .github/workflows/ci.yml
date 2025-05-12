@@ -57,7 +57,7 @@ jobs:
           echo "$PREFIX/usr/bin" >> $GITHUB_PATH
       - name: Install Node Dependencies
         run: npm install
-      # - name: Install Playwright
-      #   run: npx install playwright --with-deps
+      - name: Install Playwright
+        run: npx playwright install --with-deps
       - name: Run tests
         run: ./test-wasm.sh
