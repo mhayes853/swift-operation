@@ -5,6 +5,8 @@ import XCTest
 
 final class RefetchOnChangeQueryTests: XCTestCase {
   func testRefetchesWhenConditionChangesToTrue() async {
+    let fetchesExpectation = self.expectation(description: "begins fetching")
+
     let condition = TestCondition()
     condition.send(false)
 
@@ -15,13 +17,13 @@ final class RefetchOnChangeQueryTests: XCTestCase {
         .refetchOnChange(of: condition),
       initialValue: nil
     )
-    let subscription = store.subscribe(with: QueryEventHandler())
+    let subscription = store.subscribe(
+      with: QueryEventHandler(onFetchingStarted: { _ in fetchesExpectation.fulfill() })
+    )
     automaticCondition.send(true)
 
     condition.send(true)
-    await Task.megaYield()
-
-    expectNoDifference(store.currentValue, TestQuery.value)
+    await self.fulfillment(of: [fetchesExpectation], timeout: 0.05)
 
     subscription.cancel()
   }
