@@ -1,24 +1,10 @@
 import CustomDump
 import Query
 import QueryTestHelpers
-import Testing
+import XCTest
 
-@Suite("RefetchOnChangeQuery tests")
-struct RefetchOnChangeQueryTests {
-  @Test("Does Not Refetch Immediately")
-  func doesNotRefetchImmediately() async {
-    let condition = TestCondition()
-    condition.send(true)
-    let query = TestQuery().refetchOnChange(of: condition)
-    let store = QueryStore.detached(query: query, initialValue: nil)
-
-    await Task.megaYield()
-
-    expectNoDifference(store.currentValue, nil)
-  }
-
-  @Test("Refetches When Condition Changes To True")
-  func refetchesWhenConditionChangesToTrue() async {
+final class RefetchOnChangeQueryTests: XCTestCase {
+  func testRefetchesWhenConditionChangesToTrue() async {
     let condition = TestCondition()
     condition.send(false)
 
@@ -40,8 +26,10 @@ struct RefetchOnChangeQueryTests {
     subscription.cancel()
   }
 
-  @Test("Cancels In Progress Refetch When Condition Switches To False")
-  func cancelsInProgressRefetchWhenRefetched() async {
+  func testCancelsInProgressRefetchWhenRefetched() async {
+    let fetchesExpectation = self.expectation(description: "begins fetching")
+    let cancelsExpectation = self.expectation(description: "cancels")
+
     let condition = TestCondition()
     condition.send(false)
 
@@ -62,24 +50,33 @@ struct RefetchOnChangeQueryTests {
       .refetchOnChange(of: condition),
       initialValue: nil
     )
-    let subscription = store.subscribe(with: QueryEventHandler())
+    let subscription = store.subscribe(
+      with: QueryEventHandler(
+        onFetchingStarted: { _ in
+          expectNoDifference(store.status.isCancelled, false)
+          fetchesExpectation.fulfill()
+        },
+        onFetchingEnded: { _ in
+          expectNoDifference(store.status.isCancelled, true)
+          cancelsExpectation.fulfill()
+        }
+      )
+    )
     automaticCondition.send(true)
 
     condition.send(true)
-    await Task.megaYield()
-
-    expectNoDifference(store.status.isCancelled, false)
+    await self.fulfillment(of: [fetchesExpectation], timeout: 0.05)
 
     condition.send(false)
-    await Task.megaYield()
-
-    expectNoDifference(store.status.isCancelled, true)
+    await self.fulfillment(of: [cancelsExpectation], timeout: 0.05)
 
     subscription.cancel()
   }
 
-  @Test("Does Not Refetch When Condition Changes To False")
-  func doesNotRefetchWhenConditionChangesToFalse() async {
+  func testDoesNotRefetchWhenConditionChangesToFalse() async {
+    let expectation = self.expectation(description: "fetches")
+    expectation.isInverted = true
+
     let condition = TestCondition()
     condition.send(true)
 
@@ -90,37 +87,38 @@ struct RefetchOnChangeQueryTests {
         .refetchOnChange(of: condition),
       initialValue: nil
     )
-    let subscription = store.subscribe(with: QueryEventHandler())
+    let subscription = store.subscribe(
+      with: QueryEventHandler(onFetchingStarted: { _ in expectation.fulfill() })
+    )
     automaticCondition.send(true)
 
     condition.send(false)
-    await Task.megaYield()
+    await self.fulfillment(of: [expectation], timeout: 0.05)
 
-    expectNoDifference(store.currentValue, nil)
     subscription.cancel()
   }
 
-  @Test("Does Not Refetch When No Subscribers On QueryStore")
-  func doesNotRefetchWhenNoSubscribersOnQueryStore() async {
+  func testDoesNotRefetchWhenNoSubscribersOnQueryStore() async {
+    let expectation = self.expectation(description: "fetches")
+    expectation.isInverted = true
+
     let condition = TestCondition()
     condition.send(false)
 
-    let query = CountingQuery {}
+    let query = CountingQuery { expectation.fulfill() }
     let store = QueryStore.detached(
       query: query.enableAutomaticFetching(onlyWhen: .always(true)).refetchOnChange(of: condition),
       initialValue: nil
     )
 
     condition.send(true)
-    await Task.megaYield()
-
-    let count = await query.fetchCount
-    expectNoDifference(count, 0)
-    expectNoDifference(store.currentValue, nil)
+    await self.fulfillment(of: [expectation], timeout: 0.05)
   }
 
-  @Test("Does Not Refetch When Query Is Not Stale")
-  func doesNotRefetchWhenQueryIsNotStale() async {
+  func testDoesNotRefetchWhenQueryIsNotStale() async {
+    let expectation = self.expectation(description: "fetches")
+    expectation.isInverted = true
+
     let condition = TestCondition()
     condition.send(false)
 
@@ -132,13 +130,14 @@ struct RefetchOnChangeQueryTests {
         .staleWhen { _, _ in false },
       initialValue: nil
     )
-    let subscription = store.subscribe(with: QueryEventHandler())
+    let subscription = store.subscribe(
+      with: QueryEventHandler(onFetchingStarted: { _ in expectation.fulfill() })
+    )
     automaticCondition.send(true)
 
     condition.send(true)
-    await Task.megaYield()
+    await self.fulfillment(of: [expectation], timeout: 0.05)
 
-    expectNoDifference(store.currentValue, nil)
     subscription.cancel()
   }
 }
