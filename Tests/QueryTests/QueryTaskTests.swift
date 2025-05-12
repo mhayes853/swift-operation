@@ -56,20 +56,27 @@ struct QueryTaskTests {
 
   @Test("Task Has Been Started While Running")
   func taskHasBeenStartedWhileRunning() async throws {
+    let (startStream, startContinuation) = AsyncStream<Void>.makeStream()
+    var startIter = startStream.makeAsyncIterator()
+
     let config = QueryTaskConfiguration(context: QueryContext())
     let task = QueryTask<Int>(configuration: config) { _ in
+      startContinuation.yield()
       try await Task.never()
       return 40
     }
     Task { try await task.runIfNeeded() }
-    await Task.megaYield()
+    await startIter.next()
     expectNoDifference(task.hasStarted, true)
   }
 
   @Test("Cancel Query Task While Running, Throws Cancellation Error")
   func cancelQueryTaskThrowsCancellationError() async throws {
     let config = QueryTaskConfiguration(context: QueryContext())
-    let task = QueryTask<Void>(configuration: config) { _ in try await Task.never() }
+    let task = QueryTask<Void>(configuration: config) { _ in
+      withUnsafeCurrentTask { $0?.cancel() }
+      try await Task.never()
+    }
     let base = Task {
       do {
         try await task.runIfNeeded()
@@ -78,8 +85,6 @@ struct QueryTaskTests {
         return true
       }
     }
-    await Task.megaYield()
-    task.cancel()
     let value = try await base.value
     expectNoDifference(value, true)
   }
@@ -188,10 +193,16 @@ struct QueryTaskTests {
 
   @Test("QueryTask Is Not Finished When Loading")
   func queryTaskIsNotFinishedWhenLoading() async throws {
+    let (startStream, startContinuation) = AsyncStream<Void>.makeStream()
+    var startIter = startStream.makeAsyncIterator()
+
     let config = QueryTaskConfiguration(context: QueryContext())
-    let task = QueryTask<Int>(configuration: config) { _ in try await Task.never() }
+    let task = QueryTask<Int>(configuration: config) { _ in
+      startContinuation.yield()
+      return try await Task.never()
+    }
     Task { try await task.runIfNeeded() }
-    await Task.megaYield()
+    await startIter.next()
     expectNoDifference(task.isFinished, false)
   }
 
@@ -236,12 +247,16 @@ struct QueryTaskTests {
 
   @Test("QueryTask Is Running When Loading")
   func queryTaskIsRunningWhenLoading() async {
+    let (startStream, startContinuation) = AsyncStream<Void>.makeStream()
+    var startIter = startStream.makeAsyncIterator()
+
     let config = QueryTaskConfiguration(context: QueryContext())
     let task = QueryTask(configuration: config) { _ in
+      startContinuation.yield()
       try await Task.never()
     }
     Task { try await task.runIfNeeded() }
-    await Task.megaYield()
+    await startIter.next()
     expectNoDifference(task.isRunning, true)
   }
 
