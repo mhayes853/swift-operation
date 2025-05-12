@@ -178,13 +178,22 @@ package struct EndlessQuery: QueryRequest, Hashable {
 
 // MARK: - NonCancellingEndlessQuery
 
-package struct NonCancellingEndlessQuery: QueryRequest, Hashable {
-  package init() {}
+package struct NonCancellingEndlessQuery: QueryRequest {
+  private let onLoading: @Sendable () -> Void
+
+  package init(onLoading: @escaping @Sendable () -> Void = {}) {
+    self.onLoading = onLoading
+  }
+
+  package var path: QueryPath {
+    ["non-cancelling"]
+  }
 
   package func fetch(
     in context: QueryContext,
     with continuation: QueryContinuation<String>
   ) async throws -> String {
+    self.onLoading()
     try? await Task.never()
     continuation.yield("blob")
     return ""

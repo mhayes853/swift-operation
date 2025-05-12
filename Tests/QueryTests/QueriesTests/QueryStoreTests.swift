@@ -2,6 +2,7 @@ import CustomDump
 @_spi(Warnings) import Query
 import QueryTestHelpers
 import Testing
+import XCTest
 
 #if canImport(Combine)
   import Combine
@@ -140,7 +141,7 @@ struct QueryStoreTests {
     let collector = QueryStoreEventsCollector<TestQuery.State>()
     let store = self.client.store(for: TestQuery())
     let subscription = store.subscribe(with: collector.eventHandler())
-    await Task.megaYield()
+    _ = try await store.activeTasks.first?.runIfNeeded()
     collector.expectEventsMatch([
       .stateChanged,
       .stateChanged,
@@ -214,50 +215,6 @@ struct QueryStoreTests {
       .fetchingEnded
     ])
     subscription.cancel()
-  }
-
-  @Test("Emits Nothing When Automatic Fetching Disabled On Subscription")
-  func emitsIdleEventWhenAutomaticFetchingEnabled() async throws {
-    let query = TestQuery().enableAutomaticFetching(onlyWhen: .always(false))
-    let collector = QueryStoreEventsCollector<TestQuery.State>()
-    let store = self.client.store(for: query)
-    let subscription = store.subscribe(with: collector.eventHandler())
-    await Task.megaYield()  // NB: Give some time for any potential fetching to start.
-    collector.expectEventsMatch([.stateChanged])  // NB: This one event is for the current state.
-    subscription.cancel()
-  }
-
-  @Test("Only Starts Fetching On Subscription For The First Query Subscriber")
-  func startsFetchingOnFirstSubscription() async throws {
-    let query = CountingQuery {}
-    let store = self.client.store(for: query)
-    let s1 = store.subscribe(with: QueryEventHandler())
-    let s2 = store.subscribe(with: QueryEventHandler())
-    let s3 = store.subscribe(with: QueryEventHandler())
-    await Task.megaYield()
-    let count = await query.fetchCount
-    expectNoDifference(count, 1)
-    s1.cancel()
-    s2.cancel()
-    s3.cancel()
-  }
-
-  @Test("Cancels Automatic Subscription Fetch When All Subscribers Cancel")
-  func cancelsAutomaticSubscriptionFetchWhenAllSubscribersCancel() async throws {
-    let query = CountingQuery { try await Task.never() }
-    let store = self.client.store(for: query)
-    let s1 = store.subscribe(with: QueryEventHandler())
-    let s2 = store.subscribe(with: QueryEventHandler())
-
-    await Task.megaYield()
-    s1.cancel()
-
-    await Task.megaYield()
-    expectNoDifference(store.status.isCancelled, false)
-    s2.cancel()
-
-    await Task.megaYield()
-    expectNoDifference(store.status.isCancelled, true)
   }
 
   @Test("Emits Fetch Events When fetch Manually Called")
@@ -578,10 +535,14 @@ struct QueryStoreTests {
 
   @Test("Reset State, Does Not Update With Finished Task State When No Cooperative Cancellation")
   func resetStateDoesNotUpdateWithFinishedTaskStateWhenNoCooperativeCancellation() async throws {
-    let store = self.client.store(for: NonCancellingEndlessQuery())
+    let reset = Lock<@Sendable () -> Void>({})
+    let store = self.client.store(
+      for: NonCancellingEndlessQuery {
+        reset.withLock { $0() }
+      }
+    )
+    reset.withLock { $0 = { store.resetState() } }
     let task = Task { try await store.fetch() }
-    await Task.megaYield()
-    store.resetState()
     _ = try? await task.value
     expectNoDifference(store.error == nil, true)
     expectNoDifference(store.currentValue, nil)
@@ -609,6 +570,73 @@ struct QueryStoreTests {
       try await store.fetch()
     }
     expectNoDifference(value, 10)
+  }
+}
+
+final class QueryStoreAsyncTests: XCTestCase {
+  private let client = QueryClient()
+
+  func testEmitsIdleEventWhenAutomaticFetchingEnabled() async throws {
+    let expectation = self.expectation(description: "fetches")
+    expectation.isInverted = true
+
+    let query = TestQuery().enableAutomaticFetching(onlyWhen: .always(false))
+    let store = self.client.store(for: query)
+    let subscription = store.subscribe(
+      with: QueryEventHandler(onFetchingStarted: { _ in expectation.fulfill() })
+    )
+    await self.fulfillment(of: [expectation], timeout: 0.05)
+    subscription.cancel()
+  }
+
+  func testStartsFetchingOnFirstSubscription() async throws {
+    let expectation = self.expectation(description: "begins loading")
+    expectation.expectedFulfillmentCount = 3
+    expectation.isInverted = true
+
+    let query = CountingQuery { expectation.fulfill() }
+    let store = self.client.store(for: query)
+    let s1 = store.subscribe(with: QueryEventHandler())
+    let s2 = store.subscribe(with: QueryEventHandler())
+    let s3 = store.subscribe(with: QueryEventHandler())
+    await self.fulfillment(of: [expectation], timeout: 0.05)
+    let count = await query.fetchCount
+    expectNoDifference(count, 1)
+    s1.cancel()
+    s2.cancel()
+    s3.cancel()
+  }
+
+  func testCancelsAutomaticSubscriptionFetchWhenAllSubscribersCancel() async throws {
+    let fetchesExpectation = self.expectation(description: "fetches")
+
+    let shouldNotCancelExpectation = self.expectation(description: "should not cancel")
+    shouldNotCancelExpectation.isInverted = true
+
+    let cancelsExpectation = self.expectation(description: "cancels")
+
+    let query = CountingQuery {
+      fetchesExpectation.fulfill()
+      do {
+        try await Task.never()
+      } catch let error as CancellationError {
+        shouldNotCancelExpectation.fulfill()
+        cancelsExpectation.fulfill()
+        throw error
+      }
+    }
+    let store = self.client.store(for: query)
+    let s1 = store.subscribe(with: QueryEventHandler())
+    let s2 = store.subscribe(with: QueryEventHandler())
+
+    await self.fulfillment(of: [fetchesExpectation], timeout: 0.05)
+    s1.cancel()
+
+    await self.fulfillment(of: [shouldNotCancelExpectation], timeout: 0.05)
+
+    s2.cancel()
+
+    await self.fulfillment(of: [cancelsExpectation], timeout: 0.05)
   }
 }
 
