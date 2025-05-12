@@ -55,8 +55,6 @@ jobs:
           sudo mkdir -p $PREFIX; sudo tar -xzf /tmp/swift.tar.gz -C $PREFIX --strip-component 1
           $PREFIX/usr/bin/swift sdk install https://github.com/swiftwasm/swift/releases/download/swift-wasm-6.1-RELEASE/swift-wasm-6.1-RELEASE-wasm32-unknown-wasi.artifactbundle.zip --checksum 7550b4c77a55f4b637c376f5d192f297fe185607003a6212ad608276928db992
           echo "$PREFIX/usr/bin" >> $GITHUB_PATH
-      - name: Install Node Dependencies
-        run: npm install
       - name: Install Playwright
         run: npx playwright install --with-deps
       - name: Run tests

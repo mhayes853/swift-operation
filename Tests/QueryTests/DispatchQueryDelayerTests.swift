@@ -9,7 +9,7 @@
       let delayer: some QueryDelayer = .dispatch(queue: .global())
       let task = Task { try await delayer.delay(for: 0.2) }
       let startTime = Date()
-      try await delayer.delay(for: 0.1)
+      try await delayer.delay(for: 0.05)
       task.cancel()
       await XCTAssertThrows(try await task.value, error: CancellationError.self)
       let duration = Date().timeIntervalSince(startTime)
