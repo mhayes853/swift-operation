@@ -158,7 +158,6 @@ struct QueryStoreTests {
     let store = self.client.store(for: FailingQuery())
     var subscription = store.subscribe(with: collector.eventHandler())
     _ = try? await store.activeTasks.first?.runIfNeeded()
-    await Task.megaYield()
     collector.expectEventsMatch([
       .stateChanged,
       .stateChanged,
@@ -171,7 +170,6 @@ struct QueryStoreTests {
     collector.reset()
     subscription = store.subscribe(with: collector.eventHandler())
     _ = try? await store.activeTasks.first?.runIfNeeded()
-    await Task.megaYield()
     collector.expectEventsMatch([
       .stateChanged,
       .stateChanged,
@@ -189,7 +187,6 @@ struct QueryStoreTests {
     let store = self.client.store(for: FailingQuery())
     let subscription = store.subscribe(with: collector.eventHandler())
     _ = try? await store.activeTasks.first?.runIfNeeded()
-    await Task.megaYield()
     collector.expectEventsMatch([
       .stateChanged,
       .stateChanged,
@@ -208,7 +205,6 @@ struct QueryStoreTests {
     let store = self.client.store(for: query)
     let subscription = store.subscribe(with: collector.eventHandler())
     _ = try await store.activeTasks.first?.runIfNeeded()
-    await Task.megaYield()
     collector.expectEventsMatch([
       .stateChanged,
       .stateChanged,
