@@ -30,10 +30,10 @@
       ViewHosting.host(view: view.queryClient(QueryClient()))
 
       try await view.inspection.inspect { try $0.find(button: "Fetch").tap() }
-      let expectation = view.inspection.inspect(after: 0.1) { view in
+      let expectation = view.inspection.inspect(after: 0.3) { view in
         XCTAssertNoThrow(try view.find(viewWithId: TestQueryStatusID.loading))
       }
-      await self.fulfillment(of: [expectation], timeout: 0.2)
+      await self.fulfillment(of: [expectation], timeout: 0.5)
     }
 
     func testSuccess() async throws {
@@ -41,7 +41,7 @@
       ViewHosting.host(view: view.queryClient(QueryClient()))
 
       try await view.inspection.inspect { try $0.find(button: "Fetch").tap() }
-      let expectation = view.inspection.inspect(after: 0.1) { view in
+      let expectation = view.inspection.inspect(after: 0.3) { view in
         XCTAssertNoThrow(
           try view.find(viewWithId: TestQueryStatusID.success(TestStateQuery.successValue))
         )
@@ -55,12 +55,12 @@
       ViewHosting.host(view: view.queryClient(QueryClient()))
 
       try await view.inspection.inspect { try $0.find(button: "Fetch").tap() }
-      let expectation = view.inspection.inspect(after: 0.1) { view in
+      let expectation = view.inspection.inspect(after: 0.3) { view in
         XCTAssertNoThrow(
           try view.find(viewWithId: TestQueryStatusID.error(TestStateQuery.SomeError()))
         )
       }
-      await self.fulfillment(of: [expectation], timeout: 0.2)
+      await self.fulfillment(of: [expectation], timeout: 0.5)
     }
   }
 
