@@ -12,3 +12,4 @@ DerivedData/
 *.swiftdeps
 *.swiftdeps~
 node_modules/
+TestLog.txt
