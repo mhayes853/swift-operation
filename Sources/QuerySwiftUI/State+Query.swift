@@ -7,7 +7,7 @@
     @propertyWrapper
     @dynamicMemberLookup
     public struct Query<State: QueryStateProtocol> where Value == State.StateValue {
-      @SwiftUI.State private var state: State
+      @SwiftUI.State var state: State
 
       @Environment(\.queryClient) private var queryClient
 
@@ -81,6 +81,19 @@
         query,
         client: client,
         transaction: Transaction(animation: animation)
+      )
+    }
+
+    public init<Query: QueryRequest>(
+      _ query: DefaultQuery<Query>,
+      client: QueryClient? = nil,
+      transaction: Transaction? = nil
+    ) where State == DefaultQuery<Query>.State {
+      self.init(
+        query,
+        initialState: QueryState(initialValue: query.defaultValue),
+        client: client,
+        transaction: transaction
       )
     }
   }

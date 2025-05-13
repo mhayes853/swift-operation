@@ -21,7 +21,7 @@ extension QueryStore {
       initialContext: initialContext
     )
   }
-  
+
   /// Creates a detached store.
   ///
   /// Detached stores are not connected to a ``QueryClient``. As such, accessing the
@@ -44,7 +44,7 @@ extension QueryStore {
       initialContext: initialContext
     )
   }
-  
+
   /// Creates a detached store.
   ///
   /// Detached stores are not connected to a ``QueryClient``. As such, accessing the
@@ -90,7 +90,7 @@ extension QueryStore where State: _MutationStateProtocol {
       handler: self.queryStoreHandler(for: handler)
     )
   }
-  
+
   /// Creates a ``QueryTask`` that performs a mutation.
   ///
   /// The returned task does not begin fetching immediately. Rather you must call
