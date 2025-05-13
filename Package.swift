@@ -1,7 +1,6 @@
 // swift-tools-version: 6.1
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
-import Foundation
 import PackageDescription
 
 let package = Package(
@@ -124,7 +123,7 @@ var queryTestsDependencies: [Target.Dependency] = [
   .product(name: "IssueReportingTestSupport", package: "xctest-dynamic-overlay")
 ]
 
-if ProcessInfo.processInfo.environment["TEST_WASM"] != "1" {
+if Context.environment["TEST_WASM"] != "1" {
   package.targets.append(
     contentsOf: [
       .testTarget(
