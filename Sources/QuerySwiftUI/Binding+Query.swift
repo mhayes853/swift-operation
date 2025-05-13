@@ -2,13 +2,17 @@
   import SwiftUI
   import Query
 
+  // MARK: - Binding
+
   extension Binding {
     @MainActor
-    public init<State: QueryStateProtocol>(_ state: SwiftUI.State<State.StateValue>.Query<State>)
+    public init<State: QueryStateProtocol>(_ query: SwiftUI.State<State.StateValue>.Query<State>)
     where Value == State.StateValue {
-      self = state.$state[HashableStore(store: state.store)]
+      self = query.$state[HashableStore(store: query.store)]
     }
   }
+
+  // MARK: - HashableStore
 
   private final class HashableStore<State: QueryStateProtocol>: Hashable {
     let inner: QueryStore<State>

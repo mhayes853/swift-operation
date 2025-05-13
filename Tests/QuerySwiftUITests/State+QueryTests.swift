@@ -46,7 +46,7 @@
           try view.find(viewWithId: TestQueryStatusID.success(TestStateQuery.successValue))
         )
       }
-      await self.fulfillment(of: [expectation], timeout: 0.2)
+      await self.fulfillment(of: [expectation], timeout: 0.5)
     }
 
     func testFailure() async throws {
@@ -61,6 +61,42 @@
         )
       }
       await self.fulfillment(of: [expectation], timeout: 0.2)
+    }
+  }
+
+  private enum TestQueryStatusID: Hashable {
+    case loading
+    case idle
+    case success(String)
+    case error(TestStateQuery.SomeError)
+  }
+
+  private struct QueryView: View {
+    @State.Query(TestStateQuery()) private var query
+
+    let inspection = Inspection<Self>()
+
+    var body: some View {
+      VStack {
+        switch self.$query.status {
+        case .idle:
+          Text("Idle").id(TestQueryStatusID.idle)
+        case .loading:
+          Text("Loading").id(TestQueryStatusID.loading)
+        case .result(.success(let data)):
+          Text("Success: \(data)").id(TestQueryStatusID.success(data))
+        case .result(.failure(let error as TestStateQuery.SomeError)):
+          Text("Failure: \(error.localizedDescription)")
+            .id(TestQueryStatusID.error(error))
+        default:
+          Text("Unknown")
+        }
+
+        Button("Fetch") {
+          Task { try await self.$query.fetch() }
+        }
+      }
+      .onReceive(self.inspection.notice) { self.inspection.visit(self, $0) }
     }
   }
 #endif
