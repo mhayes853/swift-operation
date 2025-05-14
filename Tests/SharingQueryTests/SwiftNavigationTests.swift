@@ -25,7 +25,7 @@
       }
 
       try await $state.fetch()
-      await self.fulfillment(of: [expectation])
+      await self.fulfillment(of: [expectation], timeout: 0.1)
 
       // NB: 0 comes from running the observe block initially where no transaction is applied to
       // the initial query value.

@@ -25,7 +25,7 @@
       handler.messages.inner.withLock { messages in
         expectNoDifference(
           messages,
-          [TestHandler.Message(message: "TestQuery took 1 second to run.", level: .debug)]
+          [TestHandler.Message(message: "TestQuery took 1.0 seconds to run.", level: .debug)]
         )
       }
     }

@@ -25,22 +25,12 @@
       defer {
         let end = context.queryClock.now()
         let duration = end.timeIntervalSince1970 - start.timeIntervalSince1970
-        let formatted = DateComponentsFormatter.queryDuration.string(from: duration)
         logger.log(
           level: self.level,
-          "\(query._loggableTypeName) took \(formatted ?? "an unknown duration") to run."
+          "\(query._loggableTypeName) took \(duration) seconds to run."
         )
       }
       return try await query.fetch(in: context, with: continuation)
     }
-  }
-
-  extension DateComponentsFormatter {
-    fileprivate static let queryDuration: DateComponentsFormatter = {
-      let formatter = DateComponentsFormatter()
-      formatter.unitsStyle = .full
-      formatter.allowedUnits = [.hour, .minute, .second]
-      return formatter
-    }()
   }
 #endif
