@@ -1,4 +1,4 @@
-# Swift Query
+# Swift Query (WIP)
 
 [![CI](https://github.com/mhayes853/swift-query/actions/workflows/ci.yml/badge.svg)](https://github.com/mhayes853/swift-query/actions/workflows/ci.yml)
 
