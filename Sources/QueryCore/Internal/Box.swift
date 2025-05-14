@@ -30,10 +30,10 @@ final class LockedWeakBox<Value: AnyObject>: Sendable {
 
 // MARK: - LockedBox
 
-final class LockedBox<Value>: Sendable {
-  let inner: Lock<Value>
+package final class LockedBox<Value>: Sendable {
+  package let inner: Lock<Value>
 
-  init(value: sending Value) {
+  package init(value: sending Value) {
     self.inner = Lock(value)
   }
 }

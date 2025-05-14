@@ -1,6 +1,8 @@
 import Foundation
 import Query
 
+// MARK: - TestQueryClock
+
 final class TestQueryClock: QueryClock {
   private let _date: RecursiveLock<Date>
 
@@ -15,5 +17,18 @@ final class TestQueryClock: QueryClock {
 
   func now() -> Date {
     self._date.withLock { $0 }
+  }
+}
+
+// MARK: - IncrementingClock
+
+final class IncrementingClock: QueryClock {
+  let count = Lock(0)
+
+  func now() -> Date {
+    self.count.withLock { count in
+      count += 1
+      return Date(timeIntervalSince1970: TimeInterval(count))
+    }
   }
 }

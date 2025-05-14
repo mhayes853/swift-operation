@@ -18,7 +18,7 @@ where Query.State == QueryState<Query.Value?, Query.Value> {
   public typealias State = QueryState<Query.Value, Query.Value>
 
   let _defaultValue: @Sendable () -> Query.Value
-  
+
   /// The base query.
   public let query: Query
 
@@ -29,6 +29,10 @@ where Query.State == QueryState<Query.Value?, Query.Value> {
 
   public var path: QueryPath {
     self.query.path
+  }
+
+  public var _loggableTypeName: String {
+    self.query._loggableTypeName
   }
 
   public func setup(context: inout QueryContext) {

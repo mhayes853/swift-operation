@@ -151,9 +151,11 @@
 public protocol QueryRequest<Value, State>: Sendable where State.QueryValue == Value {
   /// The data type that your query fetches.
   associatedtype Value: Sendable
-  
+
   /// The state type of your query.
   associatedtype State: QueryStateProtocol = QueryState<Value?, Value>
+
+  var _loggableTypeName: String { get }
 
   /// A ``QueryPath`` that uniquely identifies your query.
   ///
@@ -163,14 +165,14 @@ public protocol QueryRequest<Value, State>: Sendable where State.QueryValue == V
   ///
   /// See <doc:PatternMatchingAndStateManagement> for more.
   var path: QueryPath { get }
-  
+
   /// Sets up the initial ``QueryContext`` that gets passed to ``fetch(in:with:)``.
   ///
   /// This method is called a single time when a ``QueryStore`` is initialized with your query.
   ///
   /// - Parameter context: The context to setup.
   func setup(context: inout QueryContext)
-  
+
   /// Fetches the data for your query.
   ///
   /// - Parameters:
@@ -198,4 +200,10 @@ extension QueryRequest where Self: Hashable {
 
 extension QueryRequest where Self: Identifiable, ID: Sendable {
   public var path: QueryPath { [self.id] }
+}
+
+// MARK: - Loggable Type Name
+
+extension QueryRequest {
+  public var _loggableTypeName: String { typeName(Self.self) }
 }

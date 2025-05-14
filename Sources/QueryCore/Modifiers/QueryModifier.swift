@@ -43,7 +43,7 @@
 public protocol QueryModifier<Query>: Sendable {
   /// The underlying ``QueryRequest`` type.
   associatedtype Query: QueryRequest
-  
+
   /// Sets up the initial ``QueryContext`` for the specified query.
   ///
   /// This method is called a single time when a ``QueryStore`` is initialized with your query.
@@ -55,7 +55,7 @@ public protocol QueryModifier<Query>: Sendable {
   ///   - context: The ``QueryContext`` to setup.
   ///   - query: The underlying query for this modifier.
   func setup(context: inout QueryContext, using query: Query)
-  
+
   /// Fetches the data for the specified query.
   ///
   /// - Parameters:
@@ -100,12 +100,16 @@ where Modifier.Query == Query {
 
   /// The base ``QueryRequest``.
   public let query: Query
-  
+
   /// The ``QueryModifier`` attached to ``query``.
   public let modifier: Modifier
 
   public var path: QueryPath {
     self.query.path
+  }
+
+  public var _loggableTypeName: String {
+    self.query._loggableTypeName
   }
 
   public func setup(context: inout QueryContext) {

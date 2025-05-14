@@ -17,7 +17,7 @@ extension InfiniteQueryRequest {
 /// You create instances of this query through ``InfiniteQueryRequest/defaultValue(_:)``.
 public struct DefaultInfiniteQuery<Query: InfiniteQueryRequest>: QueryRequest {
   let _defaultValue: @Sendable () -> Query.State.StateValue
-  
+
   /// The base query.
   public let query: Query
 
@@ -28,6 +28,10 @@ public struct DefaultInfiniteQuery<Query: InfiniteQueryRequest>: QueryRequest {
 
   public var path: QueryPath {
     self.query.path
+  }
+
+  public var _loggableTypeName: String {
+    self.query._loggableTypeName
   }
 
   public func setup(context: inout QueryContext) {

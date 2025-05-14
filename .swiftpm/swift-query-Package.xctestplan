@@ -1,0 +1,45 @@
+{
+  "configurations" : [
+    {
+      "id" : "CF6DAC18-D2F4-4680-AA70-2A95BA69C994",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "QuerySwiftUITests",
+        "name" : "QuerySwiftUITests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "QueryTests",
+        "name" : "QueryTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "QueryWASMTests",
+        "name" : "QueryWASMTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "SharingQueryTests",
+        "name" : "SharingQueryTests"
+      }
+    }
+  ],
+  "version" : 1
+}

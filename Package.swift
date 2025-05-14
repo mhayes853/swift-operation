@@ -31,7 +31,8 @@ let package = Package(
       name: "AppKitNavigation",
       description: "Integrates AppKitNavigation's AppKitAnimation with SharingQuery.",
       enabledTraits: ["SwiftNavigation"]
-    )
+    ),
+    .trait(name: "SwiftLog", description: "Integrates swift-log with the library.")
   ],
   dependencies: [
     .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.9.0"),
@@ -45,7 +46,8 @@ let package = Package(
     .package(url: "https://github.com/swiftwasm/JavaScriptKit", from: "0.26.1"),
     .package(url: "https://github.com/nalexn/ViewInspector", from: "0.10.1"),
     .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.4.3"),
-    .package(url: "https://github.com/pointfreeco/swift-navigation", from: "2.3.0")
+    .package(url: "https://github.com/pointfreeco/swift-navigation", from: "2.3.0"),
+    .package(url: "https://github.com/apple/swift-log", from: "1.6.3")
   ],
   targets: [
     .target(
@@ -96,7 +98,8 @@ let package = Package(
       name: "QueryCore",
       dependencies: [
         .product(name: "IssueReporting", package: "xctest-dynamic-overlay"),
-        .product(name: "IdentifiedCollections", package: "swift-identified-collections")
+        .product(name: "IdentifiedCollections", package: "swift-identified-collections"),
+        .product(name: "Logging", package: "swift-log", condition: .when(traits: ["SwiftLog"]))
       ]
     ),
     .target(name: "QuerySwiftUI", dependencies: ["Query"]),
