@@ -8,7 +8,7 @@
     ///   - resultType: The return type of the operation.
     ///   - operation: The operation to run.
     /// - Returns: Whatever `operation` returns.
-    static func runSync<T: Sendable>(
+    static func unsafeRunSync<T: Sendable>(
       resultType: T.Type = T.self,
       _ operation: @MainActor () throws -> T,
       file: StaticString = #file,

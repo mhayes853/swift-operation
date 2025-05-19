@@ -78,7 +78,7 @@ import Foundation
         .notificationFocus(
           didBecomeActive: UIApplication.didBecomeActiveNotification,
           willResignActive: UIApplication.willResignActiveNotification,
-          isActive: { MainActor.runSync { UIApplication.shared.applicationState == .active } }
+          isActive: { MainActor.unsafeRunSync { UIApplication.shared.applicationState == .active } }
         )
       }
     #elseif os(macOS)
@@ -88,7 +88,7 @@ import Foundation
         .notificationFocus(
           didBecomeActive: NSApplication.didBecomeActiveNotification,
           willResignActive: NSApplication.willResignActiveNotification,
-          isActive: { MainActor.runSync { NSApplication.shared.isActive } }
+          isActive: { MainActor.unsafeRunSync { NSApplication.shared.isActive } }
         )
       }
     #elseif os(watchOS)
@@ -99,7 +99,7 @@ import Foundation
         .notificationFocus(
           didBecomeActive: WKExtension.applicationDidBecomeActiveNotification,
           willResignActive: WKExtension.applicationWillResignActiveNotification,
-          isActive: { MainActor.runSync { WKExtension.shared().applicationState == .active } }
+          isActive: { MainActor.unsafeRunSync { WKExtension.shared().applicationState == .active } }
         )
       }
 
@@ -111,7 +111,9 @@ import Foundation
           .notificationFocus(
             didBecomeActive: WKApplication.didBecomeActiveNotification,
             willResignActive: WKApplication.willResignActiveNotification,
-            isActive: { MainActor.runSync { WKApplication.shared().applicationState == .active } }
+            isActive: {
+              MainActor.unsafeRunSync { WKApplication.shared().applicationState == .active }
+            }
           )
         }
       }
