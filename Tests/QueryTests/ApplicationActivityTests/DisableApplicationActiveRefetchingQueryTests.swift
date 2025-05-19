@@ -5,7 +5,7 @@ import QueryTestHelpers
 import XCTest
 
 @MainActor
-final class DisableApplicationActiveRefetchingQueryTests: XCTestCase {
+final class DisableApplicationActiveRefetchingQueryTests: XCTestCase, @unchecked Sendable {
   private let center = NotificationCenter()
 
   func testDoesNotRefetchQueryOnFocus() async throws {

@@ -6,7 +6,7 @@
   import QueryTestHelpers
 
   @MainActor
-  final class SwiftNavigationTests: XCTestCase {
+  final class SwiftNavigationTests: XCTestCase, @unchecked Sendable {
     func testAppliesTransactionWhenSettingValue() async throws {
       let expectation = self.expectation(description: "observes value")
       expectation.expectedFulfillmentCount = 4

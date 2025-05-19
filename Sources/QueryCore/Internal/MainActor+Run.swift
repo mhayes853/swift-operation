@@ -14,7 +14,7 @@
       file: StaticString = #file,
       line: UInt = #line
     ) rethrows -> T {
-      if Thread.isMainThread {
+      if DispatchQueue.getSpecific(key: key) == value {
         try Self.assumeIsolated(operation, file: file, line: line)
       } else {
         try DispatchQueue.main.sync { try operation() }
@@ -32,11 +32,19 @@
       file: StaticString = #file,
       line: UInt = #line
     ) rethrows {
-      if Thread.isMainThread {
+      if DispatchQueue.getSpecific(key: key) == value {
         try Self.assumeIsolated(operation, file: file, line: line)
       } else {
         DispatchQueue.main.async { try? operation() }
       }
     }
   }
+
+
+  private nonisolated(unsafe) let key: DispatchSpecificKey<UInt8> = {
+    let key = DispatchSpecificKey<UInt8>()
+    DispatchQueue.main.setSpecific(key: key, value: value)
+    return key
+  }()
+  private let value: UInt8 = 0
 #endif
