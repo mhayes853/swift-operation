@@ -1,49 +1,47 @@
 #if !os(WASI)
   import CustomDump
   import Foundation
-  import Query
+  @_spi(ApplicationActivityObserver) import Query
   import Testing
 
+  @MainActor
   @Suite("ApplicationIsActiveCondition tests")
   struct ApplicationIsActiveConditionTests {
     private let center = NotificationCenter()
 
     @Test("Uses Default Activity State", arguments: [true, false])
     func defaultActivityState(isActive: Bool) {
-      let observer: some FetchCondition = .applicationIsActive(
-        didBecomeActive: .fakeDidBecomeActive,
-        willResignActive: .fakeWillResignActive,
-        center: self.center,
-        isActive: { @Sendable in isActive }
+      let observer = TestApplicationActivityObserver(isInitiallyActive: isActive)
+      let condition: some FetchCondition = .applicationIsActive(
+        observer: observer,
+        center: self.center
       )
-      expectNoDifference(observer.isSatisfied(in: QueryContext()), isActive)
+      expectNoDifference(condition.isSatisfied(in: QueryContext()), isActive)
     }
 
     @Test("Is Always False When Context Disables Focus Fetching", arguments: [true, false])
     func alwaysFalseWhenContextDisablesFocusFetching(isActive: Bool) {
-      let observer: some FetchCondition = .applicationIsActive(
-        didBecomeActive: .fakeDidBecomeActive,
-        willResignActive: .fakeWillResignActive,
-        center: self.center,
-        isActive: { @Sendable in isActive }
+      let observer = TestApplicationActivityObserver(isInitiallyActive: isActive)
+      let condition: some FetchCondition = .applicationIsActive(
+        observer: observer,
+        center: self.center
       )
       var context = QueryContext()
-      context.isFocusRefetchingEnabled = false
-      expectNoDifference(observer.isSatisfied(in: context), false)
+      context.isApplicationActiveRefetchingEnabled = false
+      expectNoDifference(condition.isSatisfied(in: context), false)
     }
 
     @Test("Emits False With Empty Subscription When Subscription Context Disables Focus Fetching")
     func emitsFalseWithEmptySubscripitionWhenFocusFetchingDisabled() {
-      let observer: some FetchCondition = .applicationIsActive(
-        didBecomeActive: .fakeDidBecomeActive,
-        willResignActive: .fakeWillResignActive,
-        center: self.center,
-        isActive: { @Sendable in true }
+      let observer = TestApplicationActivityObserver(isInitiallyActive: true)
+      let condition: some FetchCondition = .applicationIsActive(
+        observer: observer,
+        center: self.center
       )
       let satisfactions = Lock([Bool]())
       var context = QueryContext()
-      context.isFocusRefetchingEnabled = false
-      let subscription = observer.subscribe(in: context) { value in
+      context.isApplicationActiveRefetchingEnabled = false
+      let subscription = condition.subscribe(in: context) { value in
         satisfactions.withLock { $0.append(value) }
       }
       expectNoDifference(subscription, .empty)
@@ -53,14 +51,13 @@
 
     @Test("Emits True When Becomes Active")
     func emitsTrueWhenBecomesActive() {
-      let observer: some FetchCondition = .applicationIsActive(
-        didBecomeActive: .fakeDidBecomeActive,
-        willResignActive: .fakeWillResignActive,
-        center: self.center,
-        isActive: { @Sendable in true }
+      let observer = TestApplicationActivityObserver(isInitiallyActive: true)
+      let condition: some FetchCondition = .applicationIsActive(
+        observer: observer,
+        center: self.center
       )
-      let satisfactions = RecursiveLock([Bool]())
-      let subscription = observer.subscribe(in: QueryContext()) { value in
+      let satisfactions = Lock([Bool]())
+      let subscription = condition.subscribe(in: QueryContext()) { value in
         satisfactions.withLock { $0.append(value) }
       }
       self.center.post(name: .fakeDidBecomeActive, object: nil)
@@ -70,14 +67,13 @@
 
     @Test("Emits False When Resigns Active")
     func emitsFalseWhenResignsActive() {
-      let observer: some FetchCondition = .applicationIsActive(
-        didBecomeActive: .fakeDidBecomeActive,
-        willResignActive: .fakeWillResignActive,
-        center: self.center,
-        isActive: { @Sendable in true }
+      let observer = TestApplicationActivityObserver(isInitiallyActive: true)
+      let condition: some FetchCondition = .applicationIsActive(
+        observer: observer,
+        center: self.center
       )
       let satisfactions = RecursiveLock([Bool]())
-      let subscription = observer.subscribe(in: QueryContext()) { value in
+      let subscription = condition.subscribe(in: QueryContext()) { value in
         satisfactions.withLock { $0.append(value) }
       }
       self.center.post(name: .fakeWillResignActive, object: nil)

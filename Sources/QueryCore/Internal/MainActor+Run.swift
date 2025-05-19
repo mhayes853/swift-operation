@@ -20,5 +20,23 @@
         try DispatchQueue.main.sync { try operation() }
       }
     }
+
+    /// Executes the given body closure on the main actor synchronously if able.
+    ///
+    /// - Parameters:
+    ///   - resultType: The return type of the operation.
+    ///   - operation: The operation to run.
+    /// - Returns: Whatever `operation` returns.
+    static func runSyncIfAble(
+      _ operation: @MainActor @escaping () throws -> Void,
+      file: StaticString = #file,
+      line: UInt = #line
+    ) rethrows {
+      if Thread.isMainThread {
+        try Self.assumeIsolated(operation, file: file, line: line)
+      } else {
+        DispatchQueue.main.async { try? operation() }
+      }
+    }
   }
 #endif

@@ -23,7 +23,7 @@
 
     func testNeverSatisfiedWhenFocusRefetchingDisabled() {
       var context = QueryContext()
-      context.isFocusRefetchingEnabled = false
+      context.isApplicationActiveRefetchingEnabled = false
 
       let document = JSObject()
       document.visibilityState = .string("visible")
@@ -43,7 +43,7 @@
 
       let satisfactions = Lock([Bool]())
       var context = QueryContext()
-      context.isFocusRefetchingEnabled = false
+      context.isApplicationActiveRefetchingEnabled = false
       let subscription = condition.subscribe(in: context) { value in
         satisfactions.withLock { $0.append(value) }
       }

@@ -15,14 +15,15 @@
 
   extension WindowIsVisibleCondition: FetchCondition {
     public func isSatisfied(in context: QueryContext) -> Bool {
-      context.isFocusRefetchingEnabled && self.document.visibilityState == .string("visible")
+      context.isApplicationActiveRefetchingEnabled
+        && self.document.visibilityState == .string("visible")
     }
 
     public func subscribe(
       in context: QueryContext,
       _ observer: @escaping @Sendable (Bool) -> Void
     ) -> QuerySubscription {
-      guard context.isFocusRefetchingEnabled else {
+      guard context.isApplicationActiveRefetchingEnabled else {
         observer(false)
         return .empty
       }
