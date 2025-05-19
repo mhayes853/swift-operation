@@ -31,11 +31,13 @@
     }
   #elseif os(watchOS)
     @_spi(ApplicationActivityObserver)
+    @available(watchOS 7.0, *)
     extension WKApplication: ApplicationActivityObserver {
       public var isInitiallyActive: Bool { self.applicationState == .active }
     }
 
     @_spi(ApplicationActivityObserver)
+    @available(watchOS 7.0, *)
     extension WKExtension: ApplicationActivityObserver {
       public static var didBecomeActiveNotification: Notification.Name {
         WKExtension.applicationDidBecomeActiveNotification

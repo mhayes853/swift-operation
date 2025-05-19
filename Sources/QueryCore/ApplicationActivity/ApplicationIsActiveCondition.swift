@@ -122,7 +122,7 @@ import Foundation
       /// is active.
       @available(watchOS 7.0, *)
       public static var applicationIsActive: Self {
-        .applicationIsActive(observer: WKAppplication.shared())
+        .applicationIsActive(observer: WKApplication.shared())
       }
     #endif
 
