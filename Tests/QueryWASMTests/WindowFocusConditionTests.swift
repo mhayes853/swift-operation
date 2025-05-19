@@ -4,12 +4,12 @@
   import QueryCore
   import XCTest
 
-  final class WindowFocusConditionTests: XCTestCase {
+  final class WindowIsVisibleConditionTests: XCTestCase {
     func testIsSatisfiedWhenVisibilityStateIsVisible() {
       let document = JSObject()
       document.visibilityState = .string("visible")
 
-      let condition: some FetchCondition = .windowFocus(document: document, window: window)
+      let condition: some FetchCondition = .windowIsVisible(document: document, window: window)
       XCTAssertTrue(condition.isSatisfied(in: QueryContext()))
     }
 
@@ -17,7 +17,7 @@
       let document = JSObject()
       document.visibilityState = .string("hidden")
 
-      let condition: some FetchCondition = .windowFocus(document: document, window: window)
+      let condition: some FetchCondition = .windowIsVisible(document: document, window: window)
       XCTAssertFalse(condition.isSatisfied(in: QueryContext()))
     }
 
@@ -28,7 +28,7 @@
       let document = JSObject()
       document.visibilityState = .string("visible")
 
-      let condition: some FetchCondition = .windowFocus(document: document, window: window)
+      let condition: some FetchCondition = .windowIsVisible(document: document, window: window)
       XCTAssertFalse(condition.isSatisfied(in: context))
 
       document.visibilityState = .string("hidden")
@@ -39,7 +39,7 @@
       let document = JSObject()
       document.visibilityState = .string("visible")
 
-      let condition: some FetchCondition = .windowFocus(document: document, window: window)
+      let condition: some FetchCondition = .windowIsVisible(document: document, window: window)
 
       let satisfactions = Lock([Bool]())
       var context = QueryContext()
@@ -56,7 +56,7 @@
       let document = JSObject()
       document.visibilityState = .string("visible")
 
-      let condition: some FetchCondition = .windowFocus(document: document, window: window)
+      let condition: some FetchCondition = .windowIsVisible(document: document, window: window)
       let values = Lock([Bool]())
       let subscription = condition.subscribe(in: QueryContext()) { value in
         values.withLock { $0.append(value) }

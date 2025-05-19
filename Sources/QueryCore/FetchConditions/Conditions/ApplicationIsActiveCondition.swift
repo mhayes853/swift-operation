@@ -18,7 +18,7 @@ import Foundation
   ///
   /// The default instance of this condition uses platform-specific `Notification`s to observe
   /// the app lifecycle, and a check for whether or not the app's state is active.
-  public final class NotificationFocusCondition: Sendable {
+  public final class ApplicationIsActiveCondition: Sendable {
     private let didBecomeActive: Notification.Name
     private let willResignActive: Notification.Name
     private let isActive: @Sendable () -> Bool
@@ -39,7 +39,7 @@ import Foundation
 
   // MARK: - FetchConditionObserver Conformance
 
-  extension NotificationFocusCondition: FetchCondition {
+  extension ApplicationIsActiveCondition: FetchCondition {
     public func isSatisfied(in context: QueryContext) -> Bool {
       context.isFocusRefetchingEnabled && self.isActive()
     }
@@ -70,11 +70,11 @@ import Foundation
     }
   }
 
-  extension FetchCondition where Self == NotificationFocusCondition {
+  extension FetchCondition where Self == ApplicationIsActiveCondition {
     #if os(iOS) || os(tvOS) || os(visionOS)
       /// A ``FetchCondition`` that is statisfied when `UIApplication` indicates that the app
       /// is active.
-      public static var notificationFocus: Self {
+      public static var applicationIsActive: Self {
         .notificationFocus(
           didBecomeActive: UIApplication.didBecomeActiveNotification,
           willResignActive: UIApplication.willResignActiveNotification,
@@ -84,8 +84,8 @@ import Foundation
     #elseif os(macOS)
       /// A ``FetchCondition`` that is statisfied when `NSApplication` indicates that the app
       /// is active.
-      public static var notificationFocus: Self {
-        .notificationFocus(
+      public static var applicationIsActive: Self {
+        .applicationIsActive(
           didBecomeActive: NSApplication.didBecomeActiveNotification,
           willResignActive: NSApplication.willResignActiveNotification,
           isActive: { MainActor.unsafeRunSync { NSApplication.shared.isActive } }
@@ -95,7 +95,7 @@ import Foundation
       /// A ``FetchCondition`` that is statisfied when `WKExtension` indicates that the app
       /// is active.
       @available(watchOS 7.0, *)
-      public static var notificationExtensionFocus: Self {
+      public static var applicationExtensionIsActive: Self {
         .notificationFocus(
           didBecomeActive: WKExtension.applicationDidBecomeActiveNotification,
           willResignActive: WKExtension.applicationWillResignActiveNotification,
@@ -106,7 +106,7 @@ import Foundation
       /// A ``FetchCondition`` that is statisfied when `WKApplication` indicates that the app
       /// is active.
       @available(watchOS 7.0, *)
-      public static var notificationFocus: Self {
+      public static var applicationIsActive: Self {
         MainActor.runSync {
           .notificationFocus(
             didBecomeActive: WKApplication.didBecomeActiveNotification,
@@ -119,7 +119,7 @@ import Foundation
       }
     #endif
 
-    /// Creates a ``NotificationFocusCondition`` using a `Notification` for whenever the app
+    /// Creates a ``ApplicationIsActiveCondition`` using a `Notification` for whenever the app
     /// becomes active and will resign being active, and a predicate that determines whether or
     /// not the app is in an active state.
     ///
@@ -128,14 +128,14 @@ import Foundation
     ///   - willResignActive: A `Notification` for whether or not the app will resign being active.
     ///   - center: The `NotificationCenter` instance to use to listen for the notifications.
     ///   - isActive: A predicate checking whether or not the app is active.
-    /// - Returns: A ``NotificationFocusCondition``.
-    public static func notificationFocus(
+    /// - Returns: An ``ApplicationIsActiveCondition``.
+    public static func applicationIsActive(
       didBecomeActive: Notification.Name,
       willResignActive: Notification.Name,
       center: NotificationCenter = .default,
       isActive: @escaping @Sendable () -> Bool
     ) -> Self {
-      NotificationFocusCondition(
+      ApplicationIsActiveCondition(
         didBecomeActive: didBecomeActive,
         willResignActive: willResignActive,
         center: center,

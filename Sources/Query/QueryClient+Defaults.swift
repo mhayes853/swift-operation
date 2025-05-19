@@ -29,7 +29,7 @@ extension QueryClient {
     let retryDelayer: (any QueryDelayer)?
     let queryEnableAutomaticFetchingCondition: any FetchCondition
     let networkObserver: (any NetworkObserver)?
-    let focusCondition: (any FetchCondition)?
+    let appActiveCondition: (any FetchCondition)?
 
     public func store<Query: QueryRequest>(
       for query: Query,
@@ -65,7 +65,7 @@ extension QueryClient {
     }
 
     private var refetchOnChangeCondition: AnyFetchCondition {
-      switch (self.networkObserver, self.focusCondition) {
+      switch (self.networkObserver, self.appActiveCondition) {
       case (let observer?, let focusCondition?):
         return AnyFetchCondition(.connected(to: observer) && AnyFetchCondition(focusCondition))
       case (let observer?, _):
@@ -87,7 +87,7 @@ extension QueryClient.StoreCreator where Self == QueryClient.DefaultStoreCreator
       retryDelayer: .noDelay,
       queryEnableAutomaticFetchingCondition: .always(true),
       networkObserver: nil,
-      focusCondition: nil
+      appActiveCondition: nil
     )
   }
 
@@ -97,7 +97,7 @@ extension QueryClient.StoreCreator where Self == QueryClient.DefaultStoreCreator
     retryDelayer: (any QueryDelayer)? = nil,
     queryEnableAutomaticFetchingCondition: any FetchCondition = .always(true),
     networkObserver: (any NetworkObserver)? = QueryClient.defaultNetworkObserver,
-    focusCondition: (any FetchCondition)? = QueryClient.defaultFocusCondition
+    appActiveCondition: (any FetchCondition)? = QueryClient.defaultAppActiveCondition
   ) -> Self {
     Self(
       retryLimit: retryLimit,
@@ -105,7 +105,7 @@ extension QueryClient.StoreCreator where Self == QueryClient.DefaultStoreCreator
       retryDelayer: retryDelayer,
       queryEnableAutomaticFetchingCondition: queryEnableAutomaticFetchingCondition,
       networkObserver: networkObserver,
-      focusCondition: focusCondition
+      appActiveCondition: appActiveCondition
     )
   }
 }
@@ -131,19 +131,19 @@ extension QueryClient {
   /// The default ``FetchCondition`` to use for detetcing whether or not the app is active.
   ///
   /// - On Darwin platforms, the ``FetchCondition/notificationFocus`` condition is used.
-  /// - On Broswer platforms (WASI), the `WindowFocusCondition` condition is used.
+  /// - On Broswer platforms (WASI), the `WindowIsVisibleCondition` condition is used.
   /// - On other platforms, the value is nil.
-  public static var defaultFocusCondition: (any FetchCondition)? {
+  public static var defaultAppActiveCondition: (any FetchCondition)? {
     #if os(iOS) || os(macOS) || os(tvOS) || os(visionOS)
-      .notificationFocus
+      .applicationIsActive
     #elseif os(watchOS)
       if #available(watchOS 7.0, *) {
-        .notificationFocus
+        .applicationIsActive
       } else {
         nil
       }
     #elseif WebBrowser && canImport(JavaScriptKit)
-      .windowFocus
+      .windowIsVisible
     #else
       nil
     #endif

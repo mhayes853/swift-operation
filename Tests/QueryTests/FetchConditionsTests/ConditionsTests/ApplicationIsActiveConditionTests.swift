@@ -4,13 +4,13 @@
   import Query
   import Testing
 
-  @Suite("NotificationFocusCondition tests")
-  struct NotificationFocusConditionTests {
+  @Suite("ApplicationIsActiveCondition tests")
+  struct ApplicationIsActiveConditionTests {
     private let center = NotificationCenter()
 
     @Test("Uses Default Activity State", arguments: [true, false])
     func defaultActivityState(isActive: Bool) {
-      let observer: some FetchCondition = .notificationFocus(
+      let observer: some FetchCondition = .applicationIsActive(
         didBecomeActive: .fakeDidBecomeActive,
         willResignActive: .fakeWillResignActive,
         center: self.center,
@@ -21,7 +21,7 @@
 
     @Test("Is Always False When Context Disables Focus Fetching", arguments: [true, false])
     func alwaysFalseWhenContextDisablesFocusFetching(isActive: Bool) {
-      let observer: some FetchCondition = .notificationFocus(
+      let observer: some FetchCondition = .applicationIsActive(
         didBecomeActive: .fakeDidBecomeActive,
         willResignActive: .fakeWillResignActive,
         center: self.center,
@@ -34,7 +34,7 @@
 
     @Test("Emits False With Empty Subscription When Subscription Context Disables Focus Fetching")
     func emitsFalseWithEmptySubscripitionWhenFocusFetchingDisabled() {
-      let observer: some FetchCondition = .notificationFocus(
+      let observer: some FetchCondition = .applicationIsActive(
         didBecomeActive: .fakeDidBecomeActive,
         willResignActive: .fakeWillResignActive,
         center: self.center,
@@ -53,7 +53,7 @@
 
     @Test("Emits True When Becomes Active")
     func emitsTrueWhenBecomesActive() {
-      let observer: some FetchCondition = .notificationFocus(
+      let observer: some FetchCondition = .applicationIsActive(
         didBecomeActive: .fakeDidBecomeActive,
         willResignActive: .fakeWillResignActive,
         center: self.center,
@@ -70,7 +70,7 @@
 
     @Test("Emits False When Resigns Active")
     func emitsFalseWhenResignsActive() {
-      let observer: some FetchCondition = .notificationFocus(
+      let observer: some FetchCondition = .applicationIsActive(
         didBecomeActive: .fakeDidBecomeActive,
         willResignActive: .fakeWillResignActive,
         center: self.center,

@@ -4,7 +4,7 @@ Learn how to best use the ``FetchCondition`` protocol to control how and when qu
 
 ## Overview
 
-The `FetchCondition` protocol describes a set of conditions that can be used to determine when a query should fetch its data. For instance, ``ConnectedCondition`` utilizes a ``NetworkObserver`` to determine whether or not the current network connection status is suitable for fetching data. Additionally, ``NotificationFocusCondition`` (or `WindowFocusCondition` on WASM) listens for changes in the app's resign active state, which allows for automatic refetching when the app becomes active again.
+The `FetchCondition` protocol describes a set of conditions that can be used to determine when a query should fetch its data. For instance, ``ConnectedCondition`` utilizes a ``NetworkObserver`` to determine whether or not the current network connection status is suitable for fetching data. Additionally, ``ApplicationIsActiveCondition`` (or `WindowIsVisibleCondition` on WASM) listens for changes in the app's resign active state, which allows for automatic refetching when the app becomes active again.
 
 The library provides many built-in modifiers that utilize fetch conditions. Let's explore how some of these modifiers work, and how you can create your own `FetchCondition` conformances that take advantage of these modifiers.
 

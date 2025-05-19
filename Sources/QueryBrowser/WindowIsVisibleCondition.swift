@@ -2,18 +2,18 @@
   import JavaScriptKit
   import QueryCore
 
-  // MARK: - WindowFocusCondition
+  // MARK: - WindowIsVisibleCondition
 
   /// A `FetchCondition` that is satisfied whenever the app is active in the foreground based on
   /// when the browser tab visibility changes.
-  public struct WindowFocusCondition: @unchecked Sendable {
+  public struct WindowIsVisibleCondition: @unchecked Sendable {
     fileprivate let document: JSObject
     fileprivate let window: JSObject
   }
 
   // MARK: - FetchCondition Conformance
 
-  extension WindowFocusCondition: FetchCondition {
+  extension WindowIsVisibleCondition: FetchCondition {
     public func isSatisfied(in context: QueryContext) -> Bool {
       context.isFocusRefetchingEnabled && self.document.visibilityState == .string("visible")
     }
@@ -39,11 +39,11 @@
     }
   }
 
-  extension FetchCondition where Self == WindowFocusCondition {
+  extension FetchCondition where Self == WindowIsVisibleCondition {
     /// A `FetchCondition` that is satisfied whenever the app is active in the foreground based on
     /// when the browser tab visibility changes.
-    public static var windowFocus: Self {
-      WindowFocusCondition(
+    public static var windowIsVisible: Self {
+      WindowIsVisibleCondition(
         document: JSObject.global.document.object!,
         window: JSObject.global.window.object!
       )
@@ -56,8 +56,8 @@
     ///   - document: The global document object.
     ///   - window: The global window object.
     /// - Returns: A `FetchCondition`
-    public static func windowFocus(document: JSObject, window: JSObject) -> Self {
-      WindowFocusCondition(document: document, window: window)
+    public static func windowIsVisible(document: JSObject, window: JSObject) -> Self {
+      WindowIsVisibleCondition(document: document, window: window)
     }
   }
 #endif

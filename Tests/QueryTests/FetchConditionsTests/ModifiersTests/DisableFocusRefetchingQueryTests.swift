@@ -16,7 +16,7 @@ final class DisableFocusRefetchingQueryTests: XCTestCase {
     let query = TestQuery().disableFocusRefetching()
       .enableAutomaticFetching(onlyWhen: automaticCondition)
       .refetchOnChange(
-        of: .notificationFocus(
+        of: .applicationIsActive(
           didBecomeActive: .fakeDidBecomeActive,
           willResignActive: .fakeWillResignActive,
           center: self.center,
