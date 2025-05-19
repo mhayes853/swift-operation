@@ -14,7 +14,7 @@
       let logger = Logger(label: "test.query") { _ in handler }
       let clock = IncrementingClock()
       let store = QueryStore.detached(
-        query: TestQuery().disableFocusRefetching()
+        query: TestQuery().disableApplicationActiveRefetching()
           .logDuration(with: logger, at: .debug),
         initialValue: nil
       )

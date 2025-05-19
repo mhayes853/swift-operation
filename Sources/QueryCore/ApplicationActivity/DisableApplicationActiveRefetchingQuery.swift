@@ -7,12 +7,12 @@ extension QueryRequest {
   /// - Returns: A ``ModifiedQuery``.
   public func disableApplicationActiveRefetching(
     _ isDisabled: Bool = true
-  ) -> ModifiedQuery<Self, _DisableFocusRefetchingModifier<Self>> {
-    self.modifier(_DisableFocusRefetchingModifier(isDisabled: isDisabled))
+  ) -> ModifiedQuery<Self, _DisableApplicationActiveRefetchingModifier<Self>> {
+    self.modifier(_DisableApplicationActiveRefetchingModifier(isDisabled: isDisabled))
   }
 }
 
-public struct _DisableFocusRefetchingModifier<Query: QueryRequest>: QueryModifier {
+public struct _DisableApplicationActiveRefetchingModifier<Query: QueryRequest>: QueryModifier {
   let isDisabled: Bool
 
   public func setup(context: inout QueryContext, using query: Query) {
