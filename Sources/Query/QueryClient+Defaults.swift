@@ -29,7 +29,7 @@ extension QueryClient {
     let retryDelayer: (any QueryDelayer)?
     let queryEnableAutomaticFetchingCondition: any FetchCondition
     let networkObserver: (any NetworkObserver)?
-    let appActiveCondition: (any FetchCondition)?
+    let activityObserver: (any ApplicationActivityObserver)?
 
     public func store<Query: QueryRequest>(
       for query: Query,
@@ -65,13 +65,15 @@ extension QueryClient {
     }
 
     private var refetchOnChangeCondition: AnyFetchCondition {
-      switch (self.networkObserver, self.appActiveCondition) {
-      case (let observer?, let focusCondition?):
-        return AnyFetchCondition(.connected(to: observer) && AnyFetchCondition(focusCondition))
-      case (let observer?, _):
-        return AnyFetchCondition(.connected(to: observer))
-      case (_, let focusCondition?):
-        return AnyFetchCondition(focusCondition)
+      switch (self.networkObserver, self.activityObserver) {
+      case (let networkObserver?, let activityObserver?):
+        return AnyFetchCondition(
+          .connected(to: networkObserver) && .applicationIsActive(observer: activityObserver)
+        )
+      case (let networkObserver?, _):
+        return AnyFetchCondition(.connected(to: networkObserver))
+      case (_, let activityObserver?):
+        return AnyFetchCondition(.applicationIsActive(observer: activityObserver))
       default:
         return AnyFetchCondition(.always(false))
       }
@@ -87,7 +89,7 @@ extension QueryClient.StoreCreator where Self == QueryClient.DefaultStoreCreator
       retryDelayer: .noDelay,
       queryEnableAutomaticFetchingCondition: .always(true),
       networkObserver: nil,
-      appActiveCondition: nil
+      activityObserver: nil
     )
   }
 
@@ -97,7 +99,8 @@ extension QueryClient.StoreCreator where Self == QueryClient.DefaultStoreCreator
     retryDelayer: (any QueryDelayer)? = nil,
     queryEnableAutomaticFetchingCondition: any FetchCondition = .always(true),
     networkObserver: (any NetworkObserver)? = QueryClient.defaultNetworkObserver,
-    appActiveCondition: (any FetchCondition)? = QueryClient.defaultAppActiveCondition
+    activityObserver: (any ApplicationActivityObserver)? = QueryClient
+      .defaultApplicationActivityObserver
   ) -> Self {
     Self(
       retryLimit: retryLimit,
@@ -105,7 +108,7 @@ extension QueryClient.StoreCreator where Self == QueryClient.DefaultStoreCreator
       retryDelayer: retryDelayer,
       queryEnableAutomaticFetchingCondition: queryEnableAutomaticFetchingCondition,
       networkObserver: networkObserver,
-      appActiveCondition: appActiveCondition
+      activityObserver: activityObserver
     )
   }
 }
@@ -128,12 +131,26 @@ extension QueryClient {
     #endif
   }
 
-  /// The default ``FetchCondition`` to use for detetcing whether or not the app is active.
+  /// The default ``ApplicationActivityObserver`` to use for detetcing whether or not the app is active.
   ///
-  /// - On Darwin platforms, the ``FetchCondition/notificationFocus`` condition is used.
-  /// - On Broswer platforms (WASI), the `WindowIsVisibleCondition` condition is used.
+  /// - On Darwin platforms, the underlying `XXXApplication` class is used.
+  /// - On Broswer platforms (WASI), the `WindowVisibilityObserver` is used.
   /// - On other platforms, the value is nil.
-  public static var defaultAppActiveCondition: (any FetchCondition)? {
-    nil
+  public static var defaultApplicationActivityObserver: (any ApplicationActivityObserver)? {
+    #if os(iOS) || os(tvOS) || os(visionOS)
+      .uiApplication
+    #elseif os(macOS)
+      .nsApplication
+    #elseif os(watchOS)
+      if #available(watchOS 7.0, *) {
+        .wkApplication
+      } else {
+        nil
+      }
+    #elseif WebBrowser && canImport(JavaScriptKit)
+      .windowVisibility
+    #else
+      nil
+    #endif
   }
 }

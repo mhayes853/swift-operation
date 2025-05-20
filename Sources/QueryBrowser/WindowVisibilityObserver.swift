@@ -3,6 +3,7 @@
   import JavaScriptEventLoop
   import QueryCore
 
+  /// An `ApplicationActivityObserver` that observes whether or not the browser window is visible.
   public struct WindowVisibilityObserver {
     let documentProperty: String
   }
@@ -25,10 +26,14 @@
   }
 
   extension ApplicationActivityObserver where Self == WindowVisibilityObserver {
+    /// An `ApplicationActivityObserver` that observes whether or not the browser window is visible.
     public static var windowVisibility: Self {
       .windowVisibility(documentProperty: "document")
     }
 
+    /// An `ApplicationActivityObserver` that observes whether or not the browser window is visible.
+    ///
+    /// - Parameter documentProperty: The property name of `window.document`.
     public static func windowVisibility(documentProperty: String) -> Self {
       WindowVisibilityObserver(documentProperty: documentProperty)
     }
