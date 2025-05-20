@@ -1,4 +1,4 @@
-#if !os(WASI)
+#if canImport(Darwin)
   import CustomDump
   import Foundation
   @_spi(ApplicationActivityObserver) import Query
