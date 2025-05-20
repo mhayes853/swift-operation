@@ -18,7 +18,7 @@
         return .undefined
       }
       window.addEventListener!("visibilitychange", listener)
-      return .jsOneshotClosure { _ in
+      return .jsClosure { _ in
         window.removeEventListener!("visibilitychange", listener)
         return .undefined
       }

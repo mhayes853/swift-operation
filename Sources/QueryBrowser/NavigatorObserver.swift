@@ -49,7 +49,7 @@
       }
       window.addEventListener!("online", onlineListener)
       window.addEventListener!("offline", offlineListener)
-      return .jsOneshotClosure { _ in
+      return .jsClosure { _ in
         window.removeEventListener!("online", onlineListener)
         window.removeEventListener!("offline", offlineListener)
         return .undefined

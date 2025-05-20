@@ -4,12 +4,12 @@
   import QueryCore
 
   extension QuerySubscription {
-    static func jsOneshotClosure(_ body: @escaping (sending [JSValue]) -> JSValue) -> Self {
-      let closure = JSSending.transfer(JSOneshotClosure(body))
+    static func jsClosure(_ body: @escaping (sending [JSValue]) -> JSValue) -> Self {
+      let closure = JSSending.transfer(JSClosure(body))
       return Self {
         Task {
-          let closure = await closure.receive()
-          closure()
+          let closure = try await closure.receive() as? JSClosure
+          closure?()
         }
       }
     }
