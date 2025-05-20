@@ -1,12 +1,13 @@
 import Foundation
-@_spi(ApplicationActivityObserver) import Query
+import Query
 
 @MainActor
-struct TestApplicationActivityObserver: ApplicationActivityObserver {
+struct TestDarwinApplicationActivityObserver: DarwinApplicationActivityObserver {
   static let didBecomeActiveNotification = Notification.Name.fakeDidBecomeActive
   static let willResignActiveNotification = Notification.Name.fakeWillResignActive
 
   let isInitiallyActive: Bool
+  let notificationCenter: NotificationCenter
 }
 
 extension Notification.Name {

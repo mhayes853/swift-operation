@@ -9,7 +9,10 @@ final class DisableApplicationActiveRefetchingQueryTests: XCTestCase, @unchecked
   private let center = NotificationCenter()
 
   func testDoesNotRefetchQueryOnFocus() async throws {
-    let observer = TestApplicationActivityObserver(isInitiallyActive: false)
+    let observer = TestDarwinApplicationActivityObserver(
+      isInitiallyActive: false,
+      notificationCenter: self.center
+    )
     let expectation = self.expectation(description: "starts fetching")
     expectation.isInverted = true
 
@@ -17,7 +20,7 @@ final class DisableApplicationActiveRefetchingQueryTests: XCTestCase, @unchecked
     automaticCondition.send(false)
     let query = TestQuery().disableApplicationActiveRefetching()
       .enableAutomaticFetching(onlyWhen: automaticCondition)
-      .refetchOnChange(of: .applicationIsActive(observer: observer, center: self.center))
+      .refetchOnChange(of: .applicationIsActive(observer: observer))
     let store = QueryStore.detached(query: query, initialValue: nil)
     let subscription = store.subscribe(
       with: QueryEventHandler(onFetchingStarted: { _ in expectation.fulfill() })

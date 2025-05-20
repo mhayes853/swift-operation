@@ -134,18 +134,6 @@ extension QueryClient {
   /// - On Broswer platforms (WASI), the `WindowIsVisibleCondition` condition is used.
   /// - On other platforms, the value is nil.
   public static var defaultAppActiveCondition: (any FetchCondition)? {
-    #if os(iOS) || os(macOS) || os(tvOS) || os(visionOS)
-      .applicationIsActive
-    #elseif os(watchOS)
-      if #available(watchOS 7.0, *) {
-        .applicationIsActive
-      } else {
-        nil
-      }
-    #elseif WebBrowser && canImport(JavaScriptKit)
-      .windowIsVisible
-    #else
-      nil
-    #endif
+    nil
   }
 }

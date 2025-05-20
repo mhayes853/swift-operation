@@ -1,15 +1,5 @@
 import Foundation
 
-#if canImport(AppKit)
-  import AppKit
-#endif
-#if canImport(UIKit)
-  import UIKit
-#endif
-#if canImport(WatchKit)
-  import WatchKit
-#endif
-
 #if !os(WASI)
   // MARK: - FocusFetchCondition
 
@@ -21,58 +11,24 @@ import Foundation
   public final class ApplicationIsActiveCondition: Sendable {
     private typealias Handler = @Sendable (Bool) -> Void
     private struct State: @unchecked Sendable {
-      let becomeActiveObserver: any NSObjectProtocol
-      let resignActiveObserver: any NSObjectProtocol
       var isActive: Bool
     }
 
-    private let state = Lock<State?>(nil)
-    private let subscriptions = QuerySubscriptions<Handler>()
-    private let center: NotificationCenter
+    private let state: LockedBox<State>
+    private let subscriptions: QuerySubscriptions<Handler>
+    private let observerSubscription: QuerySubscription
 
-    fileprivate init<Observer: ApplicationActivityObserver>(
-      observer: @MainActor @escaping @autoclosure () -> Observer,
-      center: NotificationCenter = .default
-    ) {
-      self.center = center
-      MainActor.runSyncIfAble {
-        let observer = observer()
-        self.state.withLock { state in
-          let didBecomeActiveObserver = center.addObserver(
-            forName: Observer.didBecomeActiveNotification,
-            object: nil,
-            queue: nil
-          ) { _ in
-            self.state.withLock { state in
-              state?.isActive = true
-              self.subscriptions.forEach { $0(true) }
-            }
-          }
-          let willResignActiveObserver = center.addObserver(
-            forName: Observer.willResignActiveNotification,
-            object: nil,
-            queue: nil
-          ) { _ in
-            self.state.withLock { state in
-              state?.isActive = false
-              self.subscriptions.forEach { $0(false) }
-            }
-          }
-          state = State(
-            becomeActiveObserver: didBecomeActiveObserver,
-            resignActiveObserver: willResignActiveObserver,
-            isActive: observer.isInitiallyActive
-          )
+    fileprivate init(observer: some ApplicationActivityObserver) {
+      let state = LockedBox(value: State(isActive: true))
+      let subscriptions = QuerySubscriptions<Handler>()
+      self.observerSubscription = observer.subscribe { isActive in
+        state.inner.withLock { state in
+          state.isActive = isActive
+          subscriptions.forEach { $0(isActive) }
         }
       }
-    }
-
-    deinit {
-      self.state.withLock { state in
-        guard let state else { return }
-        self.center.removeObserver(state.becomeActiveObserver)
-        self.center.removeObserver(state.resignActiveObserver)
-      }
+      self.state = state
+      self.subscriptions = subscriptions
     }
   }
 
@@ -80,8 +36,8 @@ import Foundation
 
   extension ApplicationIsActiveCondition: FetchCondition {
     public func isSatisfied(in context: QueryContext) -> Bool {
-      self.state.withLock { state in
-        context.isApplicationActiveRefetchingEnabled && (state?.isActive ?? true)
+      self.state.inner.withLock { state in
+        context.isApplicationActiveRefetchingEnabled && state.isActive
       }
     }
 
@@ -98,40 +54,8 @@ import Foundation
   }
 
   extension FetchCondition where Self == ApplicationIsActiveCondition {
-    #if os(iOS) || os(tvOS) || os(visionOS)
-      /// A ``FetchCondition`` that is statisfied when `UIApplication` indicates that the app
-      /// is active.
-      public static var applicationIsActive: Self {
-        .applicationIsActive(observer: UIApplication.shared)
-      }
-    #elseif os(macOS)
-      /// A ``FetchCondition`` that is statisfied when `NSApplication` indicates that the app
-      /// is active.
-      public static var applicationIsActive: Self {
-        .applicationIsActive(observer: NSApplication.shared)
-      }
-    #elseif os(watchOS)
-      /// A ``FetchCondition`` that is statisfied when `WKExtension` indicates that the app
-      /// is active.
-      @available(watchOS 7.0, *)
-      public static var applicationExtensionIsActive: Self {
-        .applicationIsActive(observer: WKExtension.shared())
-      }
-
-      /// A ``FetchCondition`` that is statisfied when `WKApplication` indicates that the app
-      /// is active.
-      @available(watchOS 7.0, *)
-      public static var applicationIsActive: Self {
-        .applicationIsActive(observer: WKApplication.shared())
-      }
-    #endif
-
-    @_spi(ApplicationActivityObserver)
-    public static func applicationIsActive<Observer: ApplicationActivityObserver>(
-      observer: @MainActor @escaping @autoclosure () -> Observer,
-      center: NotificationCenter = .default
-    ) -> Self {
-      ApplicationIsActiveCondition(observer: observer(), center: center)
+    public static func applicationIsActive(observer: some ApplicationActivityObserver) -> Self {
+      ApplicationIsActiveCondition(observer: observer)
     }
   }
 #endif
