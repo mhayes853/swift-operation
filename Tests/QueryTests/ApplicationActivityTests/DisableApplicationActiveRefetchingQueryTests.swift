@@ -1,6 +1,6 @@
 import CustomDump
 import Foundation
-@_spi(ApplicationActivityObserver) import Query
+import Query
 import QueryTestHelpers
 import XCTest
 
@@ -9,10 +9,7 @@ final class DisableApplicationActiveRefetchingQueryTests: XCTestCase, @unchecked
   private let center = NotificationCenter()
 
   func testDoesNotRefetchQueryOnFocus() async throws {
-    let observer = TestDarwinApplicationActivityObserver(
-      isInitiallyActive: false,
-      notificationCenter: self.center
-    )
+    let observer = TestApplicationActivityObserver()
     let expectation = self.expectation(description: "starts fetching")
     expectation.isInverted = true
 
@@ -27,7 +24,7 @@ final class DisableApplicationActiveRefetchingQueryTests: XCTestCase, @unchecked
     )
     automaticCondition.send(true)
 
-    self.center.post(name: .fakeDidBecomeActive, object: nil)
+    observer.send(isActive: true)
     await self.fulfillment(of: [expectation], timeout: 0.05)
 
     subscription.cancel()
