@@ -1,5 +1,6 @@
 #if canImport(JavaScriptKit)
   import JavaScriptKit
+  import JavaScriptEventLoop
   import QueryCore
 
   public struct WindowVisibilityObserver {
@@ -11,13 +12,14 @@
       let window = JSObject.global.window.object!
       let document = window[dynamicMember: self.documentProperty].object!
       handler(document.visibilityState == .string("visible"))
-      nonisolated(unsafe) let listener = JSClosure { _ in
+      let listener = JSClosure { _ in
         handler(document.visibilityState == .string("visible"))
         return .undefined
       }
       window.addEventListener!("visibilitychange", listener)
-      return QuerySubscription {
-        JSObject.global.window.object!.removeEventListener!("visibilitychange", listener)
+      return .jsOneshotClosure { _ in
+        window.removeEventListener!("visibilitychange", listener)
+        return .undefined
       }
     }
   }
@@ -27,9 +29,7 @@
       .windowVisibility(documentProperty: "document")
     }
 
-    public static func windowVisibility(
-      documentProperty: String
-    ) -> Self {
+    public static func windowVisibility(documentProperty: String) -> Self {
       WindowVisibilityObserver(documentProperty: documentProperty)
     }
   }

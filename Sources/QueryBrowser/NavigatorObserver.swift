@@ -39,20 +39,20 @@
     ) -> QuerySubscription {
       let window = JSObject.global.window.object!
       handler(self.currentStatus)
-      nonisolated(unsafe) let onlineListener = JSClosure { _ in
+      let onlineListener = JSClosure { _ in
         handler(.connected)
         return .undefined
       }
-      nonisolated(unsafe) let offlineListener = JSClosure { _ in
+      let offlineListener = JSClosure { _ in
         handler(.disconnected)
         return .undefined
       }
       window.addEventListener!("online", onlineListener)
       window.addEventListener!("offline", offlineListener)
-      return QuerySubscription {
-        let window = JSObject.global.window.object!
+      return .jsOneshotClosure { _ in
         window.removeEventListener!("online", onlineListener)
         window.removeEventListener!("offline", offlineListener)
+        return .undefined
       }
     }
   }

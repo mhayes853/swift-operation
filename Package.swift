@@ -91,6 +91,11 @@ let package = Package(
           name: "JavaScriptKit",
           package: "JavaScriptKit",
           condition: .when(platforms: [.wasi])
+        ),
+        .product(
+          name: "JavaScriptEventLoop",
+          package: "JavaScriptKit",
+          condition: .when(platforms: [.wasi])
         )
       ]
     ),
