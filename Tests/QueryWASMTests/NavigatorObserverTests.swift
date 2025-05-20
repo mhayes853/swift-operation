@@ -5,29 +5,29 @@
   import XCTest
 
   final class NavigatorObserverTests: XCTestCase {
-    func testConnectedWhenOnlineTrue() {
-      let navigator = JSObject()
-      navigator.onLine = .boolean(true)
-      let observer = NavigatorObserver(navigator: navigator, window: window)
+    private let navigator = JSObject()
+    private let observer = NavigatorObserver(navigatorProperty: "fakeNavigator")
 
-      XCTAssertEqual(observer.currentStatus, NetworkStatus.connected)
+    override func setUp() {
+      super.setUp()
+      window.fakeNavigator = .object(self.navigator)
+    }
+
+    func testConnectedWhenOnlineTrue() {
+      self.navigator.onLine = .boolean(true)
+      XCTAssertEqual(self.observer.currentStatus, NetworkStatus.connected)
     }
 
     func testDisconnectedWhenOnlineFalse() {
-      let navigator = JSObject()
-      navigator.onLine = .boolean(false)
-      let observer = NavigatorObserver(navigator: navigator, window: window)
-
-      XCTAssertEqual(observer.currentStatus, NetworkStatus.disconnected)
+      self.navigator.onLine = .boolean(false)
+      XCTAssertEqual(self.observer.currentStatus, NetworkStatus.disconnected)
     }
 
     func testObservesOnlineChanges() {
-      let navigator = JSObject()
-      navigator.onLine = .boolean(true)
-      let observer = NavigatorObserver(navigator: navigator, window: window)
+      self.navigator.onLine = .boolean(true)
 
       let values = Lock([NetworkStatus]())
-      let subscription = observer.subscribe { status in
+      let subscription = self.observer.subscribe { status in
         values.withLock { $0.append(status) }
       }
 

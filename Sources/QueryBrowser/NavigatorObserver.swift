@@ -5,18 +5,15 @@
   // MARK: - NavigatorObserver
 
   /// A `NetworkObserver` that uses the window navigator.
-  public final class NavigatorObserver: @unchecked Sendable {
-    private let navigator: JSObject
-    private let window: JSObject
-    
+  public struct NavigatorObserver {
+    private let navigatorProperty: String
+
     /// Creates an obsever.
     ///
     /// - Parameters:
-    ///   - navigator: The global navigator object.
-    ///   - window: The global window object.
-    public init(navigator: JSObject, window: JSObject) {
-      self.navigator = navigator
-      self.window = window
+    ///   - navigatorProperty: The property name of the navigator object on the global window.
+    public init(navigatorProperty: String = "navigator") {
+      self.navigatorProperty = navigatorProperty
     }
   }
 
@@ -24,22 +21,23 @@
 
   extension NavigatorObserver {
     /// The shared navigator observer.
-    public static let shared = NavigatorObserver(
-      navigator: JSObject.global.navigator.object!,
-      window: JSObject.global.window.object!
-    )
+    public static let shared = NavigatorObserver()
   }
 
   // MARK: - NetworkObserver Conformance
 
   extension NavigatorObserver: NetworkObserver {
     public var currentStatus: NetworkStatus {
-      self.navigator.onLine == .boolean(true) ? .connected : .disconnected
+      let window = JSObject.global.window.object!
+      return window[dynamicMember: self.navigatorProperty].onLine == .boolean(true)
+        ? .connected
+        : .disconnected
     }
 
     public func subscribe(
       with handler: @escaping @Sendable (NetworkStatus) -> Void
     ) -> QuerySubscription {
+      let window = JSObject.global.window.object!
       handler(self.currentStatus)
       nonisolated(unsafe) let onlineListener = JSClosure { _ in
         handler(.connected)
@@ -49,11 +47,12 @@
         handler(.disconnected)
         return .undefined
       }
-      self.window.addEventListener!("online", onlineListener)
-      self.window.addEventListener!("offline", offlineListener)
+      window.addEventListener!("online", onlineListener)
+      window.addEventListener!("offline", offlineListener)
       return QuerySubscription {
-        self.window.removeEventListener!("online", onlineListener)
-        self.window.removeEventListener!("offline", offlineListener)
+        let window = JSObject.global.window.object!
+        window.removeEventListener!("online", onlineListener)
+        window.removeEventListener!("offline", offlineListener)
       }
     }
   }
