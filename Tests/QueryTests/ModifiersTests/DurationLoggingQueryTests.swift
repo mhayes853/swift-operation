@@ -1,4 +1,4 @@
-#if SwiftLog
+#if SwiftQueryLogging
   import CustomDump
   import Query
   import QueryTestHelpers

@@ -1,4 +1,4 @@
-#if SwiftNavigation
+#if SwiftQueryNavigation
   import SwiftNavigation
   import Dependencies
 
@@ -145,7 +145,7 @@
         scheduler: .transaction(transaction)
       )
     }
-    
+
     /// Creates a shared query.
     ///
     /// - Parameters:

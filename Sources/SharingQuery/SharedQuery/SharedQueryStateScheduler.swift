@@ -2,7 +2,7 @@
   import SwiftUI
 #endif
 
-#if SwiftNavigation
+#if SwiftQueryNavigation
   import SwiftNavigation
 #endif
 
@@ -60,7 +60,7 @@ extension SharedQueryStateScheduler where Self == SynchronousStateScheduler {
 
 // MARK: - UITransactionStateScheduler
 
-#if SwiftNavigation
+#if SwiftQueryNavigation
   /// A ``SharedQueryStateScheduler`` that schedules its work on the MainActor inside a
   /// `withUITransaction` block.
   public struct UITransactionStateScheduler: SharedQueryStateScheduler {

@@ -1,4 +1,4 @@
-#if SwiftLog
+#if SwiftQueryLogging
   import Logging
   import Foundation
 

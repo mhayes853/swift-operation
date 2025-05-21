@@ -1,5 +1,5 @@
 @_exported import QueryCore
 
-#if WebBrowser
+#if SwiftQueryWebBrowser
   @_exported import QueryBrowser
 #endif

@@ -1,7 +1,7 @@
 import IssueReporting
 import QueryCore
 
-#if WebBrowser
+#if SwiftQueryWebBrowser
   import QueryBrowser
 #endif
 

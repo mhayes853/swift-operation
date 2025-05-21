@@ -13,26 +13,26 @@ let package = Package(
   ],
   traits: [
     .trait(
-      name: "WebBrowser",
+      name: "SwiftQueryWebBrowser",
       description:
         "Integrates web browser APIs with the library. (Only enable for WASM Browser Applications)",
       enabledTraits: []
     ),
     .trait(
-      name: "SwiftNavigation",
+      name: "SwiftQueryNavigation",
       description: "Integrates SwiftNavigation's UITransaction with SharingQuery."
     ),
     .trait(
-      name: "UIKitNavigation",
+      name: "SwiftQueryUIKitNavigation",
       description: "Integrates UIKitNavigation's UIKitAnimation with SharingQuery.",
-      enabledTraits: ["SwiftNavigation"]
+      enabledTraits: ["SwiftQueryNavigation"]
     ),
     .trait(
-      name: "AppKitNavigation",
+      name: "SwiftQueryAppKitNavigation",
       description: "Integrates AppKitNavigation's AppKitAnimation with SharingQuery.",
-      enabledTraits: ["SwiftNavigation"]
+      enabledTraits: ["SwiftQueryNavigation"]
     ),
-    .trait(name: "SwiftLog", description: "Integrates swift-log with the library.")
+    .trait(name: "SwiftQueryLogging", description: "Integrates swift-log with the library.")
   ],
   dependencies: [
     .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.9.0"),
@@ -59,20 +59,23 @@ let package = Package(
         .product(
           name: "SwiftNavigation",
           package: "swift-navigation",
-          condition: .when(traits: ["SwiftNavigation"])
+          condition: .when(traits: ["SwiftQueryNavigation"])
         ),
         .product(
           name: "UIKitNavigation",
           package: "swift-navigation",
           condition: .when(
             platforms: [.iOS, .tvOS, .visionOS, .macCatalyst],
-            traits: ["UIKitNavigation"]
+            traits: ["SwiftQueryUIKitNavigation"]
           )
         ),
         .product(
           name: "AppKitNavigation",
           package: "swift-navigation",
-          condition: .when(platforms: [.macOS, .macCatalyst], traits: ["AppKitNavigation"])
+          condition: .when(
+            platforms: [.macOS, .macCatalyst],
+            traits: ["SwiftQueryAppKitNavigation"]
+          )
         )
       ]
     ),
@@ -80,7 +83,7 @@ let package = Package(
       name: "Query",
       dependencies: [
         "QueryCore",
-        .target(name: "QueryBrowser", condition: .when(traits: ["browser"]))
+        .target(name: "QueryBrowser", condition: .when(traits: ["SwiftQueryWebBrowser"]))
       ]
     ),
     .target(
@@ -104,7 +107,11 @@ let package = Package(
       dependencies: [
         .product(name: "IssueReporting", package: "xctest-dynamic-overlay"),
         .product(name: "IdentifiedCollections", package: "swift-identified-collections"),
-        .product(name: "Logging", package: "swift-log", condition: .when(traits: ["SwiftLog"]))
+        .product(
+          name: "Logging",
+          package: "swift-log",
+          condition: .when(traits: ["SwiftQueryLogging"])
+        )
       ]
     ),
     .target(name: "QuerySwiftUI", dependencies: ["Query"]),

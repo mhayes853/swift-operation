@@ -1,4 +1,4 @@
-#if UIKitNavigation && canImport(UIKitNavigation)
+#if SwiftQueryUIKitNavigation && canImport(UIKitNavigation)
   import UIKitNavigation
   import Dependencies
 
@@ -145,7 +145,7 @@
         scheduler: .transaction(UITransaction(animation: animation))
       )
     }
-    
+
     /// Creates a shared query.
     ///
     /// - Parameters:
