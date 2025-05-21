@@ -80,8 +80,7 @@ private struct SendFriendRequestMutation: MutationRequest, Hashable {
     with continuation: QueryContinuation<Void>
   ) async throws {
     guard let client = context.queryClient else { return }
-    for (_, store) in client.stores(matching: ["user-friends"]) {
-      guard let store = store.base as? QueryStore<UserFriendsQuery.State> else { continue }
+    for (_, store) in client.stores(matching: ["user-friends"], of: UserFriendsQuery.State.self) {
       let pages = store.currentValue.map { page in
         var page = page
         page.value = page.value.map { user in
