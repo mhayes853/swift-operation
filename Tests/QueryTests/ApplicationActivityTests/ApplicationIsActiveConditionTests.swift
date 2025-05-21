@@ -61,7 +61,7 @@
         satisfactions.withLock { $0.append(value) }
       }
       self.center.post(name: .fakeDidBecomeActive, object: nil)
-      satisfactions.withLock { expectNoDifference($0, [true]) }
+      satisfactions.withLock { expectNoDifference($0, [true, true]) }
       subscription.cancel()
     }
 
@@ -77,7 +77,7 @@
         satisfactions.withLock { $0.append(value) }
       }
       self.center.post(name: .fakeWillResignActive, object: nil)
-      satisfactions.withLock { expectNoDifference($0, [false]) }
+      satisfactions.withLock { expectNoDifference($0, [true, false]) }
       subscription.cancel()
     }
   }
