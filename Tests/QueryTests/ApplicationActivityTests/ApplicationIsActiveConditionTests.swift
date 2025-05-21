@@ -52,7 +52,7 @@
     @Test("Emits True When Becomes Active")
     func emitsTrueWhenBecomesActive() {
       let observer = TestDarwinApplicationActivityObserver(
-        isInitiallyActive: true,
+        isInitiallyActive: false,
         notificationCenter: self.center
       )
       let condition: some FetchCondition = .applicationIsActive(observer: observer)
@@ -61,7 +61,33 @@
         satisfactions.withLock { $0.append(value) }
       }
       self.center.post(name: .fakeDidBecomeActive, object: nil)
-      satisfactions.withLock { expectNoDifference($0, [true, true]) }
+      satisfactions.withLock { expectNoDifference($0, [false, true]) }
+      subscription.cancel()
+    }
+
+    @Test("Deduplicates Emissions")
+    func deduplicatesEmissions() {
+      let observer = TestDarwinApplicationActivityObserver(
+        isInitiallyActive: true,
+        notificationCenter: self.center
+      )
+      let condition: some FetchCondition = .applicationIsActive(observer: observer)
+      let satisfactions = Lock([Bool]())
+      let subscription = condition.subscribe(in: QueryContext()) { value in
+        satisfactions.withLock { $0.append(value) }
+      }
+      satisfactions.withLock { expectNoDifference($0, [true]) }
+      self.center.post(name: .fakeDidBecomeActive, object: nil)
+      satisfactions.withLock {
+        expectNoDifference($0, [true])
+        $0 = []
+      }
+
+      self.center.post(name: .fakeWillResignActive, object: nil)
+      satisfactions.withLock { expectNoDifference($0, [false]) }
+      self.center.post(name: .fakeWillResignActive, object: nil)
+      satisfactions.withLock { expectNoDifference($0, [false]) }
+
       subscription.cancel()
     }
 

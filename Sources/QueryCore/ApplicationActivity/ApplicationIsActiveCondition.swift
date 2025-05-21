@@ -22,6 +22,7 @@ public final class ApplicationIsActiveCondition: Sendable {
     let subscriptions = QuerySubscriptions<Handler>()
     self.observerSubscription = observer.subscribe { isActive in
       state.inner.withLock { state in
+        guard state.isActive != isActive else { return }
         state.isActive = isActive
         subscriptions.forEach { $0(isActive) }
       }
