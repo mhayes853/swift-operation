@@ -5,7 +5,20 @@
 
   /// An `ApplicationActivityObserver` that observes whether or not the browser window is visible.
   public struct WindowVisibilityObserver {
-    let documentProperty: String
+    private let documentProperty: String
+
+    package init(documentProperty: String) {
+      self.documentProperty = documentProperty
+    }
+
+    public init() {
+      self.init(documentProperty: "document")
+    }
+  }
+
+  extension WindowVisibilityObserver {
+    /// The shared window visibility observer.
+    public static let shared = WindowVisibilityObserver()
   }
 
   extension WindowVisibilityObserver: ApplicationActivityObserver {
@@ -28,14 +41,7 @@
   extension ApplicationActivityObserver where Self == WindowVisibilityObserver {
     /// An `ApplicationActivityObserver` that observes whether or not the browser window is visible.
     public static var windowVisibility: Self {
-      .windowVisibility(documentProperty: "document")
-    }
-
-    /// An `ApplicationActivityObserver` that observes whether or not the browser window is visible.
-    ///
-    /// - Parameter documentProperty: The property name of `window.document`.
-    public static func windowVisibility(documentProperty: String) -> Self {
-      WindowVisibilityObserver(documentProperty: documentProperty)
+      WindowVisibilityObserver.shared
     }
   }
 #endif

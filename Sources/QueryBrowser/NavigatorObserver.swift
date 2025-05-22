@@ -8,11 +8,11 @@
   public struct NavigatorObserver {
     private let navigatorProperty: String
 
-    /// Creates an obsever.
-    ///
-    /// - Parameters:
-    ///   - navigatorProperty: The property name of the navigator object on the global window.
-    public init(navigatorProperty: String = "navigator") {
+    public init() {
+      self.init(navigatorProperty: "navigator")
+    }
+
+    package init(navigatorProperty: String) {
       self.navigatorProperty = navigatorProperty
     }
   }

@@ -47,7 +47,7 @@
     private let document: JSObject
 
     var observer: WindowVisibilityObserver {
-      .windowVisibility(documentProperty: "fakeDocument")
+      WindowVisibilityObserver(documentProperty: "fakeDocument")
     }
 
     init(visibility: WindowVisbility) {
