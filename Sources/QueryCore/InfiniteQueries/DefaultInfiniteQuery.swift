@@ -30,8 +30,8 @@ public struct DefaultInfiniteQuery<Query: InfiniteQueryRequest>: QueryRequest {
     self.query.path
   }
 
-  public var _loggableTypeName: String {
-    self.query._loggableTypeName
+  public var _debugTypeName: String {
+    self.query._debugTypeName
   }
 
   public func setup(context: inout QueryContext) {

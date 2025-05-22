@@ -32,13 +32,29 @@
 /// > Note: See <doc:PatternMatchingAndStateManagement> to learn best practicies for managing your
 /// > global application state using `QueryPath`.
 public struct QueryPath: Hashable, Sendable {
-  private let elements: [AnyHashableSendable]
-  
+  private let storage: Storage
+
   /// Creates a path from an array of Hashable and Sendable elements.
   ///
   /// - Parameter elements: The elements that make up this path.
-  public init(_ elements: [any Hashable & Sendable] = []) {
-    self.elements = elements.map(AnyHashableSendable.init)
+  public init(_ elements: [any Hashable & Sendable]) {
+    self.storage = .multiple(elements.map(AnyHashableSendable.init))
+  }
+
+  /// Creates an empty path.
+  public init() {
+    self.storage = .empty
+  }
+}
+
+// MARK: - Single Element Init
+
+extension QueryPath {
+  /// Creates a path from a single element.
+  ///
+  /// - Parameter element: The sole element that makes up this path.
+  public init(_ element: some Hashable & Sendable) {
+    self.storage = .single(AnyHashableSendable(element))
   }
 }
 
@@ -50,9 +66,67 @@ extension QueryPath {
   /// - Parameter other: The path to match against.
   /// - Returns: True if this path is a prefix of `other`.
   public func isPrefix(of other: Self) -> Bool {
-    guard self.elements.count <= other.elements.count else { return false }
-    return (0..<min(self.elements.count, other.elements.count))
-      .allSatisfy { i in self.elements[i] == other.elements[i] }
+    switch (self.storage, other.storage) {
+    case (.empty, _):
+      return true
+    case let (.single(e1), .single(e2)):
+      return e1 == e2
+    case let (.single(e1), .multiple(e2)):
+      return e1 == e2.first
+    case let (.multiple(e1), .multiple(e2)):
+      guard e1.count <= e2.count else { return false }
+      return (0..<min(e1.count, e2.count)).allSatisfy { i in e1[i] == e2[i] }
+    default:
+      return false
+    }
+  }
+}
+
+// MARK: - Storage
+
+extension QueryPath {
+  private enum Storage: Hashable, Sendable {
+    case empty
+    case single(AnyHashableSendable)
+    case multiple([AnyHashableSendable])
+
+    var elements: any RandomAccessCollection<AnyHashableSendable> {
+      switch self {
+      case .empty: EmptyCollection()
+      case let .single(element): CollectionOfOne(element)
+      case let .multiple(elements): elements
+      }
+    }
+
+    static func == (lhs: Self, rhs: Self) -> Bool {
+      switch (lhs, rhs) {
+      case (.empty, .empty), (.empty, .multiple([])), (.multiple([]), .empty):
+        return true
+      case let (.single(e1), .single(e2)):
+        return e1 == e2
+      case let (.single(e1), .multiple(e2)):
+        return e1 == e2.first
+      case let (.multiple(e1), .single(e2)):
+        return e1.first == e2
+      case let (.multiple(e1), .multiple(e2)):
+        return e1 == e2
+      default:
+        return false
+      }
+    }
+
+    func hash(into hasher: inout Hasher) {
+      switch self {
+      case .empty:
+        hasher.combine(0)
+      case let .single(element):
+        hasher.combine(1)
+        hasher.combine(element)
+      case let .multiple(elements):
+        hasher.combine(elements)
+      }
+
+    }
   }
 }
 
@@ -68,7 +142,7 @@ extension QueryPath: ExpressibleByArrayLiteral {
 
 extension QueryPath: CustomStringConvertible {
   public var description: String {
-    "QueryPath([\(elements.map { self.elementDescription($0) }.joined(separator: ", "))])"
+    "QueryPath([\(self.storage.elements.map { self.elementDescription($0) }.joined(separator: ", "))])"
   }
 
   private func elementDescription(_ element: AnyHashableSendable) -> String {

@@ -155,7 +155,7 @@ public protocol QueryRequest<Value, State>: Sendable where State.QueryValue == V
   /// The state type of your query.
   associatedtype State: QueryStateProtocol = QueryState<Value?, Value>
 
-  var _loggableTypeName: String { get }
+  var _debugTypeName: String { get }
 
   /// A ``QueryPath`` that uniquely identifies your query.
   ///
@@ -195,15 +195,19 @@ extension QueryRequest {
 // MARK: - Path Defaults
 
 extension QueryRequest where Self: Hashable {
-  public var path: QueryPath { [self] }
+  public var path: QueryPath {
+    QueryPath(self)
+  }
 }
 
 extension QueryRequest where Self: Identifiable, ID: Sendable {
-  public var path: QueryPath { [self.id] }
+  public var path: QueryPath {
+    QueryPath(self.id)
+  }
 }
 
-// MARK: - Loggable Type Name
+// MARK: - Debug Type Name Default
 
 extension QueryRequest {
-  public var _loggableTypeName: String { typeName(Self.self) }
+  public var _debugTypeName: String { typeName(Self.self) }
 }

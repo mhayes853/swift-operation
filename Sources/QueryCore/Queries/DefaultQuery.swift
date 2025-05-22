@@ -31,8 +31,8 @@ where Query.State == QueryState<Query.Value?, Query.Value> {
     self.query.path
   }
 
-  public var _loggableTypeName: String {
-    self.query._loggableTypeName
+  public var _debugTypeName: String {
+    self.query._debugTypeName
   }
 
   public func setup(context: inout QueryContext) {
