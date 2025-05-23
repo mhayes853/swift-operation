@@ -10,7 +10,7 @@ struct QueryStateKeyTests {
 
   @Test("Uses Current Store State")
   func usesCurrentStoreState() async throws {
-    let query = TestQuery().enableAutomaticFetching(onlyWhen: .always(false))
+    let query = TestQuery().disableAutomaticFetching()
     let store = self.client.store(for: query)
     try await store.fetch()
 
@@ -34,7 +34,7 @@ struct QueryStateKeyTests {
     @Test("Fetches Value With Animation, Completes Synchronously For Testing")
     func fetchesValuesWithAnimationCompletesSynchronouslyForTesting() async throws {
       @SharedQuery(
-        TestQuery().enableAutomaticFetching(onlyWhen: .always(false)),
+        TestQuery().disableAutomaticFetching(),
         client: self.client,
         animation: .bouncy()
       ) var state
@@ -94,7 +94,7 @@ struct QueryStateKeyTests {
 
   @Test("Does Not Start Fetch Task When Automatic Fetching Is Disabled")
   func doesNotStartFetchTaskWhenAutomaticFetchingIsDisabled() async throws {
-    let query = TestQuery().enableAutomaticFetching(onlyWhen: .always(false))
+    let query = TestQuery().disableAutomaticFetching()
     let store = self.client.store(for: query)
 
     @SharedQuery(store: store) var state
@@ -104,7 +104,7 @@ struct QueryStateKeyTests {
 
   @Test("Restarts Loading State When Triggering Fetch On Store")
   func restartsLoadingStateWhenTriggeringFetchOnStore() async throws {
-    let query = TestQuery().enableAutomaticFetching(onlyWhen: .always(false))
+    let query = TestQuery().disableAutomaticFetching()
     let store = self.client.store(for: query)
 
     @SharedQuery(store: store) var state
@@ -126,7 +126,7 @@ struct QueryStateKeyTests {
 
   @Test("Is Not In Initial Loading State When Automatic Fetching Is Disabled")
   func notInInitialLoadingStateWhenAutomaticFetchingIsDisabled() async throws {
-    let query = TestQuery().enableAutomaticFetching(onlyWhen: .always(false))
+    let query = TestQuery().disableAutomaticFetching()
     let store = self.client.store(for: query)
 
     @SharedQuery(store: store) var state
@@ -166,7 +166,7 @@ struct QueryStateKeyTests {
 
   @Test("Makes Separate Subscribers When Using QueryStateKeys With The Same Query")
   func makesSeparateSubscribersWhenUsingQueryStateKeysWithTheSameQuery() async throws {
-    let query = TestQuery().enableAutomaticFetching(onlyWhen: .always(false))
+    let query = TestQuery().disableAutomaticFetching()
     @SharedQuery(query, client: self.client) var value
     @SharedQuery(query, client: self.client) var state
 

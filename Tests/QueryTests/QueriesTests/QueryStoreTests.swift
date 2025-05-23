@@ -220,7 +220,7 @@ struct QueryStoreTests {
   @Test("Emits Fetch Events When fetch Manually Called")
   func emitsFetchEventsWhenFetchManuallyCalled() async throws {
     let collector = QueryStoreEventsCollector<TestQuery.State>()
-    let query = TestQuery().enableAutomaticFetching(onlyWhen: .always(false))
+    let query = TestQuery().disableAutomaticFetching()
     let store = self.client.store(for: query)
     let subscription = store.subscribe(with: collector.eventHandler())
     try await store.fetch()
@@ -237,7 +237,7 @@ struct QueryStoreTests {
 
   @Test("Does Not Receive Events When Unsubscribed")
   func doesNotReceiveEventsWhenUnsubscribed() async throws {
-    let query = TestQuery().enableAutomaticFetching(onlyWhen: .always(false))
+    let query = TestQuery().disableAutomaticFetching()
     let collector = QueryStoreEventsCollector<TestQuery.State>()
     let store = self.client.store(for: query)
     let subscription = store.subscribe(with: collector.eventHandler())
@@ -264,14 +264,14 @@ struct QueryStoreTests {
   @Test("Automatic Fetching Disabled When Condition fetchManuallyCalled")
   func automaticFetchingDisabledWhenFetchManuallyCalled() async throws {
     let store = self.client.store(
-      for: TestQuery().enableAutomaticFetching(onlyWhen: .always(false))
+      for: TestQuery().disableAutomaticFetching()
     )
     expectNoDifference(store.isAutomaticFetchingEnabled, false)
   }
 
   @Test("Handles Events When Fetching")
   func handlesEventsWhenFetching() async throws {
-    let query = TestQuery().enableAutomaticFetching(onlyWhen: .always(false))
+    let query = TestQuery().disableAutomaticFetching()
     let collector = QueryStoreEventsCollector<TestQuery.State>()
     let store = self.client.store(for: query)
     try await store.fetch(handler: collector.eventHandler())
@@ -418,7 +418,7 @@ struct QueryStoreTests {
   @Test("Set Current Query Value, Emits Event")
   func setCurrentQueryValueEmitsEvent() async throws {
     let store = self.client.store(
-      for: TestQuery().enableAutomaticFetching(onlyWhen: .always(false))
+      for: TestQuery().disableAutomaticFetching()
     )
     store.currentValue = TestQuery.value
     let collector = QueryStoreEventsCollector<TestQuery.State>()
@@ -433,7 +433,7 @@ struct QueryStoreTests {
     struct SomeError: Equatable, Error {}
 
     let store = self.client.store(
-      for: TestQuery().enableAutomaticFetching(onlyWhen: .always(false))
+      for: TestQuery().disableAutomaticFetching()
     )
     let collector = QueryStoreEventsCollector<TestQuery.State>()
     let subscription = store.subscribe(with: collector.eventHandler())
@@ -500,7 +500,7 @@ struct QueryStoreTests {
   @Test("Reset State, Emits Event")
   func resetStateEmitsEvent() async throws {
     let store = self.client.store(
-      for: TestQuery().enableAutomaticFetching(onlyWhen: .always(false))
+      for: TestQuery().disableAutomaticFetching()
     )
     let collector = QueryStoreEventsCollector<TestQuery.State>()
     let subscription = store.subscribe(with: collector.eventHandler())
@@ -580,7 +580,7 @@ final class QueryStoreAsyncTests: XCTestCase {
     let expectation = self.expectation(description: "fetches")
     expectation.isInverted = true
 
-    let query = TestQuery().enableAutomaticFetching(onlyWhen: .always(false))
+    let query = TestQuery().disableAutomaticFetching()
     let store = self.client.store(for: query)
     let subscription = store.subscribe(
       with: QueryEventHandler(onFetchingStarted: { _ in expectation.fulfill() })

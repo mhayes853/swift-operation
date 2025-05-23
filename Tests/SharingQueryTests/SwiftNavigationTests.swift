@@ -1,4 +1,4 @@
-#if SwiftNavigation
+#if SwiftQueryNavigation
   import SwiftNavigation
   import XCTest
   import SharingQuery
@@ -13,7 +13,7 @@
 
       let values = Lock([Int]())
 
-      let query = TestQuery().enableAutomaticFetching(onlyWhen: .always(false))
+      let query = TestQuery().disableAutomaticFetching()
       var transaction = UITransaction()
       transaction[TestKey.self] = 10
       @SharedQuery(query, transaction: transaction) var state

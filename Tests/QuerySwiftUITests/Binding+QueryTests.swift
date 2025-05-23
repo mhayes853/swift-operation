@@ -40,7 +40,7 @@
   }
 
   private struct TestBindingView: View {
-    @State.Query(TestQuery().enableAutomaticFetching(onlyWhen: .always(false)).defaultValue(0))
+    @State.Query(TestQuery().disableAutomaticFetching().defaultValue(0))
     var state
 
     let inspection = Inspection<Self>()

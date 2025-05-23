@@ -7,7 +7,7 @@ import Testing
 struct QuerySubscriptionTests {
   @Test("Decrements Subscriber Count When Cancelled")
   func decrementsSubscriberCount() {
-    let query = TestQuery().enableAutomaticFetching(onlyWhen: .always(false))
+    let query = TestQuery().disableAutomaticFetching()
     let store = QueryClient().store(for: query)
 
     let subscription = store.subscribe(with: QueryEventHandler())
@@ -18,7 +18,7 @@ struct QuerySubscriptionTests {
 
   @Test("Cancels When Deallocated")
   func cancelsWhenDeallocated() {
-    let query = TestQuery().enableAutomaticFetching(onlyWhen: .always(false))
+    let query = TestQuery().disableAutomaticFetching()
     let store = QueryClient().store(for: query)
     do {
       let subscription = store.subscribe(with: QueryEventHandler())

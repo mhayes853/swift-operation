@@ -25,7 +25,7 @@ struct QueryControllerTests {
     let controller = TestQueryController<TestQuery>()
     let store = QueryStore.detached(
       query: TestQuery().controlled(by: controller)
-        .enableAutomaticFetching(onlyWhen: .always(false)),
+        .disableAutomaticFetching(),
       initialValue: nil
     )
 
@@ -102,7 +102,7 @@ struct QueryControllerTests {
     let controller = TestQueryController<TestQuery>()
     let store = QueryStore.detached(
       query: TestQuery().controlled(by: controller)
-        .enableAutomaticFetching(onlyWhen: .always(false)),
+        .disableAutomaticFetching(),
       initialValue: nil
     )
     let collector = QueryStoreEventsCollector<TestQuery.State>()

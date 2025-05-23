@@ -1,6 +1,30 @@
 // MARK: - QueryProtocol
 
 extension QueryRequest {
+  /// Disables automatic fetching for this query based on whether or not `isDisabled` is true.
+  ///
+  /// Automatic fetching is defined as the process of data being fetched from this query without
+  /// explicitly calling ``QueryStore/fetch(using:handler:)``. This includes, but not limited to:
+  /// 1. Automatically fetching from this query when subscribed to via ``QueryStore/subscribe(with:)-93jyd``.
+  /// 2. Automatically fetching from this query when the app re-enters from the background.
+  /// 3. Automatically fetching from this query when the user's network connection comes back online.
+  /// 4. Automatically fetching from this query via a ``QueryController``.
+  /// 5. Automatically fetching from this query via ``refetchOnChange(of:)``.
+  ///
+  /// When automatic fetching is disabled, you are responsible for manually calling
+  /// ``QueryStore/fetch(using:handler:)`` to ensure that your query always has the latest data.
+  ///
+  /// When you use the default initializer of a ``QueryClient``, automatic fetching is enabled for all
+  /// ``QueryRequest`` conformances, and disabled for all ``MutationRequest`` conformances.
+  ///
+  /// - Parameter isDisabled: Whether or not to disable automatic fetching.
+  /// - Returns: A ``ModifiedQuery``.
+  public func disableAutomaticFetching(
+    _ isDisabled: Bool = true
+  ) -> ModifiedQuery<Self, _EnableAutomaticFetchingModifier<Self, AlwaysCondition>> {
+    self.enableAutomaticFetching(onlyWhen: .always(!isDisabled))
+  }
+
   /// Enables automatic fetching for this query based on the specified ``FetchCondition``.
   ///
   /// Automatic fetching is defined as the process of data being fetched from this query without

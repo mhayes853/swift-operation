@@ -21,7 +21,7 @@ struct SuspendQueryTests {
     let condition = TestCondition()
     condition.send(false)
 
-    let query = TestQuery().enableAutomaticFetching(onlyWhen: .always(false)).suspend(on: condition)
+    let query = TestQuery().disableAutomaticFetching().suspend(on: condition)
     let store = QueryStore.detached(query: query, initialValue: nil)
     let subscription = store.subscribe(
       with: QueryEventHandler(onFetchingStarted: { _ in subcontinuation.yield() })
@@ -46,7 +46,7 @@ struct SuspendQueryTests {
 
     let condition = TestCondition()
     condition.send(false)
-    let query = TestQuery().enableAutomaticFetching(onlyWhen: .always(false)).suspend(on: condition)
+    let query = TestQuery().disableAutomaticFetching().suspend(on: condition)
     let store = QueryStore.detached(query: query, initialValue: nil)
     let subscription = store.subscribe(
       with: QueryEventHandler(onFetchingStarted: { _ in subcontinuation.yield() })
@@ -74,7 +74,7 @@ struct SuspendQueryTests {
 
     let condition = TestCondition()
     condition.send(false)
-    let query = TestQuery().enableAutomaticFetching(onlyWhen: .always(false)).suspend(on: condition)
+    let query = TestQuery().disableAutomaticFetching().suspend(on: condition)
     let store = QueryStore.detached(query: query, initialValue: nil)
     let subscription = store.subscribe(
       with: QueryEventHandler(onFetchingStarted: { _ in subcontinuation.yield() })
