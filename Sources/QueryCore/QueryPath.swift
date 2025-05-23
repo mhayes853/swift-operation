@@ -38,7 +38,7 @@ public struct QueryPath: Hashable, Sendable {
   ///
   /// - Parameter elements: The elements that make up this path.
   public init(_ elements: [any Hashable & Sendable]) {
-    self.storage = .multiple(elements.map(AnyHashableSendable.init))
+    self.storage = .array(elements.map(AnyHashableSendable.init))
   }
 
   /// Creates an empty path.
@@ -67,13 +67,15 @@ extension QueryPath {
   /// - Returns: True if this path is a prefix of `other`.
   public func isPrefix(of other: Self) -> Bool {
     switch (self.storage, other.storage) {
-    case (.empty, _):
+    case (.empty, _), (.array([]), _):
       return true
     case let (.single(e1), .single(e2)):
       return e1 == e2
-    case let (.single(e1), .multiple(e2)):
+    case let (.single(e1), .array(e2)):
       return e1 == e2.first
-    case let (.multiple(e1), .multiple(e2)):
+    case let (.array(e1), .single(e2)):
+      return e1.count == 1 && e1.first == e2
+    case let (.array(e1), .array(e2)):
       guard e1.count <= e2.count else { return false }
       return (0..<min(e1.count, e2.count)).allSatisfy { i in e1[i] == e2[i] }
     default:
@@ -88,27 +90,27 @@ extension QueryPath {
   private enum Storage: Hashable, Sendable {
     case empty
     case single(AnyHashableSendable)
-    case multiple([AnyHashableSendable])
+    case array([AnyHashableSendable])
 
     var elements: any RandomAccessCollection<AnyHashableSendable> {
       switch self {
       case .empty: EmptyCollection()
       case let .single(element): CollectionOfOne(element)
-      case let .multiple(elements): elements
+      case let .array(elements): elements
       }
     }
 
     static func == (lhs: Self, rhs: Self) -> Bool {
       switch (lhs, rhs) {
-      case (.empty, .empty), (.empty, .multiple([])), (.multiple([]), .empty):
+      case (.empty, .empty), (.empty, .array([])), (.array([]), .empty):
         return true
       case let (.single(e1), .single(e2)):
         return e1 == e2
-      case let (.single(e1), .multiple(e2)):
+      case let (.single(e1), .array(e2)):
         return e1 == e2.first
-      case let (.multiple(e1), .single(e2)):
+      case let (.array(e1), .single(e2)):
         return e1.first == e2
-      case let (.multiple(e1), .multiple(e2)):
+      case let (.array(e1), .array(e2)):
         return e1 == e2
       default:
         return false
@@ -122,7 +124,7 @@ extension QueryPath {
       case let .single(element):
         hasher.combine(1)
         hasher.combine(element)
-      case let .multiple(elements):
+      case let .array(elements):
         hasher.combine(elements)
       }
 
