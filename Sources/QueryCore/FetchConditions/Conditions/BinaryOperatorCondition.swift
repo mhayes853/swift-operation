@@ -1,7 +1,11 @@
 // MARK: - BinaryOperatorConditions
 
 /// A ``FetchCondition`` that applies a binary boolean operator between 2 conditions.
-public struct BinaryOperatorCondition<Left: FetchCondition, Right: FetchCondition> {
+public struct BinaryOperatorCondition<
+  Left: FetchCondition,
+  Right: FetchCondition,
+  Operator: _BinaryFetchConditionOperator
+> {
   fileprivate let left: Left
   fileprivate let right: Right
   fileprivate let op: Operator
@@ -49,10 +53,9 @@ extension BinaryOperatorCondition: FetchCondition {
 public func && <Left: FetchCondition, Right: FetchCondition>(
   _ left: Left,
   _ right: Right
-) -> BinaryOperatorCondition<Left, Right> {
-  BinaryOperatorCondition(left: left, right: right, op: .and)
+) -> BinaryOperatorCondition<Left, Right, _AndOperator> {
+  BinaryOperatorCondition(left: left, right: right, op: _AndOperator())
 }
-
 
 /// Applies a boolean OR operation between the 2 specified ``FetchCondition``s.
 ///
@@ -63,22 +66,26 @@ public func && <Left: FetchCondition, Right: FetchCondition>(
 public func || <Left: FetchCondition, Right: FetchCondition>(
   _ left: Left,
   _ right: Right
-) -> BinaryOperatorCondition<Left, Right> {
-  BinaryOperatorCondition(left: left, right: right, op: .or)
+) -> BinaryOperatorCondition<Left, Right, _OrOperator> {
+  BinaryOperatorCondition(left: left, right: right, op: _OrOperator())
 }
 
 // MARK: - Operator
 
-private enum Operator {
-  case and
-  case or
+public protocol _BinaryFetchConditionOperator: Sendable {
+  func evaluate(_ left: Bool, _ right: Bool) -> Bool
 }
 
-extension Operator {
-  func evaluate(_ left: Bool, _ right: Bool) -> Bool {
-    switch self {
-    case .and: left && right
-    case .or: left || right
-    }
+public struct _AndOperator: _BinaryFetchConditionOperator {
+  @inlinable
+  public func evaluate(_ left: Bool, _ right: Bool) -> Bool {
+    left && right
+  }
+}
+
+public struct _OrOperator: _BinaryFetchConditionOperator {
+  @inlinable
+  public func evaluate(_ left: Bool, _ right: Bool) -> Bool {
+    left || right
   }
 }
