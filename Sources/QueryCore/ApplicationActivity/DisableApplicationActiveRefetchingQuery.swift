@@ -17,6 +17,7 @@ public struct _DisableApplicationActiveRefetchingModifier<Query: QueryRequest>: 
 
   public func setup(context: inout QueryContext, using query: Query) {
     context.isApplicationActiveRefetchingEnabled = !self.isDisabled
+    query.setup(context: &context)
   }
 
   public func fetch(
