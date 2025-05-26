@@ -138,17 +138,17 @@ extension QueryClient {
   /// - On other platforms, the value is nil.
   public static var defaultApplicationActivityObserver: (any ApplicationActivityObserver)? {
     #if os(iOS) || os(tvOS) || os(visionOS)
-      .uiApplication
+      UIApplicationActivityObserver.shared
     #elseif os(macOS)
-      .nsApplication
+      NSApplicationActivityObserver.shared
     #elseif os(watchOS)
       if #available(watchOS 7.0, *) {
-        .wkApplication
+        WKApplicationActivityObserver.shared
       } else {
         nil
       }
     #elseif WebBrowser && canImport(JavaScriptKit)
-      .windowVisibility
+      WindowVisibilityObserver.shared
     #else
       nil
     #endif

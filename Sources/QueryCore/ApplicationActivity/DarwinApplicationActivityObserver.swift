@@ -72,23 +72,23 @@
   #if os(macOS)
     @MainActor
     public struct NSApplicationActivityObserver: DarwinApplicationActivityObserver {
-      public static var didBecomeActiveNotification: Notification.Name {
+      package static var didBecomeActiveNotification: Notification.Name {
         NSApplication.didBecomeActiveNotification
       }
 
-      public static var willResignActiveNotification: Notification.Name {
+      package static var willResignActiveNotification: Notification.Name {
         NSApplication.willResignActiveNotification
       }
 
-      public var isInitiallyActive: Bool {
+      package var isInitiallyActive: Bool {
         NSApplication.shared.isActive
       }
+
+      public nonisolated init() {}
     }
 
-    extension ApplicationActivityObserver where Self == NSApplicationActivityObserver {
-      public static var nsApplication: Self {
-        NSApplicationActivityObserver()
-      }
+    extension NSApplicationActivityObserver {
+      public static nonisolated let shared = NSApplicationActivityObserver()
     }
   #endif
 
@@ -98,45 +98,45 @@
     @MainActor
     @available(watchOS 7.0, *)
     public struct WKApplicationActivityObserver: DarwinApplicationActivityObserver {
-      public static var didBecomeActiveNotification: Notification.Name {
+      package static var didBecomeActiveNotification: Notification.Name {
         WKApplication.didBecomeActiveNotification
       }
 
-      public static var willResignActiveNotification: Notification.Name {
+      package static var willResignActiveNotification: Notification.Name {
         WKApplication.willResignActiveNotification
       }
 
-      public var isInitiallyActive: Bool {
+      package var isInitiallyActive: Bool {
         WKApplication.shared().applicationState == .active
       }
+
+      public nonisolated init() {}
     }
 
-    extension ApplicationActivityObserver where Self == WKApplicationActivityObserver {
-      public static var wkApplication: Self {
-        WKApplicationActivityObserver()
-      }
+    extension WKApplicationActivityObserver {
+      public static nonisolated let shared = WKApplicationActivityObserver()
     }
 
     @MainActor
     @available(watchOS 7.0, *)
     public struct WKExtensionActivityObserver: DarwinApplicationActivityObserver {
-      public static var didBecomeActiveNotification: Notification.Name {
+      package static var didBecomeActiveNotification: Notification.Name {
         WKExtension.applicationDidBecomeActiveNotification
       }
 
-      public static var willResignActiveNotification: Notification.Name {
+      package static var willResignActiveNotification: Notification.Name {
         WKExtension.applicationWillResignActiveNotification
       }
 
-      public var isInitiallyActive: Bool {
+      package var isInitiallyActive: Bool {
         WKExtension.shared().applicationState == .active
       }
+
+      public nonisolated init() {}
     }
 
-    extension ApplicationActivityObserver where Self == WKExtensionActivityObserver {
-      public static var wkExtension: Self {
-        WKExtensionActivityObserver()
-      }
+    extension WKExtensionActivityObserver {
+      public static nonisolated let shared = WKExtensionActivityObserver()
     }
   #endif
 
@@ -145,23 +145,23 @@
   #if os(iOS) || os(tvOS) || os(visionOS)
     @MainActor
     public struct UIApplicationActivityObserver: DarwinApplicationActivityObserver {
-      public static var didBecomeActiveNotification: Notification.Name {
+      package static var didBecomeActiveNotification: Notification.Name {
         UIApplication.didBecomeActiveNotification
       }
 
-      public static var willResignActiveNotification: Notification.Name {
+      package static var willResignActiveNotification: Notification.Name {
         UIApplication.willResignActiveNotification
       }
 
-      public var isInitiallyActive: Bool {
+      package var isInitiallyActive: Bool {
         UIApplication.shared.applicationState == .active
       }
+
+      public nonisolated init() {}
     }
 
-    extension ApplicationActivityObserver where Self == UIApplicationActivityObserver {
-      public static var uiApplication: Self {
-        UIApplicationActivityObserver()
-      }
+    extension UIApplicationActivityObserver {
+      public static nonisolated let shared = UIApplicationActivityObserver()
     }
   #endif
 #endif

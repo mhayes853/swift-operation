@@ -37,11 +37,4 @@
       }
     }
   }
-
-  extension ApplicationActivityObserver where Self == WindowVisibilityObserver {
-    /// An `ApplicationActivityObserver` that observes whether or not the browser window is visible.
-    public static var windowVisibility: Self {
-      WindowVisibilityObserver.shared
-    }
-  }
 #endif
