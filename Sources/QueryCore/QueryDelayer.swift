@@ -30,6 +30,10 @@ extension QueryDelayer where Self == TaskSleepDelayer {
   }
 }
 
+#if !canImport(Darwin)
+  private let NSEC_PER_SEC: UInt64 = 1_000_000_000
+#endif
+
 // MARK: - Clock Delayer
 
 /// A ``QueryDelayer`` that uses the `Clock` protocol to delay queries.
