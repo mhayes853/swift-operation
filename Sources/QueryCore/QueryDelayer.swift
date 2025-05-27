@@ -14,45 +14,21 @@ public protocol QueryDelayer: Sendable {
   func delay(for seconds: TimeInterval) async throws
 }
 
-#if canImport(Dispatch)
-  // MARK: - Dispatch Delayer
+// MARK: - Task Sleep Delayer
 
-  /// A ``QueryDelayer`` that uses a `DispatchQueue` and `DispatchWorkItem`.
-  public struct DispatchDelayer {
-    let queue: DispatchQueue
+/// A ``QueryDelayer`` that uses a `Task.sleep` for delaying.
+public struct TaskSleepDelayer: QueryDelayer {
+  public func delay(for seconds: TimeInterval) async throws {
+    try await Task.sleep(nanoseconds: UInt64(TimeInterval(NSEC_PER_SEC) * seconds))
   }
+}
 
-  extension DispatchDelayer: QueryDelayer {
-    public func delay(for seconds: TimeInterval) async throws {
-      try Task.checkCancellation()
-      nonisolated(unsafe) var state:
-        (workItem: DispatchWorkItem?, continuation: UnsafeContinuation<Void, Error>?) = (nil, nil)
-      try await withTaskCancellationHandler {
-        try await withUnsafeThrowingContinuation { continuation in
-          state.workItem = DispatchWorkItem {
-            guard !Task.isCancelled else { return }
-            continuation.resume()
-          }
-          state.continuation = continuation
-          self.queue.asyncAfter(deadline: .now() + seconds, execute: state.workItem!)
-        }
-      } onCancel: {
-        state.workItem?.cancel()
-        state.continuation?.resume(throwing: CancellationError())
-      }
-    }
+extension QueryDelayer where Self == TaskSleepDelayer {
+  /// A ``QueryDelayer`` that uses a `Task.sleep` for delaying.
+  public static var taskSleep: Self {
+    TaskSleepDelayer()
   }
-
-  extension QueryDelayer where Self == DispatchDelayer {
-    /// A ``QueryDelayer`` that uses a `DispatchQueue` and `DispatchWorkItem`.
-    ///
-    /// - Parameter queue: The queue to delay on.
-    /// - Returns: A ``DispatchDelayer``.
-    public static func dispatch(queue: DispatchQueue) -> Self {
-      Self(queue: queue)
-    }
-  }
-#endif
+}
 
 // MARK: - Clock Delayer
 
@@ -105,7 +81,7 @@ extension QueryContext {
   /// The current ``QueryDelayer`` in this context.
   ///
   /// The default value is platform dependent. On Darwin platforms,
-  /// ``QueryDelayer/dispatch(queue:)`` is the default value, and ``QueryDelayer/clock(_:)`` is the
+  /// ``QueryDelayer/taskSleep`` is the default value, and ``QueryDelayer/clock(_:)`` is the
   /// default value on all other platforms.
   public var queryDelayer: any QueryDelayer {
     get { self[QueryDelayerKey.self] }
@@ -118,7 +94,7 @@ extension QueryContext {
         if #available(iOS 16.0, macOS 13.0, watchOS 9.0, tvOS 16.0, *) {
           .clock(ContinuousClock())
         } else {
-          .dispatch(queue: .global())
+          .taskSleep
         }
       #else
         .clock(ContinuousClock())
