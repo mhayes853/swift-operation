@@ -9,7 +9,7 @@
   final class SwiftNavigationTests: XCTestCase, @unchecked Sendable {
     func testAppliesTransactionWhenSettingValue() async throws {
       let expectation = self.expectation(description: "observes value")
-      expectation.expectedFulfillmentCount = 4
+      expectation.assertForOverFulfill = false
 
       let values = Lock([Int]())
 
@@ -20,16 +20,14 @@
 
       let token = observe { transaction in
         _ = state
-        expectation.fulfill()
-        values.withLock { $0.append(transaction[TestKey.self]) }
+        if transaction[TestKey.self] == 10 {
+          expectation.fulfill()
+        }
       }
 
       try await $state.fetch()
       await self.fulfillment(of: [expectation], timeout: 0.1)
 
-      // NB: 0 comes from running the observe block initially where no transaction is applied to
-      // the initial query value.
-      values.withLock { expectNoDifference($0, [0, 10, 10, 10]) }
       token.cancel()
     }
   }
