@@ -75,13 +75,13 @@ import Foundation
 /// ```
 @dynamicMemberLookup
 public final class QueryStore<State: QueryStateProtocol>: Sendable {
-  private typealias Values = (
-    query: State,
-    taskHerdId: Int,
-    context: QueryContext,
-    controllerSubscriptions: [QuerySubscription],
-    subscribeTask: Task<State.QueryValue, any Error>?
-  )
+  private struct Values {
+    var query: State
+    var taskHerdId: Int
+    var context: QueryContext
+    var controllerSubscriptions: [QuerySubscription]
+    var subscribeTask: Task<State.QueryValue, any Error>?
+  }
 
   private let query: any QueryRequest<State.QueryValue, State>
   private let values: RecursiveLock<Values>
@@ -96,7 +96,7 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
     query.setup(context: &context)
     self.query = query
     self.values = RecursiveLock(
-      (
+      Values(
         query: initialState,
         taskHerdId: 0,
         context: context,
@@ -270,7 +270,7 @@ extension QueryStore {
   ) -> NewValue {
     self.state[keyPath: keyPath]
   }
-  
+
   /// Exclusively accesses the current query state inside the specified closure.
   ///
   /// - Parameter fn: A closure with exclusive access to the query state.
@@ -366,7 +366,7 @@ extension QueryStore {
     let task = self.fetchTask(using: configuration)
     return try await task.runIfNeeded()
   }
-  
+
   /// Creates a ``QueryTask`` to fetch the query's data.
   ///
   /// The returned task does not begin fetching immediately. Rather you must call
@@ -496,7 +496,7 @@ extension QueryStore {
   public var subscriberCount: Int {
     self.subscriptions.count
   }
-  
+
   /// Subscribes to events from this store using a ``QueryEventHandler``.
   ///
   /// If the subscription is the first active subscription on this store, this method will begin
