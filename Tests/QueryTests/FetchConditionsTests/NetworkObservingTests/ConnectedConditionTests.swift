@@ -7,12 +7,12 @@ struct ConnectedConditionTests {
   @Test(
     "Default Satisfied When Status",
     arguments: [
-      (NetworkStatus.disconnected, false),
+      (NetworkConnectionStatus.disconnected, false),
       (.connected, true),
       (.requiresConnection, false)
     ]
   )
-  func satisfiedWhenStatus(status: NetworkStatus, isSatisfied: Bool) {
+  func satisfiedWhenStatus(status: NetworkConnectionStatus, isSatisfied: Bool) {
     let observer = MockNetworkObserver()
     let c: some FetchCondition = .connected(to: observer)
     observer.send(status: status)
@@ -22,12 +22,12 @@ struct ConnectedConditionTests {
   @Test(
     "Default Satisfied When Status For Context Value",
     arguments: [
-      (NetworkStatus.disconnected, false),
+      (NetworkConnectionStatus.disconnected, false),
       (.connected, true),
       (.requiresConnection, true)
     ]
   )
-  func satisfiedWhenStatusForContextValue(status: NetworkStatus, isSatisfied: Bool) {
+  func satisfiedWhenStatusForContextValue(status: NetworkConnectionStatus, isSatisfied: Bool) {
     var context = QueryContext()
     context.satisfiedConnectionStatus = .requiresConnection
     let observer = MockNetworkObserver()
@@ -39,12 +39,12 @@ struct ConnectedConditionTests {
   @Test(
     "Default Observes When Status",
     arguments: [
-      (NetworkStatus.disconnected, false),
+      (NetworkConnectionStatus.disconnected, false),
       (.connected, true),
       (.requiresConnection, false)
     ]
   )
-  func observesWhenStatus(status: NetworkStatus, isSatisfied: Bool) {
+  func observesWhenStatus(status: NetworkConnectionStatus, isSatisfied: Bool) {
     let satisfactions = RecursiveLock([Bool]())
     let observer = MockNetworkObserver()
     let c: some FetchCondition = .connected(to: observer)
@@ -59,12 +59,12 @@ struct ConnectedConditionTests {
   @Test(
     "Default Observes When Status For Context Value",
     arguments: [
-      (NetworkStatus.disconnected, false),
+      (NetworkConnectionStatus.disconnected, false),
       (.connected, true),
       (.requiresConnection, true)
     ]
   )
-  func observesWhenStatusForContextValue(status: NetworkStatus, isSatisfied: Bool) {
+  func observesWhenStatusForContextValue(status: NetworkConnectionStatus, isSatisfied: Bool) {
     var context = QueryContext()
     context.satisfiedConnectionStatus = .requiresConnection
 

@@ -45,7 +45,7 @@ struct QueryPathTests {
         "QueryPath([1, SomeValue()])"
       ),
       (
-        QueryPath([1, NetworkStatus.disconnected]),
+        QueryPath([1, NetworkConnectionStatus.disconnected]),
         "QueryPath([1, disconnected])"
       )
     ]

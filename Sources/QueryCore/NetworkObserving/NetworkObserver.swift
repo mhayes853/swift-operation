@@ -1,7 +1,7 @@
 // MARK: - NetworkStatus
 
 /// An enum representing the connection to a network.
-public enum NetworkStatus: Int, Hashable, Sendable {
+public enum NetworkConnectionStatus: Int, Hashable, Sendable {
   /// The user is connected to the network.
   case connected = 2
   
@@ -12,8 +12,8 @@ public enum NetworkStatus: Int, Hashable, Sendable {
   case requiresConnection = 1
 }
 
-extension NetworkStatus: Comparable {
-  public static func < (lhs: NetworkStatus, rhs: NetworkStatus) -> Bool {
+extension NetworkConnectionStatus: Comparable {
+  public static func < (lhs: NetworkConnectionStatus, rhs: NetworkConnectionStatus) -> Bool {
     lhs.rawValue < rhs.rawValue
   }
 }
@@ -23,11 +23,11 @@ extension NetworkStatus: Comparable {
 /// A protocol for observing the current network connection status.
 public protocol NetworkObserver: Sendable {
   /// The current ``NetworkStatus`` from this observer.
-  var currentStatus: NetworkStatus { get }
+  var currentStatus: NetworkConnectionStatus { get }
   
   /// Subscribes to the ``NetworkStatus`` from this observer.
   ///
   /// - Parameter handler: A closure to yield back the latest network status.
   /// - Returns: A ``QuerySubscription``.
-  func subscribe(with handler: @escaping @Sendable (NetworkStatus) -> Void) -> QuerySubscription
+  func subscribe(with handler: @escaping @Sendable (NetworkConnectionStatus) -> Void) -> QuerySubscription
 }

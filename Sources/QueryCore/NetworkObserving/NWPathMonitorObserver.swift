@@ -6,7 +6,7 @@
   /// A ``NetworkObserver`` that utilizes `NWPathMonitor` to observe an interface's connection
   /// status.
   public final class NWPathMonitorObserver {
-    private typealias Handler = @Sendable (NetworkStatus) -> Void
+    private typealias Handler = @Sendable (NetworkConnectionStatus) -> Void
 
     private let monitor: NWPathMonitor
     private let subscriptions = QuerySubscriptions<Handler>()
@@ -28,7 +28,7 @@
       self.monitor.pathUpdateHandler = { [weak self] path in
         guard let self else { return }
         previousHandler?(path)
-        self.subscriptions.forEach { $0(NetworkStatus(path.status)) }
+        self.subscriptions.forEach { $0(NetworkConnectionStatus(path.status)) }
       }
     }
   }
@@ -36,12 +36,12 @@
   // MARK: - NetworkObserver Conformance
 
   extension NWPathMonitorObserver: NetworkObserver {
-    public var currentStatus: NetworkStatus {
-      NetworkStatus(self.monitor.currentPath.status)
+    public var currentStatus: NetworkConnectionStatus {
+      NetworkConnectionStatus(self.monitor.currentPath.status)
     }
 
     public func subscribe(
-      with handler: @escaping @Sendable (NetworkStatus) -> Void
+      with handler: @escaping @Sendable (NetworkConnectionStatus) -> Void
     ) -> QuerySubscription {
       let (subscription, isFirst) = self.subscriptions.add(handler: handler)
       if isFirst {
@@ -65,7 +65,7 @@
 
   // MARK: - Helpers
 
-  extension NetworkStatus {
+  extension NetworkConnectionStatus {
     fileprivate init(_ status: NWPath.Status) {
       switch status {
       case .satisfied:

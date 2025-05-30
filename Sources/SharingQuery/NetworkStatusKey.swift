@@ -38,15 +38,15 @@ extension NetworkStatusKey: SharedReaderKey {
   }
 
   public func load(
-    context: LoadContext<NetworkStatus>,
-    continuation: LoadContinuation<NetworkStatus>
+    context: LoadContext<NetworkConnectionStatus>,
+    continuation: LoadContinuation<NetworkConnectionStatus>
   ) {
     continuation.resume(returning: self.observer.currentStatus)
   }
 
   public func subscribe(
-    context: LoadContext<NetworkStatus>,
-    subscriber: SharedSubscriber<NetworkStatus>
+    context: LoadContext<NetworkConnectionStatus>,
+    subscriber: SharedSubscriber<NetworkConnectionStatus>
   ) -> SharedSubscription {
     let subscription = self.observer.subscribe { subscriber.yield($0) }
     return SharedSubscription { subscription.cancel() }

@@ -38,12 +38,12 @@ extension QueryContext {
   /// The minimum satisfiable ``NetworkStatus`` status to satisfy ``ConnectedCondition``.
   ///
   /// The default value is ``NetworkStatus/connected``.
-  public var satisfiedConnectionStatus: NetworkStatus {
+  public var satisfiedConnectionStatus: NetworkConnectionStatus {
     get { self[SatisfiedConnectionStatusKey.self] }
     set { self[SatisfiedConnectionStatusKey.self] = newValue }
   }
 
   private struct SatisfiedConnectionStatusKey: Key {
-    static let defaultValue = NetworkStatus.connected
+    static let defaultValue = NetworkConnectionStatus.connected
   }
 }
