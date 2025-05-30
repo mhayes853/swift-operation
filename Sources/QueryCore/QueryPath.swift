@@ -32,7 +32,7 @@
 /// > Note: See <doc:PatternMatchingAndStateManagement> to learn best practicies for managing your
 /// > global application state using `QueryPath`.
 public struct QueryPath: Hashable, Sendable {
-  private let storage: Storage
+  private var storage: Storage
 
   /// Creates a path from an array of Hashable and Sendable elements.
   ///
@@ -81,6 +81,50 @@ extension QueryPath {
     default:
       return false
     }
+  }
+}
+
+// MARK: - Appending
+
+extension QueryPath {
+  /// Appends the contents of `other` to this path.
+  ///
+  /// - Parameter other: Another path.
+  public mutating func append(_ other: QueryPath) {
+    switch (self.storage, other.storage) {
+    case (.single, .empty), (.single, .array([])), (.array, .empty), (.array, .array([])):
+      break
+    case (.array([]), _), (.empty, _):
+      self.storage = other.storage
+    case let (.single(e1), .single(e2)):
+      self.storage = .array([e1, e2])
+    case let (.single(e1), .array(e2)):
+      self.storage = .array([e1] + e2)
+    case let (.array(e1), .single(e2)):
+      self.storage = .array(e1 + [e2])
+    case let (.array(e1), .array(e2)):
+      self.storage = .array(e1 + e2)
+    }
+  }
+  
+  /// Returns a new path with the contents of this path appended with the contents of `other`.
+  ///
+  /// - Parameter other: Another path.
+  /// - Returns: A new path with the contents of this path appended with the contents of `other`.
+  public func appending(_ other: QueryPath) -> Self {
+    var new = self
+    new.append(other)
+    return new
+  }
+  
+  /// Returns a new path with the contents of `lhs` appended with the contents of `rhs`.
+  ///
+  /// - Parameters:
+  ///   - lhs: The left-hand side path.
+  ///   - rhs: The right-hand side path.
+  /// - Returns: A new path with the contents of `lhs` appended with the contents of `rhs`.
+  public static func + (lhs: Self, rhs: Self) -> Self {
+    lhs.appending(rhs)
   }
 }
 

@@ -107,6 +107,27 @@ struct QueryPathTests {
   func hashable(a: QueryPath, b: QueryPath, doesMatch: Bool) {
     expectNoDifference(a.hashValue == b.hashValue, doesMatch)
   }
+
+  @Test(
+    "Appending",
+    arguments: [
+      (QueryPath(), QueryPath(), QueryPath()),
+      (QueryPath([]), QueryPath([]), QueryPath()),
+      (QueryPath([]), QueryPath("foo"), QueryPath("foo")),
+      (QueryPath("foo"), QueryPath([]), QueryPath("foo")),
+      (QueryPath(), QueryPath("foo"), QueryPath("foo")),
+      (QueryPath(), QueryPath(["foo", "bar"]), QueryPath(["foo", "bar"])),
+      (QueryPath("foo"), QueryPath(), QueryPath("foo")),
+      (QueryPath(["foo", "bar"]), QueryPath(), QueryPath(["foo", "bar"])),
+      (QueryPath("foo"), QueryPath("bar"), QueryPath(["foo", "bar"])),
+      (QueryPath(["foo", "bar"]), QueryPath(1), QueryPath(["foo", "bar", 1])),
+      (QueryPath(["foo", "bar"]), QueryPath([1, true]), QueryPath(["foo", "bar", 1, true])),
+      (QueryPath("foo"), QueryPath(["bar", 1, true]), QueryPath(["foo", "bar", 1, true]))
+    ]
+  )
+  func appending(p1: QueryPath, p2: QueryPath, expected: QueryPath) {
+    expectNoDifference(p1.appending(p2), expected)
+  }
 }
 
 private struct SomeValue: Hashable, Sendable {
