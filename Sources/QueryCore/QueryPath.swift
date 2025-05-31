@@ -106,7 +106,14 @@ extension QueryPath {
       self.storage = .array(e1 + e2)
     }
   }
-  
+
+  /// Appends `element` to this path.
+  ///
+  /// - Parameter element: The element to append.
+  public mutating func append(_ element: (some Hashable & Sendable)) {
+    self.append(QueryPath(element))
+  }
+
   /// Returns a new path with the contents of this path appended with the contents of `other`.
   ///
   /// - Parameter other: Another path.
@@ -116,15 +123,15 @@ extension QueryPath {
     new.append(other)
     return new
   }
-  
-  /// Returns a new path with the contents of `lhs` appended with the contents of `rhs`.
+
+  /// Returns a new path with `element` appended to this path.
   ///
-  /// - Parameters:
-  ///   - lhs: The left-hand side path.
-  ///   - rhs: The right-hand side path.
-  /// - Returns: A new path with the contents of `lhs` appended with the contents of `rhs`.
-  public static func + (lhs: Self, rhs: Self) -> Self {
-    lhs.appending(rhs)
+  /// - Parameter element: The element to append.
+  /// - Returns: A new path with `element` appended to this path.
+  public func appending(_ element: (some Hashable & Sendable)) -> Self {
+    var new = self
+    new.append(element)
+    return new
   }
 }
 
