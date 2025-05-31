@@ -263,7 +263,6 @@ extension QueryTask {
 
   private func newTask() -> Task<any Sendable, any Error> {
     var info = QueryTaskInfo(id: self.id, configuration: self.configuration)
-    info.configuration.context.queryRunningTaskInfo = info
     info.configuration.context.queryRunningTaskIdentifier = self.id
     return Task(configuration: info.configuration) {
       try await self.performTask(using: info)

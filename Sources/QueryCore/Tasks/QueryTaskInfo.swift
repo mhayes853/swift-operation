@@ -26,17 +26,3 @@ extension QueryTask {
     QueryTaskInfo(id: self.id, configuration: self.configuration)
   }
 }
-
-extension QueryContext {
-  /// The ``QueryTaskInfo`` of the currently running ``QueryTask`` in this context.
-  ///
-  /// This value is non-nil when accessed from a context within ``QueryRequest/fetch(in:with:)``.
-  public var queryRunningTaskInfo: QueryTaskInfo? {
-    get { self[QueryTaskInfoKey.self] }
-    set { self[QueryTaskInfoKey.self] = newValue }
-  }
-
-  private enum QueryTaskInfoKey: Key {
-    static var defaultValue: QueryTaskInfo? { nil }
-  }
-}
