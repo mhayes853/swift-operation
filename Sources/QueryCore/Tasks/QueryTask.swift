@@ -1,63 +1,5 @@
 import Foundation
 
-// MARK: - QueryTaskConfiguration
-
-/// A configuration data type for a ``QueryTask`` that holds information on how the task runs, and
-/// the ``QueryContext`` used to run the task.
-public struct QueryTaskConfiguration: Sendable {
-  /// The name of the task.
-  public var name: String?
-  
-  /// The priority of the underlying raw `Task` value used by the task.
-  public var priority: TaskPriority?
-  
-  /// The ``QueryContext`` of the task.
-  public var context: QueryContext
-  
-  private var _executorPreference: (any Sendable)?
-  
-  /// Creates a task configuration.
-  ///
-  /// - Parameters:
-  ///   - name: The name of the task.
-  ///   - priority: The priority of the underlying raw `Task` value used by the task.
-  ///   - context: The ``QueryContext`` of the task.
-  public init(name: String? = nil, priority: TaskPriority? = nil, context: QueryContext) {
-    self.name = name
-    self.priority = priority
-    self.context = context
-    self._executorPreference = nil
-  }
-}
-
-@available(iOS 18.0, macOS 15.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, *)
-extension QueryTaskConfiguration {
-  /// The `TaskExecutor` preference of the underlying raw `Task` value used by the task.
-  public var executorPreference: (any TaskExecutor)? {
-    get { self._executorPreference as? any TaskExecutor }
-    set { self._executorPreference = newValue }
-  }
-
-  /// Creates a task configuration.
-  ///
-  /// - Parameters:
-  ///   - name: The name of the task.
-  ///   - priority: The priority of the underlying raw `Task` value used by the task.
-  ///   - executorPreference: The `TaskExecutor` preference of the underlying raw `Task` value used by the task.
-  ///   - context: The ``QueryContext`` of the task.
-  public init(
-    name: String? = nil,
-    priority: TaskPriority? = nil,
-    executorPreference: (any TaskExecutor)? = nil,
-    context: QueryContext
-  ) {
-    self.name = name
-    self.priority = priority
-    self._executorPreference = executorPreference
-    self.context = context
-  }
-}
-
 // MARK: - _QueryTask
 
 private protocol _QueryTask: Sendable, Identifiable {
@@ -99,7 +41,7 @@ public struct QueryTask<Value: Sendable>: _QueryTask {
   private typealias State = (task: TaskState?, dependencies: [any _QueryTask])
 
   public let id: QueryTaskIdentifier
-  
+
   /// The current ``QueryTaskConfiguration`` for this task.
   ///
   /// > Note: Mutating this property after calling ``runIfNeeded()`` has no effect on the
@@ -251,7 +193,7 @@ extension QueryTask {
       }
     }
   }
-  
+
   /// Runs this task if it has not already been started.
   ///
   /// If the task has already been started, then this method will await the active work instead of
@@ -339,7 +281,7 @@ extension QueryTask {
       }
     }
   }
-  
+
   /// Cancels this task.
   ///
   /// `QueryTask` cancellation behaves differently based on the running state of the task.
@@ -411,47 +353,6 @@ extension QueryTask {
   }
 }
 
-// MARK: - Info
-
-/// Info about an existing ``QueryTask``.
-///
-/// You cannot directly create instances of this type. You must get an instance from an existing
-/// ``QueryTask``, or you can access the info of a running task from within
-/// ``QueryRequest/fetch(in:with:)`` via the ``QueryContext/queryRunningTaskInfo`` context value.
-public struct QueryTaskInfo: Sendable, Identifiable {
-  public let id: QueryTaskIdentifier
-  
-  /// The ``QueryTaskConfiguration`` of the task.
-  public var configuration: QueryTaskConfiguration
-}
-
-extension QueryTaskInfo: CustomStringConvertible {
-  public var description: String {
-    "[\(self.configuration.name ?? "Unnamed QueryTask")](ID: \(id.debugDescription))"
-  }
-}
-
-extension QueryTask {
-  /// This task's info.
-  public var info: QueryTaskInfo {
-    QueryTaskInfo(id: self.id, configuration: self.configuration)
-  }
-}
-
-extension QueryContext {
-  /// The ``QueryTaskInfo`` of the currently running ``QueryTask`` in this context.
-  ///
-  /// This value is non-nil when accessed from a context within ``QueryRequest/fetch(in:with:)``.
-  public var queryRunningTaskInfo: QueryTaskInfo? {
-    get { self[QueryTaskInfoKey.self] }
-    set { self[QueryTaskInfoKey.self] = newValue }
-  }
-
-  private enum QueryTaskInfoKey: Key {
-    static var defaultValue: QueryTaskInfo? { nil }
-  }
-}
-
 // MARK: - Warnings
 
 extension QueryWarning {
@@ -467,27 +368,5 @@ extension QueryWarning {
       This will cause task starvation when running any of the tasks in this cycle.
       """
     )
-  }
-}
-
-// MARK: - Helper
-
-extension Task {
-  @discardableResult
-  init(
-    configuration: QueryTaskConfiguration,
-    @_inheritActorContext @_implicitSelfCapture operation:
-      sending @escaping @isolated(any) () async throws -> Success
-  ) where Failure == Error {
-    // TODO: - Use the newly proposed task name API when available in swift 6.x.
-    if #available(iOS 18.0, macOS 15.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *) {
-      self.init(
-        executorPreference: configuration.executorPreference,
-        priority: configuration.priority,
-        operation: operation
-      )
-    } else {
-      self = Task(priority: configuration.priority, operation: operation)
-    }
   }
 }
