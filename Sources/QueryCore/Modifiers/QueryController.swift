@@ -123,24 +123,20 @@ extension QueryControls {
 
   /// Yields a refetch to the query.
   ///
-  /// - Parameter configuration: The ``QueryTaskConfiguration`` to use for the underlying ``QueryTask``.
+  /// - Parameter context: The ``QueryContext`` to use for the underlying ``QueryTask``.
   /// - Returns: The result of the refetch, or nil if refetching is unavailable.
   @discardableResult
-  public func yieldRefetch(
-    with configuration: QueryTaskConfiguration? = nil
-  ) async throws -> State.QueryValue? {
-    try await self.yieldRefetchTask(with: configuration)?.runIfNeeded()
+  public func yieldRefetch(with context: QueryContext? = nil) async throws -> State.QueryValue? {
+    try await self.yieldRefetchTask(with: context)?.runIfNeeded()
   }
 
   /// Creates a ``QueryTask`` to refetch the query.
   ///
-  /// - Parameter configuration: The ``QueryTaskConfiguration`` to use for the ``QueryTask``.
+  /// - Parameter context: The ``QueryContext`` to use for the ``QueryTask``.
   /// - Returns: A ``QueryTask`` to refetch the query, or nil if refetching is unavailable.
-  public func yieldRefetchTask(
-    with configuration: QueryTaskConfiguration? = nil
-  ) -> QueryTask<State.QueryValue>? {
+  public func yieldRefetchTask(with context: QueryContext? = nil) -> QueryTask<State.QueryValue>? {
     guard self.canYieldRefetch else { return nil }
-    return self.store?.fetchTask(using: configuration)
+    return self.store?.fetchTask(using: context)
   }
 }
 

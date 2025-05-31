@@ -42,39 +42,18 @@ public struct QueryTask<Value: Sendable>: _QueryTask {
 
   public let id: QueryTaskIdentifier
 
-  /// The current ``QueryTaskConfiguration`` for this task.
+  /// The current ``QueryContext`` for this task.
   ///
   /// > Note: Mutating this property after calling ``runIfNeeded()`` has no effect on the
   /// > active work.
-  public var configuration: QueryTaskConfiguration
+  public var context: QueryContext
 
-  public var context: QueryContext {
-    get { self.configuration.context }
-    set { self.configuration.context = newValue }
-  }
-
-  private let work: @Sendable (QueryTaskInfo) async throws -> any Sendable
+  private let work: @Sendable (QueryTaskIdentifier, QueryContext) async throws -> any Sendable
   private let transforms: @Sendable (any Sendable) throws -> Value
   private let box: LockedBox<State>
 }
 
 extension QueryTask {
-  /// Creates a task.
-  ///
-  /// - Parameters:
-  ///   - configuration: The ``QueryTaskConfiguration`` for the task.
-  ///   - work: The task's actual work.
-  public init(
-    configuration: QueryTaskConfiguration,
-    work: @escaping @Sendable (QueryTaskInfo) async throws -> Value
-  ) {
-    self.id = .next()
-    self.configuration = configuration
-    self.work = work
-    self.transforms = { $0 as! Value }
-    self.box = LockedBox(value: (nil, []))
-  }
-
   /// Creates a task.
   ///
   /// - Parameters:
@@ -85,10 +64,23 @@ extension QueryTask {
     work: @escaping @Sendable (QueryTaskIdentifier, QueryContext) async throws -> Value
   ) {
     self.id = .next()
-    self.configuration = context.queryTaskConfiguration
-    self.work = { try await work($0.id, $0.configuration.context) }
+    self.context = context
+    self.work = work
     self.transforms = { $0 as! Value }
     self.box = LockedBox(value: (nil, []))
+  }
+}
+
+// MARK: - QueryTaskConfiguration
+
+extension QueryTask {
+  /// The current ``QueryTaskConfiguration`` for this task.
+  ///
+  /// > Note: Mutating this property after calling ``runIfNeeded()`` has no effect on the
+  /// > active work.
+  public var configuration: QueryTaskConfiguration {
+    get { self.context.queryTaskConfiguration }
+    set { self.context.queryTaskConfiguration = newValue }
   }
 }
 
@@ -262,21 +254,21 @@ extension QueryTask {
   }
 
   private func newTask() -> Task<any Sendable, any Error> {
-    var info = QueryTaskInfo(id: self.id, configuration: self.configuration)
-    info.configuration.context.queryRunningTaskIdentifier = self.id
+    var context = self.context
+    context.queryRunningTaskIdentifier = self.id
     return Task(configuration: info.configuration) {
-      try await self.performTask(using: info)
+      try await self.performTask(context: context)
     }
   }
 
-  private func performTask(using info: QueryTaskInfo) async throws -> any Sendable {
+  private func performTask(context: QueryContext) async throws -> any Sendable {
     await withTaskGroup(of: Void.self) { group in
       for dependency in self.dependencies {
         group.addTask { _ = try? await dependency._runIfNeeded() }
       }
     }
     let result = await Result {
-      let value = try await self.work(info) as any Sendable
+      let value = try await self.work(self.id, context) as any Sendable
       try Task.checkCancellation()
       return value
     }
@@ -366,7 +358,7 @@ extension QueryTask {
   ) -> QueryTask<T> {
     QueryTask<T>(
       id: self.id,
-      configuration: self.configuration,
+      context: self.context,
       work: self.work,
       transforms: { try transform(self.transforms($0)) },
       box: self.box

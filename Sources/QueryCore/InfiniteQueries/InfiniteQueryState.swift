@@ -50,20 +50,20 @@ public struct InfiniteQueryState<PageID: Hashable & Sendable, PageValue: Sendabl
   /// The page id that will be passed to the driving query when
   /// ``QueryStore/fetchNextPage(using:handler:)`` is called.
   public private(set) var nextPageId: PageID?
-  
+
   /// The page id that will be passed to the driving query when
   /// ``QueryStore/fetchPreviousPage(using:handler:)`` is called.
   public private(set) var previousPageId: PageID?
 
   /// The active ``QueryTask``s for refetching all pages of data.
   public private(set) var allPagesActiveTasks = IdentifiedArrayOf<QueryTask<QueryValue>>()
-  
+
   /// The active ``QueryTask``s for fetching the initial page of data.
   public private(set) var initialPageActiveTasks = IdentifiedArrayOf<QueryTask<QueryValue>>()
-  
+
   /// The active ``QueryTask``s for fetching the next page of data.
   public private(set) var nextPageActiveTasks = IdentifiedArrayOf<QueryTask<QueryValue>>()
-  
+
   /// The active ``QueryTask``s for fetching the page of data that will be presented at the
   /// beginning of ``currentValue``.
   public private(set) var previousPageActiveTasks = IdentifiedArrayOf<QueryTask<QueryValue>>()
@@ -124,13 +124,12 @@ extension InfiniteQueryState: _InfiniteQueryStateProtocol {
   public mutating func scheduleFetchTask(
     _ task: inout QueryTask<InfiniteQueryValue<PageID, PageValue>>
   ) {
-    switch self.request(in: task.configuration.context) {
+    switch self.request(in: task.context) {
     case .allPages:
       task.schedule(after: self.initialPageActiveTasks)
       task.schedule(after: self.nextPageActiveTasks)
       task.schedule(after: self.previousPageActiveTasks)
-      task.configuration.context.infiniteValues.currentPagesTracker =
-        InfiniteQueryContextValues.PagesTracker()
+      task.context.infiniteValues.currentPagesTracker = InfiniteQueryContextValues.PagesTracker()
       self.allPagesActiveTasks.append(task)
     case .initialPage:
       self.initialPageActiveTasks.append(task)
@@ -196,12 +195,12 @@ extension InfiniteQueryState: _InfiniteQueryStateProtocol {
       self.nextPageId = value.nextPageId
       self.previousPageId = value.previousPageId
       self.valueUpdateCount += 1
-      self.valueLastUpdatedAt = task.configuration.context.queryClock.now()
+      self.valueLastUpdatedAt = task.context.queryClock.now()
       self.error = nil
     case let .failure(error):
       self.error = error
       self.errorUpdateCount += 1
-      self.errorLastUpdatedAt = task.configuration.context.queryClock.now()
+      self.errorLastUpdatedAt = task.context.queryClock.now()
     }
   }
 

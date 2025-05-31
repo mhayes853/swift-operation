@@ -164,16 +164,14 @@
   extension State.Query {
     @discardableResult
     public func fetch(
-      using configuration: QueryTaskConfiguration? = nil,
+      using context: QueryContext? = nil,
       handler: QueryEventHandler<State> = QueryEventHandler()
     ) async throws -> State.QueryValue {
-      try await self.store.fetch(using: configuration, handler: handler)
+      try await self.store.fetch(using: context, handler: handler)
     }
 
-    public func fetchTask(
-      using configuration: QueryTaskConfiguration? = nil
-    ) -> QueryTask<State.QueryValue> {
-      self.store.fetchTask(using: configuration)
+    public func fetchTask(using context: QueryContext? = nil) -> QueryTask<State.QueryValue> {
+      self.store.fetchTask(using: context)
     }
   }
 
@@ -182,47 +180,47 @@
   extension State.Query where State: _InfiniteQueryStateProtocol {
     @discardableResult
     public func fetchAllPages(
-      using configuration: QueryTaskConfiguration? = nil,
+      using context: QueryContext? = nil,
       handler: InfiniteQueryEventHandler<State.PageID, State.PageValue> =
         InfiniteQueryEventHandler()
     ) async throws -> InfiniteQueryPages<State.PageID, State.PageValue> {
-      try await self.store.fetchAllPages(using: configuration, handler: handler)
+      try await self.store.fetchAllPages(using: context, handler: handler)
     }
 
     public func fetchAllPagesTask(
-      using configuration: QueryTaskConfiguration? = nil
+      using context: QueryContext? = nil
     ) -> QueryTask<InfiniteQueryPages<State.PageID, State.PageValue>> {
-      self.store.fetchAllPagesTask(using: configuration)
+      self.store.fetchAllPagesTask(using: context)
     }
 
     @discardableResult
     public func fetchNextPage(
-      using configuration: QueryTaskConfiguration? = nil,
+      using context: QueryContext? = nil,
       handler: InfiniteQueryEventHandler<State.PageID, State.PageValue> =
         InfiniteQueryEventHandler()
     ) async throws -> InfiniteQueryPage<State.PageID, State.PageValue>? {
-      try await self.store.fetchNextPage(using: configuration, handler: handler)
+      try await self.store.fetchNextPage(using: context, handler: handler)
     }
 
     public func fetchNextPageTask(
-      using configuration: QueryTaskConfiguration? = nil
+      using context: QueryContext? = nil
     ) -> QueryTask<InfiniteQueryPage<State.PageID, State.PageValue>?> {
-      self.store.fetchNextPageTask(using: configuration)
+      self.store.fetchNextPageTask(using: context)
     }
 
     @discardableResult
     public func fetchPreviousPage(
-      using configuration: QueryTaskConfiguration? = nil,
+      using context: QueryContext? = nil,
       handler: InfiniteQueryEventHandler<State.PageID, State.PageValue> =
         InfiniteQueryEventHandler()
     ) async throws -> InfiniteQueryPage<State.PageID, State.PageValue>? {
-      try await self.store.fetchPreviousPage(using: configuration, handler: handler)
+      try await self.store.fetchPreviousPage(using: context, handler: handler)
     }
 
     public func fetchPreviousPageTask(
-      using configuration: QueryTaskConfiguration? = nil
+      using context: QueryContext? = nil
     ) -> QueryTask<InfiniteQueryPage<State.PageID, State.PageValue>?> {
-      self.store.fetchPreviousPageTask(using: configuration)
+      self.store.fetchPreviousPageTask(using: context)
     }
   }
 
@@ -232,47 +230,43 @@
     @discardableResult
     public func mutate(
       with arguments: State.Arguments,
-      using configuration: QueryTaskConfiguration? = nil,
+      using context: QueryContext? = nil,
       handler: MutationEventHandler<State.Arguments, State.Value> = MutationEventHandler()
     ) async throws -> State.Value {
-      try await self.store.mutate(with: arguments, using: configuration, handler: handler)
+      try await self.store.mutate(with: arguments, using: context, handler: handler)
     }
 
     public func mutateTask(
       with arguments: State.Arguments,
-      using configuration: QueryTaskConfiguration? = nil
+      using context: QueryContext? = nil
     ) -> QueryTask<State.Value> {
-      self.store.mutateTask(with: arguments, using: configuration)
+      self.store.mutateTask(with: arguments, using: context)
     }
 
     @discardableResult
     public func retryLatest(
-      using configuration: QueryTaskConfiguration? = nil,
+      using context: QueryContext? = nil,
       handler: MutationEventHandler<State.Arguments, State.Value> = MutationEventHandler()
     ) async throws -> State.Value {
-      try await self.store.retryLatest(using: configuration, handler: handler)
+      try await self.store.retryLatest(using: context, handler: handler)
     }
 
-    public func retryLatestTask(
-      using configuration: QueryTaskConfiguration? = nil
-    ) -> QueryTask<State.Value> {
-      self.store.retryLatestTask(using: configuration)
+    public func retryLatestTask(using context: QueryContext? = nil) -> QueryTask<State.Value> {
+      self.store.retryLatestTask(using: context)
     }
   }
 
   extension State.Query where State: _MutationStateProtocol, State.Arguments == Void {
     @discardableResult
     public func mutate(
-      using configuration: QueryTaskConfiguration? = nil,
+      using context: QueryContext? = nil,
       handler: MutationEventHandler<State.Arguments, State.Value> = MutationEventHandler()
     ) async throws -> State.Value {
-      try await self.store.mutate(using: configuration, handler: handler)
+      try await self.store.mutate(using: context, handler: handler)
     }
 
-    public func mutateTask(
-      using configuration: QueryTaskConfiguration? = nil
-    ) -> QueryTask<State.Value> {
-      self.store.mutateTask(using: configuration)
+    public func mutateTask(using context: QueryContext? = nil) -> QueryTask<State.Value> {
+      self.store.mutateTask(using: context)
     }
   }
 #endif

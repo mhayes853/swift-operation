@@ -9,7 +9,7 @@ public struct QueryTaskInfo: Sendable, Identifiable {
   public let id: QueryTaskIdentifier
 
   /// The ``QueryTaskConfiguration`` of the task.
-  public var configuration: QueryTaskConfiguration
+  public let configuration: QueryTaskConfiguration
 }
 
 extension QueryTaskInfo: CustomStringConvertible {

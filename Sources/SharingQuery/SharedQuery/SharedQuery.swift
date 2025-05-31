@@ -191,15 +191,15 @@ extension SharedQuery {
   /// Fetches the query's data.
   ///
   /// - Parameters:
-  ///   - configuration: The `QueryTaskConfiguration`` to use for the underlying `QueryTask`.
+  ///   - context: The `QueryContext` to use for the underlying `QueryTask`.
   ///   - handler: A `QueryEventHandler` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: The fetched data.
   @discardableResult
   public func fetch(
-    using configuration: QueryTaskConfiguration? = nil,
+    using context: QueryContext? = nil,
     handler: QueryEventHandler<State> = QueryEventHandler()
   ) async throws -> State.QueryValue {
-    try await self.value.store.fetch(using: configuration, handler: handler)
+    try await self.value.store.fetch(using: context, handler: handler)
   }
 
   /// Creates a `QueryTask` to fetch the query's data.
@@ -207,13 +207,11 @@ extension SharedQuery {
   /// The returned task does not begin fetching immediately. Rather you must call
   /// `QueryTask.runIfNeeded` to fetch the data.
   ///
-  /// - Parameter configuration: The `QueryTaskConfiguration` for the task.
+  /// - Parameter context: The `QueryContext` for the task.
   /// - Returns: A task to fetch the query's data.
   @discardableResult
-  public func fetchTask(
-    using configuration: QueryTaskConfiguration? = nil
-  ) -> QueryTask<State.QueryValue> {
-    self.value.store.fetchTask(using: configuration)
+  public func fetchTask(using context: QueryContext? = nil) -> QueryTask<State.QueryValue> {
+    self.value.store.fetchTask(using: context)
   }
 }
 
@@ -358,15 +356,15 @@ extension SharedQuery where State: _InfiniteQueryStateProtocol {
   /// If no pages have been fetched previously, then no pages will be fetched.
   ///
   /// - Parameters:
-  ///   - configuration: The `QueryTaskConfiguration` to use for the underlying `QueryTask`.
+  ///   - context: The `QueryContext` to use for the underlying `QueryTask`.
   ///   - handler: An `InfiniteQueryEventHandler` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: The fetched data.
   @discardableResult
   public func fetchAllPages(
-    using configuration: QueryTaskConfiguration? = nil,
+    using context: QueryContext? = nil,
     handler: InfiniteQueryEventHandler<State.PageID, State.PageValue> = InfiniteQueryEventHandler()
   ) async throws -> InfiniteQueryPages<State.PageID, State.PageValue> {
-    try await self.value.store.fetchAllPages(using: configuration, handler: handler)
+    try await self.value.store.fetchAllPages(using: context, handler: handler)
   }
 
   /// Creates a `QueryTask` that refetches all existing pages on the query.
@@ -380,13 +378,13 @@ extension SharedQuery where State: _InfiniteQueryStateProtocol {
   /// `QueryTask.runIfNeeded` to fetch the data.
   ///
   /// - Parameters:
-  ///   - configuration: The `QueryTaskConfiguration` to use for the underlying `QueryTask`.
+  ///   - context: The `QueryContext` to use for the underlying `QueryTask`.
   ///   - handler: An `InfiniteQueryEventHandler` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: A task to refetch all pages.
   public func fetchAllPagesTask(
-    using configuration: QueryTaskConfiguration? = nil
+    using context: QueryContext? = nil
   ) -> QueryTask<InfiniteQueryPages<State.PageID, State.PageValue>> {
-    self.value.store.fetchAllPagesTask(using: configuration)
+    self.value.store.fetchAllPagesTask(using: context)
   }
 
   /// Fetches the page that will be placed after the last page in ``currentValue``.
@@ -396,15 +394,15 @@ extension SharedQuery where State: _InfiniteQueryStateProtocol {
   /// This method can fetch data in parallel with ``fetchPreviousPage(using:handler:)``.
   ///
   /// - Parameters:
-  ///   - configuration: The `QueryTaskConfiguration` to use for the underlying `QueryTask`.
+  ///   - context: The `QueryContext` to use for the underlying `QueryTask`.
   ///   - handler: An `InfiniteQueryEventHandler` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: The fetched page.
   @discardableResult
   public func fetchNextPage(
-    using configuration: QueryTaskConfiguration? = nil,
+    using context: QueryContext? = nil,
     handler: InfiniteQueryEventHandler<State.PageID, State.PageValue> = InfiniteQueryEventHandler()
   ) async throws -> InfiniteQueryPage<State.PageID, State.PageValue>? {
-    try await self.value.store.fetchNextPage(using: configuration, handler: handler)
+    try await self.value.store.fetchNextPage(using: context, handler: handler)
   }
 
   /// Creates a `QueryTask` to fetch the page that will be placed after the last page in
@@ -418,13 +416,13 @@ extension SharedQuery where State: _InfiniteQueryStateProtocol {
   /// `QueryTask.runIfNeeded` to fetch the data.
   ///
   /// - Parameters:
-  ///   - configuration: The `QueryTaskConfiguration` to use for the underlying `QueryTask`.
+  ///   - context: The `QueryContext` to use for the underlying `QueryTask`.
   ///   - handler: An `InfiniteQueryEventHandler` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: The fetched page.
   public func fetchNextPageTask(
-    using configuration: QueryTaskConfiguration? = nil
+    using context: QueryContext? = nil
   ) -> QueryTask<InfiniteQueryPage<State.PageID, State.PageValue>?> {
-    self.value.store.fetchNextPageTask(using: configuration)
+    self.value.store.fetchNextPageTask(using: context)
   }
 
   /// Fetches the page that will be placed before the first page in ``currentValue``.
@@ -434,15 +432,15 @@ extension SharedQuery where State: _InfiniteQueryStateProtocol {
   /// This method can fetch data in parallel with ``fetchNextPage(using:handler:)``.
   ///
   /// - Parameters:
-  ///   - configuration: The `QueryTaskConfiguration` to use for the underlying `QueryTask`.
+  ///   - context: The `QueryContext` to use for the underlying `QueryTask`.
   ///   - handler: An `InfiniteQueryEventHandler` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: The fetched page.
   @discardableResult
   public func fetchPreviousPage(
-    using configuration: QueryTaskConfiguration? = nil,
+    using context: QueryContext? = nil,
     handler: InfiniteQueryEventHandler<State.PageID, State.PageValue> = InfiniteQueryEventHandler()
   ) async throws -> InfiniteQueryPage<State.PageID, State.PageValue>? {
-    try await self.value.store.fetchPreviousPage(using: configuration, handler: handler)
+    try await self.value.store.fetchPreviousPage(using: context, handler: handler)
   }
 
   /// Creates a `QueryTask` to fetch the page that will be placed before the first page in
@@ -456,13 +454,13 @@ extension SharedQuery where State: _InfiniteQueryStateProtocol {
   /// `QueryTask.runIfNeeded` to fetch the data.
   ///
   /// - Parameters:
-  ///   - configuration: The `QueryTaskConfiguration` to use for the underlying `QueryTask`.
+  ///   - context: The `QueryContext` to use for the underlying `QueryTask`.
   ///   - handler: An `InfiniteQueryEventHandler` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: The fetched page.
   public func fetchPreviousPageTask(
-    using configuration: QueryTaskConfiguration? = nil
+    using context: QueryContext? = nil
   ) -> QueryTask<InfiniteQueryPage<State.PageID, State.PageValue>?> {
-    self.value.store.fetchPreviousPageTask(using: configuration)
+    self.value.store.fetchPreviousPageTask(using: context)
   }
 }
 
@@ -518,16 +516,16 @@ extension SharedQuery where State: _MutationStateProtocol {
   ///
   /// - Parameters:
   ///   - arguments: The set of arguments to use.
-  ///   - configuration: The `QueryTaskConfiguration` used by the underlying `QueryTask`.
+  ///   - context: The `QueryContext` used by the underlying `QueryTask`.
   ///   - handler: A `MutationEventHandler` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: The mutated value.
   @discardableResult
   public func mutate(
     with arguments: State.Arguments,
-    using configuration: QueryTaskConfiguration? = nil,
+    using context: QueryContext? = nil,
     handler: MutationEventHandler<State.Arguments, State.Value> = MutationEventHandler()
   ) async throws -> State.Value {
-    try await self.value.store.mutate(with: arguments, using: configuration, handler: handler)
+    try await self.value.store.mutate(with: arguments, using: context, handler: handler)
   }
 
   /// Creates a `QueryTask` that performs a mutation with a set of arguments.
@@ -537,13 +535,13 @@ extension SharedQuery where State: _MutationStateProtocol {
   ///
   /// - Parameters:
   ///   - arguments: The set of arguments to use.
-  ///   - configuration: The `QueryTaskConfiguration` for the task.
+  ///   - context: The `QueryContext` for the task.
   /// - Returns: A task to perform the mutation.
   public func mutateTask(
     with arguments: State.Arguments,
-    using configuration: QueryTaskConfiguration? = nil
+    using context: QueryContext? = nil
   ) -> QueryTask<State.Value> {
-    self.value.store.mutateTask(with: arguments, using: configuration)
+    self.value.store.mutateTask(with: arguments, using: context)
   }
 
   /// Retries the mutation with the most recently used set of arguments.
@@ -553,15 +551,15 @@ extension SharedQuery where State: _MutationStateProtocol {
   /// > test. Additionally, the mutation will also throw an error.
   ///
   /// - Parameters:
-  ///   - configuration: The `QueryTaskConfiguration` used by the underlying `QueryTask`.
+  ///   - context: The `QueryContext` used by the underlying `QueryTask`.
   ///   - handler: A `MutationEventHandler` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: The mutated value.
   @discardableResult
   public func retryLatest(
-    using configuration: QueryTaskConfiguration? = nil,
+    using context: QueryContext? = nil,
     handler: MutationEventHandler<State.Arguments, State.Value> = MutationEventHandler()
   ) async throws -> State.Value {
-    try await self.value.store.retryLatest(using: configuration, handler: handler)
+    try await self.value.store.retryLatest(using: context, handler: handler)
   }
 
   /// Creates a `QueryTask` that retries the mutation with the most recently used set of
@@ -575,12 +573,10 @@ extension SharedQuery where State: _MutationStateProtocol {
   /// > test. Additionally, the mutation will also throw an error.
   ///
   /// - Parameters:
-  ///   - configuration: The `QueryTaskConfiguration` for the task.
+  ///   - context: The `QueryContext` for the task.
   /// - Returns: A task to retry the most recently used arguments on the mutation.
-  public func retryLatestTask(
-    using configuration: QueryTaskConfiguration? = nil
-  ) -> QueryTask<State.Value> {
-    self.value.store.retryLatestTask(using: configuration)
+  public func retryLatestTask(using context: QueryContext? = nil) -> QueryTask<State.Value> {
+    self.value.store.retryLatestTask(using: context)
   }
 }
 
@@ -588,15 +584,15 @@ extension SharedQuery where State: _MutationStateProtocol, State.Arguments == Vo
   /// Performs a mutation with no arguments.
   ///
   /// - Parameters:
-  ///   - configuration: The `QueryTaskConfiguration` used by the underlying `QueryTask`.
+  ///   - context: The `QueryContext` used by the underlying `QueryTask`.
   ///   - handler: A `MutationEventHandler` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: The mutated value.
   @discardableResult
   public func mutate(
-    using configuration: QueryTaskConfiguration? = nil,
+    using context: QueryContext? = nil,
     handler: MutationEventHandler<State.Arguments, State.Value> = MutationEventHandler()
   ) async throws -> State.Value {
-    try await self.mutate(with: (), using: configuration, handler: handler)
+    try await self.mutate(with: (), using: context, handler: handler)
   }
 
   /// Creates a `QueryTask` that performs a mutation with no arguments.
@@ -605,11 +601,9 @@ extension SharedQuery where State: _MutationStateProtocol, State.Arguments == Vo
   /// `QueryTask.runIfNeeded` to fetch the data.
   ///
   /// - Parameters:
-  ///   - configuration: The `QueryTaskConfiguration` for the task.
+  ///   - context: The `QueryContext` for the task.
   /// - Returns: A task to perform the mutation.
-  public func mutateTask(
-    using configuration: QueryTaskConfiguration? = nil
-  ) -> QueryTask<State.Value> {
-    self.mutateTask(with: (), using: configuration)
+  public func mutateTask(using context: QueryContext? = nil) -> QueryTask<State.Value> {
+    self.mutateTask(with: (), using: context)
   }
 }

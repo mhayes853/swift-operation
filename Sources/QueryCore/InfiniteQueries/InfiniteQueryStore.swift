@@ -59,16 +59,16 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
   /// If no pages have been fetched previously, then no pages will be fetched.
   ///
   /// - Parameters:
-  ///   - configuration: The ``QueryTaskConfiguration`` to use for the underlying ``QueryTask``.
+  ///   - context: The ``QueryContext`` to use for the underlying ``QueryTask``.
   ///   - handler: An ``InfiniteQueryEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: The fetched data.
   @discardableResult
   public func fetchAllPages(
-    using configuration: QueryTaskConfiguration? = nil,
+    using context: QueryContext? = nil,
     handler: InfiniteQueryEventHandler<State.PageID, State.PageValue> = InfiniteQueryEventHandler()
   ) async throws -> InfiniteQueryPages<State.PageID, State.PageValue> {
     let value = try await self.fetch(
-      using: self.fetchAllPagesTaskConfiguration(using: configuration),
+      using: self.fetchAllPagesTaskConfiguration(using: context),
       handler: handler
     )
     return self.allPages(from: value)
@@ -85,13 +85,13 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
   /// ``QueryTask/runIfNeeded()`` to fetch the data.
   ///
   /// - Parameters:
-  ///   - configuration: The ``QueryTaskConfiguration`` to use for the underlying ``QueryTask``.
+  ///   - context: The ``QueryContext`` to use for the underlying ``QueryTask``.
   ///   - handler: An ``InfiniteQueryEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: A task to refetch all pages.
   public func fetchAllPagesTask(
-    using configuration: QueryTaskConfiguration? = nil
+    using context: QueryContext? = nil
   ) -> QueryTask<InfiniteQueryPages<State.PageID, State.PageValue>> {
-    self.fetchTask(using: self.fetchAllPagesTaskConfiguration(using: configuration))
+    self.fetchTask(using: self.fetchAllPagesTaskConfiguration(using: context))
       .map(self.allPages(from:))
   }
 
@@ -105,12 +105,12 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
   }
 
   private func fetchAllPagesTaskConfiguration(
-    using configuration: QueryTaskConfiguration? = nil
-  ) -> QueryTaskConfiguration {
-    var configuration = configuration ?? QueryTaskConfiguration(context: self.context)
-    configuration.context.infiniteValues.fetchType = .allPages
-    configuration.name = self.fetchAllPagesTaskName
-    return configuration
+    using context: QueryContext? = nil
+  ) -> QueryContext {
+    var context = context ?? self.context
+    context.infiniteValues.fetchType = .allPages
+    context.queryTaskConfiguration.name = self.fetchAllPagesTaskName
+    return context
   }
 
   private var fetchAllPagesTaskName: String {
@@ -128,17 +128,17 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
   /// This method can fetch data in parallel with ``fetchPreviousPage(using:handler:)``.
   ///
   /// - Parameters:
-  ///   - configuration: The ``QueryTaskConfiguration`` to use for the underlying ``QueryTask``.
+  ///   - context: The ``QueryContext`` to use for the underlying ``QueryTask``.
   ///   - handler: An ``InfiniteQueryEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: The fetched page.
   @discardableResult
   public func fetchNextPage(
-    using configuration: QueryTaskConfiguration? = nil,
+    using context: QueryContext? = nil,
     handler: InfiniteQueryEventHandler<State.PageID, State.PageValue> = InfiniteQueryEventHandler()
   ) async throws -> InfiniteQueryPage<State.PageID, State.PageValue>? {
     guard self.hasNextPage else { return nil }
     let value = try await self.fetch(
-      using: self.fetchNextPageTaskConfiguration(using: configuration),
+      using: self.fetchNextPageTaskConfiguration(using: context),
       handler: handler
     )
     return self.nextPage(from: value)
@@ -155,18 +155,16 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
   /// ``QueryTask/runIfNeeded()`` to fetch the data.
   ///
   /// - Parameters:
-  ///   - configuration: The ``QueryTaskConfiguration`` to use for the underlying ``QueryTask``.
+  ///   - context: The ``QueryContext`` to use for the underlying ``QueryTask``.
   ///   - handler: An ``InfiniteQueryEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: The fetched page.
   public func fetchNextPageTask(
-    using configuration: QueryTaskConfiguration? = nil
+    using context: QueryContext? = nil
   ) -> QueryTask<InfiniteQueryPage<State.PageID, State.PageValue>?> {
     guard self.hasNextPage else {
-      return QueryTask(
-        configuration: self.fetchNextPageTaskConfiguration(using: configuration)
-      ) { _ in nil }
+      return QueryTask(context: self.fetchNextPageTaskConfiguration(using: context)) { _, _ in nil }
     }
-    return self.fetchTask(using: self.fetchNextPageTaskConfiguration(using: configuration))
+    return self.fetchTask(using: self.fetchNextPageTaskConfiguration(using: context))
       .map(self.nextPage(from:))
   }
 
@@ -181,12 +179,13 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
   }
 
   private func fetchNextPageTaskConfiguration(
-    using configuration: QueryTaskConfiguration?
-  ) -> QueryTaskConfiguration {
-    var configuration = configuration ?? QueryTaskConfiguration(context: self.context)
-    configuration.context.infiniteValues.fetchType = .nextPage
-    configuration.name = configuration.name ?? self.fetchNextPageTaskName
-    return configuration
+    using context: QueryContext?
+  ) -> QueryContext {
+    var context = context ?? self.context
+    context.infiniteValues.fetchType = .nextPage
+    context.queryTaskConfiguration.name =
+      context.queryTaskConfiguration.name ?? self.fetchNextPageTaskName
+    return context
   }
 
   private var fetchNextPageTaskName: String {
@@ -204,17 +203,17 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
   /// This method can fetch data in parallel with ``fetchNextPage(using:handler:)``.
   ///
   /// - Parameters:
-  ///   - configuration: The ``QueryTaskConfiguration`` to use for the underlying ``QueryTask``.
+  ///   - context: The ``QueryContext`` to use for the underlying ``QueryTask``.
   ///   - handler: An ``InfiniteQueryEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: The fetched page.
   @discardableResult
   public func fetchPreviousPage(
-    using configuration: QueryTaskConfiguration? = nil,
+    using context: QueryContext? = nil,
     handler: InfiniteQueryEventHandler<State.PageID, State.PageValue> = InfiniteQueryEventHandler()
   ) async throws -> InfiniteQueryPage<State.PageID, State.PageValue>? {
     guard self.hasPreviousPage else { return nil }
     let value = try await self.fetch(
-      using: self.fetchPreviousPageTaskConfiguration(using: configuration),
+      using: self.fetchPreviousPageTaskConfiguration(using: context),
       handler: handler
     )
     return self.previousPage(from: value)
@@ -231,18 +230,18 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
   /// ``QueryTask/runIfNeeded()`` to fetch the data.
   ///
   /// - Parameters:
-  ///   - configuration: The ``QueryTaskConfiguration`` to use for the underlying ``QueryTask``.
+  ///   - context: The ``QueryContext`` to use for the underlying ``QueryTask``.
   ///   - handler: An ``InfiniteQueryEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: The fetched page.
   public func fetchPreviousPageTask(
-    using configuration: QueryTaskConfiguration? = nil
+    using context: QueryContext? = nil
   ) -> QueryTask<InfiniteQueryPage<State.PageID, State.PageValue>?> {
     guard self.hasPreviousPage else {
-      return QueryTask(
-        configuration: self.fetchPreviousPageTaskConfiguration(using: configuration)
-      ) { _ in nil }
+      return QueryTask(context: self.fetchPreviousPageTaskConfiguration(using: context)) { _, _ in
+        nil
+      }
     }
-    return self.fetchTask(using: self.fetchPreviousPageTaskConfiguration(using: configuration))
+    return self.fetchTask(using: self.fetchPreviousPageTaskConfiguration(using: context))
       .map(self.previousPage(from:))
   }
 
@@ -257,12 +256,13 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
   }
 
   private func fetchPreviousPageTaskConfiguration(
-    using configuration: QueryTaskConfiguration?
-  ) -> QueryTaskConfiguration {
-    var configuration = configuration ?? QueryTaskConfiguration(context: self.context)
-    configuration.context.infiniteValues.fetchType = .previousPage
-    configuration.name = configuration.name ?? self.fetchPreviousPageTaskName
-    return configuration
+    using context: QueryContext?
+  ) -> QueryContext {
+    var context = context ?? self.context
+    context.infiniteValues.fetchType = .previousPage
+    context.queryTaskConfiguration.name =
+      context.queryTaskConfiguration.name ?? self.fetchPreviousPageTaskName
+    return context
   }
 
   private var fetchPreviousPageTaskName: String {
@@ -274,18 +274,15 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
 
 extension QueryStore where State: _InfiniteQueryStateProtocol {
   private func fetch(
-    using configuration: QueryTaskConfiguration,
+    using context: QueryContext,
     handler: InfiniteQueryEventHandler<State.PageID, State.PageValue>
   ) async throws -> InfiniteQueryValue<State.PageID, State.PageValue> {
-    let subscription = configuration.context.infiniteValues.addRequestSubscriber(
+    let subscription = context.infiniteValues.addRequestSubscriber(
       from: handler,
       isTemporary: true
     )
     defer { subscription.cancel() }
-    return try await self.fetch(
-      using: configuration,
-      handler: self.queryStoreHandler(for: handler)
-    )
+    return try await self.fetch(using: context, handler: self.queryStoreHandler(for: handler))
   }
 }
 

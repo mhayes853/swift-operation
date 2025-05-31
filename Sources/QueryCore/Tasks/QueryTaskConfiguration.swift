@@ -9,9 +9,6 @@ public struct QueryTaskConfiguration: Sendable {
   /// The priority of the underlying raw `Task` value used by the task.
   public var priority: TaskPriority?
 
-  /// The ``QueryContext`` of the task.
-  public var context: QueryContext
-
   private var _executorPreference: (any Sendable)?
 
   /// Creates a task configuration.
@@ -19,14 +16,9 @@ public struct QueryTaskConfiguration: Sendable {
   /// - Parameters:
   ///   - name: The name of the task.
   ///   - priority: The priority of the underlying raw `Task` value used by the task.
-  public init(
-    name: String? = nil,
-    priority: TaskPriority? = nil,
-    context: QueryContext = QueryContext()
-  ) {
+  public init(name: String? = nil, priority: TaskPriority? = nil) {
     self.name = name
     self.priority = priority
-    self.context = context
     self._executorPreference = nil
   }
 }
@@ -48,13 +40,11 @@ extension QueryTaskConfiguration {
   public init(
     name: String? = nil,
     priority: TaskPriority? = nil,
-    executorPreference: (any TaskExecutor)? = nil,
-    context: QueryContext = QueryContext()
+    executorPreference: (any TaskExecutor)? = nil
   ) {
     self.name = name
     self.priority = priority
     self._executorPreference = executorPreference
-    self.context = context
   }
 }
 

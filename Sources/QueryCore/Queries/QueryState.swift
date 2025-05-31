@@ -4,19 +4,19 @@ import IdentifiedCollections
 // MARK: - QueryState
 
 /// A state type used for ``QueryRequest``.
-/// 
+///
 /// This state type is the default state type for your queries, though ``InfiniteQueryRequest``
 /// and ``MutationRequest`` use ``InfiniteQueryState`` and ``MutationState`` respectively as their
 /// state types.
-/// 
+///
 /// You can only create instances of this state with an initial value that must have the same base
 /// type as `QueryValue`. A nil value for ``currentValue`` indicates that the query has not yet
 /// fetched any data, or has been yielded any value.
-/// 
+///
 /// You can also access all active ``QueryTask`` instances on this state through the
 /// ``activeTasks`` property. Tasks are removed from `activeTasks` when ``finishFetchTask(_:)`` is
 /// called by a ``QueryStore``.
-/// 
+///
 /// > Warning: You should not call any of the `mutating` methods directly on this type, rather a
 /// > ``QueryStore`` will call them at the appropriate time for you.
 public struct QueryState<StateValue: Sendable, QueryValue: Sendable> {
@@ -27,7 +27,7 @@ public struct QueryState<StateValue: Sendable, QueryValue: Sendable> {
   public private(set) var error: (any Error)?
   public private(set) var errorUpdateCount = 0
   public private(set) var errorLastUpdatedAt: Date?
-  
+
   /// The active ``QueryTask`` instances held by this state.
   public private(set) var activeTasks = IdentifiedArrayOf<QueryTask<QueryValue>>()
 
@@ -92,7 +92,7 @@ extension QueryState: QueryStateProtocol {
     with result: Result<QueryValue, any Error>,
     for task: QueryTask<QueryValue>
   ) {
-    self.update(with: result.map { $0 as! StateValue }, using: task.configuration.context)
+    self.update(with: result.map { $0 as! StateValue }, using: task.context)
   }
 
   public mutating func finishFetchTask(_ task: QueryTask<QueryValue>) {

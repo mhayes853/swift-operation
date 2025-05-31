@@ -27,7 +27,7 @@ public struct MutationState<Arguments: Sendable, Value: Sendable> {
   private var historyErrorLastUpdatedAt: Date?
   private var yielded: Yielded?
   public let initialValue: StateValue
-  
+
   /// The history of this mutation.
   ///
   /// This array stores all ongoing and previous attempts of fetching a mutation. Each attempt is
@@ -112,13 +112,12 @@ extension MutationState: _MutationStateProtocol {
   }
 
   public mutating func scheduleFetchTask(_ task: inout QueryTask<Value>) {
-    let args =
-      task.configuration.context.mutationArgs(as: Arguments.self) ?? self.history.last?.arguments
+    let args = task.context.mutationArgs(as: Arguments.self) ?? self.history.last?.arguments
     guard let args else {
       reportWarning(.mutationWithNoArgumentsOrHistory)
       return
     }
-    task.configuration.context.mutationValues = MutationContextValues(arguments: args)
+    task.context.mutationValues = MutationContextValues(arguments: args)
     self.history.append(HistoryEntry(task: task, args: args))
   }
 
@@ -171,26 +170,26 @@ extension MutationState {
   public struct HistoryEntry: Sendable {
     /// The ``QueryTask`` for this entry.
     public let task: QueryTask<Value>
-    
+
     /// The arguments passed to the mutation attempt represented by this entry.
     public let arguments: Arguments
-    
+
     /// The `Date` of when this entry was added.
     public let startDate: Date
-    
+
     /// The current and ongoing result of the mutation attempt represented by this entry.
     public private(set) var currentResult: Result<Value, any Error>?
-    
+
     /// The date this entry was last modified.
     public private(set) var lastUpdatedAt: Date?
-    
+
     /// The current ``QueryStatus`` of the mutation attempt represented by this entry.
     public private(set) var status: QueryStatus<StatusValue>
 
     fileprivate init(task: QueryTask<Value>, args: Arguments) {
       self.task = task
       self.arguments = args
-      self.startDate = task.configuration.context.queryClock.now()
+      self.startDate = task.context.queryClock.now()
       self.lastUpdatedAt = nil
       self.status = .loading
     }
@@ -206,7 +205,7 @@ extension MutationState.HistoryEntry: Identifiable {
 extension MutationState.HistoryEntry {
   fileprivate mutating func update(with result: Result<Value, any Error>) {
     self.currentResult = result
-    self.lastUpdatedAt = self.task.configuration.context.queryClock.now()
+    self.lastUpdatedAt = self.task.context.queryClock.now()
   }
 
   fileprivate mutating func finish() {

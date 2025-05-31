@@ -353,17 +353,17 @@ extension QueryStore {
   /// Fetches the query's data.
   ///
   /// - Parameters:
-  ///   - configuration: The ``QueryTaskConfiguration`` to use for the underlying ``QueryTask``.
+  ///   - context: The ``QueryContext`` to use for the underlying ``QueryTask``.
   ///   - handler: A ``QueryEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: The fetched data.
   @discardableResult
   public func fetch(
-    using configuration: QueryTaskConfiguration? = nil,
+    using context: QueryContext? = nil,
     handler: QueryEventHandler<State> = QueryEventHandler()
   ) async throws -> State.QueryValue {
     let (subscription, _) = self.subscriptions.add(handler: handler, isTemporary: true)
     defer { subscription.cancel() }
-    let task = self.fetchTask(using: configuration)
+    let task = self.fetchTask(using: context)
     return try await task.runIfNeeded()
   }
 
@@ -372,20 +372,19 @@ extension QueryStore {
   /// The returned task does not begin fetching immediately. Rather you must call
   /// ``QueryTask/runIfNeeded()`` to fetch the data.
   ///
-  /// - Parameter configuration: The ``QueryTaskConfiguration`` for the task.
+  /// - Parameter context: The ``QueryContext`` for the task.
   /// - Returns: A task to fetch the query's data.
   @discardableResult
-  public func fetchTask(
-    using configuration: QueryTaskConfiguration? = nil
-  ) -> QueryTask<State.QueryValue> {
-    self.editValuesWithStateChangeEvent(in: configuration?.context) { values in
-      var config = configuration ?? QueryTaskConfiguration(context: self.context)
-      config.context.currentQueryStore = OpaqueQueryStore(erasing: self)
-      config.name =
-        config.name ?? "\(typeName(Self.self, qualified: true, genericsAbbreviated: false)) Task"
+  public func fetchTask(using context: QueryContext? = nil) -> QueryTask<State.QueryValue> {
+    self.editValuesWithStateChangeEvent(in: context) { values in
+      var context = context ?? self.context
+      context.currentQueryStore = OpaqueQueryStore(erasing: self)
+      context.queryTaskConfiguration.name =
+        context.queryTaskConfiguration.name
+        ?? "\(typeName(Self.self, qualified: true, genericsAbbreviated: false)) Task"
       let task = LockedBox<TaskState>(value: .initial)
       var inner = self.queryTask(
-        configuration: config,
+        context: context,
         initialHerdId: values.taskHerdId,
         using: task
       )
@@ -398,30 +397,30 @@ extension QueryStore {
   }
 
   private func queryTask(
-    configuration: QueryTaskConfiguration,
+    context: QueryContext,
     initialHerdId: Int,
     using task: LockedBox<TaskState>
   ) -> QueryTask<State.QueryValue> {
-    QueryTask<State.QueryValue>(configuration: configuration) { info in
-      self.subscriptions.forEach { $0.onFetchingStarted?(info.configuration.context) }
+    QueryTask<State.QueryValue>(context: context) { _, context in
+      self.subscriptions.forEach { $0.onFetchingStarted?(context) }
       defer {
-        self.subscriptions.forEach { $0.onFetchingEnded?(info.configuration.context) }
+        self.subscriptions.forEach { $0.onFetchingEnded?(context) }
         task.inner.withLock { $0 = .finished }
       }
       do {
         let value = try await self.query.fetch(
-          in: info.configuration.context,
+          in: context,
           with: self.queryContinuation(
             task: task,
             initialHerdId: initialHerdId,
-            context: info.configuration.context
+            context: context
           )
         )
         self.finishTask(
           with: .success(value),
           task: task,
           initialHerdId: initialHerdId,
-          context: info.configuration.context
+          context: context
         )
         return value
       } catch {
@@ -429,7 +428,7 @@ extension QueryStore {
           with: .failure(error),
           task: task,
           initialHerdId: initialHerdId,
-          context: info.configuration.context
+          context: context
         )
         throw error
       }
@@ -447,9 +446,9 @@ extension QueryStore {
       context.queryResultUpdateReason = .returnedFinalResult
       task.inner.withLock {
         guard case .running(var task) = $0, values.taskHerdId == initialHerdId else { return }
-        task.configuration.context.queryResultUpdateReason = .returnedFinalResult
+        task.context.queryResultUpdateReason = .returnedFinalResult
         values.query.update(with: result, for: task)
-        task.configuration.context.queryResultUpdateReason = nil
+        task.context.queryResultUpdateReason = nil
         values.query.finishFetchTask(task)
       }
       self.subscriptions.forEach {
@@ -506,9 +505,7 @@ extension QueryStore {
   ///
   /// - Parameter handler: The event handler.
   /// - Returns: A ``QuerySubscription``.
-  public func subscribe(
-    with handler: QueryEventHandler<State>
-  ) -> QuerySubscription {
+  public func subscribe(with handler: QueryEventHandler<State>) -> QuerySubscription {
     let subscription = self.values.withLock { values in
       handler.onStateChanged?(self.state, self.context)
       let (subscription, isFirst) = self.subscriptions.add(handler: handler)

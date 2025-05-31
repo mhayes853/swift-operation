@@ -76,17 +76,17 @@ extension QueryStore where State: _MutationStateProtocol {
   ///
   /// - Parameters:
   ///   - arguments: The set of arguments to mutate with.
-  ///   - configuration: The ``QueryTaskConfiguration`` used by the underlying ``QueryTask``.
+  ///   - context: The ``QueryContext`` used by the underlying ``QueryTask``.
   ///   - handler: A ``QueryEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: The mutated value.
   @discardableResult
   public func mutate(
     with arguments: State.Arguments,
-    using configuration: QueryTaskConfiguration? = nil,
+    using context: QueryContext? = nil,
     handler: MutationEventHandler<State.Arguments, State.Value> = MutationEventHandler()
   ) async throws -> State.Value {
     try await self.fetch(
-      using: self.taskConfiguration(with: arguments, using: configuration),
+      using: self.taskConfiguration(with: arguments, using: context),
       handler: self.queryStoreHandler(for: handler)
     )
   }
@@ -98,23 +98,23 @@ extension QueryStore where State: _MutationStateProtocol {
   ///
   /// - Parameters:
   ///   - arguments: The set of arguments to mutate with.
-  ///   - configuration: The ``QueryTaskConfiguration`` for the task.
+  ///   - context: The ``QueryContext`` for the task.
   /// - Returns: A task to perform the mutation.
   public func mutateTask(
     with arguments: State.Arguments,
-    using configuration: QueryTaskConfiguration? = nil
+    using context: QueryContext? = nil
   ) -> QueryTask<State.Value> {
-    self.fetchTask(using: self.taskConfiguration(with: arguments, using: configuration))
+    self.fetchTask(using: self.taskConfiguration(with: arguments, using: context))
   }
 
   private func taskConfiguration(
     with arguments: State.Arguments,
-    using base: QueryTaskConfiguration?
-  ) -> QueryTaskConfiguration {
-    var config = base ?? QueryTaskConfiguration(context: self.context)
-    config.context.mutationValues = MutationContextValues(arguments: arguments)
-    config.name = config.name ?? self.mutateTaskName
-    return config
+    using base: QueryContext?
+  ) -> QueryContext {
+    var context = base ?? self.context
+    context.mutationValues = MutationContextValues(arguments: arguments)
+    context.queryTaskConfiguration.name = context.queryTaskConfiguration.name ?? self.mutateTaskName
+    return context
   }
 
   private var mutateTaskName: String {
@@ -126,15 +126,15 @@ extension QueryStore where State: _MutationStateProtocol, State.Arguments == Voi
   /// Performs a mutation with no arguments.
   ///
   /// - Parameters:
-  ///   - configuration: The ``QueryTaskConfiguration`` used by the underlying ``QueryTask``.
+  ///   - context: The ``QueryContext`` used by the underlying ``QueryTask``.
   ///   - handler: A ``MutationEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: The mutated value.
   @discardableResult
   public func mutate(
-    using configuration: QueryTaskConfiguration? = nil,
+    using context: QueryContext? = nil,
     handler: MutationEventHandler<State.Arguments, State.Value> = MutationEventHandler()
   ) async throws -> State.Value {
-    try await self.mutate(with: (), using: configuration, handler: handler)
+    try await self.mutate(with: (), using: context, handler: handler)
   }
 
   /// Creates a ``QueryTask`` that performs a mutation with no arguments.
@@ -143,12 +143,10 @@ extension QueryStore where State: _MutationStateProtocol, State.Arguments == Voi
   /// ``QueryTask/runIfNeeded()`` to fetch the data.
   ///
   /// - Parameters:
-  ///   - configuration: The ``QueryTaskConfiguration`` for the task.
+  ///   - context: The ``QueryContext`` for the task.
   /// - Returns: A task to perform the mutation.
-  public func mutateTask(
-    using configuration: QueryTaskConfiguration? = nil
-  ) -> QueryTask<State.Value> {
-    self.mutateTask(with: (), using: configuration)
+  public func mutateTask(using context: QueryContext? = nil) -> QueryTask<State.Value> {
+    self.mutateTask(with: (), using: context)
   }
 }
 
@@ -162,16 +160,16 @@ extension QueryStore where State: _MutationStateProtocol {
   /// > test. Additionally, the mutation will also throw an error.
   ///
   /// - Parameters:
-  ///   - configuration: The ``QueryTaskConfiguration`` used by the underlying ``QueryTask``.
+  ///   - context: The ``QueryContext`` used by the underlying ``QueryTask``.
   ///   - handler: A ``MutationEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: The mutated value.
   @discardableResult
   public func retryLatest(
-    using configuration: QueryTaskConfiguration? = nil,
+    using context: QueryContext? = nil,
     handler: MutationEventHandler<State.Arguments, State.Value> = MutationEventHandler()
   ) async throws -> State.Value {
     try await self.fetch(
-      using: self.retryTaskConfiguration(using: configuration),
+      using: self.retryTaskConfiguration(using: context),
       handler: self.queryStoreHandler(for: handler)
     )
   }
@@ -187,20 +185,19 @@ extension QueryStore where State: _MutationStateProtocol {
   /// > test. Additionally, the mutation will also throw an error.
   ///
   /// - Parameters:
-  ///   - configuration: The ``QueryTaskConfiguration`` for the task.
+  ///   - context: The ``QueryContext`` for the task.
   /// - Returns: A task to retry the most recently used arguments on the mutation.
-  public func retryLatestTask(
-    using configuration: QueryTaskConfiguration? = nil
-  ) -> QueryTask<State.Value> {
-    self.fetchTask(using: self.retryTaskConfiguration(using: configuration))
+  public func retryLatestTask(using context: QueryContext? = nil) -> QueryTask<State.Value> {
+    self.fetchTask(using: self.retryTaskConfiguration(using: context))
   }
 
   private func retryTaskConfiguration(
-    using base: QueryTaskConfiguration?
-  ) -> QueryTaskConfiguration {
-    var config = base ?? QueryTaskConfiguration(context: self.context)
-    config.name = config.name ?? self.retryLatestTaskName
-    return config
+    using base: QueryContext?
+  ) -> QueryContext {
+    var context = base ?? self.context
+    context.queryTaskConfiguration.name =
+      context.queryTaskConfiguration.name ?? self.retryLatestTaskName
+    return context
   }
 
   private var retryLatestTaskName: String {
