@@ -96,6 +96,19 @@
         transaction: transaction
       )
     }
+
+    public init<Query: QueryRequest>(
+      _ query: DefaultQuery<Query>,
+      client: QueryClient? = nil,
+      animation: Animation
+    ) where State == DefaultQuery<Query>.State {
+      self.init(
+        query,
+        initialState: QueryState(initialValue: query.defaultValue),
+        client: client,
+        transaction: Transaction(animation: animation)
+      )
+    }
   }
 
   // MARK: - Store
@@ -177,6 +190,74 @@
 
   // MARK: - Infinite Queries
 
+  extension State.Query {
+    public init<Query: InfiniteQueryRequest>(
+      wrappedValue: Query.State.StateValue = [],
+      _ query: Query,
+      client: QueryClient? = nil,
+      transaction: Transaction?
+    ) where State == InfiniteQueryState<Query.PageID, Query.PageValue> {
+      self.init(
+        query,
+        initialState: InfiniteQueryState(
+          initialValue: wrappedValue,
+          initialPageId: query.initialPageId
+        ),
+        client: client,
+        transaction: transaction
+      )
+    }
+
+    public init<Query: InfiniteQueryRequest>(
+      wrappedValue: Query.State.StateValue = [],
+      _ query: Query,
+      client: QueryClient? = nil,
+      animation: Animation
+    ) where State == InfiniteQueryState<Query.PageID, Query.PageValue> {
+      self.init(
+        query,
+        initialState: InfiniteQueryState(
+          initialValue: wrappedValue,
+          initialPageId: query.initialPageId
+        ),
+        client: client,
+        transaction: Transaction(animation: animation)
+      )
+    }
+
+    public init<Query: InfiniteQueryRequest>(
+      _ query: DefaultInfiniteQuery<Query>,
+      client: QueryClient? = nil,
+      transaction: Transaction? = nil
+    ) where State == InfiniteQueryState<Query.PageID, Query.PageValue> {
+      self.init(
+        query,
+        initialState: InfiniteQueryState(
+          initialValue: query.defaultValue,
+          initialPageId: query.initialPageId
+        ),
+        client: client,
+        transaction: transaction
+      )
+    }
+
+    public init<Query: InfiniteQueryRequest>(
+      _ query: DefaultInfiniteQuery<Query>,
+      client: QueryClient? = nil,
+      animation: Animation
+    ) where State == InfiniteQueryState<Query.PageID, Query.PageValue> {
+      self.init(
+        query,
+        initialState: InfiniteQueryState(
+          initialValue: query.defaultValue,
+          initialPageId: query.initialPageId
+        ),
+        client: client,
+        transaction: Transaction(animation: animation)
+      )
+    }
+  }
+
   extension State.Query where State: _InfiniteQueryStateProtocol {
     @discardableResult
     public func fetchAllPages(
@@ -225,6 +306,78 @@
   }
 
   // MARK: - Mutations
+
+  extension State.Query {
+    public init<
+      Arguments: Sendable,
+      V: Sendable,
+      Mutation: MutationRequest<Arguments, V>
+    >(
+      wrappedValue: V?,
+      _ mutation: Mutation,
+      client: QueryClient? = nil,
+      transaction: Transaction? = nil
+    ) where State == MutationState<Arguments, V> {
+      self.init(
+        mutation,
+        initialState: MutationState(initialValue: wrappedValue),
+        client: client,
+        transaction: transaction
+      )
+    }
+
+    public init<
+      Arguments: Sendable,
+      V: Sendable,
+      Mutation: MutationRequest<Arguments, V>
+    >(
+      wrappedValue: V?,
+      _ mutation: Mutation,
+      client: QueryClient? = nil,
+      animation: Animation
+    ) where State == MutationState<Arguments, V> {
+      self.init(
+        mutation,
+        initialState: MutationState(initialValue: wrappedValue),
+        client: client,
+        transaction: Transaction(animation: animation)
+      )
+    }
+
+    public init<
+      Arguments: Sendable,
+      V: Sendable,
+      Mutation: MutationRequest<Arguments, V>
+    >(
+      _ mutation: Mutation,
+      client: QueryClient? = nil,
+      transaction: Transaction? = nil
+    ) where State == MutationState<Arguments, V> {
+      self.init(
+        mutation,
+        initialState: MutationState(),
+        client: client,
+        transaction: transaction
+      )
+    }
+
+    public init<
+      Arguments: Sendable,
+      V: Sendable,
+      Mutation: MutationRequest<Arguments, V>
+    >(
+      _ mutation: Mutation,
+      client: QueryClient? = nil,
+      animation: Animation
+    ) where State == MutationState<Arguments, V> {
+      self.init(
+        mutation,
+        initialState: MutationState(),
+        client: client,
+        transaction: Transaction(animation: animation)
+      )
+    }
+  }
 
   extension State.Query where State: _MutationStateProtocol {
     @discardableResult
