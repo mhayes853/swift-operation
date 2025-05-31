@@ -48,6 +48,11 @@ public struct QueryTask<Value: Sendable>: _QueryTask {
   /// > active work.
   public var configuration: QueryTaskConfiguration
 
+  public var context: QueryContext {
+    get { self.configuration.context }
+    set { self.configuration.context = newValue }
+  }
+
   private let work: @Sendable (QueryTaskInfo) async throws -> any Sendable
   private let transforms: @Sendable (any Sendable) throws -> Value
   private let box: LockedBox<State>
@@ -66,6 +71,22 @@ extension QueryTask {
     self.id = .next()
     self.configuration = configuration
     self.work = work
+    self.transforms = { $0 as! Value }
+    self.box = LockedBox(value: (nil, []))
+  }
+
+  /// Creates a task.
+  ///
+  /// - Parameters:
+  ///   - context: The ``QueryContext`` for the task.
+  ///   - work: The task's actual work.
+  public init(
+    context: QueryContext,
+    work: @escaping @Sendable (QueryTaskIdentifier, QueryContext) async throws -> Value
+  ) {
+    self.id = .next()
+    self.configuration = context.queryTaskConfiguration
+    self.work = { try await work($0.id, $0.configuration.context) }
     self.transforms = { $0 as! Value }
     self.box = LockedBox(value: (nil, []))
   }
@@ -243,6 +264,7 @@ extension QueryTask {
   private func newTask() -> Task<any Sendable, any Error> {
     var info = QueryTaskInfo(id: self.id, configuration: self.configuration)
     info.configuration.context.queryRunningTaskInfo = info
+    info.configuration.context.queryRunningTaskIdentifier = self.id
     return Task(configuration: info.configuration) {
       try await self.performTask(using: info)
     }
@@ -350,6 +372,21 @@ extension QueryTask {
       transforms: { try transform(self.transforms($0)) },
       box: self.box
     )
+  }
+}
+
+// MARK: - QueryContext
+
+extension QueryContext {
+  public var queryRunningTaskIdentifier: QueryTaskIdentifier? {
+    get { self[QueryRunningTaskIdentifierKey.self] }
+    set { self[QueryRunningTaskIdentifierKey.self] = newValue }
+  }
+
+  private enum QueryRunningTaskIdentifierKey: Key {
+    static var defaultValue: QueryTaskIdentifier? {
+      nil
+    }
   }
 }
 

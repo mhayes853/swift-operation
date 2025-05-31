@@ -18,6 +18,8 @@ extension QueryTaskInfo: CustomStringConvertible {
   }
 }
 
+// MARK: - QueryTask
+
 extension QueryTask {
   /// This task's info.
   public var info: QueryTaskInfo {
