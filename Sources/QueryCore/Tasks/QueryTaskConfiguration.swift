@@ -51,6 +51,10 @@ extension QueryTaskConfiguration {
 // MARK: - QueryContext
 
 extension QueryContext {
+  /// The ``QueryTaskConfiguration`` to use for a ``QueryTask``.
+  ///
+  /// The default value is a configuration equivalent to initializing a `QueryTaskConfiguration`
+  /// with the default arguments.
   public var queryTaskConfiguration: QueryTaskConfiguration {
     get { self[QueryTaskConfigurationKey.self] }
     set { self[QueryTaskConfigurationKey.self] = newValue }

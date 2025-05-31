@@ -1,10 +1,10 @@
-// MARK: - Info
+// MARK: - QueryTaskInfo
 
 /// Info about an existing ``QueryTask``.
 ///
 /// You cannot directly create instances of this type. You must get an instance from an existing
 /// ``QueryTask``, or you can access the info of a running task from within
-/// ``QueryRequest/fetch(in:with:)`` via the ``QueryContext/queryRunningTaskInfo`` context value.
+/// ``QueryRequest/fetch(in:with:)``.
 public struct QueryTaskInfo: Sendable, Identifiable {
   public let id: QueryTaskIdentifier
 
