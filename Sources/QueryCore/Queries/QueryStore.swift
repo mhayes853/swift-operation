@@ -213,7 +213,7 @@ extension QueryStore {
 
 // MARK: - Path
 
-extension QueryStore {
+extension QueryStore: QueryPathable {
   /// The ``QueryPath`` of the query managed by this store.
   public var path: QueryPath {
     self.query.path

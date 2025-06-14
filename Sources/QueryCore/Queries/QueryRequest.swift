@@ -148,7 +148,8 @@
 ///
 /// > Note: See <doc:MultistageQueries> for a list of advanced use cases involving
 /// > ``QueryContinuation``.
-public protocol QueryRequest<Value, State>: Sendable where State.QueryValue == Value {
+public protocol QueryRequest<Value, State>: QueryPathable, Sendable
+where State.QueryValue == Value {
   /// The data type that your query fetches.
   associatedtype Value: Sendable
 

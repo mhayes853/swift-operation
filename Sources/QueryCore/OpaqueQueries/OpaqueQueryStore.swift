@@ -29,7 +29,7 @@ extension OpaqueQueryStore {
 
 // MARK: - Path
 
-extension OpaqueQueryStore {
+extension OpaqueQueryStore: QueryPathable {
   /// The ``QueryPath`` of the query managed by this store.
   public var path: QueryPath {
     self._base.path

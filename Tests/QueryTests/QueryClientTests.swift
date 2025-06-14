@@ -141,7 +141,7 @@ struct QueryClientTests {
     let client = QueryClient()
     let q1 = PathableQuery(value: 1, path: [1, 2]).defaultValue(10)
     let store = client.store(for: q1)
-    let opaqueStore = try #require(client.stores(matching: []).first?.value)
+    let opaqueStore = try #require(client.stores(matching: []).first)
 
     opaqueStore.uncheckedSetCurrentValue(20)
     expectNoDifference(store.currentValue, 20)
@@ -154,7 +154,7 @@ struct QueryClientTests {
     let client = QueryClient()
     let q1 = PathableQuery(value: 1, path: [1, 2]).defaultValue(10)
     let store = client.store(for: q1)
-    let opaqueStore = try #require(client.stores(matching: []).first?.value)
+    let opaqueStore = try #require(client.stores(matching: []).first)
 
     opaqueStore.uncheckedSetResult(to: .success(20))
     expectNoDifference(store.currentValue, 20)
@@ -239,7 +239,7 @@ struct QueryClientTests {
     let store = client.store(for: query)
     try await store.fetch()
 
-    let opaqueStore = try #require(client.stores(matching: [1]).first?.value)
+    let opaqueStore = try #require(client.stores(matching: [1]).first)
     expectNoDifference(store.currentValue, 10)
     opaqueStore.resetState()
     expectNoDifference(store.currentValue, nil)
@@ -259,8 +259,8 @@ struct QueryClientTests {
     client.withStores(matching: [1]) { entries in
       expectNoDifference(entries.count, 2)
       entries[q1.path]?.uncheckedSetCurrentValue(50)
-      entries[q4.path] = OpaqueQueryStore(erasing: .detached(query: q4))
-      entries.removeValue(forKey: q2.path)
+      entries.update(OpaqueQueryStore(erasing: .detached(query: q4)))
+      entries.removeValue(forPath: q2.path)
     }
 
     expectNoDifference(client.stores(matching: []).count, 3)
@@ -288,8 +288,8 @@ struct QueryClientTests {
     ) { entries in
       expectNoDifference(entries.count, 2)
       entries[q1.path]?.currentValue = 50
-      entries[q5.path] = .detached(query: q5)
-      entries.removeValue(forKey: q2.path)
+      entries.update(.detached(query: q5))
+      entries.removeValue(forPath: q2.path)
     }
 
     expectNoDifference(client.stores(matching: []).count, 4)
@@ -351,7 +351,7 @@ struct QueryClientTests {
     func recognizesStoreRetroactivelyAddedToCache() {
       let store = QueryStore.detached(query: TestQuery(), initialValue: nil)
       self.storeCache.withStores { entries in
-        entries[store.path] = OpaqueQueryStore(erasing: store)
+        entries.update(OpaqueQueryStore(erasing: store))
       }
       let clientStore = self.client.store(for: TestQuery())
       expectNoDifference(store === clientStore, true)
