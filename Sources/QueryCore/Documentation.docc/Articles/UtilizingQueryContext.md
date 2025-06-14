@@ -163,6 +163,8 @@ struct NoRetryQuery: QueryRequest, Hashable {
 
 ## Dependency Injection
 
+> Note: If your project uses [swift-dependencies](https://github.com/pointfreeco/swift-dependencies), you should rely on the `@Dependency` property wrapper inside your queries instead of creating custom query context properties for your dependencies. Instead, only create custom query context properties for lightweight data that only your query needs to consume such as pagination cursors for HTTP API endpoints.
+
 While making a query like this is easy.
 
 ```swift
@@ -241,7 +243,7 @@ If we want to return some mock data for testing purposes, we can now leverage `U
 @Test
 func returnsPost() async throws {
   let store = QueryStore.detached(
-    query: Post.query(for: 1), 
+    query: Post.query(for: 1),
     initialValue: nil
   )
   store.context.dataTransport = MockDataTransport()
@@ -284,7 +286,7 @@ struct MockDataTransport: HTTPDataTransport {
 
 ```swift
 let store = QueryStore.detached(
-  query: Post.query(for: 1), 
+  query: Post.query(for: 1),
   initialValue: nil
 )
 let date = Date(timeIntervalSince1970: 1234567890)
@@ -303,7 +305,7 @@ For testing, this delay may be unacceptable, but thankfully you can override the
 
 ```swift
 let store = QueryStore.detached(
-  query: Post.query(for: 1), 
+  query: Post.query(for: 1),
   initialValue: nil
 )
 store.context.queryDelayer = .noDelay
