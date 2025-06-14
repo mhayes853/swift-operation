@@ -88,7 +88,7 @@ To start, we'll want to define a reusable transformation on the value of `User.F
 ```swift
 extension InfiniteQueryPages<Int, [User]> {
   func updateRelationship(
-    for userId: Int, 
+    for userId: Int,
     to relationship: User.Relationship
   ) -> Self {
     self.map { page in
@@ -176,7 +176,7 @@ The real power of splitting the path into an array of multiple components is tha
 
 ```swift
 queryClient.stores(
-  matching: ["user-friends"], 
+  matching: ["user-friends"],
   of: User.FriendsQuery.State.self
 )
 ```
@@ -209,7 +209,7 @@ struct SendFriendRequestMutation: MutationRequest, Hashable {
       matching: ["user-friends"],
       of: User.FriendsQuery.State.self
     )
-    for (_, store) in stores {
+    for store in stores {
       store.currentValue = store.currentValue.updateRelationship(
         for: arguments.userId,
         to: .friendRequestSent
@@ -263,7 +263,7 @@ struct SendFriendRequestMutation: MutationRequest, Hashable {
       matching: ["user-friends"],
       of: User.FriendsQuery.State.self
     )
-    for (_, store) in stores {
+    for store in stores {
       store.currentValue = store.currentValue.updateRelationship(
         for: arguments.userId,
         to: relationship
@@ -293,7 +293,7 @@ struct SendFriendRequestMutation: MutationRequest, Hashable {
     guard let client = context.queryClient else { return }
     Task {
       try await withThrowingTaskGroup(of: Void.self) { group in
-        for (_, store) in client.stores(matching: ["user-friends"]) {
+        for store in client.stores(matching: ["user-friends"]) {
           group.addTask { try await store.fetch() }
         }
       }

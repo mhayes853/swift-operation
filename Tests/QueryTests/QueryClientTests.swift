@@ -350,7 +350,7 @@ struct QueryClientTests {
     @Test("Recognizes Store Retroactively Added To Cache")
     func recognizesStoreRetroactivelyAddedToCache() {
       let store = QueryStore.detached(query: TestQuery(), initialValue: nil)
-      self.storeCache.withStores { entries in
+      self.storeCache.withLock { entries in
         entries.update(OpaqueQueryStore(erasing: store))
       }
       let clientStore = self.client.store(for: TestQuery())

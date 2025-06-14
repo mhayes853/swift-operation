@@ -160,8 +160,8 @@ struct LinesQuery: QueryRequest, Hashable {
     in context: QueryContext,
     with continuation: QueryContinuation<[String]>
   ) async throws -> [String] {
-    // Apply a time freeze to the context so that 
-    // valueLastUpdatedAt remains consistent when 
+    // Apply a time freeze to the context so that
+    // valueLastUpdatedAt remains consistent when
     // many chunks of data are yielded.
     var context = context
     context.queryClock = context.queryClock.frozen()
@@ -224,14 +224,9 @@ extension EventsList {
       }
       // Look for other EventLists we've fetched and use the data from
       // any that are within the distance threshold.
-      for (_, store) in client.stores(matching: ["nearby-events"]) {
-        guard let list = store.currentValue as? EventsList else { 
-          continue 
-        }
-        if list.region.distance(to: region) < context.distanceThreshold {
-          continuation.yield(
-            EventsList(region: region, events: list.events)
-          )
+      for store in client.stores(matching: ["nearby-events"], of: State.self) {
+        if store.currentValue.region.distance(to: region) < context.distanceThreshold {
+          continuation.yield(EventsList(region: region, events: list.events))
         }
       }
       return try await fetchActualEventList(region)

@@ -93,7 +93,7 @@ extension QueryClient {
     for query: Query,
     initialState: Query.State
   ) -> OpaqueQueryStore {
-    self.storeCache.withStores { stores in
+    self.storeCache.withLock { stores in
       self.state.withLock { state in
         defer { state.queryTypes[query.path] = Query.self }
         if let store = stores[query.path] {
@@ -133,18 +133,22 @@ extension QueryClient {
 
 extension QueryClient {
   public func store(with path: QueryPath) -> OpaqueQueryStore? {
-    self.withStores(matching: path) { $0[path] }
+    self.storeCache.withLock { $0[path] }
   }
 
   public func stores(matching path: QueryPath) -> QueryPathableCollection<OpaqueQueryStore> {
-    self.withStores(matching: path) { $0 }
+    self.storeCache.withLock { $0.collection(matching: path) }
   }
 
   public func stores<State: QueryStateProtocol>(
     matching path: QueryPath,
     of stateType: State.Type
   ) -> QueryPathableCollection<QueryStore<State>> {
-    self.withStores(matching: path, of: stateType) { $0 }
+    self.storeCache.withLock { stores in
+      QueryPathableCollection<QueryStore<State>>(
+        stores.collection(matching: path).compactMap { $0.base as? QueryStore<State> }
+      )
+    }
   }
 }
 
@@ -152,12 +156,12 @@ extension QueryClient {
 
 extension QueryClient {
   public func clearStores(matching path: QueryPath = []) {
-    self.withStores(matching: path) { $0.removeAll() }
+    self.storeCache.withLock { $0.removeAll(matching: path) }
   }
 
   @discardableResult
   public func clearStore(with path: QueryPath) -> OpaqueQueryStore? {
-    self.withStores(matching: path) { $0.removeValue(forPath: path) }
+    self.storeCache.withLock { $0.removeValue(forPath: path) }
   }
 }
 
@@ -168,7 +172,7 @@ extension QueryClient {
     matching path: QueryPath,
     perform fn: (inout sending QueryPathableCollection<OpaqueQueryStore>) throws -> sending T
   ) rethrows -> T {
-    try self.storeCache.withStores { entries in
+    try self.storeCache.withLock { entries in
       let beforeEntries = entries.collection(matching: path)
       var afterEntries = beforeEntries
       defer {
@@ -192,7 +196,7 @@ extension QueryClient {
     of stateType: State.Type,
     perform fn: (inout sending QueryPathableCollection<QueryStore<State>>) throws -> sending T
   ) rethrows -> T {
-    try self.storeCache.withStores { entries in
+    try self.storeCache.withLock { entries in
       let beforeEntries = QueryPathableCollection<QueryStore<State>>(
         entries.collection(matching: path).compactMap { $0.base as? QueryStore<State> }
       )
@@ -230,7 +234,7 @@ extension QueryClient {
 
 extension QueryClient {
   public protocol StoreCache: Sendable {
-    func withStores<T>(
+    func withLock<T>(
       _ fn: (inout sending QueryPathableCollection<OpaqueQueryStore>) throws -> sending T
     ) rethrows -> T
   }
@@ -249,16 +253,13 @@ extension QueryClient {
       let subscription = memoryPressureSource?
         .subscribe { pressure in
           box.inner.withLock { stores in
-            for store in stores {
-              guard store.isEvictable(from: pressure) else { continue }
-              stores.removeValue(forPath: store.path)
-            }
+            stores.removeAll { $0.isEvictable(from: pressure) }
           }
         }
       self.subscription = subscription ?? .empty
     }
 
-    public func withStores<T>(
+    public func withLock<T>(
       _ fn: (inout sending QueryPathableCollection<OpaqueQueryStore>) throws -> sending T
     ) rethrows -> T {
       try self.stores.inner.withLock(fn)

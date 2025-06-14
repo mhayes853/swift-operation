@@ -48,6 +48,30 @@ extension QueryPathableCollection {
     self.elements.removeAll(keepingCapacity: keepingCapacity)
   }
 
+  /// Removes all elements from this collection that match the specified path.
+  ///
+  /// Matching is via the path's ``QueryPath/isPrefix(of:)`` method.
+  ///
+  /// - Parameter path: The path to match.
+  public mutating func removeAll(matching path: QueryPath) {
+    self.removeAll { path.isPrefix(of: $0.path) }
+  }
+
+  /// Removes all elements from this collection that satisfy the given predicate.
+  ///
+  /// - Parameter shouldBeRemoved: A closure that takes an element of the sequence as its argument
+  ///   and returns a Boolean value indicating whether the element should be removed from the
+  ///   collection.
+  public mutating func removeAll(where shouldBeRemoved: (Element) -> Bool) {
+    var collection = Self()
+    for element in self {
+      if !shouldBeRemoved(element) {
+        collection.update(element)
+      }
+    }
+    self = collection
+  }
+
   /// Removes the element at the specified index.
   ///
   /// - Parameter index: The index of the element to remove.
