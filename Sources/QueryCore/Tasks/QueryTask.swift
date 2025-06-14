@@ -8,7 +8,10 @@ private protocol _QueryTask: Sendable, Identifiable {
   var dependencies: [any _QueryTask] { get }
 
   func _runIfNeeded() async throws -> any Sendable
-  func warnIfCyclesDetected(cyclicalIds: [QueryTaskInfo], visited: Set<QueryTaskIdentifier>)
+
+  #if DEBUG
+    func warnIfCyclesDetected(cyclicalIds: [QueryTaskInfo], visited: Set<QueryTaskIdentifier>)
+  #endif
 }
 
 // MARK: - QueryTask
@@ -157,14 +160,16 @@ extension QueryTask {
 
   private func withDependencies(_ fn: (inout [any _QueryTask]) -> Void) {
     self.box.inner.withLock { fn(&$0.dependencies) }
-    self.warnIfCyclesDetected(cyclicalIds: [self.info], visited: [self.id])
+    #if DEBUG
+      self.warnIfCyclesDetected(cyclicalIds: [self.info], visited: [self.id])
+    #endif
   }
 
-  fileprivate func warnIfCyclesDetected(
-    cyclicalIds: [QueryTaskInfo],
-    visited: Set<QueryTaskIdentifier>
-  ) {
-    #if DEBUG
+  #if DEBUG
+    func warnIfCyclesDetected(
+      cyclicalIds: [QueryTaskInfo],
+      visited: Set<QueryTaskIdentifier>
+    ) {
       for dependency in self.dependencies {
         if visited.contains(dependency.id) {
           reportWarning(.queryTaskCircularScheduling(info: cyclicalIds + [dependency.info]))
@@ -175,8 +180,8 @@ extension QueryTask {
           )
         }
       }
-    #endif
-  }
+    }
+  #endif
 
   fileprivate var dependencies: [any _QueryTask] {
     self.box.inner.withLock { $0.dependencies }
