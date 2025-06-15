@@ -3,7 +3,7 @@
 struct InfiniteQueryContextValues: Sendable {
   var fetchType: FetchType?
   var currentPagesTracker: PagesTracker?
-  let requestSubscriptions = QuerySubscriptions<RequestSubscriber>()
+  var requestSubscriptions = QuerySubscriptions<RequestSubscriber>()
 }
 
 // MARK: - RequestSubscriber
@@ -91,14 +91,20 @@ extension QueryContext {
     )
   }
 
-  var infiniteValues: InfiniteQueryContextValues {
+  mutating func ensureInfiniteValues() -> InfiniteQueryContextValues {
+    if let infiniteValues {
+      return infiniteValues
+    }
+    self.infiniteValues = InfiniteQueryContextValues()
+    return self.infiniteValues!
+  }
+
+  var infiniteValues: InfiniteQueryContextValues? {
     get { self[InfiniteQueryContextValuesKey.self] }
     set { self[InfiniteQueryContextValuesKey.self] = newValue }
   }
 
   private enum InfiniteQueryContextValuesKey: Key {
-    static var defaultValue: InfiniteQueryContextValues {
-      InfiniteQueryContextValues()
-    }
+    static var defaultValue: InfiniteQueryContextValues? { nil }
   }
 }

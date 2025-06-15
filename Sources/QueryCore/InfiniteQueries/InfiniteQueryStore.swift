@@ -104,11 +104,9 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
     }
   }
 
-  private func fetchAllPagesTaskConfiguration(
-    using context: QueryContext? = nil
-  ) -> QueryContext {
-    var context = context ?? self.context
-    context.infiniteValues.fetchType = .allPages
+  private func fetchAllPagesTaskConfiguration(using context: QueryContext? = nil) -> QueryContext {
+    var context = self.ensuredContext(from: context)
+    context.infiniteValues?.fetchType = .allPages
     context.queryTaskConfiguration.name = self.fetchAllPagesTaskName
     return context
   }
@@ -178,11 +176,9 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
     }
   }
 
-  private func fetchNextPageTaskConfiguration(
-    using context: QueryContext?
-  ) -> QueryContext {
-    var context = context ?? self.context
-    context.infiniteValues.fetchType = .nextPage
+  private func fetchNextPageTaskConfiguration(using context: QueryContext?) -> QueryContext {
+    var context = self.ensuredContext(from: context)
+    context.infiniteValues?.fetchType = .nextPage
     context.queryTaskConfiguration.name =
       context.queryTaskConfiguration.name ?? self.fetchNextPageTaskName
     return context
@@ -255,11 +251,9 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
     }
   }
 
-  private func fetchPreviousPageTaskConfiguration(
-    using context: QueryContext?
-  ) -> QueryContext {
-    var context = context ?? self.context
-    context.infiniteValues.fetchType = .previousPage
+  private func fetchPreviousPageTaskConfiguration(using context: QueryContext?) -> QueryContext {
+    var context = self.ensuredContext(from: context)
+    context.infiniteValues?.fetchType = .previousPage
     context.queryTaskConfiguration.name =
       context.queryTaskConfiguration.name ?? self.fetchPreviousPageTaskName
     return context
@@ -277,11 +271,9 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
     using context: QueryContext,
     handler: InfiniteQueryEventHandler<State.PageID, State.PageValue>
   ) async throws -> InfiniteQueryValue<State.PageID, State.PageValue> {
-    let subscription = context.infiniteValues.addRequestSubscriber(
-      from: handler,
-      isTemporary: true
-    )
-    defer { subscription.cancel() }
+    let subscription = context.infiniteValues?
+      .addRequestSubscriber(from: handler, isTemporary: true)
+    defer { subscription?.cancel() }
     return try await self.fetch(using: context, handler: self.queryStoreHandler(for: handler))
   }
 }
@@ -300,12 +292,11 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
   public func subscribe(
     with handler: InfiniteQueryEventHandler<State.PageID, State.PageValue>
   ) -> QuerySubscription {
-    let contextSubscription = context.infiniteValues.addRequestSubscriber(
-      from: handler,
-      isTemporary: false
-    )
+    let context = self.ensuredContext(from: nil)
+    let contextSubscription = context.infiniteValues?
+      .addRequestSubscriber(from: handler, isTemporary: false)
     let baseSubscription = self.subscribe(with: self.queryStoreHandler(for: handler))
-    return .combined([baseSubscription, contextSubscription])
+    return .combined([baseSubscription, contextSubscription ?? .empty])
   }
 }
 
@@ -326,5 +317,16 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
         handler.onResultReceived?(result.map { [weak self] _ in self?.currentValue ?? [] }, context)
       }
     )
+  }
+}
+
+// MARK: - Context
+
+extension QueryStore where State: _InfiniteQueryStateProtocol {
+  private func ensuredContext(from context: QueryContext?) -> QueryContext {
+    let values = self.context.ensureInfiniteValues()
+    var context = context ?? self.context
+    context.infiniteValues?.requestSubscriptions = values.requestSubscriptions
+    return context
   }
 }

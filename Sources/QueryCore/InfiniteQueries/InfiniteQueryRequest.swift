@@ -272,7 +272,7 @@ extension InfiniteQueryRequest {
     in context: QueryContext,
     with continuation: QueryContinuation<Value>
   ) async throws -> InfiniteQueryValue<PageID, PageValue> {
-    var newPages = context.infiniteValues.currentPagesTracker?.pages(for: self) ?? []
+    var newPages = context.infiniteValues?.currentPagesTracker?.pages(for: self) ?? []
     for _ in 0..<paging.pages.count {
       let pageId =
         if let lastPage = newPages.last {
@@ -302,7 +302,7 @@ extension InfiniteQueryRequest {
         }
       )
       newPages.append(InfiniteQueryPage(id: pageId, value: pageValue))
-      context.infiniteValues.currentPagesTracker?.savePages(newPages)
+      context.infiniteValues?.currentPagesTracker?.savePages(newPages)
     }
     return self.allPagesValue(pages: newPages, paging: paging, in: context)
   }
@@ -442,31 +442,27 @@ extension InfiniteQueryRequest {
     with continuation: QueryContinuation<PageValue>
   ) async throws -> PageValue {
     let id = AnyHashableSendable(paging.pageId)
-    context.infiniteValues.requestSubscriptions.forEach { sub in
-      sub.onPageFetchingStarted(id, context)
-    }
+    context.infiniteValues?.requestSubscriptions.forEach { $0.onPageFetchingStarted(id, context) }
     let continuation = QueryContinuation<PageValue> { result, yieldedContext in
       let context = yieldedContext ?? context
-      context.infiniteValues.requestSubscriptions.forEach { sub in
-        sub.onPageResultReceived(
-          id,
-          result.map { InfiniteQueryPage(id: paging.pageId, value: $0) },
-          context
-        )
-      }
+      context.infiniteValues?.requestSubscriptions
+        .forEach { sub in
+          let result = result.map {
+            InfiniteQueryPage(id: paging.pageId, value: $0) as any Sendable
+          }
+          sub.onPageResultReceived(id, result, context)
+        }
       continuation.yield(with: result)
     }
     let result = await Result {
       try await self.fetchPage(using: paging, in: context, with: continuation)
     }
-    context.infiniteValues.requestSubscriptions.forEach { sub in
-      sub.onPageResultReceived(
-        id,
-        result.map { InfiniteQueryPage(id: paging.pageId, value: $0) },
-        context
-      )
-      sub.onPageFetchingFinished(id, context)
-    }
+    context.infiniteValues?.requestSubscriptions
+      .forEach { sub in
+        let result = result.map { InfiniteQueryPage(id: paging.pageId, value: $0) as any Sendable }
+        sub.onPageResultReceived(id, result, context)
+        sub.onPageFetchingFinished(id, context)
+      }
     return try result.get()
   }
 }

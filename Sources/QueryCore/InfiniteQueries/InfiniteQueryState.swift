@@ -129,7 +129,7 @@ extension InfiniteQueryState: _InfiniteQueryStateProtocol {
       task.schedule(after: self.initialPageActiveTasks)
       task.schedule(after: self.nextPageActiveTasks)
       task.schedule(after: self.previousPageActiveTasks)
-      task.context.infiniteValues.currentPagesTracker = InfiniteQueryContextValues.PagesTracker()
+      task.context.infiniteValues?.currentPagesTracker = InfiniteQueryContextValues.PagesTracker()
       self.allPagesActiveTasks.append(task)
     case .initialPage:
       self.initialPageActiveTasks.append(task)
@@ -212,7 +212,7 @@ extension InfiniteQueryState: _InfiniteQueryStateProtocol {
   }
 
   func request(in context: QueryContext) -> InfiniteQueryPagingRequest<PageID> {
-    guard let fetchType = context.infiniteValues.fetchType else {
+    guard let fetchType = context.infiniteValues?.fetchType else {
       return self.currentValue.isEmpty ? .initialPage : .allPages
     }
     switch (fetchType, self.nextPageId, self.previousPageId) {

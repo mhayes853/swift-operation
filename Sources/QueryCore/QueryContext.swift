@@ -25,7 +25,7 @@
 ///
 /// See <doc:UtilizingQueryContext> to learn about best practicies when utilizing the context.
 public struct QueryContext: Sendable {
-  private var storage = LockedBox(value: [StorageKey: any Sendable]())
+  private var storage = [StorageKey: any Sendable]()
 
   /// Creates an empty context.
   ///
@@ -102,29 +102,8 @@ extension QueryContext {
   ///
   /// See <doc:UtilizingQueryContext> to learn about best practicies around custom context properties.
   public subscript<Value>(_ key: (some Key<Value>).Type) -> Value {
-    get {
-      self.storage.inner.withLock { entries in
-        let storageKey = StorageKey(type: key)
-        if let value = entries[storageKey] as? Value {
-          return value
-        }
-        let defaultValue = key.defaultValue
-        entries[storageKey] = defaultValue
-        return defaultValue
-      }
-    }
-    set {
-      var storage: LockedBox<[StorageKey: any Sendable]>
-      defer { self.storage = storage }
-      if !isKnownUniquelyReferenced(&self.storage) {
-        storage = LockedBox<[StorageKey: any Sendable]>(
-          value: self.storage.inner.withLock { $0 }
-        )
-      } else {
-        storage = self.storage
-      }
-      storage.inner.withLock { $0[StorageKey(type: key)] = newValue }
-    }
+    get { (self.storage[StorageKey(type: key)] as? Value) ?? key.defaultValue }
+    set { self.storage[StorageKey(type: key)] = newValue }
   }
 }
 
@@ -132,9 +111,8 @@ extension QueryContext {
 
 extension QueryContext: CustomStringConvertible {
   public var description: String {
-    self.storage.inner.withLock {
-      let string = $0.map { (key, value) in "\(key.typeName) = \(value)" }.joined(separator: ", ")
-      return "[\(string)]"
-    }
+    let string = self.storage.map { (key, value) in "\(key.typeName) = \(value)" }
+      .joined(separator: ", ")
+    return "[\(string)]"
   }
 }

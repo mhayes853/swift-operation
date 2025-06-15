@@ -17,17 +17,6 @@ struct QueryContextTests {
     expectNoDifference(context.test, _defaultValue + 100)
   }
 
-  @Test("Only Loads Default Value A Single Time")
-  func onlyLoadsDefaultOnce() {
-    let context = QueryContext()
-    let counter = Counter()
-    Counter.$current.withValue(counter) {
-      _ = context.test
-      _ = context.test
-    }
-    expectNoDifference(counter.count, 1)
-  }
-
   @Test("Copy On Write")
   func copyOnWrite() {
     let context = QueryContext()
@@ -54,12 +43,6 @@ struct QueryContextTests {
   }
 }
 
-private final class Counter: @unchecked Sendable {
-  @TaskLocal static var current: Counter?
-
-  var count = 0
-}
-
 private let _defaultValue = 100
 
 extension QueryContext {
@@ -69,10 +52,7 @@ extension QueryContext {
   }
 
   private struct TestKey: Key {
-    static var defaultValue: Int {
-      Counter.current?.count += 1
-      return _defaultValue
-    }
+    static var defaultValue: Int { _defaultValue }
   }
 
   fileprivate var test2: String {
@@ -81,8 +61,6 @@ extension QueryContext {
   }
 
   private struct TestKey2: Key {
-    static var defaultValue: String {
-      "Blob"
-    }
+    static var defaultValue: String { "Blob" }
   }
 }
