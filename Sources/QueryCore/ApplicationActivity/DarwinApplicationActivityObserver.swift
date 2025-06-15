@@ -70,6 +70,8 @@
   // MARK: - NSApplication
 
   #if os(macOS)
+    /// An ``ApplicationActivityObserver`` that observes the application activity state from
+    /// `NSApplication`.
     @MainActor
     public struct NSApplicationActivityObserver: DarwinApplicationActivityObserver {
       package static var didBecomeActiveNotification: Notification.Name {
@@ -95,6 +97,8 @@
   // MARK: - WatchOS
 
   #if os(watchOS)
+    /// An ``ApplicationActivityObserver`` that observes the application activity state from
+    /// `WKApplication`.
     @MainActor
     @available(watchOS 7.0, *)
     public struct WKApplicationActivityObserver: DarwinApplicationActivityObserver {
@@ -117,6 +121,8 @@
       public static nonisolated let shared = WKApplicationActivityObserver()
     }
 
+    /// An ``ApplicationActivityObserver`` that observes the application activity state from
+    /// `WKExtension`.
     @MainActor
     @available(watchOS 7.0, *)
     public struct WKExtensionActivityObserver: DarwinApplicationActivityObserver {
@@ -143,6 +149,8 @@
   // MARK: - UIApplication
 
   #if os(iOS) || os(tvOS) || os(visionOS)
+    /// An ``ApplicationActivityObserver`` that observes the application activity state from
+    /// `UIApplication`.
     @MainActor
     public struct UIApplicationActivityObserver: DarwinApplicationActivityObserver {
       package static var didBecomeActiveNotification: Notification.Name {
