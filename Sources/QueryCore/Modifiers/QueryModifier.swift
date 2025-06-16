@@ -76,6 +76,29 @@ extension QueryModifier {
   }
 }
 
+// MARK: - ContextQueryModifier
+
+public protocol _ContextUpdatingQueryModifier: QueryModifier {
+  func setup(context: inout QueryContext)
+}
+
+extension _ContextUpdatingQueryModifier {
+  @inlinable
+  public func setup(context: inout QueryContext, using query: Query) {
+    self.setup(context: &context)
+    query.setup(context: &context)
+  }
+
+  @inlinable
+  public func fetch(
+    in context: QueryContext,
+    using query: Query,
+    with continuation: QueryContinuation<Query.Value>
+  ) async throws -> Query.Value {
+    try await query.fetch(in: context, with: continuation)
+  }
+}
+
 // MARK: - ModifiedQuery
 
 extension QueryRequest {
@@ -104,18 +127,22 @@ where Modifier.Query == Query {
   /// The ``QueryModifier`` attached to ``query``.
   public let modifier: Modifier
 
+  @inlinable
   public var path: QueryPath {
     self.query.path
   }
 
+  @inlinable
   public var _debugTypeName: String {
     self.query._debugTypeName
   }
 
+  @inlinable
   public func setup(context: inout QueryContext) {
     self.modifier.setup(context: &context, using: query)
   }
 
+  @inlinable
   public func fetch(
     in context: QueryContext,
     with continuation: QueryContinuation<Query.Value>

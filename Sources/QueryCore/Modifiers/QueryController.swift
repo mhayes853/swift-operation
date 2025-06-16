@@ -180,20 +180,11 @@ extension QueryRequest {
 public struct _QueryControllerModifier<
   Query: QueryRequest,
   Controller: QueryController<Query.State>
->: QueryModifier {
+>: _ContextUpdatingQueryModifier {
   let controller: Controller
 
-  public func setup(context: inout QueryContext, using query: Query) {
+  public func setup(context: inout QueryContext) {
     context.queryControllers.append(self.controller)
-    query.setup(context: &context)
-  }
-
-  public func fetch(
-    in context: QueryContext,
-    using query: Query,
-    with continuation: QueryContinuation<Query.Value>
-  ) async throws -> Query.Value {
-    try await query.fetch(in: context, with: continuation)
   }
 }
 

@@ -21,22 +21,12 @@ extension QueryRequest {
   }
 }
 
-public struct _EvictWhenPressureModifier<Query: QueryRequest>: QueryModifier {
+public struct _EvictWhenPressureModifier<Query: QueryRequest>: _ContextUpdatingQueryModifier {
   let pressure: MemoryPressure
 
-  public func setup(context: inout QueryContext, using query: Query) {
+  public func setup(context: inout QueryContext) {
     context.evictableMemoryPressure = self.pressure
-    query.setup(context: &context)
   }
-
-  public func fetch(
-    in context: QueryContext,
-    using query: Query,
-    with continuation: QueryContinuation<Query.Value>
-  ) async throws -> Query.Value {
-    try await query.fetch(in: context, with: continuation)
-  }
-
 }
 
 // MARK: - QueryContext

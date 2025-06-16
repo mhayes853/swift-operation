@@ -10,18 +10,10 @@ extension QueryRequest {
   }
 }
 
-public struct _QueryTaskConfigurationModifier<Query: QueryRequest>: QueryModifier {
+public struct _QueryTaskConfigurationModifier<Query: QueryRequest>: _ContextUpdatingQueryModifier {
   let configuration: QueryTaskConfiguration
 
-  public func setup(context: inout QueryContext, using query: Query) {
+  public func setup(context: inout QueryContext) {
     context.queryTaskConfiguration = self.configuration
-  }
-
-  public func fetch(
-    in context: QueryContext,
-    using query: Query,
-    with continuation: QueryContinuation<Query.Value>
-  ) async throws -> Query.Value {
-    try await query.fetch(in: context, with: continuation)
   }
 }

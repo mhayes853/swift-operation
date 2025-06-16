@@ -53,20 +53,11 @@ extension QueryRequest {
 public struct _EnableAutomaticFetchingModifier<
   Query: QueryRequest,
   Condition: FetchCondition
->: QueryModifier {
+>: _ContextUpdatingQueryModifier {
   let condition: any FetchCondition
 
-  public func setup(context: inout QueryContext, using query: Query) {
+  public func setup(context: inout QueryContext) {
     context.enableAutomaticFetchingCondition = self.condition
-    query.setup(context: &context)
-  }
-
-  public func fetch(
-    in context: QueryContext,
-    using query: Query,
-    with continuation: QueryContinuation<Query.Value>
-  ) async throws -> Query.Value {
-    try await query.fetch(in: context, with: continuation)
   }
 }
 

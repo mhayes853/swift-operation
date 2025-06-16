@@ -96,25 +96,16 @@ extension QueryRequest {
   }
 }
 
-public struct _StaleWhenModifier<Query: QueryRequest>: QueryModifier {
+public struct _StaleWhenModifier<Query: QueryRequest>: _ContextUpdatingQueryModifier {
   let predicate: @Sendable (Query.State, QueryContext) -> Bool
 
-  public func setup(context: inout QueryContext, using query: Query) {
+  public func setup(context: inout QueryContext) {
     context.staleWhenRevalidateCondition.add { state, context in
       guard let state = state.base as? Query.State else {
         return false
       }
       return predicate(state, context)
     }
-    query.setup(context: &context)
-  }
-
-  public func fetch(
-    in context: QueryContext,
-    using query: Query,
-    with continuation: QueryContinuation<Query.Value>
-  ) async throws -> Query.Value {
-    try await query.fetch(in: context, with: continuation)
   }
 }
 
