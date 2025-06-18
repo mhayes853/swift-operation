@@ -96,42 +96,20 @@ struct PlayerQuery: QueryRequest, Hashable {
 
 As can be seen here, we're able to customize the behavior of `PlayerQuery` based on a custom context property. Utilizing this technique allows you to use the `QueryContext` in a variety of ways, some of which we will talk about later.
 
-The `defaultValue` of a ``QueryContext/Key`` is lazily evaluated by the `QueryContext` instance. Additionally, the default value is only computed once, and then cached in the context. In other words, the following code will only evaluate the default value once per context.
+The `defaultValue` of a ``QueryContext/Key`` is computed everytime the `QueryContext` instance doesn't have an explicitly overriden value. If you want to lazily run an expensive computation for the default value, or use a shared reference, define your default value with as a `static let` property.
 
 ```swift
 extension QueryContext {
-  var myProperty: String {
-    get { self[MyPropertyKey.self] }
-    set { self[MyPropertyKey.self] = newValue }
+  var myExpensiveProperty: String {
+    get { self[MyExpensiveLazyPropertyKey.self] }
+    set { self[MyExpensiveLazyPropertyKey.self] = newValue }
   }
 
-  private enum MyPropertyKey: Key {
-    static var defaultValue: String {
-      // Only computed once per context instance.
-      someExpensiveComputation()
-    }
+  private enum MyExpensiveLazyPropertyKey: Key {
+    static let defaultValue = someExpensiveComputation()
   }
 }
 ```
-
-Provided that you do not make a brand new `QueryContext` instance, this default value will be cached in the context, and will be present in any other contexts that are mutated from the base context. In other words, the default value will also be cached in the mutated context of this example.
-
-```swift
-let context = QueryContext()
-
-// Computes and caches the default value.
-print(context.myProperty)
-
-var context2 = context
-context2.someOtherProperty = "world!"
-
-// Utilizes the cached default value from the original context.
-print(context2.myProperty)
-```
-
-> Note: `QueryContext` supports copy on write semantics similar to `Array` and `Dictionary`. In other words `context2.someOtherProperty != context.someOtherProperty` in the above example.
-
-Now that you have a basic understanding of how to add custom properties to `QueryContext`, let's explore how we can utilize this customization to implement more advanced features.
 
 ## Setting Up The Context
 
@@ -194,7 +172,7 @@ extension Post {
 }
 ```
 
-Writing reliable and deterministic tests for code that utilizes this query is not as straightforward. Since we utilize `URLSession.shared` here, we are essentially forced to make a real network call that won't return deterministic data every time we try to test code that utilizes this query. Sometimes, this is a fine as we may want to test end-to-end flows. Yet often we may want to simulate failures, or return mock data that tests a specific edge case of the code utilizing this query.
+Writing reliable and deterministic tests for code that utilizes this query is not as straightforward. Since we utilize `URLSession.shared` here, we are essentially forced to make a real network call that won't return deterministic data every time we try to test code that utilizes this query. Sometimes, this is fine as we may want to test end-to-end flows. Yet often we may want to simulate failures, or return mock data that tests a specific edge case of the code utilizing this query.
 
 A simple start to this would be to make a custom context property that allows us to mock the network behavior in the query. You may think that you can utilize a custom `URLProtocol` for this. While this can work, this can be quite cumbersome as creating a mock `URLProtocol` can be somewhat challenging. Doing this is generally [not recommended](https://forums.swift.org/t/mock-urlprotocol-with-strict-swift-6-concurrency/77135/15) as `URLSession` behaves quite differently based on the `URLProtocol`s provided to it. Instead, we'll introduce a lightweight protocol that wraps one of `URLSession`'s methods, and conform `URLSession` to the protocol. Then, we'll expose a context property that defaults to `URLSession.shared`.
 
