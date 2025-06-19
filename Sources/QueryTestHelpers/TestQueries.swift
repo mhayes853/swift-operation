@@ -825,8 +825,6 @@ package final class FailableInfiniteQuery: InfiniteQueryRequest {
 // MARK: - EmptyMutation
 
 package struct EmptyMutation: MutationRequest, Hashable {
-  package typealias Value = String
-
   package init() {}
 
   package func mutate(
@@ -841,8 +839,6 @@ package struct EmptyMutation: MutationRequest, Hashable {
 // MARK: - EmptyIntMutation
 
 package struct EmptyIntMutation: MutationRequest, Hashable {
-  package typealias Value = Int
-
   package init() {}
 
   package func mutate(
@@ -857,8 +853,6 @@ package struct EmptyIntMutation: MutationRequest, Hashable {
 // MARK: - SleepingMutation
 
 package final class SleepingMutation: MutationRequest, @unchecked Sendable {
-  package typealias Value = String
-
   package var didBeginSleeping: (() -> Void)?
 
   package init() {}
@@ -880,8 +874,6 @@ package final class SleepingMutation: MutationRequest, @unchecked Sendable {
 // MARK: - FailableMutation
 
 package final class FailableMutation: MutationRequest {
-  package typealias Value = String
-
   package let state = RecursiveLock<String?>(nil)
 
   package init() {}
@@ -916,7 +908,6 @@ package final class WaitableMutation: MutationRequest {
     continuations: [String: UnsafeContinuation<Void, any Error>],
     onLoading: [String: @Sendable () -> Void]
   )
-  package typealias Value = String
   package typealias Arguments = String
 
   package let state = RecursiveLock<_Values>((false, [:], [:]))
@@ -965,8 +956,6 @@ package final class WaitableMutation: MutationRequest {
 // MARK: - ContinuingMutation
 
 package struct ContinuingMutation: MutationRequest, Hashable {
-  package typealias Value = String
-
   package static let values = ["blob", "blob jr", "blob sr"]
   package static let finalValue = "the end"
 
@@ -987,8 +976,6 @@ package struct ContinuingMutation: MutationRequest, Hashable {
 // MARK: - ContinuingErrorMutation
 
 package struct ContinuingErrorMutation: MutationRequest, Hashable {
-  package typealias Value = String
-
   package static let finalValue = "the end"
 
   package init() {}
@@ -1010,8 +997,6 @@ package struct ContinuingErrorMutation: MutationRequest, Hashable {
 // MARK: - ContinuingValueThenErrorMutation
 
 package struct ContinuingValueThenErrorMutation: MutationRequest, Hashable {
-  package typealias Value = String
-
   package static let value = "the end"
 
   package init() {}

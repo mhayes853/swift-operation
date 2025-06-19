@@ -72,7 +72,7 @@ public enum InfiniteQueryPagingRequest<PageID: Hashable & Sendable>: Hashable, S
 
 // MARK: - InfiniteQueryResponse
 
-/// The data type returned from calling ``InfiniteQueryRequest/fetch(in:with:)``.
+/// The data type returned from an ``InfiniteQueryRequest``.
 ///
 /// You do not interact with this type, ``InfiniteQueryRequest`` manages those interactions for you.
 public struct InfiniteQueryValue<PageID: Hashable & Sendable, PageValue: Sendable>: Sendable {

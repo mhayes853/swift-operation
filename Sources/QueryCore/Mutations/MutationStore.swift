@@ -89,6 +89,7 @@ extension QueryStore where State: _MutationStateProtocol {
       using: self.taskConfiguration(with: arguments, using: context),
       handler: self.queryStoreHandler(for: handler)
     )
+    .value
   }
 
   /// Creates a ``QueryTask`` that performs a mutation.
@@ -104,7 +105,7 @@ extension QueryStore where State: _MutationStateProtocol {
     with arguments: State.Arguments,
     using context: QueryContext? = nil
   ) -> QueryTask<State.Value> {
-    self.fetchTask(using: self.taskConfiguration(with: arguments, using: context))
+    self.fetchTask(using: self.taskConfiguration(with: arguments, using: context)).map(\.value)
   }
 
   private func taskConfiguration(
@@ -172,6 +173,7 @@ extension QueryStore where State: _MutationStateProtocol {
       using: self.retryTaskConfiguration(using: context),
       handler: self.queryStoreHandler(for: handler)
     )
+    .value
   }
 
   /// Creates a ``QueryTask`` that retries the mutation with the most recently used set of
@@ -188,7 +190,7 @@ extension QueryStore where State: _MutationStateProtocol {
   ///   - context: The ``QueryContext`` for the task.
   /// - Returns: A task to retry the most recently used arguments on the mutation.
   public func retryLatestTask(using context: QueryContext? = nil) -> QueryTask<State.Value> {
-    self.fetchTask(using: self.retryTaskConfiguration(using: context))
+    self.fetchTask(using: self.retryTaskConfiguration(using: context)).map(\.value)
   }
 
   private func retryTaskConfiguration(
@@ -239,7 +241,7 @@ extension QueryStore where State: _MutationStateProtocol {
       },
       onResultReceived: {
         guard let args = $1.mutationArgs(as: State.Arguments.self) else { return }
-        handler.onMutationResultReceived?(args, $0, $1)
+        handler.onMutationResultReceived?(args, $0.map(\.value), $1)
       }
     )
   }

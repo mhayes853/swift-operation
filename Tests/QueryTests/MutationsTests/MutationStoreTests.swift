@@ -262,8 +262,8 @@ struct MutationStoreTests {
     let mutation = EmptyMutation()
     let store = QueryStore.detached(mutation: mutation)
     try await store.mutate(with: "blob")
-    let value = try await store.fetch()
-    expectNoDifference(value, "blob")
+    try await store.fetch()
+    expectNoDifference(store.currentValue, "blob")
     expectNoDifference(store.history.count, 2)
     expectNoDifference(store.history.map(\.arguments), ["blob", "blob"])
   }
@@ -282,7 +282,9 @@ struct MutationStoreTests {
   @Test("Successful Mutation Events")
   func successfulMutationEvents() async throws {
     let store = self.client.store(for: EmptyMutation())
-    let collector = MutationStoreEventsCollector<EmptyMutation.Arguments, EmptyMutation.Value>()
+    let collector = MutationStoreEventsCollector<
+      EmptyMutation.Arguments, EmptyMutation.ReturnValue
+    >()
     try await store.mutate(with: "blob", handler: collector.eventHandler())
 
     collector.expectEventsMatch([
@@ -299,7 +301,7 @@ struct MutationStoreTests {
     let mutation = FailableMutation()
     let store = self.client.store(for: mutation)
     let collector = MutationStoreEventsCollector<
-      FailableMutation.Arguments, FailableMutation.Value
+      FailableMutation.Arguments, FailableMutation.ReturnValue
     >()
     _ = try? await store.mutate(with: "blob", handler: collector.eventHandler())
 
@@ -316,7 +318,9 @@ struct MutationStoreTests {
   func subscribeToMutationEvents() async throws {
     let mutation = EmptyMutation()
     let store = self.client.store(for: mutation)
-    let collector = MutationStoreEventsCollector<EmptyMutation.Arguments, EmptyMutation.Value>()
+    let collector = MutationStoreEventsCollector<
+      EmptyMutation.Arguments, EmptyMutation.ReturnValue
+    >()
     let subscription = try await store.subscribe(with: collector.eventHandler())
     try await store.mutate(with: "blob")
 
@@ -416,7 +420,7 @@ struct MutationStoreTests {
     let mutation = ContinuingMutation()
     let store = self.client.store(for: mutation)
     let collector = MutationStoreEventsCollector<
-      ContinuingMutation.Arguments, ContinuingMutation.Value
+      ContinuingMutation.Arguments, ContinuingMutation.ReturnValue
     >()
     let value = try await store.mutate(with: "foo", handler: collector.eventHandler())
 
@@ -441,7 +445,7 @@ struct MutationStoreTests {
     let mutation = ContinuingErrorMutation()
     let store = self.client.store(for: mutation)
     let collector = MutationStoreEventsCollector<
-      ContinuingErrorMutation.Arguments, ContinuingErrorMutation.Value
+      ContinuingErrorMutation.Arguments, ContinuingErrorMutation.ReturnValue
     >()
     let value = try await store.mutate(with: "foo", handler: collector.eventHandler())
 
@@ -464,7 +468,7 @@ struct MutationStoreTests {
     let mutation = ContinuingValueThenErrorMutation()
     let store = self.client.store(for: mutation)
     let collector = MutationStoreEventsCollector<
-      ContinuingValueThenErrorMutation.Arguments, ContinuingValueThenErrorMutation.Value
+      ContinuingValueThenErrorMutation.Arguments, ContinuingValueThenErrorMutation.ReturnValue
     >()
     let value = try? await store.mutate(with: "foo", handler: collector.eventHandler())
 

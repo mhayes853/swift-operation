@@ -68,8 +68,6 @@ private struct UserFriendsQuery: InfiniteQueryRequest {
 }
 
 private struct SendFriendRequestMutation: MutationRequest, Hashable {
-  typealias Value = Void
-
   struct Arguments: Sendable {
     let userId: Int
   }

@@ -4,7 +4,7 @@ import IdentifiedCollections
 // MARK: - _MutationStateProtocol
 
 public protocol _MutationStateProtocol<Arguments, Value>: QueryStateProtocol
-where StateValue == Value?, StatusValue == Value, QueryValue == Value {
+where StateValue == Value?, StatusValue == Value, QueryValue == MutationValue<Value> {
   associatedtype Arguments: Sendable
   associatedtype Value: Sendable
 }
@@ -51,7 +51,7 @@ public struct MutationState<Arguments: Sendable, Value: Sendable> {
 extension MutationState: _MutationStateProtocol {
   public typealias StateValue = Value?
   public typealias StatusValue = Value
-  public typealias QueryValue = Value
+  public typealias QueryValue = MutationValue<Value>
 
   public var currentValue: StateValue {
     switch (self.history.last?.status.resultValue, self.yielded) {
@@ -111,7 +111,7 @@ extension MutationState: _MutationStateProtocol {
     self.history.last?.status.isLoading ?? false
   }
 
-  public mutating func scheduleFetchTask(_ task: inout QueryTask<Value>) {
+  public mutating func scheduleFetchTask(_ task: inout QueryTask<QueryValue>) {
     let args = task.context.mutationArgs(as: Arguments.self) ?? self.history.last?.arguments
     guard let args else {
       reportWarning(.mutationWithNoArgumentsOrHistory)
@@ -143,10 +143,10 @@ extension MutationState: _MutationStateProtocol {
   }
 
   public mutating func update(
-    with result: Result<Value, any Error>,
-    for task: QueryTask<Value>
+    with result: Result<QueryValue, any Error>,
+    for task: QueryTask<QueryValue>
   ) {
-    self.history[id: task.id]?.update(with: result)
+    self.history[id: task.id]?.update(with: result.map(\.value))
     guard let last = self.history.last, last.task.id == task.id else { return }
     switch result {
     case .success:
@@ -158,7 +158,7 @@ extension MutationState: _MutationStateProtocol {
     }
   }
 
-  public mutating func finishFetchTask(_ task: QueryTask<Value>) {
+  public mutating func finishFetchTask(_ task: QueryTask<QueryValue>) {
     self.history[id: task.id]?.finish()
   }
 }
@@ -186,8 +186,8 @@ extension MutationState {
     /// The current ``QueryStatus`` of the mutation attempt represented by this entry.
     public private(set) var status: QueryStatus<StatusValue>
 
-    fileprivate init(task: QueryTask<Value>, args: Arguments) {
-      self.task = task
+    fileprivate init(task: QueryTask<QueryValue>, args: Arguments) {
+      self.task = task.map(\.value)
       self.arguments = args
       self.startDate = task.context.queryClock.now()
       self.lastUpdatedAt = nil

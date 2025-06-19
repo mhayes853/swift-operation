@@ -1,3 +1,12 @@
+// MARK: - MutationValue
+
+/// The data type returned from a ``MutationRequest``.
+///
+/// You do not interact with this type, ``MutationRequest`` manages those interactions for you.
+public struct MutationValue<Value: Sendable>: Sendable {
+  let value: Value
+}
+
 // MARK: - MutationRequest
 
 /// A protocol describing a mutation.
@@ -50,11 +59,14 @@
 /// > Notice: A purple runtime warning and test failure will be issued in Xcode if you call
 /// > `retryLatest` without ever having called `mutate` first. Additionally, your mutation will
 /// > throw an error.
-public protocol MutationRequest<Arguments, Value>: QueryRequest
-where State == MutationState<Arguments, Value> {
+public protocol MutationRequest<Arguments, ReturnValue>: QueryRequest
+where Value == MutationValue<ReturnValue>, State == MutationState<Arguments, ReturnValue> {
   /// The data type of the arguments to submit to the mutation.
   associatedtype Arguments: Sendable
-  
+
+  /// The data type of the returned from the mutation.
+  associatedtype ReturnValue: Sendable
+
   /// Mutates with the specified arguments.
   ///
   /// - Parameters:
@@ -65,8 +77,8 @@ where State == MutationState<Arguments, Value> {
   func mutate(
     with arguments: Arguments,
     in context: QueryContext,
-    with continuation: QueryContinuation<Value>
-  ) async throws -> Value
+    with continuation: QueryContinuation<ReturnValue>
+  ) async throws -> ReturnValue
 }
 
 // MARK: - Fetch
@@ -79,7 +91,14 @@ extension MutationRequest {
     guard let args = context.mutationArgs(as: Arguments.self) else {
       throw MutationNoArgumentsError()
     }
-    return try await self.mutate(with: args, in: context, with: continuation)
+    let value = try await self.mutate(
+      with: args,
+      in: context,
+      with: QueryContinuation { result, context in
+        continuation.yield(with: result.map { MutationValue(value: $0) }, using: context)
+      }
+    )
+    return MutationValue(value: value)
   }
 }
 
@@ -96,8 +115,8 @@ extension MutationRequest where Arguments == Void {
   /// - Returns: The mutation value.
   public func mutate(
     in context: QueryContext,
-    with continuation: QueryContinuation<Value>
-  ) async throws -> Value {
+    with continuation: QueryContinuation<ReturnValue>
+  ) async throws -> ReturnValue {
     try await self.mutate(with: (), in: context, with: continuation)
   }
 }
