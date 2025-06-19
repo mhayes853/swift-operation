@@ -162,17 +162,45 @@ extension InfiniteQueryValue.PreviousPage: Equatable where PageValue: Equatable 
 /// }
 /// ```
 ///
-/// > Warning: You do not implement ``fetch(in:with:)``, instead `InfiniteQueryRequest` implements that
-/// > requirement for you.
-///
-/// An infinite query match fetch its data in 4 different ways, and you can inspect
+/// An infinite query can fetch its data in 4 different ways, and you can inspect
 /// ``InfiniteQueryPaging/request`` in your query to find out which way its fetching.
 /// 1. Fetching the initial page.
 /// 2. Fetching the next page in the list.
-///   - This can be fetched concurrently alongside fetching the previous page.
+///   - This can run concurrently alongside fetching the previous page.
 /// 3. Fetching the page in the list that will be placed before the beginning of the list (ie. the previous page).
-///   - This can be fetched concurrently alongside fetching the next page.
+///   - This can run concurrently alongside fetching the next page.
 /// 4. Refetching all existing pages.
+///
+/// When that state of the query is an empty list of pages, calling
+/// ``QueryStore/fetchNextPage(using:handler:)`` or ``QueryStore/fetchPreviousPage(using:handler:)``
+///  will fetch the initial page of data. Only subsequent calls to those methods will fetch the
+///  next and previous page respectively after the initial page has been fetched.
+///
+///  ```swift
+///  let store = client.store(for: Post.listsQuery(for: 1))
+///
+///  // Fetches inital page if store.currentValue.isEmpty == true
+///  let page = try await store.fetchNextPage()
+///  ```
+///
+///  You can also refetch the entire list of pages, one at a time, by calling ``QueryStore/fetchAllPages(using:handler:)``.
+///
+///  ```swift
+///  let store = client.store(for: Post.listsQuery(for: 1))
+///
+///  let pages = try await store.fetchAllPages()
+///  ```
+///
+///  After fetching a page, ``InfiniteQueryRequest/pageId(after:using:in:)`` and
+///  ``InfiniteQueryRequest/pageId(before:using:in:)`` are called to eagerly calculate whether or
+///  not additional pages are available for your query to fetch. You can check
+///  ``InfiniteQueryState/nextPageId`` or ``InfiniteQueryState/previousPageId`` to check what the
+///  ids of the next and previous available pages for your query. A nil value for either of those
+///  properties indicates that there are no additional pages for your query to fetch through
+///  ``QueryStore/fetchNextPage(using:handler:)`` and
+///  ``QueryStore/fetchPreviousPage(using:handler:)`` respectively. If you just want to check
+///  whether or not fetching additional pages is possible, you can check the boolean properties
+///  ``InfiniteQueryState/hasNextPage`` or ``InfiniteQueryState/hasPreviousPage``.
 public protocol InfiniteQueryRequest<PageID, PageValue>: QueryRequest
 where
   Value == InfiniteQueryValue<PageID, PageValue>,

@@ -29,7 +29,7 @@ public protocol QueryStateProtocol<StateValue, QueryValue>: Sendable {
   /// The type of value for a successful fetch from a query.
   associatedtype QueryValue: Sendable
   
-  /// The type of value that is accessed from the ``status-34hpq`` property.
+  /// The type of value that is accessed from the <doc:/documentation/QueryCore/QueryStateProtocol/status-34hpq> property.
   associatedtype StatusValue: Sendable
 
   /// The current value of this state.
@@ -45,6 +45,9 @@ public protocol QueryStateProtocol<StateValue, QueryValue>: Sendable {
   var valueLastUpdatedAt: Date? { get }
   
   /// Whether or not the query driving this state is loading.
+  ///
+  /// This property is true when active ``QueryTask`` instances are scheduled on the query state
+  /// regardless of whether or not ``QueryTask/isRunning`` is true.
   var isLoading: Bool { get }
   
   /// The most recent error thrown by the query driving this state.

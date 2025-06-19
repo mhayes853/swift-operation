@@ -36,9 +36,6 @@ public struct MutationValue<Value: Sendable>: Sendable {
 /// }
 /// ```
 ///
-/// > Warning: You do not implement ``fetch(in:with:)``, instead `MutationRequest` implements that
-/// > requirement for you.
-///
 /// Mutations are called with arguments directly. For instance, when you have a ``QueryStore``
 /// that uses a mutation, you can invoke your mutation's logic via
 /// ``QueryStore/mutate(with:using:handler:)``.
