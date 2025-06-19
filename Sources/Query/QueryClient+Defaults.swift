@@ -118,8 +118,8 @@ extension QueryClient.StoreCreator where Self == QueryClient.DefaultStoreCreator
 extension QueryClient {
   /// The default ``NetworkObserver`` to use for observing the user's connection status.
   ///
-  /// - On Darwin platforms, `NWPathMonitorObserver.shared` is used.
-  /// - On Broswer platforms (WASI), `NavigatorObserver.shared` is used.
+  /// - On Darwin platforms, `NWPathMonitorObserver` is used.
+  /// - On Broswer platforms (WASI), `NavigatorObserver` is used.
   /// - On other platforms, the value is nil.
   public static var defaultNetworkObserver: (any NetworkObserver)? {
     #if canImport(Network)

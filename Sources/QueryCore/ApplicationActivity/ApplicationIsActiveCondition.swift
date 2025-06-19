@@ -1,12 +1,9 @@
 import Foundation
 
-// MARK: - FocusFetchCondition
+// MARK: - ApplicationIsActiveCondition
 
-/// A ``FetchCondition`` that is satisfied whenever the app is active in the foreground based on
-/// system notifications.
-///
-/// The default instance of this condition uses platform-specific `Notification`s to observe
-/// the app lifecycle, and a check for whether or not the app's state is active.
+/// A ``FetchCondition`` that is satisfied whenever the app is active in the foreground using an
+/// ``ApplicationActivityObserver``.
 public final class ApplicationIsActiveCondition: Sendable {
   private typealias Handler = @Sendable (Bool) -> Void
   private struct State: @unchecked Sendable {
@@ -57,6 +54,11 @@ extension ApplicationIsActiveCondition: FetchCondition {
 }
 
 extension FetchCondition where Self == ApplicationIsActiveCondition {
+  /// A ``FetchCondition`` that is satisfied whenever the app is active in the foreground using an
+  /// ``ApplicationActivityObserver``.
+  ///
+  /// - Parameter observer: The observer to use to determine the app's active state.
+  /// - Returns: A ``FetchCondition`` that is satisfied whenever the app is active in the foreground.
   public static func applicationIsActive(observer: some ApplicationActivityObserver) -> Self {
     ApplicationIsActiveCondition(observer: observer)
   }
