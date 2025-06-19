@@ -11,14 +11,19 @@ extension QueryRequest {
   /// computations from local file data on a background thread, running an expensive SQL query on a
   /// SQLite database, or streaming data from a locally running LLM.
   ///
+  /// - Parameter isOffline: Whether the query is completely offline. Defaults to `true`.
   /// - Returns: A ``ModifiedQuery``.
-  public func completelyOffline() -> ModifiedQuery<Self, _CompletelyOfflineModifier<Self>> {
-    self.modifier(_CompletelyOfflineModifier())
+  public func completelyOffline(
+    _ isOffline: Bool = true
+  ) -> ModifiedQuery<Self, _CompletelyOfflineModifier<Self>> {
+    self.modifier(_CompletelyOfflineModifier(isOffline: isOffline))
   }
 }
 
 public struct _CompletelyOfflineModifier<Query: QueryRequest>: _ContextUpdatingQueryModifier {
+  let isOffline: Bool
+
   public func setup(context: inout QueryContext) {
-    context.satisfiedConnectionStatus = .disconnected
+    context.satisfiedConnectionStatus = self.isOffline ? .disconnected : .connected
   }
 }
