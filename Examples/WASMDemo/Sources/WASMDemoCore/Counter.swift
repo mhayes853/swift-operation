@@ -1,6 +1,7 @@
 import SharingQuery
 import SwiftNavigation
 import Observation
+import JavaScriptKit
 
 // MARK: - CounterModel
 
@@ -38,4 +39,17 @@ extension CounterModel {
     self._fact = SharedQuery(wrappedValue: nil, NumberFact.query(for: number))
     self._nthPrime = SharedQuery(wrappedValue: nil, NumberFact.nthPrimeQuery(for: number))
   }
+}
+
+// MARK: - Render Counter
+
+@MainActor
+private var tokens = Set<ObserveToken>()
+
+@MainActor
+public func renderCounter(using model: CounterModel, in container: JSObject) {
+  observe {
+  
+  }
+  .store(in: &tokens)
 }
