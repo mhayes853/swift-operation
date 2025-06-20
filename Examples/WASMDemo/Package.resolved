@@ -1,5 +1,5 @@
 {
-  "originHash" : "cfe4e69ff891703388108cb70d6669a64fb005ddb1193b8761eae4c2e2213fd2",
+  "originHash" : "d5054e56aeadaf1cae08795efe2a411af22548908107f416dedb0f2067f4a625",
   "pins" : [
     {
       "identity" : "combine-schedulers",
@@ -67,10 +67,10 @@
     {
       "identity" : "swift-dependencies",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/pointfreeco/swift-dependencies",
+      "location" : "https://github.com/zp-dzordz/swift-dependencies",
       "state" : {
-        "revision" : "4c90d6b2b9bf0911af87b103bb40f41771891596",
-        "version" : "1.9.2"
+        "branch" : "fix-for-WASM-builds",
+        "revision" : "fe9471f99ffc12bf01a4e687a870aa09ca6b74bb"
       }
     },
     {
@@ -115,7 +115,7 @@
       "location" : "https://github.com/mhayes853/swift-query",
       "state" : {
         "branch" : "main",
-        "revision" : "bc0a0e331e385dd7b44d2c940b0eaf7960368185"
+        "revision" : "cf8342e99a21737a0d3ff2894463b061a1c29971"
       }
     },
     {

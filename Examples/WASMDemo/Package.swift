@@ -5,18 +5,36 @@ import PackageDescription
 
 let package = Package(
   name: "WASMDemo",
-  platforms: [.macOS(.v10_15)],
+  platforms: [.macOS(.v15)],
   dependencies: [
+    .package(
+      url: "https://github.com/zp-dzordz/swift-dependencies", 
+      branch: "fix-for-WASM-builds"
+    ),
     .package(
       url: "https://github.com/mhayes853/swift-query",
       branch: "main",
       traits: ["SwiftQueryNavigation", "SwiftQueryLogging", "SwiftQueryWebBrowser"]
-    )
+    ),
+    .package(url: "https://github.com/swiftwasm/JavaScriptKit", from: "0.26.1")
   ],
   targets: [
-    .executableTarget(
-      name: "WASMDemo",
-      dependencies: [.product(name: "SharingQuery", package: "swift-query")]
+    .executableTarget(name: "WASMDemo", dependencies: ["NumberFactFeature"]),
+    .target(
+      name: "NumberFactFeature", 
+      dependencies: [
+        .product(name: "Dependencies", package: "swift-dependencies"),
+        .product(name: "SharingQuery", package: "swift-query"),
+        .product(name: "JavaScriptKit", package: "JavaScriptKit"),
+        .product(name: "JavaScriptEventLoop", package: "JavaScriptKit")
+      ]
+    ),
+    .testTarget(
+      name: "NumberFactFeatureTests", 
+      dependencies: [
+        "NumberFactFeature",
+        .product(name: "JavaScriptEventLoopTestSupport", package: "JavaScriptKit")
+      ]
     )
   ]
 )
