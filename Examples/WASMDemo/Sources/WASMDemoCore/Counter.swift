@@ -74,35 +74,26 @@ public func renderCounter(using model: CounterModel, in container: JSObject) {
   )
   container.appendChild!(decrement)
 
-  let jump100 = document.createElement!("button")
-  jump100.innerText = "Jump to 100"
-  jump100.onclick = .object(
-    JSClosure { _ in 
-      model.jumped(to: 100)
-      return .undefined
-    }
-  )
-  container.appendChild!(jump100)
+  renderJumpButton(for: 100, using: model, in: container)
+  renderJumpButton(for: 1000, using: model, in: container)
+  renderJumpButton(for: 10_000, using: model, in: container)
+}
 
-  let jump1000 = document.createElement!("button")
-  jump1000.innerText = "Jump to 1000"
-  jump1000.onclick = .object(
+@MainActor
+private func renderJumpButton(
+  for number: Int, 
+  using model: CounterModel, 
+  in container: JSObject
+) {
+  let jump = document.createElement!("button")
+  jump.innerText = .string("Jump to \(number)")
+  jump.onclick = .object(
     JSClosure { _ in 
-      model.jumped(to: 1000)
+      model.jumped(to: number)
       return .undefined
     }
   )
-  container.appendChild!(jump1000)
-
-  let jump10000 = document.createElement!("button")
-  jump10000.innerText = "Jump to 10,000"
-  jump10000.onclick = .object(
-    JSClosure { _ in 
-      model.jumped(to: 10_000)
-      return .undefined
-    }
-  )
-  container.appendChild!(jump10000)
+  container.appendChild!(jump)
 }
 
 @MainActor
