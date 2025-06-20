@@ -15,18 +15,18 @@
 
     func testConnectedWhenOnlineTrue() {
       self.navigator.onLine = .boolean(true)
-      XCTAssertEqual(self.observer.currentStatus, NetworkStatus.connected)
+      XCTAssertEqual(self.observer.currentStatus, NetworkConnectionStatus.connected)
     }
 
     func testDisconnectedWhenOnlineFalse() {
       self.navigator.onLine = .boolean(false)
-      XCTAssertEqual(self.observer.currentStatus, NetworkStatus.disconnected)
+      XCTAssertEqual(self.observer.currentStatus, NetworkConnectionStatus.disconnected)
     }
 
     func testObservesOnlineChanges() {
       self.navigator.onLine = .boolean(true)
 
-      let values = Lock([NetworkStatus]())
+      let values = Lock([NetworkConnectionStatus]())
       let subscription = self.observer.subscribe { status in
         values.withLock { $0.append(status) }
       }
@@ -38,7 +38,7 @@
       window.dispatchEvent!(offlineEvent)
 
       values.withLock {
-        XCTAssertEqual($0, [NetworkStatus.connected, .disconnected, .connected, .disconnected])
+        XCTAssertEqual($0, [NetworkConnectionStatus.connected, .disconnected, .connected, .disconnected])
       }
 
       subscription.cancel()
