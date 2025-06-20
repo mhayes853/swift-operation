@@ -19,9 +19,9 @@ let package = Package(
     .package(url: "https://github.com/swiftwasm/JavaScriptKit", from: "0.26.1")
   ],
   targets: [
-    .executableTarget(name: "WASMDemo", dependencies: ["NumberFactFeature"]),
+    .executableTarget(name: "WASMDemo", dependencies: ["WASMDemoCore"]),
     .target(
-      name: "NumberFactFeature", 
+      name: "WASMDemoCore", 
       dependencies: [
         .product(name: "Dependencies", package: "swift-dependencies"),
         .product(name: "SharingQuery", package: "swift-query"),
@@ -30,9 +30,9 @@ let package = Package(
       ]
     ),
     .testTarget(
-      name: "NumberFactFeatureTests", 
+      name: "WASMDemoTests", 
       dependencies: [
-        "NumberFactFeature",
+        "WASMDemoCore",
         .product(name: "JavaScriptEventLoopTestSupport", package: "JavaScriptKit")
       ]
     )

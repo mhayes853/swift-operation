@@ -1,5 +1,5 @@
 import XCTest
-import NumberFactFeature
+import WASMDemoCore
 
 final class NthPrimeNumberTests: XCTestCase {
   func test_basics() async {
