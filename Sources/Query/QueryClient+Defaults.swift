@@ -124,7 +124,7 @@ extension QueryClient {
   public static var defaultNetworkObserver: (any NetworkObserver)? {
     #if canImport(Network)
       NWPathMonitorObserver.shared
-    #elseif WebBrowser && canImport(JavaScriptKit)
+    #elseif SwiftQueryWebBrowser && canImport(JavaScriptKit)
       NavigatorObserver.shared
     #else
       nil
@@ -147,7 +147,7 @@ extension QueryClient {
       } else {
         nil
       }
-    #elseif WebBrowser && canImport(JavaScriptKit)
+    #elseif SwiftQueryWebBrowser && canImport(JavaScriptKit)
       WindowVisibilityObserver.shared
     #else
       nil
