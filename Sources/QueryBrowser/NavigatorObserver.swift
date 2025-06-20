@@ -27,7 +27,7 @@
   // MARK: - NetworkObserver Conformance
 
   extension NavigatorObserver: NetworkObserver {
-    public var currentStatus: NetworkStatus {
+    public var currentStatus: NetworkConnectionStatus {
       let window = JSObject.global.window.object!
       return window[dynamicMember: self.navigatorProperty].onLine == .boolean(true)
         ? .connected
@@ -35,7 +35,7 @@
     }
 
     public func subscribe(
-      with handler: @escaping @Sendable (NetworkStatus) -> Void
+      with handler: @escaping @Sendable (NetworkConnectionStatus) -> Void
     ) -> QuerySubscription {
       let window = JSObject.global.window.object!
       handler(self.currentStatus)
