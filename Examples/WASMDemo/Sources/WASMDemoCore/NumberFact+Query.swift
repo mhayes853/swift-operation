@@ -1,11 +1,11 @@
-import Query
+import QueryCore
 import Dependencies
 
 // MARK: - Query
 
 extension NumberFact {
   public static func query(for number: Int) -> some QueryRequest<Self, Query.State> {
-    Query(number: number)
+    Query(number: number).taskConfiguration { $0.name = "Fetch number fact for \(number)" }
   }
 
   public struct Query: QueryRequest, Hashable {
@@ -32,6 +32,7 @@ extension NumberFact {
     NthPrimeQuery(number: number)
       .completelyOffline()
       .disableApplicationActiveRefetching()
+      .taskConfiguration { $0.name = "Nth prime for \(number)" }
   }
 
   public struct NthPrimeQuery: QueryRequest, Hashable {

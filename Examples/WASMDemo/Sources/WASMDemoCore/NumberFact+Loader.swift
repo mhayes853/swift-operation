@@ -16,6 +16,8 @@ extension NumberFact {
     public init() {}
 
     public func fact(for number: Int) async throws -> NumberFact {
+      // NB: Add a bit of fake delay to exemplify loading.
+      try await Task.sleep(for: .seconds(0.3))
       let response = try await JSPromise(
         JSObject.global.fetch!("http://www.numberapi.com/\(number)").object!
       )!.value

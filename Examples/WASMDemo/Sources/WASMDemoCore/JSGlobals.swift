@@ -1,7 +1,7 @@
 import JavaScriptKit
 
 @MainActor
-var window = JSObject.global.window.object!
+public var window = JSObject.global.window.object!
 
 @MainActor
-var document = window.document.object!
+public var document = window.document.object!
