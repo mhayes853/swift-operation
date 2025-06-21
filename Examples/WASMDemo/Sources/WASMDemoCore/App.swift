@@ -42,10 +42,10 @@ private var tokens = Set<ObserveToken>()
 
 @MainActor
 public func renderApp(model: AppModel, in container: JSObject) {
-  var title = document.createElement!("h1")
+  let title = document.createElement!("h1")
   title.innerText = "WASM Demo"
 
-  var description = document.createElement!("p")
+  let description = document.createElement!("p")
   description.innerText = """
     This is a sample browser app built using Swift Query and WASM. You can add and \
     remove counters to see some cool facts about numbers!
@@ -56,15 +56,15 @@ public func renderApp(model: AppModel, in container: JSObject) {
     Yes, this demo app is largely based off the volume of PointFree's humble counter example usage.
     """
 
-  container.appendChild!(title)
-  container.appendChild!(description)
+  _ = container.appendChild!(title)
+  _ = container.appendChild!(description)
 
   renderNetworkStatusIndicator(in: container)
 
-  var sumContainer = document.createElement!("div")
-  container.appendChild!(sumContainer)
+  let sumContainer = document.createElement!("div")
+  _ = container.appendChild!(sumContainer)
 
-  var addCounterButton = document.createElement!("button")
+  let addCounterButton = document.createElement!("button")
   addCounterButton.innerText = "Add Counter"
   addCounterButton.onclick = .object(
     JSClosure { _ in
@@ -72,10 +72,10 @@ public func renderApp(model: AppModel, in container: JSObject) {
       return .undefined
     }
   )
-  container.appendChild!(addCounterButton)
+  _ = container.appendChild!(addCounterButton)
 
-  var countersContainer = document.createElement!("div")
-  container.appendChild!(countersContainer)
+  let countersContainer = document.createElement!("div")
+  _ = container.appendChild!(countersContainer)
 
   observe {
     sumContainer.innerHTML = ""

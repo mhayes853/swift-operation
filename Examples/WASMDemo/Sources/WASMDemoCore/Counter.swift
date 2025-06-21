@@ -49,8 +49,8 @@ private var tokens = Set<ObserveToken>()
 
 @MainActor
 public func renderCounter(using model: CounterModel, in container: JSObject) {
-  var counterContainer = document.createElement!("div")
-  container.appendChild!(counterContainer)
+  let counterContainer = document.createElement!("div")
+  _ = container.appendChild!(counterContainer)
 
   renderCounterLabels(title: "Count", using: model, in: counterContainer.object!)
 
@@ -62,7 +62,7 @@ public func renderCounter(using model: CounterModel, in container: JSObject) {
       return .undefined
     }
   )
-  container.appendChild!(increment)
+  _ = container.appendChild!(increment)
 
   let decrement = document.createElement!("button")
   decrement.innerText = "Decrement"
@@ -72,11 +72,13 @@ public func renderCounter(using model: CounterModel, in container: JSObject) {
       return .undefined
     }
   )
-  container.appendChild!(decrement)
+  _ = container.appendChild!(decrement)
 
   renderJumpButton(for: 100, using: model, in: container)
   renderJumpButton(for: 1000, using: model, in: container)
   renderJumpButton(for: 10_000, using: model, in: container)
+  renderJumpButton(for: 100_000, using: model, in: container)
+  renderJumpButton(for: 1_000_000, using: model, in: container)
 }
 
 @MainActor
@@ -93,7 +95,7 @@ private func renderJumpButton(
       return .undefined
     }
   )
-  container.appendChild!(jump)
+  _ = container.appendChild!(jump)
 }
 
 // MARK: - Render Counter Labels
@@ -104,13 +106,13 @@ public func renderCounterLabels(
   using model: CounterModel, 
   in container: JSObject
 ) {
-  var countLabel = document.createElement!("h3")
-  var factLabel = document.createElement!("p")
-  var nthPrimeLabel = document.createElement!("p")
+  let countLabel = document.createElement!("h3")
+  let factLabel = document.createElement!("p")
+  let nthPrimeLabel = document.createElement!("p")
 
-  container.appendChild!(countLabel)
-  container.appendChild!(factLabel)
-  container.appendChild!(nthPrimeLabel)
+  _ = container.appendChild!(countLabel)
+  _ = container.appendChild!(factLabel)
+  _ = container.appendChild!(nthPrimeLabel)
 
   observe {
     countLabel.innerText = .string("\(title) \(model.count)")

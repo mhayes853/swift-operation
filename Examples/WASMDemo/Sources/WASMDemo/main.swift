@@ -10,7 +10,7 @@ struct WASMDemo {
     JavaScriptEventLoop.installGlobalExecutor()
 
     #if canImport(wasi_pthreads) && _runtime(_multithreaded)
-    let executor = try? await WebWorkerTaskExecutor.sharedInstance()
+    let executor = try await WebWorkerTaskExecutor.sharedInstance()
     prepareDependencies { 
       $0[WebWorkerTaskExecutorKey.self] = executor
     }
