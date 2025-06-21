@@ -1,4 +1,4 @@
-#if canImport(JavaScriptEventLoop)
+#if canImport(JavaScriptKit)
   import JavaScriptKit
   import JavaScriptEventLoop
   import QueryCore
