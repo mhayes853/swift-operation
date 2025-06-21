@@ -1,1 +1,1 @@
-swift package --disable-sandbox --swift-sdk wasm32-unknown-wasi js test
+swift package --disable-sandbox --swift-sdk wasm32-unknown-wasip1-threads js test

@@ -96,6 +96,8 @@ private func renderJumpButton(
   container.appendChild!(jump)
 }
 
+// MARK: - Render Counter Labels
+
 @MainActor
 public func renderCounterLabels(
   title: String,

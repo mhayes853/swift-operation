@@ -1,5 +1,6 @@
 import QueryCore
 import Dependencies
+import JavaScriptEventLoop
 
 // MARK: - Query
 
@@ -32,7 +33,11 @@ extension NumberFact {
     NthPrimeQuery(number: number)
       .completelyOffline()
       .disableApplicationActiveRefetching()
-      .taskConfiguration { $0.name = "Nth prime for \(number)" }
+      .taskConfiguration { 
+        @Dependency(WebWorkerTaskExecutorKey.self) var executor
+        $0.name = "Nth prime for \(number)" 
+        $0.executorPreference = executor
+      }
   }
 
   public struct NthPrimeQuery: QueryRequest, Hashable {
