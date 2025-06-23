@@ -13,3 +13,4 @@ DerivedData/
 *.swiftdeps~
 node_modules/
 TestLog.txt
+Bundle

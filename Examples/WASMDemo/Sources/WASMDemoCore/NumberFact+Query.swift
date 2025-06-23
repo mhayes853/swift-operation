@@ -33,7 +33,7 @@ extension NumberFact {
     NthPrimeQuery(number: number)
       .completelyOffline()
       .disableApplicationActiveRefetching()
-      .taskConfiguration { 
+      .taskConfiguration {
         @Dependency(WebWorkerTaskExecutorKey.self) var executor
         $0.name = "Nth prime for \(number)" 
         $0.executorPreference = executor

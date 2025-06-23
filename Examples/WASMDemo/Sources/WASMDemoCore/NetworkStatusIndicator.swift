@@ -9,7 +9,7 @@ private var tokens = Set<ObserveToken>()
 public func renderNetworkStatusIndicator(in container: JSObject) {
   @SharedReader(.networkStatus) var status = .connected
 
-  var label = document.createElement!("b")
+  let label = document.createElement!("b")
   _ = container.appendChild!(label)
 
   observe {

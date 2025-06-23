@@ -24,7 +24,7 @@ let package = Package(
       name: "WASMDemoCore", 
       dependencies: [
         .product(name: "Dependencies", package: "swift-dependencies"),
-        .product(name: "SharingQuery", package: "swift-query"),
+        .product(name: "SharingQuery", package: "swift-sharing-query"),
         .product(name: "JavaScriptKit", package: "JavaScriptKit"),
         .product(name: "JavaScriptEventLoop", package: "JavaScriptKit")
       ]

@@ -47,11 +47,11 @@
         handler(.disconnected)
         return .undefined
       }
-      window.addEventListener!("online", onlineListener)
-      window.addEventListener!("offline", offlineListener)
+      _ = window.addEventListener!("online", onlineListener)
+      _ = window.addEventListener!("offline", offlineListener)
       return .jsClosure { _ in
-        window.removeEventListener!("online", onlineListener)
-        window.removeEventListener!("offline", offlineListener)
+        _ = window.removeEventListener!("online", onlineListener)
+        _ = window.removeEventListener!("offline", offlineListener)
         return .undefined
       }
     }

@@ -1,5 +1,5 @@
 {
-  "originHash" : "67193b3559b6af80f827e29db53283e283af46928ae10838dba60588c853f64a",
+  "originHash" : "ca625cfb5f40d7e3f6fc49f6c454f41443ad1c37376b1bcf110879b0378117f1",
   "pins" : [
     {
       "identity" : "combine-schedulers",
@@ -107,15 +107,6 @@
       "state" : {
         "revision" : "d924c62a70fca5f43872f286dbd7cef0957f1c01",
         "version" : "1.6.0"
-      }
-    },
-    {
-      "identity" : "swift-query",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/mhayes853/swift-query",
-      "state" : {
-        "branch" : "main",
-        "revision" : "d01989a0c602ac8ecb78b97c158adae8fe46e8bc"
       }
     },
     {

@@ -30,9 +30,9 @@
         handler(document.visibilityState == .string("visible"))
         return .undefined
       }
-      window.addEventListener!("visibilitychange", listener)
+      _ = window.addEventListener!("visibilitychange", listener)
       return .jsClosure { _ in
-        window.removeEventListener!("visibilitychange", listener)
+        _ = window.removeEventListener!("visibilitychange", listener)
         return .undefined
       }
     }
