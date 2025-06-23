@@ -76,7 +76,7 @@ import Foundation
 @dynamicMemberLookup
 public final class QueryStore<State: QueryStateProtocol>: Sendable {
   private struct Values {
-    var query: State
+    var state: State
     var taskHerdId: Int
     var context: QueryContext
     var controllerSubscriptions: [QuerySubscription]
@@ -97,7 +97,7 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
     self.query = query
     self.values = RecursiveLock(
       Values(
-        query: initialState,
+        state: initialState,
         taskHerdId: 0,
         context: context,
         controllerSubscriptions: [],
@@ -262,7 +262,7 @@ extension QueryStore {
 extension QueryStore {
   /// The current state of this query.
   public var state: State {
-    self.values.withLock { $0.query }
+    self.values.withLock { $0.state }
   }
 
   public subscript<NewValue: Sendable>(
@@ -271,12 +271,29 @@ extension QueryStore {
     self.state[keyPath: keyPath]
   }
 
-  /// Exclusively accesses the current query state inside the specified closure.
+  /// Exclusively accesses this store inside the specified closure.
   ///
-  /// - Parameter fn: A closure with exclusive access to the query state.
+  /// The store is thread-safe, but accessing individual properties without exclusive access can
+  /// still lead to high-level data races. Use this method to ensure that your code has exclusive
+  /// access to the store when performing multiple property accesses to compute a value or modify
+  /// the store.
+  ///
+  /// ```swift
+  /// let store: QueryStore<QueryState<Int, Int>>
+  ///
+  /// // 🔴 Is prone to high-level data races.
+  /// store.currentValue += 1
+  ///
+  //  // ✅ No data races.
+  /// store.withExclusiveAccess {
+  ///   store.currentValue += 1
+  /// }
+  /// ```
+  ///
+  /// - Parameter fn: A closure with exclusive access to this store.
   /// - Returns: Whatever `fn` returns.
-  public func withState<T: Sendable>(_ fn: (State) throws -> T) rethrows -> T {
-    try self.values.withLock { try fn($0.query) }
+  public func withExclusiveAccess<T>(_ fn: () throws -> sending T) rethrows -> sending T {
+    try self.values.withLock { _ in try fn() }
   }
 }
 
@@ -288,7 +305,7 @@ extension QueryStore {
     get { self.state.currentValue }
     set {
       self.editValuesWithStateChangeEvent {
-        $0.query.update(with: .success(newValue), using: $0.context)
+        $0.state.update(with: .success(newValue), using: $0.context)
       }
     }
   }
@@ -307,7 +324,7 @@ extension QueryStore {
     using context: QueryContext? = nil
   ) {
     self.editValuesWithStateChangeEvent {
-      $0.query.update(with: result, using: context ?? $0.context)
+      $0.state.update(with: result, using: context ?? $0.context)
     }
   }
 }
@@ -323,7 +340,7 @@ extension QueryStore {
   /// - Parameter context: The ``QueryContext`` to reset the query in.
   public func resetState(using context: QueryContext? = nil) {
     self.editValuesWithStateChangeEvent { values in
-      values.query.reset(using: context ?? values.context)
+      values.state.reset(using: context ?? values.context)
       values.taskHerdId += 1
     }
   }
@@ -342,7 +359,7 @@ extension QueryStore {
   /// ``QueryRequest/staleWhen(predicate:)`` modifier.
   public var isStale: Bool {
     self.values.withLock {
-      $0.context.staleWhenRevalidateCondition.evaluate(state: $0.query, in: $0.context)
+      $0.context.staleWhenRevalidateCondition.evaluate(state: $0.state, in: $0.context)
     }
   }
 }
@@ -389,7 +406,7 @@ extension QueryStore {
         using: task
       )
       task.inner.withLock { newTask in
-        values.query.scheduleFetchTask(&inner)
+        values.state.scheduleFetchTask(&inner)
         newTask = .running(inner)
       }
       return inner
@@ -447,7 +464,7 @@ extension QueryStore {
       task.inner.withLock {
         guard case .running(var task) = $0, values.taskHerdId == initialHerdId else { return }
         task.context.queryResultUpdateReason = .returnedFinalResult
-        values.query.update(with: result, for: task)
+        values.state.update(with: result, for: task)
         task.context.queryResultUpdateReason = nil
         values.query.finishFetchTask(task)
       }
@@ -471,7 +488,7 @@ extension QueryStore {
           case .finished:
             reportWarning(.queryYieldedAfterReturning(result))
           case .running(let task) where values.taskHerdId == initialHerdId:
-            values.query.update(with: result, for: task)
+            values.state.update(with: result, for: task)
             self.subscriptions.forEach { $0.onResultReceived?(result, context) }
           default:
             break
@@ -538,7 +555,7 @@ extension QueryStore {
     self.values.withLock { values in
       let value = fn(&values)
       self.subscriptions.forEach {
-        $0.onStateChanged?(values.query, context ?? values.context)
+        $0.onStateChanged?(values.state, context ?? values.context)
       }
       return value
     }

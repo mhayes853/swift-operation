@@ -1,7 +1,7 @@
-import XCTest
-import WASMDemoCore
-import SharingQuery
 import Dependencies
+import SharingQuery
+import WASMDemoCore
+import XCTest
 
 @MainActor
 final class AppModelTests: XCTestCase, @unchecked Sendable {
@@ -15,7 +15,7 @@ final class AppModelTests: XCTestCase, @unchecked Sendable {
   }
 
   func test_AppendsCounter() async throws {
-    let expectedFact = NumberFact(number: 0, content: "This is a cool fact") 
+    let expectedFact = NumberFact(number: 0, content: "This is a cool fact")
     self.loader.contents[expectedFact.number] = expectedFact.content
 
     try await withDependencies {
@@ -57,7 +57,7 @@ final class AppModelTests: XCTestCase, @unchecked Sendable {
   }
 
   func test_TotalSum() async throws {
-    let expectedFact = NumberFact(number: 1050, content: "This is a really cool fact") 
+    let expectedFact = NumberFact(number: 1050, content: "This is a really cool fact")
     self.loader.contents[expectedFact.number] = expectedFact.content
 
     try await withDependencies {

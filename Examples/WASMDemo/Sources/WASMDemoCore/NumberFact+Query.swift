@@ -1,6 +1,6 @@
-import QueryCore
 import Dependencies
 import JavaScriptEventLoop
+import QueryCore
 
 // MARK: - Query
 
@@ -13,7 +13,7 @@ extension NumberFact {
     let number: Int
 
     public func fetch(
-      in context: QueryContext, 
+      in context: QueryContext,
       with continuation: QueryContinuation<NumberFact>
     ) async throws -> NumberFact {
       @Dependency(NumberFactLoaderKey.self) var loader
@@ -28,14 +28,14 @@ extension NumberFact {
   public static func nthPrimeQuery(
     for number: Int
   ) -> some QueryRequest<Int?, NthPrimeQuery.State> {
-    // NB: Calculating the prime number doesn't need the network, but it still takes 
+    // NB: Calculating the prime number doesn't need the network, but it still takes
     // significant time to complete for larger numbers.
     NthPrimeQuery(number: number)
       .completelyOffline()
       .disableApplicationActiveRefetching()
       .taskConfiguration {
         @Dependency(WebWorkerTaskExecutorKey.self) var executor
-        $0.name = "Nth prime for \(number)" 
+        $0.name = "Nth prime for \(number)"
         $0.executorPreference = executor
       }
   }
@@ -44,7 +44,7 @@ extension NumberFact {
     let number: Int
 
     public func fetch(
-      in context: QueryContext, 
+      in context: QueryContext,
       with continuation: QueryContinuation<Int?>
     ) async throws -> Int? {
       await nthPrime(for: self.number)

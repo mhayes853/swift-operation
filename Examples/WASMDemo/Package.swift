@@ -8,7 +8,7 @@ let package = Package(
   platforms: [.macOS(.v15)],
   dependencies: [
     .package(
-      url: "https://github.com/zp-dzordz/swift-dependencies", 
+      url: "https://github.com/zp-dzordz/swift-dependencies",
       branch: "fix-for-WASM-builds"
     ),
     .package(
@@ -21,7 +21,7 @@ let package = Package(
   targets: [
     .executableTarget(name: "WASMDemo", dependencies: ["WASMDemoCore"]),
     .target(
-      name: "WASMDemoCore", 
+      name: "WASMDemoCore",
       dependencies: [
         .product(name: "Dependencies", package: "swift-dependencies"),
         .product(name: "SharingQuery", package: "swift-query"),
@@ -30,7 +30,7 @@ let package = Package(
       ]
     ),
     .testTarget(
-      name: "WASMDemoTests", 
+      name: "WASMDemoTests",
       dependencies: [
         "WASMDemoCore",
         .product(name: "JavaScriptEventLoopTestSupport", package: "JavaScriptKit")

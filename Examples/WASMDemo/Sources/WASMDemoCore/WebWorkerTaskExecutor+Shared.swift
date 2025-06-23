@@ -1,6 +1,6 @@
+import Dependencies
 import JavaScriptEventLoop
 import JavaScriptKit
-import Dependencies
 
 // MARK: - SharedInstance
 

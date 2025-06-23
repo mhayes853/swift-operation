@@ -60,8 +60,10 @@ public final class _RefetchOnChangeController<
   private func refetchIfAble() async throws {
     await withTaskGroup(of: Void.self) { group in
       self.subscriptions.forEach { controls in
-        guard controls.subscriberCount > 0 && controls.isStale else { return }
-        group.addTask { _ = try? await controls.yieldRefetch() }
+        controls.withExclusiveAccess {
+          guard controls.subscriberCount > 0 && controls.isStale else { return }
+          group.addTask { _ = try? await controls.yieldRefetch() }
+        }
       }
     }
   }

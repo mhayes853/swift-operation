@@ -1,8 +1,8 @@
-import SwiftNavigation
-import Observation
-import JavaScriptKit
-import IdentifiedCollections
 import Dependencies
+import IdentifiedCollections
+import JavaScriptKit
+import Observation
+import SwiftNavigation
 
 // MARK: - AppModel
 
@@ -50,7 +50,7 @@ public func renderApp(model: AppModel, in container: JSObject) {
     This is a sample browser app built using Swift Query and WASM. You can add and \
     remove counters to see some cool facts about numbers!
 
-    The top counter displays the sum of all the counters, and you can also see your \ 
+    The top counter displays the sum of all the counters, and you can also see your \
     connection status to the internet in real-time.
     """
 
@@ -78,8 +78,8 @@ public func renderApp(model: AppModel, in container: JSObject) {
   observe {
     sumContainer.innerHTML = ""
     renderCounterLabels(
-      title: "Total Sum", 
-      using: model.summedCounter(), 
+      title: "Total Sum",
+      using: model.summedCounter(),
       in: sumContainer.object!
     )
 

@@ -1,13 +1,13 @@
-import XCTest
 import WASMDemoCore
+import XCTest
 
 final class NthPrimeNumberTests: XCTestCase {
   func test_basics() async {
     let nums = [
-      (-10, nil), 
-      (0, nil), 
-      (1, 2), 
-      (40, 173), 
+      (-10, nil),
+      (0, nil),
+      (1, 2),
+      (40, 173),
       (100, 541),
       (1000, 7919)
     ]

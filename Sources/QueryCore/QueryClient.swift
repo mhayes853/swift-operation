@@ -269,7 +269,9 @@ extension QueryClient {
 
 extension OpaqueQueryStore {
   fileprivate func isEvictable(from pressure: MemoryPressure) -> Bool {
-    self.subscriberCount == 0 && self.context.evictableMemoryPressure.contains(pressure)
+    self.withExclusiveAccess {
+      self.subscriberCount == 0 && self.context.evictableMemoryPressure.contains(pressure)
+    }
   }
 }
 

@@ -137,10 +137,7 @@ struct QueryControllerTests {
 
     expectNoDifference(store.currentValue, TestQuery.value)
     controller.controls.withLock { controls in
-      controls?
-        .withState { state in
-          controls?.yield(state.currentValue! + 10)
-        }
+      controls!.withExclusiveAccess { controls!.yield(controls!.state.currentValue! + 10) }
     }
     expectNoDifference(store.currentValue, TestQuery.value + 10)
   }

@@ -87,12 +87,29 @@ extension OpaqueQueryStore {
     self.state[keyPath: keyPath]
   }
 
-  /// Exclusively accesses the current query state inside the specified closure.
+  /// Exclusively accesses this store inside the specified closure.
   ///
-  /// - Parameter fn: A closure with exclusive access to the query state.
+  /// The store is thread-safe, but accessing individual properties without exclusive access can
+  /// still lead to high-level data races. Use this method to ensure that your code has exclusive
+  /// access to the store when performing multiple property accesses to compute a value or modify
+  /// the store.
+  ///
+  /// ```swift
+  /// let store: OpaqueQueryStore
+  ///
+  /// // 🔴 Is prone to high-level data races.
+  /// store.currentValue = (store.currentValue as! Int) + 1
+  ///
+  //  // ✅ No data races.
+  /// store.withExclusiveAccess {
+  ///   store.currentValue = (store.currentValue as! Int) + 1
+  /// }
+  /// ```
+  ///
+  /// - Parameter fn: A closure with exclusive access to the store.
   /// - Returns: Whatever `fn` returns.
-  public func withState<T: Sendable>(_ fn: (OpaqueQueryState) throws -> T) rethrows -> T {
-    try self._base.opaqueWithState(fn)
+  public func withExclusiveAccess<T>(_ fn: () throws -> sending T) rethrows -> sending T {
+    try self._base.withExclusiveAccess(fn)
   }
 }
 
@@ -235,8 +252,8 @@ private protocol OpaqueableQueryStore: Sendable {
   var context: QueryContext { get nonmutating set }
   var subscriberCount: Int { get }
   var isStale: Bool { get }
+  func withExclusiveAccess<T>(_ fn: () throws -> sending T) rethrows -> sending T
 
-  func opaqueWithState<T: Sendable>(_ fn: (OpaqueQueryState) throws -> T) rethrows -> T
   func opaqueSetResult(to result: Result<(any Sendable)?, any Error>, using context: QueryContext?)
   func opaqueFetch(
     using context: QueryContext?,
@@ -249,10 +266,6 @@ private protocol OpaqueableQueryStore: Sendable {
 
 extension QueryStore: OpaqueableQueryStore {
   var opaqueState: OpaqueQueryState { OpaqueQueryState(self.state) }
-
-  func opaqueWithState<T: Sendable>(_ fn: (OpaqueQueryState) throws -> T) rethrows -> T {
-    try self.withState { try fn(OpaqueQueryState($0)) }
-  }
 
   func opaqueSetResult(
     to result: Result<(any Sendable)?, any Error>,

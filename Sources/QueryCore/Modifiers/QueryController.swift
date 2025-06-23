@@ -58,12 +58,29 @@ extension QueryControls {
     self.store?.state ?? self.initialState
   }
 
-  /// Exclusively accesses the current query state inside the specified closure.
+  /// Exclusively accesses the controls inside the specified closure.
   ///
-  /// - Parameter fn: A closure with exclusive access to the query state.
+  /// The controls are thread-safe, but accessing individual properties without exclusive access can
+  /// still lead to high-level data races. Use this method to ensure that your code has exclusive
+  /// access to the store when performing multiple property accesses to compute a value or to yield
+  /// a new value.
+  ///
+  /// ```swift
+  /// let controls: QueryControls<QueryState<Int, Int>>
+  ///
+  /// // 🔴 Is prone to high-level data races.
+  /// controls.yield(controls.state.currentValue + 1)
+  ///
+  //  // ✅ No data races.
+  /// controls.withExclusiveAccess {
+  ///   controls.yield(controls.state.currentValue + 1)
+  /// }
+  /// ```
+  ///
+  /// - Parameter fn: A closure with exclusive access to the controls.
   /// - Returns: Whatever `fn` returns.
-  public func withState<T: Sendable>(_ fn: (State) throws -> T) rethrows -> T {
-    try self.store?.withState(fn) ?? (try fn(self.initialState))
+  public func withExclusiveAccess<T>(_ fn: () throws -> sending T) rethrows -> sending T {
+    try self.store?.withExclusiveAccess(fn) ?? (try fn())
   }
 }
 

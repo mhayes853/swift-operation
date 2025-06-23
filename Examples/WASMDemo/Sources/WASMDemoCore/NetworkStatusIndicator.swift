@@ -1,5 +1,5 @@
-import SharingQuery
 import JavaScriptKit
+import SharingQuery
 import SwiftNavigation
 
 @MainActor

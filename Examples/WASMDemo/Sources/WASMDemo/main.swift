@@ -1,7 +1,7 @@
+import Dependencies
 import JavaScriptEventLoop
 import JavaScriptKit
 import WASMDemoCore
-import Dependencies
 
 @main
 struct WASMDemo {
@@ -12,7 +12,7 @@ struct WASMDemo {
     // to schedule unstructured tasks.
     // #if canImport(wasi_pthread) && _runtime(_multithreaded)
     //   let executor = try await WebWorkerTaskExecutor.sharedInstance()
-    //   prepareDependencies { 
+    //   prepareDependencies {
     //     $0[WebWorkerTaskExecutorKey.self] = executor
     //   }
     // #endif

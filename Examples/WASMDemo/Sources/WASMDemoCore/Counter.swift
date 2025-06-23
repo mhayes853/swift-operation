@@ -1,8 +1,8 @@
+import Foundation
+import JavaScriptKit
+import Observation
 import SharingQuery
 import SwiftNavigation
-import Observation
-import JavaScriptKit
-import Foundation
 
 // MARK: - CounterModel
 
@@ -57,7 +57,7 @@ public func renderCounter(using model: CounterModel, in container: JSObject) {
   let increment = document.createElement!("button")
   increment.innerText = "Increment"
   increment.onclick = .object(
-    JSClosure { _ in 
+    JSClosure { _ in
       model.incremented()
       return .undefined
     }
@@ -67,7 +67,7 @@ public func renderCounter(using model: CounterModel, in container: JSObject) {
   let decrement = document.createElement!("button")
   decrement.innerText = "Decrement"
   decrement.onclick = .object(
-    JSClosure { _ in 
+    JSClosure { _ in
       model.decremented()
       return .undefined
     }
@@ -83,14 +83,14 @@ public func renderCounter(using model: CounterModel, in container: JSObject) {
 
 @MainActor
 private func renderJumpButton(
-  for number: Int, 
-  using model: CounterModel, 
+  for number: Int,
+  using model: CounterModel,
   in container: JSObject
 ) {
   let jump = document.createElement!("button")
   jump.innerText = .string("Jump to \(number)")
   jump.onclick = .object(
-    JSClosure { _ in 
+    JSClosure { _ in
       model.jumped(to: number)
       return .undefined
     }
@@ -103,7 +103,7 @@ private func renderJumpButton(
 @MainActor
 public func renderCounterLabels(
   title: String,
-  using model: CounterModel, 
+  using model: CounterModel,
   in container: JSObject
 ) {
   let countLabel = document.createElement!("h3")
@@ -121,7 +121,7 @@ public func renderCounterLabels(
     case let .result(.success(fact)):
       factLabel.innerText = .string(fact.content)
       factLabel.style.color = "black"
-    
+
     case let .result(.failure(error)):
       factLabel.innerText = .string("Error: \(error.localizedDescription)")
       factLabel.style.color = "red"
@@ -133,7 +133,9 @@ public func renderCounterLabels(
 
     if let prime = model.nthPrime {
       if let prime {
-        nthPrimeLabel.innerText = .string("The \(model.count.nthFormatted) prime number is \(prime)!")
+        nthPrimeLabel.innerText = .string(
+          "The \(model.count.nthFormatted) prime number is \(prime)!"
+        )
       } else {
         nthPrimeLabel.innerText = .string("There is no \(model.count.nthFormatted) prime number...")
       }

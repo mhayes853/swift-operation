@@ -20,7 +20,8 @@ extension NumberFact {
       try await Task.sleep(for: .seconds(0.3))
       let response = try await JSPromise(
         JSObject.global.fetch!("http://www.numberapi.com/\(number)").object!
-      )!.value
+      )!
+      .value
       let content = try await JSPromise(response.text().object!)!.value.string!
       return NumberFact(number: number, content: content)
     }

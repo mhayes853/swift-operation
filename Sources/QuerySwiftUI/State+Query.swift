@@ -119,6 +119,35 @@
     }
   }
 
+  // MARK: - Exclusive Access
+
+  extension State.Query {
+    /// Exclusively accesses the query properties inside the specified closure.
+    ///
+    /// The property-wrapper is thread-safe due to the thread-safety of the underlying `QueryStore`,
+    /// but accessing individual properties without exclusive access can still lead to high-level
+    /// data races. Use this method to ensure that your code has exclusive access to the store when
+    /// performing multiple property accesses to compute a value or modify the underlying store.
+    ///
+    /// ```swift
+    /// @State.Query<QueryState<Int, Int>> var value
+    ///
+    /// // 🔴 Is prone to high-level data races.
+    /// $value.currentValue += 1
+    ///
+    //  // ✅ No data races.
+    /// $value.withExclusiveAccess {
+    ///   $value.currentValue += 1
+    /// }
+    /// ```
+    ///
+    /// - Parameter fn: A closure with exclusive access to the properties of this property wrapper.
+    /// - Returns: Whatever `fn` returns.
+    public func withExclusiveAccess<T>(_ fn: () throws -> sending T) rethrows -> sending T {
+      try self.store.withExclusiveAccess(fn)
+    }
+  }
+
   // MARK: - DynamicProperty
 
   extension State.Query: @preconcurrency DynamicProperty {

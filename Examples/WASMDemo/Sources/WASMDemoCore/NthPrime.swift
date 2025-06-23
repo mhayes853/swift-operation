@@ -4,7 +4,7 @@ public func nthPrime(for n: Int) async -> Int? {
   guard n > 0 else { return nil }
 
   let upperBound = n < 6 ? 15 : Int(Double(n) * log(Double(n)) + Double(n) * log(log(Double(n))))
-    
+
   var isPrime = [Bool](repeating: true, count: upperBound + 1)
   isPrime[0] = false
   isPrime[1] = false
@@ -19,7 +19,7 @@ public func nthPrime(for n: Int) async -> Int? {
 
   var count = 0
   for (index, isPrime) in isPrime.enumerated() {
-    guard isPrime else { continue } 
+    guard isPrime else { continue }
     count += 1
     if count == n {
       return index
