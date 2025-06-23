@@ -8,7 +8,8 @@ struct WASMDemo {
   static func main() async throws {
     JavaScriptEventLoop.installGlobalExecutor()
 
-    // TODO: - The act of initializing the executor seems to break observation.
+    // TODO: - The act of initializing the executor seems to break observation and/or the ability
+    // to schedule unstructured tasks.
     // #if canImport(wasi_pthread) && _runtime(_multithreaded)
     //   let executor = try await WebWorkerTaskExecutor.sharedInstance()
     //   prepareDependencies { 

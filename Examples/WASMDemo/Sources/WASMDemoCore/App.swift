@@ -52,8 +52,6 @@ public func renderApp(model: AppModel, in container: JSObject) {
 
     The top counter displays the sum of all the counters, and you can also see your \ 
     connection status to the internet in real-time.
-
-    Yes, this demo app is largely based off the volume of PointFree's humble counter example usage.
     """
 
   _ = container.appendChild!(title)
