@@ -466,7 +466,7 @@ extension QueryStore {
         task.context.queryResultUpdateReason = .returnedFinalResult
         values.state.update(with: result, for: task)
         task.context.queryResultUpdateReason = nil
-        values.query.finishFetchTask(task)
+        values.state.finishFetchTask(task)
       }
       self.subscriptions.forEach {
         $0.onResultReceived?(result, context)
