@@ -14,10 +14,17 @@ struct ContentView: View {
         Text("Tap on any of the case studies to view the library in action!")
           .font(.headline)
         
-        Section {
+        Section("1 - The Basics (Start Here)") {
           CaseStudyLink(study: BasicSwiftUICaseStudy())
           CaseStudyLink(study: BasicUIKitCaseStudy())
           CaseStudyLink(study: BasicSharingCaseStudy())
+        }
+        
+        Section("2 - Common Use Cases") {
+        }
+        
+        Section("3 - Advanced Use Cases") {
+          CaseStudyLink(study: ExpensiveLocalComputationsCaseStudy())
         }
       }
       .navigationTitle("Case Studies")

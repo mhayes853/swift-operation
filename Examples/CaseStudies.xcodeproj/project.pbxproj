@@ -42,16 +42,18 @@
 		16AE2F1D2E09EBAA006D0EEF /* Exceptions for "CaseStudies" folder in "CaseStudies" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				CaseStudiesTests/SharedTests/MockHTTPDataTransport.swift,
-				"CaseStudiesTests/SharedTests/Quote+QueryTests.swift",
+				"CaseStudiesTests/03-ExpensiveLocalComputationsTests.swift",
+				CaseStudiesTests/HelpersTests/MockHTTPDataTransport.swift,
+				"CaseStudiesTests/HelpersTests/Quote+QueryTests.swift",
 			);
 			target = 16AE2EBD2E09E4A0006D0EEF /* CaseStudies */;
 		};
 		16AE2F1E2E09EBAA006D0EEF /* Exceptions for "CaseStudies" folder in "CaseStudiesTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				CaseStudiesTests/SharedTests/MockHTTPDataTransport.swift,
-				"CaseStudiesTests/SharedTests/Quote+QueryTests.swift",
+				"CaseStudiesTests/03-ExpensiveLocalComputationsTests.swift",
+				CaseStudiesTests/HelpersTests/MockHTTPDataTransport.swift,
+				"CaseStudiesTests/HelpersTests/Quote+QueryTests.swift",
 			);
 			target = 16AE2ECA2E09E4A2006D0EEF /* CaseStudiesTests */;
 		};

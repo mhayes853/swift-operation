@@ -3,15 +3,14 @@ import SwiftUI
 import SharingQuery
 
 struct BasicSharingCaseStudy: CaseStudy {
-  let title: LocalizedStringKey = "Basic Sharing"
+  let title: LocalizedStringKey = "Basic swift-sharing"
   let description: LocalizedStringKey = """
     Basic usage of the library using the `@SharedQuery` property wrapper to fetch a random quote \
     from the Dummy JSON API in SwiftUI.
     
     `@SharedQuery` is a more flexible version of `@State.Query` that utilizes \
-    [swift-sharing](https://github.com/pointfreeco/swift-sharing) under the hood that allows \
-    you to easily observe your queries anywhere in your application such as an `@Observable` model. \
-    Such observation is not limited only to SwiftUI views.
+    [swift-sharing](https://github.com/pointfreeco/swift-sharing) under the hood allowing \
+    you to easily observe your queries anywhere in your application such as an `@Observable` model.
     """
   
   var content: some View {
