@@ -45,6 +45,8 @@
 				"CaseStudiesTests/03-ExpensiveLocalComputationsTests.swift",
 				CaseStudiesTests/HelpersTests/MockHTTPDataTransport.swift,
 				"CaseStudiesTests/HelpersTests/Quote+QueryTests.swift",
+				"CaseStudiesTests/HelpersTests/Recipe+QueryTests.swift",
+				CaseStudiesTests/RefetchOnNotificationTests.swift,
 			);
 			target = 16AE2EBD2E09E4A0006D0EEF /* CaseStudies */;
 		};
@@ -54,6 +56,8 @@
 				"CaseStudiesTests/03-ExpensiveLocalComputationsTests.swift",
 				CaseStudiesTests/HelpersTests/MockHTTPDataTransport.swift,
 				"CaseStudiesTests/HelpersTests/Quote+QueryTests.swift",
+				"CaseStudiesTests/HelpersTests/Recipe+QueryTests.swift",
+				CaseStudiesTests/RefetchOnNotificationTests.swift,
 			);
 			target = 16AE2ECA2E09E4A2006D0EEF /* CaseStudiesTests */;
 		};

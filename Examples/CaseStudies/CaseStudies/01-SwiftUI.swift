@@ -14,20 +14,8 @@ struct BasicSwiftUICaseStudy: CaseStudy {
   var content: some View {
     VStack(alignment: .leading, spacing: 20) {
       Text("Random Quote").font(.headline)
-      switch self.$quote.status {
-      case let .result(.success(q)):
-        QuoteView(quote: q)
-        
-      case let .result(.failure(error)):
-        Text(error.localizedDescription).foregroundStyle(.red)
-        
-      default:
-        if let quote {
-          QuoteView(quote: quote)
-            .opacity(0.5)
-        } else {
-          ProgressView()
-        }
+      BasicQueryStateView(state: self.$quote.state) {
+        QuoteView(quote: $0)
       }
       
       Button("Reload Quote") {
