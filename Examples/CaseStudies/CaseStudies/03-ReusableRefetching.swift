@@ -66,10 +66,7 @@ extension QueryRequest {
   func refetchOnPost(
     of name: Notification.Name,
     center: NotificationCenter = .default
-  ) -> ModifiedQuery<
-    Self,
-    _QueryControllerModifier<Self, RefetchOnNotificationController<State>>
-  > {
+  ) -> ControlledQuery<Self, RefetchOnNotificationController<State>> {
     self.controlled(by: RefetchOnNotificationController(notification: name, center: center))
   }
 }

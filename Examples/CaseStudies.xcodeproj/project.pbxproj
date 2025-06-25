@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		16A0E92D2E0A57E0003BE8A3 /* SwiftNavigation in Frameworks */ = {isa = PBXBuildFile; productRef = 16A0E92C2E0A57E0003BE8A3 /* SwiftNavigation */; };
 		16A0E92F2E0A57E0003BE8A3 /* UIKitNavigation in Frameworks */ = {isa = PBXBuildFile; productRef = 16A0E92E2E0A57E0003BE8A3 /* UIKitNavigation */; };
+		16A0E97D2E0C7CBE003BE8A3 /* SwiftUINavigation in Frameworks */ = {isa = PBXBuildFile; productRef = 16A0E97C2E0C7CBE003BE8A3 /* SwiftUINavigation */; };
 		16AE2F032E09E7D1006D0EEF /* Query in Frameworks */ = {isa = PBXBuildFile; productRef = 16AE2F022E09E7D1006D0EEF /* Query */; };
 		16AE2F052E09E7D1006D0EEF /* QuerySwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 16AE2F042E09E7D1006D0EEF /* QuerySwiftUI */; };
 		16AE2F072E09E7D1006D0EEF /* SharingQuery in Frameworks */ = {isa = PBXBuildFile; productRef = 16AE2F062E09E7D1006D0EEF /* SharingQuery */; };
@@ -42,6 +43,7 @@
 		16AE2F1D2E09EBAA006D0EEF /* Exceptions for "CaseStudies" folder in "CaseStudies" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				"CaseStudiesTests/02-FormTests.swift",
 				"CaseStudiesTests/03-ExpensiveLocalComputationsTests.swift",
 				CaseStudiesTests/HelpersTests/MockHTTPDataTransport.swift,
 				"CaseStudiesTests/HelpersTests/Quote+QueryTests.swift",
@@ -53,6 +55,7 @@
 		16AE2F1E2E09EBAA006D0EEF /* Exceptions for "CaseStudies" folder in "CaseStudiesTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				"CaseStudiesTests/02-FormTests.swift",
 				"CaseStudiesTests/03-ExpensiveLocalComputationsTests.swift",
 				CaseStudiesTests/HelpersTests/MockHTTPDataTransport.swift,
 				"CaseStudiesTests/HelpersTests/Quote+QueryTests.swift",
@@ -92,6 +95,7 @@
 			files = (
 				16A0E92D2E0A57E0003BE8A3 /* SwiftNavigation in Frameworks */,
 				16AE2F032E09E7D1006D0EEF /* Query in Frameworks */,
+				16A0E97D2E0C7CBE003BE8A3 /* SwiftUINavigation in Frameworks */,
 				16AE2F052E09E7D1006D0EEF /* QuerySwiftUI in Frameworks */,
 				16AE2F072E09E7D1006D0EEF /* SharingQuery in Frameworks */,
 				16A0E92F2E0A57E0003BE8A3 /* UIKitNavigation in Frameworks */,
@@ -116,12 +120,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		16A0E97B2E0C7CBE003BE8A3 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		16AE2EB52E09E4A0006D0EEF = {
 			isa = PBXGroup;
 			children = (
 				16AE2EC02E09E4A0006D0EEF /* CaseStudies */,
 				16AE2ECE2E09E4A2006D0EEF /* CaseStudiesTests */,
 				16AE2ED82E09E4A2006D0EEF /* CaseStudiesUITests */,
+				16A0E97B2E0C7CBE003BE8A3 /* Frameworks */,
 				16AE2EBF2E09E4A0006D0EEF /* Products */,
 			);
 			sourceTree = "<group>";
@@ -161,6 +173,7 @@
 				16AE2F062E09E7D1006D0EEF /* SharingQuery */,
 				16A0E92C2E0A57E0003BE8A3 /* SwiftNavigation */,
 				16A0E92E2E0A57E0003BE8A3 /* UIKitNavigation */,
+				16A0E97C2E0C7CBE003BE8A3 /* SwiftUINavigation */,
 			);
 			productName = CaseStudies;
 			productReference = 16AE2EBE2E09E4A0006D0EEF /* CaseStudies.app */;
@@ -651,6 +664,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 16A0E92B2E0A57E0003BE8A3 /* XCRemoteSwiftPackageReference "swift-navigation" */;
 			productName = UIKitNavigation;
+		};
+		16A0E97C2E0C7CBE003BE8A3 /* SwiftUINavigation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 16A0E92B2E0A57E0003BE8A3 /* XCRemoteSwiftPackageReference "swift-navigation" */;
+			productName = SwiftUINavigation;
 		};
 		16AE2F022E09E7D1006D0EEF /* Query */ = {
 			isa = XCSwiftPackageProductDependency;

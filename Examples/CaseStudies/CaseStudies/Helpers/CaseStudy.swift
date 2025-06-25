@@ -25,9 +25,7 @@ extension CaseStudy {
         }
       }
       
-      Section {
-        self.content
-      }
+      self.content
     }
     .navigationTitle(self.title)
   }
