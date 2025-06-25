@@ -49,6 +49,7 @@
 				"CaseStudiesTests/HelpersTests/Quote+QueryTests.swift",
 				"CaseStudiesTests/HelpersTests/Recipe+QueryTests.swift",
 				CaseStudiesTests/RefetchOnNotificationTests.swift,
+				Info.plist,
 			);
 			target = 16AE2EBD2E09E4A0006D0EEF /* CaseStudies */;
 		};
@@ -468,6 +469,7 @@
 				DEVELOPMENT_TEAM = J3HVSYHJRQ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CaseStudies/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -496,6 +498,7 @@
 				DEVELOPMENT_TEAM = J3HVSYHJRQ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CaseStudies/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
