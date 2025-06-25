@@ -182,6 +182,9 @@ extension QueryControls {
 
 // MARK: - QueryProtocol
 
+public typealias ControlledQuery<Query: QueryRequest, Controller: QueryController<Query.State>> =
+  ModifiedQuery<Query, _QueryControllerModifier<Query, Controller>>
+
 extension QueryRequest {
   /// Attaches a ``QueryController`` to this query.
   ///
@@ -189,7 +192,7 @@ extension QueryRequest {
   /// - Returns: A ``ModifiedQuery``.
   public func controlled<Controller: QueryController<State>>(
     by controller: Controller
-  ) -> ModifiedQuery<Self, _QueryControllerModifier<Self, Controller>> {
+  ) -> ControlledQuery<Self, Controller> {
     self.modifier(_QueryControllerModifier(controller: controller))
   }
 }

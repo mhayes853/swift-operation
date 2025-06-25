@@ -14,9 +14,7 @@ extension QueryRequest {
   /// - Returns: A ``ModifiedQuery``.
   public func refetchOnChange<Condition: FetchCondition>(
     of condition: Condition
-  ) -> ModifiedQuery<
-    Self, _QueryControllerModifier<Self, _RefetchOnChangeController<State, Condition>>
-  > {
+  ) -> ControlledQuery<Self, _RefetchOnChangeController<State, Condition>> {
     self.controlled(by: _RefetchOnChangeController(condition: condition))
   }
 }
