@@ -10,7 +10,7 @@ import CustomDump
 struct OptimisticUpdatesTests {
   @Test("Adds Like To Post When Interacting With Like")
   func addsLikeToPostWhenInteracting() async throws {
-    let model = PostModel(id: 1)
+    let model = OptimisticUpdatesModel(id: 1)
     _ = try await model.$post.activeTasks.first?.runIfNeeded()
     
     let interactor = MockInteractor { _, _ in
@@ -32,7 +32,7 @@ struct OptimisticUpdatesTests {
   
   @Test("Removes Like From Post When Interacting With Unlike")
   func removesLikeFromPostWhenInteracting() async throws {
-    let model = PostModel(id: 1)
+    let model = OptimisticUpdatesModel(id: 1)
     _ = try await model.$post.activeTasks.first?.runIfNeeded()
     
     await withDependencies {
@@ -62,7 +62,7 @@ struct OptimisticUpdatesTests {
   func removesOptimisticUpdate() async throws {
     struct SomeError: Error {}
     
-    let model = PostModel(id: 1)
+    let model = OptimisticUpdatesModel(id: 1)
     _ = try await model.$post.activeTasks.first?.runIfNeeded()
     
     await withDependencies {
@@ -82,7 +82,7 @@ struct OptimisticUpdatesTests {
   func presentsAlertWhenErrorOccurs() async throws {
     struct SomeError: Error {}
     
-    let model = PostModel(id: 1)
+    let model = OptimisticUpdatesModel(id: 1)
     _ = try await model.$post.activeTasks.first?.runIfNeeded()
     
     await withDependencies {

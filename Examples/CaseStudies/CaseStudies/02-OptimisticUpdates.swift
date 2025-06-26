@@ -18,16 +18,18 @@ struct OptimisticUpdatesCaseStudy: CaseStudy {
     default `QueryClient` inside the mutation. Then, we access the underlying `QueryStore` that \ 
     powers the post query, and update its `likeCount` appropriately.
     
-    While the optimistic update logic could be placed inside `PostModel`, doing so would only \
+    While the optimistic update logic could be placed inside `OptimisticUpdatesModel`, doing so would only \
     constrain the update to the local model. By performing the update inside the mutation, we \
     ensure that the opmtimism is bound to the mutation, which could be used in many parts of your \
     app. Additionally, _all_ screens that display the post in your app will get the optimistic \
     update.
     """
   
-  @State private var model = PostModel(id: 1)
+  @State private var model = OptimisticUpdatesModel(id: 1)
   
   var content: some View {
+    Text("Like and unlike the post!")
+    
     BasicQueryStateView(state: self.model.$post.state) { post in
       if let post {
         PostView(post: post) {
@@ -45,7 +47,7 @@ struct OptimisticUpdatesCaseStudy: CaseStudy {
 
 @MainActor
 @Observable
-final class PostModel {
+final class OptimisticUpdatesModel {
   @ObservationIgnored
   @SharedQuery<Post.Query.State> var post: Post??
   
@@ -59,7 +61,7 @@ final class PostModel {
   }
 }
 
-extension PostModel {
+extension OptimisticUpdatesModel {
   func likeInvoked() async {
     guard let optionalPost = self.post, let post = optionalPost else { return }
     let interaction = post.isUserLiking ? Post.Interaction.unlike : .like
@@ -75,11 +77,11 @@ extension PostModel {
 
 // MARK: - AlertState
 
-extension PostModel {
+extension OptimisticUpdatesModel {
   enum AlertAction: Hashable, Sendable {}
 }
 
-extension AlertState where Action == PostModel.AlertAction {
+extension AlertState where Action == OptimisticUpdatesModel.AlertAction {
   static func failure(interaction: Post.Interaction) -> Self {
     Self {
       let title = switch interaction {
