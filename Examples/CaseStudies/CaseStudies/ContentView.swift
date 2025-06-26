@@ -23,6 +23,7 @@ struct ContentView: View {
         Section("2 - Common Use Cases") {
           CaseStudyLink(study: FormCaseStudy())
           CaseStudyLink(study: DownloadsCaseStudy())
+          CaseStudyLink(study: OptimisticUpdatesCaseStudy())
         }
         
         Section("3 - Advanced Use Cases") {

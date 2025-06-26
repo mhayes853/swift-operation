@@ -44,8 +44,10 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				"CaseStudiesTests/02-FormTests.swift",
+				"CaseStudiesTests/02-OptimisticUpdatesTests.swift",
 				"CaseStudiesTests/03-ExpensiveLocalComputationsTests.swift",
 				CaseStudiesTests/HelpersTests/MockHTTPDataTransport.swift,
+				"CaseStudiesTests/HelpersTests/Post+QueryTests.swift",
 				"CaseStudiesTests/HelpersTests/Quote+QueryTests.swift",
 				"CaseStudiesTests/HelpersTests/Recipe+QueryTests.swift",
 				CaseStudiesTests/RefetchOnNotificationTests.swift,
@@ -57,8 +59,10 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				"CaseStudiesTests/02-FormTests.swift",
+				"CaseStudiesTests/02-OptimisticUpdatesTests.swift",
 				"CaseStudiesTests/03-ExpensiveLocalComputationsTests.swift",
 				CaseStudiesTests/HelpersTests/MockHTTPDataTransport.swift,
+				"CaseStudiesTests/HelpersTests/Post+QueryTests.swift",
 				"CaseStudiesTests/HelpersTests/Quote+QueryTests.swift",
 				"CaseStudiesTests/HelpersTests/Recipe+QueryTests.swift",
 				CaseStudiesTests/RefetchOnNotificationTests.swift,

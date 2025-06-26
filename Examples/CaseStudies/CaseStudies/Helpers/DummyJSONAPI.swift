@@ -17,9 +17,8 @@ final class DummyJSONAPI: Sendable {
 
 extension DummyJSONAPI: Quote.RandomLoader {
   func randomQuote() async throws -> Quote {
-    try await Task.sleep(for: self.delay)
     let url = URL(string: "https://dummyjson.com/quotes/random")!
-    let (data, _) = try await self.transport.data(for: URLRequest(url: url))
+    let (data, _) = try await self.data(for: URLRequest(url: url))
     let quote = try JSONDecoder().decode(DummyJSONQuote.self, from: data)
     return Quote(author: quote.author, content: quote.quote)
   }
@@ -34,10 +33,9 @@ private struct DummyJSONQuote: Decodable, Sendable {
 
 extension DummyJSONAPI: Recipe.IDLoader {
   func recipe(with id: Int) async throws -> Recipe? {
-    try await Task.sleep(for: self.delay)
     let url = URL(string: "https://dummyjson.com/recipes/\(id)")!
-    let (data, resp) = try await self.transport.data(for: URLRequest(url: url))
-    guard (resp as? HTTPURLResponse)?.statusCode != 404 else { return nil }
+    let (data, resp) = try await self.data(for: URLRequest(url: url))
+    guard resp.statusCode != 404 else { return nil }
     let recipe = try JSONDecoder().decode(DummyJSONRecipe.self, from: data)
     return Recipe(
       id: id,
@@ -57,6 +55,48 @@ private struct DummyJSONRecipe: Hashable, Sendable, Codable {
   let instructions: [String]
   let prepTimeMinutes: Int
   let cookTimeMinutes: Int
+}
+
+// MARK: - Posts Conformance
+
+extension DummyJSONAPI: Posts {
+  func post(with id: Int) async throws -> Post? {
+    let url = URL(string: "https://dummyjson.com/posts/\(id)")!
+    let (data, resp) = try await self.data(for: URLRequest(url: url))
+    guard resp.statusCode != 404 else { return nil }
+    let post = try JSONDecoder().decode(DummyJSONPost.self, from: data)
+    return Post(
+      id: post.id,
+      title: post.title,
+      content: post.body,
+      likeCount: post.reactions.likes,
+      isUserLiking: false
+    )
+  }
+}
+
+private struct DummyJSONPost: Decodable, Sendable {
+  struct Reactions: Decodable, Sendable {
+    let likes: Int
+  }
+  
+  let id: Int
+  let title: String
+  let body: String
+  let reactions: Reactions
+}
+
+// MARK: - Helper
+
+extension DummyJSONAPI {
+  private func data(for request: URLRequest) async throws -> (Data, HTTPURLResponse) {
+    try await Task.sleep(for: self.delay)
+    let (data, resp) = try await self.transport.data(for: request)
+    guard let resp = resp as? HTTPURLResponse else { throw NonHTTPResponseError() }
+    return (data, resp)
+  }
+  
+  private struct NonHTTPResponseError: Error {}
 }
 
 // MARK: - Shared
