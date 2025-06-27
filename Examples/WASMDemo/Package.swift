@@ -3,6 +3,8 @@
 
 import PackageDescription
 
+// TODO: - This needs to be merged: https://github.com/pointfreeco/swift-dependencies/pull/372
+
 let package = Package(
   name: "WASMDemo",
   platforms: [.macOS(.v15)],
