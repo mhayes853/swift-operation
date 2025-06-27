@@ -11,7 +11,17 @@ struct Post: Hashable, Sendable, Identifiable {
   var isUserLiking: Bool
 }
 
-// MARK: - Posts
+// MARK: - Protocols
+
+extension Post {
+  protocol Searcher: Sendable {
+    func search(by text: String) async throws -> IdentifiedArrayOf<Post>
+  }
+}
+
+enum PostSearcherKey: DependencyKey {
+  static let liveValue: any Post.Searcher = DummyJSONAPI.shared
+}
 
 protocol Posts: Sendable {
   func post(with id: Int) async throws -> Post?
@@ -37,6 +47,26 @@ extension Post {
     ) async throws -> Post? {
       @Dependency(PostsKey.self) var posts
       return try await posts.post(with: self.id)
+    }
+  }
+}
+
+extension Post {
+  static func searchQuery(
+    by text: String
+  ) -> some QueryRequest<IdentifiedArrayOf<Self>, SearchQuery.State> {
+    SearchQuery(text: text)
+  }
+  
+  struct SearchQuery: QueryRequest, Hashable {
+    let text: String
+    
+    func fetch(
+      in context: QueryContext,
+      with continuation: QueryContinuation<IdentifiedArrayOf<Post>>
+    ) async throws -> IdentifiedArrayOf<Post> {
+      @Dependency(PostSearcherKey.self) var posts
+      return try await posts.search(by: self.text)
     }
   }
 }

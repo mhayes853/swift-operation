@@ -99,6 +99,10 @@ private struct MockPosts: Posts {
   func post(with id: Int) async throws -> Post? {
     Post(id: id, title: "Mock", content: "This is a test", likeCount: 0, isUserLiking: false)
   }
+  
+  func search(by text: String) async throws -> IdentifiedArrayOf<Post> {
+    []
+  }
 }
 
 private struct MockInteractor: Post.Interactor {

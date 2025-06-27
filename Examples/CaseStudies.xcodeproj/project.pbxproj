@@ -45,12 +45,13 @@
 			membershipExceptions = (
 				"CaseStudiesTests/02-FormTests.swift",
 				"CaseStudiesTests/02-OptimisticUpdatesTests.swift",
+				"CaseStudiesTests/03-DebouncingTests.swift",
 				"CaseStudiesTests/03-ExpensiveLocalComputationsTests.swift",
+				"CaseStudiesTests/03-ReusableRefetchingTests.swift",
 				CaseStudiesTests/HelpersTests/MockHTTPDataTransport.swift,
 				"CaseStudiesTests/HelpersTests/Post+QueryTests.swift",
 				"CaseStudiesTests/HelpersTests/Quote+QueryTests.swift",
 				"CaseStudiesTests/HelpersTests/Recipe+QueryTests.swift",
-				CaseStudiesTests/RefetchOnNotificationTests.swift,
 				Info.plist,
 			);
 			target = 16AE2EBD2E09E4A0006D0EEF /* CaseStudies */;
@@ -60,12 +61,13 @@
 			membershipExceptions = (
 				"CaseStudiesTests/02-FormTests.swift",
 				"CaseStudiesTests/02-OptimisticUpdatesTests.swift",
+				"CaseStudiesTests/03-DebouncingTests.swift",
 				"CaseStudiesTests/03-ExpensiveLocalComputationsTests.swift",
+				"CaseStudiesTests/03-ReusableRefetchingTests.swift",
 				CaseStudiesTests/HelpersTests/MockHTTPDataTransport.swift,
 				"CaseStudiesTests/HelpersTests/Post+QueryTests.swift",
 				"CaseStudiesTests/HelpersTests/Quote+QueryTests.swift",
 				"CaseStudiesTests/HelpersTests/Recipe+QueryTests.swift",
-				CaseStudiesTests/RefetchOnNotificationTests.swift,
 			);
 			target = 16AE2ECA2E09E4A2006D0EEF /* CaseStudiesTests */;
 		};

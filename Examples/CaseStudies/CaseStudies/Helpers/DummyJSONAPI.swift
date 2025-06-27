@@ -1,5 +1,6 @@
 import Foundation
 import Dependencies
+import IdentifiedCollections
 
 // MARK: - DummyJSONAPI API
 
@@ -65,14 +66,23 @@ extension DummyJSONAPI: Posts {
     let (data, resp) = try await self.data(for: URLRequest(url: url))
     guard resp.statusCode != 404 else { return nil }
     let post = try JSONDecoder().decode(DummyJSONPost.self, from: data)
-    return Post(
-      id: post.id,
-      title: post.title,
-      content: post.body,
-      likeCount: post.reactions.likes,
-      isUserLiking: false
-    )
+    return Post(dummy: post)
   }
+}
+
+extension DummyJSONAPI: Post.Searcher {
+  func search(by text: String) async throws -> IdentifiedArrayOf<Post> {
+    let url = URL(string: "https://dummyjson.com/posts/search?q=\(text)")!
+    let (data, _) = try await self.data(for: URLRequest(url: url))
+    let posts = try JSONDecoder().decode(DummyJSONPosts.self, from: data)
+      .posts
+      .map { Post(dummy: $0) }
+    return IdentifiedArray(uniqueElements: posts)
+  }
+}
+
+private struct DummyJSONPosts: Decodable, Sendable {
+  let posts: [DummyJSONPost]
 }
 
 private struct DummyJSONPost: Decodable, Sendable {
@@ -84,6 +94,18 @@ private struct DummyJSONPost: Decodable, Sendable {
   let title: String
   let body: String
   let reactions: Reactions
+}
+
+extension Post {
+  fileprivate init(dummy post: DummyJSONPost) {
+    self.init(
+      id: post.id,
+      title: post.title,
+      content: post.body,
+      likeCount: post.reactions.likes,
+      isUserLiking: false
+    )
+  }
 }
 
 // MARK: - Helper

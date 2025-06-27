@@ -15,7 +15,7 @@ extension CaseStudy {
   }
   
   var body: some View {
-    Form {
+    List {
       Section {
         DisclosureGroup {
           Text(self.description)

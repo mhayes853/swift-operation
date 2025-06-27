@@ -62,4 +62,54 @@ struct PostQueryTests {
       expectNoDifference(post, .some(nil))
     }
   }
+  
+  @Test("Searches For Posts")
+  func searchesForPosts() async throws {
+    let postJSON = """
+      {
+        "posts": [
+          {
+            "id": 1,
+            "title": "His mother had always taught him",
+            "body": "His mother had always taught him not to ever think of himself as better than others. He'd tried to live by this motto. He never looked down on those who were less fortunate or who had less money than him. But the stupidity of the group of people he was talking to made him change his mind.",
+            "tags": [
+              "history",
+              "american",
+              "crime"
+            ],
+            "reactions": {
+              "likes": 192,
+              "dislikes": 25
+            },
+            "views": 305,
+            "userId": 121
+          }
+        ],
+        "total": 1,
+        "skip": 0,
+        "limit": 30
+      }
+      """
+    let transport = MockHTTPDataTransport { _ in (200, .data(Data(postJSON.utf8))) }
+    try await withDependencies {
+      $0[PostSearcherKey.self] = DummyJSONAPI(transport: transport)
+    } operation: {
+      @SharedQuery(Post.searchQuery(by: "blob")) var posts
+      try await $posts.load()
+      
+      let expectedPost = Post(
+        id: 1,
+        title: "His mother had always taught him",
+        content: """
+          His mother had always taught him not to ever think of himself as better than others. \
+          He'd tried to live by this motto. He never looked down on those who were less fortunate \
+          or who had less money than him. But the stupidity of the group of people he was talking \
+          to made him change his mind.
+          """,
+        likeCount: 192,
+        isUserLiking: false
+      )
+      expectNoDifference(posts, [expectedPost])
+    }
+  }
 }

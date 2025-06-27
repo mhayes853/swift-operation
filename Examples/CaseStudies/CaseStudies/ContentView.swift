@@ -27,6 +27,7 @@ struct ContentView: View {
         }
         
         Section("3 - Advanced Use Cases") {
+          CaseStudyLink(study: DebouncingCaseStudy())
           CaseStudyLink(study: ReusableRefetchingCaseStudy())
           CaseStudyLink(study: ExpensiveLocalComputationsCaseStudy())
         }

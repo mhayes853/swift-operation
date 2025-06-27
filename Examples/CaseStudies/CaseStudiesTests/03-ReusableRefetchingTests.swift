@@ -26,8 +26,7 @@ private struct TestQuery: QueryRequest, Hashable {
     in context: QueryContext,
     with continuation: QueryContinuation<Int>
   ) async throws -> Int {
-    print("fetched")
-    return 0
+    0
   }
 }
 
