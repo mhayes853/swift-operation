@@ -19,8 +19,8 @@ public final class CounterModel: Identifiable {
 
   public init(startingAt number: Int = 0) {
     self.count = number
-    self._fact = SharedQuery(wrappedValue: nil, NumberFact.query(for: number))
-    self._nthPrime = SharedQuery(wrappedValue: nil, NumberFact.nthPrimeQuery(for: number))
+    self._fact = SharedQuery(NumberFact.query(for: number))
+    self._nthPrime = SharedQuery(NumberFact.nthPrimeQuery(for: number))
   }
 }
 
@@ -37,8 +37,8 @@ extension CounterModel {
 extension CounterModel {
   public func jumped(to number: Int) {
     self.count = number
-    self._fact = SharedQuery(wrappedValue: nil, NumberFact.query(for: number))
-    self._nthPrime = SharedQuery(wrappedValue: nil, NumberFact.nthPrimeQuery(for: number))
+    self.$fact = SharedQuery(NumberFact.query(for: number))
+    self.$nthPrime = SharedQuery(NumberFact.nthPrimeQuery(for: number))
   }
 }
 
