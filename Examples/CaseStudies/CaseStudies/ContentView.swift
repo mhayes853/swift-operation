@@ -30,6 +30,7 @@ struct ContentView: View {
           CaseStudyLink(study: DebouncingCaseStudy())
           CaseStudyLink(study: ReusableRefetchingCaseStudy())
           CaseStudyLink(study: ExpensiveLocalComputationsCaseStudy())
+          CaseStudyLink(study: CustomFetchConditionsCaseStudy())
         }
       }
       .navigationTitle("Case Studies")

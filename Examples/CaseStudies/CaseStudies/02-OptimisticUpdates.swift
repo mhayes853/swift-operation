@@ -28,7 +28,7 @@ struct OptimisticUpdatesCaseStudy: CaseStudy {
   @State private var model = OptimisticUpdatesModel(id: 1)
   
   var content: some View {
-    Text("Like and unlike the post!")
+    Text("Like and unlike the post! (There is a 50% chance that an error alert will appear.)")
     
     BasicQueryStateView(state: self.model.$post.state) { post in
       if let post {
