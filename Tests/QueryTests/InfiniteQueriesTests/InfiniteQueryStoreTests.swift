@@ -396,17 +396,13 @@ struct InfiniteQueryStoreTests {
       $0.values = [0: "a", 2: "b", 3: "c"]
       $0.nextPageIds = [0: 2]
       $0.willWait = true
+      $0.shouldStallIfWaiting = false
     }
     let all = Task { try await store.fetchAllPages() }
     try await query.waitForLoading()
+    query.state.withLock { $0.willWait = false }
     let next = Task { try await store.fetchNextPage() }
-    // NB: One advance for each individual page fetch on fetchAll
-    await query.advance()
-    try await query.waitForLoading()
-    await query.advance()
     let pages = try await all.value
-    try await query.waitForLoading()
-    await query.advance()
     let page = try await next.value
 
     expectNoDifference(
@@ -441,19 +437,13 @@ struct InfiniteQueryStoreTests {
       $0.values = [-2: "a", -1: "b", 2: "c", -3: "d"]
       $0.nextPageIds = [-1: 2]
       $0.willWait = true
+      $0.shouldStallIfWaiting = false
     }
     let all = Task { try await store.fetchAllPages() }
     try await query.waitForLoading()
+    query.state.withLock { $0.willWait = false }
     let next = Task { try await store.fetchPreviousPage() }
-    // NB: One advance for each individual page fetch on fetchAll
-    await query.advance()
-    try await query.waitForLoading()
-    await query.advance()
-    try await query.waitForLoading()
-    await query.advance()
     let pages = try await all.value
-    try await query.waitForLoading()
-    await query.advance()
     let page = try await next.value
 
     expectNoDifference(

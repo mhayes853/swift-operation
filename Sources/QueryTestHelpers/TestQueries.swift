@@ -711,11 +711,12 @@ package final class WaitableInfiniteQuery: InfiniteQueryRequest {
     values: [Int: String],
     nextPageIds: [Int: Int],
     willWait: Bool,
+    shouldStallIfWaiting: Bool,
     continuations: [UnsafeContinuation<Void, Never>],
     onLoading: () -> Void
   )
 
-  package let state = RecursiveLock<_Values>(([:], [:], false, [], {}))
+  package let state = RecursiveLock<_Values>(([:], [:], false, true, [], {}))
 
   package init() {}
 
@@ -768,7 +769,9 @@ package final class WaitableInfiniteQuery: InfiniteQueryRequest {
     self.state.withLock { $0.onLoading() }
     if self.state.withLock({ $0.willWait }) {
       await self.advance()
-      try await self.waitForLoading()
+      if self.state.withLock({ $0.shouldStallIfWaiting }) {
+        try await self.waitForLoading()
+      }
     }
     return try self.state.withLock {
       if let value = $0.values[paging.pageId] {

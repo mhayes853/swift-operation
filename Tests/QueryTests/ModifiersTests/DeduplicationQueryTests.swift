@@ -4,7 +4,7 @@ import QueryTestHelpers
 import XCTest
 
 final class DeduplicationQueryTests: XCTestCase {
-  func test_deduplicatesFetchesSameStore() async throws {
+  func testDeduplicatesFetchesSameStore() async throws {
     let query = DeduplicationQuery()
     let store = QueryStore.detached(query: query.deduplicated(), initialValue: nil)
     async let f1 = store.fetch()
@@ -14,7 +14,7 @@ final class DeduplicationQueryTests: XCTestCase {
     expectNoDifference(count, 1)
   }
 
-  func test_deduplicatesFetchesDifferentStores() async throws {
+  func testDeduplicatesFetchesDifferentStores() async throws {
     let query = DeduplicationQuery()
     let storeQuery = query.deduplicated()
     let store = QueryStore.detached(query: storeQuery, initialValue: nil)
@@ -26,7 +26,7 @@ final class DeduplicationQueryTests: XCTestCase {
     expectNoDifference(count, 1)
   }
 
-  func test_deduplicationSupportsCancellation() async throws {
+  func testDeduplicationSupportsCancellation() async throws {
     let query = EndlessQuery()
     let store = QueryStore.detached(query: query.deduplicated(), initialValue: nil)
     let task = Task {
@@ -36,7 +36,7 @@ final class DeduplicationQueryTests: XCTestCase {
     await XCTAssertThrows(try await task.value, error: CancellationError.self)
   }
 
-  func test_fetchInitialPageConcurrentlyPerformsOneFetch() async throws {
+  func testFetchInitialPageConcurrentlyPerformsOneFetch() async throws {
     let query = DeduplicationInfiniteQuery()
     let store = QueryStore.detached(query: query.deduplicated())
     async let p1 = store.fetchPreviousPage()
@@ -47,7 +47,7 @@ final class DeduplicationQueryTests: XCTestCase {
     expectNoDifference(count, 1)
   }
 
-  func test_fetchAllPagesConcurrentlyFetchesAllPagesOnceEach() async throws {
+  func testFetchAllPagesConcurrentlyFetchesAllPagesOnceEach() async throws {
     let query = DeduplicationInfiniteQuery()
     let store = QueryStore.detached(query: query.deduplicated())
     try await store.fetchNextPage()
@@ -65,7 +65,7 @@ final class DeduplicationQueryTests: XCTestCase {
     )
   }
 
-  func test_fetchPreviousPageConcurrentlyPerformsOneFetch() async throws {
+  func testFetchPreviousPageConcurrentlyPerformsOneFetch() async throws {
     let query = DeduplicationInfiniteQuery()
     let store = QueryStore.detached(query: query.deduplicated())
     try await store.fetchPreviousPage()
@@ -78,7 +78,7 @@ final class DeduplicationQueryTests: XCTestCase {
     expectNoDifference(count, 1)
   }
 
-  func test_fetchNextPageConcurrentlyPerformsOneFetch() async throws {
+  func testFetchNextPageConcurrentlyPerformsOneFetch() async throws {
     let query = DeduplicationInfiniteQuery()
     let store = QueryStore.detached(query: query.deduplicated())
     try await store.fetchNextPage()
