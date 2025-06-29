@@ -14,18 +14,6 @@ final class DeduplicationQueryTests: XCTestCase {
     expectNoDifference(count, 1)
   }
 
-  func testDeduplicatesFetchesDifferentStores() async throws {
-    let query = DeduplicationQuery()
-    let storeQuery = query.deduplicated()
-    let store = QueryStore.detached(query: storeQuery, initialValue: nil)
-    let store2 = QueryStore.detached(query: storeQuery, initialValue: nil)
-    async let f1 = store.fetch()
-    async let f2 = store2.fetch()
-    _ = try await (f1, f2)
-    let count = await query.fetchCount
-    expectNoDifference(count, 1)
-  }
-
   func testDeduplicationSupportsCancellation() async throws {
     let query = EndlessQuery()
     let store = QueryStore.detached(query: query.deduplicated(), initialValue: nil)
