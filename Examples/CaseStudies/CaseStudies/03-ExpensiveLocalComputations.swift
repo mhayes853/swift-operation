@@ -66,7 +66,7 @@ extension NumberFormatter {
 final class ExpensiveLocalComputationModel {
   var count = 0 {
     didSet {
-      self._nthPrime = SharedQuery(Int.nthPrimeQuery(for: self.count))
+      self.$nthPrime = SharedQuery(Int.nthPrimeQuery(for: self.count))
     }
   }
   

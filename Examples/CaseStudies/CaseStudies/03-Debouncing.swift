@@ -24,12 +24,12 @@ struct DebouncingCaseStudy: CaseStudy {
     HStack {
       TextField("Find in Posts", text: self.$model.text)
       Spacer()
-      if self.model.posts.isLoading {
+      if self.model.$posts.isLoading {
         ProgressView()
       }
     }
     
-    BasicQueryStateView(state: self.model.posts.state) { posts in
+    BasicQueryStateView(state: self.model.$posts.state) { posts in
       if posts.isEmpty {
         ContentUnavailableView(
           "No Posts Matching \"\(self.model.text)\"",
@@ -46,12 +46,11 @@ struct DebouncingCaseStudy: CaseStudy {
 
 // MARK: - DebouncingModel
 
-// TODO: - Add a load API on SharedQuery so it can be used as a wrapper here and work with observation.
-
 @MainActor
 @Observable
 final class DebouncingModel {
-  private(set) var posts = SharedQuery(Post.searchQuery(by: ""), animation: .bouncy)
+  @ObservationIgnored
+  @SharedQuery(Post.searchQuery(by: ""), animation: .bouncy) var posts
   
   var text = "" {
     didSet { self.debounceTask?.schedule() }
@@ -63,7 +62,7 @@ final class DebouncingModel {
     @Dependency(\.continuousClock) var clock
     self.debounceTask = DebounceTask(clock: clock, duration: debounceTime) { [weak self] in
       guard let self else { return }
-      self.posts = SharedQuery(Post.searchQuery(by: self.text), animation: .bouncy)
+      self.$posts = SharedQuery(Post.searchQuery(by: self.text), animation: .bouncy)
     }
   }
 }
