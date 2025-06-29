@@ -8,7 +8,7 @@
     ///   - resultType: The return type of the operation.
     ///   - operation: The operation to run.
     /// - Returns: Whatever `operation` returns.
-    static func runSyncIfAble(
+    static func runImmediatelyIfAble(
       _ operation: @MainActor @escaping () throws -> Void,
       file: StaticString = #file,
       line: UInt = #line

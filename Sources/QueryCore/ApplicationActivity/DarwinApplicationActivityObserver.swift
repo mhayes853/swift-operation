@@ -31,40 +31,49 @@
       _ handler: @escaping @Sendable (Bool) -> Void
     ) -> QuerySubscription {
       let state = Lock<NotificationsState?>(nil)
-      MainActor.runSyncIfAble {
+      MainActor.runImmediatelyIfAble {
         state.withLock { state in
           handler(self.isInitiallyActive)
-          let didBecomeActiveObserver = self.notificationCenter.addObserver(
-            forName: Self.didBecomeActiveNotification,
-            object: nil,
-            queue: nil
-          ) { _ in handler(true) }
-          let willResignActiveObserver = self.notificationCenter.addObserver(
-            forName: Self.willResignActiveNotification,
-            object: nil,
-            queue: nil
-          ) { _ in handler(false) }
           state = NotificationsState(
-            becomeActiveObserver: didBecomeActiveObserver,
-            resignActiveObserver: willResignActiveObserver,
-            center: self.notificationCenter
+            center: self.notificationCenter,
+            didBecomeActiveNotification: Self.didBecomeActiveNotification,
+            willResignActiveNotification: Self.willResignActiveNotification,
+            handler: handler
           )
         }
       }
-      return QuerySubscription {
-        state.withLock { state in
-          guard let state else { return }
-          state.center.removeObserver(state.becomeActiveObserver)
-          state.center.removeObserver(state.resignActiveObserver)
-        }
-      }
+      return QuerySubscription { state.withLock { $0?.cancel() } }
     }
   }
 
-  private struct NotificationsState: @unchecked Sendable {
-    let becomeActiveObserver: any NSObjectProtocol
-    let resignActiveObserver: any NSObjectProtocol
-    let center: NotificationCenter
+  private final class NotificationsState {
+    private let becomeActiveObserver: any NSObjectProtocol
+    private let resignActiveObserver: any NSObjectProtocol
+    private let center: NotificationCenter
+
+    init(
+      center: NotificationCenter,
+      didBecomeActiveNotification: Notification.Name,
+      willResignActiveNotification: Notification.Name,
+      handler: @escaping @Sendable (Bool) -> Void
+    ) {
+      self.becomeActiveObserver = center.addObserver(
+        forName: didBecomeActiveNotification,
+        object: nil,
+        queue: nil
+      ) { _ in handler(true) }
+      self.resignActiveObserver = center.addObserver(
+        forName: willResignActiveNotification,
+        object: nil,
+        queue: nil
+      ) { _ in handler(false) }
+      self.center = center
+    }
+
+    func cancel() {
+      self.center.removeObserver(becomeActiveObserver)
+      self.center.removeObserver(resignActiveObserver)
+    }
   }
 
   // MARK: - NSApplication
