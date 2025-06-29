@@ -590,7 +590,7 @@ package final actor CountingInfiniteQuery: InfiniteQueryRequest {
     in context: QueryContext,
     with continuation: QueryContinuation<String>
   ) async throws -> String {
-    await Task.yield()
+    // await Task.yield()
     self.fetchCount += 1
     return "blob"
   }

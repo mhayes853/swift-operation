@@ -1,16 +1,12 @@
 import CustomDump
 import Query
 import QueryTestHelpers
-import Testing
+import XCTest
 
-@Suite("DeduplicationQuery tests")
-struct DeduplicationQueryTests {
-  private let client = QueryClient()
-
-  @Test("Deduplicates Fetches From The Same Store")
-  func deduplicatesFetchesSameStore() async throws {
-    let query = CountingQuery()
-    let store = self.client.store(for: query.deduplicated())
+final class DeduplicationQueryTests: XCTestCase {
+  func test_deduplicatesFetchesSameStore() async throws {
+    let query = DeduplicationQuery()
+    let store = QueryStore.detached(query: query.deduplicated(), initialValue: nil)
     async let f1 = store.fetch()
     async let f2 = store.fetch()
     _ = try await (f1, f2)
@@ -18,12 +14,11 @@ struct DeduplicationQueryTests {
     expectNoDifference(count, 1)
   }
 
-  @Test("Deduplicates Fetches From Different Stores")
-  func deduplicatesFetchesDifferentStores() async throws {
-    let query = CountingQuery()
+  func test_deduplicatesFetchesDifferentStores() async throws {
+    let query = DeduplicationQuery()
     let storeQuery = query.deduplicated()
-    let store = self.client.store(for: storeQuery)
-    let store2 = self.client.store(for: storeQuery)
+    let store = QueryStore.detached(query: storeQuery, initialValue: nil)
+    let store2 = QueryStore.detached(query: storeQuery, initialValue: nil)
     async let f1 = store.fetch()
     async let f2 = store2.fetch()
     _ = try await (f1, f2)
@@ -31,23 +26,19 @@ struct DeduplicationQueryTests {
     expectNoDifference(count, 1)
   }
 
-  @Test("Deduplication Supports Cancellation")
-  func deduplicationSupportsCancellation() async throws {
+  func test_deduplicationSupportsCancellation() async throws {
     let query = EndlessQuery()
-    let store = self.client.store(for: query.deduplicated())
+    let store = QueryStore.detached(query: query.deduplicated(), initialValue: nil)
     let task = Task {
       withUnsafeCurrentTask { $0?.cancel() }
       try await store.fetch()
     }
-    await #expect(throws: CancellationError.self) {
-      try await task.value
-    }
+    await XCTAssertThrows(try await task.value, error: CancellationError.self)
   }
 
-  @Test("Fetch Initial Page Concurrently With Deduplication, Only Performs 1 Fetch")
-  func fetchInitialPageConcurrentlyReturnsSamePageData() async throws {
-    let query = CountingInfiniteQuery()
-    let store = self.client.store(for: query.deduplicated())
+  func test_fetchInitialPageConcurrentlyPerformsOneFetch() async throws {
+    let query = DeduplicationInfiniteQuery()
+    let store = QueryStore.detached(query: query.deduplicated())
     async let p1 = store.fetchPreviousPage()
     async let p2 = store.fetchPreviousPage()
     _ = try await (p1, p2)
@@ -56,10 +47,9 @@ struct DeduplicationQueryTests {
     expectNoDifference(count, 1)
   }
 
-  @Test("Fetch All Pages Concurrently With Deduplication, Only Fetches All Pages Once Each")
-  func fetchAllPagesConcurrentlyReturnsSamePageData() async throws {
-    let query = CountingInfiniteQuery()
-    let store = self.client.store(for: query.deduplicated())
+  func test_fetchAllPagesConcurrentlyFetchesAllPagesOnceEach() async throws {
+    let query = DeduplicationInfiniteQuery()
+    let store = QueryStore.detached(query: query.deduplicated())
     try await store.fetchNextPage()
     try await store.fetchNextPage()
     await query.resetCount()
@@ -75,10 +65,9 @@ struct DeduplicationQueryTests {
     )
   }
 
-  @Test("Fetch Previous Page Concurrently With Deduplication, Only Performs 1 Fetch")
-  func fetchPreviousPageConcurrentlyReturnsSamePageData() async throws {
-    let query = CountingInfiniteQuery()
-    let store = self.client.store(for: query.deduplicated())
+  func test_fetchPreviousPageConcurrentlyPerformsOneFetch() async throws {
+    let query = DeduplicationInfiniteQuery()
+    let store = QueryStore.detached(query: query.deduplicated())
     try await store.fetchPreviousPage()
     await query.resetCount()
     async let p1 = store.fetchPreviousPage()
@@ -89,10 +78,9 @@ struct DeduplicationQueryTests {
     expectNoDifference(count, 1)
   }
 
-  @Test("Fetch Next Page Concurrently With Deduplication, Only Performs 1 Fetch")
-  func fetchNextPageConcurrentlyReturnsSamePageData() async throws {
-    let query = CountingInfiniteQuery()
-    let store = self.client.store(for: query.deduplicated())
+  func test_fetchNextPageConcurrentlyPerformsOneFetch() async throws {
+    let query = DeduplicationInfiniteQuery()
+    let store = QueryStore.detached(query: query.deduplicated())
     try await store.fetchNextPage()
     await query.resetCount()
     async let p1 = store.fetchNextPage()
@@ -101,5 +89,60 @@ struct DeduplicationQueryTests {
 
     let count = await query.fetchCount
     expectNoDifference(count, 1)
+  }
+}
+
+private final actor DeduplicationQuery: QueryRequest, Identifiable {
+  private(set) var fetchCount = 0
+
+  func resetCount() {
+    self.fetchCount = 0
+  }
+
+  func fetch(
+    in context: QueryContext,
+    with continuation: QueryContinuation<String>
+  ) async throws -> String {
+    // NB: Give enough time for deduplication.
+    try await Task.sleep(for: .seconds(0.1))
+    self.fetchCount += 1
+    return "blob"
+  }
+}
+
+private final actor DeduplicationInfiniteQuery: InfiniteQueryRequest, Identifiable {
+  nonisolated let initialPageId = 0
+
+  private(set) var fetchCount = 0
+
+  func resetCount() {
+    self.fetchCount = 0
+  }
+
+  nonisolated func pageId(
+    after page: InfiniteQueryPage<Int, String>,
+    using paging: InfiniteQueryPaging<Int, String>,
+    in context: QueryContext
+  ) -> Int? {
+    page.id + 1
+  }
+
+  nonisolated func pageId(
+    before page: InfiniteQueryPage<Int, String>,
+    using paging: InfiniteQueryPaging<Int, String>,
+    in context: QueryContext
+  ) -> Int? {
+    page.id - 1
+  }
+
+  func fetchPage(
+    using paging: InfiniteQueryPaging<Int, String>,
+    in context: QueryContext,
+    with continuation: QueryContinuation<String>
+  ) async throws -> String {
+    // NB: Give enough time for deduplication.
+    try await Task.sleep(for: .seconds(0.1))
+    self.fetchCount += 1
+    return "blob"
   }
 }
