@@ -289,18 +289,18 @@
 
   extension State.Query where State: _InfiniteQueryStateProtocol {
     @discardableResult
-    public func fetchAllPages(
+    public func refetchAllPages(
       using context: QueryContext? = nil,
       handler: InfiniteQueryEventHandler<State.PageID, State.PageValue> =
         InfiniteQueryEventHandler()
     ) async throws -> InfiniteQueryPages<State.PageID, State.PageValue> {
-      try await self.store.fetchAllPages(using: context, handler: handler)
+      try await self.store.refetchAllPages(using: context, handler: handler)
     }
 
-    public func fetchAllPagesTask(
+    public func refetchAllPagesTask(
       using context: QueryContext? = nil
     ) -> QueryTask<InfiniteQueryPages<State.PageID, State.PageValue>> {
-      self.store.fetchAllPagesTask(using: context)
+      self.store.refetchAllPagesTask(using: context)
     }
 
     @discardableResult

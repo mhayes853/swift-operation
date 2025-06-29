@@ -389,11 +389,11 @@ extension SharedQuery where State: _InfiniteQueryStateProtocol {
   ///   - handler: An `InfiniteQueryEventHandler` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: The fetched data.
   @discardableResult
-  public func fetchAllPages(
+  public func refetchAllPages(
     using context: QueryContext? = nil,
     handler: InfiniteQueryEventHandler<State.PageID, State.PageValue> = InfiniteQueryEventHandler()
   ) async throws -> InfiniteQueryPages<State.PageID, State.PageValue> {
-    try await self.value.store.fetchAllPages(using: context, handler: handler)
+    try await self.value.store.refetchAllPages(using: context, handler: handler)
   }
 
   /// Creates a `QueryTask` that refetches all existing pages on the query.
@@ -410,10 +410,10 @@ extension SharedQuery where State: _InfiniteQueryStateProtocol {
   ///   - context: The `QueryContext` to use for the underlying `QueryTask`.
   ///   - handler: An `InfiniteQueryEventHandler` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: A task to refetch all pages.
-  public func fetchAllPagesTask(
+  public func refetchAllPagesTask(
     using context: QueryContext? = nil
   ) -> QueryTask<InfiniteQueryPages<State.PageID, State.PageValue>> {
-    self.value.store.fetchAllPagesTask(using: context)
+    self.value.store.refetchAllPagesTask(using: context)
   }
 
   /// Fetches the page that will be placed after the last page in ``currentValue``.

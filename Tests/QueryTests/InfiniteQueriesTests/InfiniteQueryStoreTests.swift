@@ -27,14 +27,14 @@ struct InfiniteQueryStoreTests {
         expectNoDifference(store.state.isLoadingPreviousPage, false)
       }
     }
-    Task { try await store.fetchAllPages() }
+    Task { try await store.refetchAllPages() }
     try await query.waitForLoading()
   }
 
   @Test("Returns Empty Array When No Pages After Fetching All Pages")
   func emptyArrayWhenNoPagesAfterFetchingAllPages() async throws {
     let store = self.client.store(for: TestInfiniteQuery())
-    let pages = try await store.fetchAllPages()
+    let pages = try await store.refetchAllPages()
     expectNoDifference(pages, [])
     expectNoDifference(store.state.currentValue, [])
     expectNoDifference(store.state.status.isSuccessful, true)
@@ -43,7 +43,7 @@ struct InfiniteQueryStoreTests {
   @Test("Has Next And Previous Page After Fetching All Pages When Empty")
   func hasNextAndPreviousPageAfterFetchingAllPagesWhenEmpty() async throws {
     let store = self.client.store(for: TestInfiniteQuery())
-    try await store.fetchAllPages()
+    try await store.refetchAllPages()
     expectNoDifference(store.hasNextPage, true)
     expectNoDifference(store.hasPreviousPage, true)
   }
@@ -58,7 +58,7 @@ struct InfiniteQueryStoreTests {
     try await store.fetchNextPage()
 
     query.state.withLock { $0 = [0: "c", 1: "d", 2: "e"] }
-    let pages = try await store.fetchAllPages()
+    let pages = try await store.refetchAllPages()
 
     let expectedPages = InfiniteQueryPages<Int, String>(
       uniqueElements: [InfiniteQueryPage(id: 0, value: "c"), InfiniteQueryPage(id: 1, value: "d")]
@@ -76,7 +76,7 @@ struct InfiniteQueryStoreTests {
     try await store.fetchNextPage()
     try await store.fetchNextPage()
     query.state.withLock { $0 = [0: "c"] }
-    let pages = try await store.fetchAllPages()
+    let pages = try await store.refetchAllPages()
     let expectedPages = InfiniteQueryPages<Int, String>(
       uniqueElements: [InfiniteQueryPage(id: 0, value: "c")]
     )
@@ -96,7 +96,7 @@ struct InfiniteQueryStoreTests {
 
     query.state.withLock { $0 = [-1: "d", 0: "e", 1: "f"] }
     try await store.fetchPreviousPage()
-    let pages = try await store.fetchAllPages()
+    let pages = try await store.refetchAllPages()
 
     let expectedPages = InfiniteQueryPages<Int, String>(
       uniqueElements: [
@@ -121,7 +121,7 @@ struct InfiniteQueryStoreTests {
 
     query.state.withLock { $0 = [-1: "d", 0: "e", 1: "f"] }
     try await store.fetchPreviousPage()
-    let task = store.fetchAllPagesTask()
+    let task = store.refetchAllPagesTask()
     let pages = try await task.runIfNeeded()
 
     let expectedPages = InfiniteQueryPages<Int, String>(
@@ -398,7 +398,7 @@ struct InfiniteQueryStoreTests {
       $0.willWait = true
       $0.shouldStallIfWaiting = false
     }
-    let all = Task { try await store.fetchAllPages() }
+    let all = Task { try await store.refetchAllPages() }
     try await query.waitForLoading()
     query.state.withLock { $0.willWait = false }
     let next = Task { try await store.fetchNextPage() }
@@ -439,7 +439,7 @@ struct InfiniteQueryStoreTests {
       $0.willWait = true
       $0.shouldStallIfWaiting = false
     }
-    let all = Task { try await store.fetchAllPages() }
+    let all = Task { try await store.refetchAllPages() }
     try await query.waitForLoading()
     query.state.withLock { $0.willWait = false }
     let next = Task { try await store.fetchPreviousPage() }
@@ -492,8 +492,8 @@ struct InfiniteQueryStoreTests {
     expectNoDifference(store.state.status.isSuccessful, true)
   }
 
-  @Test("Fetch From Regular QueryStore, Fetches All")
-  func fetchFromRegularQueryStoreFetchesAll() async throws {
+  @Test("Fetch From Regular QueryStore, Refetches Initial Page")
+  func fetchFromRegularQueryStoreRefetchesInitialPage() async throws {
     let query = TestInfiniteQuery()
     let infiniteStore = self.client.store(for: query)
 
@@ -507,30 +507,8 @@ struct InfiniteQueryStoreTests {
     query.state.withLock { $0 = [0: "a", 1: "c", -1: "d"] }
     try await store.fetch()
 
-    expectNoDifference(
-      store.currentValue,
-      [
-        InfiniteQueryPage(id: -1, value: "d"),
-        InfiniteQueryPage(id: 0, value: "a"),
-        InfiniteQueryPage(id: 1, value: "c")
-      ]
-    )
-    expectNoDifference(store.status.isSuccessful, true)
-  }
-
-  @Test("Fetch From Regular QueryStore, Fetches Initial Page When No Fetched Pages")
-  func fetchFromRegularQueryStoreFetchesInitialPage() async throws {
-    let query = TestInfiniteQuery()
-    _ = self.client.store(for: query)
-    let store = self.client.store(with: query.path)!.base as! QueryStore<TestInfiniteQuery.State>
-
-    query.state.withLock { $0 = [0: "a", 1: "c", -1: "d"] }
-    try await store.fetch()
-
     expectNoDifference(store.currentValue, [InfiniteQueryPage(id: 0, value: "a")])
     expectNoDifference(store.status.isSuccessful, true)
-    expectNoDifference(store.hasNextPage, true)
-    expectNoDifference(store.hasPreviousPage, true)
   }
 
   @Test("Fetch Next Page Events")
@@ -617,7 +595,7 @@ struct InfiniteQueryStoreTests {
     query.state.withLock { $0 = [0: "a", 1: "b"] }
     try await store.fetchNextPage()
     try await store.fetchNextPage()
-    try await store.fetchAllPages(handler: collector.eventHandler())
+    try await store.refetchAllPages(handler: collector.eventHandler())
 
     collector.expectEventsMatch([
       .stateChanged,
@@ -646,7 +624,7 @@ struct InfiniteQueryStoreTests {
     try await store.fetchNextPage()
 
     query.state.withLock { $0 = nil }
-    _ = try? await store.fetchAllPages(handler: collector.eventHandler())
+    _ = try? await store.refetchAllPages(handler: collector.eventHandler())
 
     collector.expectEventsMatch([
       .stateChanged,
@@ -679,12 +657,7 @@ struct InfiniteQueryStoreTests {
       .pageFetchingStarted(0),
       .pageResultReceived(0, .success(InfiniteQueryPage(id: 0, value: "a"))),
       .pageFetchingEnded(0),
-      .pageFetchingStarted(1),
-      .pageResultReceived(1, .success(InfiniteQueryPage(id: 1, value: "b"))),
-      .pageFetchingEnded(1),
-      .resultReceived(
-        .success([InfiniteQueryPage(id: 0, value: "a"), InfiniteQueryPage(id: 1, value: "b")])
-      ),
+      .resultReceived(.success([InfiniteQueryPage(id: 0, value: "a")])),
       .stateChanged,
       .fetchingEnded
     ])
@@ -717,7 +690,7 @@ struct InfiniteQueryStoreTests {
   @Test("Default FetchAll InfiniteQueryStore Task Name")
   func defaultInfiniteQueryStoreName() async throws {
     let store = self.client.store(for: EmptyInfiniteQuery(initialPageId: 0, path: []))
-    let task = store.fetchAllPagesTask()
+    let task = store.refetchAllPagesTask()
     expectNoDifference(
       task.configuration.name,
       "QueryStore<InfiniteQueryState<Int, String>> Fetch All Pages Task"
@@ -936,7 +909,7 @@ struct InfiniteQueryStoreTests {
     >()
     try await store.fetchNextPage()
     try await store.fetchNextPage()
-    let value = try await store.fetchAllPages(handler: collector.eventHandler())
+    let value = try await store.refetchAllPages(handler: collector.eventHandler())
 
     collector.expectEventsMatch([
       .stateChanged,
@@ -1012,7 +985,7 @@ struct InfiniteQueryStoreTests {
     try await store.fetchNextPage()
     let task = store.fetchNextPageTask()
     let task2 = store.fetchPreviousPageTask()
-    let task3 = store.fetchAllPagesTask()
+    let task3 = store.refetchAllPagesTask()
     expectNoDifference(store.nextPageActiveTasks.count, 1)
     expectNoDifference(store.previousPageActiveTasks.count, 1)
     expectNoDifference(store.allPagesActiveTasks.count, 1)

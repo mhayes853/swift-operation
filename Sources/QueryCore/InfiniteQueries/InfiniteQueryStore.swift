@@ -63,7 +63,7 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
   ///   - handler: An ``InfiniteQueryEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: The fetched data.
   @discardableResult
-  public func fetchAllPages(
+  public func refetchAllPages(
     using context: QueryContext? = nil,
     handler: InfiniteQueryEventHandler<State.PageID, State.PageValue> = InfiniteQueryEventHandler()
   ) async throws -> InfiniteQueryPages<State.PageID, State.PageValue> {
@@ -88,7 +88,7 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
   ///   - context: The ``QueryContext`` to use for the underlying ``QueryTask``.
   ///   - handler: An ``InfiniteQueryEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: A task to refetch all pages.
-  public func fetchAllPagesTask(
+  public func refetchAllPagesTask(
     using context: QueryContext? = nil
   ) -> QueryTask<InfiniteQueryPages<State.PageID, State.PageValue>> {
     self.fetchTask(using: self.fetchAllPagesTaskConfiguration(using: context))

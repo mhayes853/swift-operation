@@ -83,12 +83,10 @@ extension QueryContext {
     }
     let state = store.state
     let pages = state.currentValue
-    let latestPageId = pages.last?.id ?? query.initialPageId
-    return InfiniteQueryPaging(
-      pageId: latestPageId,
-      pages: pages,
-      request: state.request(in: self)
-    )
+    let request = state.request(in: self)
+    let pageId =
+      request == .initialPage ? query.initialPageId : pages.last?.id ?? query.initialPageId
+    return InfiniteQueryPaging(pageId: pageId, pages: pages, request: request)
   }
 
   mutating func ensureInfiniteValues() -> InfiniteQueryContextValues {

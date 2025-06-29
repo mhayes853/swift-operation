@@ -179,7 +179,11 @@ extension InfiniteQueryState: _InfiniteQueryStateProtocol {
       case let .allPages(pages):
         self.currentValue = pages
       case let .initialPage(page):
-        self.currentValue[id: page.id] = page
+        if task.context.infiniteValues?.fetchType != nil {
+          self.currentValue[id: page.id] = page
+        } else {
+          self.currentValue = [page]
+        }
       case let .nextPage(next?):
         if let index = self.currentValue.firstIndex(where: { $0.id == next.lastPage.id }) {
           let (_, index) = self.currentValue.insert(next.page, at: index + 1)
@@ -213,7 +217,7 @@ extension InfiniteQueryState: _InfiniteQueryStateProtocol {
 
   func request(in context: QueryContext) -> InfiniteQueryPagingRequest<PageID> {
     guard let fetchType = context.infiniteValues?.fetchType else {
-      return self.currentValue.isEmpty ? .initialPage : .allPages
+      return .initialPage
     }
     switch (fetchType, self.nextPageId, self.previousPageId) {
     case (.allPages, _, _):

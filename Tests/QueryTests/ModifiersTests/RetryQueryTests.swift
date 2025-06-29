@@ -68,7 +68,7 @@ struct RetryQueryTests {
       $0.failOnPageId = 2
       $0.fetchCount = 0
     }
-    _ = try? await store.fetchAllPages()
+    _ = try? await store.refetchAllPages()
     query.values.withLock {
       expectNoDifference(
         $0.fetchCount,

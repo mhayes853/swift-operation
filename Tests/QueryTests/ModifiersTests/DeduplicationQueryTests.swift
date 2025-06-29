@@ -41,8 +41,8 @@ final class DeduplicationQueryTests: XCTestCase {
     try await store.fetchNextPage()
     try await store.fetchNextPage()
     await query.resetCount()
-    async let p1 = store.fetchAllPages()
-    async let p2 = store.fetchAllPages()
+    async let p1 = store.refetchAllPages()
+    async let p2 = store.refetchAllPages()
     _ = try await (p1, p2)
 
     let count = await query.fetchCount
