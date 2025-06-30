@@ -1,4 +1,4 @@
-#if canImport(Dispatch)
+#if canImport(Darwin)
   import Foundation
 
   extension MainActor {
@@ -22,7 +22,7 @@
   }
 
   // NB: - DispatchSpecificKey does not seem to be marked as Sendable on Linux.
-  private nonisolated(unsafe) let key: DispatchSpecificKey<UInt8> = {
+  private let key: DispatchSpecificKey<UInt8> = {
     let key = DispatchSpecificKey<UInt8>()
     DispatchQueue.main.setSpecific(key: key, value: value)
     return key

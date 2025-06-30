@@ -218,18 +218,6 @@ extension QueryClient {
   }
 }
 
-// MARK: - StoreCreator
-
-extension QueryClient {
-  public protocol StoreCreator: Sendable {
-    func store<Query: QueryRequest>(
-      for query: Query,
-      in context: QueryContext,
-      with initialState: Query.State
-    ) -> QueryStore<Query.State>
-  }
-}
-
 // MARK: - StoreCache
 
 extension QueryClient {
