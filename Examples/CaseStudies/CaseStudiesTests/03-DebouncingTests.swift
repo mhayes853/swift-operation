@@ -17,30 +17,30 @@ struct DebouncingCaseStudyTests {
       $0[PostSearcherKey.self] = MockSearcher(results: ["": [.mock1], "blob": [.mock2]])
     } operation: {
       let model = DebouncingModel(debounceTime: .seconds(1))
-      try await model.posts.load()
+      try await model.$posts.load()
       
       model.text = "blo"
       
-      expectNoDifference(model.posts.activeTasks.count, 0)
-      expectNoDifference(model.posts.wrappedValue, [.mock1])
+      expectNoDifference(model.$posts.activeTasks.count, 0)
+      expectNoDifference(model.$posts.wrappedValue, [.mock1])
       
       await clock.advance(by: .seconds(0.5))
       
       model.text = "blob"
-      expectNoDifference(model.posts.activeTasks.count, 0)
-      expectNoDifference(model.posts.wrappedValue, [.mock1])
+      expectNoDifference(model.$posts.activeTasks.count, 0)
+      expectNoDifference(model.$posts.wrappedValue, [.mock1])
       
       await clock.advance(by: .seconds(0.5))
       
-      expectNoDifference(model.posts.activeTasks.count, 0)
-      expectNoDifference(model.posts.wrappedValue, [.mock1])
+      expectNoDifference(model.$posts.activeTasks.count, 0)
+      expectNoDifference(model.$posts.wrappedValue, [.mock1])
       
       await clock.advance(by: .seconds(0.5))
       
       try await model.waitForSearchingToBegin()
       
-      _ = try await model.posts.activeTasks.first?.runIfNeeded()
-      expectNoDifference(model.posts.wrappedValue, [.mock2])
+      _ = try await model.$posts.activeTasks.first?.runIfNeeded()
+      expectNoDifference(model.$posts.wrappedValue, [.mock2])
     }
   }
 }

@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swiftwasm/JavaScriptKit",
       "state" : {
-        "revision" : "c09052886f7fd5dad58d68401509e7faa532fb92",
-        "version" : "0.30.0"
+        "revision" : "387347ac51b133b801c23f124dd8fe64cc4298c7",
+        "version" : "0.31.1"
       }
     },
     {
@@ -115,7 +115,7 @@
       "location" : "https://github.com/mhayes853/swift-query",
       "state" : {
         "branch" : "main",
-        "revision" : "a7aecb1ffc51207483576a0b6d5e4b708e977b08"
+        "revision" : "ea998b96010b629d423acda35fbc2d2e2afd6433"
       }
     },
     {
