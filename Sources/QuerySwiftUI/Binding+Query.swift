@@ -4,7 +4,10 @@
 
   // MARK: - Binding
 
-  extension Binding {
+extension Binding {
+    /// Creates a binding to the value of a ``SwiftUICore/State/Query`` value,
+    ///
+    /// - Parameter query: The query state to bind to.
     @MainActor
     public init<State: QueryStateProtocol>(_ query: SwiftUI.State<State.StateValue>.Query<State>)
     where Value == State.StateValue {
