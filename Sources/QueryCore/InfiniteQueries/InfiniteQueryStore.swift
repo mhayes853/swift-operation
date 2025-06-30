@@ -86,7 +86,6 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
   ///
   /// - Parameters:
   ///   - context: The ``QueryContext`` to use for the underlying ``QueryTask``.
-  ///   - handler: An ``InfiniteQueryEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: A task to refetch all pages.
   public func refetchAllPagesTask(
     using context: QueryContext? = nil
@@ -154,7 +153,6 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
   ///
   /// - Parameters:
   ///   - context: The ``QueryContext`` to use for the underlying ``QueryTask``.
-  ///   - handler: An ``InfiniteQueryEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: The fetched page.
   public func fetchNextPageTask(
     using context: QueryContext? = nil
@@ -227,7 +225,6 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
   ///
   /// - Parameters:
   ///   - context: The ``QueryContext`` to use for the underlying ``QueryTask``.
-  ///   - handler: An ``InfiniteQueryEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: The fetched page.
   public func fetchPreviousPageTask(
     using context: QueryContext? = nil
