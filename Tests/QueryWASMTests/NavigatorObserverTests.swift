@@ -1,4 +1,4 @@
-#if canImport(JavaScriptKit)
+#if os(WASI)
   import JavaScriptKit
   import QueryBrowser
   import QueryCore
@@ -38,7 +38,10 @@
       window.dispatchEvent!(offlineEvent)
 
       values.withLock {
-        XCTAssertEqual($0, [NetworkConnectionStatus.connected, .disconnected, .connected, .disconnected])
+        XCTAssertEqual(
+          $0,
+          [NetworkConnectionStatus.connected, .disconnected, .connected, .disconnected]
+        )
       }
 
       subscription.cancel()

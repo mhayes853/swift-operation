@@ -1,4 +1,4 @@
-#if canImport(JavaScriptKit)
+#if os(WASI)
   import JavaScriptKit
   import QueryBrowser
   import QueryCore

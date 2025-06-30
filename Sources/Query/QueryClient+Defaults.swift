@@ -117,17 +117,17 @@ extension QueryClient.StoreCreator where Self == QueryClient.DefaultStoreCreator
   }
 
   /// The default `StoreCreator` used by a query client.
-  /// 
+  ///
   /// This store creator applies a set of default modifiers to both `QueryRequest` and
   /// `MutationRequest` instances.
-  /// 
+  ///
   /// **Queries**
   /// - Deduplication
   /// - Retries
   /// - Automatic Fetching
   /// - Refetching when the network comes back online
   /// - Refetching when the app reenters from the background
-  /// 
+  ///
   /// **Mutations**
   /// - Retries
   ///
@@ -171,7 +171,7 @@ extension QueryClient {
   public static var defaultNetworkObserver: (any NetworkObserver)? {
     #if canImport(Network)
       NWPathMonitorObserver.shared
-    #elseif SwiftQueryWebBrowser && canImport(JavaScriptKit)
+    #elseif SwiftQueryWebBrowser
       NavigatorObserver.shared
     #else
       nil
@@ -194,7 +194,7 @@ extension QueryClient {
       } else {
         nil
       }
-    #elseif SwiftQueryWebBrowser && canImport(JavaScriptKit)
+    #elseif SwiftQueryWebBrowser
       WindowVisibilityObserver.shared
     #else
       nil

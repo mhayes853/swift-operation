@@ -1,4 +1,4 @@
-#if canImport(JavaScriptKit)
+#if os(WASI)
   import JavaScriptKit
 
   nonisolated(unsafe) let window = JSObject.global.window.object!
