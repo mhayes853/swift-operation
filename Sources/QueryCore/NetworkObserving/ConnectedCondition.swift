@@ -2,7 +2,7 @@
 
 /// A ``FetchCondition`` that detects whether or not the user is connected to a ``NetworkObserver``.
 ///
-/// This condition checks if the current ``NetworkStatus`` on the observer is greater then the
+/// This condition checks if the current ``NetworkConnectionStatus`` on the observer is greater then the
 /// ``QueryContext/satisfiedConnectionStatus`` context value. You can change that value to update
 /// the threshold for what is considered "connected" for this fetch condition.
 public struct ConnectedCondition {
@@ -37,7 +37,7 @@ extension FetchCondition where Self == ConnectedCondition {
 extension QueryContext {
   /// The minimum satisfiable ``NetworkStatus`` status to satisfy ``ConnectedCondition``.
   ///
-  /// The default value is ``NetworkStatus/connected``.
+  /// The default value is ``NetworkConnectionStatus/connected``.
   public var satisfiedConnectionStatus: NetworkConnectionStatus {
     get { self[SatisfiedConnectionStatusKey.self] }
     set { self[SatisfiedConnectionStatusKey.self] = newValue }

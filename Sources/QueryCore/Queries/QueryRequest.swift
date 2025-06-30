@@ -36,7 +36,7 @@
 /// }
 /// ```
 ///
-/// You can also choose to specify a manual ``path-1limj`` implementation that uniquely identifies
+/// You can also choose to specify a manual ``path-5745r`` implementation that uniquely identifies
 /// your query. This way, you can use the pattern matching features of ``QueryClient`` for global
 /// state management in your application.
 ///

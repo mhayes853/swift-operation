@@ -73,7 +73,7 @@ public protocol QueryStateProtocol<StateValue, QueryValue>: Sendable {
   
   /// Resets this state using the provided ``QueryContext``.
   ///
-  /// This method is called when ``QueryStore/reset(using:)`` is called.
+  /// This method is called when ``QueryStore/resetState(using:)`` is called.
   ///
   /// Make sure to cancel all active ``QueryTask`` instances held by this state, and then reset all
   /// properties back to their default values.

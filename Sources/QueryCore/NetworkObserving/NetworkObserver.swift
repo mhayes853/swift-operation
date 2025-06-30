@@ -22,7 +22,7 @@ extension NetworkConnectionStatus: Comparable {
 
 /// A protocol for observing the current network connection status.
 public protocol NetworkObserver: Sendable {
-  /// The current ``NetworkStatus`` from this observer.
+  /// The current ``NetworkConnectionStatus`` from this observer.
   var currentStatus: NetworkConnectionStatus { get }
   
   /// Subscribes to the ``NetworkConnectionStatus`` from this observer.

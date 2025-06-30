@@ -26,6 +26,8 @@ extension InfiniteQueryPage: Hashable where Value: Hashable {}
 
 // MARK: - InfiniteQueryPages
 
+/// A helper typealias for ``InfiniteQueryPages`` using a single ``InfiniteQueryRequest`` generic
+/// parameter.
 public typealias InfiniteQueryPagesFor<Query: InfiniteQueryRequest> =
   InfiniteQueryPages<Query.PageID, Query.PageValue>
 
@@ -183,7 +185,7 @@ extension InfiniteQueryValue.PreviousPage: Equatable where PageValue: Equatable 
 ///  let page = try await store.fetchNextPage()
 ///  ```
 ///
-///  You can also refetch the entire list of pages, one at a time, by calling ``QueryStore/fetchAllPages(using:handler:)``.
+///  You can also refetch the entire list of pages, one at a time, by calling ``QueryStore/refetchAllPages(using:handler:)``.
 ///
 ///  ```swift
 ///  let store = client.store(for: Post.listsQuery(for: 1))

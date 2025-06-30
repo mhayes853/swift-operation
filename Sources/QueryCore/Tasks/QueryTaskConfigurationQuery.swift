@@ -11,7 +11,7 @@ extension QueryRequest {
 
   /// Sets the default ``QueryTaskConfiguration`` for this query.
   ///
-  /// - Parameter configuration: A function to modify the default configuration.
+  /// - Parameter editConfiguration: A function to modify the default configuration.
   /// - Returns: A ``ModifiedQuery``.
   public func taskConfiguration(
     _ editConfiguration: @escaping @Sendable (inout QueryTaskConfiguration) -> Void

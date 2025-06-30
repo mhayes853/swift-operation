@@ -100,7 +100,7 @@ extension OpaqueQueryStore {
   /// // 🔴 Is prone to high-level data races.
   /// store.currentValue = (store.currentValue as! Int) + 1
   ///
-  //  // ✅ No data races.
+  /// // ✅ No data races.
   /// store.withExclusiveAccess {
   ///   store.currentValue = (store.currentValue as! Int) + 1
   /// }

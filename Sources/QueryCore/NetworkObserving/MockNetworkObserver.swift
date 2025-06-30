@@ -9,7 +9,7 @@ public final class MockNetworkObserver {
   
   /// Creates a mock observer.
   ///
-  /// - Parameter initialStatus: The initial ``NetworkStatus`` of this observer.
+  /// - Parameter initialStatus: The initial ``NetworkConnectionStatus`` of this observer.
   public init(initialStatus: NetworkConnectionStatus = .connected) {
     self.status = Lock(initialStatus)
   }
@@ -18,7 +18,7 @@ public final class MockNetworkObserver {
 // MARK: - Send Status
 
 extension MockNetworkObserver {
-  /// Sends a new ``NetworkStatus`` to all subscribers of this observer.
+  /// Sends a new ``NetworkConnectionStatus`` to all subscribers of this observer.
   ///
   /// - Parameter status: The status to send.
   public func send(status: NetworkConnectionStatus) {

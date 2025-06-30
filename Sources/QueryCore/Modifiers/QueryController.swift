@@ -180,10 +180,28 @@ extension QueryControls {
   }
 }
 
-// MARK: - QueryProtocol
+// MARK: - ControlledQuery
 
+/// A helper typealias for specifying that your query is controlled by a ``QueryController``.
+///
+/// Use this typealias when you define an extension to ``QueryRequest`` that applies your
+/// controller.
+///
+/// ```swift
+/// extension QueryRequest {
+///   func myControlled() -> ControlledQuery<Self, MyController<State>> {
+///     self.controlled(by: MyController())
+///   }
+/// }
+///
+/// final class MyController<State: QueryStateProtocol>: QueryController {
+///   // ...
+/// }
+/// ```
 public typealias ControlledQuery<Query: QueryRequest, Controller: QueryController<Query.State>> =
   ModifiedQuery<Query, _QueryControllerModifier<Query, Controller>>
+
+// MARK: - QueryRequest
 
 extension QueryRequest {
   /// Attaches a ``QueryController`` to this query.

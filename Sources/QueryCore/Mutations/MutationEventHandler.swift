@@ -1,4 +1,4 @@
-/// An event handler that's passed to ``QueryStore/subscribe(with:)-7gv1i``.
+/// An event handler that's passed to ``QueryStore/subscribe(with:)-7si49``.
 public struct MutationEventHandler<Arguments: Sendable, Value: Sendable>: Sendable {
   /// A callback that is invoked when the mutation state changes.
   public var onStateChanged: (@Sendable (MutationState<Arguments, Value>, QueryContext) -> Void)?

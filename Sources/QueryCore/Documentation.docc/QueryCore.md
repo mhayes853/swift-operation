@@ -116,7 +116,7 @@ if $post.isLoading {
 
 ### Pure Swift Usage
 
-If you're just using pure swift, you can observe queries by using ``Query/QueryStore`` directly.
+If you're just using pure swift, you can observe queries by using ``QueryStore`` directly.
 
 ```swift
 // Step 1: Create a QueryClient (You'll share this throughout your app).

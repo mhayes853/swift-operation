@@ -381,7 +381,7 @@ struct RecursiveQueryState<Value: RecursiveValue>: QueryStateProtocol {
 
 ### Resetting State
 
-It's also possible to reset the entire `State` on a `QueryStore` via ``QueryStore/reset(using:)``. When doing this, the store calls out to the `State` to reset itself, which is represented via a `reset` requirement on `QueryStateProtocol`. When implementing this protocol, you generally will cancel all active tasks on the state, and then reset all of the values.
+It's also possible to reset the entire `State` on a `QueryStore` via ``QueryStore/resetState(using:)``. When doing this, the store calls out to the `State` to reset itself, which is represented via a `reset` requirement on `QueryStateProtocol`. When implementing this protocol, you generally will cancel all active tasks on the state, and then reset all of the values.
 
 ```swift
 struct RecursiveQueryState<Value: RecursiveValue>: QueryStateProtocol {
