@@ -25,7 +25,7 @@ public protocol NetworkObserver: Sendable {
   /// The current ``NetworkStatus`` from this observer.
   var currentStatus: NetworkConnectionStatus { get }
   
-  /// Subscribes to the ``NetworkStatus`` from this observer.
+  /// Subscribes to the ``NetworkConnectionStatus`` from this observer.
   ///
   /// - Parameter handler: A closure to yield back the latest network status.
   /// - Returns: A ``QuerySubscription``.

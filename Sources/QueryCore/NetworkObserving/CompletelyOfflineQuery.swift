@@ -11,7 +11,12 @@ extension QueryRequest {
   /// computations from local file data on a background thread, running an expensive SQL query on a
   /// SQLite database, or streaming data from a locally running LLM.
   ///
-  /// - Parameter isOffline: Whether the query is completely offline. Defaults to `true`.
+  /// Attaching this modifier to your query guarantees.
+  /// - That ``QueryContext/satisfiedConnectionStatus`` is set to ``NetworkConnectionStatus/disconnected``.
+  /// - That ``QueryContext/queryMaxRetries`` is set to 0.
+  /// - That ``QueryContext/queryBackoffFunction`` is set to ``QueryBackoffFunction/noBackoff``.
+  ///
+  /// - Parameter isOffline: Whether the query is completely offline. Defaults to `true`. If false, no modifications are made to the query.
   /// - Returns: A ``ModifiedQuery``.
   public func completelyOffline(
     _ isOffline: Bool = true
@@ -24,6 +29,9 @@ public struct _CompletelyOfflineModifier<Query: QueryRequest>: _ContextUpdatingQ
   let isOffline: Bool
 
   public func setup(context: inout QueryContext) {
-    context.satisfiedConnectionStatus = self.isOffline ? .disconnected : .connected
+    guard self.isOffline else { return }
+    context.satisfiedConnectionStatus = .disconnected
+    context.queryMaxRetries = 0
+    context.queryBackoffFunction = .noBackoff
   }
 }

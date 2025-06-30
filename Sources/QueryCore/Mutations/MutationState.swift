@@ -125,7 +125,7 @@ extension MutationState: _MutationStateProtocol {
     for entry in self.history {
       entry.task.cancel()
     }
-    self = Self()
+    self = Self(initialValue: self.initialValue)
   }
 
   public mutating func update(

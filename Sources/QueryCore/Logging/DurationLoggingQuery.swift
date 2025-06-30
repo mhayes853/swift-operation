@@ -3,6 +3,12 @@
   import Foundation
 
   extension QueryRequest {
+    /// Logs the runtime duration of each fetch for this query in seconds.
+    ///
+    /// - Parameters:
+    ///   - logger: A `Logger` to use (defaults to the logger in ``QueryContext``.
+    ///   - level: The level to log the duration message at.
+    /// - Returns: A ``ModifiedQuery``.
     public func logDuration(
       with logger: Logger? = nil,
       at level: Logger.Level = .info
