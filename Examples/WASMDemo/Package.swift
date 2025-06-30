@@ -14,6 +14,10 @@ let package = Package(
       branch: "fix-for-WASM-builds"
     ),
     .package(
+      url: "https://github.com/mhayes853/swift-sharing",
+      branch: "fix-macos-toolchain-build"
+    ),
+    .package(
       url: "https://github.com/mhayes853/swift-query",
       branch: "main",
       traits: ["SwiftQueryNavigation", "SwiftQueryLogging", "SwiftQueryWebBrowser"]
