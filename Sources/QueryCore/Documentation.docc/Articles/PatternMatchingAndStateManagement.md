@@ -125,10 +125,12 @@ struct SendFriendRequestMutation: MutationRequest, Hashable {
     guard let client = context.queryClient else { return }
     let query = UserFriendsQuery(userId: arguments.userId)
     let store = client.store(for: query)
-    store.currentValue = store.currentValue.updateRelationship(
-      for: arguments.userId,
-      to: .friendRequestSent
-    )
+    store.withExclusiveAccess {
+      store.currentValue = store.currentValue.updateRelationship(
+        for: arguments.userId,
+        to: .friendRequestSent
+      )
+    }
   }
 }
 ```
@@ -210,10 +212,12 @@ struct SendFriendRequestMutation: MutationRequest, Hashable {
       of: User.FriendsQuery.State.self
     )
     for store in stores {
-      store.currentValue = store.currentValue.updateRelationship(
-        for: arguments.userId,
-        to: .friendRequestSent
-      )
+      store.withExclusiveAccess {
+        store.currentValue = store.currentValue.updateRelationship(
+          for: arguments.userId,
+          to: .friendRequestSent
+        )
+      }
     }
   }
 }
@@ -264,10 +268,12 @@ struct SendFriendRequestMutation: MutationRequest, Hashable {
       of: User.FriendsQuery.State.self
     )
     for store in stores {
-      store.currentValue = store.currentValue.updateRelationship(
-        for: arguments.userId,
-        to: relationship
-      )
+      store.withExclusiveAccess {
+        store.currentValue = store.currentValue.updateRelationship(
+          for: arguments.userId,
+          to: relationship
+        )
+      }
     }
   }
 }

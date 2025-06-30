@@ -3,13 +3,74 @@ import IssueReporting
 
 // MARK: - QueryClient
 
+/// A class that manages all ``QueryStore`` instances in your application.
+///
+/// Generally, you should only create a single `QueryClient` instance, and share it across your entire
+/// application. The singleton instance will provide access to all `QueryStore` instances in your
+/// application. Adapters such as the `@State.Query` and `@SharedQuery` property wrappers use
+/// this class under the hood to acces the underlying stores they observe.
+///
+/// If you want to create a `QueryStore` that exists outside of a query client, you can call
+/// ``QueryStore/detached(query:initialContext:)-17q5k``. Stores created through the `detached`
+/// methods will not be associated with a `QueryClient`, and will manage their query's state in isolation.
+///
+/// You will most commonly interact with a `QueryClient` when you need to perform global state
+/// management operations across multiple different queries. You can find more about how to do
+/// this in <doc:PatternMatchingAndStateManagement>.
+///
+/// ```swift
+/// struct SendFriendRequestMutation: MutationRequest, Hashable {
+///   // ...
+///
+///   func mutate(
+///     with arguments: Arguments,
+///     in context: QueryContext,
+///     with continuation: QueryContinuation<Void>
+///   ) async throws {
+///     try await sendFriendRequest(userId: arguments.userId)
+///
+///     // Friend request sent successfully, now update all
+///     // friends lists in the app.
+///     guard let client = context.queryClient else { return }
+///     let stores = client.stores(
+///       matching: ["user-friends"],
+///       of: User.FriendsQuery.State.self
+///     )
+///     for store in stores {
+///       store.withExclusiveAccess {
+///         store.currentValue = store.currentValue.updateRelationship(
+///           for: arguments.userId,
+///           to: .friendRequestSent
+///         )
+///       }
+///     }
+///   }
+/// }
+/// ```
+///
+/// `QueryClient` manages the in-memory storage for its stores via the ``StoreCache`` protocol. The
+/// default implementation of this protocol will evict stores from memory when the system runs low
+/// on memory. You can also write your own conformance to this protocol if you wish to customize
+/// how the client's stores are managed in memory.
+///
+/// You can also customize the client's creation of `QueryStore` instances through the
+/// ``StoreCreator`` protocol. The default implementation applies some default modifiers to each
+/// query when a store is created. If you want to override those default modifiers, consider
+/// creating a conformance to the protocol, and passing the conformance to
+/// ``init(defaultContext:storeCache:storeCreator:)``. For more on this, read <doc:QueryDefaults>.
 public final class QueryClient: Sendable {
   private typealias State = (queryTypes: [QueryPath: Any.Type], defaultContext: QueryContext)
 
   private let state: Lock<State>
   private let storeCache: any StoreCache
   private let storeCreator: any StoreCreator
-
+  
+  /// Creates a client.
+  ///
+  /// - Parameters:
+  ///   - defaultContext: The default ``QueryContext`` to use for each ``QueryStore`` created by the client.
+  ///   - storeCache: The ``StoreCache`` to use.
+  ///   - storeCreator: The ``StoreCreator`` to use.
   public init(
     defaultContext: QueryContext = QueryContext(),
     storeCache: some StoreCache = DefaultStoreCache(),
@@ -25,6 +86,7 @@ public final class QueryClient: Sendable {
 // MARK: - Default Context
 
 extension QueryClient {
+  /// The default ``QueryContext`` that is used to create subsequent ``QueryStore`` instances.
   public var defaultContext: QueryContext {
     get { self.state.withLock { $0.defaultContext } }
     set { self.state.withLock { $0.defaultContext = newValue } }
@@ -34,6 +96,12 @@ extension QueryClient {
 // MARK: - Store
 
 extension QueryClient {
+  /// Retrieves the ``QueryStore`` for a ``QueryRequest``.
+  ///
+  /// - Parameters:
+  ///   - query: The query.
+  ///   - initialState: The initial state of the query.
+  /// - Returns: A ``QueryStore``.
   public func store<Query: QueryRequest>(
     for query: Query,
     initialState: Query.State
@@ -42,12 +110,22 @@ extension QueryClient {
       as! QueryStore<Query.State>
   }
 
+  /// Retrieves the ``QueryStore`` for a ``QueryRequest``.
+  ///
+  /// - Parameters:
+  ///   - query: The query.
+  /// - Returns: A ``QueryStore``.
   public func store<Query: QueryRequest>(for query: Query) -> QueryStore<Query.State>
   where Query.State == QueryState<Query.Value?, Query.Value> {
     self.opaqueStore(for: query, initialState: Query.State(initialValue: nil)).base
       as! QueryStore<Query.State>
   }
 
+  /// Retrieves the ``QueryStore`` for a ``QueryRequest``.
+  ///
+  /// - Parameters:
+  ///   - query: The query.
+  /// - Returns: A ``QueryStore``.
   public func store<Query: QueryRequest>(
     for query: DefaultQuery<Query>
   ) -> QueryStore<DefaultQuery<Query>.State>
@@ -59,6 +137,11 @@ extension QueryClient {
     .base as! QueryStore<DefaultQuery<Query>.State>
   }
 
+  /// Retrieves the ``QueryStore`` for an ``InfiniteQueryRequest``.
+  ///
+  /// - Parameters:
+  ///   - query: The query.
+  /// - Returns: A ``QueryStore``.
   public func store<Query: InfiniteQueryRequest>(
     for query: Query
   ) -> QueryStore<Query.State> {
@@ -69,6 +152,11 @@ extension QueryClient {
     .base as! QueryStore<Query.State>
   }
 
+  /// Retrieves the ``QueryStore`` for an ``InfiniteQueryRequest``.
+  ///
+  /// - Parameters:
+  ///   - query: The query.
+  /// - Returns: A ``QueryStore``.
   public func store<Query: InfiniteQueryRequest>(
     for query: DefaultInfiniteQuery<Query>
   ) -> QueryStore<DefaultInfiniteQuery<Query>.State> {
@@ -82,6 +170,11 @@ extension QueryClient {
     .base as! QueryStore<DefaultInfiniteQuery<Query>.State>
   }
 
+  /// Retrieves the ``QueryStore`` for a ``MutationRequest``.
+  ///
+  /// - Parameters:
+  ///   - query: The mutation.
+  /// - Returns: A ``QueryStore``.
   public func store<Mutation: MutationRequest>(
     for mutation: Mutation
   ) -> QueryStore<Mutation.State> {
@@ -132,14 +225,34 @@ extension QueryClient {
 // MARK: - Queries For Path
 
 extension QueryClient {
+  /// Returns a fully-type erased store with the specified ``QueryPath``.
+  ///
+  /// The path must be an exact match, and not a prefix match.
+  ///
+  /// - Parameter path: The path of the store.
+  /// - Returns: An ``OpaqueQueryStore``.
   public func store(with path: QueryPath) -> OpaqueQueryStore? {
     self.storeCache.withLock { $0[path] }
   }
 
+  /// Returns a collection of fully-type erased stores matching the specified ``QueryPath``.
+  ///
+  /// The matching is performed via ``QueryPath/isPrefix(of:)``.
+  ///
+  /// - Parameter path: The path of the stores.
+  /// - Returns: A collection of ``OpaqueQueryStore`` instances.
   public func stores(matching path: QueryPath) -> QueryPathableCollection<OpaqueQueryStore> {
     self.storeCache.withLock { $0.collection(matching: path) }
   }
 
+  /// Returns a collection of ``QueryStore`` instances matching the specified ``QueryPath``.
+  ///
+  /// The matching is performed via ``QueryPath/isPrefix(of:)``.
+  ///
+  /// - Parameters:
+  ///   - path: The path of the stores.
+  ///   - stateType: The data type of state that the store manages.
+  /// - Returns: A collection of ``QueryStore`` instances.
   public func stores<State: QueryStateProtocol>(
     matching path: QueryPath,
     of stateType: State.Type
@@ -155,10 +268,21 @@ extension QueryClient {
 // MARK: - Clearing Queries
 
 extension QueryClient {
+  /// Removes stores from the client that match the specified ``QueryPath``.
+  ///
+  /// The matching is performed via ``QueryPath/isPrefix(of:)``.
+  ///
+  /// - Parameter path: The path of the stores.
   public func clearStores(matching path: QueryPath = []) {
     self.storeCache.withLock { $0.removeAll(matching: path) }
   }
-
+  
+  /// Removes the store with the specified ``QueryPath``.
+  ///
+  /// The path must be an exact match, and not a prefix match.
+  ///
+  /// - Parameter path: The path of the store.
+  /// - Returns: The removed store as an ``OpaqueQueryStore``.
   @discardableResult
   public func clearStore(with path: QueryPath) -> OpaqueQueryStore? {
     self.storeCache.withLock { $0.removeValue(forPath: path) }
@@ -168,6 +292,15 @@ extension QueryClient {
 // MARK: - Direct Store Access
 
 extension QueryClient {
+  /// Provides a scope to edit a collection of fully-type erased stores that match the specified
+  /// ``QueryPath``.
+  ///
+  /// The matching is performed via ``QueryPath/isPrefix(of:)``.
+  ///
+  /// - Parameters:
+  ///   - path: The path of the stores.
+  ///   - fn: A closure to edit the collection of stores.
+  /// - Returns: Whatever `fn` returns.
   public func withStores<T>(
     matching path: QueryPath,
     perform fn: (inout sending QueryPathableCollection<OpaqueQueryStore>) throws -> sending T
@@ -191,6 +324,16 @@ extension QueryClient {
     }
   }
 
+  /// Provides a scope to edit a collection of ``QueryStore`` instances that match the specified
+  /// ``QueryPath``.
+  ///
+  /// The matching is performed via ``QueryPath/isPrefix(of:)``.
+  ///
+  /// - Parameters:
+  ///   - path: The path of the stores.
+  ///   - stateType: The data type of state that the store manages.
+  ///   - fn: A closure to edit the collection of stores.
+  /// - Returns: Whatever `fn` returns.
   public func withStores<T, State: QueryStateProtocol>(
     matching path: QueryPath,
     of stateType: State.Type,
@@ -221,6 +364,15 @@ extension QueryClient {
 // MARK: - QueryContext
 
 extension QueryContext {
+  /// The ``QueryClient`` in this context.
+  ///
+  /// By default, the client is nil. When initializing a ``QueryClient``, this property will be
+  /// set to the initialized client, and will become nil when the client is deinitialized.
+  ///
+  /// ``QueryStore`` instances retrieved through a `QueryClient` will have this property set to
+  /// the client through ``QueryStore/context``. However, if the store was created through
+  /// ``QueryStore/detached(query:initialContext:)``, then its context will not contain
+  /// an associated client, and this property will be nil.
   public var queryClient: QueryClient? {
     get { self[QueryClientKey.self]?.client }
     set { self[QueryClientKey.self] = newValue.map { .strong($0) } }
@@ -258,6 +410,10 @@ extension QueryWarning {
 
         Expected: \(String(reflecting: expectedType))
            Found: \(String(reflecting: foundType))
+    
+    This is generally considered an application programming error. By using a different query type \
+    with the same path you open up your application to unexpected behavior around how a query \
+    fetches its data since a different set of modifiers can be applied to both queries.
 
     A new QueryStore instance will be created for the type with the duplicate key, and this store \
     will not be retained within the QueryClient. This means that the state will not be shared \

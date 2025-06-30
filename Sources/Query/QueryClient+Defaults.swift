@@ -8,6 +8,11 @@ import QueryCore
 // MARK: - Default Init
 
 extension QueryClient {
+  /// Creates a client.
+  ///
+  /// - Parameters:
+  ///   - defaultContext: The default ``QueryContext`` to use for each ``QueryStore`` created by the client.
+  ///   - storeCache: The ``StoreCache`` to use.
   public convenience init(
     defaultContext: QueryContext = QueryContext(),
     storeCache: some StoreCache = DefaultStoreCache()
@@ -23,6 +28,20 @@ extension QueryClient {
 // MARK: - DefaultStoreCreator
 
 extension QueryClient {
+  /// The default `StoreCreator` used by a query client.
+  ///
+  /// This store creator applies a set of default modifiers to both `QueryRequest` and
+  /// `MutationRequest` instances.
+  ///
+  /// **Queries**
+  /// - Deduplication
+  /// - Retries
+  /// - Automatic Fetching
+  /// - Refetching when the network comes back online
+  /// - Refetching when the app reenters from the background
+  ///
+  /// **Mutations**
+  /// - Retries
   public struct DefaultStoreCreator: StoreCreator {
     let retryLimit: Int
     let retryBackoff: QueryBackoffFunction?
@@ -82,6 +101,10 @@ extension QueryClient {
 }
 
 extension QueryClient.StoreCreator where Self == QueryClient.DefaultStoreCreator {
+  /// The default `StoreCreator` used by a query client for testing.
+  ///
+  /// In testing, retries are disabled, and the network status and application activity status are
+  /// not observed.
   public static var defaultTesting: Self {
     .default(
       retryLimit: 0,
@@ -93,6 +116,30 @@ extension QueryClient.StoreCreator where Self == QueryClient.DefaultStoreCreator
     )
   }
 
+  /// The default `StoreCreator` used by a query client.
+  /// 
+  /// This store creator applies a set of default modifiers to both `QueryRequest` and
+  /// `MutationRequest` instances.
+  /// 
+  /// **Queries**
+  /// - Deduplication
+  /// - Retries
+  /// - Automatic Fetching
+  /// - Refetching when the network comes back online
+  /// - Refetching when the app reenters from the background
+  /// 
+  /// **Mutations**
+  /// - Retries
+  ///
+  /// - Parameters:
+  ///   - retryLimit: The maximum number of retries for queries and mutations.
+  ///   - retryBackoff: The backoff function to use for retries.
+  ///   - retryDelayer: The `QueryDelayer` to use for delaying the execution of a retry.
+  ///   - queryEnableAutomaticFetchingCondition: The default `FetchCondition` that determines
+  ///   whether or not automatic fetching is enabled for queries (and not mutations).
+  ///   - networkObserver: The default `NetworkObserver` to use.
+  ///   - activityObserver: The default `ApplicationActivityObserver` to use.
+  /// - Returns: A ``QueryCore/QueryClient/DefaultStoreCreator``.
   public static func `default`(
     retryLimit: Int = 3,
     retryBackoff: QueryBackoffFunction? = nil,

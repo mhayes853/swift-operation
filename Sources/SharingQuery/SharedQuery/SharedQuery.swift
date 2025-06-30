@@ -159,7 +159,7 @@ extension SharedQuery {
   /// // 🔴 Is prone to high-level data races.
   /// $value.currentValue += 1
   ///
-  //  // ✅ No data races.
+  ///  // ✅ No data races.
   /// $value.withExclusiveAccess {
   ///   $value.currentValue += 1
   /// }
