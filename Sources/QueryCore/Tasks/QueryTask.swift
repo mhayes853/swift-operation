@@ -374,6 +374,7 @@ extension QueryTask {
 // MARK: - QueryContext
 
 extension QueryContext {
+  /// The ``QueryTaskIdentifier`` of the currently running task, if any.
   public var queryRunningTaskIdentifier: QueryTaskIdentifier? {
     get { self[QueryRunningTaskIdentifierKey.self] }
     set { self[QueryRunningTaskIdentifierKey.self] = newValue }
