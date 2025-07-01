@@ -395,7 +395,7 @@ extension QueryStore {
   public func fetchTask(using context: QueryContext? = nil) -> QueryTask<State.QueryValue> {
     self.editValuesWithStateChangeEvent(in: context) { values in
       var context = context ?? self.context
-      context.currentQueryStore = OpaqueQueryStore(erasing: self)
+      context.currentFetchingQueryStore = OpaqueQueryStore(erasing: self)
       context.queryTaskConfiguration.name =
         context.queryTaskConfiguration.name
         ?? "\(typeName(Self.self, qualified: true, genericsAbbreviated: false)) Task"
@@ -564,10 +564,30 @@ extension QueryStore {
 
 // MARK: - Access QueryStore In Query
 
-// TODO: - Make public in a way that makes sense.
-
 extension QueryContext {
-  var currentQueryStore: OpaqueQueryStore? {
+  /// The current query store that is fetching data.
+  ///
+  /// This property is only non-nil when accessed within ``QueryRequest/fetch(in:with:)``, and it
+  /// type erases the ``QueryStore`` that is fetching its data.
+  ///
+  /// You can use this property to access the current state for your query inside its body.
+  /// ```swift
+  /// struct MyQuery: QueryRequest, Hashable {
+  ///   func fetch(
+  ///     in context: QueryContext,
+  ///     with continuation: QueryContinuation<Value>
+  ///   ) async throws -> Value {
+  ///     guard let store = context.currentFetchingQueryStore?.base as? QueryStore<State> else {
+  ///       throw InvalidStoreError()
+  ///     }
+  ///     // 🟢 Can access the current value from within the query.
+  ///     let currentValue = store.currentValue
+  ///
+  ///     // ...
+  ///   }
+  /// }
+  /// ```
+  public var currentFetchingQueryStore: OpaqueQueryStore? {
     get { self[CurrentQueryStoreKey.self] }
     set { self[CurrentQueryStoreKey.self] = newValue }
   }

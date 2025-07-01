@@ -107,7 +107,10 @@ let package = Package(
       ]
     ),
     .target(name: "QuerySwiftUI", dependencies: ["Query"]),
-    .target(name: "QueryTestHelpers", dependencies: ["Query"]),
+    .target(
+      name: "QueryTestHelpers",
+      dependencies: ["Query", .product(name: "CustomDump", package: "swift-custom-dump")]
+    ),
     .testTarget(
       name: "QueryWASMTests",
       dependencies: [
