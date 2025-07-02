@@ -32,3 +32,17 @@ extension CKAccountStatus {
 }
 
 extension CKContainer: CKAccountStatus.Loader {}
+
+extension CKAccountStatus {
+  public struct MockLoader: Loader {
+    public let status: @Sendable () async throws -> CKAccountStatus
+
+    public init(status: @escaping @Sendable () async throws -> CKAccountStatus) {
+      self.status = status
+    }
+
+    public func accountStatus() async throws -> CKAccountStatus {
+      try await self.status()
+    }
+  }
+}
