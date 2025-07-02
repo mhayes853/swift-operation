@@ -49,7 +49,6 @@ public struct CloudSyncSectionView: View {
         }
         .symbolRenderingMode(.multicolor)
         .foregroundStyle(Color.accentColor.gradient)
-        .font(.title2)
       }
 
       if self.accountStatus == .temporarilyUnavailable {
@@ -67,18 +66,6 @@ public struct CloudSyncSectionView: View {
         EmptyView()
       }
     }
-  }
-}
-
-// MARK: - AvailabilityCircleView
-
-private struct AvailabilityCircleView: View {
-  let isAvailable: Bool
-
-  var body: some View {
-    Circle()
-      .fill(self.isAvailable ? Color.green.gradient : Color.red.gradient)
-      .frame(width: 10, height: 10)
   }
 }
 
