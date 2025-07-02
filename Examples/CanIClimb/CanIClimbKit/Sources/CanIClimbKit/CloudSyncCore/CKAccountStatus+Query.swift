@@ -1,0 +1,34 @@
+import CloudKit
+import Dependencies
+import Query
+
+// MARK: - Query
+
+extension CKAccountStatus {
+  public static let currentQuery = CurrentQuery().staleWhenNoValue()
+    .refetchOnPost(of: .CKAccountChanged)
+
+  public struct CurrentQuery: QueryRequest, Hashable {
+    public func fetch(
+      in context: QueryContext,
+      with continuation: QueryContinuation<CKAccountStatus>
+    ) async throws -> CKAccountStatus {
+      @Dependency(CKAccountStatus.LoaderKey.self) var loader
+      return try await loader.accountStatus()
+    }
+  }
+}
+
+// MARK: - Loader
+
+extension CKAccountStatus {
+  public protocol Loader: Sendable {
+    func accountStatus() async throws -> CKAccountStatus
+  }
+
+  public enum LoaderKey: DependencyKey {
+    public static let liveValue: any Loader = CKContainer.canIClimb
+  }
+}
+
+extension CKContainer: CKAccountStatus.Loader {}
