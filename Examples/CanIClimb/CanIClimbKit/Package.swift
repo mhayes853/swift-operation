@@ -17,7 +17,8 @@ let package = Package(
     ),
     .package(url: "https://github.com/pointfreeco/sharing-grdb-icloud", branch: "cloudkit"),
     .package(url: "https://github.com/mhayes853/structured-queries-tagged", from: "0.1.1"),
-    .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.9.2")
+    .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.9.2"),
+    .package(url: "https://github.com/pointfreeco/swift-navigation", from: "2.3.1")
   ],
   targets: [
     .target(
@@ -25,7 +26,8 @@ let package = Package(
       dependencies: [
         .product(name: "SharingQuery", package: "swift-query"),
         .product(name: "SharingGRDB", package: "sharing-grdb-icloud"),
-        .product(name: "StructuredQueriesTagged", package: "structured-queries-tagged")
+        .product(name: "StructuredQueriesTagged", package: "structured-queries-tagged"),
+        .product(name: "SwiftUINavigation", package: "swift-navigation")
       ]
     ),
     .testTarget(

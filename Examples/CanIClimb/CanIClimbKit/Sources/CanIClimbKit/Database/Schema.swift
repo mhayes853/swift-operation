@@ -19,6 +19,20 @@ public struct InternalMetricsRecord: Hashable, Sendable, SingleRowTable {
   }
 }
 
+// MARK: - LocalInternalMetricsRecord
+
+@Table("LocalInternalMetrics")
+public struct LocalInternalMetricsRecord: Hashable, Sendable, SingleRowTable {
+  public private(set) var id: UUID = UUID.null
+  public var hasConnectedHealthKit = false
+
+  public init() {}
+
+  public init(hasConnectedHealthKit: Bool = false) {
+    self.hasConnectedHealthKit = hasConnectedHealthKit
+  }
+}
+
 // MARK: - UserProfileRecord
 
 @Table("UserProfile")
@@ -152,9 +166,6 @@ public struct MountainClimbGoalRecord {
 public func canIClimbDatabase(url: URL? = nil) throws -> any DatabaseWriter {
   var configuration = Configuration()
   configuration.foreignKeysEnabled = isTesting
-  configuration.prepareDatabase { db in
-    try db.attachMetadatabase(containerIdentifier: "iCloud.day.onetask.CanIClimb")
-  }
 
   let writer = try writer(for: url, configuration: configuration)
   var migrator = DatabaseMigrator()
@@ -245,6 +256,18 @@ extension DatabaseMigrator {
           dateAdded TIMESTAMP NOT NULL,
           achievedDate TIMESTAMP,
           FOREIGN KEY (mountainId) REFERENCES CachedMountains(id)
+        );
+        """,
+        as: Void.self
+      )
+      .execute(db)
+    }
+    self.registerMigration("create local internal metrics table") { db in
+      try #sql(
+        """
+        CREATE TABLE IF NOT EXISTS LocalInternalMetrics (
+          \(raw: singleRowTablePrimaryKeyColumnSQL),
+          hasConnectedHealthKit BOOLEAN NOT NULL
         );
         """,
         as: Void.self

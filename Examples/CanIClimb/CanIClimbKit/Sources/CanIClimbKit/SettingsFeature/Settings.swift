@@ -4,6 +4,7 @@ import Observation
 import SharingGRDB
 import SharingQuery
 import SwiftUI
+import SwiftUINavigation
 
 // MARK: - SettingsModel
 
@@ -14,14 +15,69 @@ public final class SettingsModel {
   @Fetch(wrappedValue: SettingsRecord(), .singleRow(SettingsRecord.self)) private var _settings
 
   @ObservationIgnored
+  @Fetch(wrappedValue: LocalInternalMetricsRecord(), .singleRow(LocalInternalMetricsRecord.self))
+  private var _localMetrics
+
+  @ObservationIgnored
   @Dependency(\.defaultDatabase) private var database
+
+  @ObservationIgnored
+  @Dependency(HealthPermissions.self) private var healthPermissions
 
   public var settings: SettingsRecord {
     get { self._settings }
     set { try? self.database.write { try newValue.save(in: $0) } }
   }
 
+  public var destination: Destination?
+
   public init() {}
+}
+
+// MARK: - Connect To HealthKit
+
+extension SettingsModel {
+  public var isConnectedToHealthKit: Bool {
+    self._localMetrics.hasConnectedHealthKit
+  }
+
+  public func connectToHealthKitInvoked() async {
+    do {
+      try await self.healthPermissions.request()
+      self.destination = .alert(.successfullyConnectedToHealthKit)
+    } catch {
+      self.destination = .alert(.failedToConnectToHealthKit)
+    }
+  }
+}
+
+// MARK: - Destination
+
+extension SettingsModel {
+  @CasePathable
+  public enum Destination: Hashable, Sendable {
+    case alert(AlertState<SettingsModel.AlertAction>)
+  }
+}
+
+// MARK: - AlertState
+
+extension SettingsModel {
+  public enum AlertAction: Hashable, Sendable {}
+}
+
+extension AlertState where Action == SettingsModel.AlertAction {
+  public static let failedToConnectToHealthKit = Self {
+    TextState("Failed to Connect to HealthKit")
+  } message: {
+    TextState("Please try again later.")
+  }
+
+  public static let successfullyConnectedToHealthKit = Self {
+    TextState("Successfully Connected to HealthKit")
+  } message: {
+    TextState("Enjoy your climbing journey!")
+  }
 }
 
 // MARK: - SettingsView
@@ -34,8 +90,12 @@ public struct SettingsView: View {
     Form {
       CloudSyncSectionView()
       AIAvailabilitySectionView()
+      ConnectHealthKitSectionView(isConnected: self.model.isConnectedToHealthKit) {
+        Task { await self.model.connectToHealthKitInvoked() }
+      }
       PreferencesSectionView(settings: self.$model.settings)
       SocialsSectionView()
+      DisclaimerSectionView()
     }
     .navigationTitle("Settings")
     .toolbar {
@@ -54,6 +114,7 @@ public struct SettingsView: View {
         }
       #endif
     }
+    .alert(self.$model.destination.alert) { _ in }
   }
 }
 
@@ -206,6 +267,49 @@ private struct AIAvailabilitySectionView: View {
   }
 }
 
+// MARK: - Connect HealtKit Section
+
+private struct ConnectHealthKitSectionView: View {
+  let isConnected: Bool
+  let onConnect: () -> Void
+
+  var body: some View {
+    Section {
+      if self.isConnected {
+        Label {
+          Text("Connected")
+        } icon: {
+          Image(systemName: "heart.text.square.fill")
+            .foregroundStyle(.secondary)
+        }
+        .foregroundStyle(.secondary)
+      } else {
+        Button {
+          self.onConnect()
+        } label: {
+          Label {
+            Text("Connect to HealthKit")
+          } icon: {
+            Image(systemName: "heart.text.square.fill")
+              .foregroundStyle(.pink)
+          }
+        }
+      }
+    } header: {
+      Text("HealthKit")
+    } footer: {
+      if self.isConnected {
+        Text("HealthKit is connected, and will be used to personalize your training plans.")
+      } else {
+        Text(
+          "Connect to HealthKit to personalize your training plans based on your personal health data."
+        )
+      }
+    }
+    .tint(.pink)
+  }
+}
+
 // MARK: - Preferences Section
 
 private struct PreferencesSectionView: View {
@@ -274,6 +378,24 @@ private struct SocialsSectionView: View {
   }
 }
 
+// MARK: - Disclaimer Section
+
+private struct DisclaimerSectionView: View {
+  var body: some View {
+    Section {
+      Text(
+        """
+        CanIClimb is just an application for demonstration purposes that shows how to integrate \
+        Swift Query into a moderately complex application involving personalized data. Please \
+        consult with a licensed professional for accurate and personalized advice.
+        """
+      )
+    } header: {
+      Text("Disclaimer")
+    }
+  }
+}
+
 #Preview {
   @Previewable @State var isPresented = true
 
@@ -283,6 +405,13 @@ private struct SocialsSectionView: View {
       return .available
     }
     $0.defaultDatabase = try! canIClimbDatabase()
+
+    var requester = HealthPermissions.MockRequester()
+    // requester.shouldFail = true
+    $0[HealthPermissions.self] = HealthPermissions(
+      database: $0.defaultDatabase,
+      requester: requester
+    )
   }
 
   Button("Present Settings") {
