@@ -16,7 +16,8 @@ let package = Package(
       traits: ["SwiftQueryLogging"]
     ),
     .package(url: "https://github.com/pointfreeco/sharing-grdb-icloud", branch: "cloudkit"),
-    .package(url: "https://github.com/mhayes853/structured-queries-tagged", from: "0.1.1")
+    .package(url: "https://github.com/mhayes853/structured-queries-tagged", from: "0.1.1"),
+    .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.9.2")
   ],
   targets: [
     .target(
@@ -27,7 +28,13 @@ let package = Package(
         .product(name: "StructuredQueriesTagged", package: "structured-queries-tagged")
       ]
     ),
-    .testTarget(name: "CanIClimbKitTests", dependencies: ["CanIClimbKit"])
+    .testTarget(
+      name: "CanIClimbKitTests",
+      dependencies: [
+        "CanIClimbKit",
+        .product(name: "DependenciesTestSupport", package: "swift-dependencies")
+      ]
+    )
   ],
   swiftLanguageModes: [.v6]
 )

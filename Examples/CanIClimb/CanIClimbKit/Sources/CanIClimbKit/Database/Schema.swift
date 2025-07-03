@@ -8,9 +8,11 @@ import StructuredQueriesTagged
 // MARK: - InternalMetricsRecord
 
 @Table("InternalMetrics")
-public struct InternalMetricsRecord: Hashable, Sendable {
+public struct InternalMetricsRecord: Hashable, Sendable, SingleRowTable {
   public private(set) var id: UUID = UUID.null
   public var hasCompletedOnboarding = false
+
+  public init() {}
 
   public init(hasCompletedOnboarding: Bool = false) {
     self.hasCompletedOnboarding = hasCompletedOnboarding
@@ -20,7 +22,7 @@ public struct InternalMetricsRecord: Hashable, Sendable {
 // MARK: - UserProfileRecord
 
 @Table("UserProfile")
-public struct UserProfileRecord: Hashable, Sendable {
+public struct UserProfileRecord: Hashable, Sendable, SingleRowTable {
   public private(set) var id: UUID = UUID.null
 
   @Column(as: HumanHeight.JSONRepresentation.self)
@@ -33,6 +35,8 @@ public struct UserProfileRecord: Hashable, Sendable {
   public var gender: HumanGender = .male
   public var activityLevel: HumanActivityLevel = .sedentary
   public var workoutFrequency: HumanWorkoutFrequency = .none
+
+  public init() {}
 
   public init(
     height: HumanHeight = .imperial(feet: 5, inches: 8),
@@ -92,10 +96,12 @@ public struct CachedMountainRecord {
 // MARK: - SettingsRecord
 
 @Table("Settings")
-public struct SettingsRecord {
+public struct SettingsRecord: Sendable, SingleRowTable {
   public private(set) var id: UUID = .null
   public var metricPreference: MetricPreference = .imperial
   public var temperaturePreference: TemperaturePreference = .celsius
+
+  public init() {}
 
   public init(
     metricPreference: SettingsRecord.MetricPreference = .imperial,
@@ -107,14 +113,14 @@ public struct SettingsRecord {
 }
 
 extension SettingsRecord {
-  public enum MetricPreference: String, QueryBindable {
+  public enum MetricPreference: String, QueryBindable, CaseIterable {
     case imperial
     case metric
   }
 }
 
 extension SettingsRecord {
-  public enum TemperaturePreference: String, QueryBindable {
+  public enum TemperaturePreference: String, QueryBindable, CaseIterable {
     case celsius
     case fahrenheit
     case kelvin
@@ -248,4 +254,4 @@ extension DatabaseMigrator {
   }
 }
 
-private let singleRowTablePrimaryKeyColumnSQL = "id BLOB PRIMARY KEY CHECK (id = \(UUID.null))"
+private let singleRowTablePrimaryKeyColumnSQL = "id BLOB PRIMARY KEY CHECK (id = '\(UUID.null)')"
