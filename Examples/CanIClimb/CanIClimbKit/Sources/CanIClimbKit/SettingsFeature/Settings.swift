@@ -15,6 +15,10 @@ public final class SettingsModel {
   @Fetch(wrappedValue: SettingsRecord(), .singleRow(SettingsRecord.self)) private var _settings
 
   @ObservationIgnored
+  @Fetch(wrappedValue: UserProfileRecord(), .singleRow(UserProfileRecord.self))
+  private var _userProfile
+
+  @ObservationIgnored
   @Fetch(wrappedValue: LocalInternalMetricsRecord(), .singleRow(LocalInternalMetricsRecord.self))
   private var _localMetrics
 
@@ -26,6 +30,11 @@ public final class SettingsModel {
 
   public var settings: SettingsRecord {
     get { self._settings }
+    set { try? self.database.write { try newValue.save(in: $0) } }
+  }
+
+  public var userProfile: UserProfileRecord {
+    get { self._userProfile }
     set { try? self.database.write { try newValue.save(in: $0) } }
   }
 
@@ -94,6 +103,10 @@ public struct SettingsView: View {
         Task { await self.model.connectToHealthKitInvoked() }
       }
       PreferencesSectionView(settings: self.$model.settings)
+      UserProfileSectionView(
+        profile: self.$model.userProfile,
+        metricPreference: self.model.settings.metricPreference
+      )
       SocialsSectionView()
       DisclaimerSectionView()
     }
@@ -351,6 +364,91 @@ extension SettingsRecord.TemperaturePreference {
     case .fahrenheit: "Fahrenheit"
     case .kelvin: "Kelvin"
     }
+  }
+}
+
+// MARK: - User Profile Section
+
+private struct UserProfileSectionView: View {
+  @Binding var profile: UserProfileRecord
+  let metricPreference: SettingsRecord.MetricPreference
+
+  var body: some View {
+    Section {
+      Picker("Gender", selection: self.$profile.gender) {
+        ForEach(HumanGender.allCases, id: \.self) { gender in
+          Text(gender.localizedString)
+            .tag(gender)
+        }
+      }
+
+      Picker("Age Range", selection: self.$profile.ageRange) {
+        ForEach(HumanAgeRange.allCases, id: \.self) { ageRange in
+          Text(ageRange.localizedString)
+            .tag(ageRange)
+        }
+      }
+
+      switch self.metricPreference {
+      case .imperial:
+        Picker("Height", selection: self.$profile.height.imperial) {
+          ForEach(HumanHeight.Imperial.options, id: \.self) { height in
+            Text(height.formatted)
+              .tag(height)
+          }
+        }
+      case .metric:
+        Picker("Height", selection: self.$profile.height.metric) {
+          ForEach(HumanHeight.Metric.options, id: \.self) { height in
+            Text(height.formatted)
+              .tag(height)
+          }
+        }
+      }
+
+      switch self.metricPreference {
+      case .imperial:
+        Stepper(
+          "Weight (\(self.profile.weight.displayedPounds) lbs)",
+          value: self.$profile.weight.displayedPounds,
+          in: 0...600
+        )
+      case .metric:
+        Stepper(
+          "Weight (\(self.profile.weight.displayedKilograms) kg)",
+          value: self.$profile.weight.displayedKilograms,
+          in: 0...272
+        )
+      }
+
+      Picker("Activity Level", selection: self.$profile.activityLevel) {
+        ForEach(HumanActivityLevel.allCases, id: \.self) { activityLevel in
+          Text(activityLevel.localizedString)
+            .tag(activityLevel)
+        }
+      }
+
+      Picker("Workout Frequency", selection: self.$profile.workoutFrequency) {
+        ForEach(HumanWorkoutFrequency.allCases, id: \.self) { frequency in
+          Text(frequency.localizedString)
+            .tag(frequency)
+        }
+      }
+    } header: {
+      Text("Profile")
+    }
+  }
+}
+
+extension Measurement where UnitType == UnitMass {
+  fileprivate var displayedPounds: Int {
+    get { Int(self.converted(to: .pounds).value) }
+    set { self = Measurement(value: Double(newValue), unit: .pounds) }
+  }
+
+  fileprivate var displayedKilograms: Int {
+    get { Int(self.converted(to: .kilograms).value) }
+    set { self = Measurement(value: Double(newValue), unit: .kilograms) }
   }
 }
 

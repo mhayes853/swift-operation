@@ -40,7 +40,7 @@ public struct UserProfileRecord: Hashable, Sendable, SingleRowTable {
   public private(set) var id: UUID = UUID.null
 
   @Column(as: HumanHeight.JSONRepresentation.self)
-  public var height: HumanHeight = .imperial(feet: 5, inches: 8)
+  public var height: HumanHeight = .imperial(HumanHeight.Imperial(feet: 5, inches: 8))
 
   @Column(as: Measurement<UnitMass>.JSONRepresentation.self)
   public var weight: Measurement<UnitMass> = Measurement(value: 150, unit: .pounds)
@@ -48,17 +48,17 @@ public struct UserProfileRecord: Hashable, Sendable, SingleRowTable {
   public var ageRange: HumanAgeRange = .in20s
   public var gender: HumanGender = .male
   public var activityLevel: HumanActivityLevel = .sedentary
-  public var workoutFrequency: HumanWorkoutFrequency = .none
+  public var workoutFrequency: HumanWorkoutFrequency = .noDays
 
   public init() {}
 
   public init(
-    height: HumanHeight = .imperial(feet: 5, inches: 8),
+    height: HumanHeight = .imperial(HumanHeight.Imperial(feet: 5, inches: 8)),
     weight: Measurement<UnitMass> = Measurement(value: 150, unit: .pounds),
     ageRange: HumanAgeRange = .in20s,
     gender: HumanGender = .male,
     activityLevel: HumanActivityLevel = .sedentary,
-    workoutFrequency: HumanWorkoutFrequency = .none
+    workoutFrequency: HumanWorkoutFrequency = .noDays
   ) {
     self.height = height
     self.weight = weight

@@ -17,6 +17,15 @@ struct SettingsModelTests {
     expectNoDifference(model2.settings.metricPreference, .metric)
   }
 
+  @Test("Persists User Profile When Updated")
+  func persistsUserProfileWhenUpdated() {
+    let model = SettingsModel()
+    model.userProfile.gender = .female
+
+    let model2 = SettingsModel()
+    expectNoDifference(model2.userProfile.gender, .female)
+  }
+
   @Test(
     "Connects To HealthKit",
     .dependencies {
