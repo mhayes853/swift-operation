@@ -15,7 +15,6 @@ public struct HumanBMI: Hashable, Sendable {
 extension HumanBMI {
   public init(weight: Measurement<UnitMass>, height: HumanHeight) {
     let meters = height.metric.measurement.converted(to: .meters)
-    print(meters, height)
     self.score = weight.converted(to: .kilograms).value / (meters.value * meters.value)
   }
 }
