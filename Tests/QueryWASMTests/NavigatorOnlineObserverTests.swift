@@ -6,7 +6,7 @@
 
   final class NavigatorObserverTests: XCTestCase {
     private let navigator = JSObject()
-    private let observer = NavigatorObserver(navigatorProperty: "fakeNavigator")
+    private let observer = NavigatorOnlineObserver(navigatorProperty: "fakeNavigator")
 
     override func setUp() {
       super.setUp()

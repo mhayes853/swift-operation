@@ -4,7 +4,7 @@ import QueryCore
 // MARK: - NavigatorObserver
 
 /// A `NetworkObserver` that uses the window navigator.
-public struct NavigatorObserver {
+public struct NavigatorOnlineObserver {
   private let navigatorProperty: String
 
   public init() {
@@ -18,14 +18,14 @@ public struct NavigatorObserver {
 
 // MARK: - Shared
 
-extension NavigatorObserver {
+extension NavigatorOnlineObserver {
   /// The shared navigator observer.
-  public static let shared = NavigatorObserver()
+  public static let shared = NavigatorOnlineObserver()
 }
 
 // MARK: - NetworkObserver Conformance
 
-extension NavigatorObserver: NetworkObserver {
+extension NavigatorOnlineObserver: NetworkObserver {
   public var currentStatus: NetworkConnectionStatus {
     let window = JSObject.global.window.object!
     return window[dynamicMember: self.navigatorProperty].onLine == .boolean(true)
