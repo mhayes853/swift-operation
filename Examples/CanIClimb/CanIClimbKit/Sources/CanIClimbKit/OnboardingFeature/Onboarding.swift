@@ -26,6 +26,7 @@ extension OnboardingModel {
     case selectWorkoutFrequency
     case connectHealthKit
     case shareLocation
+    case accountCreation
     case wrapUp
   }
 }

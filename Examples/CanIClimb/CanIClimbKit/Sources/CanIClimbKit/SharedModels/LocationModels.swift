@@ -1,6 +1,24 @@
 import CoreLocation
 import Foundation
 
+// MARK: - LocationCoordinate2D
+
+public struct LocationCoordinate2D: Hashable, Sendable, Codable {
+  public var latitude: Double
+  public var longitude: Double
+
+  public init(latitude: Double, longitude: Double) {
+    self.latitude = latitude
+    self.longitude = longitude
+  }
+}
+
+extension LocationCoordinate2D {
+  public init(coordinate: CLLocationCoordinate2D) {
+    self.init(latitude: coordinate.latitude, longitude: coordinate.longitude)
+  }
+}
+
 // MARK: - LocationReading
 
 public struct LocationReading: Sendable {
@@ -12,8 +30,6 @@ public struct LocationReading: Sendable {
     self.altitudeAboveSeaLevel = altitudeAboveSeaLevel
   }
 }
-
-// MARK: - CLLocation
 
 extension LocationReading {
   public init(location: CLLocation) {
