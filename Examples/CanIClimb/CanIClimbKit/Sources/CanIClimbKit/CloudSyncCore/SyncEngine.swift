@@ -2,6 +2,8 @@ import CloudKit
 import SharingGRDB
 import os
 
+// MARK: - SyncEngine
+
 extension SyncEngine {
   public static func canIClimb(writer: any DatabaseWriter) throws -> SyncEngine {
     try SyncEngine(
@@ -16,4 +18,10 @@ extension SyncEngine {
       ]
     )
   }
+}
+
+// MARK: - CKContainer
+
+extension CKContainer {
+  public static let canIClimb = CKContainer(identifier: "iCloud.day.onetask.CanIClimb")
 }

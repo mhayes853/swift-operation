@@ -1,5 +1,22 @@
+import Dependencies
 import Query
 import WeatherKit
+
+// MARK: - Loader
+
+extension WeatherAttribution {
+  public protocol Loader: Sendable {
+    var attribution: WeatherAttribution { get async throws }
+  }
+
+  public enum LoaderKey: DependencyKey {
+    public static let liveValue: any Loader = WeatherService.shared
+  }
+}
+
+extension WeatherService: WeatherAttribution.Loader {}
+
+// MARK: - Query
 
 extension WeatherAttribution {
   public static let currentQuery = CurrentQuery().staleWhenNoValue()
@@ -9,7 +26,8 @@ extension WeatherAttribution {
       in context: QueryContext,
       with continuation: QueryContinuation<WeatherAttribution>
     ) async throws -> WeatherAttribution {
-      try await WeatherService.shared.attribution
+      @Dependency(WeatherAttribution.LoaderKey.self) var loader
+      return try await loader.attribution
     }
   }
 }
