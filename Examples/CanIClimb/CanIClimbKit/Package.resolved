@@ -1,5 +1,5 @@
 {
-  "originHash" : "0fcb18572102a5568516c2c673c4eb1b99e8b0f37199f6b0fa75f5f893d36cea",
+  "originHash" : "5062f21b5279a166d1a164d7b0a14e291dc81f51c17e426752dfae6a12421282",
   "pins" : [
     {
       "identity" : "combine-schedulers",
@@ -34,7 +34,7 @@
       "location" : "https://github.com/pointfreeco/sharing-grdb-icloud",
       "state" : {
         "branch" : "cloudkit",
-        "revision" : "3020379a2035b10a77cf62c22fe3e92429acdd6e"
+        "revision" : "a43a4931a4903640b9b52ef577a581f3815df357"
       }
     },
     {
@@ -142,7 +142,7 @@
       "location" : "https://github.com/mhayes853/swift-query",
       "state" : {
         "branch" : "main",
-        "revision" : "428aa1c5e918521bc3a3fbada31bff1d6037e29a"
+        "revision" : "ae29ac19166fa89dd72deaceea071279166104a9"
       }
     },
     {
@@ -169,7 +169,7 @@
       "location" : "https://github.com/pointfreeco/swift-structured-queries",
       "state" : {
         "branch" : "main",
-        "revision" : "83e47762c29ea3aa9cef256e506086bca22488c3"
+        "revision" : "51762923eeb38ced382b0a5eda5c3daa0c6968d9"
       }
     },
     {
