@@ -9,6 +9,7 @@ public struct CanIClimbApp: App {
         url: .applicationSupportDirectory.appending(path: "db/can-i-climb.db")
       )
       $0.defaultSyncEngine = try .canIClimb(writer: $0.defaultDatabase)
+      $0[UserLocationKey.self] = CLUserLocation()
     }
   }
 
