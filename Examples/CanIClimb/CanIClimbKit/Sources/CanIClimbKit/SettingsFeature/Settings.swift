@@ -19,14 +19,7 @@ public final class SettingsModel {
   private var _userProfile
 
   @ObservationIgnored
-  @Fetch(wrappedValue: LocalInternalMetricsRecord(), .singleRow(LocalInternalMetricsRecord.self))
-  private var _localMetrics
-
-  @ObservationIgnored
   @Dependency(\.defaultDatabase) private var database
-
-  @ObservationIgnored
-  @Dependency(HealthPermissions.self) private var healthPermissions
 
   public var settings: SettingsRecord {
     get { self._settings }
@@ -38,55 +31,9 @@ public final class SettingsModel {
     set { try? self.database.write { try newValue.save(in: $0) } }
   }
 
-  public var destination: Destination?
+  public let connectToHealthKit = ConnectToHealthKitModel()
 
   public init() {}
-}
-
-// MARK: - Connect To HealthKit
-
-extension SettingsModel {
-  public var isConnectedToHealthKit: Bool {
-    self._localMetrics.hasConnectedHealthKit
-  }
-
-  public func connectToHealthKitInvoked() async {
-    do {
-      try await self.healthPermissions.request()
-      self.destination = .alert(.successfullyConnectedToHealthKit)
-    } catch {
-      self.destination = .alert(.failedToConnectToHealthKit)
-    }
-  }
-}
-
-// MARK: - Destination
-
-extension SettingsModel {
-  @CasePathable
-  public enum Destination: Hashable, Sendable {
-    case alert(AlertState<SettingsModel.AlertAction>)
-  }
-}
-
-// MARK: - AlertState
-
-extension SettingsModel {
-  public enum AlertAction: Hashable, Sendable {}
-}
-
-extension AlertState where Action == SettingsModel.AlertAction {
-  public static let failedToConnectToHealthKit = Self {
-    TextState("Failed to Connect to HealthKit")
-  } message: {
-    TextState("Please try again later.")
-  }
-
-  public static let successfullyConnectedToHealthKit = Self {
-    TextState("Successfully Connected to HealthKit")
-  } message: {
-    TextState("Enjoy your climbing journey!")
-  }
 }
 
 // MARK: - SettingsView
@@ -99,8 +46,8 @@ public struct SettingsView: View {
     Form {
       CloudSyncSectionView()
       AIAvailabilitySectionView()
-      ConnectHealthKitSectionView(isConnected: self.model.isConnectedToHealthKit) {
-        Task { await self.model.connectToHealthKitInvoked() }
+      ConnectHealthKitSectionView(isConnected: self.model.connectToHealthKit.isConnected) {
+        Task { await self.model.connectToHealthKit.connectInvoked() }
       }
       PreferencesSectionView(settings: self.$model.settings)
       UserProfileSectionView(
@@ -127,7 +74,7 @@ public struct SettingsView: View {
         }
       #endif
     }
-    .alert(self.$model.destination.alert) { _ in }
+    .connectToHealthKit(model: self.model.connectToHealthKit)
   }
 }
 
@@ -505,7 +452,7 @@ private struct DisclaimerSectionView: View {
     $0.defaultDatabase = try! canIClimbDatabase()
 
     var requester = HealthPermissions.MockRequester()
-    // requester.shouldFail = true
+//     requester.shouldFail = true
     $0[HealthPermissions.self] = HealthPermissions(
       database: $0.defaultDatabase,
       requester: requester

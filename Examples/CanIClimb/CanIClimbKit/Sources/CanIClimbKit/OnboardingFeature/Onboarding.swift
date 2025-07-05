@@ -11,6 +11,8 @@ public final class OnboardingModel {
 
   public var path = [Path]()
 
+  public let connectToHealthKit = ConnectToHealthKitModel()
+
   public init() {}
 }
 
@@ -40,5 +42,6 @@ public struct OnboardingView: View {
     NavigationStack(path: self.$model.path) {
       EmptyView()
     }
+    .connectToHealthKit(model: self.model.connectToHealthKit)
   }
 }
