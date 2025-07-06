@@ -95,6 +95,21 @@ extension HumanGender {
   }
 }
 
+extension HumanGender {
+  public struct Averages: Hashable, Sendable {
+    public let weight: Measurement<UnitMass>
+    public let height: HumanHeight
+  }
+
+  public var averages: Averages {
+    switch self {
+    case .male: Averages(weight: .averageMale, height: .averageMale)
+    case .female: Averages(weight: .averageFemale, height: .averageFemale)
+    case .nonBinary: Averages(weight: .averageNonBinary, height: .averageNonBinary)
+    }
+  }
+}
+
 // MARK: - HumanWorkoutFrequency
 
 public enum HumanWorkoutFrequency: String, Hashable, Sendable, CaseIterable {
@@ -213,6 +228,18 @@ extension HumanHeight {
 }
 
 // MARK: - Constants
+
+extension HumanHeight {
+  public static let averageMale = Self.imperial(Imperial(feet: 5, inches: 8))
+  public static let averageFemale = Self.imperial(Imperial(feet: 5, inches: 3))
+  public static let averageNonBinary = Self.imperial(Imperial(feet: 5, inches: 5))
+}
+
+extension Measurement<UnitMass> {
+  public static let averageMale = Measurement(value: 188, unit: .pounds)
+  public static let averageFemale = Measurement(value: 168, unit: .pounds)
+  public static let averageNonBinary = Measurement(value: 177, unit: .pounds)
+}
 
 extension Double {
   fileprivate static let feetToCentimeters = 30.48
