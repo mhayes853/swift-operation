@@ -47,6 +47,15 @@
       }
     },
     {
+      "identity" : "swift-case-paths",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/pointfreeco/swift-case-paths",
+      "state" : {
+        "revision" : "9810c8d6c2914de251e072312f01d3bf80071852",
+        "version" : "1.7.1"
+      }
+    },
+    {
       "identity" : "swift-clocks",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-clocks",
@@ -107,6 +116,15 @@
       "state" : {
         "revision" : "3d8596ed08bd13520157f0355e35caed215ffbfa",
         "version" : "1.6.3"
+      }
+    },
+    {
+      "identity" : "swift-navigation",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/pointfreeco/swift-navigation",
+      "state" : {
+        "revision" : "ae208d1a5cf33aee1d43734ea780a09ada6e2a21",
+        "version" : "2.3.1"
       }
     },
     {
