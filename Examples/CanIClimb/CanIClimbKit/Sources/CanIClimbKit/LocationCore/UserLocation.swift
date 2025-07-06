@@ -135,8 +135,14 @@ extension LocationReading {
       in context: QueryContext,
       with continuation: QueryContinuation<Bool>
     ) async -> Bool {
+      @Dependency(\.defaultQueryClient) var client
       @Dependency(UserLocationKey.self) var userLocation
-      return await userLocation.requestAuthorization()
+      let isAuthorized = await userLocation.requestAuthorization()
+      if isAuthorized {
+        let task = client.store(for: LocationReading.userQuery).fetchTask()
+        Task { try await task.runIfNeeded() }
+      }
+      return isAuthorized
     }
   }
 }
