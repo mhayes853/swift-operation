@@ -1,5 +1,5 @@
 {
-  "originHash" : "5062f21b5279a166d1a164d7b0a14e291dc81f51c17e426752dfae6a12421282",
+  "originHash" : "f8ec39b5c2ce289d6da7f8c5e800ffb330ec6dbb02ad1d3de672175b74dc288f",
   "pins" : [
     {
       "identity" : "combine-schedulers",
@@ -26,6 +26,15 @@
       "state" : {
         "revision" : "f4d52190ad1a4011c489165d43d25ae8e321bc4d",
         "version" : "0.26.2"
+      }
+    },
+    {
+      "identity" : "keychain-swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/evgenyneu/keychain-swift",
+      "state" : {
+        "revision" : "5e1b02b6a9dac2a759a1d5dbc175c86bd192a608",
+        "version" : "24.0.0"
       }
     },
     {
