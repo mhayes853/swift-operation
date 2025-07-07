@@ -16,7 +16,9 @@ public protocol SecureStorage: Sendable {
 public final class KeychainSecureStorage: SecureStorage, @unchecked Sendable {
   private let keychain = KeychainSwift()
 
-  public init() {}
+  public init() {
+    self.keychain.accessGroup = "J3HVSYHJRQ.day.onetask.CanIClimb"
+  }
 
   public subscript(key: String) -> Data? {
     get { self.keychain.getData(key) }
