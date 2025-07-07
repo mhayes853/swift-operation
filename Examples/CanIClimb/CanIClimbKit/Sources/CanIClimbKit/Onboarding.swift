@@ -133,7 +133,7 @@ extension OnboardingModel {
 extension OnboardingModel {
   public enum AccountStepAction: Hashable {
     case skip
-    case signIn(username: String)
+    case signIn(User.SignInCredentials)
   }
 
   public func accountStepInvoked(action: AccountStepAction) {
