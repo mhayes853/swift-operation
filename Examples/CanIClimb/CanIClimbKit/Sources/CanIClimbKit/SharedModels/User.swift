@@ -19,7 +19,7 @@ public struct User: Hashable, Sendable, Identifiable, Codable {
 // MARK: - SignInCredentials
 
 extension User {
-  public struct SignInCredentials: Hashable, Sendable {
+  public struct SignInCredentials: Hashable, Sendable, Codable {
     public let userId: User.ID
     public let name: PersonNameComponents
     public let identityToken: Data

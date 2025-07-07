@@ -1,4 +1,3 @@
-import Dependencies
 import Foundation
 import KeychainSwift
 import Synchronization
@@ -6,7 +5,7 @@ import Synchronization
 // MARK: - SecureStorage
 
 public protocol SecureStorage: Sendable {
-  subscript(key: String) -> Data? { get set }
+  subscript(key: String) -> Data? { get nonmutating set }
 }
 
 // MARK: - KeychainSecureStorage
@@ -16,7 +15,7 @@ public protocol SecureStorage: Sendable {
 public final class KeychainSecureStorage: SecureStorage, @unchecked Sendable {
   private let keychain = KeychainSwift()
 
-  public init() {
+  private init() {
     self.keychain.accessGroup = "J3HVSYHJRQ.day.onetask.CanIClimb"
   }
 
@@ -30,6 +29,10 @@ public final class KeychainSecureStorage: SecureStorage, @unchecked Sendable {
       }
     }
   }
+}
+
+extension KeychainSecureStorage {
+  public static let shared = KeychainSecureStorage()
 }
 
 // MARK: - InMemorySecureStorage
@@ -49,11 +52,4 @@ public final class InMemorySecureStorage: SecureStorage {
       }
     }
   }
-}
-
-// MARK: - SecureStorageKey
-
-public enum SecureStorageKey: DependencyKey {
-  public static let liveValue: any SecureStorage = KeychainSecureStorage()
-  public static let testValue: any SecureStorage = InMemorySecureStorage()
 }
