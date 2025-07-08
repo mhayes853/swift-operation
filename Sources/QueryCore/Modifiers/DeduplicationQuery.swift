@@ -53,11 +53,7 @@ public struct _DeduplicationModifier<Query: QueryRequest>: QueryModifier {
     guard let storage = context.deduplicationStorage as? DeduplicationStorage<Query> else {
       return try await query.fetch(in: context, with: continuation)
     }
-    if let task = await storage.task(for: context) {
-      return try await task.cancellableValue
-    } else {
-      return try await storage.fetch(query: query, in: context, with: continuation)
-    }
+    return try await storage.fetch(query: query, in: context, with: continuation)
   }
 }
 
@@ -73,15 +69,14 @@ private final actor DeduplicationStorage<Query: QueryRequest> {
     self.removeDuplicates = removeDuplicates
   }
 
-  func task(for context: QueryContext) -> Task<Query.Value, any Error>? {
-    self.entries.first(where: { self.removeDuplicates($0.context, context) })?.task
-  }
-
   func fetch(
     query: Query,
     in context: QueryContext,
     with continuation: QueryContinuation<Query.Value>
   ) async throws -> Query.Value {
+    if let task = self.task(for: context) {
+      return try await task.cancellableValue
+    }
     defer { self.idCounter += 1 }
     let id = self.idCounter
     let task = Task {
@@ -90,6 +85,10 @@ private final actor DeduplicationStorage<Query: QueryRequest> {
     }
     self.entries.append((id, context, task))
     return try await task.cancellableValue
+  }
+
+  private func task(for context: QueryContext) -> Task<Query.Value, any Error>? {
+    self.entries.first(where: { self.removeDuplicates($0.context, context) })?.task
   }
 }
 
