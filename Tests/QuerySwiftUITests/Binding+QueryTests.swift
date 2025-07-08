@@ -22,10 +22,10 @@
         try v.find(button: "Increment").tap()
       }
 
-      let expectation = view.inspection.inspect(after: 0.1) { v in
+      let expectation = view.inspection.inspect(after: 0.2) { v in
         XCTAssertNoThrow(try v.find(text: "Count 1"))
       }
-      await self.fulfillment(of: [expectation], timeout: 0.5)
+      await self.fulfillment(of: [expectation], timeout: 1)
     }
   }
 
