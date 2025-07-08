@@ -1,4 +1,5 @@
 import AuthenticationServices
+import Dependencies
 import Foundation
 import Tagged
 
@@ -44,3 +45,31 @@ extension User.SignInCredentials {
     self.init(userId: User.ID(rawValue: credentials.user), name: fullName, token: token)
   }
 }
+
+// MARK: - Authenticator
+
+extension User {
+  public protocol Authenticator: Sendable {
+    func signIn(with credentials: SignInCredentials) async throws
+  }
+
+  public enum AuthenticatorKey: DependencyKey {
+    public static let liveValue: any User.Authenticator = CanIClimbAPI.shared
+  }
+}
+
+extension CanIClimbAPI: User.Authenticator {}
+
+// MARK: - CurrentLoader
+
+extension User {
+  public protocol CurrentLoader: Sendable {
+    func user() async throws -> User
+  }
+
+  public enum CurrentLoaderKey: DependencyKey {
+    public static let liveValue: any User.CurrentLoader = CanIClimbAPI.shared
+  }
+}
+
+extension CanIClimbAPI: User.CurrentLoader {}
