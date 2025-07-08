@@ -82,7 +82,7 @@ public struct CachedMountainRecord {
   public var longitude: Double
   public var dateAdded: Date
   public var imageURL: URL
-  public var difficulty: Mountain.Difficulty
+  public var difficulty: Mountain.ClimbingDifficulty
 
   public init(
     id: Mountain.ID,
@@ -93,7 +93,7 @@ public struct CachedMountainRecord {
     longitude: Double,
     dateAdded: Date,
     imageURL: URL,
-    difficulty: Mountain.Difficulty
+    difficulty: Mountain.ClimbingDifficulty
   ) {
     self.id = id
     self.name = name

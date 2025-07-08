@@ -12,7 +12,7 @@ public struct Mountain: Hashable, Sendable, Codable {
   public var elevation: Measurement<UnitLength>
   public var location: LocationCoordinate2D
   public var dateAdded: Date
-  public var difficulty: Difficulty
+  public var difficulty: ClimbingDifficulty
   public var imageURL: URL
 
   public init(
@@ -22,7 +22,7 @@ public struct Mountain: Hashable, Sendable, Codable {
     elevation: Measurement<UnitLength>,
     location: LocationCoordinate2D,
     dateAdded: Date,
-    difficulty: Difficulty,
+    difficulty: ClimbingDifficulty,
     imageURL: URL
   ) {
     self.id = id
@@ -39,10 +39,32 @@ public struct Mountain: Hashable, Sendable, Codable {
 // MARK: - Difficulty
 
 extension Mountain {
-  public enum Difficulty: Int, Hashable, Sendable, Codable {
+  public struct ClimbingDifficulty: RawRepresentable, Hashable, Sendable, Codable {
+    public var rawValue: Double
+
+    public init?(rawValue: RawValue) {
+      guard (0...100).contains(rawValue) else { return nil }
+      self.rawValue = rawValue
+    }
+  }
+}
+
+extension Mountain.ClimbingDifficulty {
+  public enum Rating: Hashable, Sendable {
     case easy
     case moderate
     case difficult
     case veryDifficult
+    case extreme
+  }
+
+  public var rating: Rating {
+    switch self.rawValue {
+    case 0...25: .easy
+    case 25..<50: .moderate
+    case 50..<75: .difficult
+    case 75..<90: .veryDifficult
+    default: .extreme
+    }
   }
 }
