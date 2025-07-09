@@ -170,7 +170,7 @@ extension QueryClient {
   /// - On other platforms, the value is nil.
   public static var defaultNetworkObserver: (any NetworkObserver)? {
     #if canImport(Network)
-      NWPathMonitorObserver.shared
+      NWPathMonitorObserver.startingShared()
     #elseif SwiftQueryWebBrowser
       NavigatorOnlineObserver.shared
     #else

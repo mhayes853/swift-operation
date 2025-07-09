@@ -10,25 +10,54 @@
 
     private let monitor: NWPathMonitor
     private let subscriptions = QuerySubscriptions<Handler>()
-    private let queue: DispatchQueue
 
-    /// Creates a path monitor observer.
+    private init(monitor: NWPathMonitor) {
+      self.monitor = monitor
+    }
+
+    /// Creates a path monitor observer, and begins observing path updates.
     ///
     /// This initializer updates the `pathUpdateHandler` of the specifed `monitor` by first calling
     /// out to the current handler, and then by propagating the new path status to all subscribers
     /// on this observer.
     ///
+    /// When the observer is deallocated, it will cancel the path monitor.
+    ///
     /// - Parameters:
     ///   - monitor: The `NWPathMonitor` to use.
     ///   - queue: The queue to start monitoring for updates on.
-    public init(monitor: NWPathMonitor = NWPathMonitor(), queue: DispatchQueue = .global()) {
-      self.monitor = monitor
-      self.queue = queue
-      let previousHandler = self.monitor.pathUpdateHandler
-      self.monitor.pathUpdateHandler = { [weak self] path in
-        guard let self else { return }
+    public static func starting(
+      monitor: NWPathMonitor = NWPathMonitor(),
+      queue: DispatchQueue = .global()
+    ) -> NWPathMonitorObserver {
+      let observer = NWPathMonitorObserver(monitor: monitor)
+      let previousHandler = monitor.pathUpdateHandler
+      monitor.pathUpdateHandler = { [weak observer] path in
         previousHandler?(path)
-        self.subscriptions.forEach { $0(NetworkConnectionStatus(path.status)) }
+        observer?.subscriptions.forEach { $0(NetworkConnectionStatus(path.status)) }
+      }
+      monitor.start(queue: queue)
+      return observer
+    }
+
+    deinit { self.monitor.cancel() }
+  }
+
+  // MARK: - Starting Shared
+
+  extension NWPathMonitorObserver {
+    private static let shared = Lock<NWPathMonitorObserver?>(nil)
+
+    /// Creates a shared path monitor observer instance that starts monitoring all available network interfaces.
+    ///
+    /// - Returns: A shared instance of `NWPathMonitorObserver`.
+    public static func startingShared() -> NWPathMonitorObserver {
+      Self.shared.withLock { observer in
+        if let observer {
+          return observer
+        }
+        observer = .starting()
+        return observer!
       }
     }
   }
@@ -43,24 +72,8 @@
     public func subscribe(
       with handler: @escaping @Sendable (NetworkConnectionStatus) -> Void
     ) -> QuerySubscription {
-      let (subscription, isFirst) = self.subscriptions.add(handler: handler)
-      if isFirst {
-        self.monitor.start(queue: self.queue)
-      }
-      return QuerySubscription { [weak self] in
-        subscription.cancel()
-        if self?.subscriptions.count == 0 {
-          self?.monitor.cancel()
-        }
-      }
+      self.subscriptions.add(handler: handler).subscription
     }
-  }
-
-  // MARK: - Shared Instance
-
-  extension NWPathMonitorObserver {
-    /// A shared ``NWPathMonitorObserver`` instance that observes all available interface types.
-    public static let shared = NWPathMonitorObserver()
   }
 
   // MARK: - Helpers
