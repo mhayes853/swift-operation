@@ -38,12 +38,18 @@ public struct QueryContext: Sendable {
 
 extension QueryContext {
   private struct StorageKey: Hashable {
-    let id: ObjectIdentifier
-    let typeName: String
+    let type: Any.Type
 
-    init(type: Any.Type) {
-      self.id = ObjectIdentifier(type)
-      self.typeName = QueryCore.typeName(type)
+    var typeName: String {
+      QueryCore.typeName(self.type)
+    }
+
+    static func == (lhs: StorageKey, rhs: StorageKey) -> Bool {
+      lhs.type == rhs.type
+    }
+
+    func hash(into hasher: inout Hasher) {
+      hasher.combine(ObjectIdentifier(self.type))
     }
   }
 }
