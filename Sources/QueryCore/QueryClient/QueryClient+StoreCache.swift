@@ -33,7 +33,7 @@ extension QueryClient {
   public final class DefaultStoreCache: StoreCache {
     private let stores: LockedBox<QueryPathableCollection<OpaqueQueryStore>>
     private let subscription: QuerySubscription
-    
+
     /// Creates a default store cache.
     ///
     /// - Parameter memoryPressureSource: The ``MemoryPressureSource`` to use to detect when the
