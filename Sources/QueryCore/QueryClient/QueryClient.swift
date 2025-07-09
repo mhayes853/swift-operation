@@ -64,7 +64,7 @@ public final class QueryClient: Sendable {
   private let state: Lock<State>
   private let storeCache: any StoreCache
   private let storeCreator: any StoreCreator
-  
+
   /// Creates a client.
   ///
   /// - Parameters:
@@ -114,10 +114,14 @@ extension QueryClient {
   ///
   /// - Parameters:
   ///   - query: The query.
+  ///   - initialValue: The initial value of the query.
   /// - Returns: A ``QueryStore``.
-  public func store<Query: QueryRequest>(for query: Query) -> QueryStore<Query.State>
+  public func store<Query: QueryRequest>(
+    for query: Query,
+    initialValue: Query.Value? = nil
+  ) -> QueryStore<Query.State>
   where Query.State == QueryState<Query.Value?, Query.Value> {
-    self.opaqueStore(for: query, initialState: Query.State(initialValue: nil)).base
+    self.opaqueStore(for: query, initialState: Query.State(initialValue: initialValue)).base
       as! QueryStore<Query.State>
   }
 
@@ -141,13 +145,18 @@ extension QueryClient {
   ///
   /// - Parameters:
   ///   - query: The query.
+  ///   - initialValue: The initial value for the state of the query.
   /// - Returns: A ``QueryStore``.
   public func store<Query: InfiniteQueryRequest>(
-    for query: Query
+    for query: Query,
+    initialValue: Query.State.StateValue = []
   ) -> QueryStore<Query.State> {
     self.opaqueStore(
       for: query,
-      initialState: InfiniteQueryState(initialValue: [], initialPageId: query.initialPageId)
+      initialState: InfiniteQueryState(
+        initialValue: initialValue,
+        initialPageId: query.initialPageId
+      )
     )
     .base as! QueryStore<Query.State>
   }
@@ -174,11 +183,13 @@ extension QueryClient {
   ///
   /// - Parameters:
   ///   - query: The mutation.
+  ///   - initialValue: The initial value for the state of the mutation.
   /// - Returns: A ``QueryStore``.
   public func store<Mutation: MutationRequest>(
-    for mutation: Mutation
+    for mutation: Mutation,
+    initialValue: Mutation.State.StateValue = nil
   ) -> QueryStore<Mutation.State> {
-    self.opaqueStore(for: mutation, initialState: MutationState()).base
+    self.opaqueStore(for: mutation, initialState: MutationState(initialValue: initialValue)).base
       as! QueryStore<Mutation.State>
   }
 
@@ -276,7 +287,7 @@ extension QueryClient {
   public func clearStores(matching path: QueryPath = []) {
     self.storeCache.withLock { $0.removeAll(matching: path) }
   }
-  
+
   /// Removes the store with the specified ``QueryPath``.
   ///
   /// The path must be an exact match, and not a prefix match.
@@ -410,7 +421,7 @@ extension QueryWarning {
 
         Expected: \(String(reflecting: expectedType))
            Found: \(String(reflecting: foundType))
-    
+
     This is generally considered an application programming error. By using a different query type \
     with the same path you open up your application to unexpected behavior around how a query \
     fetches its data since a different set of modifiers can be applied to both queries.
