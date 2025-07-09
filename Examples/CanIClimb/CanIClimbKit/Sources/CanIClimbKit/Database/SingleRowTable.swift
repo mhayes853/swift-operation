@@ -19,6 +19,16 @@ extension SingleRowTable {
   public func save(in db: Database) throws {
     try Self.upsert { Self.Draft(self) }.execute(db)
   }
+
+  public static func update<T>(
+    in db: Database,
+    _ update: @Sendable (inout Self) throws -> T
+  ) throws -> T {
+    var table = Self.find(in: db)
+    let value = try update(&table)
+    try table.save(in: db)
+    return value
+  }
 }
 
 // MARK: - SingleRowTableRequest

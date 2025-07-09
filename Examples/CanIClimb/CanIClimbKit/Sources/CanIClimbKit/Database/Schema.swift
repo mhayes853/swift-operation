@@ -25,12 +25,9 @@ public struct InternalMetricsRecord: Hashable, Sendable, SingleRowTable {
 public struct LocalInternalMetricsRecord: Hashable, Sendable, SingleRowTable {
   public private(set) var id: UUID = UUID.null
   public var hasConnectedHealthKit = false
+  public var currentUserId: User.ID?
 
   public init() {}
-
-  public init(hasConnectedHealthKit: Bool = false) {
-    self.hasConnectedHealthKit = hasConnectedHealthKit
-  }
 }
 
 // MARK: - UserProfileRecord
@@ -104,6 +101,27 @@ public struct CachedMountainRecord {
     self.dateAdded = dateAdded
     self.imageURL = imageURL
     self.difficulty = difficulty
+  }
+}
+
+// MARK: - CachedUser
+
+@Table("CachedUsers")
+public struct CachedUserRecord: Hashable, Sendable {
+  public let id: User.ID
+
+  @Column(as: PersonNameComponents.JSONRepresentation.self)
+  public let name: PersonNameComponents
+
+  public init(user: User) {
+    self.id = user.id
+    self.name = user.name
+  }
+}
+
+extension User {
+  public init(cached: CachedUserRecord) {
+    self.init(id: cached.id, name: cached.name)
   }
 }
 
@@ -267,7 +285,20 @@ extension DatabaseMigrator {
         """
         CREATE TABLE IF NOT EXISTS LocalInternalMetrics (
           \(raw: singleRowTablePrimaryKeyColumnSQL),
-          hasConnectedHealthKit BOOLEAN NOT NULL
+          hasConnectedHealthKit BOOLEAN NOT NULL,
+          currentUserId TEXT
+        );
+        """,
+        as: Void.self
+      )
+      .execute(db)
+    }
+    self.registerMigration("create cached users table") { db in
+      try #sql(
+        """
+        CREATE TABLE IF NOT EXISTS CachedUsers (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL
         );
         """,
         as: Void.self

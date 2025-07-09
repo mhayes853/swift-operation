@@ -24,9 +24,7 @@ extension HealthPermissions {
   public func request() async throws {
     try await self.requester.requestCanIClimbPermissions()
     try await self.database.write { db in
-      var metrics = LocalInternalMetricsRecord.find(in: db)
-      metrics.hasConnectedHealthKit = true
-      try metrics.save(in: db)
+      try LocalInternalMetricsRecord.update(in: db) { $0.hasConnectedHealthKit = true }
     }
   }
 }
