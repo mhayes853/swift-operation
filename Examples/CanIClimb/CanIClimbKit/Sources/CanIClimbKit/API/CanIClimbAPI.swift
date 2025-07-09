@@ -53,13 +53,34 @@ extension URL {
   public static let canIClimbAPIBase = URL(string: "https://api.caniclimb.com")!
 }
 
-// MARK: - Sign In
+// MARK: - Auth
 
 extension CanIClimbAPI {
   public func signIn(with credentials: User.SignInCredentials) async throws {
     _ = try await self.accessTokenStore.mutate(
       with: AccessTokenMutation.Arguments(api: self, request: .signIn(credentials))
     )
+  }
+
+  public func signOut() async throws {
+    let (_, resp) = try await self.performRequestWithAccessToken(
+      path: "/auth/sign-out"
+    ) { request in
+      request.httpMethod = "POST"
+      return try await self.transport.data(for: request)
+    }
+    guard (resp as? HTTPURLResponse)?.statusCode == 204 else {
+      throw SignOutFailure(statusCode: (resp as? HTTPURLResponse)?.statusCode)
+    }
+    self.secureStorage[_refreshTokenSecureStorageKey] = nil
+  }
+
+  public struct SignOutFailure: Hashable, Error {
+    public let statusCode: Int?
+
+    public init(statusCode: Int?) {
+      self.statusCode = statusCode
+    }
   }
 }
 
@@ -71,6 +92,29 @@ extension CanIClimbAPI {
       try await self.transport.data(for: request)
     }
     return try JSONDecoder().decode(User.self, from: data)
+  }
+}
+
+// MARK: - Delete User
+
+extension CanIClimbAPI {
+  public func deleteUser() async throws {
+    let (_, resp) = try await self.performRequestWithAccessToken(path: "/user") { request in
+      request.httpMethod = "DELETE"
+      return try await self.transport.data(for: request)
+    }
+    guard (resp as? HTTPURLResponse)?.statusCode == 204 else {
+      throw DeleteUserFailure(statusCode: (resp as? HTTPURLResponse)?.statusCode)
+    }
+    self.secureStorage[_refreshTokenSecureStorageKey] = nil
+  }
+
+  public struct DeleteUserFailure: Hashable, Error {
+    public let statusCode: Int?
+
+    public init(statusCode: Int?) {
+      self.statusCode = statusCode
+    }
   }
 }
 

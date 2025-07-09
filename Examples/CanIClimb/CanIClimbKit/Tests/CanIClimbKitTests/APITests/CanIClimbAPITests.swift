@@ -116,6 +116,105 @@ struct CanIClimbAPITests {
     expectNoDifference(user, userResponse)
   }
 
+  @Test("Removes Refresh Token When Signing Out")
+  func removeRefreshTokenWhenSigningOut() async throws {
+    let tokenResponse = CanIClimbAPI.AccessTokenResponse(
+      accessToken: "access",
+      refreshToken: "refresh"
+    )
+    let api = CanIClimbAPI(
+      transport: .mock { request in
+        if request.url?.path() == "/auth/sign-in" {
+          return (200, .json(tokenResponse))
+        } else if request.url?.path() == "/auth/sign-out" {
+          return (204, .data(Data()))
+        }
+        return (401, .data(Data()))
+      },
+      secureStorage: self.storage
+    )
+
+    try await api.signIn(with: .mock)
+    try await api.signOut()
+
+    await #expect(throws: CanIClimbAPI.UnauthorizedError.self) {
+      try await api.user()
+    }
+  }
+
+  @Test("Throws Error When Sign Out Returns Non-204")
+  func throwsErrorWhenSignOutReturnsNon204() async throws {
+    let tokenResponse = CanIClimbAPI.AccessTokenResponse(
+      accessToken: "access",
+      refreshToken: "refresh"
+    )
+    let api = CanIClimbAPI(
+      transport: .mock { request in
+        if request.url?.path() == "/auth/sign-in" {
+          return (200, .json(tokenResponse))
+        } else if request.url?.path() == "/auth/sign-out" {
+          return (400, .data(Data()))
+        }
+        return (401, .data(Data()))
+      },
+      secureStorage: self.storage
+    )
+
+    try await api.signIn(with: .mock)
+    await #expect(throws: CanIClimbAPI.SignOutFailure(statusCode: 400)) {
+      try await api.signOut()
+    }
+  }
+
+  @Test("Removes Refresh Token When Account Deleted")
+  func removeRefreshTokenWhenAccountDeleted() async throws {
+    let tokenResponse = CanIClimbAPI.AccessTokenResponse(
+      accessToken: "access",
+      refreshToken: "refresh"
+    )
+    let api = CanIClimbAPI(
+      transport: .mock { request in
+        if request.url?.path() == "/auth/sign-in" {
+          return (200, .json(tokenResponse))
+        } else if request.url?.path() == "/user" && request.httpMethod == "DELETE" {
+          return (204, .data(Data()))
+        }
+        return (401, .data(Data()))
+      },
+      secureStorage: self.storage
+    )
+
+    try await api.signIn(with: .mock)
+    try await api.deleteUser()
+
+    await #expect(throws: CanIClimbAPI.UnauthorizedError.self) {
+      try await api.user()
+    }
+  }
+
+  @Test("Throws Error When Delete Account Returns Non-204")
+  func throwsErrorWhenDeleteAccountReturnsNon204() async throws {
+    let tokenResponse = CanIClimbAPI.AccessTokenResponse(
+      accessToken: "access",
+      refreshToken: "refresh"
+    )
+    let api = CanIClimbAPI(
+      transport: .mock { request in
+        if request.url?.path() == "/auth/sign-in" {
+          return (200, .json(tokenResponse))
+        }
+        return (400, .data(Data()))
+      },
+      secureStorage: self.storage
+    )
+
+    try await api.signIn(with: .mock)
+
+    await #expect(throws: CanIClimbAPI.DeleteUserFailure(statusCode: 400)) {
+      try await api.deleteUser()
+    }
+  }
+
   @Test("Throws Unauthorized Error When Endpoint Responds With 401 and No Refresh Token Available")
   func throwsUnauthorizedErrorWhenEndpointRespondsWith403AndNoRefreshTokenAvailable() async throws {
     let api = CanIClimbAPI(
