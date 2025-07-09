@@ -6,96 +6,97 @@ import SharingGRDB
 import SharingQuery
 import Testing
 
-@MainActor
-@Suite(
-  "OnboardingModel tests",
-  .dependencies {
-    $0.defaultDatabase = try! canIClimbDatabase()
-    $0[HealthPermissions.self] = HealthPermissions(
-      database: $0.defaultDatabase,
-      requester: HealthPermissions.MockRequester()
-    )
-  }
-)
-struct OnboardingModelTests {
-  @Test("Onboarding Flow, Finishes Once")
-  func onboardingFlowFinishesOnce() async throws {
-    try await withDependencies {
-      $0[UserLocationKey.self] = MockUserLocation()
-    } operation: {
-      var didFinishCount = 0
-      let model = OnboardingModel()
-      model.onFinished = { didFinishCount += 1 }
-
-      expectNoDifference(didFinishCount, 0)
-      try await model.runOnboardingFlow(fillingIn: .mock)
-      expectNoDifference(didFinishCount, 1)
+extension DependenciesTestSuite {
+  @MainActor
+  @Suite(
+    "OnboardingModel tests",
+    .dependencies {
+      $0[HealthPermissions.self] = HealthPermissions(
+        database: $0.defaultDatabase,
+        requester: HealthPermissions.MockRequester()
+      )
     }
-  }
-
-  @Test("Onboarding Flow, Saves Record")
-  func onboardingFlowSavesRecord() async throws {
-    try await withDependencies {
-      $0[UserLocationKey.self] = MockUserLocation()
-    } operation: {
-      @Dependency(\.defaultDatabase) var database
-
-      let model = OnboardingModel()
-      try await model.runOnboardingFlow(fillingIn: .mock)
-
-      let record = try await database.read { UserProfileRecord.find(in: $0) }
-      expectNoDifference(record, .mock)
-    }
-  }
-
-  @Test("Onboarding Flow, Marks Onboarding Complete")
-  func onboardingFlowMarksOnboardingComplete() async throws {
-    try await withDependencies {
-      $0[UserLocationKey.self] = MockUserLocation()
-    } operation: {
-      @Dependency(\.defaultDatabase) var database
-
-      let model = OnboardingModel()
-
-      var record = try await database.read { InternalMetricsRecord.find(in: $0) }
-      expectNoDifference(record.hasCompletedOnboarding, false)
-
-      try await model.runOnboardingFlow(fillingIn: .mock)
-
-      record = try await database.read { InternalMetricsRecord.find(in: $0) }
-      expectNoDifference(record.hasCompletedOnboarding, true)
-    }
-  }
-
-  @Test(
-    "Onboarding Flow, Sets Averages For Other Profile Fields When Gender Selected",
-    arguments: [HumanGender.male, .female, .nonBinary]
   )
-  func setsAveragesForOtherProfileFieldsWhenGenderSelectedForFirstTime(gender: HumanGender) {
-    let model = OnboardingModel()
+  struct OnboardingModelTests {
+    @Test("Onboarding Flow, Finishes Once")
+    func onboardingFlowFinishesOnce() async throws {
+      try await withDependencies {
+        $0[UserLocationKey.self] = MockUserLocation()
+      } operation: {
+        var didFinishCount = 0
+        let model = OnboardingModel()
+        model.onFinished = { didFinishCount += 1 }
 
-    model.genderSelected(gender)
-    expectNoDifference(model.userProfile.weight, gender.averages.weight)
-    expectNoDifference(model.userProfile.height, gender.averages.height)
+        expectNoDifference(didFinishCount, 0)
+        try await model.runOnboardingFlow(fillingIn: .mock)
+        expectNoDifference(didFinishCount, 1)
+      }
+    }
 
-    let newLbs = Measurement<UnitMass>(value: 100, unit: .pounds)
-    model.weightSelected(newLbs)
-    model.genderSelected(.male)
-    expectNoDifference(
-      model.userProfile.weight,
-      newLbs,
-      "A second gender selection should not update the preselected averages."
+    @Test("Onboarding Flow, Saves Record")
+    func onboardingFlowSavesRecord() async throws {
+      try await withDependencies {
+        $0[UserLocationKey.self] = MockUserLocation()
+      } operation: {
+        @Dependency(\.defaultDatabase) var database
+
+        let model = OnboardingModel()
+        try await model.runOnboardingFlow(fillingIn: .mock)
+
+        let record = try await database.read { UserProfileRecord.find(in: $0) }
+        expectNoDifference(record, .mock)
+      }
+    }
+
+    @Test("Onboarding Flow, Marks Onboarding Complete")
+    func onboardingFlowMarksOnboardingComplete() async throws {
+      try await withDependencies {
+        $0[UserLocationKey.self] = MockUserLocation()
+      } operation: {
+        @Dependency(\.defaultDatabase) var database
+
+        let model = OnboardingModel()
+
+        var record = try await database.read { InternalMetricsRecord.find(in: $0) }
+        expectNoDifference(record.hasCompletedOnboarding, false)
+
+        try await model.runOnboardingFlow(fillingIn: .mock)
+
+        record = try await database.read { InternalMetricsRecord.find(in: $0) }
+        expectNoDifference(record.hasCompletedOnboarding, true)
+      }
+    }
+
+    @Test(
+      "Onboarding Flow, Sets Averages For Other Profile Fields When Gender Selected",
+      arguments: [HumanGender.male, .female, .nonBinary]
     )
-  }
+    func setsAveragesForOtherProfileFieldsWhenGenderSelectedForFirstTime(gender: HumanGender) {
+      let model = OnboardingModel()
 
-  @Test("Persists Metric Preference")
-  func persistsMetricPreference() async throws {
-    let model = OnboardingModel()
+      model.genderSelected(gender)
+      expectNoDifference(model.userProfile.weight, gender.averages.weight)
+      expectNoDifference(model.userProfile.height, gender.averages.height)
 
-    model.metricPreference = .metric
+      let newLbs = Measurement<UnitMass>(value: 100, unit: .pounds)
+      model.weightSelected(newLbs)
+      model.genderSelected(.male)
+      expectNoDifference(
+        model.userProfile.weight,
+        newLbs,
+        "A second gender selection should not update the preselected averages."
+      )
+    }
 
-    let model2 = OnboardingModel()
-    expectNoDifference(model2.metricPreference, .metric)
+    @Test("Persists Metric Preference")
+    func persistsMetricPreference() async throws {
+      let model = OnboardingModel()
+
+      model.metricPreference = .metric
+
+      let model2 = OnboardingModel()
+      expectNoDifference(model2.metricPreference, .metric)
+    }
   }
 }
 
