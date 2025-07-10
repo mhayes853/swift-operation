@@ -10,9 +10,6 @@ import SwiftUINavigation
 @Observable
 public final class SignInModel {
   @ObservationIgnored
-  @SharedReader(.networkStatus) private var networkStatus = NetworkConnectionStatus.connected
-
-  @ObservationIgnored
   @SharedQuery(User.signInMutation, animation: .bouncy) public var signIn: Void?
 
   public var destination: Destination?
@@ -26,16 +23,14 @@ extension SignInModel {
   public func credentialsReceived(_ credentials: Result<User.SignInCredentials?, any Error>) async {
     do {
       guard let credentials = try credentials.get() else {
-        self.destination = .alert(.signInFailure(for: .generic))
+        self.destination = .alert(.signInFailure)
         return
       }
       try await self.$signIn.mutate(with: User.SignInMutation.Arguments(credentials: credentials))
       self.destination = .alert(.signInSuccess)
       self.onSignInSuccess?()
     } catch {
-      self.destination = .alert(
-        .signInFailure(for: self.networkStatus != .connected ? .noConnection : .generic)
-      )
+      self.destination = .alert(.signInFailure)
     }
   }
 }
@@ -51,29 +46,19 @@ extension SignInModel {
 
 extension SignInModel {
   public enum AlertAction: Hashable, Sendable {}
-
-  public enum FailureReason: Hashable, Sendable {
-    case noConnection
-    case generic
-  }
 }
 
 extension AlertState where Action == SignInModel.AlertAction {
-  public static let signInSuccess = Self {
+  public static let signInSuccess = Self.remoteOperationError {
     TextState("Success")
   } message: {
     TextState("You've signed in successfully. Enjoy climbing!")
   }
 
-  public static func signInFailure(for reason: SignInModel.FailureReason) -> Self {
-    Self {
-      TextState("An Error Occurred")
-    } message: {
-      switch reason {
-      case .noConnection: TextState("Please check your internet connection.")
-      case .generic: TextState("Something went wrong. Please try again later.")
-      }
-    }
+  public static let signInFailure = Self.remoteOperationError {
+    TextState("An Error Occurred")
+  } message: {
+    TextState("Something went wrong. Please try again later.")
   }
 }
 

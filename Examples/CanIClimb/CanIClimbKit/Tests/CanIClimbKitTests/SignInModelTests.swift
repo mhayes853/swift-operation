@@ -43,7 +43,7 @@ extension DependenciesTestSuite {
         let model = SignInModel()
 
         await model.credentialsReceived(.success(nil))
-        expectNoDifference(model.destination, .alert(.signInFailure(for: .generic)))
+        expectNoDifference(model.destination, .alert(.signInFailure))
       }
     }
 
@@ -59,7 +59,7 @@ extension DependenciesTestSuite {
         let model = SignInModel()
 
         await model.credentialsReceived(.success(.mock2))
-        expectNoDifference(model.destination, .alert(.signInFailure(for: .generic)))
+        expectNoDifference(model.destination, .alert(.signInFailure))
       }
     }
 
@@ -76,24 +76,7 @@ extension DependenciesTestSuite {
         let model = SignInModel()
 
         await model.credentialsReceived(.failure(SomeError()))
-        expectNoDifference(model.destination, .alert(.signInFailure(for: .generic)))
-      }
-    }
-
-    @Test("Unsuccessful Sign In, No Connection")
-    func unsuccessfulSignInNoConnection() async throws {
-      let authenticator = User.MockAuthenticator()
-      authenticator.requiredCredentials = .mock1
-
-      await withDependencies {
-        $0[User.AuthenticatorKey.self] = authenticator
-        $0[User.CurrentLoaderKey.self] = User.MockCurrentLoader(result: .success(.mock1))
-        $0.defaultNetworkObserver = MockNetworkObserver(initialStatus: .disconnected)
-      } operation: {
-        let model = SignInModel()
-
-        await model.credentialsReceived(.success(.mock2))
-        expectNoDifference(model.destination, .alert(.signInFailure(for: .noConnection)))
+        expectNoDifference(model.destination, .alert(.signInFailure))
       }
     }
 
