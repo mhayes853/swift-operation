@@ -36,9 +36,9 @@ extension OnboardingModel {
   public var metricPreference: SettingsRecord.MetricPreference {
     get { self._settings.metricPreference }
     set {
-      var settings = self._settings
-      settings.metricPreference = newValue
-      try? self.database.write { try settings.save(in: $0) }
+      try? self.database.write { db in
+        try SettingsRecord.update(in: db) { $0.metricPreference = newValue }
+      }
     }
   }
 }
