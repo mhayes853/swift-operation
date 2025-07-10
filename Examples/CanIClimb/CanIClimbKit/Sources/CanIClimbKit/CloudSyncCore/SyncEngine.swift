@@ -11,9 +11,11 @@ extension SyncEngine {
       database: writer,
       logger: os.Logger(subsystem: "day.onetask.CanIClimb", category: "SyncEngine"),
       tables: [
-        SettingsRecord.self,
         MountainClimbGoalRecord.self,
-        UserHumanityRecord.self,
+        UserHumanityRecord.self
+      ],
+      privateTables: [
+        SettingsRecord.self,
         InternalMetricsRecord.self
       ]
     )
