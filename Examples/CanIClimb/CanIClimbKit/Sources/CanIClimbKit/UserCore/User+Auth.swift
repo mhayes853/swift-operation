@@ -37,6 +37,7 @@ extension User.SignInCredentials {
 extension User {
   public protocol Authenticator: Sendable {
     func signIn(with credentials: SignInCredentials) async throws
+    func signOut() async throws
   }
 
   public enum AuthenticatorKey: DependencyKey {
@@ -50,6 +51,8 @@ extension User {
   @MainActor
   public final class MockAuthenticator: User.Authenticator {
     public var requiredCredentials: User.SignInCredentials?
+    public var signOutError: (any Error)?
+    public private(set) var signOutCount = 0
 
     public init() {}
 
@@ -57,6 +60,13 @@ extension User {
       if credentials != self.requiredCredentials {
         throw InvalidCredentialsError()
       }
+    }
+
+    public func signOut() async throws {
+      if let error = self.signOutError {
+        throw error
+      }
+      self.signOutCount += 1
     }
 
     private struct InvalidCredentialsError: Error {}
@@ -88,6 +98,26 @@ extension User {
       try await authenticator.signIn(with: arguments.credentials)
       let task = client.store(for: User.currentQuery).fetchTask()
       Task { try await task.runIfNeeded() }
+    }
+  }
+}
+
+extension User {
+  public static let signOutMutation = SignOutMutation()
+
+  public struct SignOutMutation: MutationRequest, Hashable {
+    public func mutate(
+      with arguments: Void,
+      in context: QueryContext,
+      with continuation: QueryContinuation<Void>
+    ) async throws {
+      @Dependency(User.AuthenticatorKey.self) var authenticator
+      @Dependency(\.defaultQueryClient) var client
+      @Dependency(CurrentUser.self) var currentUser
+
+      try await authenticator.signOut()
+      client.store(for: User.currentQuery).currentValue = nil
+      try await currentUser.switchUserId(to: nil)
     }
   }
 }

@@ -15,6 +15,7 @@ extension DependenciesTestSuite {
     func savesCurrentUserInDatabase() async throws {
       let loader = User.MockCurrentLoader(result: .success(.mock1))
       try await withDependencies {
+        $0[CurrentUser.self] = CurrentUser(database: $0.defaultDatabase)
         $0[User.CurrentLoaderKey.self] = loader
       } operation: {
         let users = Mutex([User?]())
