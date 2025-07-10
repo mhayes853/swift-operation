@@ -10,10 +10,7 @@ struct CanIClimbAPITests {
   @Test("Signs User In, Saves Refresh Token Securely")
   func signInSavesRefreshTokenSecurely() async throws {
     let credentials = User.SignInCredentials.mock
-    let resp = CanIClimbAPI.AccessTokenResponse(
-      accessToken: "access",
-      refreshToken: "refresh"
-    )
+    let resp = CanIClimbAPI.AccessTokenResponse.signIn
     let api = CanIClimbAPI(
       transport: .mock { _ in (200, .json(resp)) },
       secureStorage: self.storage
@@ -28,10 +25,7 @@ struct CanIClimbAPITests {
   func signInUsesAccessTokenToAccessUser() async throws {
     let credentials = User.SignInCredentials.mock
     let userResponse = User(id: credentials.userId, name: credentials.name)
-    let tokenResponse = CanIClimbAPI.AccessTokenResponse(
-      accessToken: "access",
-      refreshToken: "refresh"
-    )
+    let tokenResponse = CanIClimbAPI.AccessTokenResponse.signIn
     let api = CanIClimbAPI(
       transport: .mock { request in
         if request.url?.path() == "/auth/sign-in" {
@@ -53,14 +47,8 @@ struct CanIClimbAPITests {
   func refreshTokenWhenNotPresent() async throws {
     let credentials = User.SignInCredentials.mock
     let userResponse = User(id: credentials.userId, name: credentials.name)
-    let tokenResponse1 = CanIClimbAPI.AccessTokenResponse(
-      accessToken: "access",
-      refreshToken: "refresh"
-    )
-    let tokenResponse2 = CanIClimbAPI.AccessTokenResponse(
-      accessToken: "access2",
-      refreshToken: nil
-    )
+    let tokenResponse1 = CanIClimbAPI.AccessTokenResponse.signIn
+    let tokenResponse2 = CanIClimbAPI.AccessTokenResponse.refresh
     let api = CanIClimbAPI(
       transport: .mock { _ in (200, .json(tokenResponse1)) },
       secureStorage: self.storage
@@ -87,14 +75,8 @@ struct CanIClimbAPITests {
   func refreshTokenWhenAPI401s() async throws {
     let credentials = User.SignInCredentials.mock
     let userResponse = User(id: credentials.userId, name: credentials.name)
-    let tokenResponse1 = CanIClimbAPI.AccessTokenResponse(
-      accessToken: "access",
-      refreshToken: "refresh"
-    )
-    let tokenResponse2 = CanIClimbAPI.AccessTokenResponse(
-      accessToken: "access2",
-      refreshToken: nil
-    )
+    let tokenResponse1 = CanIClimbAPI.AccessTokenResponse.signIn
+    let tokenResponse2 = CanIClimbAPI.AccessTokenResponse.refresh
     let api = CanIClimbAPI(
       transport: .mock { request in
         if request.url?.path() == "/auth/sign-in" {
@@ -118,10 +100,7 @@ struct CanIClimbAPITests {
 
   @Test("Removes Refresh Token When Signing Out")
   func removeRefreshTokenWhenSigningOut() async throws {
-    let tokenResponse = CanIClimbAPI.AccessTokenResponse(
-      accessToken: "access",
-      refreshToken: "refresh"
-    )
+    let tokenResponse = CanIClimbAPI.AccessTokenResponse.signIn
     let api = CanIClimbAPI(
       transport: .mock { request in
         if request.url?.path() == "/auth/sign-in" {
@@ -144,10 +123,7 @@ struct CanIClimbAPITests {
 
   @Test("Throws Error When Sign Out Returns Non-204")
   func throwsErrorWhenSignOutReturnsNon204() async throws {
-    let tokenResponse = CanIClimbAPI.AccessTokenResponse(
-      accessToken: "access",
-      refreshToken: "refresh"
-    )
+    let tokenResponse = CanIClimbAPI.AccessTokenResponse.signIn
     let api = CanIClimbAPI(
       transport: .mock { request in
         if request.url?.path() == "/auth/sign-in" {
@@ -168,10 +144,7 @@ struct CanIClimbAPITests {
 
   @Test("Removes Refresh Token When Account Deleted")
   func removeRefreshTokenWhenAccountDeleted() async throws {
-    let tokenResponse = CanIClimbAPI.AccessTokenResponse(
-      accessToken: "access",
-      refreshToken: "refresh"
-    )
+    let tokenResponse = CanIClimbAPI.AccessTokenResponse.signIn
     let api = CanIClimbAPI(
       transport: .mock { request in
         if request.url?.path() == "/auth/sign-in" {
@@ -194,10 +167,7 @@ struct CanIClimbAPITests {
 
   @Test("Throws Error When Delete Account Returns Non-204")
   func throwsErrorWhenDeleteAccountReturnsNon204() async throws {
-    let tokenResponse = CanIClimbAPI.AccessTokenResponse(
-      accessToken: "access",
-      refreshToken: "refresh"
-    )
+    let tokenResponse = CanIClimbAPI.AccessTokenResponse.signIn
     let api = CanIClimbAPI(
       transport: .mock { request in
         if request.url?.path() == "/auth/sign-in" {
@@ -225,6 +195,47 @@ struct CanIClimbAPITests {
       try await api.user()
     }
   }
+
+  @Test("Edits User")
+  func editsUser() async throws {
+    let tokenResponse = CanIClimbAPI.AccessTokenResponse.signIn
+
+    var editedUser = User.mock1
+    editedUser.subtitle = "Edited"
+
+    let edit = User.Edit(name: editedUser.name, subtitle: editedUser.subtitle)
+
+    let api = CanIClimbAPI(
+      transport: .mock { [editedUser] request in
+        if request.url?.path() == "/auth/sign-in" {
+          return (200, .json(tokenResponse))
+        } else if request.url?.path() == "/user"
+          && request.httpMethod == "PATCH"
+          && request.hasBody(edit)
+        {
+          return (200, .json(editedUser))
+        }
+        return (400, .data(Data()))
+      },
+      secureStorage: self.storage
+    )
+
+    try await api.signIn(with: .mock)
+
+    let user = try await api.editUser(with: edit)
+    expectNoDifference(user, editedUser)
+  }
+}
+
+extension CanIClimbAPI.AccessTokenResponse {
+  fileprivate static let signIn = Self(
+    accessToken: "access",
+    refreshToken: "refresh"
+  )
+  fileprivate static let refresh = Self(
+    accessToken: "access2",
+    refreshToken: nil
+  )
 }
 
 extension User.SignInCredentials {
@@ -238,5 +249,11 @@ extension User.SignInCredentials {
 extension URLRequest {
   fileprivate func hasToken(_ token: String?) -> Bool {
     allHTTPHeaderFields?["Authorization"] == "Bearer \(token ?? "")"
+  }
+
+  fileprivate func hasBody<T: Decodable & Equatable>(_ body: T) -> Bool {
+    let requestBody = try? JSONDecoder().decode(T.self, from: self.httpBody ?? Data())
+    guard let requestBody else { return false }
+    return requestBody == body
   }
 }

@@ -8,10 +8,12 @@ public struct User: Hashable, Sendable, Identifiable, Codable {
 
   public let id: ID
   public var name: PersonNameComponents
+  public var subtitle: String
 
-  public init(id: ID, name: PersonNameComponents) {
+  public init(id: ID, name: PersonNameComponents, subtitle: String = "") {
     self.id = id
     self.name = name
+    self.subtitle = subtitle
   }
 }
 

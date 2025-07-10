@@ -26,11 +26,15 @@ extension CurrentUser {
 extension CurrentUser {
   public func user(using loader: some User.CurrentLoader) async throws -> User {
     let user = try await loader.user()
-    try await self.database.write { db in
-      try LocalInternalMetricsRecord.update(in: db) { $0.currentUserId = user.id }
-      try CachedUserRecord.upsert { CachedUserRecord.Draft(CachedUserRecord(user: user)) }
-        .execute(db)
-    }
+    try await self.saveLocalUser(user)
+    return user
+  }
+}
+
+extension CurrentUser {
+  public func edit(with edit: User.Edit, using editor: some User.Editor) async throws -> User {
+    let user = try await editor.editUser(with: edit)
+    try await self.saveLocalUser(user)
     return user
   }
 }
@@ -50,6 +54,16 @@ extension CurrentUser {
   public func switchUserId(to id: User.ID?) async throws {
     try await self.database.write { db in
       try LocalInternalMetricsRecord.update(in: db) { $0.currentUserId = id }
+    }
+  }
+}
+
+extension CurrentUser {
+  private func saveLocalUser(_ user: User) async throws {
+    try await self.database.write { db in
+      try LocalInternalMetricsRecord.update(in: db) { $0.currentUserId = user.id }
+      try CachedUserRecord.upsert { CachedUserRecord.Draft(CachedUserRecord(user: user)) }
+        .execute(db)
     }
   }
 }

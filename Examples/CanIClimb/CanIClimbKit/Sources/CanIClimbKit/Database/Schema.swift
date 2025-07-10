@@ -111,17 +111,20 @@ public struct CachedUserRecord: Hashable, Sendable {
   public let id: User.ID
 
   @Column(as: PersonNameComponents.JSONRepresentation.self)
-  public let name: PersonNameComponents
+  public var name: PersonNameComponents
+
+  public var subtitle: String
 
   public init(user: User) {
     self.id = user.id
     self.name = user.name
+    self.subtitle = user.subtitle
   }
 }
 
 extension User {
   public init(cached: CachedUserRecord) {
-    self.init(id: cached.id, name: cached.name)
+    self.init(id: cached.id, name: cached.name, subtitle: cached.subtitle)
   }
 }
 
@@ -298,7 +301,8 @@ extension DatabaseMigrator {
         """
         CREATE TABLE IF NOT EXISTS CachedUsers (
           id TEXT PRIMARY KEY,
-          name TEXT NOT NULL
+          name TEXT NOT NULL,
+          subtitle TEXT NOT NULL
         );
         """,
         as: Void.self

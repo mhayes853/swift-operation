@@ -95,6 +95,20 @@ extension CanIClimbAPI {
   }
 }
 
+// MARK: - Edit User
+
+extension CanIClimbAPI {
+  public func editUser(with edit: User.Edit) async throws -> User {
+    let body = try JSONEncoder().encode(edit)
+    let (data, _) = try await self.performRequestWithAccessToken(path: "/user") { request in
+      request.httpMethod = "PATCH"
+      request.httpBody = body
+      return try await self.transport.data(for: request)
+    }
+    return try JSONDecoder().decode(User.self, from: data)
+  }
+}
+
 // MARK: - Delete User
 
 extension CanIClimbAPI {
