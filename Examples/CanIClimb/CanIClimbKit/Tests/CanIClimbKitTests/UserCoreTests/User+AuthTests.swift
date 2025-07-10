@@ -23,13 +23,8 @@ extension DependenciesTestSuite {
         let signInStore = client.store(for: User.signInMutation)
         let userStore = client.store(for: User.currentQuery)
 
-        let credentials = User.SignInCredentials(
-          userId: User.mock1.id,
-          name: User.mock1.name,
-          token: Data()
-        )
-        authenticator.requiredCredentials = credentials
-        try await signInStore.mutate(with: User.SignInMutation.Arguments(credentials: credentials))
+        authenticator.requiredCredentials = .mock1
+        try await signInStore.mutate(with: User.SignInMutation.Arguments(credentials: .mock1))
 
         let task = try #require(userStore.activeTasks.first)
         let user = try await task.runIfNeeded()

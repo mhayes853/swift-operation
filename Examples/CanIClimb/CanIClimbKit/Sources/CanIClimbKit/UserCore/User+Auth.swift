@@ -32,6 +32,11 @@ extension User.SignInCredentials {
   }
 }
 
+extension User.SignInCredentials {
+  public static let mock1 = Self(userId: User.mock1.id, name: User.mock1.name, token: Data())
+  public static let mock2 = Self(userId: User.mock2.id, name: User.mock2.name, token: Data())
+}
+
 // MARK: - Authenticator
 
 extension User {
