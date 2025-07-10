@@ -43,7 +43,7 @@ extension DependenciesTestSuite {
         let model = OnboardingModel()
         try await model.runOnboardingFlow(fillingIn: .mock)
 
-        let record = try await database.read { UserProfileRecord.find(in: $0) }
+        let record = try await database.read { UserHumanityRecord.find(in: $0) }
         expectNoDifference(record, .mock)
       }
     }
@@ -102,7 +102,7 @@ extension DependenciesTestSuite {
 
 extension OnboardingModel {
   fileprivate func runOnboardingFlow(
-    fillingIn record: UserProfileRecord,
+    fillingIn record: UserHumanityRecord,
     locationPermissions: LocationPermissionStepAction = .requestPermission,
     account: AccountStepAction = .skip,
     connectHealthKit: ConnectToHealthKitStepAction = .connect
@@ -149,8 +149,8 @@ extension OnboardingModel {
   }
 }
 
-extension UserProfileRecord {
-  fileprivate static let mock = UserProfileRecord(
+extension UserHumanityRecord {
+  fileprivate static let mock = UserHumanityRecord(
     height: .imperial(HumanHeight.Imperial(feet: 6, inches: 1)),
     weight: Measurement(value: 180, unit: .pounds),
     ageRange: .in30s,

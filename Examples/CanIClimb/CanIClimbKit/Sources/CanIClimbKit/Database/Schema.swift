@@ -30,10 +30,10 @@ public struct LocalInternalMetricsRecord: Hashable, Sendable, SingleRowTable {
   public init() {}
 }
 
-// MARK: - UserProfileRecord
+// MARK: - UserHumanityRecord
 
-@Table("UserProfile")
-public struct UserProfileRecord: Hashable, Sendable, SingleRowTable {
+@Table("UserHumanity")
+public struct UserHumanityRecord: Hashable, Sendable, SingleRowTable {
   public private(set) var id: UUID = UUID.null
 
   @Column(as: HumanHeight.JSONRepresentation.self)
@@ -216,10 +216,10 @@ extension DatabaseMigrator {
       )
       .execute(db)
     }
-    self.registerMigration("create user profile table") { db in
+    self.registerMigration("create user humanity table") { db in
       try #sql(
         """
-        CREATE TABLE IF NOT EXISTS UserProfile (
+        CREATE TABLE IF NOT EXISTS UserHumanity (
          \(raw: singleRowTablePrimaryKeyColumnSQL),
           height BLOB NOT NULL,
           weight BLOB NOT NULL,

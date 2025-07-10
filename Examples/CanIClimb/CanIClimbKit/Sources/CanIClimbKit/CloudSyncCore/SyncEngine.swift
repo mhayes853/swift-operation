@@ -13,7 +13,7 @@ extension SyncEngine {
       tables: [
         SettingsRecord.self,
         MountainClimbGoalRecord.self,
-        UserProfileRecord.self,
+        UserHumanityRecord.self,
         InternalMetricsRecord.self
       ]
     )

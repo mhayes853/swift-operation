@@ -15,7 +15,7 @@ public final class OnboardingModel {
 
   public let connectToHealthKit = ConnectToHealthKitModel()
 
-  public private(set) var userProfile = UserProfileRecord()
+  public private(set) var userProfile = UserHumanityRecord()
 
   @ObservationIgnored
   private var didSelectedGender = false

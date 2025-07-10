@@ -15,7 +15,7 @@ public final class SettingsModel {
   @Fetch(wrappedValue: SettingsRecord(), .singleRow(SettingsRecord.self)) private var _settings
 
   @ObservationIgnored
-  @Fetch(wrappedValue: UserProfileRecord(), .singleRow(UserProfileRecord.self))
+  @Fetch(wrappedValue: UserHumanityRecord(), .singleRow(UserHumanityRecord.self))
   private var _userProfile
 
   @ObservationIgnored
@@ -26,7 +26,7 @@ public final class SettingsModel {
     set { try? self.database.write { try newValue.save(in: $0) } }
   }
 
-  public var userProfile: UserProfileRecord {
+  public var userProfile: UserHumanityRecord {
     get { self._userProfile }
     set { try? self.database.write { try newValue.save(in: $0) } }
   }
@@ -317,7 +317,7 @@ extension SettingsRecord.TemperaturePreference {
 // MARK: - User Profile Section
 
 private struct UserProfileSectionView: View {
-  @Binding var profile: UserProfileRecord
+  @Binding var profile: UserHumanityRecord
   let metricPreference: SettingsRecord.MetricPreference
 
   var body: some View {
