@@ -78,7 +78,7 @@ extension DependenciesTestSuite {
     func loadingTypeIsEditingWhenEditSubmitted() async throws {
       try await withDefaultEdit { model in
         var loadingType: UserSettingsModel.LoadingType?
-        model.onLoading = { [unowned model] in loadingType = model.loadingType }
+        model.onLoading = { loadingType = $0 }
 
         try await model.editSubmitted(edit: #require(model.submittableEdit))
         expectNoDifference(loadingType, .editProfile)
@@ -138,7 +138,7 @@ extension DependenciesTestSuite {
         model.destination = nil
 
         var loadingType: UserSettingsModel.LoadingType?
-        model.onLoading = { [unowned model] in loadingType = model.loadingType }
+        model.onLoading = { loadingType = $0 }
 
         await model.alert(action: .accountDeletionConfirmed)
         expectNoDifference(loadingType, .accountDeleted)
@@ -185,7 +185,7 @@ extension DependenciesTestSuite {
       } operation: {
         let model = UserSettingsModel(user: .mock1)
         var loadingType: UserSettingsModel.LoadingType?
-        model.onLoading = { [unowned model] in loadingType = model.loadingType }
+        model.onLoading = { loadingType = $0 }
 
         await model.signOutInvoked()
         expectNoDifference(loadingType, .signOut)

@@ -23,7 +23,7 @@ public final class UserSettingsModel {
   @SharedQuery(User.editMutation) private var editProfile
 
   @ObservationIgnored public var onSignOut: ((SignOutType) -> Void)?
-  @ObservationIgnored public var onLoading: (() -> Void)?
+  @ObservationIgnored public var onLoading: ((LoadingType) -> Void)?
 
   public init(user: User) {
     self.editableFields = EditableFields(user: user)
@@ -66,7 +66,7 @@ extension UserSettingsModel {
   public func editSubmitted(edit: User.Edit) async {
     do {
       let task = self.$editProfile.mutateTask(with: User.EditMutation.Arguments(edit: edit))
-      self.onLoading?()
+      self.indicateLoading()
       let user = try await task.runIfNeeded()
       self.originalEditableFields = EditableFields(user: user)
       self.destination = .alert(.editProfileSuccess)
@@ -86,7 +86,7 @@ extension UserSettingsModel {
   public func signOutInvoked() async {
     do {
       let task = self.$signOut.mutateTask()
-      self.onLoading?()
+      self.indicateLoading()
       try await task.runIfNeeded()
       self.destination = .alert(.signOutSuccess(type: .signOut))
       self.onSignOut?(.signOut)
@@ -109,13 +109,20 @@ extension UserSettingsModel {
   private func deleteAccount() async {
     do {
       let task = self.$deleteAccount.mutateTask()
-      self.onLoading?()
+      self.indicateLoading()
       try await task.runIfNeeded()
       self.destination = .alert(.signOutSuccess(type: .accountDeleted))
       self.onSignOut?(.accountDeleted)
     } catch {
       self.destination = .alert(.signOutFailure(type: .accountDeleted))
     }
+  }
+}
+
+extension UserSettingsModel {
+  private func indicateLoading() {
+    guard let loadingType else { return }
+    self.onLoading?(loadingType)
   }
 }
 
