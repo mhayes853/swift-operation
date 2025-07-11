@@ -19,10 +19,14 @@ extension User {
   @MainActor
   public final class MockAccountDeleter: AccountDeleter {
     public private(set) var deleteCount = 0
+    public var error: (any Error)?
 
     public init() {}
 
     public func deleteUser() async throws {
+      if let error = error {
+        throw error
+      }
       self.deleteCount += 1
     }
   }

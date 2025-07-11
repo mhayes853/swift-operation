@@ -64,14 +64,15 @@ extension User {
     public func mutate(
       with arguments: Arguments,
       in context: QueryContext,
-      with continuation: QueryContinuation<Void>
-    ) async throws {
+      with continuation: QueryContinuation<User>
+    ) async throws -> User {
       @Dependency(\.defaultQueryClient) var client
       @Dependency(User.EditorKey.self) var editor
       @Dependency(CurrentUser.self) var currentUser
 
       let user = try await currentUser.edit(with: arguments.edit, using: editor)
       client.store(for: User.currentQuery).currentValue = user
+      return user
     }
   }
 }
