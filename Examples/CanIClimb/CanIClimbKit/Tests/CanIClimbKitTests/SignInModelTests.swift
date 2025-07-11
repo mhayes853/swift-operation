@@ -46,6 +46,19 @@ extension DependenciesTestSuite {
       }
     }
 
+    @Test("Unsuccessful Sign In, Error Credentials")
+    func unsuccessfulSignInErrorCredentials() async throws {
+      try await withDependencies {
+        $0[User.AuthenticatorKey.self] = User.MockAuthenticator()
+      } operation: {
+        struct SomeError: Error {}
+        let model = SignInModel()
+
+        try await model.credentialsReceived(.failure(SomeError()))
+        expectNoDifference(model.destination, .alert(.signInFailure))
+      }
+    }
+
     @Test("Unsuccessful Sign In, Doesn't Call On Success")
     func unsuccessfulSignInDoesntCallOnSuccess() async throws {
       let authenticator = User.MockAuthenticator()

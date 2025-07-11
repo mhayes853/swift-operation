@@ -24,7 +24,7 @@ extension SignInModel {
   public func credentialsReceived(
     _ credentials: Result<User.SignInCredentials?, any Error>
   ) async throws {
-    guard let credentials = try credentials.get() else {
+    guard let credentials = try? credentials.get() else {
       self.destination = .alert(.signInFailure)
       return
     }
@@ -66,5 +66,7 @@ public struct SignInButton: View {
 
 #Preview {
   SignInButton(label: .continue, model: SignInModel())
+    .frame(maxHeight: 60)
+    .padding()
     .observeQueryAlerts()
 }
