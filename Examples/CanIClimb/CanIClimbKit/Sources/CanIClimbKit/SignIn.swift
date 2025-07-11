@@ -1,4 +1,5 @@
 import AuthenticationServices
+import IssueReporting
 import Observation
 import SharingQuery
 import SwiftUI
@@ -20,45 +21,22 @@ public final class SignInModel {
 }
 
 extension SignInModel {
-  public func credentialsReceived(_ credentials: Result<User.SignInCredentials?, any Error>) async {
-    do {
-      guard let credentials = try credentials.get() else {
-        self.destination = .alert(.signInFailure)
-        return
-      }
-      try await self.$signIn.mutate(with: User.SignInMutation.Arguments(credentials: credentials))
-      self.destination = .alert(.signInSuccess)
-      self.onSignInSuccess?()
-    } catch {
+  public func credentialsReceived(
+    _ credentials: Result<User.SignInCredentials?, any Error>
+  ) async throws {
+    guard let credentials = try credentials.get() else {
       self.destination = .alert(.signInFailure)
+      return
     }
+    try await self.$signIn.mutate(with: User.SignInMutation.Arguments(credentials: credentials))
+    self.onSignInSuccess?()
   }
 }
 
 extension SignInModel {
   @CasePathable
   public enum Destination: Hashable, Sendable {
-    case alert(AlertState<AlertAction>)
-  }
-}
-
-// MARK: - AlertState
-
-extension SignInModel {
-  public enum AlertAction: Hashable, Sendable {}
-}
-
-extension AlertState where Action == SignInModel.AlertAction {
-  public static let signInSuccess = Self.remoteOperationError {
-    TextState("Success")
-  } message: {
-    TextState("You've signed in successfully. Enjoy climbing!")
-  }
-
-  public static let signInFailure = Self.remoteOperationError {
-    TextState("An Error Occurred")
-  } message: {
-    TextState("Something went wrong. Please try again later.")
+    case alert(AlertState<Never>)
   }
 }
 
@@ -74,16 +52,19 @@ public struct SignInButton: View {
       onRequest: { $0.requestedScopes = [.fullName] },
       onCompletion: { result in
         Task {
-          await self.model.credentialsReceived(
-            result.map(User.SignInCredentials.init(authorization:))
-          )
+          await withErrorReporting {
+            try await self.model.credentialsReceived(
+              result.map(User.SignInCredentials.init(authorization:))
+            )
+          }
         }
       }
     )
-    .alert(self.$model.destination.alert) { _ in }
+    .alert(self.$model.destination.alert)
   }
 }
 
 #Preview {
   SignInButton(label: .continue, model: SignInModel())
+    .observeQueryAlerts()
 }

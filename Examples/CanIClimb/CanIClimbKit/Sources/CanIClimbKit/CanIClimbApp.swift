@@ -16,6 +16,7 @@ public struct CanIClimbApp: App {
   public var body: some Scene {
     WindowGroup {
       Text("TODO")
+        .observeQueryAlerts()
     }
   }
 }

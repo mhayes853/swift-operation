@@ -2,6 +2,7 @@ import AuthenticationServices
 import Dependencies
 import Foundation
 import SharingQuery
+import SwiftNavigation
 
 // MARK: - SignInCredentials
 
@@ -82,6 +83,7 @@ extension User {
 
 extension User {
   public static let signInMutation = SignInMutation()
+    .alerts(success: .signInSuccess, failure: .signInFailure)
 
   public struct SignInMutation: MutationRequest, Hashable {
     public struct Arguments: Sendable {
@@ -124,5 +126,21 @@ extension User {
       client.store(for: User.currentQuery).currentValue = nil
       try await currentUser.switchUserId(to: nil)
     }
+  }
+}
+
+// MARK: - AlertState
+
+extension AlertState where Action == Never {
+  public static let signInSuccess = Self.remoteOperationError {
+    TextState("Success")
+  } message: {
+    TextState("You've signed in successfully. Enjoy climbing!")
+  }
+
+  public static let signInFailure = Self.remoteOperationError {
+    TextState("An Error Occurred")
+  } message: {
+    TextState("Something went wrong. Please try again later.")
   }
 }
