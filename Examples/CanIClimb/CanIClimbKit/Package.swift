@@ -29,6 +29,7 @@ let package = Package(
         .product(name: "SharingGRDB", package: "sharing-grdb-icloud"),
         .product(name: "StructuredQueriesTagged", package: "structured-queries-tagged"),
         .product(name: "SwiftUINavigation", package: "swift-navigation"),
+        .product(name: "UIKitNavigation", package: "swift-navigation"),
         .product(name: "KeychainSwift", package: "keychain-swift")
       ]
     ),

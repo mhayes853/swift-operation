@@ -166,6 +166,5 @@ public struct OnboardingView: View {
     NavigationStack(path: self.$model.path) {
       EmptyView()
     }
-    .connectToHealthKit(model: self.model.connectToHealthKit)
   }
 }

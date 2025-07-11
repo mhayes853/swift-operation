@@ -74,7 +74,6 @@ public struct SettingsView: View {
         }
       #endif
     }
-    .connectToHealthKit(model: self.model.connectToHealthKit)
   }
 }
 
@@ -452,7 +451,7 @@ private struct DisclaimerSectionView: View {
     $0.defaultDatabase = try! canIClimbDatabase()
 
     var requester = HealthPermissions.MockRequester()
-//     requester.shouldFail = true
+    // requester.shouldFail = true
     $0[HealthPermissions.self] = HealthPermissions(
       database: $0.defaultDatabase,
       requester: requester
@@ -467,4 +466,5 @@ private struct DisclaimerSectionView: View {
       SettingsView(model: SettingsModel())
     }
   }
+  .observeQueryAlerts()
 }

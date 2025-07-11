@@ -18,17 +18,12 @@ extension DependenciesTestSuite {
     )
     func connectsToHealthKit() async {
       let model = ConnectToHealthKitModel()
-
-      expectNoDifference(model.isConnected, false)
-
       await model.connectInvoked()
-
-      expectNoDifference(model.destination, .alert(.successfullyConnectedToHealthKit))
       expectNoDifference(model.isConnected, true)
     }
 
     @Test(
-      "Presents Error Alert When Failing to Connect to HealthKit",
+      "Is Not Connected When Failing to Connect to HealthKit",
       .dependencies {
         var requester = HealthPermissions.MockRequester()
         requester.shouldFail = true
@@ -40,10 +35,7 @@ extension DependenciesTestSuite {
     )
     func presentsErrorAlertWhenFailingToConnectToHealthKit() async {
       let model = ConnectToHealthKitModel()
-
       await model.connectInvoked()
-
-      expectNoDifference(model.destination, .alert(.failedToConnectToHealthKit))
       expectNoDifference(model.isConnected, false)
     }
   }

@@ -1,7 +1,9 @@
 import Dependencies
 import GRDB
 import HealthKit
+import Query
 import StructuredQueriesGRDB
+import SwiftUINavigation
 
 // MARK: - HealthPermissions
 
@@ -77,5 +79,37 @@ extension HealthPermissions: DependencyKey {
   public static var liveValue: HealthPermissions {
     @Dependency(\.defaultDatabase) var database
     return HealthPermissions(database: database, requester: HKHealthStore.canIClimb)
+  }
+}
+
+// MARK: - Query
+
+extension HealthPermissions {
+  public static let requestMutation = RequestMutation()
+    .alerts(success: .connectToHealthKitSuccess, failure: .connectToHealthKitFailure)
+
+  public struct RequestMutation: MutationRequest, Hashable {
+    public func mutate(
+      with arguments: Void,
+      in context: QueryContext,
+      with continuation: QueryContinuation<Void>
+    ) async throws {
+      @Dependency(HealthPermissions.self) var permissions
+      try await permissions.request()
+    }
+  }
+}
+
+extension AlertState where Action == Never {
+  public static let connectToHealthKitFailure = Self {
+    TextState("Failed to Connect to HealthKit")
+  } message: {
+    TextState("Please try again later.")
+  }
+
+  public static let connectToHealthKitSuccess = Self {
+    TextState("Successfully Connected to HealthKit")
+  } message: {
+    TextState("Enjoy your climbing journey!")
   }
 }
