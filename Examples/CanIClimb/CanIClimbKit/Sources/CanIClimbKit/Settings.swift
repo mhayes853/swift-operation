@@ -431,11 +431,9 @@ private struct DisclaimerSectionView: View {
   @Previewable @State var isPresented = true
 
   let _ = prepareDependencies {
-    $0[CKAccountStatus.LoaderKey.self] = CKAccountStatus.MockLoader {
-      try await Task.sleep(for: .seconds(1))
-      return .available
-    }
+    $0[CKAccountStatus.LoaderKey.self] = CKAccountStatus.MockLoader { .available }
     $0.defaultDatabase = try! canIClimbDatabase()
+    $0.defaultQueryClient = QueryClient(storeCreator: .preview)
 
     var requester = HealthPermissions.MockRequester()
     // requester.shouldFail = true

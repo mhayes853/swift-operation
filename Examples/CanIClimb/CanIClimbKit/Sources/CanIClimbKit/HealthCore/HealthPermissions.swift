@@ -87,6 +87,7 @@ extension HealthPermissions: DependencyKey {
 extension HealthPermissions {
   public static let requestMutation = RequestMutation()
     .alerts(success: .connectToHealthKitSuccess, failure: .connectToHealthKitFailure)
+    .previewDelay(shouldDisable: true)
 
   public struct RequestMutation: MutationRequest, Hashable {
     public func mutate(

@@ -201,17 +201,22 @@ public struct UserSettingsView: View {
 
 private struct LoadingIndicatorSectionView: View {
   let loadingType: UserSettingsModel.LoadingType
+  let progressId = UUID()
 
   var body: some View {
     Section {
       Label {
-        switch self.loadingType {
-        case .accountDeleted: Text("Deleting Account")
-        case .editProfile: Text("Updating Profile")
-        case .signOut: Text("Signing Out")
+        Group {
+          switch self.loadingType {
+          case .accountDeleted: Text("Deleting Account")
+          case .editProfile: Text("Updating Profile")
+          case .signOut: Text("Signing Out")
+          }
         }
+        .bold()
       } icon: {
         ProgressView()
+          .id(self.progressId)
       }
     }
   }
@@ -261,6 +266,7 @@ private struct ManageAccountSectionView: View {
 
   let _ = prepareDependencies {
     $0.defaultDatabase = try! canIClimbDatabase()
+    $0.defaultQueryClient = QueryClient(storeCreator: .preview)
 
     $0[User.AuthenticatorKey.self] = User.MockAuthenticator()
     $0[User.AccountDeleterKey.self] = User.MockAccountDeleter()
