@@ -115,13 +115,13 @@ extension QueryBackoffFunction {
 extension QueryContext {
   /// The current ``QueryBackoffFunction`` in this context.
   ///
-  /// The default value is ``QueryBackoffFunction/fibonacci(_:)`` with a base interval of 1 second.
+  /// The default value is ``QueryBackoffFunction/exponential(_:)`` with a base interval of 1 second.
   public var queryBackoffFunction: QueryBackoffFunction {
     get { self[QueryBackoffFunctionKey.self] }
     set { self[QueryBackoffFunctionKey.self] = newValue }
   }
 
   private enum QueryBackoffFunctionKey: Key {
-    static var defaultValue: QueryBackoffFunction { .fibonacci(1) }
+    static var defaultValue: QueryBackoffFunction { .exponential(1) }
   }
 }
