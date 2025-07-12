@@ -1,5 +1,6 @@
 import Dependencies
 import Query
+import SwiftNavigation
 
 // MARK: - AccountDeletor
 
@@ -36,6 +37,7 @@ extension User {
 
 extension User {
   public static let deleteMutation = DeleteMutation()
+    .alerts(success: .deleteAccountSuccess, failure: .deleteAccountFailure)
 
   public struct DeleteMutation: MutationRequest, Hashable {
     public func mutate(
@@ -50,5 +52,26 @@ extension User {
       try await currentUser.delete(using: deleter)
       client.store(for: User.currentQuery).currentValue = nil
     }
+  }
+}
+
+// MARK: - AlertState
+
+extension AlertState where Action == Never {
+  public static let deleteAccountSuccess = Self.remoteOperationError {
+    TextState("Your Account Has Been Deleted")
+  } message: {
+    TextState(
+      """
+      Your account has been successfully deleted. You can create a new account by signing in with \
+      your Apple ID.
+      """
+    )
+  }
+
+  public static let deleteAccountFailure = Self.remoteOperationError {
+    TextState("Failed to Delete Account")
+  } message: {
+    TextState("Your account could not be deleted. Please try again later.")
   }
 }

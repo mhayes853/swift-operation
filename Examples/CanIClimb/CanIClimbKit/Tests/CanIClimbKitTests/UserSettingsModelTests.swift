@@ -55,25 +55,6 @@ extension DependenciesTestSuite {
       }
     }
 
-    @Test("Presents Alert When Edit Successful")
-    func presentsAlertWhenEditSuccessful() async throws {
-      try await withDefaultEdit { model in
-        expectNoDifference(model.destination, nil)
-        try await model.editSubmitted(edit: #require(model.submittableEdit))
-        expectNoDifference(model.destination, .alert(.editProfileSuccess))
-      }
-    }
-
-    @Test("Presents Alert When Edit Fails")
-    func presentsAlertWhenEditFails() async throws {
-      struct SomeError: Error {}
-      try await withDefaultEdit(result: .failure(SomeError())) { model in
-        expectNoDifference(model.destination, nil)
-        try await model.editSubmitted(edit: #require(model.submittableEdit))
-        expectNoDifference(model.destination, .alert(.editProfileFailure))
-      }
-    }
-
     @Test("Loading Type Is Editing When Edit Submitted")
     func loadingTypeIsEditingWhenEditSubmitted() async throws {
       try await withDefaultEdit { model in
@@ -87,7 +68,7 @@ extension DependenciesTestSuite {
 
     @Test("Successful Delete Account Flow")
     func successfulDeleteAccountFlow() async throws {
-      await withDependencies {
+      try await withDependencies {
         $0[User.AccountDeleterKey.self] = User.MockAccountDeleter()
       } operation: {
         let model = UserSettingsModel(user: .mock1)
@@ -98,8 +79,7 @@ extension DependenciesTestSuite {
         expectNoDifference(model.destination, .alert(.confirmAccountDeletion))
 
         model.destination = nil
-        await model.alert(action: .accountDeletionConfirmed)
-        expectNoDifference(model.destination, .alert(.signOutSuccess(type: .accountDeleted)))
+        try await model.alert(action: .accountDeletionConfirmed)
         expectNoDifference(signOutCount, 1)
       }
     }
@@ -120,15 +100,14 @@ extension DependenciesTestSuite {
         expectNoDifference(model.destination, .alert(.confirmAccountDeletion))
 
         model.destination = nil
-        await model.alert(action: .accountDeletionConfirmed)
-        expectNoDifference(model.destination, .alert(.signOutFailure(type: .accountDeleted)))
+        try? await model.alert(action: .accountDeletionConfirmed)
         expectNoDifference(signOutCount, 0)
       }
     }
 
     @Test("Loading Type Is AccountDeletion When Deleting Account")
     func loadingTypeIsAccountDeletionWhenDeletingAccount() async throws {
-      await withDependencies {
+      try await withDependencies {
         $0[User.AccountDeleterKey.self] = User.MockAccountDeleter()
       } operation: {
         let model = UserSettingsModel(user: .mock1)
@@ -140,22 +119,21 @@ extension DependenciesTestSuite {
         var loadingType: UserSettingsModel.LoadingType?
         model.onLoading = { loadingType = $0 }
 
-        await model.alert(action: .accountDeletionConfirmed)
+        try await model.alert(action: .accountDeletionConfirmed)
         expectNoDifference(loadingType, .accountDeleted)
       }
     }
 
     @Test("Successful Sign Out Flow")
     func successfulSignOutFlow() async throws {
-      await withDependencies {
+      try await withDependencies {
         $0[User.AuthenticatorKey.self] = User.MockAuthenticator()
       } operation: {
         let model = UserSettingsModel(user: .mock1)
         var signOutCount = 0
         model.onSignOut = { _ in signOutCount += 1 }
 
-        await model.signOutInvoked()
-        expectNoDifference(model.destination, .alert(.signOutSuccess(type: .signOut)))
+        try await model.signOutInvoked()
         expectNoDifference(signOutCount, 1)
       }
     }
@@ -172,22 +150,21 @@ extension DependenciesTestSuite {
         var signOutCount = 0
         model.onSignOut = { _ in signOutCount += 1 }
 
-        await model.signOutInvoked()
-        expectNoDifference(model.destination, .alert(.signOutFailure(type: .signOut)))
+        try? await model.signOutInvoked()
         expectNoDifference(signOutCount, 0)
       }
     }
 
     @Test("Loading Type Is SignOut When Signing Out")
     func loadingTypeIsSignOutWhenSigningOut() async throws {
-      await withDependencies {
+      try await withDependencies {
         $0[User.AuthenticatorKey.self] = User.MockAuthenticator()
       } operation: {
         let model = UserSettingsModel(user: .mock1)
         var loadingType: UserSettingsModel.LoadingType?
         model.onLoading = { loadingType = $0 }
 
-        await model.signOutInvoked()
+        try await model.signOutInvoked()
         expectNoDifference(loadingType, .signOut)
       }
     }

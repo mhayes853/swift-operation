@@ -100,6 +100,8 @@ extension HealthPermissions {
   }
 }
 
+// MARK: - AlertState
+
 extension AlertState where Action == Never {
   public static let connectToHealthKitFailure = Self {
     TextState("Failed to Connect to HealthKit")

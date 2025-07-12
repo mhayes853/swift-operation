@@ -1,6 +1,7 @@
 import Dependencies
 import Foundation
 import SharingQuery
+import SwiftNavigation
 
 // MARK: - Edit
 
@@ -51,6 +52,7 @@ extension User {
 
 extension User {
   public static let editMutation = EditMutation()
+    .alerts(success: .editProfileSuccess, failure: .editProfileFailure)
 
   public struct EditMutation: MutationRequest, Hashable {
     public struct Arguments: Sendable {
@@ -74,5 +76,21 @@ extension User {
       client.store(for: User.currentQuery).currentValue = user
       return user
     }
+  }
+}
+
+// MARK: - AlertState
+
+extension AlertState where Action == Never {
+  public static let editProfileSuccess = Self {
+    TextState("Success")
+  } message: {
+    TextState("Your profile has been updated.")
+  }
+
+  public static let editProfileFailure = Self.remoteOperationError {
+    TextState("Failed to Edit Your Profile")
+  } message: {
+    TextState("Your profile could not be edited. Please try again later.")
   }
 }

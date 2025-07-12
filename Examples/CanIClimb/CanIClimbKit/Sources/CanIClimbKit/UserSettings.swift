@@ -63,16 +63,11 @@ extension UserSettingsModel {
     return User.Edit(name: components, subtitle: self.editableFields.subtitle)
   }
 
-  public func editSubmitted(edit: User.Edit) async {
-    do {
-      let task = self.$editProfile.mutateTask(with: User.EditMutation.Arguments(edit: edit))
-      self.indicateLoading()
-      let user = try await task.runIfNeeded()
-      self.originalEditableFields = EditableFields(user: user)
-      self.destination = .alert(.editProfileSuccess)
-    } catch {
-      self.destination = .alert(.editProfileFailure)
-    }
+  public func editSubmitted(edit: User.Edit) async throws {
+    let task = self.$editProfile.mutateTask(with: User.EditMutation.Arguments(edit: edit))
+    self.indicateLoading()
+    let user = try await task.runIfNeeded()
+    self.originalEditableFields = EditableFields(user: user)
   }
 }
 
@@ -83,39 +78,29 @@ extension UserSettingsModel {
 }
 
 extension UserSettingsModel {
-  public func signOutInvoked() async {
-    do {
-      let task = self.$signOut.mutateTask()
-      self.indicateLoading()
-      try await task.runIfNeeded()
-      self.destination = .alert(.signOutSuccess(type: .signOut))
-      self.onSignOut?(.signOut)
-    } catch {
-      self.destination = .alert(.signOutFailure(type: .signOut))
-    }
+  public func signOutInvoked() async throws {
+    let task = self.$signOut.mutateTask()
+    self.indicateLoading()
+    try await task.runIfNeeded()
+    self.onSignOut?(.signOut)
   }
 }
 
 extension UserSettingsModel {
-  public func alert(action: AlertAction?) async {
+  public func alert(action: AlertAction?) async throws {
     switch action {
     case .accountDeletionConfirmed:
-      await self.deleteAccount()
+      try await self.deleteAccount()
     default:
       break
     }
   }
 
-  private func deleteAccount() async {
-    do {
-      let task = self.$deleteAccount.mutateTask()
-      self.indicateLoading()
-      try await task.runIfNeeded()
-      self.destination = .alert(.signOutSuccess(type: .accountDeleted))
-      self.onSignOut?(.accountDeleted)
-    } catch {
-      self.destination = .alert(.signOutFailure(type: .accountDeleted))
-    }
+  private func deleteAccount() async throws {
+    let task = self.$deleteAccount.mutateTask()
+    self.indicateLoading()
+    try await task.runIfNeeded()
+    self.onSignOut?(.accountDeleted)
   }
 }
 
@@ -161,18 +146,6 @@ extension UserSettingsModel {
 }
 
 extension AlertState where Action == UserSettingsModel.AlertAction {
-  public static let editProfileSuccess = Self {
-    TextState("Success")
-  } message: {
-    TextState("Your profile has been updated.")
-  }
-
-  public static let editProfileFailure = Self.remoteOperationError {
-    TextState("Failed to Edit Your Profile")
-  } message: {
-    TextState("Your profile could not be edited. Please try again later.")
-  }
-
   public static let confirmAccountDeletion = Self {
     TextState("Confirm Account Deletion")
   } actions: {
@@ -184,34 +157,6 @@ extension AlertState where Action == UserSettingsModel.AlertAction {
     }
   } message: {
     TextState("Are you sure you want to delete your account? You cannot undo this action.")
-  }
-
-  public static func signOutSuccess(type: UserSettingsModel.SignOutType) -> Self {
-    Self {
-      switch type {
-      case .signOut: TextState("Signed Out Successfully")
-      case .accountDeleted: TextState("Your Account Has Been Deleted")
-      }
-    } message: {
-      switch type {
-      case .signOut: TextState("You have successfully signed out.")
-      case .accountDeleted: TextState("Your account has been successfully deleted.")
-      }
-    }
-  }
-
-  public static func signOutFailure(type: UserSettingsModel.SignOutType) -> Self {
-    Self.remoteOperationError {
-      switch type {
-      case .signOut: TextState("Failed to Sign Out")
-      case .accountDeleted: TextState("Failed to Delete Account")
-      }
-    } message: {
-      switch type {
-      case .signOut: TextState("An error occurred while signing out. Please try again later.")
-      case .accountDeleted: TextState("Your account could not be deleted. Please try again later.")
-      }
-    }
   }
 }
 
@@ -226,7 +171,7 @@ public struct UserSettingsView: View {
     }
     .navigationTitle("Profile")
     .alert(self.$model.destination.alert) { action in
-      Task { await self.model.alert(action: action) }
+      Task { try await self.model.alert(action: action) }
     }
   }
 }

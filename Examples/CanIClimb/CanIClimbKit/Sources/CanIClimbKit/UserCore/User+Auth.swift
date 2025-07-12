@@ -111,6 +111,7 @@ extension User {
 
 extension User {
   public static let signOutMutation = SignOutMutation()
+    .alerts(success: .signOutSuccess, failure: .signOutFailure)
 
   public struct SignOutMutation: MutationRequest, Hashable {
     public func mutate(
@@ -139,8 +140,20 @@ extension AlertState where Action == Never {
   }
 
   public static let signInFailure = Self.remoteOperationError {
-    TextState("An Error Occurred")
+    TextState("Failed to Sign In")
   } message: {
-    TextState("Something went wrong. Please try again later.")
+    TextState("An error occurred while signing in. Please try again later.")
+  }
+
+  public static let signOutSuccess = Self.remoteOperationError {
+    TextState("Success")
+  } message: {
+    TextState("You've signed out successfully. See you next time!")
+  }
+
+  public static let signOutFailure = Self.remoteOperationError {
+    TextState("Failed to Sign Out")
+  } message: {
+    TextState("An error occurred while signing out. Please try again later.")
   }
 }
