@@ -1,4 +1,5 @@
 import AuthenticationServices
+import Dependencies
 import IssueReporting
 import Observation
 import SharingQuery
@@ -45,6 +46,7 @@ extension SignInModel {
 public struct SignInButton: View {
   let label: SignInWithAppleButton.Label
   @Bindable var model: SignInModel
+  @Environment(\.signInButtonMockCredentials) var mockCredentials
 
   public var body: some View {
     SignInWithAppleButton(
@@ -53,9 +55,13 @@ public struct SignInButton: View {
       onCompletion: { result in
         Task {
           await withErrorReporting {
-            try await self.model.credentialsReceived(
-              result.map(User.SignInCredentials.init(authorization:))
-            )
+            if let mockCredentials = mockCredentials {
+              try await self.model.credentialsReceived(.success(mockCredentials))
+            } else {
+              try await self.model.credentialsReceived(
+                result.map(User.SignInCredentials.init(authorization:))
+              )
+            }
           }
         }
       }
@@ -64,9 +70,25 @@ public struct SignInButton: View {
   }
 }
 
+// MARK: - Environment
+
+extension EnvironmentValues {
+  @Entry public var signInButtonMockCredentials: User.SignInCredentials?
+}
+
 #Preview {
+  let _ = prepareDependencies {
+    let authenticator = User.MockAuthenticator()
+    authenticator.requiredCredentials = .mock1
+    $0.defaultDatabase = try! canIClimbDatabase()
+    $0.defaultQueryClient = QueryClient(storeCreator: .preview)
+    $0[User.AuthenticatorKey.self] = authenticator
+    $0[User.CurrentLoaderKey.self] = User.MockCurrentLoader(result: .success(.mock1))
+  }
+
   SignInButton(label: .continue, model: SignInModel())
     .frame(maxHeight: 60)
     .padding()
+    .environment(\.signInButtonMockCredentials, .mock1)
     .observeQueryAlerts()
 }
