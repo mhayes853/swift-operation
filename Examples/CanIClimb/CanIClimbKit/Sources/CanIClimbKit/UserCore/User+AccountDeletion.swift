@@ -58,7 +58,7 @@ extension User {
 // MARK: - AlertState
 
 extension AlertState where Action == Never {
-  public static let deleteAccountSuccess = Self.remoteOperationError {
+  public static let deleteAccountSuccess = Self {
     TextState("Your Account Has Been Deleted")
   } message: {
     TextState(

@@ -133,7 +133,7 @@ extension User {
 // MARK: - AlertState
 
 extension AlertState where Action == Never {
-  public static let signInSuccess = Self.remoteOperationError {
+  public static let signInSuccess = Self {
     TextState("Success")
   } message: {
     TextState("You've signed in successfully. Enjoy climbing!")
@@ -145,7 +145,7 @@ extension AlertState where Action == Never {
     TextState("An error occurred while signing in. Please try again later.")
   }
 
-  public static let signOutSuccess = Self.remoteOperationError {
+  public static let signOutSuccess = Self {
     TextState("Success")
   } message: {
     TextState("You've signed out successfully. See you next time!")
