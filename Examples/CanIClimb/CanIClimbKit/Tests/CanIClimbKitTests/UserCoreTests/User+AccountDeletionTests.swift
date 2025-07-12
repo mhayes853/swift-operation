@@ -33,6 +33,7 @@ extension DependenciesTestSuite {
         try await deleteStore.mutate()
         expectNoDifference(deleter.deleteCount, 1)
         expectNoDifference(userStore.currentValue, nil)
+        expectNoDifference(userStore.error is User.UnauthorizedError, true)
 
         let localUser = try await userStorage.localUser()
         expectNoDifference(localUser, nil)

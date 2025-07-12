@@ -199,7 +199,7 @@ extension CanIClimbAPI {
   private func refresh() async throws -> AccessToken {
     var request = URLRequest(url: self.baseURL.appending(path: "/auth/refresh"))
     request.httpMethod = "POST"
-    guard let persistedRefreshToken else { throw CanIClimbAPI.UnauthorizedError() }
+    guard let persistedRefreshToken else { throw User.UnauthorizedError() }
     request.setValue("Bearer \(persistedRefreshToken)", forHTTPHeaderField: "Authorization")
     let (data, _) = try await self.transport.data(for: request)
     return try JSONDecoder().decode(AccessTokenResponse.self, from: data).accessToken
@@ -223,10 +223,4 @@ extension CanIClimbAPI {
     }
     set { self.secureStorage[self.refreshTokenStorageKey] = newValue.map { Data($0.utf8) } }
   }
-}
-
-// MARK: - UnauthorizedError
-
-extension CanIClimbAPI {
-  public struct UnauthorizedError: Error {}
 }

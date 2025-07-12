@@ -54,6 +54,7 @@ extension DependenciesTestSuite {
         try await signOutStore.mutate()
         expectNoDifference(authenticator.signOutCount, 1)
         expectNoDifference(userStore.currentValue, nil)
+        expectNoDifference(userStore.error is User.UnauthorizedError, true)
 
         let localUser = try await userStorage.localUser()
         expectNoDifference(localUser, nil)

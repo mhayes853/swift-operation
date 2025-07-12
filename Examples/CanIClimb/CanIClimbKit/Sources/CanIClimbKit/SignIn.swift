@@ -55,7 +55,7 @@ public struct SignInButton: View {
       onCompletion: { result in
         Task {
           await withErrorReporting {
-            if let mockCredentials = mockCredentials {
+            if let mockCredentials {
               try await self.model.credentialsReceived(.success(mockCredentials))
             } else {
               try await self.model.credentialsReceived(

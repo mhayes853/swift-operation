@@ -31,9 +31,30 @@ public final class SettingsModel {
     set { try? self.database.write { try newValue.save(in: $0) } }
   }
 
+  public var path = [Path]() {
+    didSet { self.bind() }
+  }
+
   public let connectToHealthKit = ConnectToHealthKitModel()
+  public let signIn = SignInModel()
 
   public init() {}
+}
+
+extension SettingsModel {
+  @CasePathable
+  public enum Path: Hashable, Sendable {
+    case userSettings(UserSettingsModel)
+  }
+
+  private func bind() {
+    for element in path {
+      switch element {
+      case .userSettings(let model):
+        model.onSignOut = { [weak self] _ in self?.path.removeLast() }
+      }
+    }
+  }
 }
 
 // MARK: - SettingsView
@@ -42,25 +63,72 @@ public struct SettingsView: View {
   @Bindable var model: SettingsModel
 
   public var body: some View {
-    Form {
-      CloudSyncSectionView()
-      AIAvailabilitySectionView()
-      ConnectHealthKitSectionView(isConnected: self.model.connectToHealthKit.isConnected) {
-        Task { await self.model.connectToHealthKit.connectInvoked() }
+    NavigationStack(path: self.$model.path) {
+      Form {
+        UserProfileSectionView(model: self.model.signIn)
+        CloudSyncSectionView()
+        AIAvailabilitySectionView()
+        ConnectHealthKitSectionView(isConnected: self.model.connectToHealthKit.isConnected) {
+          Task { await self.model.connectToHealthKit.connectInvoked() }
+        }
+        PreferencesSectionView(settings: self.$model.settings)
+        UserInfoSectionView(
+          profile: self.$model.userProfile,
+          metricPreference: self.model.settings.metricPreference
+        )
+        SocialsSectionView()
+        DisclaimerSectionView()
       }
-      PreferencesSectionView(settings: self.$model.settings)
-      UserInfoSectionView(
-        profile: self.$model.userProfile,
-        metricPreference: self.model.settings.metricPreference
-      )
-      SocialsSectionView()
-      DisclaimerSectionView()
+      .navigationDestination(for: SettingsModel.Path.self) { path in
+        switch path {
+        case .userSettings(let model):
+          UserSettingsView(model: model)
+        }
+      }
+      .navigationTitle("Settings")
+      .dismissable()
+      #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+      #endif
     }
-    .navigationTitle("Settings")
-    .dismissable()
-    #if os(iOS)
-      .navigationBarTitleDisplayMode(.inline)
-    #endif
+  }
+}
+
+// MARK: - UserProfileSectionView
+
+private struct UserProfileSectionView: View {
+  @SharedQuery(User.currentQuery, animation: .bouncy) private var user
+  let model: SignInModel
+  let progressId = UUID()
+
+  var body: some View {
+    Section {
+      switch self.$user.status {
+      case .result(.success(let user)):
+        NavigationLink(value: SettingsModel.Path.userSettings(UserSettingsModel(user: user))) {
+          UserCardView(user: user)
+        }
+      case .result(.failure(let error)) where error is User.UnauthorizedError:
+        SignInButton(label: .signIn, model: self.model)
+
+      default:
+        if let user {
+          NavigationLink(value: SettingsModel.Path.userSettings(UserSettingsModel(user: user))) {
+            UserCardView(user: user)
+          }
+        } else {
+          Label {
+            Text("Loading Profile...")
+              .foregroundStyle(.secondary)
+          } icon: {
+            ProgressView().id(self.progressId)
+          }
+        }
+      }
+
+    } header: {
+      Text("Profile")
+    }
   }
 }
 
@@ -68,6 +136,7 @@ public struct SettingsView: View {
 
 private struct CloudSyncSectionView: View {
   @SharedQuery(CKAccountStatus.currentQuery, animation: .bouncy) private var accountStatus
+  private let progressId = UUID()
 
   public var body: some View {
     Section {
@@ -86,6 +155,7 @@ private struct CloudSyncSectionView: View {
             Text("Cannot Determine")
           default:
             Text("Loading...")
+              .foregroundStyle(.secondary)
           }
           Spacer()
           if !self.$accountStatus.isLoading {
@@ -105,7 +175,7 @@ private struct CloudSyncSectionView: View {
             .result(.success(.noAccount)):
             Image(systemName: "xmark.icloud.fill")
           default:
-            ProgressView()
+            ProgressView().id(self.progressId)
           }
         }
         .symbolRenderingMode(.multicolor)
@@ -441,15 +511,18 @@ private struct DisclaimerSectionView: View {
       database: $0.defaultDatabase,
       requester: requester
     )
+
+    let loader = User.MockCurrentLoader(result: .success(.mock1))
+    $0[User.CurrentLoaderKey.self] = loader
+    $0[User.AuthenticatorKey.self] = User.MockAuthenticator()
+    $0[User.EditorKey.self] = User.PassthroughEditor()
   }
 
   Button("Present Settings") {
     isPresented = true
   }
   .sheet(isPresented: $isPresented) {
-    NavigationStack {
-      SettingsView(model: SettingsModel())
-    }
+    SettingsView(model: SettingsModel())
   }
   .observeQueryAlerts()
 }

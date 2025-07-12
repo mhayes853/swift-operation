@@ -50,7 +50,9 @@ extension User {
       @Dependency(CurrentUser.self) var currentUser
 
       try await currentUser.delete(using: deleter)
-      client.store(for: User.currentQuery).currentValue = nil
+      let userStore = client.store(for: User.currentQuery)
+      userStore.currentValue = nil
+      userStore.setResult(to: .failure(User.UnauthorizedError()))
     }
   }
 }

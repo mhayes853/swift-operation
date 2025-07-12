@@ -118,7 +118,7 @@ struct CanIClimbAPITests {
     try await api.signIn(with: .mock)
     try await api.signOut()
 
-    await #expect(throws: CanIClimbAPI.UnauthorizedError.self) {
+    await #expect(throws: User.UnauthorizedError.self) {
       try await api.user()
     }
   }
@@ -162,7 +162,7 @@ struct CanIClimbAPITests {
     try await api.signIn(with: .mock)
     try await api.deleteUser()
 
-    await #expect(throws: CanIClimbAPI.UnauthorizedError.self) {
+    await #expect(throws: User.UnauthorizedError.self) {
       try await api.user()
     }
   }
@@ -193,7 +193,7 @@ struct CanIClimbAPITests {
       transport: .mock { _ in (401, .data(Data())) },
       secureStorage: self.storage
     )
-    await #expect(throws: CanIClimbAPI.UnauthorizedError.self) {
+    await #expect(throws: User.UnauthorizedError.self) {
       try await api.user()
     }
   }

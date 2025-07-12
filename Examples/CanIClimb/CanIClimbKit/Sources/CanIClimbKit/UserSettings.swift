@@ -8,7 +8,7 @@ import SwiftUINavigation
 
 @MainActor
 @Observable
-public final class UserSettingsModel {
+public final class UserSettingsModel: HashableObject {
   public var editableFields: EditableFields
   private var originalEditableFields: EditableFields
 
@@ -195,7 +195,6 @@ public struct UserSettingsView: View {
     .alert(self.$model.destination.alert) { action in
       Task { try await self.model.alert(action: action) }
     }
-    .dismissable()
   }
 }
 
@@ -279,6 +278,7 @@ private struct ManageAccountSectionView: View {
   .sheet(isPresented: $isPresented) {
     NavigationStack {
       UserSettingsView(model: UserSettingsModel(user: .mock1))
+        .dismissable()
     }
   }
   .observeQueryAlerts()

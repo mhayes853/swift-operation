@@ -38,6 +38,14 @@ extension User.SignInCredentials {
   public static let mock2 = Self(userId: User.mock2.id, name: User.mock2.name, token: Data())
 }
 
+// MARK: - UnauthorizedError
+
+extension User {
+  public struct UnauthorizedError: Error {
+    public init() {}
+  }
+}
+
 // MARK: - Authenticator
 
 extension User {
@@ -124,7 +132,9 @@ extension User {
       @Dependency(CurrentUser.self) var currentUser
 
       try await authenticator.signOut()
-      client.store(for: User.currentQuery).currentValue = nil
+      let userStore = client.store(for: User.currentQuery)
+      userStore.currentValue = nil
+      userStore.setResult(to: .failure(User.UnauthorizedError()))
       try await currentUser.switchUserId(to: nil)
     }
   }
