@@ -39,7 +39,6 @@ public final class SettingsModel {
 // MARK: - SettingsView
 
 public struct SettingsView: View {
-  @Environment(\.dismiss) var dismiss
   @Bindable var model: SettingsModel
 
   public var body: some View {
@@ -50,7 +49,7 @@ public struct SettingsView: View {
         Task { await self.model.connectToHealthKit.connectInvoked() }
       }
       PreferencesSectionView(settings: self.$model.settings)
-      UserProfileSectionView(
+      UserInfoSectionView(
         profile: self.$model.userProfile,
         metricPreference: self.model.settings.metricPreference
       )
@@ -58,22 +57,10 @@ public struct SettingsView: View {
       DisclaimerSectionView()
     }
     .navigationTitle("Settings")
-    .toolbar {
-      let button = Button {
-        self.dismiss()
-      } label: {
-        Image(systemName: "xmark")
-      }
-      #if os(iOS)
-        ToolbarItem(placement: .topBarLeading) {
-          button
-        }
-      #else
-        ToolbarItem(placement: .navigation) {
-          button
-        }
-      #endif
-    }
+    .dismissable()
+    #if os(iOS)
+      .navigationBarTitleDisplayMode(.inline)
+    #endif
   }
 }
 
@@ -315,7 +302,7 @@ extension SettingsRecord.TemperaturePreference {
 
 // MARK: - User Profile Section
 
-private struct UserProfileSectionView: View {
+private struct UserInfoSectionView: View {
   @Binding var profile: UserHumanityRecord
   let metricPreference: SettingsRecord.MetricPreference
 
@@ -381,7 +368,7 @@ private struct UserProfileSectionView: View {
         }
       }
     } header: {
-      Text("Profile")
+      Text("Info")
     }
   }
 }

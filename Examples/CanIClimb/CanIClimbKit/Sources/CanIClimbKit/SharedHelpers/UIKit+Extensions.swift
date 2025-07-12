@@ -11,7 +11,7 @@
     ) -> UIAlertController {
       var state = state
       if state.buttons.isEmpty {
-        state.buttons.append(ButtonState { TextState("Ok") })
+        state.buttons.append(ButtonState { TextState("OK") })
       }
       return UIAlertController(state: state, handler: handler)
     }

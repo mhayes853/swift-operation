@@ -48,6 +48,16 @@ extension User {
   }
 }
 
+extension User {
+  public struct PassthroughEditor: Editor {
+    public init() {}
+
+    public func editUser(with edit: User.Edit) async throws -> User {
+      User(id: User.mock1.id, name: edit.name, subtitle: edit.subtitle)
+    }
+  }
+}
+
 // MARK: - Mutation
 
 extension User {

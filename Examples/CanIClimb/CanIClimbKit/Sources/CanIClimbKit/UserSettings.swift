@@ -1,3 +1,4 @@
+import Dependencies
 import Observation
 import SharingQuery
 import SwiftUI
@@ -14,13 +15,13 @@ public final class UserSettingsModel {
   public var destination: Destination?
 
   @ObservationIgnored
-  @SharedQuery(User.signOutMutation) private var signOut: Void?
+  @SharedQuery(User.signOutMutation, animation: .bouncy) private var signOut: Void?
 
   @ObservationIgnored
-  @SharedQuery(User.deleteMutation) private var deleteAccount: Void?
+  @SharedQuery(User.deleteMutation, animation: .bouncy) private var deleteAccount: Void?
 
   @ObservationIgnored
-  @SharedQuery(User.editMutation) private var editProfile
+  @SharedQuery(User.editMutation, animation: .bouncy) private var editProfile
 
   @ObservationIgnored public var onSignOut: ((SignOutType) -> Void)?
   @ObservationIgnored public var onLoading: ((LoadingType) -> Void)?
@@ -167,11 +168,112 @@ public struct UserSettingsView: View {
 
   public var body: some View {
     Form {
-
+      if let loadingType = self.model.loadingType {
+        LoadingIndicatorSectionView(loadingType: loadingType)
+      }
+      Group {
+        EditableSectionView(
+          fields: self.$model.editableFields.animation(),
+          submittableEdit: self.model.submittableEdit,
+          onSubmitted: { edit in
+            Task { try await self.model.editSubmitted(edit: edit) }
+          }
+        )
+        ManageAccountSectionView(
+          onDeleted: { self.model.deleteAccountInvoked() },
+          onSignedOut: {
+            Task { try await self.model.signOutInvoked() }
+          }
+        )
+      }
+      .disabled(self.model.loadingType != nil)
     }
-    .navigationTitle("Profile")
+    .navigationTitle("Your Account")
+    #if os(iOS)
+      .navigationBarTitleDisplayMode(.inline)
+    #endif
     .alert(self.$model.destination.alert) { action in
       Task { try await self.model.alert(action: action) }
     }
+    .dismissable()
   }
+}
+
+private struct LoadingIndicatorSectionView: View {
+  let loadingType: UserSettingsModel.LoadingType
+
+  var body: some View {
+    Section {
+      Label {
+        switch self.loadingType {
+        case .accountDeleted: Text("Deleting Account")
+        case .editProfile: Text("Updating Profile")
+        case .signOut: Text("Signing Out")
+        }
+      } icon: {
+        ProgressView()
+      }
+    }
+  }
+}
+
+private struct EditableSectionView: View {
+  @Binding var fields: UserSettingsModel.EditableFields
+  let submittableEdit: User.Edit?
+  let onSubmitted: (User.Edit) -> Void
+
+  var body: some View {
+    Section {
+      TextField("Name", text: self.$fields.name)
+      TextField("Subtitle", text: self.$fields.subtitle)
+    } header: {
+      Text("Profile Info")
+    }
+
+    if let submittableEdit {
+      Button("Save Profile", systemImage: "square.and.arrow.down") {
+        self.onSubmitted(submittableEdit)
+      }
+    }
+  }
+}
+
+private struct ManageAccountSectionView: View {
+  let onDeleted: () -> Void
+  let onSignedOut: () -> Void
+
+  var body: some View {
+    Section {
+      Button("Sign Out", systemImage: "person.crop.circle", role: .destructive) {
+        self.onSignedOut()
+      }
+      Button("Delete Account", systemImage: "trash.slash", role: .destructive) {
+        self.onDeleted()
+      }
+    } header: {
+      Text("Manage Account")
+    }
+  }
+}
+
+#Preview {
+  @Previewable @State var isPresented = true
+
+  let _ = prepareDependencies {
+    $0.defaultDatabase = try! canIClimbDatabase()
+
+    $0[User.AuthenticatorKey.self] = User.MockAuthenticator()
+    $0[User.AccountDeleterKey.self] = User.MockAccountDeleter()
+    $0[User.EditorKey.self] = User.PassthroughEditor()
+  }
+
+  Button("Present Settings") {
+    isPresented = true
+  }
+  .sheet(isPresented: $isPresented) {
+    NavigationStack {
+      UserSettingsView(model: UserSettingsModel(user: .mock1))
+    }
+  }
+  .observeQueryAlerts()
 }
