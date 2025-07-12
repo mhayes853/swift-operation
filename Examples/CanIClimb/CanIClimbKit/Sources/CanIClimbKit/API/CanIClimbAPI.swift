@@ -8,17 +8,19 @@ public final class CanIClimbAPI: Sendable {
   private let baseURL: URL
   private let transport: any HTTPDataTransport
   private let secureStorage: any SecureStorage
+  private let refreshTokenStorageKey: String
   private let accessTokenStore: QueryStore<AccessTokenMutation.State>
 
   public init(
     baseURL: URL = .canIClimbAPIBase,
-    delayer: (any QueryDelayer)? = isTesting ? .noDelay : nil,
     transport: any HTTPDataTransport,
+    refreshTokenStorageKey: String = "canIClimbAPI_RefreshToken",
     secureStorage: any SecureStorage
   ) {
     self.baseURL = baseURL
     self.transport = transport
     self.secureStorage = secureStorage
+    self.refreshTokenStorageKey = refreshTokenStorageKey
 
     // NB: Use a query store to control fetches to the access token to prevent duplicate concurrent
     // requests from either signing the user in, or refreshing the access token. We can also add
@@ -30,7 +32,7 @@ public final class CanIClimbAPI: Sendable {
     // memory pressure notification.
     self.accessTokenStore = .detached(
       mutation: AccessTokenMutation()
-        .retry(limit: 3, delayer: delayer)
+        .retry(limit: 3, delayer: isTesting ? .noDelay : nil)
         .deduplicated()
     )
   }
@@ -72,7 +74,7 @@ extension CanIClimbAPI {
     guard (resp as? HTTPURLResponse)?.statusCode == 204 else {
       throw SignOutFailure(statusCode: (resp as? HTTPURLResponse)?.statusCode)
     }
-    self.secureStorage[_refreshTokenSecureStorageKey] = nil
+    self.persistedRefreshToken = nil
   }
 
   public struct SignOutFailure: Hashable, Error {
@@ -120,7 +122,7 @@ extension CanIClimbAPI {
     guard (resp as? HTTPURLResponse)?.statusCode == 204 else {
       throw DeleteUserFailure(statusCode: (resp as? HTTPURLResponse)?.statusCode)
     }
-    self.secureStorage[_refreshTokenSecureStorageKey] = nil
+    self.persistedRefreshToken = nil
   }
 
   public struct DeleteUserFailure: Hashable, Error {
@@ -197,11 +199,8 @@ extension CanIClimbAPI {
   private func refresh() async throws -> AccessToken {
     var request = URLRequest(url: self.baseURL.appending(path: "/auth/refresh"))
     request.httpMethod = "POST"
-    guard let token = self.secureStorage[_refreshTokenSecureStorageKey] else {
-      throw CanIClimbAPI.UnauthorizedError()
-    }
-    let refreshToken = String(decoding: token, as: UTF8.self)
-    request.setValue("Bearer \(refreshToken)", forHTTPHeaderField: "Authorization")
+    guard let persistedRefreshToken else { throw CanIClimbAPI.UnauthorizedError() }
+    request.setValue("Bearer \(persistedRefreshToken)", forHTTPHeaderField: "Authorization")
     let (data, _) = try await self.transport.data(for: request)
     return try JSONDecoder().decode(AccessTokenResponse.self, from: data).accessToken
   }
@@ -213,13 +212,18 @@ extension CanIClimbAPI {
     let (data, _) = try await self.transport.data(for: request)
     let response = try JSONDecoder().decode(AccessTokenResponse.self, from: data)
     if let token = response.refreshToken {
-      self.secureStorage[_refreshTokenSecureStorageKey] = Data(token.utf8)
+      self.persistedRefreshToken = token
     }
     return response.accessToken
   }
-}
 
-public let _refreshTokenSecureStorageKey = "canIClimbAPI_RefreshToken"
+  private var persistedRefreshToken: String? {
+    get {
+      self.secureStorage[self.refreshTokenStorageKey].map { String(decoding: $0, as: UTF8.self) }
+    }
+    set { self.secureStorage[self.refreshTokenStorageKey] = newValue.map { Data($0.utf8) } }
+  }
+}
 
 // MARK: - UnauthorizedError
 

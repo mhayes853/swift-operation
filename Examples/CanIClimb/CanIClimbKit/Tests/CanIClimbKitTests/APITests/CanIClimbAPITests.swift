@@ -11,14 +11,16 @@ struct CanIClimbAPITests {
   func signInSavesRefreshTokenSecurely() async throws {
     let credentials = User.SignInCredentials.mock
     let resp = CanIClimbAPI.AccessTokenResponse.signIn
+    let key = "test_refresh_token"
     let api = CanIClimbAPI(
       transport: .mock { _ in (200, .json(resp)) },
+      refreshTokenStorageKey: key,
       secureStorage: self.storage
     )
 
-    expectNoDifference(self.storage[_refreshTokenSecureStorageKey], nil)
+    expectNoDifference(self.storage[key], nil)
     try await api.signIn(with: credentials)
-    expectNoDifference(self.storage[_refreshTokenSecureStorageKey], Data(resp.refreshToken!.utf8))
+    expectNoDifference(self.storage[key], Data(resp.refreshToken!.utf8))
   }
 
   @Test("Signs User In, Uses Access Token To Access User")
