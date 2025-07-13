@@ -25,15 +25,14 @@ extension DependenciesTestSuite {
         query: TestQuery(shouldFail: shouldFail).alerts(success: .success, failure: .failure),
         initialValue: nil
       )
-      let (stream, continuation) = AsyncStream<Void>.makeStream()
-      var iter = stream.makeAsyncIterator()
-      let token = center.addObserver(for: QueryAlertMessage.self) { message in
-        expectNoDifference(message.alert, alert)
-        continuation.yield()
+      await confirmation { confirm in
+        let token = center.addObserver(for: QueryAlertMessage.self) { message in
+          expectNoDifference(message.alert, alert)
+          confirm()
+        }
+        _ = try? await store.fetch()
+        center.removeObserver(token)
       }
-      _ = try? await store.fetch()
-      await iter.next()
-      center.removeObserver(token)
     }
 
     @Test("Only Posts Failure Alert Once When Retried")
@@ -45,22 +44,13 @@ extension DependenciesTestSuite {
           .retry(limit: 3, delayer: .noDelay),
         initialValue: nil
       )
-      let (stream, continuation) = AsyncStream<Void>.makeStream()
-      let token = center.addObserver(for: QueryAlertMessage.self) { message in
-        expectNoDifference(message.alert, .failure)
-        continuation.yield()
+      await confirmation(expectedCount: 1) { confirm in
+        let token = center.addObserver(for: QueryAlertMessage.self) { _ in
+          confirm()
+        }
+        _ = try? await store.fetch()
+        center.removeObserver(token)
       }
-      _ = try? await store.fetch()
-      // NB: Give time for the observer to spin up a task with the alert.
-      try await Task.sleep(for: .milliseconds(100))
-      continuation.finish()
-
-      var count = 0
-      for await _ in stream {
-        count += 1
-      }
-      expectNoDifference(count, 1)
-      center.removeObserver(token)
     }
   }
 }
