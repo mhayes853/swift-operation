@@ -2,18 +2,45 @@
   import UIKit
   import UIKitNavigation
 
-  // MARK: - With Ok Button
+  // MARK: - CanIClimbAlertController
 
-  extension UIAlertController {
+  final class CanIClimbAlertController: UIAlertController {
+    private var window: UIWindow?
+  }
+
+  extension CanIClimbAlertController {
+    func present() {
+      let window = self.currentWindow()
+      window?.makeKeyAndVisible()
+      window?.rootViewController?.present(self, animated: true)
+    }
+    
+    private func currentWindow() -> UIWindow? {
+      if let window {
+        return window
+      }
+      let windowScene = UIApplication.shared.connectedScenes
+        .compactMap { $0 as? UIWindowScene }
+        .first
+      guard let windowScene else { return nil }
+      let window = UIWindow(windowScene: windowScene)
+      window.rootViewController = UIViewController()
+      window.windowLevel = .alert
+      self.window = window
+      return window
+    }
+  }
+
+  extension CanIClimbAlertController {
     static func withOkButton<Action>(
       state: AlertState<Action>,
       handler: @escaping (_ action: Action?) -> Void = { (_: Never?) in }
-    ) -> UIAlertController {
+    ) -> CanIClimbAlertController {
       var state = state
       if state.buttons.isEmpty {
         state.buttons.append(ButtonState { TextState("OK") })
       }
-      return UIAlertController(state: state, handler: handler)
+      return CanIClimbAlertController(state: state, handler: handler)
     }
   }
 

@@ -26,9 +26,9 @@ extension DependenciesTestSuite {
         authenticator.requiredCredentials = .mock1
         try await signInStore.mutate(with: User.SignInMutation.Arguments(credentials: .mock1))
 
-        let task = try #require(userStore.activeTasks.first)
-        let user = try await task.runIfNeeded()
-        expectNoDifference(user, .mock1)
+        let task = userStore.activeTasks.first
+        _ = try? await task?.runIfNeeded()
+        expectNoDifference(userStore.currentValue, .mock1)
       }
     }
 

@@ -28,13 +28,13 @@ public struct _AlertStateModifier<Query: QueryRequest>: QueryModifier {
     do {
       let value = try await query.fetch(in: context, with: continuation)
       if let successAlert {
-        center.post(QueryAlertMessage(alert: successAlert))
+        await center.post(QueryAlertMessage(alert: successAlert))
       }
       return value
     } catch {
       let isLastRetry = context.queryRetryIndex >= context.queryMaxRetries
       if let failureAlert, isLastRetry {
-        center.post(QueryAlertMessage(alert: failureAlert))
+        await center.post(QueryAlertMessage(alert: failureAlert))
       }
       throw error
     }
@@ -43,7 +43,7 @@ public struct _AlertStateModifier<Query: QueryRequest>: QueryModifier {
 
 // MARK: - Notification
 
-public struct QueryAlertMessage: NotificationCenter.AsyncMessage {
+public struct QueryAlertMessage: NotificationCenter.MainActorMessage {
   public typealias Subject = AnyObject
 
   public static var name: Notification.Name {
@@ -71,14 +71,12 @@ private struct ObserveQueryAlertsModifier: ViewModifier {
       .onAppear {
         self.token = self.center.addObserver(for: QueryAlertMessage.self) { message in
           #if os(macOS)
-            Task { @MainActor in self.alert = message.alert }
+            self.alert = message.alert
           #else
             // NB: Present through UIKit directly on iOS due to SwiftUI dismissing children sheets
             // when an alert is presented from a parent view.
-            Task { @MainActor in
-              let alert = UIAlertController.withOkButton(state: message.alert)
-              UIApplication.shared.topMostViewController?.present(alert, animated: true)
-            }
+            let alert = CanIClimbAlertController.withOkButton(state: message.alert)
+            alert.present()
           #endif
         }
       }
