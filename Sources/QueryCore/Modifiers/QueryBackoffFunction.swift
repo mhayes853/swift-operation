@@ -110,6 +110,28 @@ extension QueryBackoffFunction {
   }
 }
 
+// MARK: - QueryModifier
+
+extension QueryRequest {
+  /// Sets the ``QueryBackoffFunction`` to use for this query.
+  ///
+  /// - Parameter function: The ``QueryBackoffFunction`` to use.
+  /// - Returns: A ``ModifiedQuery``.
+  public func backoff(
+    _ function: QueryBackoffFunction
+  ) -> ModifiedQuery<Self, _BackoffFunctionModifier<Self>> {
+    self.modifier(_BackoffFunctionModifier(function: function))
+  }
+}
+
+public struct _BackoffFunctionModifier<Query: QueryRequest>: _ContextUpdatingQueryModifier {
+  let function: QueryBackoffFunction
+
+  public func setup(context: inout QueryContext) {
+    context.queryBackoffFunction = self.function
+  }
+}
+
 // MARK: - QueryContext
 
 extension QueryContext {

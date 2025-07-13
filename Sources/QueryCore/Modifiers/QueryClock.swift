@@ -67,7 +67,7 @@ extension QueryClock where Self == TimeFreezeClock {
   public static var timeFreeze: Self {
     TimeFreezeClock(date: Date())
   }
-  
+
   /// A ``QueryClock`` that always returns the provided `date`.
   ///
   /// - Parameter date: The date to return.
@@ -83,6 +83,29 @@ extension QueryClock {
   /// - Returns: A ``TimeFreezeClock`` based on this clock's ``now()`` return value.
   public func frozen() -> TimeFreezeClock {
     .timeFreeze(self.now())
+  }
+}
+
+// MARK: - QueryModifier
+
+extension QueryRequest {
+  /// The ``QueryClock`` to use for this query.
+  ///
+  /// - Parameter clock: A ``QueryClock``.
+  /// - Returns: A ``ModifiedQuery``.
+  public func clock<C>(_ clock: C) -> ModifiedQuery<Self, _QueryClockModifier<Self, C>> {
+    self.modifier(_QueryClockModifier(clock: clock))
+  }
+}
+
+public struct _QueryClockModifier<
+  Query: QueryRequest,
+  C: QueryClock
+>: _ContextUpdatingQueryModifier {
+  let clock: C
+
+  public func setup(context: inout QueryContext) {
+    context.queryClock = self.clock
   }
 }
 

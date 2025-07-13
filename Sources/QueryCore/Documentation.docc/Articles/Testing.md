@@ -125,8 +125,8 @@ func valueLoads() async throws {
   let client = QueryClient(
     storeCreator: .default(
       retryLimit: 0,
-      retryBackoff: .noBackoff,
-      retryDelayer: .noDelay,
+      backoff: .noBackoff,
+      delayer: .noDelay,
       queryEnableAutomaticFetchingCondition: .always(false),
       networkObserver: nil,
       focusCondition: nil
@@ -151,8 +151,8 @@ func valueLoads() async throws {
 >   let client = QueryClient(
 >     storeCreator: .default(
 >       retryLimit: 0,
->       retryBackoff: .noBackoff,
->       retryDelayer: .noDelay,
+>       backoff: .noBackoff,
+>       delayer: .noDelay,
 >       queryEnableAutomaticFetchingCondition: .always(false),
 >       networkObserver: nil,
 >       focusCondition: nil
