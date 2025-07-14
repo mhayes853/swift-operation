@@ -79,7 +79,7 @@ extension DependenciesTestSuite {
       expectNoDifference(model.userProfile.height, gender.averages.height)
 
       let newLbs = Measurement<UnitMass>(value: 100, unit: .pounds)
-      model.weightSelected(newLbs)
+      model.userProfile.weight = newLbs
       model.genderSelected(.male)
       expectNoDifference(
         model.userProfile.weight,
@@ -135,7 +135,8 @@ extension OnboardingModel {
     self.startInvoked()
     expectNoDifference(self.path, [.disclaimer])
 
-    self.disclaimerInvoked()
+    self.hasAcceptedDisclaimer = true
+    self.disclaimerAccepted()
     expectNoDifference(self.path.last, .selectGender)
 
     self.genderSelected(record.gender)
@@ -144,10 +145,12 @@ extension OnboardingModel {
     self.ageRangeSelected(record.ageRange)
     expectNoDifference(self.path.last, .selectHeight)
 
-    self.heightSelected(record.height)
+    self.userProfile.height = record.height
+    self.heightSelected()
     expectNoDifference(self.path.last, .selectWeight)
 
-    self.weightSelected(record.weight)
+    self.userProfile.weight = record.weight
+    self.weightSelected()
     expectNoDifference(self.path.last, .selectActivityLevel)
 
     self.activityLevelSelected(record.activityLevel)
@@ -157,9 +160,7 @@ extension OnboardingModel {
     expectNoDifference(self.path.last, .connectHealthKit)
 
     await self.connectToHealthKitStepInvoked(action: connectHealthKit)
-    if connectHealthKit == .connect {
-      expectNoDifference(self.connectToHealthKit.isConnected, true)
-    }
+    expectNoDifference(self.connectToHealthKit.isConnected, connectHealthKit == .connect)
     expectNoDifference(self.path.last, .shareLocation)
 
     @SharedQuery(LocationReading.requestUserPermissionMutation) var request
@@ -167,8 +168,14 @@ extension OnboardingModel {
     await self.locationPermissionStepInvoked(action: locationPermissions)
     if locationPermissions == .requestPermission {
       expectNoDifference($request.valueUpdateCount, 1)
+      expectNoDifference(self.hasRequestedLocationSharing, true)
+      expectNoDifference(self.isLocationSharingEnabled, request)
+    } else {
+      expectNoDifference($request.valueUpdateCount, 0)
+      expectNoDifference(self.hasRequestedLocationSharing, false)
+      expectNoDifference(self.isLocationSharingEnabled, false)
     }
-    expectNoDifference(self.path.last, .accountCreation)
+    expectNoDifference(self.path.last, .signIn)
 
     if let signInCredentials {
       try await self.signIn.credentialsReceived(.success(signInCredentials))

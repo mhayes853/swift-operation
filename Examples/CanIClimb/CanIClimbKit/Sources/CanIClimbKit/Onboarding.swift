@@ -19,7 +19,7 @@ public final class OnboardingModel {
 
   public let signIn = SignInModel()
 
-  public private(set) var userProfile = UserHumanityRecord()
+  public var userProfile = UserHumanityRecord()
 
   @ObservationIgnored
   private var didSelectedGender = false
@@ -84,13 +84,11 @@ extension OnboardingModel {
     self.path.append(.selectHeight)
   }
 
-  public func heightSelected(_ height: HumanHeight) {
-    self.userProfile.height = height
+  public func heightSelected() {
     self.path.append(.selectWeight)
   }
 
-  public func weightSelected(_ weight: Measurement<UnitMass>) {
-    self.userProfile.weight = weight
+  public func weightSelected() {
     self.path.append(.selectActivityLevel)
   }
 
@@ -121,7 +119,7 @@ extension OnboardingModel {
     case .skip:
       break
     }
-    self.path.append(.accountCreation)
+    self.path.append(.signIn)
   }
 
   public func signInSkipped() {
@@ -165,7 +163,7 @@ extension OnboardingModel {
     case selectWorkoutFrequency
     case connectHealthKit
     case shareLocation
-    case accountCreation
+    case signIn
     case wrapUp
   }
 }
@@ -191,17 +189,17 @@ public struct OnboardingView: View {
           case .selectHeight:
             HeightSelectionView(
               metricPreference: self.$model.metricPreference,
-              initialHeight: self.model.userProfile.height
+              selectedHeight: self.$model.userProfile.height
             ) {
-              self.model.heightSelected($0)
+              self.model.heightSelected()
             }
           case .selectWeight:
             WeightSelectionView(
               metricPreference: self.$model.metricPreference,
               height: self.model.userProfile.height,
-              initialWeight: self.model.userProfile.weight
+              weight: self.$model.userProfile.weight
             ) {
-              self.model.weightSelected($0)
+              self.model.weightSelected()
             }
           case .selectActivityLevel:
             ActivitiyLevelSelectionView { self.model.activityLevelSelected($0) }
@@ -212,13 +210,13 @@ public struct OnboardingView: View {
               Task { await self.model.connectToHealthKitStepInvoked(action: action) }
             }
           case .shareLocation:
-            LocationPermissionView(
+            ShareLocationView(
               hasRequested: self.model.hasRequestedLocationSharing,
               isEnabled: self.model.isLocationSharingEnabled
             ) { action in
               Task { await self.model.locationPermissionStepInvoked(action: action) }
             }
-          case .accountCreation:
+          case .signIn:
             SignInView(model: self.model.signIn) { self.model.signInSkipped() }
           case .wrapUp:
             WrapUpView {
@@ -250,6 +248,7 @@ private struct WelcomeView: View {
         self.onStart()
       }
     }
+    .onboardingNavigationTitle("Welcome")
   }
 }
 
@@ -280,6 +279,7 @@ private struct DisclaimerView: View {
       .padding()
       .disabled(!self.hasAcceptedDisclaimer)
     }
+    .onboardingNavigationTitle("DISCLAIMER")
   }
 }
 
@@ -292,6 +292,7 @@ private struct GenderSelectionView: View {
     OnboardingOptionsPicker(title: "Select Your Gender", options: Array(HumanGender.allCases)) {
       self.onSelected($0)
     }
+    .onboardingNavigationTitle("Gender")
   }
 }
 
@@ -304,6 +305,7 @@ private struct AgeRangeSelectionView: View {
     OnboardingOptionsPicker(title: "Select Your Age", options: Array(HumanAgeRange.allCases)) {
       self.onSelected($0)
     }
+    .onboardingNavigationTitle("Age")
   }
 }
 
@@ -311,23 +313,13 @@ private struct AgeRangeSelectionView: View {
 
 private struct HeightSelectionView: View {
   @Binding var metricPreference: SettingsRecord.MetricPreference
-  @State private var selectedHeight: HumanHeight
-  let onSelected: (HumanHeight) -> Void
-
-  init(
-    metricPreference: Binding<SettingsRecord.MetricPreference>,
-    initialHeight: HumanHeight,
-    onSelected: @escaping (HumanHeight) -> Void
-  ) {
-    self._metricPreference = metricPreference
-    self._selectedHeight = State(initialValue: initialHeight)
-    self.onSelected = onSelected
-  }
+  @Binding var selectedHeight: HumanHeight
+  let onSelected: () -> Void
 
   var body: some View {
     ScrollView {
       VStack(alignment: .leading) {
-        Text("Select Your Height").font(.title.bold())
+        Text("Select Your Weight").font(.title.bold())
         Spacer()
         Group {
           switch self.metricPreference {
@@ -357,10 +349,11 @@ private struct HeightSelectionView: View {
     }
     .safeAreaInset(edge: .bottom) {
       OnboardingButton("Select Height") {
-        self.onSelected(self.selectedHeight)
+        self.onSelected()
       }
       .padding()
     }
+    .onboardingNavigationTitle("Height")
   }
 }
 
@@ -368,9 +361,14 @@ private struct HeightSelectionView: View {
 
 private struct WeightSelectionView: View {
   @Binding var metricPreference: SettingsRecord.MetricPreference
+
+  // NB: SwiftUI Pickers will reset a Measurement binding to 0 when the metric preference changes,
+  // so use a raw numerical value instead.
   @State private var selectedValue: Int
+
+  @Binding var weight: Measurement<UnitMass>
   let height: HumanHeight
-  let onSelected: (Measurement<UnitMass>) -> Void
+  let onSelected: () -> Void
 
   private var selectedWeight: Measurement<UnitMass> {
     Measurement(value: Double(self.selectedValue), unit: self.metricPreference.unit)
@@ -383,13 +381,14 @@ private struct WeightSelectionView: View {
   init(
     metricPreference: Binding<SettingsRecord.MetricPreference>,
     height: HumanHeight,
-    initialWeight: Measurement<UnitMass>,
-    onSelected: @escaping (Measurement<UnitMass>) -> Void
+    weight: Binding<Measurement<UnitMass>>,
+    onSelected: @escaping () -> Void
   ) {
     self._metricPreference = metricPreference
     self._selectedValue = State(
-      initialValue: Int(initialWeight.converted(to: metricPreference.wrappedValue.unit).value)
+      initialValue: Int(weight.wrappedValue.converted(to: metricPreference.wrappedValue.unit).value)
     )
+    self._weight = weight
     self.height = height
     self.onSelected = onSelected
   }
@@ -426,6 +425,9 @@ private struct WeightSelectionView: View {
             )
             self.selectedValue = Int(oldMeasurement.converted(to: new.unit).value)
           }
+          .onChange(of: self.selectedValue) {
+            self.weight = self.selectedWeight
+          }
         OnboardingBMIView(bmi: self.bmi)
         Spacer()
       }
@@ -433,10 +435,11 @@ private struct WeightSelectionView: View {
     }
     .safeAreaInset(edge: .bottom) {
       OnboardingButton("Select Weight") {
-        self.onSelected(self.selectedWeight)
+        self.onSelected()
       }
       .padding()
     }
+    .onboardingNavigationTitle("Weight")
   }
 }
 
@@ -454,6 +457,7 @@ private struct ActivitiyLevelSelectionView: View {
     ) {
       self.onSelected($0)
     }
+    .onboardingNavigationTitle("Activity Level")
   }
 }
 
@@ -469,6 +473,7 @@ private struct WorkoutFrequencySelectionView: View {
     ) {
       self.onSelected($0)
     }
+    .onboardingNavigationTitle("Exercise Frequency")
   }
 }
 
@@ -502,12 +507,13 @@ private struct ConnectHealthKitView: View {
         .buttonStyle(.plain)
       }
     }
+    .onboardingNavigationTitle("Connect HealthKit")
   }
 }
 
 // MARK: - LocationPermissionView
 
-private struct LocationPermissionView: View {
+private struct ShareLocationView: View {
   let hasRequested: Bool
   let isEnabled: Bool
   let onAction: (OnboardingModel.LocationPermissionStepAction) -> Void
@@ -549,6 +555,7 @@ private struct LocationPermissionView: View {
         }
       }
     }
+    .onboardingNavigationTitle("Location Sharing")
   }
 }
 
@@ -586,6 +593,7 @@ private struct SignInView: View {
         .buttonStyle(.plain)
       }
     }
+    .onboardingNavigationTitle("Sign In")
   }
 }
 
@@ -605,6 +613,7 @@ private struct WrapUpView: View {
         self.onAction()
       }
     }
+    .onboardingNavigationTitle("Wrap Up")
   }
 }
 
@@ -802,6 +811,17 @@ private struct OnboardingButton: View {
     }
     .buttonStyle(.borderedProminent)
     .tint(.primary)
+  }
+}
+
+// MARK: - Onboarding Navigation Title
+
+extension View {
+  fileprivate func onboardingNavigationTitle(_ title: LocalizedStringResource) -> some View {
+    self.navigationTitle(title)
+      #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+      #endif
   }
 }
 
