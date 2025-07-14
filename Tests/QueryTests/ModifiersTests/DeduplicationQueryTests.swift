@@ -92,7 +92,7 @@ private final actor DeduplicationQuery: QueryRequest, Identifiable {
     with continuation: QueryContinuation<String>
   ) async throws -> String {
     // NB: Give enough time for deduplication.
-    try await Task.sleep(for: .seconds(0.1))
+    try await TaskSleepDelayer.taskSleep.delay(for: 0.1)
     self.fetchCount += 1
     return "blob"
   }
@@ -129,7 +129,7 @@ private final actor DeduplicationInfiniteQuery: InfiniteQueryRequest, Identifiab
     with continuation: QueryContinuation<String>
   ) async throws -> String {
     // NB: Give enough time for deduplication.
-    try await Task.sleep(for: .seconds(0.1))
+    try await TaskSleepDelayer.taskSleep.delay(for: 0.1)
     self.fetchCount += 1
     return "blob"
   }

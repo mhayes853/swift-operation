@@ -247,6 +247,33 @@ struct QueryTaskTests {
     expectNoDifference(task.context.queryRunningTaskIdentifier, nil)
   }
 
+  #if compiler(>=6.2)
+    @Test("Runs On Executor Preference")
+    @available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, visionOS 26.0, *)
+    func runsOnExecutorPreference() async throws {
+      final class ImmediateExecutor: TaskExecutor {
+        func asUnownedTaskExecutor() -> UnownedTaskExecutor {
+          UnownedTaskExecutor(ordinary: self)
+        }
+
+        func enqueue(_ job: consuming ExecutorJob) {
+          let job = UnownedJob(job)
+          Task {
+            job.runSynchronously(on: self.asUnownedTaskExecutor())
+          }
+        }
+      }
+
+      let executor = ImmediateExecutor()
+      var task = QueryTask<Bool>(context: QueryContext()) { _, _ in
+        Task.currentExecutor === executor
+      }
+      task.configuration.executorPreference = executor
+      let didRunOnExecutor = try await task.runIfNeeded()
+      expectNoDifference(didRunOnExecutor, true)
+    }
+  #endif
+
   #if DEBUG
     @Test("Reports Issue When Circular Scheduling, 2 Tasks")
     func reportsIssueWhenCircularScheduling2Tasks() async throws {
