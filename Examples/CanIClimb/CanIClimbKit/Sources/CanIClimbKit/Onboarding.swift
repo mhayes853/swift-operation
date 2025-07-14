@@ -2,24 +2,21 @@ import Observation
 import SharingGRDB
 import SharingQuery
 import SwiftUI
+import SwiftUINavigation
 
 // MARK: - OnboardingModel
 
 @MainActor
 @Observable
-public final class OnboardingModel {
+public final class OnboardingModel: HashableObject {
+  public var path = [Path]()
+  public var hasAcceptedDisclaimer = false
+  public let connectToHealthKit = ConnectToHealthKitModel()
+  public let signIn = SignInModel()
+  public var userProfile = UserHumanityRecord()
+
   @ObservationIgnored
   public var onFinished: (() -> Void)?
-
-  public var path = [Path]()
-
-  public var hasAcceptedDisclaimer = false
-
-  public let connectToHealthKit = ConnectToHealthKitModel()
-
-  public let signIn = SignInModel()
-
-  public var userProfile = UserHumanityRecord()
 
   @ObservationIgnored
   private var didSelectedGender = false
