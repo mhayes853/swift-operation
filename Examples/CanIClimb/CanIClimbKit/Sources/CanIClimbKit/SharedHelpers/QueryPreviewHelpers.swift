@@ -1,3 +1,4 @@
+import Dependencies
 import Query
 
 // MARK: - Random Delay
@@ -25,19 +26,16 @@ public struct _PreviewDelayModifier<Query: QueryRequest>: QueryModifier {
     using query: Query,
     with continuation: QueryContinuation<Query.Value>
   ) async throws -> Query.Value {
-    #if DEBUG
-      guard !context[DisablePreviewDelayKey.self] else {
-        return try await query.fetch(in: context, with: continuation)
-      }
-      if let delay {
-        try await Task.sleep(for: delay)
-      } else {
-        try await Task.sleep(for: .seconds(Double.random(in: 0.1...3)))
-      }
+    @Dependency(\.context) var mode
+    guard mode == .preview && !context[DisablePreviewDelayKey.self] else {
       return try await query.fetch(in: context, with: continuation)
-    #else
-      return try await query.fetch(in: context, with: continuation)
-    #endif
+    }
+    if let delay {
+      try await Task.sleep(for: delay)
+    } else {
+      try await Task.sleep(for: .seconds(Double.random(in: 0.1...3)))
+    }
+    return try await query.fetch(in: context, with: continuation)
   }
 }
 
@@ -47,24 +45,26 @@ private enum DisablePreviewDelayKey: QueryContext.Key {
 
 // MARK: - PreviewStoreCreator
 
-#if DEBUG
-  extension QueryClient {
-    public struct PreviewStoreCreator: StoreCreator {
-      let base: any StoreCreator = .default()
+extension QueryClient {
+  public struct PreviewStoreCreator: StoreCreator {
+    var base: any StoreCreator = .default()
 
-      public func store<Query: QueryRequest>(
-        for query: Query,
-        in context: QueryContext,
-        with initialState: Query.State
-      ) -> QueryStore<Query.State> {
-        self.base.store(for: query.previewDelay(), in: context, with: initialState)
-      }
+    public func store<Query: QueryRequest>(
+      for query: Query,
+      in context: QueryContext,
+      with initialState: Query.State
+    ) -> QueryStore<Query.State> {
+      self.base.store(for: query.previewDelay(), in: context, with: initialState)
     }
   }
+}
 
-  extension QueryClient.StoreCreator where Self == QueryClient.PreviewStoreCreator {
-    public static var preview: Self {
-      QueryClient.PreviewStoreCreator()
-    }
+extension QueryClient.StoreCreator where Self == QueryClient.PreviewStoreCreator {
+  public static var preview: Self {
+    QueryClient.PreviewStoreCreator()
   }
-#endif
+
+  public static func preview(base: any QueryClient.StoreCreator) -> Self {
+    QueryClient.PreviewStoreCreator(base: base)
+  }
+}
