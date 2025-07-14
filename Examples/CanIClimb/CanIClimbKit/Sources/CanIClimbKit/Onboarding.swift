@@ -627,8 +627,9 @@ private struct OnboardingImageActionView<Actions: View>: View {
   @ViewBuilder let actions: () -> Actions
 
   var body: some View {
-    ZStack {
+    ScrollView {
       VStack(spacing: 20) {
+        Spacer()
         Image(systemName: self.systemImageName)
           .resizable()
           .scaledToFit()
@@ -639,12 +640,13 @@ private struct OnboardingImageActionView<Actions: View>: View {
           .font(.largeTitle.bold())
         Text(self.subtitle)
           .foregroundStyle(.secondary)
+        Spacer()
       }
       .padding()
-
+    }
+    .safeAreaInset(edge: .bottom) {
       self.actions()
         .padding()
-        .frame(maxHeight: .infinity, alignment: .bottom)
     }
   }
 }
