@@ -41,7 +41,8 @@ extension DependenciesTestSuite {
 
       let store = QueryStore.detached(
         query: TestQuery(shouldFail: true).alerts(success: .success, failure: .failure)
-          .retry(limit: 3, delayer: .noDelay),
+          .delayer(.noDelay)
+          .retry(limit: 3),
         initialValue: nil
       )
       await confirmation(expectedCount: 1) { confirm in

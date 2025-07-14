@@ -32,7 +32,9 @@ public final class CanIClimbAPI: Sendable {
     // memory pressure notification.
     self.accessTokenStore = .detached(
       mutation: AccessTokenMutation()
-        .retry(limit: 3, delayer: isTesting ? .noDelay : nil)
+        .retry(limit: 3)
+        .backoff(.exponential(1))
+        .delayer(AnyDelayer(isTesting ? .noDelay : .taskSleep))
         .deduplicated()
     )
   }
