@@ -79,6 +79,49 @@ extension QueryDelayer where Self == NoDelayer {
   public static var noDelay: Self { NoDelayer() }
 }
 
+// MARK: - AnyDelayer
+
+/// A type-erased ``QueryDelayer``.
+public struct AnyDelayer: QueryDelayer {
+  public let base: any QueryDelayer
+
+  /// Creates a type-erased ``QueryDelayer``.
+  ///
+  /// - Parameter base: The ``QueryDelayer`` to erase.
+  public init(_ base: any QueryDelayer) {
+    self.base = base
+  }
+
+  public func delay(for seconds: TimeInterval) async throws {
+    try await self.base.delay(for: seconds)
+  }
+}
+
+// MARK: - QueryModifier
+
+extension QueryRequest {
+  /// Sets the ``QueryDelayer`` to use for this query.
+  ///
+  /// - Parameter delayer: The ``QueryDelayer`` to use.
+  /// - Returns: A ``ModifiedQuery``.
+  public func delayer<Delayer>(
+    _ delayer: Delayer
+  ) -> ModifiedQuery<Self, _DelayerModifier<Self, Delayer>> {
+    self.modifier(_DelayerModifier(delayer: delayer))
+  }
+}
+
+public struct _DelayerModifier<
+  Query: QueryRequest,
+  Delayer: QueryDelayer
+>: _ContextUpdatingQueryModifier {
+  let delayer: Delayer
+
+  public func setup(context: inout QueryContext) {
+    context.queryDelayer = self.delayer
+  }
+}
+
 // MARK: - QueryContext
 
 extension QueryContext {

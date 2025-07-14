@@ -110,18 +110,40 @@ extension QueryBackoffFunction {
   }
 }
 
+// MARK: - QueryModifier
+
+extension QueryRequest {
+  /// Sets the ``QueryBackoffFunction`` to use for this query.
+  ///
+  /// - Parameter function: The ``QueryBackoffFunction`` to use.
+  /// - Returns: A ``ModifiedQuery``.
+  public func backoff(
+    _ function: QueryBackoffFunction
+  ) -> ModifiedQuery<Self, _BackoffFunctionModifier<Self>> {
+    self.modifier(_BackoffFunctionModifier(function: function))
+  }
+}
+
+public struct _BackoffFunctionModifier<Query: QueryRequest>: _ContextUpdatingQueryModifier {
+  let function: QueryBackoffFunction
+
+  public func setup(context: inout QueryContext) {
+    context.queryBackoffFunction = self.function
+  }
+}
+
 // MARK: - QueryContext
 
 extension QueryContext {
   /// The current ``QueryBackoffFunction`` in this context.
   ///
-  /// The default value is ``QueryBackoffFunction/fibonacci(_:)`` with a base interval of 1 second.
+  /// The default value is ``QueryBackoffFunction/exponential(_:)`` with a base interval of 1 second.
   public var queryBackoffFunction: QueryBackoffFunction {
     get { self[QueryBackoffFunctionKey.self] }
     set { self[QueryBackoffFunctionKey.self] = newValue }
   }
 
   private enum QueryBackoffFunctionKey: Key {
-    static var defaultValue: QueryBackoffFunction { .fibonacci(1) }
+    static var defaultValue: QueryBackoffFunction { .exponential(1) }
   }
 }

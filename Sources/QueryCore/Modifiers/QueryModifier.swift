@@ -3,7 +3,7 @@
 /// A protocol for defining reusable and composable logic for your queries.
 ///
 /// The library comes with many built-in modifiers that you can use to customize the logic and
-/// behavior of your queries. For instance, ``QueryRequest/retry(limit:backoff:delayer:)`` adds
+/// behavior of your queries. For instance, ``QueryRequest/retry(limit:)`` adds
 /// retry logic to your queries.
 ///
 /// To create your own modifier, create a data type that conforms to this protocol. We'll create a

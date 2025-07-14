@@ -44,8 +44,8 @@ extension QueryClient {
   /// - Retries
   public struct DefaultStoreCreator: StoreCreator {
     let retryLimit: Int
-    let retryBackoff: QueryBackoffFunction?
-    let retryDelayer: (any QueryDelayer)?
+    let backoff: QueryBackoffFunction?
+    let delayer: (any QueryDelayer)?
     let queryEnableAutomaticFetchingCondition: any FetchCondition
     let networkObserver: (any NetworkObserver)?
     let activityObserver: (any ApplicationActivityObserver)?
@@ -55,24 +55,22 @@ extension QueryClient {
       in context: QueryContext,
       with initialState: Query.State
     ) -> QueryStore<Query.State> {
+      let backoff = self.backoff ?? context.queryBackoffFunction
+      let delayer = AnyDelayer(self.delayer ?? context.queryDelayer)
       if query is any MutationRequest {
         return .detached(
-          query: query.retry(
-            limit: self.retryLimit,
-            backoff: self.retryBackoff,
-            delayer: self.retryDelayer
-          ),
+          query: query.retry(limit: self.retryLimit)
+            .backoff(backoff)
+            .delayer(delayer),
           initialState: initialState,
           initialContext: context
         )
       }
       return .detached(
         query:
-          query.retry(
-            limit: self.retryLimit,
-            backoff: self.retryBackoff,
-            delayer: self.retryDelayer
-          )
+          query.retry(limit: self.retryLimit)
+          .backoff(backoff)
+          .delayer(delayer)
           .enableAutomaticFetching(
             onlyWhen: AnyFetchCondition(self.queryEnableAutomaticFetchingCondition)
           )
@@ -104,12 +102,12 @@ extension QueryClient.StoreCreator where Self == QueryClient.DefaultStoreCreator
   /// The default `StoreCreator` used by a query client for testing.
   ///
   /// In testing, retries are disabled, and the network status and application activity status are
-  /// not observed.
+  /// not observed, delays are disabled, and the backoff function is `QueryBackoffFunction.noBackoff`.
   public static var defaultTesting: Self {
     .default(
       retryLimit: 0,
-      retryBackoff: .noBackoff,
-      retryDelayer: .noDelay,
+      backoff: .noBackoff,
+      delayer: .noDelay,
       queryEnableAutomaticFetchingCondition: .always(true),
       networkObserver: nil,
       activityObserver: nil
@@ -133,8 +131,8 @@ extension QueryClient.StoreCreator where Self == QueryClient.DefaultStoreCreator
   ///
   /// - Parameters:
   ///   - retryLimit: The maximum number of retries for queries and mutations.
-  ///   - retryBackoff: The backoff function to use for retries.
-  ///   - retryDelayer: The `QueryDelayer` to use for delaying the execution of a retry.
+  ///   - backoff: The backoff function to use for retries.
+  ///   - delayer: The `QueryDelayer` to use for delaying the execution of a retry.
   ///   - queryEnableAutomaticFetchingCondition: The default `FetchCondition` that determines
   ///   whether or not automatic fetching is enabled for queries (and not mutations).
   ///   - networkObserver: The default `NetworkObserver` to use.
@@ -142,8 +140,8 @@ extension QueryClient.StoreCreator where Self == QueryClient.DefaultStoreCreator
   /// - Returns: A ``QueryCore/QueryClient/DefaultStoreCreator``.
   public static func `default`(
     retryLimit: Int = 3,
-    retryBackoff: QueryBackoffFunction? = nil,
-    retryDelayer: (any QueryDelayer)? = nil,
+    backoff: QueryBackoffFunction? = nil,
+    delayer: (any QueryDelayer)? = nil,
     queryEnableAutomaticFetchingCondition: any FetchCondition = .always(true),
     networkObserver: (any NetworkObserver)? = QueryClient.defaultNetworkObserver,
     activityObserver: (any ApplicationActivityObserver)? = QueryClient
@@ -151,8 +149,8 @@ extension QueryClient.StoreCreator where Self == QueryClient.DefaultStoreCreator
   ) -> Self {
     Self(
       retryLimit: retryLimit,
-      retryBackoff: retryBackoff,
-      retryDelayer: retryDelayer,
+      backoff: backoff,
+      delayer: delayer,
       queryEnableAutomaticFetchingCondition: queryEnableAutomaticFetchingCondition,
       networkObserver: networkObserver,
       activityObserver: activityObserver

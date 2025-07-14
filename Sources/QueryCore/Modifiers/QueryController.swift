@@ -30,12 +30,12 @@ public protocol QueryController<State>: Sendable {
 /// You do not create instances of this type. Instead, it is passed to your `QueryController`
 /// through ``QueryController/control(with:)``.
 public struct QueryControls<State: QueryStateProtocol>: Sendable {
-  private weak var store: QueryStore<State>?
+  private weak var _store: QueryStore<State>?
   private let defaultContext: QueryContext
   private let initialState: State
 
   init(store: QueryStore<State>, defaultContext: QueryContext, initialState: State) {
-    self.store = store
+    self._store = store
     self.defaultContext = defaultContext
     self.initialState = initialState
   }
@@ -180,6 +180,18 @@ extension QueryControls {
   }
 }
 
+// MARK: - Store
+
+extension QueryControls {
+  private var store: QueryStore<State>? {
+    guard let _store else {
+      reportWarning(.controllerDeallocatedStoreAccess(stateType: State.self))
+      return nil
+    }
+    return _store
+  }
+}
+
 // MARK: - ControlledQuery
 
 /// A helper typealias for specifying that your query is controlled by a ``QueryController``.
@@ -239,5 +251,36 @@ extension QueryContext {
 
   private enum QueryControllersKey: Key {
     static var defaultValue: [any QueryController] { [] }
+  }
+}
+
+// MARK: - Warnings
+
+extension QueryWarning {
+  public static func controllerDeallocatedStoreAccess(stateType: Any.Type) -> Self {
+    """
+    An instance of `QueryStore<\(typeName(stateType))>` has been deallocated, but an access has \
+    been attempted from through a `QueryController`.
+
+    This is considered an application programming error, because the lifetime of the \
+    `QueryControls` passed to the controller is managed by the store. To fix this, ensure that the \
+    `QuerySubscription` returned from your controller's `control` implementation disposes of the \
+    `QueryControls` instance passed to it.
+
+        final class MyController<State: QueryStateProtocol>: QueryController {
+          private let controls = Mutex<QueryControls<State>?>(nil)
+
+          func control(with controls: QueryControls<State>) -> QuerySubscription {
+            self.controls.withLock { $0 = controls }
+
+            // ...
+
+            return QuerySubscription {
+              // Dispose of the controls.
+              self.controls.withLock { $0 = nil }
+            }
+          }
+        }
+    """
   }
 }
