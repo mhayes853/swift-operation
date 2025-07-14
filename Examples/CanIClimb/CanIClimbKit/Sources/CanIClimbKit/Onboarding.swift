@@ -15,6 +15,8 @@ public final class OnboardingModel {
 
   public let connectToHealthKit = ConnectToHealthKitModel()
 
+  public let signIn = SignInModel()
+
   public private(set) var userProfile = UserHumanityRecord()
 
   @ObservationIgnored
@@ -29,7 +31,9 @@ public final class OnboardingModel {
   @ObservationIgnored
   @Fetch(wrappedValue: SettingsRecord(), .singleRow(SettingsRecord.self)) private var _settings
 
-  public init() {}
+  public init() {
+    self.signIn.onSignInSuccess = { [weak self] in self?.path.append(.wrapUp) }
+  }
 }
 
 extension OnboardingModel {
@@ -131,13 +135,7 @@ extension OnboardingModel {
 }
 
 extension OnboardingModel {
-  public enum AccountStepAction: Hashable {
-    case skip
-    case signIn(User.SignInCredentials)
-  }
-
-  public func accountStepInvoked(action: AccountStepAction) {
-    // TODO: - Sign In With Apple
+  public func signInSkipped() {
     self.path.append(.wrapUp)
   }
 }

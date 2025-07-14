@@ -88,14 +88,39 @@ extension DependenciesTestSuite {
       )
     }
 
-    @Test("Persists Metric Preference")
-    func persistsMetricPreference() async throws {
+    @Test("Persists Metric Preference When Changed")
+    func persistsMetricPreferenceWhenChanged() async throws {
       let model = OnboardingModel()
 
       model.metricPreference = .metric
 
       let model2 = OnboardingModel()
       expectNoDifference(model2.metricPreference, .metric)
+    }
+
+    @Test("Onboarding Flow With Sign In, Finishes Properly")
+    func onboardingFlowWithSignIn() async throws {
+      let authenticator = User.MockAuthenticator()
+      authenticator.requiredCredentials = .mock1
+
+      try await withDependencies {
+        $0[User.AuthenticatorKey.self] = authenticator
+        $0[User.CurrentLoaderKey.self] = User.MockCurrentLoader(result: .success(.mock1))
+      } operation: {
+        @Dependency(\.defaultQueryClient) var client
+
+        let model = OnboardingModel()
+        try await model.runOnboardingFlow(
+          fillingIn: .mock,
+          locationPermissions: .skip,
+          signInCredentials: .mock1,
+          connectHealthKit: .skip
+        )
+
+        let userStore = client.store(for: User.currentQuery)
+        _ = try? await userStore.activeTasks.first?.runIfNeeded()
+        expectNoDifference(userStore.currentValue, .mock1)
+      }
     }
   }
 }
@@ -104,7 +129,7 @@ extension OnboardingModel {
   fileprivate func runOnboardingFlow(
     fillingIn record: UserHumanityRecord,
     locationPermissions: LocationPermissionStepAction = .requestPermission,
-    account: AccountStepAction = .skip,
+    signInCredentials: User.SignInCredentials? = nil,
     connectHealthKit: ConnectToHealthKitStepAction = .connect
   ) async throws {
     self.startInvoked()
@@ -142,7 +167,11 @@ extension OnboardingModel {
     }
     expectNoDifference(self.path.last, .accountCreation)
 
-    self.accountStepInvoked(action: account)
+    if let signInCredentials {
+      try await self.signIn.credentialsReceived(.success(signInCredentials))
+    } else {
+      self.signInSkipped()
+    }
     expectNoDifference(self.path.last, .wrapUp)
 
     try await self.wrapUpInvoked()
