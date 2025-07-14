@@ -1,6 +1,6 @@
 import CustomDump
 import Foundation
-import Query
+@_spi(Warnings) import Query
 import QueryTestHelpers
 import Testing
 
@@ -140,6 +140,34 @@ struct QueryControllerTests {
       controls!.withExclusiveAccess { controls!.yield(controls!.state.currentValue! + 10) }
     }
     expectNoDifference(store.currentValue, TestQuery.value + 10)
+  }
+
+  @Test("Reports Issue When Accessing Controls When Controller Is Deallocated")
+  func reportsIssueWhenAccessingControlsWhenControllerIsDeallocated() async throws {
+    final class EvilController<State: QueryStateProtocol>: QueryController {
+      let controls = Lock<QueryControls<State>?>(nil)
+
+      func control(with controls: QueryControls<State>) -> QuerySubscription {
+        self.controls.withLock { $0 = controls }
+        return .empty
+      }
+    }
+
+    let controller = EvilController<TestQuery.State>()
+    do {
+      _ = QueryStore.detached(
+        query: TestQuery().controlled(by: controller),
+        initialValue: nil
+      )
+    }
+
+    withKnownIssue {
+      _ = controller.controls.withLock { $0?.state }
+    } matching: {
+      $0.comments.contains(
+        .warning(.controllerDeallocatedStoreAccess(stateType: TestQuery.State.self))
+      )
+    }
   }
 }
 
