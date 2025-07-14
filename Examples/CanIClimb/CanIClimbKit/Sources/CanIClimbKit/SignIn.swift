@@ -47,6 +47,7 @@ public struct SignInButton: View {
   let label: SignInWithAppleButton.Label
   @Bindable var model: SignInModel
   @Environment(\.signInButtonMockCredentials) var mockCredentials
+  @Environment(\.colorScheme) var colorScheme
 
   public var body: some View {
     SignInWithAppleButton(
@@ -66,6 +67,7 @@ public struct SignInButton: View {
         }
       }
     )
+    .signInWithAppleButtonStyle(self.colorScheme == .dark ? .white : .black)
     .alert(self.$model.destination.alert)
   }
 }

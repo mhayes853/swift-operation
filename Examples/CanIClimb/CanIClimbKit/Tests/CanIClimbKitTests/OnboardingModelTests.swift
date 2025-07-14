@@ -133,7 +133,10 @@ extension OnboardingModel {
     connectHealthKit: ConnectToHealthKitStepAction = .connect
   ) async throws {
     self.startInvoked()
-    expectNoDifference(self.path, [.selectGender])
+    expectNoDifference(self.path, [.disclaimer])
+
+    self.disclaimerInvoked()
+    expectNoDifference(self.path.last, .selectGender)
 
     self.genderSelected(record.gender)
     expectNoDifference(self.path.last, .selectAgeRange)

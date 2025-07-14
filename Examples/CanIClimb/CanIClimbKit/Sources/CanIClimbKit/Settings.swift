@@ -335,37 +335,18 @@ private struct PreferencesSectionView: View {
     Section {
       Picker("Measurement Units", selection: $settings.metricPreference) {
         ForEach(SettingsRecord.MetricPreference.allCases, id: \.self) { preference in
-          Text(preference.localizedString)
+          Text(preference.localizedStringResource)
             .tag(preference)
         }
       }
       Picker("Temperature Units", selection: $settings.temperaturePreference) {
         ForEach(SettingsRecord.TemperaturePreference.allCases, id: \.self) { preference in
-          Text(preference.localizedString)
+          Text(preference.localizedStringResource)
             .tag(preference)
         }
       }
     } header: {
       Text("Preferences")
-    }
-  }
-}
-
-extension SettingsRecord.MetricPreference {
-  fileprivate var localizedString: LocalizedStringKey {
-    switch self {
-    case .metric: "Metric (cm, kg)"
-    case .imperial: "Imperial (ft, lbs)"
-    }
-  }
-}
-
-extension SettingsRecord.TemperaturePreference {
-  fileprivate var localizedString: LocalizedStringKey {
-    switch self {
-    case .celsius: "Celsius"
-    case .fahrenheit: "Fahrenheit"
-    case .kelvin: "Kelvin"
     }
   }
 }
@@ -380,14 +361,14 @@ private struct UserInfoSectionView: View {
     Section {
       Picker("Gender", selection: self.$profile.gender) {
         ForEach(HumanGender.allCases, id: \.self) { gender in
-          Text(gender.localizedString)
+          Text(gender.localizedStringResource)
             .tag(gender)
         }
       }
 
       Picker("Age Range", selection: self.$profile.ageRange) {
         ForEach(HumanAgeRange.allCases, id: \.self) { ageRange in
-          Text(ageRange.localizedString)
+          Text(ageRange.localizedStringResource)
             .tag(ageRange)
         }
       }
@@ -426,14 +407,14 @@ private struct UserInfoSectionView: View {
 
       Picker("Activity Level", selection: self.$profile.activityLevel) {
         ForEach(HumanActivityLevel.allCases, id: \.self) { activityLevel in
-          Text(activityLevel.localizedString)
+          Text(activityLevel.localizedStringResource)
             .tag(activityLevel)
         }
       }
 
       Picker("Workout Frequency", selection: self.$profile.workoutFrequency) {
         ForEach(HumanWorkoutFrequency.allCases, id: \.self) { frequency in
-          Text(frequency.localizedString)
+          Text(frequency.localizedStringResource)
             .tag(frequency)
         }
       }
@@ -484,15 +465,9 @@ private struct SocialsSectionView: View {
 private struct DisclaimerSectionView: View {
   var body: some View {
     Section {
-      Text(
-        """
-        CanIClimb is just an application for demonstration purposes that shows how to integrate \
-        Swift Query into a moderately complex application involving personalized data. Please \
-        consult with a licensed professional for accurate and personalized advice.
-        """
-      )
+      Text(disclaimer)
     } header: {
-      Text("Disclaimer")
+      Text("DISCLAIMER")
     }
   }
 }

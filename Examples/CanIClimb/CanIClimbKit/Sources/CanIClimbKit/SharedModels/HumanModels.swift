@@ -9,8 +9,8 @@ public enum HumanActivityLevel: String, Hashable, Sendable, CaseIterable {
   case veryActive
 }
 
-extension HumanActivityLevel {
-  public var localizedString: LocalizedStringKey {
+extension HumanActivityLevel: CustomLocalizedStringResourceConvertible {
+  public var localizedStringResource: LocalizedStringResource {
     switch self {
     case .sedentary: "Sedentary"
     case .somewhatActive: "Somewhat Active"
@@ -30,8 +30,8 @@ public enum HumanAgeRange: String, Hashable, Sendable, CaseIterable {
   case in50sOrGreater
 }
 
-extension HumanAgeRange {
-  public var localizedString: LocalizedStringKey {
+extension HumanAgeRange: CustomLocalizedStringResourceConvertible {
+  public var localizedStringResource: LocalizedStringResource {
     switch self {
     case .under20: "Under 20"
     case .in20s: "20s"
@@ -85,8 +85,8 @@ public enum HumanGender: String, Hashable, Sendable, CaseIterable {
   case nonBinary
 }
 
-extension HumanGender {
-  public var localizedString: LocalizedStringKey {
+extension HumanGender: CustomLocalizedStringResourceConvertible {
+  public var localizedStringResource: LocalizedStringResource {
     switch self {
     case .male: "Male"
     case .female: "Female"
@@ -120,8 +120,8 @@ public enum HumanWorkoutFrequency: String, Hashable, Sendable, CaseIterable {
   case everyDay
 }
 
-extension HumanWorkoutFrequency {
-  public var localizedString: LocalizedStringKey {
+extension HumanWorkoutFrequency: CustomLocalizedStringResourceConvertible {
+  public var localizedStringResource: LocalizedStringResource {
     switch self {
     case .noDays: "Never"
     case .onceOrTwicePerWeek: "1-2 Times per Week"

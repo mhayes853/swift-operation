@@ -154,11 +154,39 @@ extension SettingsRecord {
   }
 }
 
+extension SettingsRecord.MetricPreference {
+  public var unit: UnitMass {
+    switch self {
+    case .imperial: .pounds
+    case .metric: .kilograms
+    }
+  }
+}
+
+extension SettingsRecord.MetricPreference: CustomLocalizedStringResourceConvertible {
+  public var localizedStringResource: LocalizedStringResource {
+    switch self {
+    case .metric: "Metric (cm, kg)"
+    case .imperial: "Imperial (ft, lbs)"
+    }
+  }
+}
+
 extension SettingsRecord {
   public enum TemperaturePreference: String, QueryBindable, CaseIterable {
     case celsius
     case fahrenheit
     case kelvin
+  }
+}
+
+extension SettingsRecord.TemperaturePreference: CustomLocalizedStringResourceConvertible {
+  public var localizedStringResource: LocalizedStringResource {
+    switch self {
+    case .celsius: "Celsius"
+    case .fahrenheit: "Fahrenheit"
+    case .kelvin: "Kelvin"
+    }
   }
 }
 
