@@ -8,7 +8,7 @@ import SwiftUINavigation
 
 @MainActor
 @Observable
-public final class OnboardingModel: HashableObject {
+public final class OnboardingModel: HashableObject, Identifiable {
   public var path = [Path]()
   public var hasAcceptedDisclaimer = false
   public let connectToHealthKit = ConnectToHealthKitModel()

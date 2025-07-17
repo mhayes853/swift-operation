@@ -11,17 +11,47 @@ import SwiftUINavigation
 public final class CanIClimbModel {
   private let analyzer = QueryAnalyzerModel()
 
-  public var destination: Destination?
+  @ObservationIgnored
+  @Dependency(\.defaultDatabase) private var database
+
+  public var destination: Destination? {
+    didSet { self.bind() }
+  }
 
   public init() {}
+}
+
+extension CanIClimbModel {
+  public func appeared() async throws {
+    let hasFinishedOnboarding = try await self.database.read {
+      InternalMetricsRecord.find(in: $0).hasCompletedOnboarding
+    }
+    if !hasFinishedOnboarding {
+      self.destination = .onboarding(OnboardingModel())
+    }
+  }
+}
+
+extension CanIClimbModel {
+  public func settingsInvoked() {
+    self.destination = .settings(SettingsModel())
+  }
 }
 
 extension CanIClimbModel {
   @CasePathable
   public enum Destination: Hashable, Sendable {
     case onboarding(OnboardingModel)
-    case queryAnalyzer(QueryAnalyzerModel)
     case settings(SettingsModel)
+  }
+
+  private func bind() {
+    switch self.destination {
+    case .onboarding(let model):
+      model.onFinished = { [weak self] in self?.destination = nil }
+    default:
+      break
+    }
   }
 }
 
@@ -51,10 +81,20 @@ public struct CanIClimbApp: App {
 // MARK: - CanIClimbView
 
 public struct CanIClimbView: View {
-  let model: CanIClimbModel
+  @Bindable var model: CanIClimbModel
 
   public var body: some View {
     Text("TODO")
       .observeQueryAlerts()
+      .task { try? await self.model.appeared() }
+      #if os(iOS)
+        .fullScreenCover(item: self.$model.destination.onboarding) { model in
+          OnboardingView(model: model)
+        }
+      #else
+        .sheet(item: self.$model.destination.onboarding) { model in
+          OnboardingView(model: model)
+        }
+      #endif
   }
 }

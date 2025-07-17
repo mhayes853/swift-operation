@@ -126,7 +126,7 @@ extension DependenciesTestSuite {
 }
 
 extension OnboardingModel {
-  fileprivate func runOnboardingFlow(
+  func runOnboardingFlow(
     fillingIn record: UserHumanityRecord,
     locationPermissions: LocationPermissionStepAction = .requestPermission,
     signInCredentials: User.SignInCredentials? = nil,
@@ -189,7 +189,7 @@ extension OnboardingModel {
 }
 
 extension UserHumanityRecord {
-  fileprivate static let mock = UserHumanityRecord(
+  static let mock = UserHumanityRecord(
     height: .imperial(HumanHeight.Imperial(feet: 6, inches: 1)),
     weight: Measurement(value: 180, unit: .pounds),
     ageRange: .in30s,
