@@ -5,7 +5,7 @@ extension Task {
     @_inheritActorContext @_implicitSelfCapture operation:
       sending @escaping @isolated(any) () async throws -> Success
   ) where Failure == Error {
-    #if compiler(>=6.2)
+    #if swift(>=6.2)
       if #available(iOS 18.0, macOS 15.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *),
         // NB: Avoid passing nil to executorPreference to avoid crashing.
         let executor = configuration.executorPreference

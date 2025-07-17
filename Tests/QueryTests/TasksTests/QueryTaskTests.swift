@@ -203,6 +203,29 @@ struct QueryTaskTests {
     expectNoDifference(task.isFinished, true)
   }
 
+  @Test("QueryTask No Finished Result Before Running")
+  func queryTaskNoFinishedResultBeforeRunning() async throws {
+    let task = QueryTask<Int>(context: QueryContext()) { _, _ in 42 }
+    expectNoDifference(try task.finishedResult?.get(), nil)
+  }
+
+  @Test("QueryTask Has Finished Result After Running")
+  func queryTaskHasFinishedResultAfterRunning() async throws {
+    let task = QueryTask<Int>(context: QueryContext()) { _, _ in 42 }
+    _ = try await task.runIfNeeded()
+    expectNoDifference(try task.finishedResult?.get(), 42)
+  }
+
+  @Test("QueryTask Has Error Finished Result After Running When Map Throws")
+  func queryTaskHasErrorFinishedResultAfterRunningWhenMapThrows() async throws {
+    struct SomeError: Error {}
+
+    let task = QueryTask<Int>(context: QueryContext()) { _, _ in 42 }
+      .map { _ in throw SomeError() }
+    _ = try? await task.runIfNeeded()
+    #expect(throws: SomeError.self) { try task.finishedResult?.get() }
+  }
+
   @Test("QueryTask Is Not Running By Default")
   func queryTaskIsNotRunningByDefault() {
     let task = QueryTask(context: QueryContext()) { _, _ in 42 }

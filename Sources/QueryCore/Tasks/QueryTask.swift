@@ -232,13 +232,13 @@ extension QueryTask {
 
   fileprivate func _runIfNeeded() async throws -> any Sendable {
     switch try self.runTaskAction() {
-    case let .awaitTask(task):
+    case .awaitTask(let task):
       return try await withTaskCancellationHandler {
         try await task.value
       } onCancel: {
         self.cancel()
       }
-    case let .returnValue(value):
+    case .returnValue(let value):
       return value
     }
   }
@@ -246,9 +246,9 @@ extension QueryTask {
   private func runTaskAction() throws -> RunAction {
     try self.box.inner.withLock { state in
       switch state.task {
-      case let .running(task):
+      case .running(let task):
         return RunAction.awaitTask(task)
-      case let .finished(result):
+      case .finished(let result):
         return try .returnValue(result.get())
       case .none:
         let task = self.newTask()
@@ -294,7 +294,7 @@ extension QueryTask {
   public var isCancelled: Bool {
     self.box.inner.withLock {
       switch $0.task {
-      case let .finished(.failure(error)): error is CancellationError
+      case .finished(.failure(let error)): error is CancellationError
       default: false
       }
     }
@@ -315,7 +315,7 @@ extension QueryTask {
   public func cancel() {
     self.box.inner.withLock {
       switch $0.task {
-      case let .running(task): task.cancel()
+      case .running(let task): task.cancel()
       case .finished: return
       default: break
       }
@@ -333,6 +333,18 @@ extension QueryTask {
       switch $0.task {
       case .finished: true
       default: false
+      }
+    }
+  }
+
+  /// The result of this task, if it has finished running.
+  public var finishedResult: Result<Value, any Error>? {
+    self.box.inner.withLock {
+      switch $0.task {
+      case .finished(let result):
+        result.flatMap { value in Result { try self.transforms(value) } }
+      default:
+        nil
       }
     }
   }
