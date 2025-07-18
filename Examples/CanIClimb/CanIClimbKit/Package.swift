@@ -26,7 +26,7 @@ let package = Package(
     .package(
       url: "https://github.com/mhayes853/swift-uuidv7",
       branch: "sharing-grdb-icloud",
-      traits: ["SwiftUUIDV7SharingGRDB", "SwiftUUIDV7Tagged"]
+      traits: ["SwiftUUIDV7SharingGRDB", "SwiftUUIDV7Tagged", "SwiftUUIDV7Dependencies"]
     )
   ],
   targets: [

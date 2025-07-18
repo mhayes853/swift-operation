@@ -223,6 +223,7 @@ public struct QueryAnalysisRecord {
   public var queryRetryAttempt: Int
   public var queryRuntimeDuration: TimeInterval
   public var queryTypeName: String
+  public var queryDescription: String
 
   @Column(as: QueryAnalysis.DataResult.JSONRepresentation.self)
   public var queryDataResult: QueryAnalysis.DataResult
@@ -233,6 +234,7 @@ public struct QueryAnalysisRecord {
     queryRetryAttempt: Int,
     queryRuntimeDuration: TimeInterval,
     queryTypeName: String,
+    queryDescription: String,
     queryDataResult: QueryAnalysis.DataResult
   ) {
     self.id = id
@@ -240,6 +242,7 @@ public struct QueryAnalysisRecord {
     self.queryRetryAttempt = queryRetryAttempt
     self.queryRuntimeDuration = queryRuntimeDuration
     self.queryTypeName = queryTypeName
+    self.queryDescription = queryDescription
     self.queryDataResult = queryDataResult
   }
 }
@@ -365,6 +368,23 @@ extension DatabaseMigrator {
           id TEXT PRIMARY KEY,
           name TEXT NOT NULL,
           subtitle TEXT NOT NULL
+        );
+        """,
+        as: Void.self
+      )
+      .execute(db)
+    }
+    self.registerMigration("create query analysis table") { db in
+      try #sql(
+        """
+        CREATE TABLE IF NOT EXISTS QueryAnalysis (
+          id BLOB PRIMARY KEY,
+          launchId BLOB NOT NULL,
+          queryRetryAttempt INTEGER NOT NULL,
+          queryRuntimeDuration REAL NOT NULL,
+          queryTypeName TEXT NOT NULL,
+          queryDescription TEXT NOT NULL,
+          queryDataResult TEXT NOT NULL
         );
         """,
         as: Void.self
