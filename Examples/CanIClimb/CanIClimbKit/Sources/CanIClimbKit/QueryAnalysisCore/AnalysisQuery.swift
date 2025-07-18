@@ -78,7 +78,7 @@ extension QueryAnalysis {
       queryName: query.analysisName,
       queryPathDescription: query.path.description,
       yieldedQueryDataResults: yieldedResults.map { DataResult(result: $0) },
-      queryDataResult: DataResult.init(result: finalResult)
+      queryDataResult: DataResult(result: finalResult)
     )
   }
 }

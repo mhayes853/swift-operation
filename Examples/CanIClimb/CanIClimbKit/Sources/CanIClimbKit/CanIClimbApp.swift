@@ -1,5 +1,6 @@
 import Dependencies
 import Observation
+import Query
 import SharingGRDB
 import SwiftUI
 import SwiftUINavigation
@@ -62,6 +63,7 @@ public struct CanIClimbApp: App {
 
   public init() {
     try! prepareDependencies {
+      $0.defaultQueryClient = QueryClient(storeCreator: .canIClimb)
       $0.defaultDatabase = try canIClimbDatabase(
         url: .applicationSupportDirectory.appending(path: "db/can-i-climb.db")
       )
