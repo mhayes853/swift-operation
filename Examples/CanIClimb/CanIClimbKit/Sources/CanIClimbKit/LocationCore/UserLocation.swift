@@ -139,8 +139,7 @@ extension LocationReading {
       @Dependency(UserLocationKey.self) var userLocation
       let isAuthorized = await userLocation.requestAuthorization()
       if isAuthorized {
-        let task = client.store(for: LocationReading.userQuery).fetchTask()
-        Task { try await task.runIfNeeded() }
+        Task.immediate { try await client.store(for: LocationReading.userQuery).fetch() }
       }
       return isAuthorized
     }

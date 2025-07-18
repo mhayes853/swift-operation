@@ -111,8 +111,7 @@ extension User {
       @Dependency(\.defaultQueryClient) var client
 
       try await authenticator.signIn(with: arguments.credentials)
-      let task = client.store(for: User.currentQuery).fetchTask()
-      Task { try await task.runIfNeeded() }
+      Task.immediate { try await client.store(for: User.currentQuery).fetch() }
     }
   }
 }
