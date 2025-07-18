@@ -172,19 +172,8 @@ public struct UserSettingsView: View {
         LoadingIndicatorSectionView(loadingType: loadingType)
       }
       Group {
-        EditableSectionView(
-          fields: self.$model.editableFields.animation(),
-          submittableEdit: self.model.submittableEdit,
-          onSubmitted: { edit in
-            Task { try await self.model.editSubmitted(edit: edit) }
-          }
-        )
-        ManageAccountSectionView(
-          onDeleted: { self.model.deleteAccountInvoked() },
-          onSignedOut: {
-            Task { try await self.model.signOutInvoked() }
-          }
-        )
+        EditableSectionView(model: self.model)
+        ManageAccountSectionView(model: self.model)
       }
       .disabled(self.model.loadingType != nil)
     }
@@ -200,7 +189,6 @@ public struct UserSettingsView: View {
 
 private struct LoadingIndicatorSectionView: View {
   let loadingType: UserSettingsModel.LoadingType
-  let progressId = UUID()
 
   var body: some View {
     Section {
@@ -214,45 +202,41 @@ private struct LoadingIndicatorSectionView: View {
         }
         .bold()
       } icon: {
-        ProgressView()
-          .id(self.progressId)
+        SpinnerView()
       }
     }
   }
 }
 
 private struct EditableSectionView: View {
-  @Binding var fields: UserSettingsModel.EditableFields
-  let submittableEdit: User.Edit?
-  let onSubmitted: (User.Edit) -> Void
+  @Bindable var model: UserSettingsModel
 
   var body: some View {
     Section {
-      TextField("Name", text: self.$fields.name)
-      TextField("Subtitle", text: self.$fields.subtitle)
+      TextField("Name", text: self.$model.editableFields.name.animation())
+      TextField("Subtitle", text: self.$model.editableFields.subtitle.animation())
     } header: {
       Text("Profile Info")
     }
 
-    if let submittableEdit {
+    if let submittableEdit = self.model.submittableEdit {
       Button("Save Profile", systemImage: "square.and.arrow.down") {
-        self.onSubmitted(submittableEdit)
+        Task { try await self.model.editSubmitted(edit: submittableEdit) }
       }
     }
   }
 }
 
 private struct ManageAccountSectionView: View {
-  let onDeleted: () -> Void
-  let onSignedOut: () -> Void
+  let model: UserSettingsModel
 
   var body: some View {
     Section {
       Button("Sign Out", systemImage: "person.crop.circle", role: .destructive) {
-        self.onSignedOut()
+        Task { try await self.model.signOutInvoked() }
       }
       Button("Delete Account", systemImage: "trash.slash", role: .destructive) {
-        self.onDeleted()
+        self.model.deleteAccountInvoked()
       }
     } header: {
       Text("Manage Account")

@@ -68,9 +68,7 @@ public struct SettingsView: View {
         UserProfileSectionView(model: self.model.signIn)
         CloudSyncSectionView()
         AIAvailabilitySectionView()
-        ConnectHealthKitSectionView(isConnected: self.model.connectToHealthKit.isConnected) {
-          Task { await self.model.connectToHealthKit.connectInvoked() }
-        }
+        ConnectHealthKitSectionView(model: self.model.connectToHealthKit)
         PreferencesSectionView(settings: self.$model.settings)
         UserInfoSectionView(
           profile: self.$model.userProfile,
@@ -99,7 +97,6 @@ public struct SettingsView: View {
 private struct UserProfileSectionView: View {
   @SharedQuery(User.currentQuery, animation: .bouncy) private var user
   let model: SignInModel
-  let progressId = UUID()
 
   var body: some View {
     Section {
@@ -121,11 +118,10 @@ private struct UserProfileSectionView: View {
             Text("Loading Profile...")
               .foregroundStyle(.secondary)
           } icon: {
-            ProgressView().id(self.progressId)
+            SpinnerView()
           }
         }
       }
-
     } header: {
       Text("Profile")
     }
@@ -136,7 +132,6 @@ private struct UserProfileSectionView: View {
 
 private struct CloudSyncSectionView: View {
   @SharedQuery(CKAccountStatus.currentQuery, animation: .bouncy) private var accountStatus
-  private let progressId = UUID()
 
   public var body: some View {
     Section {
@@ -175,7 +170,7 @@ private struct CloudSyncSectionView: View {
             .result(.success(.noAccount)):
             Image(systemName: "xmark.icloud.fill")
           default:
-            ProgressView().id(self.progressId)
+            SpinnerView()
           }
         }
         .symbolRenderingMode(.multicolor)
@@ -286,12 +281,11 @@ private struct AIAvailabilitySectionView: View {
 // MARK: - Connect HealtKit Section
 
 private struct ConnectHealthKitSectionView: View {
-  let isConnected: Bool
-  let onConnect: () -> Void
+  let model: ConnectToHealthKitModel
 
   var body: some View {
     Section {
-      if self.isConnected {
+      if self.model.isConnected {
         Label {
           Text("Connected")
         } icon: {
@@ -301,7 +295,7 @@ private struct ConnectHealthKitSectionView: View {
         .foregroundStyle(.secondary)
       } else {
         Button {
-          self.onConnect()
+          Task { await self.model.connectInvoked() }
         } label: {
           Label {
             Text("Connect to HealthKit")
@@ -314,7 +308,7 @@ private struct ConnectHealthKitSectionView: View {
     } header: {
       Text("HealthKit")
     } footer: {
-      if self.isConnected {
+      if self.model.isConnected {
         Text("HealthKit is connected, and will be used to personalize your training plans.")
       } else {
         Text(

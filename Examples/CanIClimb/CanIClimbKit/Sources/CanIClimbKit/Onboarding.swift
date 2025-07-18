@@ -172,55 +172,31 @@ public struct OnboardingView: View {
 
   public var body: some View {
     NavigationStack(path: self.$model.path) {
-      WelcomeView { self.model.startInvoked() }
+      WelcomeView(model: self.model)
         .navigationDestination(for: OnboardingModel.Path.self) { path in
           switch path {
           case .disclaimer:
-            DisclaimerView(hasAcceptedDisclaimer: self.$model.hasAcceptedDisclaimer) {
-              self.model.disclaimerAccepted()
-            }
+            DisclaimerView(model: self.model)
           case .selectGender:
-            GenderSelectionView { self.model.genderSelected($0) }
+            GenderSelectionView(model: self.model)
           case .selectAgeRange:
-            AgeRangeSelectionView { self.model.ageRangeSelected($0) }
+            AgeRangeSelectionView(model: self.model)
           case .selectHeight:
-            HeightSelectionView(
-              metricPreference: self.$model.metricPreference,
-              selectedHeight: self.$model.userProfile.height
-            ) {
-              self.model.heightSelected()
-            }
+            HeightSelectionView(model: self.model)
           case .selectWeight:
-            WeightSelectionView(
-              metricPreference: self.$model.metricPreference,
-              height: self.model.userProfile.height,
-              weight: self.$model.userProfile.weight
-            ) {
-              self.model.weightSelected()
-            }
+            WeightSelectionView(model: self.model)
           case .selectActivityLevel:
-            ActivitiyLevelSelectionView { self.model.activityLevelSelected($0) }
+            ActivitiyLevelSelectionView(model: self.model)
           case .selectWorkoutFrequency:
-            WorkoutFrequencySelectionView { self.model.workoutFrequencySelected($0) }
+            WorkoutFrequencySelectionView(model: self.model)
           case .connectHealthKit:
-            ConnectHealthKitView(isConnected: self.model.connectToHealthKit.isConnected) { action in
-              Task { await self.model.connectToHealthKitStepInvoked(action: action) }
-            }
+            ConnectHealthKitView(model: self.model)
           case .shareLocation:
-            ShareLocationView(
-              hasRequested: self.model.hasRequestedLocationSharing,
-              isEnabled: self.model.isLocationSharingEnabled
-            ) { action in
-              Task { await self.model.locationPermissionStepInvoked(action: action) }
-            }
+            ShareLocationView(model: self.model)
           case .signIn:
-            SignInView(model: self.model.signIn) { self.model.signInSkipped() }
+            SignInView(model: self.model)
           case .wrapUp:
-            WrapUpView {
-              Task {
-                await withErrorReporting { try await self.model.wrapUpInvoked() }
-              }
-            }
+            WrapUpView(model: self.model)
           }
         }
     }
@@ -230,7 +206,7 @@ public struct OnboardingView: View {
 // MARK: - WelcomeView
 
 private struct WelcomeView: View {
-  let onStart: () -> Void
+  let model: OnboardingModel
 
   var body: some View {
     OnboardingImageActionView(
@@ -242,7 +218,7 @@ private struct WelcomeView: View {
       imageColor: .primary
     ) {
       OnboardingButton("Let's Get Started!") {
-        self.onStart()
+        self.model.startInvoked()
       }
     }
     .onboardingNavigationTitle("Welcome")
@@ -252,15 +228,14 @@ private struct WelcomeView: View {
 // MARK: - DisclaimerView
 
 private struct DisclaimerView: View {
-  @Binding var hasAcceptedDisclaimer: Bool
-  let onAccepted: () -> Void
+  @Bindable var model: OnboardingModel
 
   var body: some View {
     ScrollView {
       VStack(spacing: 20) {
         Text("DISCLAIMER").font(.title.bold())
         Text(disclaimer)
-        Toggle("I Understand and Accept", isOn: self.$hasAcceptedDisclaimer)
+        Toggle("I Understand and Accept", isOn: self.$model.hasAcceptedDisclaimer)
           .frame(maxWidth: .infinity)
           .bold()
           .padding()
@@ -271,10 +246,10 @@ private struct DisclaimerView: View {
     }
     .safeAreaInset(edge: .bottom) {
       OnboardingButton("Let's Move On") {
-        self.onAccepted()
+        self.model.disclaimerAccepted()
       }
       .padding()
-      .disabled(!self.hasAcceptedDisclaimer)
+      .disabled(!self.model.hasAcceptedDisclaimer)
     }
     .onboardingNavigationTitle("DISCLAIMER")
   }
@@ -283,11 +258,11 @@ private struct DisclaimerView: View {
 // MARK: - GenderSelectionView
 
 private struct GenderSelectionView: View {
-  let onSelected: (HumanGender) -> Void
+  let model: OnboardingModel
 
   var body: some View {
     OnboardingOptionsPicker(title: "Select Your Gender", options: Array(HumanGender.allCases)) {
-      self.onSelected($0)
+      self.model.genderSelected($0)
     }
     .onboardingNavigationTitle("Gender")
   }
@@ -296,11 +271,11 @@ private struct GenderSelectionView: View {
 // MARK: - AgeRangeSelectionView
 
 private struct AgeRangeSelectionView: View {
-  let onSelected: (HumanAgeRange) -> Void
+  let model: OnboardingModel
 
   var body: some View {
     OnboardingOptionsPicker(title: "Select Your Age", options: Array(HumanAgeRange.allCases)) {
-      self.onSelected($0)
+      self.model.ageRangeSelected($0)
     }
     .onboardingNavigationTitle("Age")
   }
@@ -309,9 +284,7 @@ private struct AgeRangeSelectionView: View {
 // MARK: - HeightSelectionView
 
 private struct HeightSelectionView: View {
-  @Binding var metricPreference: SettingsRecord.MetricPreference
-  @Binding var selectedHeight: HumanHeight
-  let onSelected: () -> Void
+  @Bindable var model: OnboardingModel
 
   var body: some View {
     ScrollView {
@@ -319,16 +292,16 @@ private struct HeightSelectionView: View {
         Text("Select Your Weight").font(.title.bold())
         Spacer()
         Group {
-          switch self.metricPreference {
+          switch self.model.metricPreference {
           case .imperial:
-            Picker("Select Your Height", selection: self.$selectedHeight.imperial) {
+            Picker("Select Your Height", selection: self.$model.userProfile.height.imperial) {
               ForEach(HumanHeight.Imperial.options, id: \.self) { height in
                 Text(height.formatted)
                   .tag(height)
               }
             }
           case .metric:
-            Picker("Select Your Height", selection: self.$selectedHeight.metric) {
+            Picker("Select Your Height", selection: self.$model.userProfile.height.metric) {
               ForEach(HumanHeight.Metric.options, id: \.self) { height in
                 Text(height.formatted)
                   .tag(height)
@@ -339,14 +312,14 @@ private struct HeightSelectionView: View {
         #if os(iOS)
           .pickerStyle(.wheel)
         #endif
-        OnboardingMetricPreferencePickerView(metricPreference: self.$metricPreference)
+        OnboardingMetricPreferencePickerView(metricPreference: self.$model.metricPreference)
         Spacer()
       }
       .padding()
     }
     .safeAreaInset(edge: .bottom) {
       OnboardingButton("Select Height") {
-        self.onSelected()
+        self.model.heightSelected()
       }
       .padding()
     }
@@ -357,37 +330,17 @@ private struct HeightSelectionView: View {
 // MARK: - WeightSelectionView
 
 private struct WeightSelectionView: View {
-  @Binding var metricPreference: SettingsRecord.MetricPreference
+  @Bindable var model: OnboardingModel
 
   // NB: SwiftUI Pickers will reset a Measurement binding to 0 when the metric preference changes,
   // so use a raw numerical value instead.
   @State private var selectedValue: Int
 
-  @Binding var weight: Measurement<UnitMass>
-  let height: HumanHeight
-  let onSelected: () -> Void
-
-  private var selectedWeight: Measurement<UnitMass> {
-    Measurement(value: Double(self.selectedValue), unit: self.metricPreference.unit)
-  }
-
-  private var bmi: HumanBMI {
-    HumanBMI(weight: self.selectedWeight, height: self.height)
-  }
-
-  init(
-    metricPreference: Binding<SettingsRecord.MetricPreference>,
-    height: HumanHeight,
-    weight: Binding<Measurement<UnitMass>>,
-    onSelected: @escaping () -> Void
-  ) {
-    self._metricPreference = metricPreference
+  init(model: OnboardingModel) {
+    self.model = model
     self._selectedValue = State(
-      initialValue: Int(weight.wrappedValue.converted(to: metricPreference.wrappedValue.unit).value)
+      initialValue: Int(model.userProfile.weight.converted(to: model.metricPreference.unit).value)
     )
-    self._weight = weight
-    self.height = height
-    self.onSelected = onSelected
   }
 
   var body: some View {
@@ -397,7 +350,7 @@ private struct WeightSelectionView: View {
         Spacer()
         Group {
           Picker("Select Your Weight", selection: self.$selectedValue.animation()) {
-            switch self.metricPreference {
+            switch self.model.metricPreference {
             case .imperial:
               ForEach(0..<601) { value in
                 Text("\(value) lbs")
@@ -414,8 +367,8 @@ private struct WeightSelectionView: View {
         #if os(iOS)
           .pickerStyle(.wheel)
         #endif
-        OnboardingMetricPreferencePickerView(metricPreference: self.$metricPreference)
-          .onChange(of: self.metricPreference) { old, new in
+        OnboardingMetricPreferencePickerView(metricPreference: self.$model.metricPreference)
+          .onChange(of: self.model.metricPreference) { old, new in
             let oldMeasurement = Measurement<UnitMass>(
               value: Double(self.selectedValue),
               unit: old.unit
@@ -423,16 +376,19 @@ private struct WeightSelectionView: View {
             self.selectedValue = Int(oldMeasurement.converted(to: new.unit).value)
           }
           .onChange(of: self.selectedValue) {
-            self.weight = self.selectedWeight
+            self.model.userProfile.weight = Measurement(
+              value: Double(self.selectedValue),
+              unit: self.model.metricPreference.unit
+            )
           }
-        OnboardingBMIView(bmi: self.bmi)
+        OnboardingBMIView(bmi: self.model.userProfile.bmi)
         Spacer()
       }
       .padding()
     }
     .safeAreaInset(edge: .bottom) {
       OnboardingButton("Select Weight") {
-        self.onSelected()
+        self.model.weightSelected()
       }
       .padding()
     }
@@ -443,7 +399,7 @@ private struct WeightSelectionView: View {
 // MARK: - ActivityLevelSelectionView
 
 private struct ActivitiyLevelSelectionView: View {
-  let onSelected: (HumanActivityLevel) -> Void
+  let model: OnboardingModel
 
   var body: some View {
     OnboardingOptionsPicker(
@@ -452,7 +408,7 @@ private struct ActivitiyLevelSelectionView: View {
         "How would you best describe how physically active your are? Pick the option that you think best suits your lifestyle.",
       options: Array(HumanActivityLevel.allCases)
     ) {
-      self.onSelected($0)
+      self.model.activityLevelSelected($0)
     }
     .onboardingNavigationTitle("Activity Level")
   }
@@ -461,14 +417,14 @@ private struct ActivitiyLevelSelectionView: View {
 // MARK: - WorkoutFrequencySelectionView
 
 private struct WorkoutFrequencySelectionView: View {
-  let onSelected: (HumanWorkoutFrequency) -> Void
+  let model: OnboardingModel
 
   var body: some View {
     OnboardingOptionsPicker(
       title: "How Often do you Exercise?",
       options: Array(HumanWorkoutFrequency.allCases)
     ) {
-      self.onSelected($0)
+      self.model.workoutFrequencySelected($0)
     }
     .onboardingNavigationTitle("Exercise Frequency")
   }
@@ -477,8 +433,7 @@ private struct WorkoutFrequencySelectionView: View {
 // MARK: - ConnectHealthKitView
 
 private struct ConnectHealthKitView: View {
-  let isConnected: Bool
-  let onAction: (OnboardingModel.ConnectToHealthKitStepAction) -> Void
+  let model: OnboardingModel
 
   var body: some View {
     OnboardingImageActionView(
@@ -493,12 +448,14 @@ private struct ConnectHealthKitView: View {
       imageColor: .pink
     ) {
       VStack(spacing: 20) {
-        OnboardingButton(self.isConnected ? "HealthKit Connected" : "Connect HealthKit") {
-          self.onAction(.connect)
+        OnboardingButton(
+          self.model.connectToHealthKit.isConnected ? "HealthKit Connected" : "Connect HealthKit"
+        ) {
+          Task { await self.model.connectToHealthKitStepInvoked(action: .connect) }
         }
-        .disabled(self.isConnected)
-        Button(self.isConnected ? "Continue" : "Skip") {
-          self.onAction(.skip)
+        .disabled(self.model.connectToHealthKit.isConnected)
+        Button(self.model.connectToHealthKit.isConnected ? "Continue" : "Skip") {
+          Task { await self.model.connectToHealthKitStepInvoked(action: .skip) }
         }
         .tint(.primary)
         .buttonStyle(.plain)
@@ -511,9 +468,7 @@ private struct ConnectHealthKitView: View {
 // MARK: - LocationPermissionView
 
 private struct ShareLocationView: View {
-  let hasRequested: Bool
-  let isEnabled: Bool
-  let onAction: (OnboardingModel.LocationPermissionStepAction) -> Void
+  let model: OnboardingModel
 
   var body: some View {
     OnboardingImageActionView(
@@ -528,24 +483,25 @@ private struct ShareLocationView: View {
       imageColor: .blue
     ) {
       VStack(spacing: 20) {
-        if self.hasRequested {
+        if self.model.hasRequestedLocationSharing {
           OnboardingButton(
-            self.isEnabled ? "Location Sharing Enabled" : "Location Sharing Disabled"
+            self.model.isLocationSharingEnabled
+              ? "Location Sharing Enabled" : "Location Sharing Disabled"
           ) {
-            self.onAction(.skip)
+            Task { await self.model.locationPermissionStepInvoked(action: .skip) }
           }
           .disabled(true)
           Button("Continue") {
-            self.onAction(.skip)
+            Task { await self.model.locationPermissionStepInvoked(action: .skip) }
           }
           .tint(.primary)
           .buttonStyle(.plain)
         } else {
           OnboardingButton("Share Your Location") {
-            self.onAction(.requestPermission)
+            Task { await self.model.locationPermissionStepInvoked(action: .requestPermission) }
           }
           Button("Skip") {
-            self.onAction(.skip)
+            Task { await self.model.locationPermissionStepInvoked(action: .skip) }
           }
           .tint(.primary)
           .buttonStyle(.plain)
@@ -559,8 +515,7 @@ private struct ShareLocationView: View {
 // MARK: - SignUpView
 
 private struct SignInView: View {
-  let model: SignInModel
-  let onSkipped: () -> Void
+  let model: OnboardingModel
 
   var body: some View {
     OnboardingImageActionView(
@@ -576,15 +531,14 @@ private struct SignInView: View {
       imageColor: .primary,
     ) {
       VStack(spacing: 20) {
-        let isSignedIn = self.model.signIn != nil
-        let isDisabled = isSignedIn || self.model.$signIn.isLoading
-        SignInButton(label: .signIn, model: self.model)
+        let isDisabled = self.model.signIn.isSignedIn || self.model.signIn.$signIn.isLoading
+        SignInButton(label: .signIn, model: self.model.signIn)
           .opacity(isDisabled ? 0.5 : 1)
           .frame(maxHeight: 60)
           .disabled(isDisabled)
           .padding()
-        Button(isSignedIn ? "Continue" : "Skip") {
-          self.onSkipped()
+        Button(self.model.signIn.isSignedIn ? "Continue" : "Skip") {
+          self.model.signInSkipped()
         }
         .tint(.primary)
         .buttonStyle(.plain)
@@ -594,10 +548,16 @@ private struct SignInView: View {
   }
 }
 
+extension SignInModel {
+  fileprivate var isSignedIn: Bool {
+    self.signIn != nil
+  }
+}
+
 // MARK: - WrapUpView
 
 private struct WrapUpView: View {
-  let onAction: () -> Void
+  let model: OnboardingModel
 
   var body: some View {
     OnboardingImageActionView(
@@ -607,7 +567,7 @@ private struct WrapUpView: View {
       imageColor: .primary
     ) {
       OnboardingButton("Let's Get Climbing Indeed!") {
-        self.onAction()
+        Task { await withErrorReporting { try await self.model.wrapUpInvoked() } }
       }
     }
     .onboardingNavigationTitle("Wrap Up")

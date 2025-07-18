@@ -67,6 +67,12 @@ public struct UserHumanityRecord: Hashable, Sendable, SingleRowTable {
   }
 }
 
+extension UserHumanityRecord {
+  public var bmi: HumanBMI {
+    HumanBMI(weight: self.weight, height: self.height)
+  }
+}
+
 // MARK: - CachedMountainRecord
 
 @Table("CachedMountains")
