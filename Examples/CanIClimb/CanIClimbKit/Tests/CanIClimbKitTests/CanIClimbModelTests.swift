@@ -23,7 +23,7 @@ extension DependenciesTestSuite {
       expectNoDifference(model.destination, nil)
     }
 
-    @Test("Doesn't Present Onboarding Flow When Completed")
+    @Test("Doesn't Present Onboarding Flow When Completed On Next Launch")
     func doesNotPresentOnboardingFlowWhenCompleted() async throws {
       let model = CanIClimbModel()
       try await model.appeared()
@@ -35,9 +35,13 @@ extension DependenciesTestSuite {
           connectHealthKit: .skip
         )
 
-      let model2 = CanIClimbModel()
-      try await model2.appeared()
-      expectNoDifference(model2.destination, nil)
+      try await withDependencies {
+        $0[ApplicationLaunchID.self] = ApplicationLaunchID()
+      } operation: {
+        let model2 = CanIClimbModel()
+        try await model2.appeared()
+        expectNoDifference(model2.destination, nil)
+      }
     }
 
     @Test("Presents QueryAnalyzer When Device Shaken After Appearance")
@@ -82,6 +86,26 @@ extension DependenciesTestSuite {
       expectNoDifference(model.devTools, nil)
       center.post(DeviceShakeMessage())
       expectNoDifference(model.devTools, nil)
+    }
+
+    @Test("Records Launch When Appeared")
+    func recordsLaunchWhenAppeared() async throws {
+      @Dependency(ApplicationLaunchID.self) var launchID
+      @Dependency(\.defaultDatabase) var database
+
+      let model = CanIClimbModel()
+      try await model.appeared()
+
+      let launches = try await database.read { try ApplicationLaunchRecord.all.fetchAll($0) }
+      expectNoDifference(
+        launches,
+        [
+          ApplicationLaunchRecord(
+            id: launchID,
+            localizedDeviceName: DeviceInfo.testValue.localizedModelName
+          )
+        ]
+      )
     }
   }
 }

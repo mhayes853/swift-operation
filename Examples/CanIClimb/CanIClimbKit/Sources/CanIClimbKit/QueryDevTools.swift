@@ -14,7 +14,7 @@ public final class QueryDevToolsModel: HashableObject, Identifiable {
   public var path = [Path]()
 
   public init() {
-    @Dependency(ApplicationLaunchIDKey.self) var launchId
+    @Dependency(ApplicationLaunchID.self) var launchId
     self._analyzes = Fetch(
       wrappedValue: GroupQueryAnalysisRequest.Value(),
       GroupQueryAnalysisRequest(launchId: launchId),

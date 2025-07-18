@@ -22,6 +22,12 @@ public final class CanIClimbModel {
   @ObservationIgnored
   @Dependency(\.notificationCenter) var center
 
+  @ObservationIgnored
+  @Dependency(ApplicationLaunchID.self) var launchId
+
+  @ObservationIgnored
+  @Dependency(DeviceInfo.self) var deviceInfo
+
   private var token: NotificationCenter.ObservationToken?
 
   public init() {}
@@ -32,8 +38,12 @@ extension CanIClimbModel {
     self.token = self.center.addObserver(for: DeviceShakeMessage.self) { [weak self] _ in
       self?.devTools = self?.devTools ?? QueryDevToolsModel()
     }
-    let hasFinishedOnboarding = try await self.database.read {
-      InternalMetricsRecord.find(in: $0).hasCompletedOnboarding
+    let hasFinishedOnboarding = try await self.database.write { [launchId, deviceInfo] db in
+      try ApplicationLaunchRecord.insert {
+        ApplicationLaunchRecord(id: launchId, localizedDeviceName: deviceInfo.localizedModelName)
+      }
+      .execute(db)
+      return InternalMetricsRecord.find(in: db).hasCompletedOnboarding
     }
     if !hasFinishedOnboarding {
       self.destination = .onboarding(OnboardingModel())
@@ -82,6 +92,7 @@ public struct CanIClimbApp: App {
       )
       $0.defaultSyncEngine = try .canIClimb(writer: $0.defaultDatabase)
       $0[UserLocationKey.self] = CLUserLocation()
+      $0[DeviceInfo.self] = DeviceInfo.current
     }
     self.model = CanIClimbModel()
   }

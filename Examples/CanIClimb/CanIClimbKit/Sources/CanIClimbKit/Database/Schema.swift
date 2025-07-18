@@ -252,6 +252,21 @@ public struct QueryAnalysisRecord: Hashable, Sendable, Identifiable {
   }
 }
 
+// MARK: - ApplicationLaunchRecord
+
+@Table("ApplicationLaunches")
+public struct ApplicationLaunchRecord: Hashable, Sendable {
+  @Column(as: ApplicationLaunchID.Representation.self)
+  public let id: ApplicationLaunchID
+
+  public var localizedDeviceName: String
+
+  public init(id: ApplicationLaunchID, localizedDeviceName: String) {
+    self.id = id
+    self.localizedDeviceName = localizedDeviceName
+  }
+}
+
 // MARK: - Can I Climb Database
 
 public func canIClimbDatabase(url: URL? = nil) throws -> any DatabaseWriter {
@@ -391,6 +406,18 @@ extension DatabaseMigrator {
           queryPathDescription TEXT NOT NULL,
           yieldedQueryDataResults TEXT NOT NULL,
           queryDataResult TEXT NOT NULL
+        );
+        """,
+        as: Void.self
+      )
+      .execute(db)
+    }
+    self.registerMigration("create application launches table") { db in
+      try #sql(
+        """
+        CREATE TABLE IF NOT EXISTS ApplicationLaunches (
+          id BLOB PRIMARY KEY,
+          localizedDeviceName TEXT NOT NULL
         );
         """,
         as: Void.self

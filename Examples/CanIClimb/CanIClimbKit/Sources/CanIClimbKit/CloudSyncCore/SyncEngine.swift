@@ -17,6 +17,9 @@ extension SyncEngine {
       privateTables: [
         SettingsRecord.self,
         InternalMetricsRecord.self
+          // TODO: - Make these syncable.
+          // QueryAnalysisRecord.self,
+          // ApplicationLaunchRecord.self
       ]
     )
   }

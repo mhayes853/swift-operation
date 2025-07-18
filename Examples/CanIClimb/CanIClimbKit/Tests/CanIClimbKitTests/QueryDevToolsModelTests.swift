@@ -10,7 +10,7 @@ extension DependenciesTestSuite {
     @Test(
       "Queries Analyzes List",
       .dependencies {
-        $0[ApplicationLaunchIDKey.self] = QueryAnalysis.mock1.launchId
+        $0[ApplicationLaunchID.self] = QueryAnalysis.mock1.launchId
       }
     )
     func queriesAnalyzesList() async throws {

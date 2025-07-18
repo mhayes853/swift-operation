@@ -17,7 +17,7 @@ extension DependenciesTestSuite {
   struct AnalysisQueryTests {
     @Test("Analyzes Successful Query Run")
     func analyzeSuccessfulQueryRun() async throws {
-      @Dependency(ApplicationLaunchIDKey.self) var launchId
+      @Dependency(ApplicationLaunchID.self) var launchId
 
       let query = TestQuery().analyzed()
       let store = QueryStore.detached(query: query, initialValue: nil)
@@ -41,7 +41,7 @@ extension DependenciesTestSuite {
 
     @Test("Analyzes Failed Query Run")
     func analyzeFailedQueryRun() async throws {
-      @Dependency(ApplicationLaunchIDKey.self) var launchId
+      @Dependency(ApplicationLaunchID.self) var launchId
 
       let query = TestQuery(shouldFail: true).analyzed().retry(limit: 1).delayer(.noDelay)
       let store = QueryStore.detached(query: query, initialValue: nil)
@@ -73,7 +73,7 @@ extension DependenciesTestSuite {
 
     @Test("Analyzes Query Run With Continuation Yields")
     func analyzesQueryRunWithContinuationYields() async throws {
-      @Dependency(ApplicationLaunchIDKey.self) var launchId
+      @Dependency(ApplicationLaunchID.self) var launchId
 
       let query = TestQuery(yieldCount: 2).analyzed()
       let store = QueryStore.detached(query: query, initialValue: nil)
@@ -96,14 +96,14 @@ extension DependenciesTestSuite {
 
     @Test("Analyzes Queries On a Per Launch Basis")
     func analyzesQueriesOnPerLaunchBasis() async throws {
-      @Dependency(ApplicationLaunchIDKey.self) var launchId1
+      @Dependency(ApplicationLaunchID.self) var launchId1
       let launchId2 = ApplicationLaunchID()
 
       let query = TestQuery(yieldCount: 1).analyzed()
       let store = QueryStore.detached(query: query, initialValue: nil)
       try await store.fetch()
       try await withDependencies {
-        $0[ApplicationLaunchIDKey.self] = launchId2
+        $0[ApplicationLaunchID.self] = launchId2
       } operation: {
         try await store.fetch()
       }
@@ -144,7 +144,7 @@ extension DependenciesTestSuite {
 
     @Test("Groups Analyses By Query Name")
     func groupsAnalysesByQueryName() async throws {
-      @Dependency(ApplicationLaunchIDKey.self) var launchId
+      @Dependency(ApplicationLaunchID.self) var launchId
 
       let query = TestQuery().analyzed()
       let query2 = TestQuery2().analyzed()
@@ -186,7 +186,7 @@ private func expectGroupedAnalyses(
   for launchId: ApplicationLaunchID? = nil,
   _ value: GroupQueryAnalysisRequest.Value
 ) async throws {
-  @Dependency(ApplicationLaunchIDKey.self) var defaultLaunchId
+  @Dependency(ApplicationLaunchID.self) var defaultLaunchId
   @Dependency(\.defaultDatabase) var database
 
   let launchId = launchId ?? defaultLaunchId
