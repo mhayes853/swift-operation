@@ -88,6 +88,7 @@ public struct CanIClimbView: View {
       .observeQueryAlerts()
       .task { try? await self.model.appeared() }
       #if os(iOS)
+        .shakeDetection()
         .fullScreenCover(item: self.$model.destination.onboarding) { model in
           OnboardingView(model: model)
         }
