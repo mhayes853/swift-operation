@@ -178,7 +178,7 @@ private struct CloudSyncSectionView: View {
       }
 
       if self.accountStatus == .temporarilyUnavailable {
-        Link("Open Settings", destination: settingsURL)
+        Link("Open Settings", destination: DeviceInfo.current.settingsURL)
       }
     } header: {
       Text("iCloud Sync Status")
@@ -193,7 +193,7 @@ private struct CloudSyncSectionView: View {
         )
       case .result(.success(.noAccount)):
         Text(
-          "You must be signed into your iCloud account to sync data with your \(localizedModelName)."
+          "You must be signed into your iCloud account to sync data with your \(DeviceInfo.current.localizedModelName)."
         )
       case .result(.success(.temporarilyUnavailable)):
         Text("You need to verify your iCloud account in settings.")
@@ -201,7 +201,7 @@ private struct CloudSyncSectionView: View {
         Text(
           """
           CanIClimb was denied access to your iCloud account. This may be because your \
-          \(localizedModelName) has parental control restrictions, or is owned by a company or \
+          \(DeviceInfo.current.localizedModelName) has parental control restrictions, or is owned by a company or \
           educational institution.
           """
         )
@@ -243,7 +243,7 @@ private struct AIAvailabilitySectionView: View {
       }
 
       if self.availability == .unavailable(.appleIntelligenceNotEnabled) {
-        Link("Open Settings", destination: settingsURL)
+        Link("Open Settings", destination: DeviceInfo.current.settingsURL)
       }
     } header: {
       Text("CanIClimb AI Availability")
@@ -252,14 +252,14 @@ private struct AIAvailabilitySectionView: View {
       case .available:
         Text(
           """
-          Apple Intelligence is enabled and ready to use on your \(localizedModelName), have fun \
+          Apple Intelligence is enabled and ready to use on your \(DeviceInfo.current.localizedModelName), have fun \
           climbing!
           """
         )
       case .unavailable(.appleIntelligenceNotEnabled):
         Text(
           """
-          Apple Intelligence is available for your \(localizedModelName), but it is not enabled. \
+          Apple Intelligence is available for your \(DeviceInfo.current.localizedModelName), but it is not enabled. \
           Go to settings and enable Apple Intelligence to access features such as personalized \
           training plans!
           """
@@ -267,12 +267,12 @@ private struct AIAvailabilitySectionView: View {
       case .unavailable(.modelNotReady):
         Text(
           """
-          Apple Intelligence is enabled on your \(localizedModelName), but the model is readying \
+          Apple Intelligence is enabled on your \(DeviceInfo.current.localizedModelName), but the model is readying \
           itself. Please wait and check back later.
           """
         )
       default:
-        Text("Apple Intelligence is unavailable on your \(localizedModelName).")
+        Text("Apple Intelligence is unavailable on your \(DeviceInfo.current.localizedModelName).")
       }
     }
   }
