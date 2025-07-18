@@ -83,7 +83,7 @@ extension EnvironmentValues {
     let authenticator = User.MockAuthenticator()
     authenticator.requiredCredentials = .mock1
     $0.defaultDatabase = try! canIClimbDatabase()
-    $0.defaultQueryClient = QueryClient(storeCreator: .preview)
+    $0.defaultQueryClient = QueryClient(storeCreator: .canIClimb)
     $0[User.AuthenticatorKey.self] = authenticator
     $0[User.CurrentLoaderKey.self] = User.MockCurrentLoader(result: .success(.mock1))
   }

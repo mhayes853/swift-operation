@@ -265,7 +265,7 @@ private struct ManageAccountSectionView: View {
 
   let _ = prepareDependencies {
     $0.defaultDatabase = try! canIClimbDatabase()
-    $0.defaultQueryClient = QueryClient(storeCreator: .preview)
+    $0.defaultQueryClient = QueryClient(storeCreator: .canIClimb)
 
     $0[User.AuthenticatorKey.self] = User.MockAuthenticator()
     $0[User.AccountDeleterKey.self] = User.MockAccountDeleter()

@@ -478,7 +478,7 @@ private struct DisclaimerSectionView: View {
   let _ = prepareDependencies {
     $0[CKAccountStatus.LoaderKey.self] = CKAccountStatus.MockLoader { .available }
     $0.defaultDatabase = try! canIClimbDatabase()
-    $0.defaultQueryClient = QueryClient(storeCreator: .preview)
+    $0.defaultQueryClient = QueryClient(storeCreator: .canIClimb)
 
     var requester = HealthPermissions.MockRequester()
     // requester.shouldFail = true

@@ -42,29 +42,3 @@ public struct _PreviewDelayModifier<Query: QueryRequest>: QueryModifier {
 private enum DisablePreviewDelayKey: QueryContext.Key {
   static let defaultValue = false
 }
-
-// MARK: - PreviewStoreCreator
-
-extension QueryClient {
-  public struct PreviewStoreCreator: StoreCreator {
-    var base: any StoreCreator = .default()
-
-    public func store<Query: QueryRequest>(
-      for query: Query,
-      in context: QueryContext,
-      with initialState: Query.State
-    ) -> QueryStore<Query.State> {
-      self.base.store(for: query.previewDelay(), in: context, with: initialState)
-    }
-  }
-}
-
-extension QueryClient.StoreCreator where Self == QueryClient.PreviewStoreCreator {
-  public static var preview: Self {
-    QueryClient.PreviewStoreCreator()
-  }
-
-  public static func preview(base: any QueryClient.StoreCreator) -> Self {
-    QueryClient.PreviewStoreCreator(base: base)
-  }
-}

@@ -833,7 +833,7 @@ extension Color {
 #Preview {
   let _ = prepareDependencies {
     $0.defaultDatabase = try! canIClimbDatabase()
-    $0.defaultQueryClient = QueryClient(storeCreator: .preview)
+    $0.defaultQueryClient = QueryClient(storeCreator: .canIClimb)
 
     let authenticator = User.MockAuthenticator()
     authenticator.requiredCredentials = .mock1
