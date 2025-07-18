@@ -10,26 +10,39 @@ import SwiftUINavigation
 @MainActor
 @Observable
 public final class CanIClimbModel {
-  private let analyzer = QueryAnalyzerModel()
-
   @ObservationIgnored
   @Dependency(\.defaultDatabase) private var database
+
+  public var analyzer: QueryAnalyzerModel?
 
   public var destination: Destination? {
     didSet { self.bind() }
   }
+
+  @ObservationIgnored
+  @Dependency(\.notificationCenter) var center
+
+  private var token: NotificationCenter.ObservationToken?
 
   public init() {}
 }
 
 extension CanIClimbModel {
   public func appeared() async throws {
+    self.token = self.center.addObserver(for: DeviceShakeMessage.self) { [weak self] _ in
+      self?.analyzer = self?.analyzer ?? QueryAnalyzerModel()
+    }
     let hasFinishedOnboarding = try await self.database.read {
       InternalMetricsRecord.find(in: $0).hasCompletedOnboarding
     }
     if !hasFinishedOnboarding {
       self.destination = .onboarding(OnboardingModel())
     }
+  }
+
+  public func disappeared() {
+    guard let token else { return }
+    self.center.removeObserver(token)
   }
 }
 
@@ -89,6 +102,7 @@ public struct CanIClimbView: View {
     Text("TODO")
       .observeQueryAlerts()
       .task { try? await self.model.appeared() }
+      .onDisappear { self.model.disappeared() }
       #if os(iOS)
         .shakeDetection()
         .fullScreenCover(item: self.$model.destination.onboarding) { model in

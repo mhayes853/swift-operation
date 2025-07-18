@@ -1,5 +1,6 @@
 import CanIClimbKit
 import CustomDump
+import Dependencies
 import Testing
 
 extension DependenciesTestSuite {
@@ -37,6 +38,50 @@ extension DependenciesTestSuite {
       let model2 = CanIClimbModel()
       try await model2.appeared()
       expectNoDifference(model2.destination, nil)
+    }
+
+    @Test("Presents QueryAnalyzer When Device Shaken After Appearance")
+    func presentsQueryAnalyzerWhenDeviceShaken() async throws {
+      @Dependency(\.notificationCenter) var center
+
+      let model = CanIClimbModel()
+      try await model.appeared()
+
+      expectNoDifference(model.analyzer, nil)
+      center.post(DeviceShakeMessage())
+      expectNoDifference(model.analyzer != nil, true)
+
+      model.disappeared()
+    }
+
+    @Test("Does Not Re-Present QueryAnalyzer When Device Shaken After Appearance")
+    func doesNotRePresentQueryAnalyzerWhenDeviceShaken() async throws {
+      @Dependency(\.notificationCenter) var center
+
+      let model = CanIClimbModel()
+      try await model.appeared()
+
+      expectNoDifference(model.analyzer, nil)
+      center.post(DeviceShakeMessage())
+      let analyzer = try #require(model.analyzer)
+
+      center.post(DeviceShakeMessage())
+      expectNoDifference(model.analyzer, analyzer)
+
+      model.disappeared()
+    }
+
+    @Test("Stops Presenting QueryAnalyzer When Device Shaken After Disappearance")
+    func stopsPresentingQueryAnalyzerWhenDeviceShakenAfterDisappearance() async throws {
+      @Dependency(\.notificationCenter) var center
+
+      let model = CanIClimbModel()
+      try await model.appeared()
+      model.disappeared()
+
+      expectNoDifference(model.analyzer, nil)
+      center.post(DeviceShakeMessage())
+      expectNoDifference(model.analyzer, nil)
     }
   }
 }
