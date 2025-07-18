@@ -3,18 +3,10 @@ import Tagged
 
 // MARK: - User
 
-public struct User: Hashable, Sendable, Identifiable, Codable {
+public typealias User = CachedUserRecord
+
+extension User {
   public typealias ID = Tagged<Self, String>
-
-  public let id: ID
-  public var name: PersonNameComponents
-  public var subtitle: String
-
-  public init(id: ID, name: PersonNameComponents, subtitle: String = "") {
-    self.id = id
-    self.name = name
-    self.subtitle = subtitle
-  }
 }
 
 // MARK: - Mocks

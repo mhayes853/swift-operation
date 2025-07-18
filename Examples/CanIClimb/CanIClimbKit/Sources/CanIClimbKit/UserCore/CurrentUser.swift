@@ -18,7 +18,6 @@ extension CurrentUser {
     try await self.database.read { db in
       let id = LocalInternalMetricsRecord.find(in: db).currentUserId
       return try id.flatMap { try CachedUserRecord.find($0).fetchOne(db) }
-        .map { User(cached: $0) }
     }
   }
 }
@@ -62,7 +61,7 @@ extension CurrentUser {
   private func saveLocalUser(_ user: User) async throws {
     try await self.database.write { db in
       try LocalInternalMetricsRecord.update(in: db) { $0.currentUserId = user.id }
-      try CachedUserRecord.upsert { CachedUserRecord.Draft(CachedUserRecord(user: user)) }
+      try CachedUserRecord.upsert { CachedUserRecord.Draft(user) }
         .execute(db)
     }
   }

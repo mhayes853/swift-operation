@@ -108,7 +108,7 @@ public struct CachedMountainRecord {
 // MARK: - CachedUser
 
 @Table("CachedUsers")
-public struct CachedUserRecord: Hashable, Sendable {
+public struct CachedUserRecord: Hashable, Sendable, Identifiable, Codable {
   public let id: User.ID
 
   @Column(as: PersonNameComponents.JSONRepresentation.self)
@@ -116,16 +116,10 @@ public struct CachedUserRecord: Hashable, Sendable {
 
   public var subtitle: String
 
-  public init(user: User) {
-    self.id = user.id
-    self.name = user.name
-    self.subtitle = user.subtitle
-  }
-}
-
-extension User {
-  public init(cached: CachedUserRecord) {
-    self.init(id: cached.id, name: cached.name, subtitle: cached.subtitle)
+  public init(id: User.ID, name: PersonNameComponents, subtitle: String = "") {
+    self.id = id
+    self.name = name
+    self.subtitle = subtitle
   }
 }
 
