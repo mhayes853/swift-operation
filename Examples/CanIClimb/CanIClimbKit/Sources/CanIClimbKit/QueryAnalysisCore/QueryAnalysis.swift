@@ -8,6 +8,7 @@ public typealias QueryAnalysis = QueryAnalysisRecord
 
 extension QueryAnalysis {
   public typealias ID = Tagged<Self, UUIDV7>
+  public typealias QueryName = Tagged<Self, String>
 }
 
 // MARK: - DataResult

@@ -208,7 +208,7 @@ public struct MountainClimbGoalRecord {
 // MARK: - QueryAnalysisRecord
 
 @Table("QueryAnalysis")
-public struct QueryAnalysisRecord {
+public struct QueryAnalysisRecord: Hashable, Sendable, Identifiable {
   public let id: QueryAnalysis.ID
 
   @Column(as: ApplicationLaunchID.Representation.self)
@@ -216,8 +216,11 @@ public struct QueryAnalysisRecord {
 
   public var queryRetryAttempt: Int
   public var queryRuntimeDuration: TimeInterval
-  public var queryTypeName: String
-  public var queryDescription: String
+  public var queryName: QueryAnalysis.QueryName
+  public var queryPathDescription: String
+
+  @Column(as: [QueryAnalysis.DataResult].JSONRepresentation.self)
+  public var yieldedQueryDataResults: [QueryAnalysis.DataResult]
 
   @Column(as: QueryAnalysis.DataResult.JSONRepresentation.self)
   public var queryDataResult: QueryAnalysis.DataResult
@@ -227,16 +230,18 @@ public struct QueryAnalysisRecord {
     launchId: ApplicationLaunchID,
     queryRetryAttempt: Int,
     queryRuntimeDuration: TimeInterval,
-    queryTypeName: String,
-    queryDescription: String,
+    queryName: QueryAnalysis.QueryName,
+    queryPathDescription: String,
+    yieldedQueryDataResults: [QueryAnalysis.DataResult],
     queryDataResult: QueryAnalysis.DataResult
   ) {
     self.id = id
     self.launchId = launchId
     self.queryRetryAttempt = queryRetryAttempt
     self.queryRuntimeDuration = queryRuntimeDuration
-    self.queryTypeName = queryTypeName
-    self.queryDescription = queryDescription
+    self.queryName = queryName
+    self.queryPathDescription = queryPathDescription
+    self.yieldedQueryDataResults = yieldedQueryDataResults
     self.queryDataResult = queryDataResult
   }
 }
@@ -376,8 +381,9 @@ extension DatabaseMigrator {
           launchId BLOB NOT NULL,
           queryRetryAttempt INTEGER NOT NULL,
           queryRuntimeDuration REAL NOT NULL,
-          queryTypeName TEXT NOT NULL,
-          queryDescription TEXT NOT NULL,
+          queryName TEXT NOT NULL,
+          queryPathDescription TEXT NOT NULL,
+          yieldedQueryDataResults TEXT NOT NULL,
           queryDataResult TEXT NOT NULL
         );
         """,
