@@ -36,3 +36,29 @@ extension QueryAnalysis.DataResult {
     }
   }
 }
+
+// MARK: - Mock Data
+
+extension QueryAnalysis {
+  public static let mock1 = Self(
+    id: ID(),
+    launchId: ApplicationLaunchID(),
+    queryRetryAttempt: 0,
+    queryRuntimeDuration: 1,
+    queryName: "Mock1",
+    queryPathDescription: "QueryPath([\"mock1\"])",
+    yieldedQueryDataResults: [],
+    queryDataResult: DataResult(didSucceed: true, dataDescription: "Something(count: 10)")
+  )
+
+  public static let mock2 = Self(
+    id: ID(),
+    launchId: ApplicationLaunchID(),
+    queryRetryAttempt: 0,
+    queryRuntimeDuration: 1,
+    queryName: "Mock2",
+    queryPathDescription: "QueryPath([\"mock2\"])",
+    yieldedQueryDataResults: [],
+    queryDataResult: DataResult(didSucceed: true, dataDescription: "Something(count: 20)")
+  )
+}

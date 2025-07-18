@@ -47,9 +47,9 @@ extension DependenciesTestSuite {
       let model = CanIClimbModel()
       try await model.appeared()
 
-      expectNoDifference(model.analyzer, nil)
+      expectNoDifference(model.devTools, nil)
       center.post(DeviceShakeMessage())
-      expectNoDifference(model.analyzer != nil, true)
+      expectNoDifference(model.devTools != nil, true)
 
       model.disappeared()
     }
@@ -61,12 +61,12 @@ extension DependenciesTestSuite {
       let model = CanIClimbModel()
       try await model.appeared()
 
-      expectNoDifference(model.analyzer, nil)
+      expectNoDifference(model.devTools, nil)
       center.post(DeviceShakeMessage())
-      let analyzer = try #require(model.analyzer)
+      let analyzer = try #require(model.devTools)
 
       center.post(DeviceShakeMessage())
-      expectNoDifference(model.analyzer, analyzer)
+      expectNoDifference(model.devTools, analyzer)
 
       model.disappeared()
     }
@@ -79,9 +79,9 @@ extension DependenciesTestSuite {
       try await model.appeared()
       model.disappeared()
 
-      expectNoDifference(model.analyzer, nil)
+      expectNoDifference(model.devTools, nil)
       center.post(DeviceShakeMessage())
-      expectNoDifference(model.analyzer, nil)
+      expectNoDifference(model.devTools, nil)
     }
   }
 }

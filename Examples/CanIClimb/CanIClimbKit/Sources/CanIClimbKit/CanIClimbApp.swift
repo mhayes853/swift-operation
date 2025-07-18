@@ -13,7 +13,7 @@ public final class CanIClimbModel {
   @ObservationIgnored
   @Dependency(\.defaultDatabase) private var database
 
-  public var analyzer: QueryAnalyzerModel?
+  public var devTools: QueryDevToolsModel?
 
   public var destination: Destination? {
     didSet { self.bind() }
@@ -30,7 +30,7 @@ public final class CanIClimbModel {
 extension CanIClimbModel {
   public func appeared() async throws {
     self.token = self.center.addObserver(for: DeviceShakeMessage.self) { [weak self] _ in
-      self?.analyzer = self?.analyzer ?? QueryAnalyzerModel()
+      self?.devTools = self?.devTools ?? QueryDevToolsModel()
     }
     let hasFinishedOnboarding = try await self.database.read {
       InternalMetricsRecord.find(in: $0).hasCompletedOnboarding
@@ -103,6 +103,9 @@ public struct CanIClimbView: View {
       .observeQueryAlerts()
       .task { try? await self.model.appeared() }
       .onDisappear { self.model.disappeared() }
+      .sheet(item: self.$model.devTools) { model in
+        QueryDevToolsView(model: model)
+      }
       #if os(iOS)
         .shakeDetection()
         .fullScreenCover(item: self.$model.destination.onboarding) { model in
