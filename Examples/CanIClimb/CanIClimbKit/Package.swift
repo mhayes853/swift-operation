@@ -15,11 +15,19 @@ let package = Package(
       branch: "main",
       traits: ["SwiftQueryLogging"]
     ),
-    .package(url: "https://github.com/pointfreeco/sharing-grdb-icloud", branch: "cloudkit"),
+    .package(
+      url: "https://github.com/pointfreeco/sharing-grdb-icloud",
+      revision: "f3a9c5a3c0942b9e8056736b3994ac07b381ea6c"
+    ),
     .package(url: "https://github.com/mhayes853/structured-queries-tagged", from: "0.1.1"),
     .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.9.2"),
     .package(url: "https://github.com/pointfreeco/swift-navigation", from: "2.3.1"),
-    .package(url: "https://github.com/evgenyneu/keychain-swift", from: "24.0.0")
+    .package(url: "https://github.com/evgenyneu/keychain-swift", from: "24.0.0"),
+    .package(
+      url: "https://github.com/mhayes853/swift-uuidv7",
+      branch: "sharing-grdb-icloud",
+      traits: ["SwiftUUIDV7SharingGRDB", "SwiftUUIDV7Tagged"]
+    )
   ],
   targets: [
     .target(
@@ -30,7 +38,8 @@ let package = Package(
         .product(name: "StructuredQueriesTagged", package: "structured-queries-tagged"),
         .product(name: "SwiftUINavigation", package: "swift-navigation"),
         .product(name: "UIKitNavigation", package: "swift-navigation"),
-        .product(name: "KeychainSwift", package: "keychain-swift")
+        .product(name: "KeychainSwift", package: "keychain-swift"),
+        .product(name: "UUIDV7", package: "swift-uuidv7")
       ]
     ),
     .testTarget(

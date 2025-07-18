@@ -10,7 +10,7 @@ public protocol SingleRowTable: PrimaryKeyedTable<UUID> where QueryOutput == Sel
 
 extension SingleRowTable {
   public static func find(in db: Database) -> Self {
-    let query = try? Self.find(UUID.null).fetchOne(db)
+    let query = try? Self.find(UUID.nil).fetchOne(db)
     return query ?? Self()
   }
 }

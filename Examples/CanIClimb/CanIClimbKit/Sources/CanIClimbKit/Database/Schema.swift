@@ -4,12 +4,13 @@ import SharingGRDB
 import StructuredQueries
 import StructuredQueriesGRDB
 import StructuredQueriesTagged
+import UUIDV7
 
 // MARK: - InternalMetricsRecord
 
 @Table("InternalMetrics")
 public struct InternalMetricsRecord: Hashable, Sendable, SingleRowTable {
-  public private(set) var id: UUID = UUID.null
+  public private(set) var id: UUID = .nil
   public var hasCompletedOnboarding = false
 
   public init() {}
@@ -23,7 +24,7 @@ public struct InternalMetricsRecord: Hashable, Sendable, SingleRowTable {
 
 @Table("LocalInternalMetrics")
 public struct LocalInternalMetricsRecord: Hashable, Sendable, SingleRowTable {
-  public private(set) var id: UUID = UUID.null
+  public private(set) var id: UUID = .nil
   public var hasConnectedHealthKit = false
   public var currentUserId: User.ID?
 
@@ -34,7 +35,7 @@ public struct LocalInternalMetricsRecord: Hashable, Sendable, SingleRowTable {
 
 @Table("UserHumanity")
 public struct UserHumanityRecord: Hashable, Sendable, SingleRowTable {
-  public private(set) var id: UUID = UUID.null
+  public private(set) var id: UUID = .nil
 
   @Column(as: HumanHeight.JSONRepresentation.self)
   public var height: HumanHeight = .imperial(HumanHeight.Imperial(feet: 5, inches: 8))
@@ -132,7 +133,7 @@ extension User {
 
 @Table("Settings")
 public struct SettingsRecord: Sendable, SingleRowTable {
-  public private(set) var id: UUID = .null
+  public private(set) var id: UUID = .nil
   public var metricPreference: MetricPreference = .imperial
   public var temperaturePreference: TemperaturePreference = .celsius
 
@@ -207,6 +208,39 @@ public struct MountainClimbGoalRecord {
     self.mountainId = mountainId
     self.dateAdded = dateAdded
     self.achievedDate = achievedDate
+  }
+}
+
+// MARK: - QueryAnalysisRecord
+
+@Table("QueryAnalysis")
+public struct QueryAnalysisRecord {
+  public let id: QueryAnalysis.ID
+
+  @Column(as: ApplicationLaunchID.Representation.self)
+  public let launchId: ApplicationLaunchID
+
+  public var queryRetryAttempt: Int
+  public var queryRuntimeDuration: TimeInterval
+  public var queryTypeName: String
+
+  @Column(as: QueryAnalysis.DataResult.JSONRepresentation.self)
+  public var queryDataResult: QueryAnalysis.DataResult
+
+  public init(
+    id: QueryAnalysis.ID,
+    launchId: ApplicationLaunchID,
+    queryRetryAttempt: Int,
+    queryRuntimeDuration: TimeInterval,
+    queryTypeName: String,
+    queryDataResult: QueryAnalysis.DataResult
+  ) {
+    self.id = id
+    self.launchId = launchId
+    self.queryRetryAttempt = queryRetryAttempt
+    self.queryRuntimeDuration = queryRuntimeDuration
+    self.queryTypeName = queryTypeName
+    self.queryDataResult = queryDataResult
   }
 }
 
@@ -340,4 +374,4 @@ extension DatabaseMigrator {
   }
 }
 
-private let singleRowTablePrimaryKeyColumnSQL = "id BLOB PRIMARY KEY CHECK (id = '\(UUID.null)')"
+private let singleRowTablePrimaryKeyColumnSQL = "id BLOB PRIMARY KEY CHECK (id = '\(UUID.nil)')"
