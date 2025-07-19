@@ -182,7 +182,7 @@ extension QueryStore where State: _RecursiveQueryStateProtocol {
     for id: State.NodeID,
     using configuration: QueryTaskConfiguration? = nil
   ) async throws -> State.QueryValue {
-    var configuration = configuration 
+    var configuration = configuration
       ?? QueryTaskConfiguration(context: context)
     // More to come...
   }
@@ -218,7 +218,7 @@ extension QueryStore where State: _RecursiveQueryStateProtocol {
     for id: State.NodeID,
     using configuration: QueryTaskConfiguration? = nil
   ) async throws -> State.QueryValue {
-    var configuration = configuration 
+    var configuration = configuration
       ?? QueryTaskConfiguration(context: context)
     configuration.context.recursiveValues.nodeId = id
     return try await fetch(using: configuration)
@@ -258,17 +258,17 @@ extension RecursiveQueryRequest {
   ) async throws -> Value {
     if let nodeId = context.recursiveValues.nodeId as? NodeID {
       return try await fetchTree(
-        for: nodeId, 
-        in: context, 
+        for: nodeId,
+        in: context,
         with: continuation
       )
     } else {
-      // If we have no node id in the context (eg. We called 
-      // `fetch` directly the `QueryStore` instead of `fetchTree`), 
+      // If we have no node id in the context (eg. We called
+      // `fetch` directly the `QueryStore` instead of `fetchTree`),
       // we'll assume we're refetching from the root.
       return try await fetchTree(
-        for: rootNodeId, 
-        in: context, 
+        for: rootNodeId,
+        in: context,
         with: continuation
       )
     }
@@ -381,17 +381,16 @@ struct RecursiveQueryState<Value: RecursiveValue>: QueryStateProtocol {
 
 ### Resetting State
 
-It's also possible to reset the entire `State` on a `QueryStore` via ``QueryStore/resetState(using:)``. When doing this, the store calls out to the `State` to reset itself, which is represented via a `reset` requirement on `QueryStateProtocol`. When implementing this protocol, you generally will cancel all active tasks on the state, and then reset all of the values.
+It's also possible to reset the entire `State` on a `QueryStore` via ``QueryStore/resetState(using:)``. When doing this, the store calls out to the `State` to reset itself, which is represented via a `reset` requirement on `QueryStateProtocol`. When implementing this method you will reset the properties in your state to their initial values, and then you will return a `ResetEffect` with the `QueryTask` instances that you want to cancel. The `QueryStore` is responsible to for cancelling the tasks themselves. This is because the store is designed to be the runtime for the query, whilst the state is meant to be a plain data type that represents the current state of the query.
 
 ```swift
 struct RecursiveQueryState<Value: RecursiveValue>: QueryStateProtocol {
   // ...
 
-  mutating func reset(using context: QueryContext) {
-    for task in activeTasks {
-      task.cancel()
-    }
+  mutating func reset(using context: QueryContext) -> ResetEffect {
+    let tasksToCancel = activeTasks
     self = Self(initialValue: initialValue)
+    return ResetEffect(tasksToCancel: tasksToCancel)
   }
 }
 ```
@@ -437,14 +436,14 @@ extension RecursiveQueryRequest {
   ) async throws -> Value {
     if let nodeId = context.recursiveValues.nodeId as? NodeID {
       return try await fetchTree(
-        for: nodeId, 
-        in: context, 
+        for: nodeId,
+        in: context,
         with: continuation
       )
     } else {
       return try await fetchTree(
-        for: rootNodeId, 
-        in: context, 
+        for: rootNodeId,
+        in: context,
         with: continuation
       )
     }
@@ -517,11 +516,10 @@ struct RecursiveQueryState<
     activeTasks.remove(id: task.id)
   }
 
-  mutating func reset(using context: QueryContext) {
-    for task in activeTasks {
-      task.cancel()
-    }
+  mutating func reset(using context: QueryContext) -> ResetEffect {
+    let tasksToCancel = activeTasks
     self = Self(initialValue: initialValue)
+    return ResetEffect(tasksToCancel: tasksToCancel)
   }
 }
 
@@ -530,7 +528,7 @@ extension QueryStore where State: _RecursiveQueryStateProtocol {
     for id: State.NodeID,
     using configuration: QueryTaskConfiguration? = nil
   ) async throws -> State.QueryValue {
-    var configuration = configuration 
+    var configuration = configuration
       ?? QueryTaskConfiguration(context: context)
     configuration.context.recursiveValues.nodeId = id
     return try await fetch(using: configuration)

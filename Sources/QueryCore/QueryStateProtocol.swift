@@ -19,6 +19,8 @@ import IdentifiedCollections
 /// > Warning: You should not call any of the `mutating` methods directly on this type, rather a
 /// > ``QueryStore`` will call them at the appropriate time for you.
 public protocol QueryStateProtocol<StateValue, QueryValue>: Sendable {
+  /// A data type returned from ``reset(using:)`` that determines the action that the
+  /// ``QueryStore`` should take when ``QueryStore/resetState(using:)`` is called.
   typealias ResetEffect = _QueryStateResetEffect<Self>
 
   /// The type of value that is held in the state directly.
@@ -131,15 +133,25 @@ public protocol QueryStateProtocol<StateValue, QueryValue>: Sendable {
 
 // MARK: - _QueryStateResetEffect
 
+/// A data type returned from ``QueryStateProtocol/reset(using:)`` that determines the action that the
+/// ``QueryStore`` should take when ``QueryStore/resetState(using:)`` is called.
+@_documentation(visibility: public)
 public struct _QueryStateResetEffect<State: QueryStateProtocol>: Sendable {
+  /// Cancels all ``QueryTask`` instances returned from ``QueryStateProtocol/reset(using:)``.
   public let tasksCancellable: QuerySubscription
 
+  /// Creates a reset effect with a subscription to cancel ``QueryTask`` instances.
+  ///
+  /// - Parameter tasksCancellable: The subscription to cancel `QueryTask` instances.
   public init(tasksCancellable: QuerySubscription) {
     self.tasksCancellable = tasksCancellable
   }
 }
 
 extension _QueryStateResetEffect {
+  /// Creates a reset effect that cancels the specified ``QueryTask`` instances.
+  ///
+  /// - Parameter tasksToCancel: The tasks to cancel.
   public init(tasksToCancel: some Sequence<QueryTask<State.QueryValue>>) {
     self.tasksCancellable = .combined(
       tasksToCancel.map { task in QuerySubscription { task.cancel() } }

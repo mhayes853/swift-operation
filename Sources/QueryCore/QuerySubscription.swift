@@ -108,9 +108,9 @@ extension QuerySubscription {
     switch self.storage {
     case .empty:
       break
-    case let .box(box):
+    case .box(let box):
       box.cancel()
-    case let .combined(subscriptions):
+    case .combined(let subscriptions):
       subscriptions.forEach { $0.cancel() }
     }
   }
@@ -177,9 +177,9 @@ extension QuerySubscription: Equatable {
     switch (lhs.storage, rhs.storage) {
     case (.empty, .empty):
       return true
-    case let (.box(lhsBox), .box(rhsBox)):
+    case (.box(let lhsBox), .box(let rhsBox)):
       return lhsBox === rhsBox
-    case let (.combined(lhsSubs), .combined(rhsSubs)):
+    case (.combined(let lhsSubs), .combined(let rhsSubs)):
       return lhsSubs == rhsSubs
     default:
       return false
@@ -194,9 +194,9 @@ extension QuerySubscription: Hashable {
     switch self.storage {
     case .empty:
       break
-    case let .box(box):
+    case .box(let box):
       hasher.combine(ObjectIdentifier(box))
-    case let .combined(subscriptions):
+    case .combined(let subscriptions):
       hasher.combine(subscriptions)
     }
   }
