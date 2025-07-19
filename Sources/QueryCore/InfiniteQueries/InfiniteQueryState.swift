@@ -144,12 +144,12 @@ extension InfiniteQueryState: _InfiniteQueryStateProtocol {
     }
   }
 
-  public mutating func reset(using context: QueryContext) {
-    self.initialPageActiveTasks.forEach { $0.cancel() }
-    self.nextPageActiveTasks.forEach { $0.cancel() }
-    self.previousPageActiveTasks.forEach { $0.cancel() }
-    self.allPagesActiveTasks.forEach { $0.cancel() }
+  public mutating func reset(using context: QueryContext) -> ResetEffect {
+    let tasksToCancel =
+      self.initialPageActiveTasks + self.nextPageActiveTasks
+      + self.previousPageActiveTasks + self.allPagesActiveTasks
     self = Self(initialValue: self.initialValue, initialPageId: self.initialPageId)
+    return ResetEffect(tasksToCancel: tasksToCancel)
   }
 
   public mutating func update(
@@ -157,12 +157,12 @@ extension InfiniteQueryState: _InfiniteQueryStateProtocol {
     using context: QueryContext
   ) {
     switch result {
-    case let .success(value):
+    case .success(let value):
       self.currentValue = value
       self.valueUpdateCount += 1
       self.valueLastUpdatedAt = context.queryClock.now()
       self.error = nil
-    case let .failure(error):
+    case .failure(let error):
       self.error = error
       self.errorUpdateCount += 1
       self.errorLastUpdatedAt = context.queryClock.now()
@@ -174,22 +174,22 @@ extension InfiniteQueryState: _InfiniteQueryStateProtocol {
     for task: QueryTask<InfiniteQueryValue<PageID, PageValue>>
   ) {
     switch result {
-    case let .success(value):
+    case .success(let value):
       switch value.response {
-      case let .allPages(pages):
+      case .allPages(let pages):
         self.currentValue = pages
-      case let .initialPage(page):
+      case .initialPage(let page):
         if task.context.infiniteValues?.fetchType != nil {
           self.currentValue[id: page.id] = page
         } else {
           self.currentValue = [page]
         }
-      case let .nextPage(next?):
+      case .nextPage(let next?):
         if let index = self.currentValue.firstIndex(where: { $0.id == next.lastPage.id }) {
           let (_, index) = self.currentValue.insert(next.page, at: index + 1)
           self.currentValue[index] = next.page
         }
-      case let .previousPage(previous?):
+      case .previousPage(let previous?):
         if let index = self.currentValue.firstIndex(where: { $0.id == previous.firstPage.id }) {
           let (_, index) = self.currentValue.insert(previous.page, at: index)
           self.currentValue[index] = previous.page
@@ -201,7 +201,7 @@ extension InfiniteQueryState: _InfiniteQueryStateProtocol {
       self.valueUpdateCount += 1
       self.valueLastUpdatedAt = task.context.queryClock.now()
       self.error = nil
-    case let .failure(error):
+    case .failure(let error):
       self.error = error
       self.errorUpdateCount += 1
       self.errorLastUpdatedAt = task.context.queryClock.now()
@@ -222,9 +222,9 @@ extension InfiniteQueryState: _InfiniteQueryStateProtocol {
     switch (fetchType, self.nextPageId, self.previousPageId) {
     case (.allPages, _, _):
       return .allPages
-    case let (.nextPage, last?, _):
+    case (.nextPage, let last?, _):
       return .nextPage(last)
-    case let (.previousPage, _, first?):
+    case (.previousPage, _, let first?):
       return .previousPage(first)
     default:
       return .initialPage

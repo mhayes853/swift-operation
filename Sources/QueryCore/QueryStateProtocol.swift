@@ -1,4 +1,5 @@
 import Foundation
+import IdentifiedCollections
 
 /// A protocol for the state of a query.
 ///
@@ -18,6 +19,8 @@ import Foundation
 /// > Warning: You should not call any of the `mutating` methods directly on this type, rather a
 /// > ``QueryStore`` will call them at the appropriate time for you.
 public protocol QueryStateProtocol<StateValue, QueryValue>: Sendable {
+  typealias ResetEffect = _QueryStateResetEffect<Self>
+
   /// The type of value that is held in the state directly.
   ///
   /// This can differ from ``QueryValue`` as the latter represents the value for a successful fetch,
@@ -25,44 +28,44 @@ public protocol QueryStateProtocol<StateValue, QueryValue>: Sendable {
   /// instance, this type in ``QueryState`` may be an optional while ``QueryValue`` may not be an
   /// optional because a nil value would mean that the query has never been fetched.
   associatedtype StateValue: Sendable
-  
+
   /// The type of value for a successful fetch from a query.
   associatedtype QueryValue: Sendable
-  
+
   /// The type of value that is accessed from the <doc:/documentation/QueryCore/QueryStateProtocol/status-34hpq> property.
   associatedtype StatusValue: Sendable
 
   /// The current value of this state.
   var currentValue: StateValue { get }
-  
+
   /// The initial value of this state.
   var initialValue: StateValue { get }
-  
+
   /// The number of times that ``currentValue`` has been updated.
   var valueUpdateCount: Int { get }
-  
+
   /// The most recent date when ``currentValue`` was updated.
   var valueLastUpdatedAt: Date? { get }
-  
+
   /// Whether or not the query driving this state is loading.
   ///
   /// This property is true when active ``QueryTask`` instances are scheduled on the query state
   /// regardless of whether or not ``QueryTask/isRunning`` is true.
   var isLoading: Bool { get }
-  
+
   /// The most recent error thrown by the query driving this state.
   ///
   /// When a query finishes a successful fetch, this property is set to nil.
   var error: (any Error)? { get }
-  
+
   /// The number of times ``error`` was updated. (Not counting setting it to nil on a successful
   /// query fetch).
   var errorUpdateCount: Int { get }
-  
+
   /// The most recent date when ``error`` was updated. Not counting setting it to nil on a
   /// successful query fetch).
   var errorLastUpdatedAt: Date? { get }
-  
+
   /// Schedules a ``QueryTask`` on this state.
   ///
   /// A ``QueryStateProtocol`` conformance is required to hold the instances of all active tasks
@@ -70,17 +73,19 @@ public protocol QueryStateProtocol<StateValue, QueryValue>: Sendable {
   ///
   /// - Parameter task: The ``QueryTask`` to schedule on this state.
   mutating func scheduleFetchTask(_ task: inout QueryTask<QueryValue>)
-  
+
   /// Resets this state using the provided ``QueryContext``.
   ///
-  /// This method is called when ``QueryStore/resetState(using:)`` is called.
+  /// This method is called when ``QueryStore/resetState(using:)`` is called, and you return a
+  /// ``ResetEffect`` back to the store. This effect contains the ``QueryTask`` instances that the
+  /// store should cancel. Do not cancel any tasks that are held by this state within this method.
   ///
-  /// Make sure to cancel all active ``QueryTask`` instances held by this state, and then reset all
-  /// properties back to their default values.
+  /// Make sure to reset all properties back to their default values, as if the state was just
+  /// created with its initial value.
   ///
   /// - Parameter context: The context to reset this state in.
-  mutating func reset(using context: QueryContext)
-  
+  mutating func reset(using context: QueryContext) -> ResetEffect
+
   /// Updates the state of this query based on the provided result.
   ///
   /// This method is called when setting ``QueryStore/currentValue`` directly through a query store,
@@ -95,7 +100,7 @@ public protocol QueryStateProtocol<StateValue, QueryValue>: Sendable {
     with result: Result<StateValue, any Error>,
     using context: QueryContext
   )
-  
+
   /// Updates the state of a query based on a fetch result.
   ///
   /// This method is called when a query fetch finishes, or when a result is yielded through
@@ -110,7 +115,7 @@ public protocol QueryStateProtocol<StateValue, QueryValue>: Sendable {
     with result: Result<QueryValue, any Error>,
     for task: QueryTask<QueryValue>
   )
-  
+
   /// Indicates to this state that a ``QueryTask`` is about to finish running.
   ///
   /// This method is called by ``QueryStore`` when a query fetch finishes, and is the last step in
@@ -122,4 +127,22 @@ public protocol QueryStateProtocol<StateValue, QueryValue>: Sendable {
   ///
   /// - Parameter task: The ``QueryTask`` that is about to finish running.
   mutating func finishFetchTask(_ task: QueryTask<QueryValue>)
+}
+
+// MARK: - _QueryStateResetEffect
+
+public struct _QueryStateResetEffect<State: QueryStateProtocol>: Sendable {
+  public let tasksCancellable: QuerySubscription
+
+  public init(tasksCancellable: QuerySubscription) {
+    self.tasksCancellable = tasksCancellable
+  }
+}
+
+extension _QueryStateResetEffect {
+  public init(tasksToCancel: some Sequence<QueryTask<State.QueryValue>>) {
+    self.tasksCancellable = .combined(
+      tasksToCancel.map { task in QuerySubscription { task.cancel() } }
+    )
+  }
 }

@@ -339,10 +339,11 @@ extension QueryStore {
   ///
   /// - Parameter context: The ``QueryContext`` to reset the query in.
   public func resetState(using context: QueryContext? = nil) {
-    self.editValuesWithStateChangeEvent { values in
-      values.state.reset(using: context ?? values.context)
+    let effect = self.editValuesWithStateChangeEvent { values in
       values.taskHerdId += 1
+      return values.state.reset(using: context ?? values.context)
     }
+    effect.tasksCancellable.cancel()
   }
 }
 

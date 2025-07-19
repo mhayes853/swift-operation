@@ -45,8 +45,11 @@ extension OpaqueQueryState: QueryStateProtocol {
     open(state: &self.base)
   }
 
-  public mutating func reset(using context: QueryContext) {
-    self.base.reset(using: context)
+  public mutating func reset(using context: QueryContext) -> ResetEffect {
+    func open<State: QueryStateProtocol>(state: inout State) -> ResetEffect {
+      ResetEffect(tasksCancellable: state.reset(using: context).tasksCancellable)
+    }
+    return open(state: &self.base)
   }
 
   public mutating func update(

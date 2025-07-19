@@ -64,11 +64,10 @@ extension QueryState: QueryStateProtocol {
     self.activeTasks.append(task)
   }
 
-  public mutating func reset(using context: QueryContext) {
-    for task in self.activeTasks {
-      task.cancel()
-    }
+  public mutating func reset(using context: QueryContext) -> ResetEffect {
+    let tasksToCancel = self.activeTasks
     self = Self(_initialValue: self.initialValue)
+    return ResetEffect(tasksToCancel: tasksToCancel)
   }
 
   public mutating func update(
@@ -76,12 +75,12 @@ extension QueryState: QueryStateProtocol {
     using context: QueryContext
   ) {
     switch result {
-    case let .success(value):
+    case .success(let value):
       self.currentValue = value
       self.valueUpdateCount += 1
       self.valueLastUpdatedAt = context.queryClock.now()
       self.error = nil
-    case let .failure(error):
+    case .failure(let error):
       self.error = error
       self.errorUpdateCount += 1
       self.errorLastUpdatedAt = context.queryClock.now()

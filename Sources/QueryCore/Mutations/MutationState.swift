@@ -55,11 +55,11 @@ extension MutationState: _MutationStateProtocol {
 
   public var currentValue: StateValue {
     switch (self.history.last?.status.resultValue, self.yielded) {
-    case let (historyValue?, nil):
+    case (let historyValue?, nil):
       return historyValue
-    case let (nil, .success(value, _)):
+    case (nil, .success(let value, _)):
       return value
-    case let (historyValue?, .success(value, lastUpdatedAt)):
+    case (let historyValue?, .success(let value, let lastUpdatedAt)):
       guard let historyValueLastUpdatedAt else { return value }
       return historyValueLastUpdatedAt > lastUpdatedAt ? historyValue : value
     default:
@@ -69,11 +69,11 @@ extension MutationState: _MutationStateProtocol {
 
   public var valueLastUpdatedAt: Date? {
     switch (self.historyValueLastUpdatedAt, self.yielded) {
-    case let (valueLastUpdatedAt?, nil):
+    case (let valueLastUpdatedAt?, nil):
       return valueLastUpdatedAt
-    case let (nil, .success(_, lastUpdatedAt)):
+    case (nil, .success(_, let lastUpdatedAt)):
       return lastUpdatedAt
-    case let (valueLastUpdatedAt?, .success(_, lastUpdatedAt)):
+    case (let valueLastUpdatedAt?, .success(_, let lastUpdatedAt)):
       return max(valueLastUpdatedAt, lastUpdatedAt)
     default:
       return nil
@@ -82,11 +82,11 @@ extension MutationState: _MutationStateProtocol {
 
   public var error: (any Error)? {
     switch (self.history.last?.status.resultError, self.yielded) {
-    case let (historyError?, nil):
+    case (let historyError?, nil):
       return historyError
-    case let (nil, .failure(error, _)):
+    case (nil, .failure(let error, _)):
       return error
-    case let (historyError?, .failure(error, lastUpdatedAt)):
+    case (let historyError?, .failure(let error, let lastUpdatedAt)):
       guard let historyErrorLastUpdatedAt else { return error }
       return historyErrorLastUpdatedAt > lastUpdatedAt ? historyError : error
     default:
@@ -96,11 +96,11 @@ extension MutationState: _MutationStateProtocol {
 
   public var errorLastUpdatedAt: Date? {
     switch (self.historyErrorLastUpdatedAt, self.yielded) {
-    case let (errorLastUpdatedAt?, nil):
+    case (let errorLastUpdatedAt?, nil):
       return errorLastUpdatedAt
-    case let (nil, .failure(_, lastUpdatedAt)):
+    case (nil, .failure(_, let lastUpdatedAt)):
       return lastUpdatedAt
-    case let (errorLastUpdatedAt?, .failure(_, lastUpdatedAt)):
+    case (let errorLastUpdatedAt?, .failure(_, let lastUpdatedAt)):
       return max(errorLastUpdatedAt, lastUpdatedAt)
     default:
       return nil
@@ -121,11 +121,10 @@ extension MutationState: _MutationStateProtocol {
     self.history.append(HistoryEntry(task: task, args: args))
   }
 
-  public mutating func reset(using context: QueryContext) {
-    for entry in self.history {
-      entry.task.cancel()
-    }
+  public mutating func reset(using context: QueryContext) -> ResetEffect {
+    let tasksToCancel = self.history.map(\.baseTask)
     self = Self(initialValue: self.initialValue)
+    return ResetEffect(tasksToCancel: tasksToCancel)
   }
 
   public mutating func update(
@@ -133,10 +132,10 @@ extension MutationState: _MutationStateProtocol {
     using context: QueryContext
   ) {
     switch result {
-    case let .success(value):
+    case .success(let value):
       self.yielded = .success(value, context.queryClock.now())
       self.valueUpdateCount += 1
-    case let .failure(error):
+    case .failure(let error):
       self.yielded = .failure(error, context.queryClock.now())
       self.errorUpdateCount += 1
     }
@@ -168,9 +167,6 @@ extension MutationState: _MutationStateProtocol {
 extension MutationState {
   /// An entry of history for a ``MutationState``.
   public struct HistoryEntry: Sendable {
-    /// The ``QueryTask`` for this entry.
-    public let task: QueryTask<Value>
-
     /// The arguments passed to the mutation attempt represented by this entry.
     public let arguments: Arguments
 
@@ -186,13 +182,22 @@ extension MutationState {
     /// The current ``QueryStatus`` of the mutation attempt represented by this entry.
     public private(set) var status: QueryStatus<StatusValue>
 
+    fileprivate let baseTask: QueryTask<QueryValue>
+
     fileprivate init(task: QueryTask<QueryValue>, args: Arguments) {
-      self.task = task.map(\.value)
+      self.baseTask = task
       self.arguments = args
       self.startDate = task.context.queryClock.now()
       self.lastUpdatedAt = nil
       self.status = .loading
     }
+  }
+}
+
+extension MutationState.HistoryEntry {
+  /// The ``QueryTask`` for this entry.
+  public var task: QueryTask<Value> {
+    self.baseTask.map(\.value)
   }
 }
 
