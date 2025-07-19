@@ -8,30 +8,30 @@ public struct InfiniteQueryEventHandler<
   /// A callback that is invoked when the query state changes.
   public var onStateChanged:
     (@Sendable (InfiniteQueryState<PageID, PageValue>, QueryContext) -> Void)?
-  
+
   /// A callback that is invoked when fetching starts.
   public var onFetchingStarted: (@Sendable (QueryContext) -> Void)?
-  
+
   /// A callback that is invoked when fetching for a specified page starts.
   public var onPageFetchingStarted: (@Sendable (PageID, QueryContext) -> Void)?
-  
+
   /// A callback that is invoked when the result for fetching a page is received.
   public var onPageResultReceived:
     (
       @Sendable (PageID, Result<InfiniteQueryPage<PageID, PageValue>, any Error>, QueryContext) ->
         Void
     )?
-  
+
   /// A callback that is invoked when a result is received from fetching on a ``QueryStore``.
   public var onResultReceived:
     (@Sendable (Result<InfiniteQueryPages<PageID, PageValue>, any Error>, QueryContext) -> Void)?
-  
+
   /// A callback that is invoked when fetching for a specified page ends.
   public var onPageFetchingEnded: (@Sendable (PageID, QueryContext) -> Void)?
-  
+
   /// A callback that is invoked when fetching ends.
   public var onFetchingEnded: (@Sendable (QueryContext) -> Void)?
-  
+
   /// Creates an event handler.
   ///
   /// - Parameters:

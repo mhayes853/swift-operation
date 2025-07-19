@@ -1,5 +1,5 @@
-import SwiftUI
 import SharingQuery
+import SwiftUI
 
 // MARK: - ExpensiveLocalComputationsCaseStudy
 
@@ -8,24 +8,24 @@ struct ExpensiveLocalComputationsCaseStudy: CaseStudy {
   let description: LocalizedStringKey = """
     Some parts of your application may run entirely local on the user's device, but may be \
     computationally expensive. Examples of this include running a large query on a SQLite \
-    database, processing a large file, streaming a response from the Foundation Models framework, \ 
+    database, processing a large file, streaming a response from the Foundation Models framework, \
     or simply just calculating a long-running mathematical computation. These examples, while \
     entirely local would still benefit from being made into queries due to their long runtimes.
-    
+
     You can use the `completelyOffline` modifier to signify that your query runs without a network \
     connection. This will prevent it from being refetched when the user's network flips from \
     offline to online. Additionally, if your query is just a computationally expensive pure \
     function, you'll also want to add on the `disableApplicationActiveRefetching` modifier to \
     prevent the computation from re-running when the user foregrounds your app.
-    
+
     Calculating the Nth prime number is fast for smaller numbers, but it gets slower for larger \
     numbers. Try playing around with the counter!
     """
-  
+
   @State private var model = ExpensiveLocalComputationModel()
-  
+
   private let counts = [0, 10, 100, 1000, 10_000, 100_000, 1_000_000, 10_000_000]
-  
+
   var content: some View {
     Stepper(value: self.$model.count) {
       Text("Count \(self.model.count)")
@@ -34,7 +34,8 @@ struct ExpensiveLocalComputationsCaseStudy: CaseStudy {
       if self.model.$nthPrime.isLoading {
         ProgressView()
       } else if let nthPrime = self.model.nthPrime {
-        let formatted = NumberFormatter.ordinal.string(from: self.model.count as NSNumber) ?? "Unknown"
+        let formatted =
+          NumberFormatter.ordinal.string(from: self.model.count as NSNumber) ?? "Unknown"
         if let nthPrime {
           Text("The \(formatted) prime number is \(nthPrime).")
         } else {
@@ -69,7 +70,7 @@ final class ExpensiveLocalComputationModel {
       self.$nthPrime = SharedQuery(Int.nthPrimeQuery(for: self.count))
     }
   }
-  
+
   @ObservationIgnored
   @SharedQuery(Int.nthPrimeQuery(for: 0)) var nthPrime
 }
@@ -82,10 +83,10 @@ extension Int {
       .completelyOffline()
       .disableApplicationActiveRefetching()
   }
-  
+
   struct NthPrimeQuery: QueryRequest, Hashable {
     let n: Int
-    
+
     func fetch(
       in context: QueryContext,
       with continuation: QueryContinuation<Int?>

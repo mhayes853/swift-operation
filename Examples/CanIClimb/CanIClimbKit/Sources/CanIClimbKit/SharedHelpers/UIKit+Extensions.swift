@@ -17,7 +17,7 @@
       window.makeKeyAndVisible()
       window.rootViewController?.present(self, animated: true)
     }
-    
+
     private func currentWindow() -> UIWindow? {
       if let window {
         return window

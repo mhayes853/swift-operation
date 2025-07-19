@@ -1,7 +1,7 @@
-import SwiftUI
-import SharingQuery
-import SwiftUINavigation
 import IssueReporting
+import SharingQuery
+import SwiftUI
+import SwiftUINavigation
 
 // MARK: - FormCaseStudy
 
@@ -12,14 +12,14 @@ struct FormCaseStudy: CaseStudy {
     use the `MutationRequest` protocol to power the submission for such forms. Alongside automatic \
     retry logic, you can also look into the history of previous submissions to detect a known bad \
     input.
-    
+
     This example simulates a user updating their name through a form. The form uses the history of \
     every subsmission on its mutation to detect whether or not a previously entered name is known \
     to be taken. If so, it doesn't allow the user to resubmit that name.
     """
-  
+
   @State private var model = FormModel()
-  
+
   var content: some View {
     Group {
       Section {
@@ -31,7 +31,7 @@ struct FormCaseStudy: CaseStudy {
           Text("Name has been taken.").foregroundStyle(.red)
         }
       }
-      
+
       Section {
         Button {
           Task {
@@ -69,7 +69,7 @@ struct FormCaseStudy: CaseStudy {
 final class FormModel {
   @ObservationIgnored
   @SharedQuery(FormName.updateMutation, animation: .bouncy) var update
-  
+
   var name = ""
   var alert: AlertState<AlertAction>?
 }
@@ -81,7 +81,7 @@ extension FormModel {
     case submittable(FormName)
     case nameTaken
   }
-  
+
   var submissionStatus: SubmissionStatus {
     guard let name = FormName(rawValue: self.name) else { return .empty }
     let isNameTaken = self.$update.history
@@ -119,7 +119,7 @@ extension AlertState where Action == FormModel.AlertAction {
       TextState("Your name was updated to \(name.rawValue)!")
     }
   }
-  
+
   static func failure(name: FormName) -> Self {
     Self {
       TextState("Failed")
@@ -133,7 +133,7 @@ extension AlertState where Action == FormModel.AlertAction {
 
 struct FormName: Hashable, RawRepresentable {
   var rawValue: String
-  
+
   init?(rawValue: String) {
     guard !rawValue.isEmpty else { return nil }
     self.rawValue = rawValue
@@ -146,17 +146,17 @@ private let takenNames = ["blob", "joe", "ashley", "maria", "sam", "james"]
 
 extension FormName {
   static let updateMutation = UpdateMutation()
-  
+
   enum UpdateResult: Hashable, Sendable {
     case success
     case nameTaken
   }
-  
+
   struct UpdateMutation: MutationRequest, Hashable {
     struct Arguments: Sendable {
       let name: FormName
     }
-    
+
     func mutate(
       with arguments: Arguments,
       in context: QueryContext,

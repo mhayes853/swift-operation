@@ -48,7 +48,7 @@
 
   // MARK: - FetchConditionObserver Extensions
 
-extension FetchCondition {
+  extension FetchCondition {
     /// A ``FetchCondition`` that observes the value of a Combine `Publisher`.
     ///
     /// - Parameters:

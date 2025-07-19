@@ -1,9 +1,10 @@
-@testable import CaseStudies
-import SharingQuery
-import Testing
-import Foundation
 import CustomDump
 import Dependencies
+import Foundation
+import SharingQuery
+import Testing
+
+@testable import CaseStudies
 
 @Suite("Post+Query tests")
 struct PostQueryTests {
@@ -33,7 +34,7 @@ struct PostQueryTests {
     } operation: {
       @SharedQuery(Post.query(for: 1)) var post
       try await $post.load()
-      
+
       let expectedPost = Post(
         id: 1,
         title: "His mother had always taught him",
@@ -49,7 +50,7 @@ struct PostQueryTests {
       expectNoDifference(post, expectedPost)
     }
   }
-  
+
   @Test("Returns Nil When ID Not Found From Dummy JSON API")
   func returnsNilWhenRandomNotFoundFromDummyJSON() async throws {
     let transport = MockHTTPDataTransport { _ in (404, .data(Data())) }
@@ -58,11 +59,11 @@ struct PostQueryTests {
     } operation: {
       @SharedQuery(Post.query(for: 1)) var post
       try await $post.load()
-      
+
       expectNoDifference(post, .some(nil))
     }
   }
-  
+
   @Test("Searches For Posts")
   func searchesForPosts() async throws {
     let postJSON = """
@@ -96,7 +97,7 @@ struct PostQueryTests {
     } operation: {
       @SharedQuery(Post.searchQuery(by: "blob")) var posts
       try await $posts.load()
-      
+
       let expectedPost = Post(
         id: 1,
         title: "His mother had always taught him",
@@ -112,7 +113,7 @@ struct PostQueryTests {
       expectNoDifference(posts, [expectedPost])
     }
   }
-  
+
   @Test("Loads Page By Tag From Dummy JSON")
   func loadsPageByTagFromDummyJSON() async throws {
     let json = """
@@ -143,19 +144,19 @@ struct PostQueryTests {
     let transport = MockHTTPDataTransport { request in
       guard
         request.url?.path() == "/posts/tag/mystery"
-            && request.url?.query() == "limit=10&skip=0"
+          && request.url?.query() == "limit=10&skip=0"
       else {
         return (400, .data(Data()))
       }
       return (200, .data(Data(json.utf8)))
     }
-    
+
     try await withDependencies {
       $0[PostListByTagLoaderKey.self] = DummyJSONAPI(transport: transport)
     } operation: {
       @SharedQuery(Post.listByTagQuery(tag: "mystery")) var list
       try await $list.load()
-      
+
       let expectedPost = Post(
         id: 42,
         title: "You know that tingly feeling you get on the back of your neck sometimes?",
@@ -181,7 +182,7 @@ struct PostQueryTests {
       expectNoDifference($list.nextPageId, Post.ListPage.ID(limit: 10, skip: 10))
     }
   }
-  
+
   @Test("List by Tag has no Next Page ID when Skip and Limit go Above Total")
   func listByTagHasNoNextPageID() async throws {
     let json = """
@@ -215,7 +216,7 @@ struct PostQueryTests {
     } operation: {
       @SharedQuery(Post.listByTagQuery(tag: "mystery")) var list
       try await $list.load()
-      
+
       expectNoDifference($list.nextPageId, nil)
     }
   }

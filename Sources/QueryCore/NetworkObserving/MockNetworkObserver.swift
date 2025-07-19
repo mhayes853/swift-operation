@@ -6,7 +6,7 @@ public final class MockNetworkObserver {
 
   private let subscriptions = QuerySubscriptions<Handler>()
   private let status: Lock<NetworkConnectionStatus>
-  
+
   /// Creates a mock observer.
   ///
   /// - Parameter initialStatus: The initial ``NetworkConnectionStatus`` of this observer.

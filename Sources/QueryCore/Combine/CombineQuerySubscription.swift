@@ -8,7 +8,7 @@
   /// Use this type if you need to integrate a `QuerySubscription` with a Combine `Publisher`.
   public final class CombineQuerySubscription {
     private let base: QuerySubscription
-    
+
     /// Creates a Combine subscription.
     ///
     /// - Parameter subscription: A ``QuerySubscription``.

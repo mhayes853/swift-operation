@@ -1,7 +1,8 @@
-@testable import CaseStudies
+import ConcurrencyExtras
 import Foundation
 import Synchronization
-import ConcurrencyExtras
+
+@testable import CaseStudies
 
 // MARK: - MockHTTPDataTransport
 

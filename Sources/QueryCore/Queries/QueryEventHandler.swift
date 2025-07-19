@@ -4,17 +4,17 @@
 public struct QueryEventHandler<State: QueryStateProtocol>: Sendable {
   /// A callback that is invoked when the query state changes.
   public var onStateChanged: (@Sendable (State, QueryContext) -> Void)?
-  
+
   /// A callback that is invoked when fetching begins on the ``QueryStore``.
   public var onFetchingStarted: (@Sendable (QueryContext) -> Void)?
-  
+
   /// A callback that is invoked when fetching ends on the ``QueryStore``.
   public var onFetchingEnded: (@Sendable (QueryContext) -> Void)?
-  
+
   /// A callback that is invoked when a result is received from fetching on a ``QueryStore``.
   public var onResultReceived:
     (@Sendable (Result<State.QueryValue, any Error>, QueryContext) -> Void)?
-  
+
   /// Creates an event handler.
   ///
   /// - Parameters:

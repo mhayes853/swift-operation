@@ -145,7 +145,7 @@
         scheduler: .animation(animation)
       )
     }
-    
+
     /// Creates a shared query.
     ///
     /// - Parameters:

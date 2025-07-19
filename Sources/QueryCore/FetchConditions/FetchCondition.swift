@@ -14,7 +14,7 @@ public protocol FetchCondition: Sendable {
   /// - Parameter context: The context in which to evaluate this condition.
   /// - Returns: Whether or not the condition is satisfied.
   func isSatisfied(in context: QueryContext) -> Bool
-  
+
   /// Subcribes to this condition in the specified ``QueryContext``.
   ///
   /// - Parameters:

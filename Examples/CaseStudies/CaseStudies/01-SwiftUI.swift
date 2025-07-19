@@ -1,6 +1,6 @@
 import Foundation
-import SwiftUI
 import QuerySwiftUI
+import SwiftUI
 
 struct BasicSwiftUICaseStudy: CaseStudy {
   let title: LocalizedStringKey = "Basic SwiftUI"
@@ -8,16 +8,16 @@ struct BasicSwiftUICaseStudy: CaseStudy {
     Basic usage of the library using the `@State.Query` property wrapper to fetch a random quote \
     from the Dummy JSON API in SwiftUI.
     """
-  
+
   @State.Query(Quote.randomQuery) private var quote
-  
+
   var content: some View {
     VStack(alignment: .leading, spacing: 20) {
       Text("Random Quote").font(.headline)
       BasicQueryStateView(state: self.$quote.state) {
         QuoteView(quote: $0)
       }
-      
+
       Button("Reload Quote") {
         Task { try await self.$quote.fetch() }
       }

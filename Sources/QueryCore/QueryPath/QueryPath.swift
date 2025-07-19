@@ -195,13 +195,14 @@ extension QueryPath: ExpressibleByArrayLiteral {
 
 extension QueryPath: CustomStringConvertible {
   public var description: String {
-    let joined = self.storage.elements.map {
-      if $0.base is any StringProtocol {
-        return "\"\($0.description)\""
+    let joined = self.storage.elements
+      .map {
+        if $0.base is any StringProtocol {
+          return "\"\($0.description)\""
+        }
+        return $0.description
       }
-      return $0.description
-    }
-    .joined(separator: ", ")
+      .joined(separator: ", ")
     return "QueryPath([\(joined)])"
   }
 }

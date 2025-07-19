@@ -1,5 +1,5 @@
-import Foundation
 import Dependencies
+import Foundation
 import Query
 
 // MARK: - Quote
@@ -27,7 +27,7 @@ extension Quote {
   struct MockRandomLoader: RandomLoader {
     var result: Result<Quote, any Error>
     var delay = Duration.zero
-    
+
     func randomQuote() async throws -> Quote {
       try await Task.sleep(for: self.delay)
       return try self.result.get()
@@ -39,7 +39,7 @@ extension Quote {
 
 extension Quote {
   static let randomQuery = RandomQuery()
-  
+
   struct RandomQuery: QueryRequest, Hashable {
     func fetch(
       in context: QueryContext,

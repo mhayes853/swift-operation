@@ -1,7 +1,7 @@
-import SwiftUI
-import SharingQuery
-import Synchronization
 import Dependencies
+import SharingQuery
+import SwiftUI
+import Synchronization
 
 // MARK: - DownloadsCaseStudy
 
@@ -11,14 +11,14 @@ struct DownloadsCaseStudy: CaseStudy {
     If your app needs to download a file, you can still do so while reporting on its progress \
     using a query. We'll use the `QueryContinuation` handed to the download query to report the \
     progress of the download from an `AsyncThrowingStream`.
-    
+
     Additionally, for such expensive queries, you may want to opt out of automatic fetching by \
     using the `disableAutomaticFetching` modifier. Applying this modifier means that your query \
     will only fetch data when you explicitly call `fetch`.
     """
-  
+
   @SharedQuery(Download.query(for: .hugeFile), animation: .bouncy) private var download
-  
+
   var content: some View {
     if let download {
       Section {
@@ -48,7 +48,7 @@ struct DownloadsCaseStudy: CaseStudy {
         }
       }
     }
-    
+
     Section {
       Button {
         Task { try await self.$download.fetch() }
@@ -88,10 +88,10 @@ extension Download {
       .disableAutomaticFetching()
       .staleWhenNoValue()
   }
-  
+
   struct Query: QueryRequest, Hashable {
     let url: URL
-    
+
     func fetch(
       in context: QueryContext,
       with continuation: QueryContinuation<Download>
@@ -122,10 +122,12 @@ enum FileDownloaderKey: DependencyKey {
 final class URLSessionDownloader: NSObject {
   private let session: URLSession
   private let delegate: Delegate
-  
+
   override init() {
     self.delegate = Delegate()
-    let config = URLSessionConfiguration.background(withIdentifier: "day.onetask.DownloadsCaseStudy.background")
+    let config = URLSessionConfiguration.background(
+      withIdentifier: "day.onetask.DownloadsCaseStudy.background"
+    )
     self.session = URLSession(configuration: config, delegate: self.delegate, delegateQueue: nil)
     super.init()
   }
@@ -145,7 +147,7 @@ extension URLSessionDownloader: FileDownloader {
 extension URLSessionDownloader {
   private final class Delegate: NSObject, URLSessionDownloadDelegate {
     let continuation = Mutex<AsyncThrowingStream<Download, Error>.Continuation?>(nil)
-    
+
     func urlSession(
       _ session: URLSession,
       downloadTask: URLSessionDownloadTask,
@@ -157,11 +159,15 @@ extension URLSessionDownloader {
       }
       try? FileManager.default.removeItem(at: location)
     }
-    
-    func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: (any Error)?) {
+
+    func urlSession(
+      _ session: URLSession,
+      task: URLSessionTask,
+      didCompleteWithError error: (any Error)?
+    ) {
       self.continuation.withLock { $0?.finish(throwing: error) }
     }
-    
+
     func urlSession(
       _ session: URLSession,
       downloadTask: URLSessionDownloadTask,

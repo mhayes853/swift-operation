@@ -1,5 +1,5 @@
-import Query
 import Dependencies
+import Query
 
 // MARK: - Post
 
@@ -63,10 +63,10 @@ extension Post {
   static func query(for id: Int) -> some QueryRequest<Self?, Query.State> {
     Query(id: id)
   }
-  
+
   struct Query: QueryRequest, Hashable {
     let id: Int
-    
+
     func fetch(
       in context: QueryContext,
       with continuation: QueryContinuation<Post?>
@@ -83,10 +83,10 @@ extension Post {
   ) -> some QueryRequest<IdentifiedArrayOf<Self>, SearchQuery.State> {
     SearchQuery(text: text)
   }
-  
+
   struct SearchQuery: QueryRequest, Hashable {
     let text: String
-    
+
     func fetch(
       in context: QueryContext,
       with continuation: QueryContinuation<IdentifiedArrayOf<Post>>
@@ -103,19 +103,19 @@ extension Post {
   ) -> some InfiniteQueryRequest<ListPage.ID, ListPage> {
     ListByTagQuery(tag: tag)
   }
-  
+
   struct ListByTagQuery: InfiniteQueryRequest {
     typealias PageID = Post.ListPage.ID
     typealias PageValue = Post.ListPage
-    
+
     let tag: String
-    
+
     let initialPageId = Post.ListPage.ID(limit: 10, skip: 0)
-    
+
     var path: QueryPath {
       ["posts", self.tag]
     }
-    
+
     func pageId(
       after page: InfiniteQueryPage<PageID, PageValue>,
       using paging: InfiniteQueryPaging<PageID, PageValue>,
@@ -124,7 +124,7 @@ extension Post {
       let nextId = PageID(limit: page.id.limit, skip: page.id.skip + page.id.limit)
       return nextId.skip >= page.value.total ? nil : nextId
     }
-    
+
     func fetchPage(
       using paging: InfiniteQueryPaging<PageID, PageValue>,
       in context: QueryContext,

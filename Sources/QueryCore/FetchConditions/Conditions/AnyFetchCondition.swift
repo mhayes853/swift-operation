@@ -5,7 +5,7 @@
 public struct AnyFetchCondition: FetchCondition {
   /// The base ``FetchCondition`` as an existential.
   public let base: any FetchCondition
-  
+
   /// Type-erases `condition`.
   ///
   /// - Parameter condition: The underlying ``FetchCondition`` to erase.

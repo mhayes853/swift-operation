@@ -29,7 +29,7 @@
 /// > how most effectively yield data from your queries.
 public struct QueryContinuation<Value: Sendable>: Sendable {
   private let onQueryResult: @Sendable (Result<Value, any Error>, QueryContext?) -> Void
-  
+
   /// Creates a continuation.
   ///
   /// - Parameter onQueryResult: A function to handle yielded query results.

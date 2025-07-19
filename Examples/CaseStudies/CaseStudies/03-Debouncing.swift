@@ -1,6 +1,6 @@
+import Dependencies
 import SharingQuery
 import SwiftUI
-import Dependencies
 
 // MARK: - DebouncingCaseStudy
 
@@ -11,15 +11,15 @@ struct DebouncingCaseStudy: CaseStudy {
     data with high-frequency. Here, we'll use a clock to wait when the user enters search text, \
     and only after they've stopped entering for 0.5 seconds will we fetch the posts with the \
     query string.
-    
-    We can do this by reconstructing the query when the 0.5 seconds is up, and assigning that to \ 
-    the `posts` property on `DebouncingModel` using a reusable `DebounceTask` class. This way, we \ 
+
+    We can do this by reconstructing the query when the 0.5 seconds is up, and assigning that to \
+    the `posts` property on `DebouncingModel` using a reusable `DebounceTask` class. This way, we \
     maintain cached results from previous query strings, and can reuse the debouncing logic in \
     other parts of our app.
     """
-  
+
   @State private var model = DebouncingModel(debounceTime: .seconds(0.5))
-  
+
   var content: some View {
     HStack {
       TextField("Find in Posts", text: self.$model.text)
@@ -28,7 +28,7 @@ struct DebouncingCaseStudy: CaseStudy {
         ProgressView()
       }
     }
-    
+
     BasicQueryStateView(state: self.model.$posts.state) { posts in
       if posts.isEmpty {
         ContentUnavailableView(
@@ -51,13 +51,13 @@ struct DebouncingCaseStudy: CaseStudy {
 final class DebouncingModel {
   @ObservationIgnored
   @SharedQuery(Post.searchQuery(by: ""), animation: .bouncy) var posts
-  
+
   var text = "" {
     didSet { self.debounceTask?.schedule() }
   }
-  
+
   private var debounceTask: DebounceTask?
-  
+
   init(debounceTime: Duration) {
     @Dependency(\.continuousClock) var clock
     self.debounceTask = DebounceTask(clock: clock, duration: debounceTime) { [weak self] in
@@ -81,7 +81,7 @@ final class DebounceTask {
   private var task: Task<Void, any Error>?
   private let clock: any Clock<Duration>
   private let duration: Duration
-  
+
   init(
     clock: some Clock<Duration>,
     duration: Duration,
@@ -91,7 +91,7 @@ final class DebounceTask {
     self.duration = duration
     self.operation = operation
   }
-  
+
   func schedule() {
     self.task?.cancel()
     self.task = Task {
@@ -99,7 +99,7 @@ final class DebounceTask {
       try await self.operation()
     }
   }
-  
+
   func waitForCurrent() async throws {
     try await self.task?.value
   }

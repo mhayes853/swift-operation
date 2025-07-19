@@ -1,5 +1,5 @@
-import Foundation
 import Dependencies
+import Foundation
 import IdentifiedCollections
 
 // MARK: - DummyJSONAPI API
@@ -7,7 +7,7 @@ import IdentifiedCollections
 final class DummyJSONAPI: Sendable {
   private let transport: any HTTPDataTransport
   private let delay: Duration
-  
+
   init(transport: any HTTPDataTransport, delay: Duration = .zero) {
     self.transport = transport
     self.delay = delay
@@ -102,7 +102,7 @@ private struct DummyJSONPost: Decodable, Sendable {
   struct Reactions: Decodable, Sendable {
     let likes: Int
   }
-  
+
   let id: Int
   let title: String
   let body: String
@@ -130,7 +130,7 @@ extension DummyJSONAPI {
     guard let resp = resp as? HTTPURLResponse else { throw NonHTTPResponseError() }
     return (data, resp)
   }
-  
+
   private struct NonHTTPResponseError: Error {}
 }
 

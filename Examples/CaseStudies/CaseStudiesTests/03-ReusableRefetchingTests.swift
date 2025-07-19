@@ -1,8 +1,9 @@
-@testable import CaseStudies
-import SharingQuery
-import Foundation
-import Testing
 import CustomDump
+import Foundation
+import SharingQuery
+import Testing
+
+@testable import CaseStudies
 
 @Suite("RefetchOnNotification tests")
 struct RefetchOnNotificationTests {
@@ -10,13 +11,13 @@ struct RefetchOnNotificationTests {
   func refetchesWhenNotificationPosted() async throws {
     let center = NotificationCenter()
     @SharedQuery(TestQuery().refetchOnPost(of: .fake, center: center)) var num
-    
+
     _ = try await $num.activeTasks.first?.runIfNeeded()
-    
+
     center.post(name: .fake, object: nil)
-    
+
     _ = try await $num.activeTasks.first?.runIfNeeded()
-    
+
     expectNoDifference($num.valueUpdateCount, 2)
   }
 }

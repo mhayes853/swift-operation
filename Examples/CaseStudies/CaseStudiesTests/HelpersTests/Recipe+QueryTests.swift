@@ -1,10 +1,11 @@
-@testable import CaseStudies
 import CustomDump
-import Testing
-import SharingQuery
 import Dependencies
 import DependenciesTestSupport
 import Foundation
+import SharingQuery
+import Testing
+
+@testable import CaseStudies
 
 @Suite("Recipe+Query tests")
 struct RecipeQueryTests {
@@ -52,7 +53,7 @@ struct RecipeQueryTests {
         ]
       }
       """
-    
+
     let transport = MockHTTPDataTransport { request in
       guard request.url?.path() == "/recipes/1" else { return (404, .data(Data())) }
       return (200, .data(Data(json.utf8)))
@@ -62,7 +63,7 @@ struct RecipeQueryTests {
     } operation: {
       @SharedQuery(Recipe.randomQuery) var recipe
       try await $recipe.load()
-      
+
       let expectedRecipe = Recipe(
         id: 1,
         name: "Classic Margherita Pizza",
@@ -85,11 +86,11 @@ struct RecipeQueryTests {
         prepTime: Measurement(value: 20, unit: .minutes),
         cookTime: Measurement(value: 15, unit: .minutes)
       )
-      
+
       expectNoDifference(recipe, expectedRecipe)
     }
   }
-  
+
   @Test(
     "Returns Nil When Random Not Found From Dummy JSON",
     .dependency(\.withRandomNumberGenerator, WithRandomNumberGenerator(OneGenerator()))
@@ -101,7 +102,7 @@ struct RecipeQueryTests {
     } operation: {
       @SharedQuery(Recipe.randomQuery) var recipe
       try await $recipe.load()
-      
+
       expectNoDifference(recipe, .some(nil))
     }
   }

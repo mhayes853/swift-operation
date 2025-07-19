@@ -19,7 +19,7 @@ public struct QueryResultUpdateReason: Hashable, Sendable {
 extension QueryResultUpdateReason {
   /// The query yielded a result through a ``QueryContinuation``.
   public static let yieldedResult = Self(rawValue: "yieldedResult")
-  
+
   /// The query returned its final value from ``QueryRequest/fetch(in:with:)``.
   public static let returnedFinalResult = Self(rawValue: "returnedFinalResult")
 }

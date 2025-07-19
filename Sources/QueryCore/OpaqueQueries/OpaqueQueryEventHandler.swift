@@ -4,16 +4,16 @@
 public struct OpaqueQueryEventHandler: Sendable {
   /// A callback that is invoked when the state changes.
   public var onStateChanged: (@Sendable (OpaqueQueryState, QueryContext) -> Void)?
-  
+
   /// A callback that is invoked when fetching begins on the ``OpaqueQueryStore``.
   public var onFetchingStarted: (@Sendable (QueryContext) -> Void)?
-  
+
   /// A callback that is invoked when fetching ends on the ``OpaqueQueryStore``.
   public var onFetchingEnded: (@Sendable (QueryContext) -> Void)?
-  
+
   /// A callback that is invoked when a result is received from fetching on a ``OpaqueQueryStore``.
   public var onResultReceived: (@Sendable (Result<any Sendable, any Error>, QueryContext) -> Void)?
-  
+
   /// Creates an event handler.
   ///
   /// - Parameters:

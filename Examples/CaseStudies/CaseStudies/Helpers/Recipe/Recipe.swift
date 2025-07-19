@@ -1,6 +1,6 @@
+import Dependencies
 import Foundation
 import Query
-import Dependencies
 
 // MARK: - Recipe
 
@@ -29,7 +29,7 @@ enum RecipeIDLoaderKey: DependencyKey {
 
 extension Recipe {
   static let randomQuery = RandomQuery()
-  
+
   struct RandomQuery: QueryRequest, Hashable {
     func fetch(
       in context: QueryContext,

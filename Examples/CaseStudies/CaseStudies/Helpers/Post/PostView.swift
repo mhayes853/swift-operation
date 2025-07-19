@@ -3,12 +3,12 @@ import SwiftUI
 struct PostView: View {
   let post: Post
   let onLikeTapped: (() -> Void)?
-  
+
   var body: some View {
     VStack(alignment: .leading) {
       Text(self.post.title).font(.headline)
       Text(self.post.content)
-      
+
       if let onLikeTapped {
         Button {
           onLikeTapped()

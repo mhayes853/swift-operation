@@ -10,7 +10,7 @@ extension SharedReaderKey where Self == NetworkStatusKey {
   public static var networkStatus: NetworkStatusKey {
     NetworkStatusKey(observer: nil)
   }
-  
+
   /// A `SharedReaderKey` that observes the current user's network connection status.
   ///
   /// - Parameter observer: The `NetworkObserver` to use.
