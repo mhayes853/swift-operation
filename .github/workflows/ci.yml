@@ -30,15 +30,37 @@ jobs:
     name: Linux
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    strategy:
-      matrix:
-        swift:
-          - "6.1"
-    container: swift:${{ matrix.swift }}
+    container: swift:6.1
     steps:
       - uses: actions/checkout@v4
       - name: Run tests
         run: swift test --enable-all-traits
+
+  android:
+    name: Android
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: "Test Swift Package on Android"
+        uses: swift-android-sdk/swift-android-action@v2
+        with:
+          swift-version: 6.1
+          swift-build-flags: --enable-all-traits
+
+  windows:
+    name: Windows
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: "Setup Swift on Windows"
+        uses: compnerd/gha-setup-swift@main
+        with:
+          branch: swift-6.1-release
+          tag: 6.1-RELEASE
+      - name: "Test Swift Package on Windows"
+        run: swift test --configuration --enable-all-traits
 
   wasm:
     name: WASM

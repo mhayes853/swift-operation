@@ -1,3 +1,1 @@
-export TEST_WASM=1
-swift package --disable-sandbox --swift-sdk wasm32-unknown-wasi js test --environment browser
-export TEST_WASM=0
+TEST_WASM=1 swift package --disable-sandbox --swift-sdk wasm32-unknown-wasi js test --environment browser

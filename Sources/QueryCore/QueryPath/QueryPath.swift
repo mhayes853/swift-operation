@@ -234,7 +234,7 @@ extension QueryPath: MutableCollection {
       switch self.storage {
       case .single(let element): yield element.base
       case .array(let elements): yield elements[position].base
-      case .empty: fatalError()  // NB: Unreachable due to checkIndex.
+      case .empty: fatalError()  // NB: Unreachable due to checkIndexPrecondition.
       }
     }
     set {
@@ -246,7 +246,7 @@ extension QueryPath: MutableCollection {
         elements[position] = AnyHashableSendable(newValue)
         self.storage = .array(elements)
       case .empty:
-        fatalError()  // NB: Unreachable due to checkIndex.
+        fatalError()  // NB: Unreachable due to checkIndexPrecondition.
       }
     }
   }
@@ -277,7 +277,7 @@ extension QueryPath: RangeReplaceableCollection {
       elements.replaceSubrange(subrange, with: newElements.map(AnyHashableSendable.init))
       self.storage = .array(elements)
     case .empty:
-      fatalError()  // NB: Unreachable due to checkIndex.
+      fatalError()  // NB: Unreachable due to checkIndexPrecondition.
     }
   }
 }
