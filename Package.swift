@@ -149,6 +149,8 @@ let package = Package(
     .append(
       .target(name: "QueryBrowser", condition: .when(traits: ["SwiftQueryWebBrowser"]))
     )
+#else
+	package.targets.append(.target(name: "QueryBrowser"))
 #endif
 
 var queryTestsDependencies: [Target.Dependency] = [
