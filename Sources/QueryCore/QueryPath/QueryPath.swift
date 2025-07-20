@@ -250,7 +250,41 @@ extension QueryPath: MutableCollection {
       }
     }
   }
+}
 
+// MARK: - RandomAccessCollection
+
+extension QueryPath: RandomAccessCollection {
+}
+
+// MARK: - RangeReplaceableCollection
+
+extension QueryPath: RangeReplaceableCollection {
+  public mutating func replaceSubrange(
+    _ subrange: Range<Int>,
+    with newElements: some Collection<Element>
+  ) {
+    self.checkIndexPrecondition(position: subrange.lowerBound)
+    self.checkIndexPrecondition(position: subrange.upperBound - 1)
+    switch self.storage {
+    case .single:
+      if let first = newElements.first {
+        self.storage = .single(AnyHashableSendable(first))
+      } else {
+        self.storage = .empty
+      }
+    case .array(var elements):
+      elements.replaceSubrange(subrange, with: newElements.map(AnyHashableSendable.init))
+      self.storage = .array(elements)
+    case .empty:
+      fatalError()  // NB: Unreachable due to checkIndex.
+    }
+  }
+}
+
+// MARK: - Check Index
+
+extension QueryPath {
   package static let _indexOutOfRangeMessage = "QueryPath index out of range"
 
   private func checkIndexPrecondition(position: Index) {
