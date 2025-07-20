@@ -220,6 +220,21 @@ struct QueryPathTests {
     "Replace Subrange",
     arguments: [
       ReplaceSubrangeArgs(QueryPath("element"), 0..<1, ["foo"], QueryPath("foo")),
+      ReplaceSubrangeArgs(QueryPath(), 0..<0, QueryPath("foo"), QueryPath("foo")),
+      ReplaceSubrangeArgs(QueryPath("bar"), 1..<1, QueryPath("foo"), QueryPath(["bar", "foo"])),
+      ReplaceSubrangeArgs(QueryPath("bar"), 0..<0, QueryPath("foo"), QueryPath(["foo", "bar"])),
+      ReplaceSubrangeArgs(
+        QueryPath(["foo", "bar"]),
+        2..<2,
+        QueryPath("baz"),
+        QueryPath(["foo", "bar", "baz"])
+      ),
+      ReplaceSubrangeArgs(
+        QueryPath(["foo", "bar"]),
+        0..<0,
+        QueryPath("baz"),
+        QueryPath(["baz", "foo", "bar"])
+      ),
       ReplaceSubrangeArgs(
         QueryPath(["element", "bar"]),
         0..<1,
@@ -427,6 +442,10 @@ struct QueryPathTests {
       await #expect(processExitsWith: .failure, .indexOutOfRange) {
         var path = QueryPath(["blob", "foo"])
         path.replaceSubrange(-1..<3, with: [])
+      }
+      await #expect(processExitsWith: .failure, .indexOutOfRange) {
+        var path = QueryPath(["blob", "foo"])
+        path.replaceSubrange(4..<4, with: [QueryPath.Element("blob 2")])
       }
       await #expect(processExitsWith: .failure, .indexOutOfRange) {
         var path = QueryPath(["blob", "foo"])

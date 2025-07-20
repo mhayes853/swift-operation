@@ -285,20 +285,38 @@ extension QueryPath: RangeReplaceableCollection {
     _ subrange: Range<Int>,
     with newElements: some Collection<Element>
   ) {
-    self.checkIndexPrecondition(position: subrange.lowerBound)
-    self.checkIndexPrecondition(position: subrange.upperBound - 1)
-    switch self.storage {
-    case .single:
+    let kind = subrange.isEmpty ? IndexKind.insertion : .access
+    switch kind {
+    case .access:
+      self.checkIndexPrecondition(position: subrange.lowerBound)
+      self.checkIndexPrecondition(position: subrange.upperBound - 1)
+    case .insertion:
+      self.checkIndexPrecondition(position: subrange.startIndex, kind: kind)
+    }
+
+    switch (self.storage, kind) {
+    case (.single, .access):
       if let first = newElements.first {
         self.storage = .single(first)
       } else {
         self.storage = .empty
       }
-    case .array(var elements):
+    case (.single(let element), .insertion):
+      guard let first = newElements.first else { break }
+      if subrange.startIndex == self.startIndex {
+        self.storage = .array([first, element])
+      } else {
+        self.storage = .array([element, first])
+      }
+    case (.array(var elements), _):
       elements.replaceSubrange(subrange, with: newElements)
       self.storage = .array(elements)
-    case .empty:
-      fatalError()  // NB: Unreachable due to checkIndexPrecondition.
+    case (.empty, .insertion):
+      if let first = newElements.first {
+        self.storage = .single(first)
+      }
+    case (.empty, .access):
+      break  // NB: Unreachable due to checkIndexPrecondition.
     }
   }
 }
@@ -308,13 +326,32 @@ extension QueryPath: RangeReplaceableCollection {
 extension QueryPath {
   package static let _indexOutOfRangeMessage = "QueryPath index out of range"
 
-  private func checkIndexPrecondition(position: Index) {
-    switch self.storage {
-    case .empty: preconditionFailure(Self._indexOutOfRangeMessage)
-    case .single: precondition(self.startIndex == position, Self._indexOutOfRangeMessage)
-    case .array(let elements):
+  private enum IndexKind {
+    case access
+    case insertion
+  }
+
+  private func checkIndexPrecondition(position: Index, kind: IndexKind = .access) {
+    switch (self.storage, kind) {
+    case (.empty, .access):
+      preconditionFailure(Self._indexOutOfRangeMessage)
+    case (.empty, .insertion):
+      precondition(position == 0, Self._indexOutOfRangeMessage)
+    case (.single, .access):
+      precondition(self.startIndex == position, Self._indexOutOfRangeMessage)
+    case (.single, .insertion):
+      precondition(
+        (self.startIndex...self.endIndex).contains(position),
+        Self._indexOutOfRangeMessage
+      )
+    case (.array(let elements), .access):
       precondition(
         (elements.startIndex..<elements.endIndex).contains(position),
+        Self._indexOutOfRangeMessage
+      )
+    case (.array(let elements), .insertion):
+      precondition(
+        (elements.startIndex...elements.endIndex).contains(position),
         Self._indexOutOfRangeMessage
       )
     }
