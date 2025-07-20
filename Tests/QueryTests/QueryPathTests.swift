@@ -203,17 +203,17 @@ struct QueryPathTests {
   @Test(
     "Subscripting",
     arguments: [
-      (QueryPath("bar"), 0, AnyHashableSendable("bar")),
-      (QueryPath(["bar"]), 0, AnyHashableSendable("bar")),
-      (QueryPath(["bar", "baz"]), 1, AnyHashableSendable("baz"))
+      (QueryPath("bar"), 0, QueryPath.Element("bar")),
+      (QueryPath(["bar"]), 0, QueryPath.Element("bar")),
+      (QueryPath(["bar", "baz"]), 1, QueryPath.Element("baz"))
     ]
   )
-  func subscripting(path: QueryPath, index: Int, readValue: AnyHashableSendable) {
+  func subscripting(path: QueryPath, index: Int, readValue: QueryPath.Element) {
     var path = path
-    expectNoDifference(AnyHashableSendable(path[index]), readValue)
+    expectNoDifference(path[index], readValue)
 
-    path[index] = 0
-    expectNoDifference(AnyHashableSendable(path[index]), 0)
+    path[index] = QueryPath.Element(0)
+    expectNoDifference(path[index], QueryPath.Element(0))
   }
 
   @Test(
@@ -330,83 +330,83 @@ struct QueryPathTests {
     func indexOutOfRangeWriting() async {
       await #expect(processExitsWith: .failure, .indexOutOfRange) {
         var p = QueryPath()
-        p[0] = 0
+        p[0] = QueryPath.Element(0)
       }
       await #expect(processExitsWith: .failure, .indexOutOfRange) {
         var p = QueryPath()
-        p[1] = 0
+        p[1] = QueryPath.Element(1)
       }
       await #expect(processExitsWith: .failure, .indexOutOfRange) {
         var p = QueryPath()
-        p[-1] = 0
+        p[-1] = QueryPath.Element(-1)
       }
       await #expect(processExitsWith: .failure, .indexOutOfRange) {
         var p = QueryPath()
-        p[2983] = 0
+        p[2983] = QueryPath.Element(2983)
       }
       await #expect(processExitsWith: .failure, .indexOutOfRange) {
         var p = QueryPath()
-        p[2983] = 0
+        p[2983] = QueryPath.Element(2983)
       }
       await #expect(processExitsWith: .failure, .indexOutOfRange) {
         var p = QueryPath()
-        p[-198] = 0
+        p[-198] = QueryPath.Element(-198)
       }
       await #expect(processExitsWith: .failure, .indexOutOfRange) {
         var p = QueryPath([])
-        p[0] = 0
+        p[0] = QueryPath.Element(0)
       }
       await #expect(processExitsWith: .failure, .indexOutOfRange) {
         var p = QueryPath([])
-        p[1] = 0
+        p[1] = QueryPath.Element(1)
       }
       await #expect(processExitsWith: .failure, .indexOutOfRange) {
         var p = QueryPath([])
-        p[-1] = 0
+        p[-1] = QueryPath.Element(-1)
       }
       await #expect(processExitsWith: .failure, .indexOutOfRange) {
         var p = QueryPath([])
-        p[2983] = 0
+        p[2983] = QueryPath.Element(2983)
       }
       await #expect(processExitsWith: .failure, .indexOutOfRange) {
         var p = QueryPath([])
-        p[18] = 0
+        p[18] = QueryPath.Element(0)
       }
       await #expect(processExitsWith: .failure, .indexOutOfRange) {
         var p = QueryPath([])
-        p[18] = 0
+        p[18] = QueryPath.Element(0)
       }
       await #expect(processExitsWith: .failure, .indexOutOfRange) {
         var p = QueryPath("element")
-        p[1] = 0
+        p[1] = QueryPath.Element(0)
       }
       await #expect(processExitsWith: .failure, .indexOutOfRange) {
         var p = QueryPath("element")
-        p[1] = 0
+        p[1] = QueryPath.Element(0)
       }
       await #expect(processExitsWith: .failure, .indexOutOfRange) {
         var p = QueryPath("element")
-        p[100] = 0
+        p[100] = QueryPath.Element(0)
       }
       await #expect(processExitsWith: .failure, .indexOutOfRange) {
         var p = QueryPath("element")
-        p[13] = 0
+        p[13] = QueryPath.Element(0)
       }
       await #expect(processExitsWith: .failure, .indexOutOfRange) {
         var p = QueryPath("element")
-        p[13] = 0
+        p[13] = QueryPath.Element(0)
       }
       await #expect(processExitsWith: .failure, .indexOutOfRange) {
         var p = QueryPath(["element", "bar"])
-        p[-1] = 0
+        p[-1] = QueryPath.Element(0)
       }
       await #expect(processExitsWith: .failure, .indexOutOfRange) {
         var p = QueryPath(["element", "bar"])
-        p[2] = 0
+        p[2] = QueryPath.Element(0)
       }
       await #expect(processExitsWith: .failure, .indexOutOfRange) {
         var p = QueryPath(["element"])
-        p[1] = 0
+        p[1] = QueryPath.Element(0)
       }
     }
 

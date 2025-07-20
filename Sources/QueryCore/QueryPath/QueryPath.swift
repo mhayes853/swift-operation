@@ -38,7 +38,7 @@ public struct QueryPath: Hashable, Sendable {
   ///
   /// - Parameter elements: The elements that make up this path.
   public init(_ elements: [any Hashable & Sendable]) {
-    self.storage = .array(elements.map(AnyHashableSendable.init))
+    self.storage = .array(elements.map(Element.init))
   }
 
   /// Creates an empty path.
@@ -54,7 +54,7 @@ extension QueryPath {
   ///
   /// - Parameter element: The sole element that makes up this path.
   public init(_ element: some Hashable & Sendable) {
-    self.storage = .single(AnyHashableSendable(element))
+    self.storage = .single(Element(element))
   }
 }
 
@@ -140,10 +140,10 @@ extension QueryPath {
 extension QueryPath {
   private enum Storage: Hashable, Sendable {
     case empty
-    case single(AnyHashableSendable)
-    case array([AnyHashableSendable])
+    case single(Element)
+    case array([Element])
 
-    var elements: any RandomAccessCollection<AnyHashableSendable> {
+    var elements: any RandomAccessCollection<Element> {
       switch self {
       case .empty: EmptyCollection()
       case .single(let element): CollectionOfOne(element)
@@ -206,10 +206,31 @@ extension QueryPath: CustomStringConvertible {
   }
 }
 
+// MARK: - Element
+
+extension QueryPath {
+  public struct Element: Hashable, Sendable {
+    private let inner: AnyHashableSendable
+
+    public var base: any Hashable & Sendable {
+      self.inner.base
+    }
+
+    public init(_ value: any Hashable & Sendable) {
+      self.inner = AnyHashableSendable(value)
+    }
+  }
+}
+
+extension QueryPath.Element: CustomStringConvertible {
+  public var description: String {
+    self.inner.description
+  }
+}
+
 // MARK: - MutableCollection
 
 extension QueryPath: MutableCollection {
-  public typealias Element = any Hashable & Sendable
   public typealias Index = Int
 
   public func index(after i: Int) -> Int {
@@ -232,8 +253,8 @@ extension QueryPath: MutableCollection {
     _read {
       self.checkIndexPrecondition(position: position)
       switch self.storage {
-      case .single(let element): yield element.base
-      case .array(let elements): yield elements[position].base
+      case .single(let element): yield element
+      case .array(let elements): yield elements[position]
       case .empty: fatalError()  // NB: Unreachable due to checkIndexPrecondition.
       }
     }
@@ -241,9 +262,9 @@ extension QueryPath: MutableCollection {
       self.checkIndexPrecondition(position: position)
       switch self.storage {
       case .single:
-        self.storage = .single(AnyHashableSendable(newValue))
+        self.storage = .single(newValue)
       case .array(var elements):
-        elements[position] = AnyHashableSendable(newValue)
+        elements[position] = newValue
         self.storage = .array(elements)
       case .empty:
         fatalError()  // NB: Unreachable due to checkIndexPrecondition.
@@ -269,12 +290,12 @@ extension QueryPath: RangeReplaceableCollection {
     switch self.storage {
     case .single:
       if let first = newElements.first {
-        self.storage = .single(AnyHashableSendable(first))
+        self.storage = .single(first)
       } else {
         self.storage = .empty
       }
     case .array(var elements):
-      elements.replaceSubrange(subrange, with: newElements.map(AnyHashableSendable.init))
+      elements.replaceSubrange(subrange, with: newElements)
       self.storage = .array(elements)
     case .empty:
       fatalError()  // NB: Unreachable due to checkIndexPrecondition.
