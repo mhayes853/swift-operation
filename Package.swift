@@ -90,8 +90,20 @@ let package = Package(
       name: "QueryBrowser",
       dependencies: [
         "QueryCore",
-        .product(name: "JavaScriptKit", package: "JavaScriptKit"),
-        .product(name: "JavaScriptEventLoop", package: "JavaScriptKit")
+        .product(
+          name: "JavaScriptKit",
+          package: "JavaScriptKit",
+          condition: .when(platforms: [
+            .iOS, .tvOS, .macOS, .watchOS, .visionOS, .macCatalyst, .linux
+          ])
+        ),
+        .product(
+          name: "JavaScriptEventLoop",
+          package: "JavaScriptKit",
+          condition: .when(platforms: [
+            .iOS, .tvOS, .macOS, .watchOS, .visionOS, .macCatalyst, .linux
+          ])
+        )
       ]
     ),
     .target(

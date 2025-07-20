@@ -267,7 +267,7 @@ struct QueryPathTests {
     }
   }
 
-  #if swift(>=6.2) && os(macOS) || os(Linux) || os(Windows)
+  #if swift(>=6.2) && (os(macOS) || os(Linux) || os(Windows))
     // NB: Parameterized tests don't support exit testing due to the macro expanding an
     // @convention(c) closure. So inline all of this instead.
 
