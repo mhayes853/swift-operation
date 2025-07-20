@@ -69,15 +69,15 @@ extension QueryPath {
     switch (self.storage, other.storage) {
     case (.empty, _), (.array([]), _):
       return true
-    case let (.single(e1), .single(e2)):
+    case (.single(let e1), .single(let e2)):
       return e1 == e2
-    case let (.single(e1), .array(e2)):
+    case (.single(let e1), .array(let e2)):
       return e1 == e2.first
-    case let (.array(e1), .single(e2)):
+    case (.array(let e1), .single(let e2)):
       return e1.count == 1 && e1.first == e2
-    case let (.array(e1), .array(e2)):
+    case (.array(let e1), .array(let e2)):
       guard e1.count <= e2.count else { return false }
-      return (0..<min(e1.count, e2.count)).allSatisfy { i in e1[i] == e2[i] }
+      return (0..<Swift.min(e1.count, e2.count)).allSatisfy { i in e1[i] == e2[i] }
     default:
       return false
     }
@@ -96,13 +96,13 @@ extension QueryPath {
       break
     case (.array([]), _), (.empty, _):
       self.storage = other.storage
-    case let (.single(e1), .single(e2)):
+    case (.single(let e1), .single(let e2)):
       self.storage = .array([e1, e2])
-    case let (.single(e1), .array(e2)):
+    case (.single(let e1), .array(let e2)):
       self.storage = .array([e1] + e2)
-    case let (.array(e1), .single(e2)):
+    case (.array(let e1), .single(let e2)):
       self.storage = .array(e1 + [e2])
-    case let (.array(e1), .array(e2)):
+    case (.array(let e1), .array(let e2)):
       self.storage = .array(e1 + e2)
     }
   }
@@ -146,25 +146,25 @@ extension QueryPath {
     var elements: any RandomAccessCollection<AnyHashableSendable> {
       switch self {
       case .empty: EmptyCollection()
-      case let .single(element): CollectionOfOne(element)
-      case let .array(elements): elements
+      case .single(let element): CollectionOfOne(element)
+      case .array(let elements): elements
       }
     }
 
     static func == (lhs: Self, rhs: Self) -> Bool {
       switch (lhs, rhs) {
       case (.empty, .empty), (.empty, .array([])), (.array([]), .empty):
-        return true
-      case let (.single(e1), .single(e2)):
-        return e1 == e2
-      case let (.single(e1), .array(e2)):
-        return e1 == e2.first
-      case let (.array(e1), .single(e2)):
-        return e1.first == e2
-      case let (.array(e1), .array(e2)):
-        return e1 == e2
+        true
+      case (.single(let e1), .single(let e2)):
+        e1 == e2
+      case (.single(let e1), .array(let e2)):
+        e1 == e2.first
+      case (.array(let e1), .single(let e2)):
+        e1.first == e2
+      case (.array(let e1), .array(let e2)):
+        e1 == e2
       default:
-        return false
+        false
       }
     }
 
@@ -172,13 +172,12 @@ extension QueryPath {
       switch self {
       case .empty:
         hasher.combine(0)
-      case let .single(element):
+      case .single(let element):
         hasher.combine(1)
         hasher.combine(element)
-      case let .array(elements):
+      case .array(let elements):
         hasher.combine(elements)
       }
-
     }
   }
 }
@@ -204,5 +203,65 @@ extension QueryPath: CustomStringConvertible {
       }
       .joined(separator: ", ")
     return "QueryPath([\(joined)])"
+  }
+}
+
+// MARK: - MutableCollection
+
+extension QueryPath: MutableCollection {
+  public typealias Element = any Hashable & Sendable
+  public typealias Index = Int
+
+  public func index(after i: Int) -> Int {
+    i + 1
+  }
+
+  public var startIndex: Int {
+    0
+  }
+
+  public var endIndex: Int {
+    switch self.storage {
+    case .empty: 0
+    case .single: 1
+    case .array(let elements): elements.endIndex
+    }
+  }
+
+  public subscript(position: Index) -> Element {
+    _read {
+      self.checkIndexPrecondition(position: position)
+      switch self.storage {
+      case .single(let element): yield element.base
+      case .array(let elements): yield elements[position].base
+      case .empty: fatalError()  // NB: Unreachable due to checkIndex.
+      }
+    }
+    set {
+      self.checkIndexPrecondition(position: position)
+      switch self.storage {
+      case .single:
+        self.storage = .single(AnyHashableSendable(newValue))
+      case .array(var elements):
+        elements[position] = AnyHashableSendable(newValue)
+        self.storage = .array(elements)
+      case .empty:
+        fatalError()  // NB: Unreachable due to checkIndex.
+      }
+    }
+  }
+
+  package static let _indexOutOfRangeMessage = "QueryPath index out of range"
+
+  private func checkIndexPrecondition(position: Index) {
+    switch self.storage {
+    case .empty: preconditionFailure(Self._indexOutOfRangeMessage)
+    case .single: precondition(self.startIndex == position, Self._indexOutOfRangeMessage)
+    case .array(let elements):
+      precondition(
+        (elements.startIndex..<elements.endIndex).contains(position),
+        Self._indexOutOfRangeMessage
+      )
+    }
   }
 }

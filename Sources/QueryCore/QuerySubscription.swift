@@ -216,7 +216,7 @@ extension QuerySubscription {
 
 extension QuerySubscription {
   private final class Box: Sendable {
-    let onCancel: Lock<(@Sendable () -> Void)?>
+    private let onCancel: Lock<(@Sendable () -> Void)?>
 
     init(onCancel: @escaping @Sendable () -> Void) {
       self.onCancel = Lock(onCancel)

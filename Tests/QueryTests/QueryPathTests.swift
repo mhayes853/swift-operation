@@ -128,6 +128,175 @@ struct QueryPathTests {
   func appending(p1: QueryPath, p2: QueryPath, expected: QueryPath) {
     expectNoDifference(p1.appending(p2), expected)
   }
+
+  @Test(
+    "End Index",
+    arguments: [
+      (QueryPath(), 0),
+      (QueryPath([]), 0),
+      (QueryPath("foo"), 1),
+      (QueryPath(["foo"]), 1),
+      (QueryPath(["foo", "bar"]), 2),
+      (QueryPath(["foo", "bar", 1]), 3)
+    ]
+  )
+  func endIndex(path: QueryPath, index: Int) {
+    expectNoDifference(path.endIndex, index)
+  }
+
+  #if swift(>=6.2) && os(macOS) || os(Linux) || os(Windows)
+    // NB: Parameterized tests don't support exit testing due to the macro expanding an
+    // @convention(c) closure. So inline all of this instead.
+
+    @Test("Index Out of Range (Reading)")
+    func indexOutOfRangeReading() async {
+      let comment = Comment(rawValue: QueryPath._indexOutOfRangeMessage)
+      await #expect(processExitsWith: .failure, comment) {
+        _ = QueryPath()[0]
+      }
+      await #expect(processExitsWith: .failure, comment) {
+        _ = QueryPath()[1]
+      }
+      await #expect(processExitsWith: .failure, comment) {
+        _ = QueryPath()[-1]
+      }
+      await #expect(processExitsWith: .failure, comment) {
+        _ = QueryPath()[2983]
+      }
+      await #expect(processExitsWith: .failure, comment) {
+        _ = QueryPath()[-198]
+      }
+      await #expect(processExitsWith: .failure, comment) {
+        _ = QueryPath([])[0]
+      }
+      await #expect(processExitsWith: .failure, comment) {
+        _ = QueryPath([])[1]
+      }
+      await #expect(processExitsWith: .failure, comment) {
+        _ = QueryPath([])[-1]
+      }
+      await #expect(processExitsWith: .failure, comment) {
+        _ = QueryPath([])[2983]
+      }
+      await #expect(processExitsWith: .failure, comment) {
+        _ = QueryPath([])[18]
+      }
+      await #expect(processExitsWith: .failure, comment) {
+        _ = QueryPath("element")[1]
+      }
+      await #expect(processExitsWith: .failure, comment) {
+        _ = QueryPath("element")[1]
+      }
+      await #expect(processExitsWith: .failure, comment) {
+        _ = QueryPath("element")[100]
+      }
+      await #expect(processExitsWith: .failure, comment) {
+        _ = QueryPath("element")[13]
+      }
+      await #expect(processExitsWith: .failure, comment) {
+        _ = QueryPath(["element", "bar"])[-1]
+      }
+      await #expect(processExitsWith: .failure, comment) {
+        _ = QueryPath(["element", "bar"])[2]
+      }
+      await #expect(processExitsWith: .failure, comment) {
+        _ = QueryPath(["element"])[1]
+      }
+    }
+
+    @Test("Index Out of Range (Writing)")
+    func indexOutOfRangeWriting() async {
+      let comment = Comment(rawValue: QueryPath._indexOutOfRangeMessage)
+      await #expect(processExitsWith: .failure, comment) {
+        var p = QueryPath()
+        p[0] = 0
+      }
+      await #expect(processExitsWith: .failure, comment) {
+        var p = QueryPath()
+        p[1] = 0
+      }
+      await #expect(processExitsWith: .failure, comment) {
+        var p = QueryPath()
+        p[-1] = 0
+      }
+      await #expect(processExitsWith: .failure, comment) {
+        var p = QueryPath()
+        p[2983] = 0
+      }
+      await #expect(processExitsWith: .failure, comment) {
+        var p = QueryPath()
+        p[2983] = 0
+      }
+      await #expect(processExitsWith: .failure, comment) {
+        var p = QueryPath()
+        p[-198] = 0
+      }
+      await #expect(processExitsWith: .failure, comment) {
+        var p = QueryPath([])
+        p[0] = 0
+      }
+      await #expect(processExitsWith: .failure, comment) {
+        var p = QueryPath([])
+        p[1] = 0
+      }
+      await #expect(processExitsWith: .failure, comment) {
+        var p = QueryPath([])
+        p[-1] = 0
+      }
+      await #expect(processExitsWith: .failure, comment) {
+        var p = QueryPath([])
+        p[2983] = 0
+      }
+      await #expect(processExitsWith: .failure, comment) {
+        var p = QueryPath([])
+        p[18] = 0
+      }
+      await #expect(processExitsWith: .failure, comment) {
+        var p = QueryPath("element")
+        p[1] = 0
+      }
+      await #expect(processExitsWith: .failure, comment) {
+        var p = QueryPath("element")
+        p[1] = 0
+      }
+      await #expect(processExitsWith: .failure, comment) {
+        var p = QueryPath("element")
+        p[100] = 0
+      }
+      await #expect(processExitsWith: .failure, comment) {
+        var p = QueryPath("element")
+        p[13] = 0
+      }
+      await #expect(processExitsWith: .failure, comment) {
+        var p = QueryPath(["element", "bar"])
+        p[-1] = 0
+      }
+      await #expect(processExitsWith: .failure, comment) {
+        var p = QueryPath(["element", "bar"])
+        p[2] = 0
+      }
+      await #expect(processExitsWith: .failure, comment) {
+        var p = QueryPath(["element"])
+        p[1] = 0
+      }
+    }
+  #endif
+
+  @Test(
+    "Subscripting",
+    arguments: [
+      (QueryPath("bar"), 0, AnyHashableSendable("bar")),
+      (QueryPath(["bar"]), 0, AnyHashableSendable("bar")),
+      (QueryPath(["bar", "baz"]), 1, AnyHashableSendable("baz"))
+    ]
+  )
+  func subscripting(path: QueryPath, index: Int, readValue: AnyHashableSendable) {
+    var path = path
+    expectNoDifference(AnyHashableSendable(path[index]), readValue)
+
+    path[index] = 0
+    expectNoDifference(AnyHashableSendable(path[index]), 0)
+  }
 }
 
 private struct SomeValue: Hashable, Sendable {
