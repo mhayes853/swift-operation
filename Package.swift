@@ -5,7 +5,7 @@ import PackageDescription
 
 let package = Package(
   name: "swift-query",
-  platforms: [.iOS(.v13), .macOS(.v10_15), .tvOS(.v13), .watchOS(.v6)],
+  platforms: [.iOS(.v13), .macOS(.v10_15), .tvOS(.v13), .watchOS(.v6), .macCatalyst(.v13)],
   products: [
     .library(name: "SharingQuery", targets: ["SharingQuery"]),
     .library(name: "Query", targets: ["Query"]),
@@ -43,7 +43,6 @@ let package = Package(
       .upToNextMajor(from: "1.1.0")
     ),
     .package(url: "https://github.com/pointfreeco/xctest-dynamic-overlay", from: "1.4.3"),
-    .package(url: "https://github.com/swiftwasm/JavaScriptKit", from: "0.26.1"),
     .package(url: "https://github.com/nalexn/ViewInspector", from: "0.10.1"),
     .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.4.3"),
     .package(url: "https://github.com/pointfreeco/swift-navigation", from: "2.3.1"),
@@ -82,28 +81,7 @@ let package = Package(
     .target(
       name: "Query",
       dependencies: [
-        "QueryCore",
-        .target(name: "QueryBrowser", condition: .when(traits: ["SwiftQueryWebBrowser"]))
-      ]
-    ),
-    .target(
-      name: "QueryBrowser",
-      dependencies: [
-        "QueryCore",
-        .product(
-          name: "JavaScriptKit",
-          package: "JavaScriptKit",
-          condition: .when(platforms: [
-            .iOS, .tvOS, .macOS, .watchOS, .visionOS, .macCatalyst, .linux
-          ])
-        ),
-        .product(
-          name: "JavaScriptEventLoop",
-          package: "JavaScriptKit",
-          condition: .when(platforms: [
-            .iOS, .tvOS, .macOS, .watchOS, .visionOS, .macCatalyst, .linux
-          ])
-        )
+        "QueryCore"
       ]
     ),
     .target(
@@ -122,21 +100,56 @@ let package = Package(
     .target(
       name: "QueryTestHelpers",
       dependencies: ["Query", .product(name: "CustomDump", package: "swift-custom-dump")]
-    ),
-    .testTarget(
-      name: "QueryWASMTests",
-      dependencies: [
-        "QueryBrowser",
-        .product(
-          name: "JavaScriptEventLoopTestSupport",
-          package: "JavaScriptKit",
-          condition: .when(platforms: [.wasi])
-        )
-      ]
     )
   ],
   swiftLanguageModes: [.v6]
 )
+
+#if !os(Windows)
+  package.dependencies.append(
+    .package(url: "https://github.com/swiftwasm/JavaScriptKit", from: "0.26.1"),
+  )
+  package.targets.append(
+    contentsOf: [
+      .target(
+        name: "QueryBrowser",
+        dependencies: [
+          "QueryCore",
+          .product(
+            name: "JavaScriptKit",
+            package: "JavaScriptKit",
+            condition: .when(platforms: [
+              .iOS, .tvOS, .macOS, .watchOS, .visionOS, .macCatalyst, .linux
+            ])
+          ),
+          .product(
+            name: "JavaScriptEventLoop",
+            package: "JavaScriptKit",
+            condition: .when(platforms: [
+              .iOS, .tvOS, .macOS, .watchOS, .visionOS, .macCatalyst, .linux
+            ])
+          )
+        ]
+      ),
+      .testTarget(
+        name: "QueryWASMTests",
+        dependencies: [
+          "QueryBrowser",
+          .product(
+            name: "JavaScriptEventLoopTestSupport",
+            package: "JavaScriptKit",
+            condition: .when(platforms: [.wasi])
+          )
+        ]
+      )
+    ]
+  )
+  let queryTarget = package.targets.first { $0.name == "Query" }
+  queryTarget?.dependencies
+    .append(
+      .target(name: "QueryBrowser", condition: .when(traits: ["SwiftQueryWebBrowser"]))
+    )
+#endif
 
 var queryTestsDependencies: [Target.Dependency] = [
   "Query",
