@@ -78,12 +78,7 @@ let package = Package(
         )
       ]
     ),
-    .target(
-      name: "Query",
-      dependencies: [
-        "QueryCore"
-      ]
-    ),
+    .target(name: "Query", dependencies: ["QueryCore"]),
     .target(
       name: "QueryCore",
       dependencies: [
@@ -119,14 +114,14 @@ let package = Package(
             name: "JavaScriptKit",
             package: "JavaScriptKit",
             condition: .when(platforms: [
-              .iOS, .tvOS, .macOS, .watchOS, .visionOS, .macCatalyst, .linux
+              .iOS, .tvOS, .macOS, .watchOS, .visionOS, .macCatalyst, .linux, .wasi
             ])
           ),
           .product(
             name: "JavaScriptEventLoop",
             package: "JavaScriptKit",
             condition: .when(platforms: [
-              .iOS, .tvOS, .macOS, .watchOS, .visionOS, .macCatalyst, .linux
+              .iOS, .tvOS, .macOS, .watchOS, .visionOS, .macCatalyst, .linux, .wasi
             ])
           )
         ]
