@@ -3,7 +3,7 @@ import Tagged
 
 // MARK: - Mountain
 
-public struct Mountain: Hashable, Sendable, Codable {
+public struct Mountain: Hashable, Sendable, Codable, Identifiable {
   public typealias ID = Tagged<Self, UUID>
 
   public let id: ID

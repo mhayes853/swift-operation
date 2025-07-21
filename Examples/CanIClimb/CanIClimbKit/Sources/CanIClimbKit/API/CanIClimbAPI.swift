@@ -136,6 +136,25 @@ extension CanIClimbAPI {
   }
 }
 
+// MARK: - Mountains Searcher
+
+extension CanIClimbAPI {
+  public func searchMountains(
+    by search: Mountain.Search,
+    page: Int
+  ) async throws -> Mountain.SearchResult {
+    Mountain.SearchResult(mountains: [], hasNextPage: false)
+  }
+}
+
+// MARK: - Mountain Detail
+
+extension CanIClimbAPI {
+  public func mountain(with id: Mountain.ID) async throws -> Mountain? {
+    nil
+  }
+}
+
 // MARK: - Access Token
 
 extension CanIClimbAPI {
