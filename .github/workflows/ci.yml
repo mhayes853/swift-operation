@@ -71,7 +71,7 @@ jobs:
       - uses: bytecodealliance/actions/wasmtime/setup@v1
       - uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: 22.15.0
       - name: Install Swift and Swift SDK for WebAssembly
         run: |
           PREFIX=/opt/swift
