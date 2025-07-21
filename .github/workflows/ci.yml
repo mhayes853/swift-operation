@@ -61,7 +61,7 @@ jobs:
           branch: swift-6.1-release
           tag: 6.1-RELEASE
       - name: "Build Swift Package on Windows"
-        run: swift build --target Query --enable-all-traits
+        run: swift build --target Query --traits SwiftQueryLogging
 
   wasm:
     name: WASM
