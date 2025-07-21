@@ -34,16 +34,31 @@
 public struct QueryPath: Hashable, Sendable {
   private var storage: Storage
 
-  /// Creates a path from an array of Hashable and Sendable elements.
-  ///
-  /// - Parameter elements: The elements that make up this path.
-  public init(_ elements: [any Hashable & Sendable]) {
-    self.storage = .array(elements.map(Element.init))
-  }
-
   /// Creates an empty path.
   public init() {
     self.storage = .empty
+  }
+}
+
+// MARK: - Array Init
+
+extension QueryPath {
+  /// Creates a path from an array of Hashable and Sendable elements.
+  ///
+  /// This initializer will wrap each element of the sequence in an ``Element`` instance. If you
+  /// wish to construct a path from a sequence of literal `Element` instances, use
+  /// ``init(elements:)`` instead.
+  ///
+  /// - Parameter elements: The elements that make up this path.
+  public init(_ elements: some Sequence<any Hashable & Sendable>) {
+    self.init(elements: elements.map(Element.init))
+  }
+
+  /// Constructs a path from a sequence of ``Element`` instances.
+  ///
+  /// - Parameter elements: The elements that make up this path.
+  public init(elements: some Sequence<Element>) {
+    self.storage = .array(Array(elements))
   }
 }
 
@@ -52,9 +67,20 @@ public struct QueryPath: Hashable, Sendable {
 extension QueryPath {
   /// Creates a path from a single element.
   ///
+  /// This initializer will wrap the element in an ``Element`` instance. If you wish to construct a
+  /// path from a literal `Element` instance, use ``init(element:)`` instead.
+  ///
   /// - Parameter element: The sole element that makes up this path.
+  @_disfavoredOverload
   public init(_ element: some Hashable & Sendable) {
-    self.storage = .single(Element(element))
+    self.init(element: Element(element))
+  }
+
+  /// Constructs a path from a single ``Element`` instance.
+  ///
+  /// - Parameter element: The sole element that makes up this path.
+  public init(element: Element) {
+    self.storage = .single(element)
   }
 }
 
@@ -216,6 +242,9 @@ extension QueryPath {
       self.inner.base
     }
 
+    /// Creates an element.
+    ///
+    /// - Parameter value: A Hashable and Sendable value.
     public init(_ value: any Hashable & Sendable) {
       self.inner = AnyHashableSendable(value)
     }
