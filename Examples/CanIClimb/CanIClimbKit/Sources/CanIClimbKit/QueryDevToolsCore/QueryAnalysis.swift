@@ -42,7 +42,7 @@ extension QueryAnalysis.DataResult {
 extension QueryAnalysis {
   public static let mock1 = Self(
     id: ID(),
-    launchId: ApplicationLaunchID(),
+    launchId: ApplicationLaunch.ID(),
     queryRetryAttempt: 0,
     queryRuntimeDuration: 1,
     queryName: "Mock1",
@@ -53,7 +53,7 @@ extension QueryAnalysis {
 
   public static let mock2 = Self(
     id: ID(),
-    launchId: ApplicationLaunchID(),
+    launchId: ApplicationLaunch.ID(),
     queryRetryAttempt: 0,
     queryRuntimeDuration: 1,
     queryName: "Mock2",

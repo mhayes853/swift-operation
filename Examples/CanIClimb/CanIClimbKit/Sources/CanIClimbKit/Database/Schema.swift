@@ -217,8 +217,8 @@ public struct MountainClimbGoalRecord {
 public struct QueryAnalysisRecord: Hashable, Sendable, Identifiable {
   public let id: QueryAnalysis.ID
 
-  @Column(as: ApplicationLaunchID.Representation.self)
-  public let launchId: ApplicationLaunchID
+  @Column(as: ApplicationLaunch.IDRepresentation.self)
+  public let launchId: ApplicationLaunch.ID
 
   public var queryRetryAttempt: Int
   public var queryRuntimeDuration: TimeInterval
@@ -233,7 +233,7 @@ public struct QueryAnalysisRecord: Hashable, Sendable, Identifiable {
 
   public init(
     id: QueryAnalysis.ID,
-    launchId: ApplicationLaunchID,
+    launchId: ApplicationLaunch.ID,
     queryRetryAttempt: Int,
     queryRuntimeDuration: TimeInterval,
     queryName: QueryAnalysis.QueryName,
@@ -255,13 +255,13 @@ public struct QueryAnalysisRecord: Hashable, Sendable, Identifiable {
 // MARK: - ApplicationLaunchRecord
 
 @Table("ApplicationLaunches")
-public struct ApplicationLaunchRecord: Hashable, Sendable {
-  @Column(as: ApplicationLaunchID.Representation.self)
-  public let id: ApplicationLaunchID
+public struct ApplicationLaunchRecord: Hashable, Sendable, Identifiable {
+  @Column(as: ApplicationLaunch.IDRepresentation.self)
+  public let id: ApplicationLaunch.ID
 
   public var localizedDeviceName: String
 
-  public init(id: ApplicationLaunchID, localizedDeviceName: String) {
+  public init(id: ApplicationLaunch.ID, localizedDeviceName: String) {
     self.id = id
     self.localizedDeviceName = localizedDeviceName
   }

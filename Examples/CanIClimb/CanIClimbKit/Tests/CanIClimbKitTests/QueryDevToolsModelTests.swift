@@ -10,7 +10,7 @@ extension DependenciesTestSuite {
     @Test(
       "Queries Analyzes List",
       .dependencies {
-        $0[ApplicationLaunchID.self] = QueryAnalysis.mock1.launchId
+        $0[ApplicationLaunch.ID.self] = QueryAnalysis.mock1.launchId
       }
     )
     func queriesAnalyzesList() async throws {
@@ -46,9 +46,11 @@ extension DependenciesTestSuite {
       expectNoDifference(model.analyzes, [QueryAnalysis.mock1.queryName: [QueryAnalysis.mock1]])
       expectNoDifference(model.selectedLaunch, launch1)
 
+      model.path.append(.selectLaunch)
       try await model.launchSelected(id: QueryAnalysis.mock2.launchId)
       expectNoDifference(model.analyzes, [QueryAnalysis.mock2.queryName: [QueryAnalysis.mock2]])
       expectNoDifference(model.selectedLaunch, launch2)
+      expectNoDifference(model.path, [])
     }
   }
 }

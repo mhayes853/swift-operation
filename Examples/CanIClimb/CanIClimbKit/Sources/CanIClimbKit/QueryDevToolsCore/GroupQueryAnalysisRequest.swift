@@ -6,9 +6,9 @@ import Tagged
 // MARK: - GroupQueryAnalysisRequest
 
 public struct GroupQueryAnalysisRequest: Hashable, Sendable {
-  private let launchId: ApplicationLaunchID
+  private let launchId: ApplicationLaunch.ID
 
-  public init(launchId: ApplicationLaunchID) {
+  public init(launchId: ApplicationLaunch.ID) {
     self.launchId = launchId
   }
 }

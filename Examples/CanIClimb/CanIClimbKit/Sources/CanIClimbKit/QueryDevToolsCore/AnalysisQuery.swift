@@ -21,7 +21,7 @@ public struct _AnalysisModifier<Query: QueryRequest>: QueryModifier {
   ) async throws -> Query.Value {
     @Dependency(\.defaultDatabase) var database
     @Dependency(\.continuousClock) var clock
-    @Dependency(ApplicationLaunchID.self) var launchId
+    @Dependency(ApplicationLaunch.ID.self) var launchId
     @Dependency(\.uuidv7) var uuidv7
 
     let yields = Mutex([Result<Query.Value, any Error>]())
@@ -63,7 +63,7 @@ extension QueryRequest {
 extension QueryAnalysis {
   public init<Query: QueryRequest>(
     id: QueryAnalysis.ID,
-    launchId: ApplicationLaunchID,
+    launchId: ApplicationLaunch.ID,
     query: Query,
     queryRetryAttempt: Int,
     queryRuntimeDuration: Duration,

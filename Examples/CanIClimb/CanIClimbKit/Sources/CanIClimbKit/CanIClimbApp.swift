@@ -23,7 +23,7 @@ public final class CanIClimbModel {
   @Dependency(\.notificationCenter) var center
 
   @ObservationIgnored
-  @Dependency(ApplicationLaunchID.self) var launchId
+  @Dependency(ApplicationLaunch.ID.self) var launchId
 
   @ObservationIgnored
   @Dependency(DeviceInfo.self) var deviceInfo

@@ -18,8 +18,8 @@ extension Mountain {
   public typealias IDRepresentation = Tagged<Self, UUID.BytesRepresentation>
 }
 
-// MARK: - ApplicationLaunchID
+// MARK: - ApplicationLaunch
 
-extension ApplicationLaunchID {
-  public typealias Representation = Tagged<_ApplicationLaunchIDTag, UUIDV7.BytesRepresentation>
+extension ApplicationLaunch {
+  public typealias IDRepresentation = Tagged<Self, UUIDV7.BytesRepresentation>
 }
