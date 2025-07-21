@@ -1,5 +1,5 @@
 {
-  "originHash" : "720be139966b526f867044460c5a0193234e66c751aa1f0051d2a7baad65f2d5",
+  "originHash" : "6d5a202988e11ad4e5ccceaad8082ce619f8a2236c97f0b36ec6fbfd16721bef",
   "pins" : [
     {
       "identity" : "combine-schedulers",
@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/groue/GRDB.swift",
       "state" : {
-        "revision" : "a5a1be26b4513dc7ec360eb56bc08a345bac6649",
-        "version" : "7.5.0"
+        "revision" : "fb68849bfb7a1b0ff80734fed6872364aab6c5d0",
+        "version" : "7.6.0"
       }
     },
     {
@@ -150,7 +150,7 @@
       "location" : "https://github.com/mhayes853/swift-query",
       "state" : {
         "branch" : "main",
-        "revision" : "f72319676388cb1a99ff28e18fe9cf01ead0b980"
+        "revision" : "606fa85384fbedbdd705e52b9436c2ffc3beb93e"
       }
     },
     {
@@ -167,8 +167,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-snapshot-testing",
       "state" : {
-        "revision" : "37230a37e83f1b7023be08e1b1a2603fcb1567fb",
-        "version" : "1.18.4"
+        "revision" : "b198a568ad24c5a22995c5ff0ecf9667634e860e",
+        "version" : "1.18.5"
       }
     },
     {
@@ -177,7 +177,7 @@
       "location" : "https://github.com/pointfreeco/swift-structured-queries",
       "state" : {
         "branch" : "main",
-        "revision" : "2d9f1d94f5cbfbd37c5ab0b2500b385db95516a3"
+        "revision" : "a2a7c06f5b3c60811558bd9552fbbbd0cc027d91"
       }
     },
     {
@@ -212,8 +212,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/xctest-dynamic-overlay",
       "state" : {
-        "revision" : "39de59b2d47f7ef3ca88a039dff3084688fe27f4",
-        "version" : "1.5.2"
+        "revision" : "23e3442166b5122f73f9e3e622cd1e4bafeab3b7",
+        "version" : "1.6.0"
       }
     }
   ],

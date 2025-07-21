@@ -11,6 +11,9 @@ public final class QueryDevToolsModel: HashableObject, Identifiable {
   @ObservationIgnored
   @Fetch public var analyzes: GroupQueryAnalysisRequest.Value
 
+  @ObservationIgnored
+  @FetchOne public var selectedLaunch: ApplicationLaunchRecord?
+
   public var path = [Path]()
 
   public init() {
@@ -20,11 +23,16 @@ public final class QueryDevToolsModel: HashableObject, Identifiable {
       GroupQueryAnalysisRequest(launchId: launchId),
       animation: .bouncy
     )
+    self._selectedLaunch = FetchOne(
+      wrappedValue: nil,
+      ApplicationLaunchRecord.find(#bind(launchId))
+    )
   }
 }
 
 extension QueryDevToolsModel {
   public func launchSelected(id: ApplicationLaunchID) async throws {
+    try await self.$selectedLaunch.load(ApplicationLaunchRecord.find(#bind(id)))
     try await self.$analyzes.load(GroupQueryAnalysisRequest(launchId: id), animation: .bouncy)
   }
 }
@@ -64,7 +72,9 @@ private struct AnalyzesListView: View {
   let analyzes: GroupQueryAnalysisRequest.Value
 
   public var body: some View {
-    Text("TODO")
+    List {
+
+    }
   }
 }
 
