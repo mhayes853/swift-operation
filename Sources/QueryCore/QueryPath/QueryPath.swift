@@ -238,6 +238,7 @@ extension QueryPath {
   public struct Element: Hashable, Sendable {
     private let inner: AnyHashableSendable
 
+    /// The underlying value of this element.
     public var base: any Hashable & Sendable {
       self.inner.base
     }

@@ -13,14 +13,18 @@
 ///     in context: QueryContext,
 ///     with continuation: QueryContinuation<QueryData>
 ///   ) async throws -> QueryData {
-///      if let cachedData = Cache.shared[key] {
-///      if let cachedData = context.cache[key] {
+///     if let cachedData = context.cache[key] {
 ///       continuation.yield(cachedData)
 ///     }
 ///     let freshData = try await fetchFreshData()
-///      Cache.shared[key] = freshData
-///      context.cache[key] = freshData
+///     context.cache[key] = freshData
 ///     return freshData
+///   }
+/// }
+///
+/// extension QueryContext {
+///   var cache: Cache {
+///     // ...
 ///   }
 /// }
 /// ```
