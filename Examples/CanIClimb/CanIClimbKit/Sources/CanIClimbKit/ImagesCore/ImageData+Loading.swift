@@ -41,7 +41,7 @@ extension ImageData.FileSystemCachedLoader {
 extension ImageData.FileSystemCachedLoader: ImageData.Loader {
   public func localImage(for url: URL) async throws -> ImageData? {
     guard let data = try? Data(contentsOf: self.localURL(for: url)) else { return nil }
-    return try ImageData(data: data)
+    return try ImageData(data: (data as NSData).decompressed(using: .lzfse) as Data)
   }
 
   public func remoteImage(for url: URL) async throws -> ImageData {
@@ -53,7 +53,8 @@ extension ImageData.FileSystemCachedLoader: ImageData.Loader {
 
   private func saveLocalImage(for url: URL, image: ImageData) throws {
     try self.ensureDirectory()
-    try image.data.write(to: self.localURL(for: url), options: [.atomicWrite])
+    try (image.data as NSData).compressed(using: .lzfse)
+      .write(to: self.localURL(for: url), options: [.atomicWrite])
   }
 
   private func localURL(for remoteURL: URL) -> URL {
