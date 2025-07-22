@@ -68,4 +68,9 @@ extension QueryContext {
   private enum MaxRetriesKey: Key {
     static let defaultValue = 0
   }
+
+  /// Whether or not the query is on its last retry attempt.
+  public var isLastRetryAttempt: Bool {
+    self.queryRetryIndex == self.queryMaxRetries
+  }
 }
