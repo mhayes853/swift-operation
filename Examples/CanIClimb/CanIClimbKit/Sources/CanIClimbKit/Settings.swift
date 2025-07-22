@@ -60,7 +60,11 @@ extension SettingsModel {
 // MARK: - SettingsView
 
 public struct SettingsView: View {
-  @Bindable var model: SettingsModel
+  @Bindable private var model: SettingsModel
+
+  public init(model: SettingsModel) {
+    self.model = model
+  }
 
   public var body: some View {
     NavigationStack(path: self.$model.path) {

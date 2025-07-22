@@ -168,7 +168,11 @@ extension OnboardingModel {
 // MARK: - OnboardingView
 
 public struct OnboardingView: View {
-  @Bindable var model: OnboardingModel
+  @Bindable private var model: OnboardingModel
+
+  public init(model: OnboardingModel) {
+    self.model = model
+  }
 
   public var body: some View {
     NavigationStack(path: self.$model.path) {

@@ -164,7 +164,11 @@ extension AlertState where Action == UserSettingsModel.AlertAction {
 // MARK: - UserSettingsView
 
 public struct UserSettingsView: View {
-  @Bindable var model: UserSettingsModel
+  @Bindable private var model: UserSettingsModel
+
+  public init(model: UserSettingsModel) {
+    self.model = model
+  }
 
   public var body: some View {
     Form {

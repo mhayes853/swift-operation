@@ -44,10 +44,15 @@ extension SignInModel {
 // MARK: - SignInButton
 
 public struct SignInButton: View {
-  let label: SignInWithAppleButton.Label
-  @Bindable var model: SignInModel
-  @Environment(\.signInButtonMockCredentials) var mockCredentials
-  @Environment(\.colorScheme) var colorScheme
+  private let label: SignInWithAppleButton.Label
+  @Bindable private var model: SignInModel
+  @Environment(\.signInButtonMockCredentials) private var mockCredentials
+  @Environment(\.colorScheme) private var colorScheme
+
+  public init(label: SignInWithAppleButton.Label, model: SignInModel) {
+    self.label = label
+    self.model = model
+  }
 
   public var body: some View {
     SignInWithAppleButton(

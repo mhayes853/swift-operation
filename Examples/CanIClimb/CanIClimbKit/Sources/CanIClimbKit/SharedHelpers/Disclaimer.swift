@@ -8,7 +8,7 @@ public let disclaimer: LocalizedStringResource = """
 
   This application simulates network activity using a lightweight protocol wrapper over \
   `URLSession` (see `HTTPTransport.swift`). No user data is transmitted to any external or live \
-  server.
+  server (see `DummyBackend.swift`).
 
   Any training or fitness-related guidance presented within this application is for illustrative \
   purposes only and has not been reviewed or approved by a licensed medical professional. \

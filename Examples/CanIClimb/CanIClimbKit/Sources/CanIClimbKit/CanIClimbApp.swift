@@ -107,7 +107,11 @@ public struct CanIClimbApp: App {
 // MARK: - CanIClimbView
 
 public struct CanIClimbView: View {
-  @Bindable var model: CanIClimbModel
+  @Bindable private var model: CanIClimbModel
+
+  public init(model: CanIClimbModel) {
+    self.model = model
+  }
 
   public var body: some View {
     Text("TODO")

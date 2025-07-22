@@ -53,7 +53,11 @@ extension QueryDevToolsModel {
 // MARK: - QueryDevToolsView
 
 public struct QueryDevToolsView: View {
-  @Bindable var model: QueryDevToolsModel
+  @Bindable private var model: QueryDevToolsModel
+
+  public init(model: QueryDevToolsModel) {
+    self.model = model
+  }
 
   public var body: some View {
     NavigationStack(path: self.$model.path) {

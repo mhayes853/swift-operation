@@ -1,9 +1,13 @@
 import SwiftUI
 
-struct UserCardView: View {
-  let user: User
+public struct UserCardView: View {
+  private let user: User
 
-  var body: some View {
+  public init(user: User) {
+    self.user = user
+  }
+
+  public var body: some View {
     HStack(alignment: .center) {
       Image(systemName: "person.crop.circle")
         .font(.largeTitle)

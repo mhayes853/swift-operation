@@ -43,7 +43,8 @@ public final class CanIClimbAPI: Sendable {
 // MARK: - Shared
 
 extension CanIClimbAPI {
-  // NB: In a production application with a real API, you can use URLSession.shared.
+  // NB: In a production application with a real API, you can use URLSession.shared for the
+  // transport.
 
   public static let shared = CanIClimbAPI(
     transport: DummyBackend(),
