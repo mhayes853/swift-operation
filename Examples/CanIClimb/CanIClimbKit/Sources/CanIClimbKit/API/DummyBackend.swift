@@ -1,6 +1,6 @@
 import Foundation
 
-public final class DemoAPITransport: HTTPDataTransport {
+public final class DummyBackend: HTTPDataTransport {
   public init() {}
 
   public func data(for request: URLRequest) async throws -> (Data, URLResponse) {

@@ -46,7 +46,7 @@ extension CanIClimbAPI {
   // NB: In a production application with a real API, you can use URLSession.shared.
 
   public static let shared = CanIClimbAPI(
-    transport: DemoAPITransport(),
+    transport: DummyBackend(),
     secureStorage: KeychainSecureStorage.shared
   )
 }
