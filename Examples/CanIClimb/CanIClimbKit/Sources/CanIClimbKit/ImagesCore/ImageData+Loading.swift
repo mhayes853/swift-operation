@@ -16,6 +16,15 @@ extension ImageData {
   }
 }
 
+extension ImageData.Loader {
+  public func image(for url: URL) async throws -> ImageData {
+    if let local = try? await self.localImage(for: url) {
+      return local
+    }
+    return try await self.remoteImage(for: url)
+  }
+}
+
 // MARK: - FileSystemCachedLoader
 
 extension ImageData {
@@ -87,10 +96,7 @@ extension ImageData {
       with continuation: QueryContinuation<ImageData>
     ) async throws -> ImageData {
       @Dependency(ImageData.LoaderKey.self) var loader
-      if let local = try? await loader.localImage(for: self.url) {
-        return local
-      }
-      return try await loader.remoteImage(for: self.url)
+      return try await loader.image(for: self.url)
     }
   }
 }
