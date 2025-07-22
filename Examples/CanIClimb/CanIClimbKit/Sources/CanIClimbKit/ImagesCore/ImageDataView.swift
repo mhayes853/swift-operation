@@ -24,7 +24,6 @@ public struct ImageDataView<Content: View>: View {
       directoryURL: .temporaryDirectory.appending(path: "images-\(UUID())"),
       transport: URLSession.shared
     )
-
   }
 
   let url = URL(string: "https://whypeople.xyz/assets/monad-PhvCeWLi.png")!

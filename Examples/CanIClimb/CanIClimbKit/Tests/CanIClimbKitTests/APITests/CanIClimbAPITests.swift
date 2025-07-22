@@ -227,6 +227,47 @@ struct CanIClimbAPITests {
     let user = try await api.editUser(with: edit)
     expectNoDifference(user, editedUser)
   }
+
+  @Test("Nil When 404s For Mountain Request")
+  func nilWhen404sForeMountainRequest() async throws {
+    let api = CanIClimbAPI(
+      transport: .mock { _ in (404, .data(Data())) },
+      secureStorage: self.storage
+    )
+    let mountain = try await api.mountain(with: Mountain.ID(UUID()))
+    expectNoDifference(mountain, nil)
+  }
+
+  @Test("Returns Mountain Details")
+  func returnsMountainDetails() async throws {
+    let api = CanIClimbAPI(
+      transport: .mock { request in
+        if request.url?.path() == "/mountain/\(Mountain.mock1.id)" {
+          return (200, .json(Mountain.mock1))
+        }
+        return (404, .data(Data()))
+      },
+      secureStorage: self.storage
+    )
+    let mountain = try await api.mountain(with: Mountain.mock1.id)
+    expectNoDifference(mountain, .mock1)
+  }
+
+  @Test("Returns Mountain Search Results")
+  func returnsMountainSearchResults() async throws {
+    let expectedResult = Mountain.SearchResult(mountains: [.mock1], hasNextPage: false)
+    let api = CanIClimbAPI(
+      transport: .mock { request in
+        if request.url?.path() == "/mountains" && request.url?.query() == "text=st&page=1" {
+          return (200, .json(expectedResult))
+        }
+        return (400, .data(Data()))
+      },
+      secureStorage: self.storage
+    )
+    let searchResult = try await api.searchMountains(by: Mountain.Search(text: "st"), page: 1)
+    expectNoDifference(searchResult, expectedResult)
+  }
 }
 
 extension CanIClimbAPI.AccessTokenResponse {

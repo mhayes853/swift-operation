@@ -68,3 +68,21 @@ extension Mountain.ClimbingDifficulty {
     }
   }
 }
+
+// MARK: - Mocks
+
+extension Mountain {
+  public static let mock1 = Self(
+    id: ID(),
+    name: "Mt. Stupid",
+    displayDescription: "A mountain composed of stupidity.",
+    elevation: Measurement(value: 20_000, unit: .feet),
+    location: LocationCoordinate2D(latitude: 45, longitude: 45),
+    dateAdded: .now,
+    difficulty: ClimbingDifficulty(rawValue: 47)!,
+    imageURL: URL(
+      string:
+        "https://paragliding.ch/wp-content/uploads/2024/03/Bildschirmfoto-2024-03-07-um-22.18.44.png"
+    )!
+  )
+}

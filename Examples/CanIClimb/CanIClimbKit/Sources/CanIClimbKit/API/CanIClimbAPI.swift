@@ -143,7 +143,14 @@ extension CanIClimbAPI {
     by search: Mountain.Search,
     page: Int
   ) async throws -> Mountain.SearchResult {
-    Mountain.SearchResult(mountains: [], hasNextPage: false)
+    var request = URLRequest(url: self.baseURL.appending(path: "/mountains"))
+    request.url?
+      .append(queryItems: [
+        URLQueryItem(name: "text", value: search.text),
+        URLQueryItem(name: "page", value: "\(page)")
+      ])
+    let (data, _) = try await self.transport.data(for: request)
+    return try JSONDecoder().decode(Mountain.SearchResult.self, from: data)
   }
 }
 
@@ -151,7 +158,10 @@ extension CanIClimbAPI {
 
 extension CanIClimbAPI {
   public func mountain(with id: Mountain.ID) async throws -> Mountain? {
-    nil
+    let request = URLRequest(url: self.baseURL.appending(path: "/mountain/\(id)"))
+    let (data, resp) = try await self.transport.data(for: request)
+    guard (resp as? HTTPURLResponse)?.statusCode != 404 else { return nil }
+    return try JSONDecoder().decode(Mountain.self, from: data)
   }
 }
 
