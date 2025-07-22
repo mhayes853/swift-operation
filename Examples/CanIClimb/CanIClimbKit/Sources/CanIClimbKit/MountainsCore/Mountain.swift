@@ -78,7 +78,7 @@ extension Mountain {
     displayDescription: "A mountain composed of stupidity.",
     elevation: Measurement(value: 20_000, unit: .feet),
     location: LocationCoordinate2D(latitude: 45, longitude: 45),
-    dateAdded: .now,
+    dateAdded: Date(timeIntervalSince1970: 0),
     difficulty: ClimbingDifficulty(rawValue: 47)!,
     imageURL: URL(
       string:

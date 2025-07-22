@@ -76,7 +76,7 @@ extension UserHumanityRecord {
 // MARK: - CachedMountainRecord
 
 @Table("CachedMountains")
-public struct CachedMountainRecord {
+public struct CachedMountainRecord: Sendable {
   @Column(as: Mountain.IDRepresentation.self)
   public let id: Mountain.ID
   public var name: String
@@ -88,26 +88,31 @@ public struct CachedMountainRecord {
   public var imageURL: URL
   public var difficulty: Mountain.ClimbingDifficulty
 
-  public init(
-    id: Mountain.ID,
-    name: String,
-    displayDescription: String,
-    elevationMeters: Double,
-    latitude: Double,
-    longitude: Double,
-    dateAdded: Date,
-    imageURL: URL,
-    difficulty: Mountain.ClimbingDifficulty
-  ) {
-    self.id = id
-    self.name = name
-    self.displayDescription = displayDescription
-    self.elevationMeters = elevationMeters
-    self.latitude = latitude
-    self.longitude = longitude
-    self.dateAdded = dateAdded
-    self.imageURL = imageURL
-    self.difficulty = difficulty
+  public init(mountain: Mountain) {
+    self.id = mountain.id
+    self.name = mountain.name
+    self.displayDescription = mountain.displayDescription
+    self.elevationMeters = mountain.elevation.converted(to: .meters).value
+    self.latitude = mountain.location.latitude
+    self.longitude = mountain.location.longitude
+    self.dateAdded = mountain.dateAdded
+    self.imageURL = mountain.imageURL
+    self.difficulty = mountain.difficulty
+  }
+}
+
+extension Mountain {
+  public init(cached record: CachedMountainRecord) {
+    self.init(
+      id: record.id,
+      name: record.name,
+      displayDescription: record.displayDescription,
+      elevation: Measurement(value: record.elevationMeters, unit: .meters),
+      location: LocationCoordinate2D(latitude: record.latitude, longitude: record.longitude),
+      dateAdded: record.dateAdded,
+      difficulty: record.difficulty,
+      imageURL: record.imageURL
+    )
   }
 }
 
