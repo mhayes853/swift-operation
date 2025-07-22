@@ -132,8 +132,10 @@ extension User {
 
       try await authenticator.signOut()
       let userStore = client.store(for: User.currentQuery)
-      userStore.currentValue = nil
-      userStore.setResult(to: .failure(User.UnauthorizedError()))
+      userStore.withExclusiveAccess {
+        userStore.currentValue = nil
+        userStore.setResult(to: .failure(User.UnauthorizedError()))
+      }
       try await currentUser.switchUserId(to: nil)
     }
   }
