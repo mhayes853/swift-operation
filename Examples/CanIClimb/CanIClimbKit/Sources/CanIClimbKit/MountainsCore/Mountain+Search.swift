@@ -4,17 +4,17 @@ import SharingQuery
 // MARK: - Search
 
 extension Mountain {
-  public struct Search: RawRepresentable, Codable, Hashable, Sendable {
-    public var rawValue: String
+  public struct Search: Codable, Hashable, Sendable {
+    public var text: String
 
-    public init(rawValue: String) {
-      self.rawValue = rawValue
+    public init(text: String) {
+      self.text = text
     }
   }
 }
 
 extension Mountain.Search {
-  public static let all = Self(rawValue: "")
+  public static let recommended = Self(text: "")
 }
 
 // MARK: - Searcher

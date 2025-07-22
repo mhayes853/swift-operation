@@ -26,7 +26,7 @@ extension Mountain {
     let id: Mountain.ID
 
     public var path: QueryPath {
-      ["mountain", self.id]
+      .mountain(with: self.id)
     }
 
     public func fetch(
@@ -36,5 +36,13 @@ extension Mountain {
       @Dependency(Mountain.LoaderKey.self) var loader
       return try await loader.mountain(with: id)
     }
+  }
+}
+
+extension QueryPath {
+  public static let mountain = Self("mountain")
+
+  public static func mountain(with id: Mountain.ID) -> Self {
+    .mountain.appending(id)
   }
 }
