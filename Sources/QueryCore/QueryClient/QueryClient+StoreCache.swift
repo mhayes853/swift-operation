@@ -1,26 +1,25 @@
+import Foundation
+
 // MARK: - StoreCache
 
 extension QueryClient {
   /// A protocol for managing the in-memory storage of ``QueryStore`` instances that a
   /// ``QueryClient`` holds.
   public protocol StoreCache {
-    /// The stores that this cache holds.
-    func stores() -> QueryPathableCollection<OpaqueQueryStore>
-
-    /// Replaces all stores in this cache.
+    /// Provides scoped access to the stores in this cache.
     ///
-    /// - Parameter stores: A collection of stores.
-    mutating func replaceAll(stores: QueryPathableCollection<OpaqueQueryStore>)
+    /// - Parameter body: A function that runs with scoped access to the stores.
+    /// - Returns: Whatever `body` returns.
+    mutating func withStores<T, E: Error>(
+      _ body: (inout sending QueryPathableCollection<OpaqueQueryStore>) throws(E) -> sending T
+    ) throws(E) -> sending T
   }
 }
 
 extension QueryClient.StoreCache {
-  package mutating func update<T, E: Error>(
-    _ fn: (inout QueryPathableCollection<OpaqueQueryStore>) throws(E) -> T
-  ) throws(E) -> T {
-    var stores = self.stores()
-    defer { self.replaceAll(stores: stores) }
-    return try fn(&stores)
+  func stores() -> QueryPathableCollection<OpaqueQueryStore> {
+    var current = self
+    return current.withStores { $0 }
   }
 }
 
@@ -37,40 +36,37 @@ extension QueryClient {
   /// Only stores that have no active subscribers are evicted from the cache, and you can customize
   /// the ``MemoryPressure`` value at which a store is evicted via the
   /// ``QueryRequest/evictWhen(pressure:)`` modifier.
-  public final class DefaultStoreCache: Sendable {
-    private struct State {
-      var stores = QueryPathableCollection<OpaqueQueryStore>()
-      var subscription = QuerySubscription.empty
-    }
-    private let state = Lock(State())
+  public final class DefaultStoreCache: @unchecked Sendable {
+    private let lock = NSLock()
+    private var stores = QueryPathableCollection<OpaqueQueryStore>()
+    private var subscription = QuerySubscription.empty
 
     /// Creates a default store cache.
     ///
     /// - Parameter memoryPressureSource: The ``MemoryPressureSource`` to use to detect when the
     ///   system is running low on memory. If nil is provided, then the cache will not listen for
     ///   low memory warnings, and will therefore never evict any inactive stores.
-    public init(memoryPressureSource: (any MemoryPressureSource)? = defaultMemoryPressureSource) {
-      self.state.withLock { state in
+    public init(
+      memoryPressureSource: sending (any MemoryPressureSource)? = defaultMemoryPressureSource
+    ) {
+      self.lock.withLock {
         let subscription = memoryPressureSource?
           .subscribe { [weak self] pressure in
-            self?.state
-              .withLock { state in
-                state.stores.removeAll { $0.isEvictable(from: pressure) }
-              }
+            self?.withStores { stores in stores.removeAll { $0.isEvictable(from: pressure) } }
           }
-        state.subscription = subscription ?? .empty
+        self.subscription = subscription ?? .empty
       }
     }
   }
 }
 
 extension QueryClient.DefaultStoreCache: QueryClient.StoreCache {
-  public func stores() -> QueryPathableCollection<OpaqueQueryStore> {
-    self.state.withLock { $0.stores }
-  }
-
-  public func replaceAll(stores: QueryPathableCollection<OpaqueQueryStore>) {
-    self.state.withLock { $0.stores = stores }
+  public func withStores<T, E: Error>(
+    _ fn: (inout sending QueryPathableCollection<OpaqueQueryStore>) throws(E) -> sending T
+  ) throws(E) -> sending T {
+    self.lock.lock()
+    defer { self.lock.unlock() }
+    return try fn(&self.stores)
   }
 }
 

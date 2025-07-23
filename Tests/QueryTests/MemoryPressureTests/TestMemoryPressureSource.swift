@@ -1,6 +1,6 @@
 import Query
 
-final class TestMemoryPressureSource: MemoryPressureSource {
+final class TestMemoryPressureSource: MemoryPressureSource, Sendable {
   typealias Handler = @Sendable (MemoryPressure) -> Void
 
   private let subscribers = QuerySubscriptions<Handler>()

@@ -8,7 +8,7 @@
 ///
 /// ``QueryClient/DefaultStoreCache`` uses this protocol to evict inactive stores whenever a new
 /// pressure notification is received.
-public protocol MemoryPressureSource: Sendable {
+public protocol MemoryPressureSource {
   /// Subcribes to pressure notifications from this source.
   ///
   /// - Parameter handler: A handler to run whenever a new notification is emitted.
@@ -21,7 +21,7 @@ public protocol MemoryPressureSource: Sendable {
 #if canImport(Darwin)
   /// A ``MemoryPressureSource`` that uses `DispatchSource.makeMemoryPressureSource` to subscribe
   /// to memory pressure notifications.
-  public struct DispatchMemoryPressureSource: MemoryPressureSource {
+  public struct DispatchMemoryPressureSource: MemoryPressureSource, Sendable {
     let queue: DispatchQueue?
 
     public func subscribe(
