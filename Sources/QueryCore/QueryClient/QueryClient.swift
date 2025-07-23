@@ -63,10 +63,20 @@ public final class QueryClient: Sendable {
     var queryTypes = [QueryPath: Any.Type]()
     var defaultContext: QueryContext
     var storeCache: any StoreCache
+    let storeCreator: any StoreCreator
+
+    func newOpaqueStore<Query: QueryRequest>(
+      for query: Query,
+      initialState: Query.State,
+      using context: QueryContext
+    ) -> OpaqueQueryStore {
+      OpaqueQueryStore(
+        erasing: self.storeCreator.store(for: query, in: context, with: initialState)
+      )
+    }
   }
 
   private let state: RecursiveLock<State>
-  private let storeCreator: any StoreCreator
 
   /// Creates a client.
   ///
@@ -77,10 +87,11 @@ public final class QueryClient: Sendable {
   public init(
     defaultContext: QueryContext = QueryContext(),
     storeCache: sending some StoreCache = DefaultStoreCache(),
-    storeCreator: some StoreCreator
+    storeCreator: sending some StoreCreator
   ) {
-    self.state = RecursiveLock(State(defaultContext: defaultContext, storeCache: storeCache))
-    self.storeCreator = storeCreator
+    self.state = RecursiveLock(
+      State(defaultContext: defaultContext, storeCache: storeCache, storeCreator: storeCreator)
+    )
     self.state.withLock { $0.defaultContext.setWeakQueryClient(self) }
   }
 }
@@ -201,37 +212,32 @@ extension QueryClient {
   ) -> OpaqueQueryStore {
     self.state.withLock { state in
       defer { state.queryTypes[query.path] = Query.self }
+      let storeCreator = state.storeCreator
       return state.storeCache.withStores { stores in
         if let store = stores[query.path] {
           if let queryType = state.queryTypes[query.path], queryType != Query.self {
             reportWarning(.duplicatePath(expectedType: queryType, foundType: Query.self))
-            return self.newOpaqueStore(
-              for: query,
-              initialState: initialState,
-              using: state.defaultContext
+            return OpaqueQueryStore(
+              erasing: storeCreator.store(
+                for: query,
+                in: state.defaultContext,
+                with: initialState
+              )
             )
           }
           return store
         }
-        let newStore = self.newOpaqueStore(
-          for: query,
-          initialState: initialState,
-          using: state.defaultContext
+        let newStore = OpaqueQueryStore(
+          erasing: storeCreator.store(
+            for: query,
+            in: state.defaultContext,
+            with: initialState
+          )
         )
         stores.update(newStore)
         return newStore
       }
     }
-  }
-
-  private func newOpaqueStore<Query: QueryRequest>(
-    for query: Query,
-    initialState: Query.State,
-    using context: QueryContext
-  ) -> OpaqueQueryStore {
-    OpaqueQueryStore(
-      erasing: self.storeCreator.store(for: query, in: context, with: initialState)
-    )
   }
 }
 

@@ -31,7 +31,7 @@ extension QueryClient {
   ///  }
   /// ```
   /// Read <doc:QueryDefaults> to learn more about how to set defaults for your queries.
-  public protocol StoreCreator: Sendable {
+  public protocol StoreCreator {
     /// Creates a ``QueryStore`` for the specified ``QueryRequest``.
     ///
     /// - Parameters:
