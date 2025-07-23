@@ -10,9 +10,9 @@ extension QueryClient {
     ///
     /// - Parameter body: A function that runs with scoped access to the stores.
     /// - Returns: Whatever `body` returns.
-    mutating func withStores<T, E: Error>(
-      _ body: (inout sending QueryPathableCollection<OpaqueQueryStore>) throws(E) -> sending T
-    ) throws(E) -> sending T
+    mutating func withStores<T>(
+      _ body: (inout sending QueryPathableCollection<OpaqueQueryStore>) throws -> sending T
+    ) rethrows -> sending T
   }
 }
 
@@ -37,9 +37,11 @@ extension QueryClient {
   /// the ``MemoryPressure`` value at which a store is evicted via the
   /// ``QueryRequest/evictWhen(pressure:)`` modifier.
   public final class DefaultStoreCache: @unchecked Sendable {
-    private let lock = NSLock()
-    private var stores = QueryPathableCollection<OpaqueQueryStore>()
-    private var subscription = QuerySubscription.empty
+    private struct State {
+      var stores = QueryPathableCollection<OpaqueQueryStore>()
+      var subscription = QuerySubscription.empty
+    }
+    private let state = Lock(State())
 
     /// Creates a default store cache.
     ///
@@ -49,24 +51,22 @@ extension QueryClient {
     public init(
       memoryPressureSource: sending (any MemoryPressureSource)? = defaultMemoryPressureSource
     ) {
-      self.lock.withLock {
+      self.state.withLock { state in
         let subscription = memoryPressureSource?
           .subscribe { [weak self] pressure in
             self?.withStores { stores in stores.removeAll { $0.isEvictable(from: pressure) } }
           }
-        self.subscription = subscription ?? .empty
+        state.subscription = subscription ?? .empty
       }
     }
   }
 }
 
 extension QueryClient.DefaultStoreCache: QueryClient.StoreCache {
-  public func withStores<T, E: Error>(
-    _ fn: (inout sending QueryPathableCollection<OpaqueQueryStore>) throws(E) -> sending T
-  ) throws(E) -> sending T {
-    self.lock.lock()
-    defer { self.lock.unlock() }
-    return try fn(&self.stores)
+  public func withStores<T>(
+    _ body: (inout sending QueryPathableCollection<OpaqueQueryStore>) throws -> sending T
+  ) rethrows -> sending T {
+    try self.state.withLock { try body(&$0.stores) }
   }
 }
 
