@@ -298,10 +298,21 @@ struct QueryClientTests {
     expectNoDifference(client.store(for: q5).currentValue, 40)
   }
 
+  @Test("Nested WithStores")
+  func nestedWithStores() {
+    let client = QueryClient()
+    let isEmpty = client.withStores(matching: QueryPath()) { _ in
+      client.withStores(matching: QueryPath()) { stores in
+        stores.isEmpty
+      }
+    }
+    expectNoDifference(isEmpty, true)
+  }
+
   @Suite("QueryClient+DefaultStoreCache tests")
   struct DefaultStoreCacheTests {
     private let source = TestMemoryPressureSource()
-    private let storeCache: any QueryClient.StoreCache
+    private var storeCache: QueryClient.DefaultStoreCache
     private let client: QueryClient
 
     init() {
@@ -348,11 +359,9 @@ struct QueryClientTests {
     }
 
     @Test("Recognizes Store Retroactively Added To Cache")
-    func recognizesStoreRetroactivelyAddedToCache() {
+    mutating func recognizesStoreRetroactivelyAddedToCache() {
       let store = QueryStore.detached(query: TestQuery(), initialValue: nil)
-      self.storeCache.withLock { entries in
-        entries.update(OpaqueQueryStore(erasing: store))
-      }
+      self.storeCache.update { $0.update(OpaqueQueryStore(erasing: store)) }
       let clientStore = self.client.store(for: TestQuery())
       expectNoDifference(store === clientStore, true)
     }

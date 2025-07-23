@@ -3,17 +3,24 @@
 extension QueryClient {
   /// A protocol for managing the in-memory storage of ``QueryStore`` instances that a
   /// ``QueryClient`` holds.
-  ///
-  /// Conformances to this protocol must be thread-safe in order to uphold `QueryClient`
-  /// sendability guarantees.
-  public protocol StoreCache: Sendable {
-    /// Provides scoped, exclusive, and mutable access to the stores managed by the ``QueryClient``.
+  public protocol StoreCache {
+    /// The stores that this cache holds.
+    func stores() -> QueryPathableCollection<OpaqueQueryStore>
+
+    /// Replaces all stores in this cache.
     ///
-    /// - Parameter fn: A function to edit the underlying collection of query stores.
-    /// - Returns: Whatever `fn` returns.
-    func withLock<T>(
-      _ fn: (inout sending QueryPathableCollection<OpaqueQueryStore>) throws -> sending T
-    ) rethrows -> T
+    /// - Parameter stores: A collection of stores.
+    mutating func replaceAll(stores: QueryPathableCollection<OpaqueQueryStore>)
+  }
+}
+
+extension QueryClient.StoreCache {
+  package mutating func update<T, E: Error>(
+    _ fn: (inout QueryPathableCollection<OpaqueQueryStore>) throws(E) -> T
+  ) throws(E) -> T {
+    var stores = self.stores()
+    defer { self.replaceAll(stores: stores) }
+    return try fn(&stores)
   }
 }
 
@@ -30,9 +37,12 @@ extension QueryClient {
   /// Only stores that have no active subscribers are evicted from the cache, and you can customize
   /// the ``MemoryPressure`` value at which a store is evicted via the
   /// ``QueryRequest/evictWhen(pressure:)`` modifier.
-  public final class DefaultStoreCache: StoreCache {
-    private let stores: LockedBox<QueryPathableCollection<OpaqueQueryStore>>
-    private let subscription: QuerySubscription
+  public final class DefaultStoreCache: Sendable {
+    private struct State {
+      var stores = QueryPathableCollection<OpaqueQueryStore>()
+      var subscription = QuerySubscription.empty
+    }
+    private let state = Lock(State())
 
     /// Creates a default store cache.
     ///
@@ -40,22 +50,27 @@ extension QueryClient {
     ///   system is running low on memory. If nil is provided, then the cache will not listen for
     ///   low memory warnings, and will therefore never evict any inactive stores.
     public init(memoryPressureSource: (any MemoryPressureSource)? = defaultMemoryPressureSource) {
-      let box = LockedBox(value: QueryPathableCollection<OpaqueQueryStore>())
-      self.stores = box
-      let subscription = memoryPressureSource?
-        .subscribe { pressure in
-          box.inner.withLock { stores in
-            stores.removeAll { $0.isEvictable(from: pressure) }
+      self.state.withLock { state in
+        let subscription = memoryPressureSource?
+          .subscribe { [weak self] pressure in
+            self?.state
+              .withLock { state in
+                state.stores.removeAll { $0.isEvictable(from: pressure) }
+              }
           }
-        }
-      self.subscription = subscription ?? .empty
+        state.subscription = subscription ?? .empty
+      }
     }
+  }
+}
 
-    public func withLock<T>(
-      _ fn: (inout sending QueryPathableCollection<OpaqueQueryStore>) throws -> sending T
-    ) rethrows -> T {
-      try self.stores.inner.withLock(fn)
-    }
+extension QueryClient.DefaultStoreCache: QueryClient.StoreCache {
+  public func stores() -> QueryPathableCollection<OpaqueQueryStore> {
+    self.state.withLock { $0.stores }
+  }
+
+  public func replaceAll(stores: QueryPathableCollection<OpaqueQueryStore>) {
+    self.state.withLock { $0.stores = stores }
   }
 }
 

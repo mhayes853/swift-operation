@@ -15,7 +15,7 @@ extension QueryClient {
   ///   - storeCache: The ``StoreCache`` to use.
   public convenience init(
     defaultContext: QueryContext = QueryContext(),
-    storeCache: some StoreCache = DefaultStoreCache()
+    storeCache: sending some StoreCache = DefaultStoreCache()
   ) {
     self.init(
       defaultContext: defaultContext,
