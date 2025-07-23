@@ -256,10 +256,10 @@ struct QueryClientTests {
     _ = client.store(for: q2)
     _ = client.store(for: q3)
 
-    client.withStores(matching: [1]) { entries in
+    client.withStores(matching: [1]) { entries, createStore in
       expectNoDifference(entries.count, 2)
       entries[q1.path]?.uncheckedSetCurrentValue(50)
-      entries.update(OpaqueQueryStore(erasing: .detached(query: q4)))
+      entries.update(OpaqueQueryStore(erasing: createStore(for: q4)))
       entries.removeValue(forPath: q2.path)
     }
 
@@ -285,10 +285,10 @@ struct QueryClientTests {
     client.withStores(
       matching: [1],
       of: DefaultQuery<TaggedPathableQuery<Int>>.State.self
-    ) { entries in
+    ) { entries, createStore in
       expectNoDifference(entries.count, 2)
       entries[q1.path]?.currentValue = 50
-      entries.update(.detached(query: q5))
+      entries.update(createStore(for: q5))
       entries.removeValue(forPath: q2.path)
     }
 
@@ -301,70 +301,12 @@ struct QueryClientTests {
   @Test("Nested WithStores")
   func nestedWithStores() {
     let client = QueryClient()
-    let isEmpty = client.withStores(matching: QueryPath()) { _ in
-      client.withStores(matching: QueryPath()) { stores in
+    let isEmpty = client.withStores(matching: QueryPath()) { _, _ in
+      client.withStores(matching: QueryPath()) { stores, c in
         stores.isEmpty
       }
     }
     expectNoDifference(isEmpty, true)
-  }
-
-  @Suite("QueryClient+DefaultStoreCache tests")
-  struct DefaultStoreCacheTests {
-    private let source = TestMemoryPressureSource()
-    private var storeCache: QueryClient.DefaultStoreCache
-    private let client: QueryClient
-
-    init() {
-      let cache = QueryClient.DefaultStoreCache(memoryPressureSource: source)
-      self.storeCache = cache
-      self.client = QueryClient(storeCache: cache)
-    }
-
-    @Test("Does Not Evict When Normal Pressure Emitted")
-    func doesNotEvictWhenNormalPressureEmitted() {
-      let store = self.client.store(for: TestQuery())
-      self.source.send(pressure: .normal)
-      expectNoDifference(self.client.stores(matching: store.path).count, 1)
-    }
-
-    @Test("Evicts When Warning Pressure Emitted")
-    func evictsWhenWarningPressureEmitted() {
-      let store = self.client.store(for: TestQuery())
-      self.source.send(pressure: .warning)
-      expectNoDifference(self.client.stores(matching: store.path).count, 0)
-    }
-
-    @Test("Evicts When Critical Pressure Emitted")
-    func evictsWhenCriticalPressureEmitted() {
-      let store = self.client.store(for: TestQuery())
-      self.source.send(pressure: .critical)
-      expectNoDifference(self.client.stores(matching: store.path).count, 0)
-    }
-
-    @Test("Does Not Evict Queries That Have Subscribers")
-    func doesNotEvictQueriesThatHaveSubscribers() {
-      let store = self.client.store(for: TestQuery())
-      let subscription = store.subscribe(with: QueryEventHandler())
-      self.source.send(pressure: .critical)
-      expectNoDifference(self.client.stores(matching: store.path).count, 1)
-      subscription.cancel()
-    }
-
-    @Test("Does Not Evict Non-Evictable Queries")
-    func doesNotEvictQueriesThatAreNonEvictable() {
-      let store = self.client.store(for: TestQuery().evictWhen(pressure: []))
-      self.source.send(pressure: .critical)
-      expectNoDifference(self.client.stores(matching: store.path).count, 1)
-    }
-
-    @Test("Recognizes Store Retroactively Added To Cache")
-    mutating func recognizesStoreRetroactivelyAddedToCache() {
-      let store = QueryStore.detached(query: TestQuery(), initialValue: nil)
-      self.storeCache.withStores { $0.update(OpaqueQueryStore(erasing: store)) }
-      let clientStore = self.client.store(for: TestQuery())
-      expectNoDifference(store === clientStore, true)
-    }
   }
 }
 

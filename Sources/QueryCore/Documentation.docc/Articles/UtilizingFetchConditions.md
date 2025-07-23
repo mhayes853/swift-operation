@@ -103,7 +103,7 @@ The ``!(_:)``, ``||(_:_:)``, and ``&&(_:_:)`` operators have been overloaded for
 ```swift
 let query = MyQuery().staleWhen(
   condition:
-    .connected(to: NWPathMonitorObserver.shared) && .notificationFocus
+    .connected(to: NWPathMonitorObserver.startingShared()) && .notificationFocus
 )
 ```
 

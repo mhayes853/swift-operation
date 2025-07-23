@@ -60,18 +60,16 @@ import IssueReporting
 /// ``init(defaultContext:storeCache:storeCreator:)``. For more on this, read <doc:QueryDefaults>.
 public final class QueryClient: Sendable {
   private struct State {
-    var queryTypes = [QueryPath: Any.Type]()
-    var defaultContext: QueryContext
+    let storeCreator: any QueryClient.StoreCreator
     var storeCache: any StoreCache
-    let storeCreator: any StoreCreator
+    var initialContext: QueryContext
+    var queryTypes = [QueryPath: Any.Type]()
 
-    func newOpaqueStore<Query: QueryRequest>(
-      for query: Query,
-      initialState: Query.State,
-      using context: QueryContext
-    ) -> OpaqueQueryStore {
-      OpaqueQueryStore(
-        erasing: self.storeCreator.store(for: query, in: context, with: initialState)
+    func createStore() -> CreateStore {
+      CreateStore(
+        creator: self.storeCreator,
+        initialContext: self.initialContext,
+        queryTypes: self.queryTypes
       )
     }
   }
@@ -90,9 +88,9 @@ public final class QueryClient: Sendable {
     storeCreator: sending some StoreCreator
   ) {
     self.state = RecursiveLock(
-      State(defaultContext: defaultContext, storeCache: storeCache, storeCreator: storeCreator)
+      State(storeCreator: storeCreator, storeCache: storeCache, initialContext: defaultContext)
     )
-    self.state.withLock { $0.defaultContext.setWeakQueryClient(self) }
+    self.state.withLock { $0.initialContext.setWeakQueryClient(self) }
   }
 }
 
@@ -101,8 +99,8 @@ public final class QueryClient: Sendable {
 extension QueryClient {
   /// The default ``QueryContext`` that is used to create subsequent ``QueryStore`` instances.
   public var defaultContext: QueryContext {
-    get { self.state.withLock { $0.defaultContext } }
-    set { self.state.withLock { $0.defaultContext = newValue } }
+    get { self.state.withLock { $0.initialContext } }
+    set { self.state.withLock { $0.initialContext = newValue } }
   }
 }
 
@@ -119,8 +117,7 @@ extension QueryClient {
     for query: Query,
     initialState: Query.State
   ) -> QueryStore<Query.State> {
-    self.opaqueStore(for: query, initialState: initialState).base
-      as! QueryStore<Query.State>
+    self.withStoreCreation(for: query) { $0(for: query, initialState: initialState) }
   }
 
   /// Retrieves the ``QueryStore`` for a ``QueryRequest``.
@@ -134,8 +131,7 @@ extension QueryClient {
     initialValue: Query.Value? = nil
   ) -> QueryStore<Query.State>
   where Query.State == QueryState<Query.Value?, Query.Value> {
-    self.opaqueStore(for: query, initialState: Query.State(initialValue: initialValue)).base
-      as! QueryStore<Query.State>
+    self.withStoreCreation(for: query) { $0(for: query, initialValue: initialValue) }
   }
 
   /// Retrieves the ``QueryStore`` for a ``QueryRequest``.
@@ -147,11 +143,7 @@ extension QueryClient {
     for query: DefaultQuery<Query>
   ) -> QueryStore<DefaultQuery<Query>.State>
   where DefaultQuery<Query>.State == QueryState<Query.Value, Query.Value> {
-    self.opaqueStore(
-      for: query,
-      initialState: DefaultQuery<Query>.State(initialValue: query.defaultValue)
-    )
-    .base as! QueryStore<DefaultQuery<Query>.State>
+    self.withStoreCreation(for: query) { $0(for: query) }
   }
 
   /// Retrieves the ``QueryStore`` for an ``InfiniteQueryRequest``.
@@ -164,14 +156,7 @@ extension QueryClient {
     for query: Query,
     initialValue: Query.State.StateValue = []
   ) -> QueryStore<Query.State> {
-    self.opaqueStore(
-      for: query,
-      initialState: InfiniteQueryState(
-        initialValue: initialValue,
-        initialPageId: query.initialPageId
-      )
-    )
-    .base as! QueryStore<Query.State>
+    self.withStoreCreation(for: query) { $0(for: query, initialValue: initialValue) }
   }
 
   /// Retrieves the ``QueryStore`` for an ``InfiniteQueryRequest``.
@@ -182,14 +167,7 @@ extension QueryClient {
   public func store<Query: InfiniteQueryRequest>(
     for query: DefaultInfiniteQuery<Query>
   ) -> QueryStore<DefaultInfiniteQuery<Query>.State> {
-    self.opaqueStore(
-      for: query,
-      initialState: InfiniteQueryState(
-        initialValue: query.defaultValue,
-        initialPageId: query.initialPageId
-      )
-    )
-    .base as! QueryStore<DefaultInfiniteQuery<Query>.State>
+    self.withStoreCreation(for: query) { $0(for: query) }
   }
 
   /// Retrieves the ``QueryStore`` for a ``MutationRequest``.
@@ -202,40 +180,27 @@ extension QueryClient {
     for mutation: Mutation,
     initialValue: Mutation.State.StateValue = nil
   ) -> QueryStore<Mutation.State> {
-    self.opaqueStore(for: mutation, initialState: MutationState(initialValue: initialValue)).base
-      as! QueryStore<Mutation.State>
+    self.withStoreCreation(for: mutation) { $0(for: mutation, initialValue: initialValue) }
   }
 
-  private func opaqueStore<Query: QueryRequest>(
+  private func withStoreCreation<Query: QueryRequest>(
     for query: Query,
-    initialState: Query.State
-  ) -> OpaqueQueryStore {
+    _ create: @Sendable (inout CreateStore) -> QueryStore<Query.State>
+  ) -> QueryStore<Query.State> {
     self.state.withLock { state in
-      defer { state.queryTypes[query.path] = Query.self }
-      let storeCreator = state.storeCreator
+      var createStore = state.createStore()
+      defer { state.queryTypes = createStore.queryTypes }
       return state.storeCache.withStores { stores in
-        if let store = stores[query.path] {
+        if let opaqueStore = stores[query.path] {
           if let queryType = state.queryTypes[query.path], queryType != Query.self {
             reportWarning(.duplicatePath(expectedType: queryType, foundType: Query.self))
-            return OpaqueQueryStore(
-              erasing: storeCreator.store(
-                for: query,
-                in: state.defaultContext,
-                with: initialState
-              )
-            )
+            return create(&createStore)
           }
-          return store
+          return opaqueStore.base as! QueryStore<Query.State>
         }
-        let newStore = OpaqueQueryStore(
-          erasing: storeCreator.store(
-            for: query,
-            in: state.defaultContext,
-            with: initialState
-          )
-        )
-        stores.update(newStore)
-        return newStore
+        let store = create(&createStore)
+        stores.update(OpaqueQueryStore(erasing: store))
+        return store
       }
     }
   }
@@ -328,26 +293,30 @@ extension QueryClient {
   /// - Returns: Whatever `fn` returns.
   public func withStores<T>(
     matching path: QueryPath,
-    perform fn: (inout sending QueryPathableCollection<OpaqueQueryStore>) throws -> sending T
+    perform fn: @Sendable (
+      inout QueryPathableCollection<OpaqueQueryStore>,
+      inout CreateStore
+    ) throws -> sending T
   ) rethrows -> T {
     try self.state.withLock { state in
-      let beforeEntries = state.storeCache.stores().collection(matching: path)
-      var afterEntries = beforeEntries
-      defer {
-        state.storeCache.withStores { stores in
-          for store in afterEntries {
-            if beforeEntries[store.path] == nil {
-              stores.update(store)
-            }
-          }
-          for store in beforeEntries {
-            if afterEntries[store.path] == nil {
-              stores.removeValue(forPath: store.path)
-            }
+      var createStore = state.createStore()
+      defer { state.queryTypes = createStore.queryTypes }
+      return try state.storeCache.withStores { stores in
+        let beforeEntries = stores.collection(matching: path)
+        var afterEntries = beforeEntries
+        let value = try fn(&afterEntries, &createStore)
+        for store in afterEntries {
+          if beforeEntries[store.path] == nil {
+            stores.update(store)
           }
         }
+        for store in beforeEntries {
+          if afterEntries[store.path] == nil {
+            stores.removeValue(forPath: store.path)
+          }
+        }
+        return value
       }
-      return try fn(&afterEntries)
     }
   }
 
@@ -364,29 +333,32 @@ extension QueryClient {
   public func withStores<T, State: QueryStateProtocol>(
     matching path: QueryPath,
     of stateType: State.Type,
-    perform fn: (inout sending QueryPathableCollection<QueryStore<State>>) throws -> sending T
+    perform fn: @Sendable (
+      inout QueryPathableCollection<QueryStore<State>>,
+      inout CreateStore
+    ) throws -> sending T
   ) rethrows -> T {
     try self.state.withLock { state in
-      let beforeEntries = QueryPathableCollection<QueryStore<State>>(
-        state.storeCache.stores().collection(matching: path)
-          .compactMap { $0.base as? QueryStore<State> }
-      )
-      var afterEntries = beforeEntries
-      defer {
-        state.storeCache.withStores { stores in
-          for store in afterEntries {
-            if beforeEntries[store.path] == nil {
-              stores.update(OpaqueQueryStore(erasing: store))
-            }
-          }
-          for store in beforeEntries {
-            if afterEntries[store.path] == nil {
-              stores.removeValue(forPath: store.path)
-            }
+      var createStore = state.createStore()
+      defer { state.queryTypes = createStore.queryTypes }
+      return try state.storeCache.withStores { stores in
+        let beforeEntries = QueryPathableCollection<QueryStore<State>>(
+          stores.collection(matching: path).compactMap { $0.base as? QueryStore<State> }
+        )
+        var afterEntries = beforeEntries
+        let value = try fn(&afterEntries, &createStore)
+        for store in afterEntries {
+          if beforeEntries[store.path] == nil {
+            stores.update(OpaqueQueryStore(erasing: store))
           }
         }
+        for store in beforeEntries {
+          if afterEntries[store.path] == nil {
+            stores.removeValue(forPath: store.path)
+          }
+        }
+        return value
       }
-      return try fn(&afterEntries)
     }
   }
 }

@@ -41,7 +41,8 @@ extension QueryClient {
       var stores = QueryPathableCollection<OpaqueQueryStore>()
       var subscription = QuerySubscription.empty
     }
-    private let state = Lock(State())
+
+    private let state = RecursiveLock(State())
 
     /// Creates a default store cache.
     ///
