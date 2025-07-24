@@ -285,9 +285,9 @@ extension InfiniteQueryRequest {
       return try await self.fetchAllPages(using: paging, in: context, with: continuation)
     case .initialPage:
       return try await self.fetchInitialPage(using: paging, in: context, with: continuation)
-    case let .nextPage(id):
+    case .nextPage(let id):
       return try await self.fetchNextPage(with: id, using: paging, in: context, with: continuation)
-    case let .previousPage(id):
+    case .previousPage(let id):
       return try await self.fetchPreviousPage(
         with: id,
         using: paging,
@@ -474,7 +474,8 @@ extension InfiniteQueryRequest {
     let id = AnyHashableSendable(paging.pageId)
     context.infiniteValues?.requestSubscriptions.forEach { $0.onPageFetchingStarted(id, context) }
     let continuation = QueryContinuation<PageValue> { result, yieldedContext in
-      let context = yieldedContext ?? context
+      var context = yieldedContext ?? context
+      context.queryResultUpdateReason = .yieldedResult
       context.infiniteValues?.requestSubscriptions
         .forEach { sub in
           let result = result.map {
@@ -487,10 +488,15 @@ extension InfiniteQueryRequest {
     let result = await Result {
       try await self.fetchPage(using: paging, in: context, with: continuation)
     }
+
     context.infiniteValues?.requestSubscriptions
       .forEach { sub in
         let result = result.map { InfiniteQueryPage(id: paging.pageId, value: $0) as any Sendable }
-        sub.onPageResultReceived(id, result, context)
+
+        var resultContext = context
+        resultContext.queryResultUpdateReason = .returnedFinalResult
+        sub.onPageResultReceived(id, result, resultContext)
+
         sub.onPageFetchingFinished(id, context)
       }
     return try result.get()

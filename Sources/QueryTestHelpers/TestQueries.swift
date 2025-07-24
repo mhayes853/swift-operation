@@ -791,9 +791,13 @@ package final class WaitableInfiniteQuery: InfiniteQueryRequest {
 package final class FailableInfiniteQuery: InfiniteQueryRequest {
   package let initialPageId = 0
 
-  package let state = RecursiveLock<String?>(nil)
+  package let state = Lock<String?>(nil)
 
-  package init() {}
+  private let shouldYield: Bool
+
+  package init(shouldYield: Bool = false) {
+    self.shouldYield = shouldYield
+  }
 
   package var path: QueryPath {
     [ObjectIdentifier(self)]
@@ -814,7 +818,13 @@ package final class FailableInfiniteQuery: InfiniteQueryRequest {
   ) async throws -> String {
     try self.state.withLock { state in
       if let state {
+        if self.shouldYield {
+          continuation.yield(state)
+        }
         return state
+      }
+      if self.shouldYield {
+        continuation.yield(error: SomeError())
       }
       throw SomeError()
     }

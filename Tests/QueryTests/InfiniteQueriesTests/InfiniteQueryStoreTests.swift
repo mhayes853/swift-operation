@@ -1010,4 +1010,40 @@ struct InfiniteQueryStoreTests {
     expectNoDifference(store.valueUpdateCount, 0)
     expectNoDifference(store.valueLastUpdatedAt == nil, true)
   }
+
+  @Test("Includes Yielded Update Reason In Page Result Events")
+  func includesYieldedUpdateReasonInPageResultEvents() async throws {
+    let store = self.client.store(for: FailableInfiniteQuery(shouldYield: true))
+
+    await confirmation { confirm in
+      await #expect(throws: Error.self) {
+        try await store.fetchNextPage(
+          handler: InfiniteQueryEventHandler(
+            onPageResultReceived: { _, _, context in
+              guard context.queryResultUpdateReason == .yieldedResult else { return }
+              confirm()
+            }
+          )
+        )
+      }
+    }
+  }
+
+  @Test("Includes Final Result Update Reason In Page Result Events")
+  func includesFinalResultUpdateReasonInPageResultEvents() async throws {
+    let store = self.client.store(for: FailableInfiniteQuery())
+
+    await confirmation { confirm in
+      await #expect(throws: Error.self) {
+        try await store.fetchNextPage(
+          handler: InfiniteQueryEventHandler(
+            onPageResultReceived: { _, _, context in
+              guard context.queryResultUpdateReason == .returnedFinalResult else { return }
+              confirm()
+            }
+          )
+        )
+      }
+    }
+  }
 }
