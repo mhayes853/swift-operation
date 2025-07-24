@@ -6,7 +6,7 @@ import Tagged
 public struct Mountain: Hashable, Sendable, Codable, Identifiable {
   public typealias ID = Tagged<Self, UUID>
 
-  public let id: ID
+  public var id: ID
   public var name: String
   public var displayDescription: String
   public var elevation: Measurement<UnitLength>

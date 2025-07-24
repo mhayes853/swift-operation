@@ -47,7 +47,7 @@ extension DependenciesTestSuite {
       }
     }
 
-    @Test("Caches Individual Mountains", .disabled())
+    @Test("Caches Individual Mountains")
     func cachesIndividualMountains() async throws {
       try await withDependencies {
         let searcher = Mountain.MockSearcher()
@@ -72,6 +72,47 @@ extension DependenciesTestSuite {
             }
           )
           try await mountainStore.fetch(handler: handler)
+        }
+      }
+    }
+
+    @Test("Yields Cached Mountains When Unable To Search Remotely On Page 1")
+    func yieldsCachedMountainsWhenUnableToSearchRemotely() async throws {
+      struct SomeError: Error {}
+
+      var mountain = Mountain.mock1
+      mountain.name = "Mt Test"
+
+      try await withDependencies {
+        let searcher = Mountain.MockSearcher()
+        searcher.results[0] = .failure(SomeError())
+        $0[Mountain.SearcherKey.self] = searcher
+        $0[Mountain.LoaderKey.self] = Mountain.MockLoader(result: .success(mountain))
+      } operation: {
+        @Dependency(\.defaultQueryClient) var client
+        let mountainStore = client.store(for: Mountain.query(id: mountain.id))
+        try await mountainStore.fetch()
+
+        await confirmation { confirm in
+          let handler = InfiniteQueryEventHandler<Int, Mountain.SearchResult>(
+            onPageResultReceived: { [mountain] _, result, context in
+              guard
+                context.queryResultUpdateReason == .yieldedResult && context.isLastRetryAttempt
+              else { return }
+              expectNoDifference(
+                try? result.get(),
+                InfiniteQueryPage(
+                  id: 0,
+                  value: Mountain.SearchResult(mountains: [mountain], hasNextPage: false)
+                )
+              )
+              confirm()
+            }
+          )
+          let searchStore = client.store(for: Mountain.searchQuery(Mountain.Search(text: "te")))
+          await #expect(throws: SomeError.self) {
+            try await searchStore.fetchNextPage(handler: handler)
+          }
         }
       }
     }

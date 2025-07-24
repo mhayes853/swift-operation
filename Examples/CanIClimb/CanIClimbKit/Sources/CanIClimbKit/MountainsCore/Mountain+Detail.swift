@@ -53,24 +53,15 @@ extension Mountain {
       @Dependency(Mountain.LoaderKey.self) var loader
       @Dependency(\.defaultDatabase) var database
 
-      let localMountain = try await database.read { db in
-        try CachedMountainRecord.find(#bind(self.id)).fetchOne(db)
-      }
+      let localMountain = try await database.read { try Mountain.find(by: self.id, in: $0) }
       if let localMountain {
-        continuation.yield(Mountain(cached: localMountain))
+        continuation.yield(localMountain)
       }
       guard let mountain = try await loader.mountain(with: self.id) else {
-        try await database.write { db in
-          try CachedMountainRecord.delete().where { $0.id == #bind(self.id) }.execute(db)
-        }
+        try await database.write { try Mountain.delete(by: self.id, in: $0) }
         return nil
       }
-      try await database.write { db in
-        try CachedMountainRecord.upsert {
-          CachedMountainRecord.Draft(CachedMountainRecord(mountain: mountain))
-        }
-        .execute(db)
-      }
+      try await database.write { try Mountain.save(CollectionOfOne(mountain), in: $0) }
       return mountain
     }
   }

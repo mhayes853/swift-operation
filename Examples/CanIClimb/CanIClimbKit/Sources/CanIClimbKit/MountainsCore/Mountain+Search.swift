@@ -94,29 +94,20 @@ extension Mountain {
 
       let searchResult = try await searcher.searchMountains(by: self.search, page: paging.pageId)
       client.updateDetailQueries(mountains: searchResult.mountains)
-      try await database.write { db in
-        for mountain in searchResult.mountains {
-
-        }
-        // let cachedMountains = searchResult.mountains.map {
-        //   CachedMountainRecord.Draft(CachedMountainRecord(mountain: $0))
-        // }
-        // try CachedMountainRecord.upsert { cachedMountains }
-        //   .execute(db)
-      }
+      try await database.write { try Mountain.save(searchResult.mountains, in: $0) }
       return searchResult
     }
   }
 }
 
 extension QueryClient {
-  fileprivate func updateDetailQueries(mountains: some Sequence<Mountain>) {
-    self.withStores(matching: .mountain, of: Mountain.Query.State.self) { stores in
+  fileprivate func updateDetailQueries(mountains: some Sequence<Mountain> & Sendable) {
+    self.withStores(matching: .mountain, of: Mountain.Query.State.self) { stores, createStore in
       for mountain in mountains {
         if let store = stores[.mountain(with: mountain.id)] {
           store.currentValue = mountain
         } else {
-          stores.update(self.store(for: Mountain.query(id: mountain.id), initialValue: mountain))
+          stores.update(createStore(for: Mountain.query(id: mountain.id), initialValue: mountain))
         }
       }
     }
