@@ -113,13 +113,14 @@ extension User {
       in context: QueryContext,
       with continuation: QueryContinuation<User>
     ) async throws -> User {
-      @Dependency(CurrentUser.self) var currentUser
       @Dependency(User.CurrentLoaderKey.self) var loader
+      let currentUser = Dependency(CurrentUser.self).wrappedValue
 
+      async let user = currentUser.user(using: loader)
       if let localUser = try await currentUser.localUser() {
         continuation.yield(localUser)
       }
-      return try await currentUser.user(using: loader)
+      return try await user
     }
   }
 }

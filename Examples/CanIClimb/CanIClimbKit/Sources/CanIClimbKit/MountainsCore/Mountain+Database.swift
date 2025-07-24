@@ -35,7 +35,7 @@ extension Mountain {
 
   public static func findAll(matching name: String, in db: Database) throws -> [Self] {
     try CachedMountainRecord.all
-      .where { #sql("localizedStandardContains(\($0.name), \(bind: name))") }
+      .where { name.eq("").or(#sql("localizedStandardContains(\($0.name), \(bind: name))")) }
       .order { $0.dateAdded.desc() }
       .fetchAll(db)
       .map(Mountain.init(cached:))
