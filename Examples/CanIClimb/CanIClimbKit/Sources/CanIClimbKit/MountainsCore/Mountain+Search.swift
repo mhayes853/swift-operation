@@ -98,7 +98,7 @@ extension Mountain {
         try await database.write { try Mountain.save(searchResult.mountains, in: $0) }
         return searchResult
       } catch {
-        guard context.isLastRetryAttempt else { throw error }
+        guard paging.pageId == self.initialPageId && context.isLastRetryAttempt else { throw error }
         let mountains = try await database.read { db in
           try Mountain.findAll(matching: self.search.text, in: db)
         }
@@ -116,7 +116,7 @@ extension Mountain {
 }
 
 extension QueryClient {
-  fileprivate func updateDetailQueries(mountains: some Sequence<Mountain> & Sendable) {
+  fileprivate func updateDetailQueries(mountains: IdentifiedArrayOf<Mountain>) {
     self.withStores(matching: .mountain, of: Mountain.Query.State.self) { stores, createStore in
       for mountain in mountains {
         if let store = stores[.mountain(with: mountain.id)] {

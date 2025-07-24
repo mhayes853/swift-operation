@@ -76,7 +76,7 @@ extension DependenciesTestSuite {
       }
     }
 
-    @Test("Yields Cached Mountains When Unable To Search Remotely On Page 1")
+    @Test("Yields Cached Mountains When Unable To Search Remotely On Page 0")
     func yieldsCachedMountainsWhenUnableToSearchRemotely() async throws {
       struct SomeError: Error {}
 
@@ -114,6 +114,43 @@ extension DependenciesTestSuite {
             try await searchStore.fetchNextPage(handler: handler)
           }
         }
+      }
+    }
+
+    @Test("Does Not Yield Cached Mountains When Fetching Past The First Page")
+    func doesNotYieldCachedMountainsWhenFetchingPastTheFirstPage() async throws {
+      struct SomeError: Error {}
+
+      let mountain1 = Mountain.mock1
+
+      var mountain2 = mountain1
+      mountain2.id = Mountain.ID()
+      mountain2.name = "Mt Test"
+
+      try await withDependencies {
+        let searcher = Mountain.MockSearcher()
+        searcher.results[0] = .success(
+          Mountain.SearchResult(mountains: [mountain1], hasNextPage: true)
+        )
+        searcher.results[1] = .failure(SomeError())
+        $0[Mountain.SearcherKey.self] = searcher
+        $0[Mountain.LoaderKey.self] = Mountain.MockLoader(result: .success(mountain2))
+      } operation: {
+        @Dependency(\.defaultQueryClient) var client
+        let searchStore = client.store(for: Mountain.searchQuery(.recommended))
+        let mountain2Store = client.store(for: Mountain.query(id: mountain2.id))
+        try await mountain2Store.fetch()
+
+        try await searchStore.fetchNextPage()
+        await #expect(throws: SomeError.self) {
+          try await searchStore.fetchNextPage()
+        }
+
+        expectNoDifference(
+          searchStore.currentValue.map(\.value),
+          [Mountain.SearchResult(mountains: [mountain1], hasNextPage: true)],
+          "There should only be 1 page because no cached data should be yielded after page 0."
+        )
       }
     }
   }
