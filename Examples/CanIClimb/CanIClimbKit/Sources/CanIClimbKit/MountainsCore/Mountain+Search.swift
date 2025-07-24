@@ -92,10 +92,25 @@ extension Mountain {
       @Dependency(\.defaultQueryClient) var client
       @Dependency(\.defaultDatabase) var database
 
-      let searchResult = try await searcher.searchMountains(by: self.search, page: paging.pageId)
-      client.updateDetailQueries(mountains: searchResult.mountains)
-      try await database.write { try Mountain.save(searchResult.mountains, in: $0) }
-      return searchResult
+      do {
+        let searchResult = try await searcher.searchMountains(by: self.search, page: paging.pageId)
+        client.updateDetailQueries(mountains: searchResult.mountains)
+        try await database.write { try Mountain.save(searchResult.mountains, in: $0) }
+        return searchResult
+      } catch {
+        guard context.isLastRetryAttempt else { throw error }
+        let mountains = try await database.read { db in
+          try Mountain.findAll(matching: self.search.text, in: db)
+        }
+        continuation.yield(
+          Mountain.SearchResult(
+            mountains: IdentifiedArray(uniqueElements: mountains),
+            hasNextPage: false
+          ),
+          using: context
+        )
+        throw error
+      }
     }
   }
 }
