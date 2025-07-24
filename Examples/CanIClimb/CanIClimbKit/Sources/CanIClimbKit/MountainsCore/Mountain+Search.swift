@@ -39,6 +39,25 @@ extension Mountain {
   }
 }
 
+extension Mountain {
+  @MainActor
+  public final class MockSearcher: Searcher {
+    public var results = [Int: Result<Mountain.SearchResult, any Error>]()
+
+    public init() {}
+
+    public func searchMountains(
+      by query: Mountain.Search,
+      page: Int
+    ) async throws -> Mountain.SearchResult {
+      guard let result = self.results[page] else { throw NoResultError() }
+      return try result.get()
+    }
+
+    private struct NoResultError: Error {}
+  }
+}
+
 extension CanIClimbAPI: Mountain.Searcher {}
 
 // MARK: - Query
@@ -70,7 +89,36 @@ extension Mountain {
       with continuation: QueryContinuation<PageValue>
     ) async throws -> PageValue {
       @Dependency(Mountain.SearcherKey.self) var searcher
-      return try await searcher.searchMountains(by: self.search, page: paging.pageId)
+      @Dependency(\.defaultQueryClient) var client
+      @Dependency(\.defaultDatabase) var database
+
+      let searchResult = try await searcher.searchMountains(by: self.search, page: paging.pageId)
+      client.updateDetailQueries(mountains: searchResult.mountains)
+      try await database.write { db in
+        for mountain in searchResult.mountains {
+
+        }
+        // let cachedMountains = searchResult.mountains.map {
+        //   CachedMountainRecord.Draft(CachedMountainRecord(mountain: $0))
+        // }
+        // try CachedMountainRecord.upsert { cachedMountains }
+        //   .execute(db)
+      }
+      return searchResult
+    }
+  }
+}
+
+extension QueryClient {
+  fileprivate func updateDetailQueries(mountains: some Sequence<Mountain>) {
+    self.withStores(matching: .mountain, of: Mountain.Query.State.self) { stores in
+      for mountain in mountains {
+        if let store = stores[.mountain(with: mountain.id)] {
+          store.currentValue = mountain
+        } else {
+          stores.update(self.store(for: Mountain.query(id: mountain.id), initialValue: mountain))
+        }
+      }
     }
   }
 }
