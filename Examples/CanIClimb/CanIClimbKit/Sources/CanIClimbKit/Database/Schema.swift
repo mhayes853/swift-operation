@@ -267,6 +267,25 @@ public struct ApplicationLaunchRecord: Hashable, Sendable, Identifiable {
   }
 }
 
+// MARK: - ScheduleableAlarmRecord
+
+@Table("ScheduleableAlarms")
+public struct ScheduleableAlarmRecord: Sendable, Identifiable {
+  @Column(as: ScheduleableAlarm.IDRepresentation.self)
+  public let id: ScheduleableAlarm.ID
+
+  @Column(as: LocalizedStringResource.JSONRepresentation.self)
+  public var title: LocalizedStringResource
+
+  public var date: Date
+
+  public init(id: ScheduleableAlarm.ID, title: LocalizedStringResource, date: Date) {
+    self.id = id
+    self.title = title
+    self.date = date
+  }
+}
+
 // MARK: - Can I Climb Database
 
 public func canIClimbDatabase(url: URL? = nil) throws -> any DatabaseWriter {
@@ -421,6 +440,19 @@ extension DatabaseMigrator {
         CREATE TABLE IF NOT EXISTS ApplicationLaunches (
           id BLOB PRIMARY KEY,
           localizedDeviceName TEXT NOT NULL
+        );
+        """,
+        as: Void.self
+      )
+      .execute(db)
+    }
+    self.registerMigration("create alarms table") { db in
+      try #sql(
+        """
+        CREATE TABLE IF NOT EXISTS Alarms (
+          id BLOB PRIMARY KEY,
+          name TEXT NOT NULL,
+          date REAL NOT NULL
         );
         """,
         as: Void.self

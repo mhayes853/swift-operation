@@ -23,3 +23,9 @@ extension Mountain {
 extension ApplicationLaunch {
   public typealias IDRepresentation = Tagged<Self, UUIDV7.BytesRepresentation>
 }
+
+// MARK: - ScheduleableAlarm
+
+extension ScheduleableAlarm {
+  public typealias IDRepresentation = Tagged<ScheduleableAlarm, UUID.BytesRepresentation>
+}

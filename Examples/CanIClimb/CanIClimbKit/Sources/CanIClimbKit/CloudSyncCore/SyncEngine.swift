@@ -16,10 +16,10 @@ extension SyncEngine {
       ],
       privateTables: [
         SettingsRecord.self,
-        InternalMetricsRecord.self
-          // TODO: - Make these syncable.
-          // QueryAnalysisRecord.self,
-          // ApplicationLaunchRecord.self
+        InternalMetricsRecord.self,
+        ScheduleableAlarmRecord.self,
+        QueryAnalysisRecord.self,
+        ApplicationLaunchRecord.self
       ]
     )
   }
