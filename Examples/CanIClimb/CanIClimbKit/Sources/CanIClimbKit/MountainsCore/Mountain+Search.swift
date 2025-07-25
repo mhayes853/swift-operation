@@ -4,17 +4,21 @@ import SharingQuery
 // MARK: - Search
 
 extension Mountain {
-  public struct Search: Codable, Hashable, Sendable {
-    public var text: String
-
-    public init(text: String) {
-      self.text = text
-    }
+  public enum Search: Hashable, Sendable {
+    case recommended
+    case text(String)
+    case planned
   }
 }
 
 extension Mountain.Search {
-  public static let recommended = Self(text: "")
+  public init(text: String) {
+    if text.isEmpty {
+      self = .recommended
+    } else {
+      self = .text(text)
+    }
+  }
 }
 
 // MARK: - Searcher
@@ -30,8 +34,18 @@ extension Mountain {
     }
   }
 
+  public struct SearchRequest: Hashable, Sendable {
+    public var search: Search
+    public var page: Int
+
+    public init(search: Mountain.Search, page: Int) {
+      self.search = search
+      self.page = page
+    }
+  }
+
   public protocol Searcher: Sendable {
-    func searchMountains(by query: Search, page: Int) async throws -> SearchResult
+    func searchMountains(by request: SearchRequest) async throws -> SearchResult
   }
 
   public enum SearcherKey: DependencyKey {
@@ -47,10 +61,9 @@ extension Mountain {
     public init() {}
 
     public func searchMountains(
-      by query: Mountain.Search,
-      page: Int
+      by request: SearchRequest
     ) async throws -> Mountain.SearchResult {
-      guard let result = self.results[page] else { throw NoResultError() }
+      guard let result = self.results[request.page] else { throw NoResultError() }
       return try result.get()
     }
 
@@ -93,22 +106,21 @@ extension Mountain {
       @Dependency(\.defaultDatabase) var database
 
       do {
-        let searchResult = try await searcher.searchMountains(by: self.search, page: paging.pageId)
+        let request = Mountain.SearchRequest(search: self.search, page: paging.pageId)
+        let searchResult = try await searcher.searchMountains(by: request)
         client.updateDetailQueries(mountains: searchResult.mountains)
         try await database.write { try Mountain.save(searchResult.mountains, in: $0) }
         return searchResult
       } catch {
         guard paging.pageId == self.initialPageId && context.isLastRetryAttempt else { throw error }
         let mountains = try await database.read { db in
-          try Mountain.findAll(matching: self.search.text, in: db)
+          try Mountain.findAll(matching: self.search, in: db)
         }
-        continuation.yield(
-          Mountain.SearchResult(
-            mountains: IdentifiedArray(uniqueElements: mountains),
-            hasNextPage: false
-          ),
-          using: context
+        let searchResult = Mountain.SearchResult(
+          mountains: IdentifiedArray(uniqueElements: mountains),
+          hasNextPage: false
         )
+        continuation.yield(searchResult, using: context)
         throw error
       }
     }

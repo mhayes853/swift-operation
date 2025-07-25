@@ -141,16 +141,21 @@ extension CanIClimbAPI {
 
 extension CanIClimbAPI {
   public func searchMountains(
-    by search: Mountain.Search,
-    page: Int
+    by request: Mountain.SearchRequest
   ) async throws -> Mountain.SearchResult {
-    var request = URLRequest(url: self.baseURL.appending(path: "/mountains"))
-    request.url?
-      .append(queryItems: [
-        URLQueryItem(name: "text", value: search.text),
-        URLQueryItem(name: "page", value: "\(page)")
-      ])
-    let (data, _) = try await self.transport.data(for: request)
+    var urlRequest = URLRequest(url: self.baseURL.appending(path: "/mountains"))
+    var queryItems = [URLQueryItem(name: "page", value: "\(request.page)")]
+    switch request.search {
+    case .recommended:
+      queryItems.append(URLQueryItem(name: "type", value: "recommended"))
+    case .text(let text):
+      queryItems.append(URLQueryItem(name: "type", value: "text"))
+      queryItems.append(URLQueryItem(name: "text", value: text))
+    case .planned:
+      queryItems.append(URLQueryItem(name: "type", value: "planned"))
+    }
+    urlRequest.url?.append(queryItems: queryItems)
+    let (data, _) = try await self.transport.data(for: urlRequest)
     return try JSONDecoder().decode(Mountain.SearchResult.self, from: data)
   }
 }
