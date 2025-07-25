@@ -19,6 +19,12 @@ extension LocationCoordinate2D {
   }
 }
 
+extension CLLocation {
+  public convenience init(coordinate: LocationCoordinate2D) {
+    self.init(latitude: coordinate.latitude, longitude: coordinate.longitude)
+  }
+}
+
 // MARK: - LocationReading
 
 public struct LocationReading: Sendable {
