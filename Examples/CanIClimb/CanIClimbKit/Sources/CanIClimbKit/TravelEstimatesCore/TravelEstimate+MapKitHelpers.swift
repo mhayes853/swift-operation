@@ -1,19 +1,5 @@
 import MapKit
 
-// MARK: - MapKitLoader
-
-extension TravelEstimate {
-  public final class MapKitLoader: Loader {
-    public init() {}
-
-    public func estimate(for request: TravelEstimate.Request) async throws -> TravelEstimate {
-      let request = MKDirections.Request(from: request)
-      let eta = try await MKDirections(request: request).calculateETA()
-      return TravelEstimate(response: eta)
-    }
-  }
-}
-
 // MARK: - DirectionsRequest
 
 extension MKDirections.Request {
@@ -22,14 +8,6 @@ extension MKDirections.Request {
     self.source = MKMapItem(coordinate: request.origin)
     self.destination = MKMapItem(coordinate: request.destination)
     self.transportType = MKDirectionsTransportType(kind: request.kind)
-  }
-}
-
-// MARK: - MapItem
-
-extension MKMapItem {
-  public convenience init(coordinate: LocationCoordinate2D) {
-    self.init(location: CLLocation(coordinate: coordinate), address: nil)
   }
 }
 
