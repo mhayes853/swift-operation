@@ -539,7 +539,7 @@ struct MutationStoreTests {
     expectNoDifference(store.history.count, 1)
   }
 
-  #if swift(>=6.2) && (os(macOS) || os(Linux) || os(Windows))
+  #if swift(>=6.2) && SWIFT_QUERY_EXIT_TESTABLE
     @Test("History Length Must Be Greater Than Zero")
     func historyLengthMustBeGreaterThanZero() async {
       await #expect(

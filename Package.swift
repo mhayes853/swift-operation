@@ -89,6 +89,12 @@ let package = Package(
           package: "swift-log",
           condition: .when(traits: ["SwiftQueryLogging"])
         )
+      ],
+      swiftSettings: [
+        .define(
+          "SWIFT_QUERY_EXIT_TESTABLE",
+          .when(platforms: [.macOS, .linux, .windows])
+        )
       ]
     ),
     .target(name: "QuerySwiftUI", dependencies: ["Query"]),
