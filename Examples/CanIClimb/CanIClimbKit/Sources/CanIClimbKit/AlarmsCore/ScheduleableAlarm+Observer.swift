@@ -110,13 +110,3 @@ extension ScheduleableAlarm.Observer {
     self.task?.cancel()
   }
 }
-
-// MARK: - DependencyKey
-
-extension ScheduleableAlarm.Observer: DependencyKey {
-  public static var liveValue: ScheduleableAlarm.Observer {
-    @Dependency(\.defaultDatabase) var database
-    @Dependency(ScheduleableAlarm.StoreKey.self) var store
-    return ScheduleableAlarm.Observer(database: database, store: store)
-  }
-}

@@ -93,6 +93,12 @@ public struct CanIClimbApp: App {
       $0.defaultSyncEngine = try .canIClimb(writer: $0.defaultDatabase)
       $0[UserLocationKey.self] = CLUserLocation()
       $0[DeviceInfo.self] = DeviceInfo.current
+
+      let observer = ScheduleableAlarm.Observer(
+        database: $0.defaultDatabase,
+        store: $0[ScheduleableAlarm.StoreKey.self]
+      )
+      Task(priority: .background) { try await observer.beginObserving() }
     }
     self.model = CanIClimbModel()
   }
