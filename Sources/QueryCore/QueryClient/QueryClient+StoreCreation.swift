@@ -79,7 +79,7 @@ extension QueryClient {
   public struct CreateStore: ~Copyable {
     let creator: any QueryClient.StoreCreator
     let initialContext: QueryContext
-    var queryTypes: [QueryPath: Any.Type]
+    let queryTypes: MutableBox<[QueryPath: Any.Type]>
   }
 }
 
@@ -90,11 +90,11 @@ extension QueryClient.CreateStore {
   ///   - query: The query.
   ///   - initialState: The initial state of the query.
   /// - Returns: A ``QueryStore``.
-  public mutating func callAsFunction<Query: QueryRequest>(
+  public func callAsFunction<Query: QueryRequest>(
     for query: Query,
     initialState: Query.State
   ) -> QueryStore<Query.State> {
-    self.queryTypes[query.path] = Query.self
+    self.queryTypes.value[query.path] = Query.self
     return self.creator.store(for: query, in: self.initialContext, with: initialState)
   }
 
@@ -104,7 +104,7 @@ extension QueryClient.CreateStore {
   ///   - query: The query.
   ///   - initialValue: The initial value of the query.
   /// - Returns: A ``QueryStore``.
-  public mutating func callAsFunction<Query: QueryRequest>(
+  public func callAsFunction<Query: QueryRequest>(
     for query: Query,
     initialValue: Query.Value? = nil
   ) -> QueryStore<Query.State>
@@ -117,7 +117,7 @@ extension QueryClient.CreateStore {
   /// - Parameters:
   ///   - query: The query.
   /// - Returns: A ``QueryStore``.
-  public mutating func callAsFunction<Query: QueryRequest>(
+  public func callAsFunction<Query: QueryRequest>(
     for query: DefaultQuery<Query>
   ) -> QueryStore<DefaultQuery<Query>.State>
   where DefaultQuery<Query>.State == QueryState<Query.Value, Query.Value> {
@@ -130,7 +130,7 @@ extension QueryClient.CreateStore {
   ///   - query: The query.
   ///   - initialValue: The initial value for the state of the query.
   /// - Returns: A ``QueryStore``.
-  public mutating func callAsFunction<Query: InfiniteQueryRequest>(
+  public func callAsFunction<Query: InfiniteQueryRequest>(
     for query: Query,
     initialValue: Query.State.StateValue = []
   ) -> QueryStore<Query.State> {
@@ -148,7 +148,7 @@ extension QueryClient.CreateStore {
   /// - Parameters:
   ///   - query: The query.
   /// - Returns: A ``QueryStore``.
-  public mutating func callAsFunction<Query: InfiniteQueryRequest>(
+  public func callAsFunction<Query: InfiniteQueryRequest>(
     for query: DefaultInfiniteQuery<Query>
   ) -> QueryStore<DefaultInfiniteQuery<Query>.State> {
     self(
@@ -166,7 +166,7 @@ extension QueryClient.CreateStore {
   ///   - query: The mutation.
   ///   - initialValue: The initial value for the state of the mutation.
   /// - Returns: A ``QueryStore``.
-  public mutating func callAsFunction<Mutation: MutationRequest>(
+  public func callAsFunction<Mutation: MutationRequest>(
     for mutation: Mutation,
     initialValue: Mutation.State.StateValue = nil
   ) -> QueryStore<Mutation.State> {

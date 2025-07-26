@@ -69,7 +69,7 @@ public final class QueryClient: Sendable {
       CreateStore(
         creator: self.storeCreator,
         initialContext: self.initialContext,
-        queryTypes: self.queryTypes
+        queryTypes: MutableBox(value: self.queryTypes)
       )
     }
   }
@@ -185,20 +185,20 @@ extension QueryClient {
 
   private func withStoreCreation<Query: QueryRequest>(
     for query: Query,
-    _ create: @Sendable (inout CreateStore) -> QueryStore<Query.State>
+    _ create: @Sendable (borrowing CreateStore) -> QueryStore<Query.State>
   ) -> QueryStore<Query.State> {
     self.state.withLock { state in
-      var createStore = state.createStore()
-      defer { state.queryTypes = createStore.queryTypes }
+      let createStore = state.createStore()
+      defer { state.queryTypes = createStore.queryTypes.value }
       return state.storeCache.withStores { stores in
         if let opaqueStore = stores[query.path] {
           if let queryType = state.queryTypes[query.path], queryType != Query.self {
             reportWarning(.duplicatePath(expectedType: queryType, foundType: Query.self))
-            return create(&createStore)
+            return create(createStore)
           }
           return opaqueStore.base as! QueryStore<Query.State>
         }
-        let store = create(&createStore)
+        let store = create(createStore)
         stores.update(OpaqueQueryStore(erasing: store))
         return store
       }
@@ -295,16 +295,16 @@ extension QueryClient {
     matching path: QueryPath,
     perform fn: @Sendable (
       inout QueryPathableCollection<OpaqueQueryStore>,
-      inout CreateStore
+      borrowing CreateStore
     ) throws -> sending T
   ) rethrows -> T {
     try self.state.withLock { state in
-      var createStore = state.createStore()
-      defer { state.queryTypes = createStore.queryTypes }
+      let createStore = state.createStore()
+      defer { state.queryTypes = createStore.queryTypes.value }
       return try state.storeCache.withStores { stores in
         let beforeEntries = stores.collection(matching: path)
         var afterEntries = beforeEntries
-        let value = try fn(&afterEntries, &createStore)
+        let value = try fn(&afterEntries, createStore)
         for store in afterEntries {
           if beforeEntries[store.path] == nil {
             stores.update(store)
@@ -335,18 +335,18 @@ extension QueryClient {
     of stateType: State.Type,
     perform fn: @Sendable (
       inout QueryPathableCollection<QueryStore<State>>,
-      inout CreateStore
+      borrowing CreateStore
     ) throws -> sending T
   ) rethrows -> T {
     try self.state.withLock { state in
-      var createStore = state.createStore()
-      defer { state.queryTypes = createStore.queryTypes }
+      let createStore = state.createStore()
+      defer { state.queryTypes = createStore.queryTypes.value }
       return try state.storeCache.withStores { stores in
         let beforeEntries = QueryPathableCollection<QueryStore<State>>(
           stores.collection(matching: path).compactMap { $0.base as? QueryStore<State> }
         )
         var afterEntries = beforeEntries
-        let value = try fn(&afterEntries, &createStore)
+        let value = try fn(&afterEntries, createStore)
         for store in afterEntries {
           if beforeEntries[store.path] == nil {
             stores.update(OpaqueQueryStore(erasing: store))

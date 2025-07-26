@@ -8,6 +8,16 @@ final class Box<Value: Sendable>: Sendable {
   }
 }
 
+// MARK: - MutableBox
+
+final class MutableBox<Value> {
+  var value: Value
+
+  init(value: Value) {
+    self.value = value
+  }
+}
+
 // MARK: - WeakBox
 
 final class WeakBox<Value: AnyObject> {
