@@ -2,6 +2,7 @@
   import AlarmKit
   import IdentifiedCollections
   import ConcurrencyExtras
+  import Tagged
 
   // MARK: - AlarmKitStore
 
@@ -46,19 +47,13 @@
 
       _ = try await self.manager.schedule(id: alarm.id.rawValue, configuration: configuration)
     }
-    
+
     public func cancel(id: ScheduleableAlarm.ID) async throws {
       try self.manager.cancel(id: id.rawValue)
     }
 
-    public func all() async throws -> [ScheduleableAlarm.ID] {
-      try self.manager.alarms.map { ScheduleableAlarm.ID($0.id) }
-    }
-
-    public func updates() async -> AsyncStream<[ScheduleableAlarm.ID]> {
-      self.manager.alarmUpdates
-        .map { alarms in alarms.map { ScheduleableAlarm.ID($0.id) } }
-        .eraseToStream()
+    public func all() async throws -> Set<ScheduleableAlarm.ID> {
+      try Set(self.manager.alarms.map { ScheduleableAlarm.ID($0.id) })
     }
   }
 

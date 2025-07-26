@@ -270,7 +270,7 @@ public struct ApplicationLaunchRecord: Hashable, Sendable, Identifiable {
 // MARK: - ScheduleableAlarmRecord
 
 @Table("ScheduleableAlarms")
-public struct ScheduleableAlarmRecord: Sendable, Identifiable {
+public struct ScheduleableAlarmRecord: Equatable, Sendable, Identifiable {
   @Column(as: ScheduleableAlarm.IDRepresentation.self)
   public let id: ScheduleableAlarm.ID
 
@@ -279,10 +279,18 @@ public struct ScheduleableAlarmRecord: Sendable, Identifiable {
 
   public var date: Date
 
-  public init(id: ScheduleableAlarm.ID, title: LocalizedStringResource, date: Date) {
+  public var isScheduled: Bool
+
+  public init(
+    id: ScheduleableAlarm.ID,
+    title: LocalizedStringResource,
+    date: Date,
+    isScheduled: Bool
+  ) {
     self.id = id
     self.title = title
     self.date = date
+    self.isScheduled = isScheduled
   }
 }
 
@@ -449,10 +457,11 @@ extension DatabaseMigrator {
     self.registerMigration("create alarms table") { db in
       try #sql(
         """
-        CREATE TABLE IF NOT EXISTS Alarms (
+        CREATE TABLE IF NOT EXISTS ScheduleableAlarms (
           id BLOB PRIMARY KEY,
-          name TEXT NOT NULL,
-          date REAL NOT NULL
+          title TEXT NOT NULL,
+          date REAL NOT NULL,
+          isScheduled BOOLEAN NOT NULL
         );
         """,
         as: Void.self

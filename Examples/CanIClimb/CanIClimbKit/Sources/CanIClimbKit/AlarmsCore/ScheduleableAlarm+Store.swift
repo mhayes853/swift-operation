@@ -1,6 +1,7 @@
 import Dependencies
 import IdentifiedCollections
 import Query
+import Tagged
 
 // MARK: - Store
 
@@ -10,18 +11,52 @@ extension ScheduleableAlarm {
 
     func schedule(alarm: ScheduleableAlarm) async throws
     func cancel(id: ScheduleableAlarm.ID) async throws
-    func all() async throws -> [ScheduleableAlarm.ID]
-    func updates() async -> AsyncStream<[ScheduleableAlarm.ID]>
+    func all() async throws -> Set<ScheduleableAlarm.ID>
+  }
+
+  public static var defaultStore: any Store {
+    #if os(iOS)
+      AlarmKitStore.shared
+    #else
+      NoopStore()
+    #endif
   }
 
   public enum StoreKey: DependencyKey {
     public static var liveValue: any Store {
-      #if os(iOS)
-        AlarmKitStore.shared
-      #else
-        NoopStore()
-      #endif
+      ScheduleableAlarm.defaultStore
     }
+  }
+}
+
+extension ScheduleableAlarm.Store {
+  public func replaceAll(
+    with alarms: some Sequence<ScheduleableAlarm>
+  ) async throws -> [(ScheduleableAlarm, (any Error)?)] {
+    try await withThrowingTaskGroup { group in
+      for id in try await self.all() {
+        group.addTask { try await self.cancel(id: id) }
+      }
+    }
+    return await withTaskGroup(of: (ScheduleableAlarm, (any Error)?).self) { group in
+      for alarm in alarms {
+        group.addTask {
+          do {
+            try await self.schedule(alarm: alarm)
+            return (alarm, nil)
+          } catch {
+            return (alarm, error)
+          }
+        }
+      }
+      return await group.reduce(into: []) { $0.append($1) }
+    }
+  }
+}
+
+extension ScheduleableAlarm {
+  public struct ReplaceAllResult: Equatable, Sendable {
+    public let successfullyScheduledAlarms: [ScheduleableAlarm]
   }
 }
 
@@ -41,12 +76,8 @@ extension ScheduleableAlarm {
     public func cancel(id: ScheduleableAlarm.ID) async throws {
     }
 
-    public func all() -> [ScheduleableAlarm.ID] {
+    public func all() -> Set<ScheduleableAlarm.ID> {
       []
-    }
-
-    public func updates() -> AsyncStream<[ScheduleableAlarm.ID]> {
-      AsyncStream { $0.finish() }
     }
   }
 }
@@ -57,39 +88,34 @@ extension ScheduleableAlarm {
   @MainActor
   public final class MockStore: Store {
     public var isGranted = true
-    private var alarms = IdentifiedArrayOf<ScheduleableAlarm>()
-    private var continuations = [AsyncStream<[ScheduleableAlarm.ID]>.Continuation]()
+    public var failToScheduleError: (any Error)?
+    private var alarms = Set<ScheduleableAlarm.ID>()
+    private var cancelCounts = [ScheduleableAlarm.ID: Int]()
 
     public init() {}
+
+    public func cancelCount(for id: ScheduleableAlarm.ID) -> Int {
+      self.cancelCounts[id, default: 0]
+    }
 
     public func requestPermission() async -> Bool {
       self.isGranted
     }
 
     public func schedule(alarm: ScheduleableAlarm) async throws {
-      self.alarms.append(alarm)
-      self.continuations.forEach { $0.yield(self.alarms.map(\.id)) }
+      if let error = self.failToScheduleError {
+        throw error
+      }
+      self.alarms.insert(alarm.id)
     }
 
     public func cancel(id: ScheduleableAlarm.ID) async throws {
-      self.alarms.removeAll(where: { $0.id == id })
-      self.continuations.forEach { $0.yield(self.alarms.map(\.id)) }
+      self.alarms.remove(id)
+      self.cancelCounts[id, default: 0] += 1
     }
 
-    public func all() -> [ScheduleableAlarm.ID] {
-      self.alarms.map(\.id)
-    }
-
-    public func updates() -> AsyncStream<[ScheduleableAlarm.ID]> {
-      AsyncStream { continuation in
-        continuation.yield(self.alarms.map(\.id))
-        self.continuations.append(continuation)
-        continuation.onTermination = { _ in
-          Task { @MainActor in
-            self.continuations.removeAll(where: { $0 == continuation })
-          }
-        }
-      }
+    public func all() -> Set<ScheduleableAlarm.ID> {
+      self.alarms
     }
   }
 }
