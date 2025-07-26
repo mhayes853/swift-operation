@@ -296,7 +296,9 @@ struct CanIClimbAPITests {
     let expectedResult = Mountain.SearchResult(mountains: [.mock1], hasNextPage: false)
     let api = CanIClimbAPI(
       transport: .mock { request in
-        if request.url?.path() == "/mountains" && request.url?.query() == "page=0&type=planned" {
+        if request.url?.path() == "/mountains"
+          && request.url?.query() == "page=0&type=planned&orderBy=completed"
+        {
           return (200, .json(expectedResult))
         }
         return (400, .data(Data()))
@@ -304,7 +306,7 @@ struct CanIClimbAPITests {
       secureStorage: self.storage
     )
     let searchResult = try await api.searchMountains(
-      by: Mountain.SearchRequest(search: .planned, page: 0)
+      by: Mountain.SearchRequest(search: .planned(.completed), page: 0)
     )
     expectNoDifference(searchResult, expectedResult)
   }

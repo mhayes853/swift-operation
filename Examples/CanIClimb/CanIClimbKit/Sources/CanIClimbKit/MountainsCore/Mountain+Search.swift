@@ -7,7 +7,14 @@ extension Mountain {
   public enum Search: Hashable, Sendable {
     case recommended
     case text(String)
-    case planned
+    case planned(PlannedOrder)
+  }
+}
+
+extension Mountain.Search {
+  public enum PlannedOrder: Hashable, Sendable {
+    case completed
+    case uncompleted
   }
 }
 

@@ -32,6 +32,7 @@ public final class CanIClimbAPI: Sendable {
     // memory pressure notification.
     self.accessTokenStore = .detached(
       mutation: AccessTokenMutation()
+        .maxHistory(length: 1)
         .retry(limit: 3)
         .backoff(.exponential(1))
         .delayer(AnyDelayer(isTesting ? .noDelay : .taskSleep))
@@ -151,8 +152,14 @@ extension CanIClimbAPI {
     case .text(let text):
       queryItems.append(URLQueryItem(name: "type", value: "text"))
       queryItems.append(URLQueryItem(name: "text", value: text))
-    case .planned:
+    case .planned(let order):
       queryItems.append(URLQueryItem(name: "type", value: "planned"))
+      switch order {
+      case .completed:
+        queryItems.append(URLQueryItem(name: "orderBy", value: "completed"))
+      case .uncompleted:
+        queryItems.append(URLQueryItem(name: "orderBy", value: "uncompleted"))
+      }
     }
     urlRequest.url?.append(queryItems: queryItems)
     let (data, _) = try await self.transport.data(for: urlRequest)

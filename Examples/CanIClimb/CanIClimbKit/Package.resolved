@@ -123,8 +123,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-log",
       "state" : {
-        "revision" : "3d8596ed08bd13520157f0355e35caed215ffbfa",
-        "version" : "1.6.3"
+        "revision" : "ce592ae52f982c847a4efc0dd881cc9eb32d29f2",
+        "version" : "1.6.4"
       }
     },
     {
@@ -133,7 +133,7 @@
       "location" : "https://github.com/pointfreeco/swift-navigation",
       "state" : {
         "revision" : "ae208d1a5cf33aee1d43734ea780a09ada6e2a21",
-        "version" : "2.3.1"
+        "version" : "2.3.2"
       }
     },
     {
@@ -151,7 +151,7 @@
       "location" : "https://github.com/mhayes853/swift-query",
       "state" : {
         "branch" : "main",
-        "revision" : "9f025900d25687e666d2cafd647dc41373e0dd92"
+        "revision" : "9133549a71d3df9c3242ac64f7af56458622eb42"
       }
     },
     {
