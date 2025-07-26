@@ -117,8 +117,11 @@ extension MutationState: _MutationStateProtocol {
       reportWarning(.mutationWithNoArgumentsOrHistory)
       return
     }
-    task.context.mutationValues = MutationContextValues(arguments: args)
+    task.context.mutationValues.arguments = args
     self.history.append(HistoryEntry(task: task, args: args))
+    if self.history.count > task.context.mutationValues.maxHistoryLength {
+      self.history.removeFirst()
+    }
   }
 
   public mutating func reset(using context: QueryContext) -> ResetEffect {

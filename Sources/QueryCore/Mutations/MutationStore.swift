@@ -113,7 +113,7 @@ extension QueryStore where State: _MutationStateProtocol {
     using base: QueryContext?
   ) -> QueryContext {
     var context = base ?? self.context
-    context.mutationValues = MutationContextValues(arguments: arguments)
+    context.mutationValues.arguments = arguments
     context.queryTaskConfiguration.name = context.queryTaskConfiguration.name ?? self.mutateTaskName
     return context
   }

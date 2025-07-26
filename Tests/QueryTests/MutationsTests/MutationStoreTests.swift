@@ -525,4 +525,63 @@ struct MutationStoreTests {
     expectNoDifference(store.errorLastUpdatedAt, nil)
     expectNoDifference(store.errorUpdateCount, 0)
   }
+
+  @Test("1-Lengthed History, Only Keeps Most Recent Attempt")
+  func noHistoryOnlyKeepsMostRecentAttempt() async throws {
+    let store = self.client.store(for: EmptyMutation().maxHistory(length: 1))
+    try await store.mutate(with: "blob")
+
+    expectNoDifference(try? store.history[0].currentResult?.get(), "blob")
+    expectNoDifference(store.history.count, 1)
+
+    try await store.mutate(with: "blob jr")
+    expectNoDifference(try? store.history[0].currentResult?.get(), "blob jr")
+    expectNoDifference(store.history.count, 1)
+  }
+
+  #if swift(>=6.2) && (os(macOS) || os(Linux) || os(Windows))
+    @Test("History Length Must Be Greater Than Zero")
+    func historyLengthMustBeGreaterThanZero() async {
+      await #expect(
+        processExitsWith: .failure,
+        Comment(rawValue: _tooSmallMutationHistoryLengthMessage(got: 0))
+      ) {
+        _ = EmptyMutation().maxHistory(length: 0)
+      }
+    }
+  #endif
+
+  @Test("Fixed Length History, Cycles Out Old Attempts")
+  func fixedLengthHistoryCyclesOutOldAttempts() async throws {
+    let store = self.client.store(for: EmptyMutation().maxHistory(length: 2))
+    try await store.mutate(with: "blob")
+    try await store.mutate(with: "blob jr")
+    try await store.mutate(with: "blob sr")
+
+    expectNoDifference(try? store.history[0].currentResult?.get(), "blob jr")
+    expectNoDifference(try? store.history[1].currentResult?.get(), "blob sr")
+    expectNoDifference(store.history.count, 2)
+  }
+
+  @Test("Fixed Length History, Ignores Results From Old Attempts")
+  func fixedLengthHistoryIgnoresResultsFromOldAttempts() async throws {
+    let mutation = FailableMutation()
+    mutation.state.withLock { $0 = "blob" }
+
+    let store = self.client.store(for: mutation.maxHistory(length: 2))
+    let task = store.mutateTask(with: "blob")
+    try await store.mutate(with: "blob jr")
+    try await store.mutate(with: "blob sr")
+
+    mutation.state.withLock { $0 = nil }
+    await #expect(throws: FailableMutation.MutateError.self) {
+      try await task.runIfNeeded()
+    }
+
+    expectNoDifference(store.error == nil, true)
+    expectNoDifference(try? store.history[0].currentResult?.get(), "blob")
+    expectNoDifference(try? store.history[1].currentResult?.get(), "blob")
+    expectNoDifference(store.history.count, 2)
+    expectNoDifference(store.errorUpdateCount, 0)
+  }
 }
