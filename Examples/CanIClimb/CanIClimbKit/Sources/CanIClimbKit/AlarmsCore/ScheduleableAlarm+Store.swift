@@ -1,5 +1,6 @@
 import Dependencies
 import IdentifiedCollections
+import Query
 
 // MARK: - Store
 
@@ -89,6 +90,25 @@ extension ScheduleableAlarm {
           }
         }
       }
+    }
+  }
+}
+
+// MARK: - Permissions Mutation
+
+extension ScheduleableAlarm {
+  public static let requestPermissionMutation = RequestPermissionMutation()
+
+  public struct RequestPermissionMutation: MutationRequest, Hashable {
+    public typealias Arguments = Void
+
+    public func mutate(
+      with arguments: Void,
+      in context: QueryContext,
+      with continuation: QueryContinuation<Bool>
+    ) async -> Bool {
+      @Dependency(ScheduleableAlarm.StoreKey.self) var store
+      return await store.requestPermission()
     }
   }
 }
