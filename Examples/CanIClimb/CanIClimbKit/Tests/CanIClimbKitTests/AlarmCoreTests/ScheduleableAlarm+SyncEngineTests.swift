@@ -5,8 +5,8 @@ import StructuredQueriesGRDB
 import XCTest
 
 @MainActor
-final class ScheduleableAlarmObserverTests: XCTestCase, @unchecked Sendable {
-  private var observer: ScheduleableAlarm.Observer!
+final class ScheduleableAlarmSyncEngineTests: XCTestCase, @unchecked Sendable {
+  private var observer: ScheduleableAlarm.SyncEngine!
   private var store: ScheduleableAlarm.MockStore!
   private var database: (any DatabaseWriter)!
 
@@ -14,8 +14,13 @@ final class ScheduleableAlarmObserverTests: XCTestCase, @unchecked Sendable {
     try await super.setUp()
     self.database = try canIClimbDatabase()
     self.store = ScheduleableAlarm.MockStore()
-    self.observer = ScheduleableAlarm.Observer(database: self.database, store: self.store)
-    try await self.observer.beginObserving()
+    self.observer = ScheduleableAlarm.SyncEngine(database: self.database, store: self.store)
+    try await self.observer.start()
+  }
+
+  override func tearDown() async throws {
+    try await super.tearDown()
+    await self.observer.stop()
   }
 
   func testSchedulesAlarmsAddedThroughDatabase() async throws {
@@ -26,7 +31,7 @@ final class ScheduleableAlarmObserverTests: XCTestCase, @unchecked Sendable {
       date: .distantFuture
     )
     await self.observer.setCallbacks(
-      ScheduleableAlarm.Observer.Callbacks { scheduled in
+      ScheduleableAlarm.SyncEngine.Callbacks { scheduled in
         guard !scheduled.isEmpty else { return }
         Task { @MainActor in
           expectNoDifference(alarm.id, scheduled[0].0.id)
@@ -61,7 +66,7 @@ final class ScheduleableAlarmObserverTests: XCTestCase, @unchecked Sendable {
     a1.date = .distantFuture - 1000
 
     await self.observer.setCallbacks(
-      ScheduleableAlarm.Observer.Callbacks { [a1] scheduled in
+      ScheduleableAlarm.SyncEngine.Callbacks { [a1] scheduled in
         guard !scheduled.isEmpty else { return }
         Task { @MainActor in
           expectNoDifference(Set(scheduled.map(\.0.date)), [a1.date, a2.date])
@@ -87,10 +92,10 @@ final class ScheduleableAlarmObserverTests: XCTestCase, @unchecked Sendable {
   func testRemovesAlarmsThatHaveBeenRemovedFromStoreOnBeginObserving() async throws {
     let expectation = self.expectation(description: "Alarm scheduled")
     await self.observer.setCallbacks(
-      ScheduleableAlarm.Observer.Callbacks { scheduled in
+      ScheduleableAlarm.SyncEngine.Callbacks { scheduled in
         guard !scheduled.isEmpty else { return }
         Task { @MainActor in
-          await self.observer.endObserving()
+          await self.observer.stop()
           expectation.fulfill()
         }
       }
@@ -109,7 +114,7 @@ final class ScheduleableAlarmObserverTests: XCTestCase, @unchecked Sendable {
 
     try await self.store.cancel(id: alarm.id)
 
-    try await self.observer.beginObserving()
+    try await self.observer.start()
 
     let alarms = try await self.database.read {
       try ScheduleableAlarmRecord.all.fetchAll($0)
@@ -120,10 +125,10 @@ final class ScheduleableAlarmObserverTests: XCTestCase, @unchecked Sendable {
   func testDoesNotRemoveAlarmsThatCouldNotBeScheduledWhenObservingStarted() async throws {
     let expectation = self.expectation(description: "Alarm scheduled")
     await self.observer.setCallbacks(
-      ScheduleableAlarm.Observer.Callbacks { scheduled in
+      ScheduleableAlarm.SyncEngine.Callbacks { scheduled in
         guard !scheduled.isEmpty else { return }
         Task { @MainActor in
-          await self.observer.endObserving()
+          await self.observer.stop()
           expectation.fulfill()
         }
       }
@@ -144,7 +149,7 @@ final class ScheduleableAlarmObserverTests: XCTestCase, @unchecked Sendable {
     await self.fulfillment(of: [expectation], timeout: 1)
     await self.observer.setCallbacks(nil)
 
-    try await self.observer.beginObserving()
+    try await self.observer.start()
 
     let alarms = try await self.database.read {
       try ScheduleableAlarmRecord.all.fetchAll($0)

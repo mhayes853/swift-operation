@@ -28,6 +28,9 @@ public final class CanIClimbModel {
   @ObservationIgnored
   @Dependency(DeviceInfo.self) var deviceInfo
 
+  @ObservationIgnored
+  @Dependency(ScheduleableAlarm.SyncEngine.self) var alarmSyncEngine
+
   private var token: NotificationCenter.ObservationToken?
 
   public init() {}
@@ -35,6 +38,7 @@ public final class CanIClimbModel {
 
 extension CanIClimbModel {
   public func appeared() async throws {
+    try await self.alarmSyncEngine.start()
     self.token = self.center.addObserver(for: DeviceShakeMessage.self) { [weak self] _ in
       self?.devTools = self?.devTools ?? QueryDevToolsModel()
     }
@@ -50,9 +54,10 @@ extension CanIClimbModel {
     }
   }
 
-  public func disappeared() {
+  public func disappeared() async {
     guard let token else { return }
     self.center.removeObserver(token)
+    await self.alarmSyncEngine.stop()
   }
 }
 
@@ -93,12 +98,6 @@ public struct CanIClimbApp: App {
       $0.defaultSyncEngine = try .canIClimb(writer: $0.defaultDatabase)
       $0[UserLocationKey.self] = CLUserLocation()
       $0[DeviceInfo.self] = DeviceInfo.current
-
-      let observer = ScheduleableAlarm.Observer(
-        database: $0.defaultDatabase,
-        store: $0[ScheduleableAlarm.StoreKey.self]
-      )
-      Task(priority: .background) { try await observer.beginObserving() }
     }
     self.model = CanIClimbModel()
   }
@@ -123,7 +122,7 @@ public struct CanIClimbView: View {
     Text("TODO")
       .observeQueryAlerts()
       .task { try? await self.model.appeared() }
-      .onDisappear { self.model.disappeared() }
+      .onDisappear { Task { await self.model.disappeared() } }
       .sheet(item: self.$model.devTools) { model in
         QueryDevToolsView(model: model)
       }

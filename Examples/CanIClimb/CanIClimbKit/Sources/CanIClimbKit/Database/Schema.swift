@@ -304,8 +304,7 @@ public struct ScheduleableAlarmRecord: Equatable, Sendable, Identifiable {
 
 @Table("PlannedClimbAlarms")
 public struct PlannedClimbAlarmRecord: Hashable, Sendable, Codable {
-  public typealias ID = Tagged<PlannedClimbAlarmRecord, UUIDV7>
-
+  @Column(as: IDRepresentation.self)
   public var id: ID
 
   @Column(as: Mountain.PlannedClimb.IDRepresentation.self)
@@ -323,6 +322,11 @@ public struct PlannedClimbAlarmRecord: Hashable, Sendable, Codable {
     self.plannedClimbID = plannedClimbID
     self.alarmId = alarmId
   }
+}
+
+extension PlannedClimbAlarmRecord {
+  public typealias ID = Tagged<PlannedClimbAlarmRecord, UUIDV7>
+  public typealias IDRepresentation = Tagged<PlannedClimbAlarmRecord, UUIDV7.BytesRepresentation>
 }
 
 // MARK: - Can I Climb Database

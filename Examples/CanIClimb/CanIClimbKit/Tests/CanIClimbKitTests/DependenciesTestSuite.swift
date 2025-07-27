@@ -9,6 +9,10 @@ import Testing
     $0.defaultDatabase = try! canIClimbDatabase()
     $0.defaultNetworkObserver = MockNetworkObserver()
     $0[CurrentUser.self] = CurrentUser(database: $0.defaultDatabase)
+    $0[ScheduleableAlarm.SyncEngine.self] = ScheduleableAlarm.SyncEngine(
+      database: $0.defaultDatabase,
+      store: ScheduleableAlarm.NoopStore()
+    )
   }
 )
 struct DependenciesTestSuite {}

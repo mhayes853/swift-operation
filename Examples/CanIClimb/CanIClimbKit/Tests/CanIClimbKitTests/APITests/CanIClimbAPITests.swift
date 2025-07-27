@@ -234,7 +234,7 @@ struct CanIClimbAPITests {
       transport: .mock { _ in (404, .data(Data())) },
       secureStorage: self.storage
     )
-    let mountain = try await api.mountain(with: Mountain.ID(UUID()))
+    let mountain = try await api.mountain(with: Mountain.ID())
     expectNoDifference(mountain, nil)
   }
 

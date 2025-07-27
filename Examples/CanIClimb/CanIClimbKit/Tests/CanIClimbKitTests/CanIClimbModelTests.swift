@@ -55,7 +55,7 @@ extension DependenciesTestSuite {
       center.post(DeviceShakeMessage())
       expectNoDifference(model.devTools != nil, true)
 
-      model.disappeared()
+      await model.disappeared()
     }
 
     @Test("Does Not Re-Present QueryAnalyzer When Device Shaken After Appearance")
@@ -72,7 +72,7 @@ extension DependenciesTestSuite {
       center.post(DeviceShakeMessage())
       expectNoDifference(model.devTools, analyzer)
 
-      model.disappeared()
+      await model.disappeared()
     }
 
     @Test("Stops Presenting QueryAnalyzer When Device Shaken After Disappearance")
@@ -81,7 +81,7 @@ extension DependenciesTestSuite {
 
       let model = CanIClimbModel()
       try await model.appeared()
-      model.disappeared()
+      await model.disappeared()
 
       expectNoDifference(model.devTools, nil)
       center.post(DeviceShakeMessage())
