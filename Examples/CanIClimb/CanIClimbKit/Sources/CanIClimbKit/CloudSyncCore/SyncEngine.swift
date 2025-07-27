@@ -11,7 +11,6 @@ extension SyncEngine {
       database: writer,
       logger: os.Logger(subsystem: "day.onetask.CanIClimb", category: "SyncEngine"),
       tables: [
-        MountainClimbGoalRecord.self,
         UserHumanityRecord.self
       ],
       privateTables: [
@@ -19,7 +18,8 @@ extension SyncEngine {
         InternalMetricsRecord.self,
         ScheduleableAlarmRecord.self,
         QueryAnalysisRecord.self,
-        ApplicationLaunchRecord.self
+        ApplicationLaunchRecord.self,
+        PlannedClimbAlarmRecord.self
       ]
     )
   }

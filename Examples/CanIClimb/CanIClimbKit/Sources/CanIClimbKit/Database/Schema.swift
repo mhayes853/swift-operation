@@ -76,7 +76,7 @@ extension UserHumanityRecord {
 // MARK: - CachedMountainRecord
 
 @Table("CachedMountains")
-public struct CachedMountainRecord: Sendable {
+public struct CachedMountainRecord: Hashable, Identifiable, Sendable {
   @Column(as: Mountain.IDRepresentation.self)
   public let id: Mountain.ID
   public var name: String
@@ -191,22 +191,28 @@ extension SettingsRecord.TemperaturePreference: CustomLocalizedStringResourceCon
   }
 }
 
-// MARK: - MountainClimbGoalRecord
+// MARK: - MountainPlannedClimbRecord
 
-@Table("MountainClimbGoals")
-public struct MountainClimbGoalRecord {
-  public let id: UUID
+@Table("PlannedClimbs")
+public struct CachedPlannedClimbRecord: Hashable, Sendable, Codable, Identifiable {
+  @Column(as: Mountain.PlannedClimb.IDRepresentation.self)
+  public let id: Mountain.PlannedClimb.ID
 
   @Column(as: Mountain.IDRepresentation.self)
   public let mountainId: Mountain.ID
 
-  public let dateAdded: Date
+  public var targetDate: Date
   public var achievedDate: Date?
 
-  public init(id: UUID, mountainId: Mountain.ID, dateAdded: Date, achievedDate: Date?) {
+  public init(
+    id: Mountain.PlannedClimb.ID,
+    mountainId: Mountain.ID,
+    targetDate: Date,
+    achievedDate: Date?
+  ) {
     self.id = id
     self.mountainId = mountainId
-    self.dateAdded = dateAdded
+    self.targetDate = targetDate
     self.achievedDate = achievedDate
   }
 }
@@ -294,6 +300,31 @@ public struct ScheduleableAlarmRecord: Equatable, Sendable, Identifiable {
   }
 }
 
+// MARK: - PlannedClimbAlarmRecord
+
+@Table("PlannedClimbAlarms")
+public struct PlannedClimbAlarmRecord: Hashable, Sendable, Codable {
+  public typealias ID = Tagged<PlannedClimbAlarmRecord, UUIDV7>
+
+  public var id: ID
+
+  @Column(as: Mountain.PlannedClimb.IDRepresentation.self)
+  public var plannedClimbID: Mountain.PlannedClimb.ID
+
+  @Column(as: ScheduleableAlarm.IDRepresentation.self)
+  public var alarmId: ScheduleableAlarm.ID
+
+  public init(
+    id: ID,
+    plannedClimbID: Mountain.PlannedClimb.ID,
+    alarmId: ScheduleableAlarm.ID
+  ) {
+    self.id = id
+    self.plannedClimbID = plannedClimbID
+    self.alarmId = alarmId
+  }
+}
+
 // MARK: - Can I Climb Database
 
 public func canIClimbDatabase(url: URL? = nil) throws -> any DatabaseWriter {
@@ -361,7 +392,7 @@ extension DatabaseMigrator {
           elevationMeters DOUBLE NOT NULL,
           latitude REAL NOT NULL,
           longitude REAL NOT NULL,
-          difficulty INTEGER NOT NULL,
+          difficulty DOUBLE NOT NULL,
           imageURL TEXT NOT NULL,
           dateAdded TIMESTAMP NOT NULL
         );
@@ -386,10 +417,10 @@ extension DatabaseMigrator {
     self.registerMigration("create mountain climb goals table") { db in
       try #sql(
         """
-        CREATE TABLE IF NOT EXISTS MountainClimbGoals (
+        CREATE TABLE IF NOT EXISTS PlannedClimbs (
           id BLOB PRIMARY KEY,
           mountainId BLOB NOT NULL,
-          dateAdded TIMESTAMP NOT NULL,
+          targetDate TIMESTAMP NOT NULL,
           achievedDate TIMESTAMP,
           FOREIGN KEY (mountainId) REFERENCES CachedMountains(id)
         );
@@ -462,6 +493,20 @@ extension DatabaseMigrator {
           title TEXT NOT NULL,
           date REAL NOT NULL,
           isScheduled BOOLEAN NOT NULL
+        );
+        """,
+        as: Void.self
+      )
+      .execute(db)
+    }
+    self.registerMigration("create planned climb alarms table") { db in
+      try #sql(
+        """
+        CREATE TABLE IF NOT EXISTS PlannedClimbAlarms (
+          plannedClimbID BLOB NOT NULL,
+          alarmId BLOB NOT NULL,
+          PRIMARY KEY (plannedClimbID, alarmId),
+          FOREIGN KEY (alarmId) REFERENCES ScheduleableAlarms(id)
         );
         """,
         as: Void.self

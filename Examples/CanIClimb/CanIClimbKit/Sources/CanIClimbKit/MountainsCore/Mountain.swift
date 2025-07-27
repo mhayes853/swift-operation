@@ -1,10 +1,11 @@
 import Foundation
 import Tagged
+import UUIDV7
 
 // MARK: - Mountain
 
 public struct Mountain: Hashable, Sendable, Codable, Identifiable {
-  public typealias ID = Tagged<Self, UUID>
+  public typealias ID = Tagged<Self, UUIDV7>
 
   public var id: ID
   public var name: String

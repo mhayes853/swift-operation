@@ -69,14 +69,16 @@ extension Mountain {
 
 extension CachedMountainRecord {
   public init(mountain: Mountain) {
-    self.id = mountain.id
-    self.name = mountain.name
-    self.displayDescription = mountain.displayDescription
-    self.elevationMeters = mountain.elevation.converted(to: .meters).value
-    self.latitude = mountain.location.latitude
-    self.longitude = mountain.location.longitude
-    self.dateAdded = mountain.dateAdded
-    self.imageURL = mountain.imageURL
-    self.difficulty = mountain.difficulty
+    self.init(
+      id: mountain.id,
+      name: mountain.name,
+      displayDescription: mountain.displayDescription,
+      elevationMeters: mountain.elevation.converted(to: .meters).value,
+      latitude: mountain.location.latitude,
+      longitude: mountain.location.longitude,
+      dateAdded: mountain.dateAdded,
+      imageURL: mountain.imageURL,
+      difficulty: mountain.difficulty
+    )
   }
 }

@@ -15,7 +15,11 @@ extension HumanWorkoutFrequency: QueryBindable {}
 extension Mountain.ClimbingDifficulty: QueryBindable {}
 
 extension Mountain {
-  public typealias IDRepresentation = Tagged<Self, UUID.BytesRepresentation>
+  public typealias IDRepresentation = Tagged<Self, UUIDV7.BytesRepresentation>
+}
+
+extension Mountain.PlannedClimb {
+  public typealias IDRepresentation = Tagged<Self, UUIDV7.BytesRepresentation>
 }
 
 // MARK: - ApplicationLaunch
