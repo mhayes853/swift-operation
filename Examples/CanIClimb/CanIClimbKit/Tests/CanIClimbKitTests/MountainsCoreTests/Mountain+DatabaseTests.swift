@@ -11,15 +11,20 @@ struct MountainDatabaseTests {
   @Test(
     "Searches Mountains By Text",
     arguments: [
-      (Mountain.Search.text("mount"), [0, 1]),
-      (Mountain.Search.text("k"), [2]),
-      (Mountain.Search.text("WHIT"), [0]),
-      (Mountain.Search.recommended, [0, 1, 2])
+      (Mountain.Search(text: ""), [0, 1, 2]),
+      (Mountain.Search(text: "mount"), [0, 1]),
+      (Mountain.Search(text: "k"), [2]),
+      (Mountain.Search(text: "WHIT"), [0]),
+      (Mountain.Search.recommended, [0, 1, 2]),
+      (Mountain.Search.planned, [1]),
+      (Mountain.Search(text: "blob", category: .planned), [])
     ]
   )
   func searchesMountainsByText(search: Mountain.Search, indicies: [Int]) async throws {
     let results = try await self.database.write { db in
       try Mountain.save(Mountain.searchMocks, in: db)
+      try CachedPlannedClimbRecord.insert { Mountain.PlannedClimb.mocks }
+        .execute(db)
       return try Mountain.findAll(matching: search, in: db)
     }
     let expected = indicies.map { Mountain.searchMocks[$0] }
@@ -41,4 +46,15 @@ extension Mountain {
     m3.name = "K2"
     return [m1, m2, m3]
   }()
+}
+
+extension Mountain.PlannedClimb {
+  fileprivate static let mocks = [
+    Self(
+      id: ID(),
+      mountainId: Mountain.searchMocks[1].id,
+      targetDate: .distantFuture,
+      achievedDate: nil
+    )
+  ]
 }

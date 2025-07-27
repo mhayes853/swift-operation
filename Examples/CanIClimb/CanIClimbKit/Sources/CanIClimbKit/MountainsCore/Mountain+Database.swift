@@ -36,15 +36,19 @@ extension Mountain {
   public static func findAll(matching search: Search, in db: Database) throws -> [Self] {
     // TODO: - Planned Search Query
     try CachedMountainRecord.all
+      .leftJoin(CachedPlannedClimbRecord.all) { $0.id.eq($1.mountainId) }
       .where {
-        switch search {
-        case .text(let text):
-          #sql("localizedStandardContains(\($0.name), \(bind: text))")
-        default:
-          true
+        let doesMatch = search.text.eq("")
+          .or(#sql("localizedStandardContains(\($0.name), \(bind: search.text))"))
+        switch search.category {
+        case .recommended:
+          doesMatch
+        case .planned:
+          doesMatch.and($1.id.isNot(nil))
         }
       }
-      .order { $0.dateAdded.desc() }
+      .order { (m, _) in m.dateAdded.desc() }
+      .select { (m, _) in m }
       .fetchAll(db)
       .map(Mountain.init(cached:))
   }

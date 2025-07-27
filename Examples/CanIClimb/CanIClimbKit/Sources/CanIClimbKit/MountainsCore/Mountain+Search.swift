@@ -4,28 +4,27 @@ import SharingQuery
 // MARK: - Search
 
 extension Mountain {
-  public enum Search: Hashable, Sendable {
-    case recommended
-    case text(String)
-    case planned(PlannedOrder)
-  }
-}
+  public struct Search: Hashable, Sendable {
+    public var text: String
+    public var category: Category
 
-extension Mountain.Search {
-  public enum PlannedOrder: Hashable, Sendable {
-    case completed
-    case uncompleted
-  }
-}
-
-extension Mountain.Search {
-  public init(text: String) {
-    if text.isEmpty {
-      self = .recommended
-    } else {
-      self = .text(text)
+    public init(text: String, category: Category = .recommended) {
+      self.text = text
+      self.category = category
     }
   }
+}
+
+extension Mountain.Search {
+  public enum Category: Hashable, Sendable {
+    case recommended
+    case planned
+  }
+}
+
+extension Mountain.Search {
+  public static let recommended = Self(text: "", category: .recommended)
+  public static let planned = Self(text: "", category: .planned)
 }
 
 // MARK: - Searcher

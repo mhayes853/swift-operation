@@ -146,22 +146,15 @@ extension CanIClimbAPI {
   ) async throws -> Mountain.SearchResult {
     var urlRequest = URLRequest(url: self.baseURL.appending(path: "/mountains"))
     var queryItems = [URLQueryItem(name: "page", value: "\(request.page)")]
-    switch request.search {
-    case .recommended:
-      queryItems.append(URLQueryItem(name: "type", value: "recommended"))
-    case .text(let text):
-      queryItems.append(URLQueryItem(name: "type", value: "text"))
-      queryItems.append(URLQueryItem(name: "text", value: text))
-    case .planned(let order):
-      queryItems.append(URLQueryItem(name: "type", value: "planned"))
-      switch order {
-      case .completed:
-        queryItems.append(URLQueryItem(name: "orderBy", value: "completed"))
-      case .uncompleted:
-        queryItems.append(URLQueryItem(name: "orderBy", value: "uncompleted"))
-      }
+    switch request.search.category {
+    case .planned: queryItems.append(URLQueryItem(name: "category", value: "planned"))
+    case .recommended: queryItems.append(URLQueryItem(name: "category", value: "recommended"))
+    }
+    if !request.search.text.isEmpty {
+      queryItems.append(URLQueryItem(name: "text", value: request.search.text))
     }
     urlRequest.url?.append(queryItems: queryItems)
+
     let (data, _) = try await self.transport.data(for: urlRequest)
     return try JSONDecoder().decode(Mountain.SearchResult.self, from: data)
   }
