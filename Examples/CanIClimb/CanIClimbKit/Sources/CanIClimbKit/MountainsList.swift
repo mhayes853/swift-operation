@@ -123,8 +123,8 @@ private struct MountainsListMapView: View {
 private struct MountainsListSheetContentView: View {
   @Bindable var model: MountainsListModel
   let isFullScreen: Bool
-  
-  @ScaledMetric private var searchRowHeight = 40
+
+  @ScaledMetric private var profileHeight = 45
 
   var body: some View {
     ScrollView {
@@ -134,16 +134,14 @@ private struct MountainsListSheetContentView: View {
             text: self.$model.searchText,
             isFullScreen: self.isFullScreen
           )
-          .frame(maxHeight: self.searchRowHeight)
-          
-          
+
           Button {
             self.model.settingsInvoked()
           } label: {
             Image(systemName: "person.crop.circle")
               .resizable()
               .scaledToFit()
-              .frame(height: self.searchRowHeight)
+              .frame(height: self.profileHeight)
               .foregroundStyle(.black)
               .accessibilityLabel("Profile")
           }
@@ -165,19 +163,20 @@ private struct MountainsListSheetContentView: View {
 // MARK: - MountainsListSearchFieldView
 
 private struct MountainsListSearchFieldView: View {
+  @Environment(\.colorScheme) private var colorScheme
   @Binding var text: String
   let isFullScreen: Bool
+
+  @ScaledMetric private var height = 45
 
   var body: some View {
     HStack(alignment: .center) {
       Image(systemName: "magnifyingglass")
-        .foregroundStyle(Color.black.opacity(0.5))
+        .foregroundStyle(.secondary)
       TextField(text: self.$text.animation()) {
         Text("Find Mountains")
-          .foregroundStyle(Color.black.opacity(0.5))
           .fontWeight(.semibold)
       }
-      .foregroundStyle(.black)
 
       Spacer()
 
@@ -186,14 +185,19 @@ private struct MountainsListSearchFieldView: View {
           self.text = ""
         } label: {
           Image(systemName: "xmark")
-            .foregroundStyle(Color.black.opacity(0.5))
+            .foregroundStyle(.secondary)
             .accessibilityLabel("Clear")
         }
         .buttonStyle(.plain)
       }
     }
-    .padding()
-    .background(Color.white)
+    .padding(.horizontal)
+    .frame(height: self.height)
+    .background(
+      self.colorScheme == .dark
+        ? AnyShapeStyle(Color.secondaryBackground)
+        : AnyShapeStyle(.background.opacity(self.isFullScreen ? 1 : 0.5))
+    )
     .clipShape(Capsule())
     .shadow(color: Color.black.opacity(self.isFullScreen ? 0.15 : 0), radius: 15, y: 10)
   }
