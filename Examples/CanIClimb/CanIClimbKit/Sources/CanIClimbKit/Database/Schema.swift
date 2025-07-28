@@ -340,6 +340,10 @@ public func canIClimbDatabase(url: URL? = nil) throws -> any DatabaseWriter {
   }
   var configuration = Configuration()
   configuration.foreignKeysEnabled = isTesting
+  configuration.prepareDatabase { db in
+    db.add(function: .localizedStandardContains)
+    db.addUUIDV7Functions()
+  }
 
   let writer = try writer(for: url, configuration: configuration)
   var migrator = DatabaseMigrator()
@@ -363,9 +367,6 @@ private func writer(for url: URL?, configuration: Configuration) throws -> any D
 
 extension DatabaseMigrator {
   fileprivate mutating func registerV1() {
-    self.registerMigration("add localized standard contains function") { db in
-      db.add(function: .localizedStandardContains)
-    }
     self.registerMigration("create internal metrics table") { db in
       try #sql(
         """
