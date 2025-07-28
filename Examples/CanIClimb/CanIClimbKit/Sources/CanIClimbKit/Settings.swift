@@ -438,11 +438,19 @@ extension Measurement where UnitType == UnitMass {
 private struct SocialsSectionView: View {
   var body: some View {
     Section {
-      Link("Github Repo", destination: URL(string: "https://github.com/mhayes853/swift-query")!)
-      Link("Introduction Blog Post", destination: URL(string: "https://whypeople.xyz/swift-query")!)
       Link(
-        "Source Code (for this demo app)",
+        "Swift Query Github Repo",
         destination: URL(string: "https://github.com/mhayes853/swift-query")!
+      )
+      Link(
+        "Swift Query Introduction Blog Post",
+        destination: URL(string: "https://whypeople.xyz/swift-query")!
+      )
+      Link(
+        "CanIClimb Source Code",
+        destination: URL(
+          string: "https://github.com/mhayes853/swift-query/tree/main/Examples/CanIClimb"
+        )!
       )
     } header: {
       Text("Learn More")
