@@ -12,7 +12,7 @@ extension DependenciesTestSuite {
     func seedsQueryClientWithDetailResults() async throws {
       try await withDependencies {
         let searcher = Mountain.MockSearcher()
-        searcher.results[0] = .success(
+        searcher.results[.recommended(page: 0)] = .success(
           Mountain.SearchResult(mountains: [.mock1], hasNextPage: false)
         )
         $0[Mountain.SearcherKey.self] = searcher
@@ -31,7 +31,7 @@ extension DependenciesTestSuite {
     func seedsQueryClientWithPreExistingDetailResults() async throws {
       try await withDependencies {
         let searcher = Mountain.MockSearcher()
-        searcher.results[0] = .success(
+        searcher.results[.recommended(page: 0)] = .success(
           Mountain.SearchResult(mountains: [.mock1], hasNextPage: false)
         )
         $0[Mountain.SearcherKey.self] = searcher
@@ -51,7 +51,7 @@ extension DependenciesTestSuite {
     func cachesIndividualMountains() async throws {
       try await withDependencies {
         let searcher = Mountain.MockSearcher()
-        searcher.results[0] = .success(
+        searcher.results[.recommended(page: 0)] = .success(
           Mountain.SearchResult(mountains: [.mock1], hasNextPage: false)
         )
         $0[Mountain.SearcherKey.self] = searcher
@@ -83,9 +83,11 @@ extension DependenciesTestSuite {
       var mountain = Mountain.mock1
       mountain.name = "Mt Test"
 
+      let request = Mountain.SearchRequest.recommended(page: 0, text: "te")
+
       try await withDependencies {
         let searcher = Mountain.MockSearcher()
-        searcher.results[0] = .failure(SomeError())
+        searcher.results[request] = .failure(SomeError())
         $0[Mountain.SearcherKey.self] = searcher
         $0[Mountain.LoaderKey.self] = Mountain.MockLoader(result: .success(mountain))
       } operation: {
@@ -109,7 +111,7 @@ extension DependenciesTestSuite {
               confirm()
             }
           )
-          let searchStore = client.store(for: Mountain.searchQuery(Mountain.Search(text: "te")))
+          let searchStore = client.store(for: Mountain.searchQuery(request.search))
           await #expect(throws: SomeError.self) {
             try await searchStore.fetchNextPage(handler: handler)
           }
@@ -129,10 +131,10 @@ extension DependenciesTestSuite {
 
       try await withDependencies {
         let searcher = Mountain.MockSearcher()
-        searcher.results[0] = .success(
+        searcher.results[.recommended(page: 0)] = .success(
           Mountain.SearchResult(mountains: [mountain1], hasNextPage: true)
         )
-        searcher.results[1] = .failure(SomeError())
+        searcher.results[.recommended(page: 1)] = .failure(SomeError())
         $0[Mountain.SearcherKey.self] = searcher
         $0[Mountain.LoaderKey.self] = Mountain.MockLoader(result: .success(mountain2))
       } operation: {

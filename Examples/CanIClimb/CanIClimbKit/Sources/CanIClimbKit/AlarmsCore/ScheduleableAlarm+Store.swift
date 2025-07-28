@@ -54,12 +54,6 @@ extension ScheduleableAlarm.Store {
   }
 }
 
-extension ScheduleableAlarm {
-  public struct ReplaceAllResult: Equatable, Sendable {
-    public let successfullyScheduledAlarms: [ScheduleableAlarm]
-  }
-}
-
 // MARK: - NoopStore
 
 extension ScheduleableAlarm {

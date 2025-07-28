@@ -27,6 +27,26 @@ extension Mountain.Search {
   public static let planned = Self(text: "", category: .planned)
 }
 
+// MARK: - SearchRequest
+
+extension Mountain {
+  public struct SearchRequest: Hashable, Sendable {
+    public var search: Search
+    public var page: Int
+
+    public init(search: Mountain.Search, page: Int) {
+      self.search = search
+      self.page = page
+    }
+  }
+}
+
+extension Mountain.SearchRequest {
+  public static func recommended(page: Int, text: String = "") -> Self {
+    Self(search: Mountain.Search(text: text), page: page)
+  }
+}
+
 // MARK: - Searcher
 
 extension Mountain {
@@ -37,16 +57,6 @@ extension Mountain {
     public init(mountains: IdentifiedArrayOf<Mountain>, hasNextPage: Bool) {
       self.mountains = mountains
       self.hasNextPage = hasNextPage
-    }
-  }
-
-  public struct SearchRequest: Hashable, Sendable {
-    public var search: Search
-    public var page: Int
-
-    public init(search: Mountain.Search, page: Int) {
-      self.search = search
-      self.page = page
     }
   }
 
@@ -62,14 +72,14 @@ extension Mountain {
 extension Mountain {
   @MainActor
   public final class MockSearcher: Searcher {
-    public var results = [Int: Result<Mountain.SearchResult, any Error>]()
+    public var results = [SearchRequest: Result<SearchResult, any Error>]()
 
     public init() {}
 
     public func searchMountains(
       by request: SearchRequest
-    ) async throws -> Mountain.SearchResult {
-      guard let result = self.results[request.page] else { throw NoResultError() }
+    ) async throws -> SearchResult {
+      guard let result = self.results[request] else { throw NoResultError() }
       return try result.get()
     }
 
