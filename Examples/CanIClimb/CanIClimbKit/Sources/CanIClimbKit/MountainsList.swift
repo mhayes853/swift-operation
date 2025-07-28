@@ -138,11 +138,7 @@ private struct MountainsListSheetContentView: View {
           Button {
             self.model.settingsInvoked()
           } label: {
-            Image(systemName: "person.crop.circle")
-              .resizable()
-              .scaledToFit()
-              .frame(height: self.profileHeight)
-              .foregroundStyle(.black)
+            ProfileCircleView(height: self.profileHeight)
               .accessibilityLabel("Profile")
           }
           .buttonStyle(.plain)
