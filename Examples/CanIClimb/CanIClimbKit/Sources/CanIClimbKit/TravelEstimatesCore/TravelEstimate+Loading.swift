@@ -22,19 +22,7 @@ extension TravelEstimate {
   }
 
   public enum LoaderKey: DependencyKey {
-    public static let liveValue: any Loader = MapKitLoader()
-  }
-}
-
-extension TravelEstimate {
-  public final class MapKitLoader: Loader {
-    public init() {}
-
-    public func estimate(for request: TravelEstimate.Request) async throws -> TravelEstimate {
-      let request = MKDirections.Request(from: request)
-      let eta = try await MKDirections(request: request).calculateETA()
-      return TravelEstimate(response: eta)
-    }
+    public static let liveValue: any Loader = MapKitLoader.shared
   }
 }
 
