@@ -15,6 +15,8 @@ public final class QueryDevToolsModel: HashableObject, Identifiable {
   @ObservationIgnored
   @FetchOne public var selectedLaunch: ApplicationLaunchRecord?
 
+  public var onDismissed: (() -> Void)?
+
   public var path = [Path]()
 
   public init() {
@@ -39,6 +41,12 @@ extension QueryDevToolsModel {
     )
     try await self.$analyzes.load(GroupQueryAnalysisRequest(launchId: id), animation: .bouncy)
     self.path.removeLast()
+  }
+}
+
+extension QueryDevToolsModel {
+  public func dismissed() {
+    self.onDismissed?()
   }
 }
 
@@ -71,7 +79,7 @@ public struct QueryDevToolsView: View {
             QueryAnalysisView(analysis: analysis, launch: launch)
           }
         }
-        .dismissable()
+        .dismissable { self.model.dismissed() }
     }
   }
 }

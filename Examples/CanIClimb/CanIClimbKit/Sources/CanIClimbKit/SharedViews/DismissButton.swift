@@ -1,19 +1,24 @@
 import SwiftUI
 
 extension View {
-  public func dismissable() -> some View {
-    self.modifier(DismissableModifier())
+  public func dismissable(onDismiss: (() -> Void)? = nil) -> some View {
+    self.modifier(DismissableModifier(onDismiss: onDismiss))
   }
 }
 
 private struct DismissableModifier: ViewModifier {
   @Environment(\.dismiss) private var dismiss
+  let onDismiss: (() -> Void)?
 
   func body(content: Content) -> some View {
     content
       .toolbar {
         let button = Button {
-          self.dismiss()
+          if let onDismiss {
+            onDismiss()
+          } else {
+            self.dismiss()
+          }
         } label: {
           Image(systemName: "xmark")
         }

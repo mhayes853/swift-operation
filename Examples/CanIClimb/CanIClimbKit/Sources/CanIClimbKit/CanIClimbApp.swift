@@ -13,7 +13,9 @@ public final class CanIClimbModel {
   @ObservationIgnored
   @Dependency(\.defaultDatabase) private var database
 
-  public var devTools: QueryDevToolsModel?
+  public var devTools: QueryDevToolsModel? {
+    didSet { self.bind() }
+  }
 
   public var destination: Destination? {
     didSet { self.bind() }
@@ -70,6 +72,7 @@ extension CanIClimbModel {
   }
 
   private func bind() {
+    self.devTools?.onDismissed = { [weak self] in self?.devTools = nil }
     switch self.destination {
     case .onboarding(let model):
       model.onFinished = { [weak self] in self?.destination = nil }
@@ -114,22 +117,28 @@ public struct CanIClimbView: View {
   }
 
   public var body: some View {
-    MountainsListView(model: self.model.mountainsList) { content in
-      content
-        .sheet(item: self.$model.devTools) { model in
-          QueryDevToolsView(model: model)
+    Group {
+      if let devToolsModel = self.model.devTools {
+        QueryDevToolsView(model: devToolsModel)
+          .transition(.move(edge: .bottom))
+      } else {
+        MountainsListView(model: self.model.mountainsList) { content in
+          content
+            #if os(iOS)
+              .fullScreenCover(item: self.$model.destination.onboarding) { model in
+                OnboardingView(model: model).background(.background)
+              }
+              .shakeDetection()
+            #else
+              .sheet(item: self.$model.destination.onboarding) { model in
+                OnboardingView(model: model)
+              }
+            #endif
         }
-        #if os(iOS)
-          .fullScreenCover(item: self.$model.destination.onboarding) { model in
-            OnboardingView(model: model).background(.background)
-          }
-          .shakeDetection()
-        #else
-          .sheet(item: self.$model.destination.onboarding) { model in
-            OnboardingView(model: model)
-          }
-        #endif
+        .transition(.move(edge: .bottom))
+      }
     }
+    .animation(.easeInOut, value: self.model.devTools)
     .observeQueryAlerts()
     .task {
       await withErrorReporting { try await self.model.appeared() }
