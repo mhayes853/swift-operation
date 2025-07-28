@@ -10,7 +10,7 @@ import SwiftUINavigation
 
 @MainActor
 @Observable
-public final class SettingsModel: HashableObject {
+public final class SettingsModel: HashableObject, Identifiable {
   @ObservationIgnored
   @Fetch(wrappedValue: SettingsRecord(), .singleRow(SettingsRecord.self)) private var _settings
 

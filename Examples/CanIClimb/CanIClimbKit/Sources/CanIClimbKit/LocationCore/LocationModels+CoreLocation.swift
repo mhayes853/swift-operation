@@ -8,6 +8,12 @@ extension LocationCoordinate2D {
   }
 }
 
+extension CLLocationCoordinate2D {
+  public init(coordinate: LocationCoordinate2D) {
+    self.init(latitude: coordinate.latitude, longitude: coordinate.longitude)
+  }
+}
+
 extension CLLocation {
   public convenience init(coordinate: LocationCoordinate2D) {
     self.init(latitude: coordinate.latitude, longitude: coordinate.longitude)

@@ -64,16 +64,9 @@ extension CanIClimbModel {
 }
 
 extension CanIClimbModel {
-  public func settingsInvoked() {
-    self.destination = .settings(SettingsModel())
-  }
-}
-
-extension CanIClimbModel {
   @CasePathable
   public enum Destination: Hashable, Sendable {
     case onboarding(OnboardingModel)
-    case settings(SettingsModel)
   }
 
   private func bind() {

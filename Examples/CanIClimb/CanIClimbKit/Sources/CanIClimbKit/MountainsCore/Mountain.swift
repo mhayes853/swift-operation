@@ -11,7 +11,7 @@ public struct Mountain: Hashable, Sendable, Codable, Identifiable {
   public var name: String
   public var displayDescription: String
   public var elevation: Measurement<UnitLength>
-  public var location: LocationCoordinate2D
+  public var coordinate: LocationCoordinate2D
   public var dateAdded: Date
   public var difficulty: ClimbingDifficulty
   public var imageURL: URL
@@ -21,7 +21,7 @@ public struct Mountain: Hashable, Sendable, Codable, Identifiable {
     name: String,
     displayDescription: String,
     elevation: Measurement<UnitLength>,
-    location: LocationCoordinate2D,
+    coordinate: LocationCoordinate2D,
     dateAdded: Date,
     difficulty: ClimbingDifficulty,
     imageURL: URL
@@ -30,7 +30,7 @@ public struct Mountain: Hashable, Sendable, Codable, Identifiable {
     self.name = name
     self.displayDescription = displayDescription
     self.elevation = elevation
-    self.location = location
+    self.coordinate = coordinate
     self.dateAdded = dateAdded
     self.difficulty = difficulty
     self.imageURL = imageURL
@@ -78,7 +78,7 @@ extension Mountain {
     name: "Mt. Stupid",
     displayDescription: "A mountain composed of stupidity.",
     elevation: Measurement(value: 20_000, unit: .feet),
-    location: LocationCoordinate2D(latitude: 45, longitude: 45),
+    coordinate: LocationCoordinate2D(latitude: 45, longitude: 45),
     dateAdded: Date(timeIntervalSince1970: 0),
     difficulty: ClimbingDifficulty(rawValue: 47)!,
     imageURL: URL(
@@ -92,7 +92,7 @@ extension Mountain {
     name: "Olympus Mons",
     displayDescription: "A cool mountain on Mars.",
     elevation: Measurement(value: 69_648.95, unit: .feet),
-    location: LocationCoordinate2D(latitude: 45, longitude: 45),
+    coordinate: LocationCoordinate2D(latitude: 45, longitude: 45),
     dateAdded: Date(timeIntervalSince1970: 0),
     difficulty: ClimbingDifficulty(rawValue: 100)!,
     imageURL: URL(

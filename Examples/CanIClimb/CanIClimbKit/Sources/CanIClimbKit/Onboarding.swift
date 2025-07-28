@@ -225,7 +225,7 @@ private struct WelcomeView: View {
         self.model.startInvoked()
       }
     }
-    .onboardingNavigationTitle("Welcome")
+    .inlineNavigationTitle("Welcome")
   }
 }
 
@@ -255,7 +255,7 @@ private struct DisclaimerView: View {
       .padding()
       .disabled(!self.model.hasAcceptedDisclaimer)
     }
-    .onboardingNavigationTitle("DISCLAIMER")
+    .inlineNavigationTitle("DISCLAIMER")
   }
 }
 
@@ -268,7 +268,7 @@ private struct GenderSelectionView: View {
     OnboardingOptionsPicker(title: "Select Your Gender", options: Array(HumanGender.allCases)) {
       self.model.genderSelected($0)
     }
-    .onboardingNavigationTitle("Gender")
+    .inlineNavigationTitle("Gender")
   }
 }
 
@@ -281,7 +281,7 @@ private struct AgeRangeSelectionView: View {
     OnboardingOptionsPicker(title: "Select Your Age", options: Array(HumanAgeRange.allCases)) {
       self.model.ageRangeSelected($0)
     }
-    .onboardingNavigationTitle("Age")
+    .inlineNavigationTitle("Age")
   }
 }
 
@@ -327,7 +327,7 @@ private struct HeightSelectionView: View {
       }
       .padding()
     }
-    .onboardingNavigationTitle("Height")
+    .inlineNavigationTitle("Height")
   }
 }
 
@@ -396,7 +396,7 @@ private struct WeightSelectionView: View {
       }
       .padding()
     }
-    .onboardingNavigationTitle("Weight")
+    .inlineNavigationTitle("Weight")
   }
 }
 
@@ -414,7 +414,7 @@ private struct ActivitiyLevelSelectionView: View {
     ) {
       self.model.activityLevelSelected($0)
     }
-    .onboardingNavigationTitle("Activity Level")
+    .inlineNavigationTitle("Activity Level")
   }
 }
 
@@ -430,7 +430,7 @@ private struct WorkoutFrequencySelectionView: View {
     ) {
       self.model.workoutFrequencySelected($0)
     }
-    .onboardingNavigationTitle("Exercise Frequency")
+    .inlineNavigationTitle("Exercise Frequency")
   }
 }
 
@@ -465,7 +465,7 @@ private struct ConnectHealthKitView: View {
         .buttonStyle(.plain)
       }
     }
-    .onboardingNavigationTitle("Connect HealthKit")
+    .inlineNavigationTitle("Connect HealthKit")
   }
 }
 
@@ -512,7 +512,7 @@ private struct ShareLocationView: View {
         }
       }
     }
-    .onboardingNavigationTitle("Location Sharing")
+    .inlineNavigationTitle("Location Sharing")
   }
 }
 
@@ -548,7 +548,7 @@ private struct SignInView: View {
         .buttonStyle(.plain)
       }
     }
-    .onboardingNavigationTitle("Sign In")
+    .inlineNavigationTitle("Sign In")
   }
 }
 
@@ -574,7 +574,7 @@ private struct WrapUpView: View {
         Task { await withErrorReporting { try await self.model.wrapUpInvoked() } }
       }
     }
-    .onboardingNavigationTitle("Wrap Up")
+    .inlineNavigationTitle("Wrap Up")
   }
 }
 
@@ -775,23 +775,6 @@ private struct OnboardingButton: View {
     .buttonStyle(.borderedProminent)
     .tint(.primary)
   }
-}
-
-// MARK: - Onboarding Navigation Title
-
-extension View {
-  fileprivate func onboardingNavigationTitle(_ title: LocalizedStringResource) -> some View {
-    self.navigationTitle(title)
-      #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-      #endif
-  }
-}
-
-// MARK: - Colors
-
-extension Color {
-  fileprivate static let secondaryBackground = Self.secondary.opacity(0.15)
 }
 
 #Preview {

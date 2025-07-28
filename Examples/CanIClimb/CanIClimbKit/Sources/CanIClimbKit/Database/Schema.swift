@@ -332,11 +332,20 @@ extension PlannedClimbAlarmRecord {
 // MARK: - Can I Climb Database
 
 public func canIClimbDatabase(url: URL? = nil) throws -> any DatabaseWriter {
+  if let url {
+    try FileManager.default.createDirectory(
+      at: url.deletingLastPathComponent(),
+      withIntermediateDirectories: true
+    )
+  }
   var configuration = Configuration()
   configuration.foreignKeysEnabled = isTesting
 
   let writer = try writer(for: url, configuration: configuration)
   var migrator = DatabaseMigrator()
+  #if DEBUG
+    migrator.eraseDatabaseOnSchemaChange = true
+  #endif
   migrator.registerV1()
   try migrator.migrate(writer)
   return writer
@@ -425,8 +434,7 @@ extension DatabaseMigrator {
           id BLOB PRIMARY KEY,
           mountainId BLOB NOT NULL,
           targetDate TIMESTAMP NOT NULL,
-          achievedDate TIMESTAMP,
-          FOREIGN KEY (mountainId) REFERENCES CachedMountains(id)
+          achievedDate TIMESTAMP
         );
         """,
         as: Void.self
@@ -507,10 +515,10 @@ extension DatabaseMigrator {
       try #sql(
         """
         CREATE TABLE IF NOT EXISTS PlannedClimbAlarms (
+          id BLOB NOT NULL,
           plannedClimbID BLOB NOT NULL,
           alarmId BLOB NOT NULL,
-          PRIMARY KEY (plannedClimbID, alarmId),
-          FOREIGN KEY (alarmId) REFERENCES ScheduleableAlarms(id)
+          PRIMARY KEY (plannedClimbID, alarmId)
         );
         """,
         as: Void.self
