@@ -1,6 +1,8 @@
 import Foundation
 import GRDB
 import StructuredQueriesGRDB
+import Tagged
+import UUIDV7
 
 // MARK: - Saving
 
@@ -34,7 +36,6 @@ extension Mountain {
   }
 
   public static func findAll(matching search: Search, in db: Database) throws -> [Self] {
-    // TODO: - Planned Search Query
     try CachedMountainRecord.all
       .leftJoin(CachedPlannedClimbRecord.all) { $0.id.eq($1.mountainId) }
       .where {
@@ -52,6 +53,20 @@ extension Mountain {
       .fetchAll(db)
       .map(Mountain.init(cached:))
   }
+}
+
+// MARK: - QueryBindable
+
+extension Mountain.ClimbingDifficulty: QueryBindable {}
+
+// MARK: - IDRepresentation
+
+extension Mountain {
+  public typealias IDRepresentation = Tagged<Self, UUIDV7.BytesRepresentation>
+}
+
+extension Mountain.PlannedClimb {
+  public typealias IDRepresentation = Tagged<Self, UUIDV7.BytesRepresentation>
 }
 
 // MARK: - Conversions
