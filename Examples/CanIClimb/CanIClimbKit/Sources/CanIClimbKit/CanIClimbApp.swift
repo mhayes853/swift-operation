@@ -33,12 +33,14 @@ public final class CanIClimbModel {
 
   private var token: NotificationCenter.ObservationToken?
 
+  public let mountainsList = MountainsListModel()
+
   public init() {}
 }
 
 extension CanIClimbModel {
   public func appeared() async throws {
-    try await self.alarmSyncEngine.start()
+    try await self.alarmSyncEngine?.start()
     self.token = self.center.addObserver(for: DeviceShakeMessage.self) { [weak self] _ in
       self?.devTools = self?.devTools ?? QueryDevToolsModel()
     }
@@ -57,7 +59,7 @@ extension CanIClimbModel {
   public func disappeared() async {
     guard let token else { return }
     self.center.removeObserver(token)
-    await self.alarmSyncEngine.stop()
+    await self.alarmSyncEngine?.stop()
   }
 }
 
@@ -119,7 +121,7 @@ public struct CanIClimbView: View {
   }
 
   public var body: some View {
-    Text("TODO")
+    MountainsListView(model: self.model.mountainsList)
       .observeQueryAlerts()
       .task { try? await self.model.appeared() }
       .onDisappear { Task { await self.model.disappeared() } }

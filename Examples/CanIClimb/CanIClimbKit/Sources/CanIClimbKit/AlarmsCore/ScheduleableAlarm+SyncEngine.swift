@@ -112,9 +112,13 @@ extension ScheduleableAlarm.SyncEngine {
 // MARK: - DependencyKey
 
 extension ScheduleableAlarm.SyncEngine: DependencyKey {
-  public static var liveValue: ScheduleableAlarm.SyncEngine {
-    @Dependency(\.defaultDatabase) var database
-    @Dependency(ScheduleableAlarm.StoreKey.self) var store
-    return ScheduleableAlarm.SyncEngine(database: database, store: store)
+  public static var liveValue: ScheduleableAlarm.SyncEngine? {
+    #if canImport(AlarmKit)
+      @Dependency(\.defaultDatabase) var database
+      @Dependency(ScheduleableAlarm.StoreKey.self) var store
+      return ScheduleableAlarm.SyncEngine(database: database, store: store)
+    #else
+      return nil
+    #endif
   }
 }
