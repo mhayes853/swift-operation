@@ -45,6 +45,10 @@ extension Mountain.SearchRequest {
   public static func recommended(page: Int, text: String = "") -> Self {
     Self(search: Mountain.Search(text: text), page: page)
   }
+
+  public static func planned(page: Int, text: String = "") -> Self {
+    Self(search: Mountain.Search(text: text, category: .planned), page: page)
+  }
 }
 
 // MARK: - Searcher
@@ -74,7 +78,7 @@ extension Mountain {
   public final class MockSearcher: Searcher {
     public var results = [SearchRequest: Result<SearchResult, any Error>]()
 
-    public init() {}
+    public nonisolated init() {}
 
     public func searchMountains(
       by request: SearchRequest

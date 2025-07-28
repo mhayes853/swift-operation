@@ -86,4 +86,18 @@ extension Mountain {
         "https://paragliding.ch/wp-content/uploads/2024/03/Bildschirmfoto-2024-03-07-um-22.18.44.png"
     )!
   )
+
+  public static let mock2 = Self(
+    id: ID(),
+    name: "Olympus Mons",
+    displayDescription: "A cool mountain on Mars.",
+    elevation: Measurement(value: 69_648.95, unit: .feet),
+    location: LocationCoordinate2D(latitude: 45, longitude: 45),
+    dateAdded: Date(timeIntervalSince1970: 0),
+    difficulty: ClimbingDifficulty(rawValue: 100)!,
+    imageURL: URL(
+      string:
+        "https://lowell.edu/wp-content/uploads/2020/09/maxresdefault-1024x576.jpg"
+    )!
+  )
 }

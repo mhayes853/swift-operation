@@ -1,11 +1,18 @@
 import CanIClimbKit
 import CustomDump
 import Dependencies
+import DependenciesTestSupport
 import Testing
 
 extension DependenciesTestSuite {
   @MainActor
-  @Suite("CanIClimbModel tests")
+  @Suite(
+    "CanIClimbModel tests",
+    .dependencies {
+      $0.continuousClock = ImmediateClock()
+      $0[Mountain.SearcherKey.self] = Mountain.MockSearcher()
+    }
+  )
   struct CanIClimbModelTests {
     @Test("Presents Onboarding Flow When Not Completed")
     func presentOnboardingFlowWhenNotCompleted() async throws {
