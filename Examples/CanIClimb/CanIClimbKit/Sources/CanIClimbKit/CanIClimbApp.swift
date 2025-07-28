@@ -120,7 +120,7 @@ public struct CanIClimbView: View {
     Group {
       if let devToolsModel = self.model.devTools {
         QueryDevToolsView(model: devToolsModel)
-          .transition(.move(edge: .bottom))
+          .transition(.opacity)
       } else {
         MountainsListView(model: self.model.mountainsList) { content in
           content
@@ -135,7 +135,7 @@ public struct CanIClimbView: View {
               }
             #endif
         }
-        .transition(.move(edge: .bottom))
+        .transition(.opacity)
       }
     }
     .animation(.easeInOut, value: self.model.devTools)
