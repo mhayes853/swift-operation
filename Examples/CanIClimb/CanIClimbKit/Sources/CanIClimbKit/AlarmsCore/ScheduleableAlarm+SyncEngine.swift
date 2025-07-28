@@ -17,7 +17,7 @@ extension ScheduleableAlarm {
     public init(
       database: any DatabaseWriter,
       store: any Store = ScheduleableAlarm.defaultStore,
-      logger: Logger = Logger(label: "caniclimb.scheduleablealarm.observer")
+      logger: Logger = Logger(label: "caniclimb.scheduleablealarm.syncengine")
     ) {
       self.database = database
       self.store = store
@@ -49,7 +49,7 @@ extension ScheduleableAlarm.SyncEngine {
 extension ScheduleableAlarm.SyncEngine {
   public func start() async throws {
     try await self.removeCancelledAlarmsFromDatabase()
-    self.logger.info("Performed initial sync with Alarm Store.")
+    self.logger.info("Removed cancelled alarms pulled from alarm store.")
 
     self.task?.cancel()
 

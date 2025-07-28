@@ -121,7 +121,7 @@ public struct CanIClimbView: View {
         }
         #if os(iOS)
           .fullScreenCover(item: self.$model.destination.onboarding) { model in
-            OnboardingView(model: model)
+            OnboardingView(model: model).background(.background)
           }
           .shakeDetection()
         #else
@@ -131,7 +131,9 @@ public struct CanIClimbView: View {
         #endif
     }
     .observeQueryAlerts()
-    .task { try? await self.model.appeared() }
+    .task {
+      await withErrorReporting { try await self.model.appeared() }
+    }
     .onDisappear { Task { await self.model.disappeared() } }
   }
 }

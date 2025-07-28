@@ -193,7 +193,7 @@ extension SettingsRecord.TemperaturePreference: CustomLocalizedStringResourceCon
 
 // MARK: - MountainPlannedClimbRecord
 
-@Table("PlannedClimbs")
+@Table("CachedPlannedClimbs")
 public struct CachedPlannedClimbRecord: Hashable, Sendable, Codable, Identifiable {
   @Column(as: Mountain.PlannedClimb.IDRepresentation.self)
   public let id: Mountain.PlannedClimb.ID
@@ -222,10 +222,7 @@ public struct CachedPlannedClimbRecord: Hashable, Sendable, Codable, Identifiabl
 @Table("QueryAnalysis")
 public struct QueryAnalysisRecord: Hashable, Sendable, Identifiable {
   public let id: QueryAnalysis.ID
-
-  @Column(as: ApplicationLaunch.IDRepresentation.self)
   public let launchId: ApplicationLaunch.ID
-
   public var queryRetryAttempt: Int
   public var queryRuntimeDuration: TimeInterval
   public var queryName: QueryAnalysis.QueryName
@@ -262,9 +259,7 @@ public struct QueryAnalysisRecord: Hashable, Sendable, Identifiable {
 
 @Table("ApplicationLaunches")
 public struct ApplicationLaunchRecord: Hashable, Sendable, Identifiable {
-  @Column(as: ApplicationLaunch.IDRepresentation.self)
   public let id: ApplicationLaunch.ID
-
   public var localizedDeviceName: String
 
   public init(id: ApplicationLaunch.ID, localizedDeviceName: String) {
@@ -277,14 +272,12 @@ public struct ApplicationLaunchRecord: Hashable, Sendable, Identifiable {
 
 @Table("ScheduleableAlarms")
 public struct ScheduleableAlarmRecord: Equatable, Sendable, Identifiable {
-  @Column(as: ScheduleableAlarm.IDRepresentation.self)
   public let id: ScheduleableAlarm.ID
 
   @Column(as: LocalizedStringResource.JSONRepresentation.self)
   public var title: LocalizedStringResource
 
   public var date: Date
-
   public var isScheduled: Bool
 
   public init(
@@ -304,22 +297,20 @@ public struct ScheduleableAlarmRecord: Equatable, Sendable, Identifiable {
 
 @Table("PlannedClimbAlarms")
 public struct PlannedClimbAlarmRecord: Hashable, Sendable, Codable {
-  @Column(as: IDRepresentation.self)
   public var id: ID
 
   @Column(as: Mountain.PlannedClimb.IDRepresentation.self)
-  public var plannedClimbID: Mountain.PlannedClimb.ID
+  public var plannedClimbId: Mountain.PlannedClimb.ID
 
-  @Column(as: ScheduleableAlarm.IDRepresentation.self)
   public var alarmId: ScheduleableAlarm.ID
 
   public init(
     id: ID,
-    plannedClimbID: Mountain.PlannedClimb.ID,
+    plannedClimbId: Mountain.PlannedClimb.ID,
     alarmId: ScheduleableAlarm.ID
   ) {
     self.id = id
-    self.plannedClimbID = plannedClimbID
+    self.plannedClimbId = plannedClimbId
     self.alarmId = alarmId
   }
 }
@@ -431,7 +422,7 @@ extension DatabaseMigrator {
     self.registerMigration("create mountain climb goals table") { db in
       try #sql(
         """
-        CREATE TABLE IF NOT EXISTS PlannedClimbs (
+        CREATE TABLE IF NOT EXISTS CachedPlannedClimbs (
           id BLOB PRIMARY KEY,
           mountainId BLOB NOT NULL,
           targetDate TIMESTAMP NOT NULL,
@@ -472,7 +463,7 @@ extension DatabaseMigrator {
       try #sql(
         """
         CREATE TABLE IF NOT EXISTS QueryAnalysis (
-          id BLOB PRIMARY KEY,
+          id TEXT PRIMARY KEY,
           launchId BLOB NOT NULL,
           queryRetryAttempt INTEGER NOT NULL,
           queryRuntimeDuration REAL NOT NULL,
@@ -490,7 +481,7 @@ extension DatabaseMigrator {
       try #sql(
         """
         CREATE TABLE IF NOT EXISTS ApplicationLaunches (
-          id BLOB PRIMARY KEY,
+          id TEXT PRIMARY KEY,
           localizedDeviceName TEXT NOT NULL
         );
         """,
@@ -502,7 +493,7 @@ extension DatabaseMigrator {
       try #sql(
         """
         CREATE TABLE IF NOT EXISTS ScheduleableAlarms (
-          id BLOB PRIMARY KEY,
+          id TEXT PRIMARY KEY,
           title TEXT NOT NULL,
           date REAL NOT NULL,
           isScheduled BOOLEAN NOT NULL
@@ -516,9 +507,9 @@ extension DatabaseMigrator {
       try #sql(
         """
         CREATE TABLE IF NOT EXISTS PlannedClimbAlarms (
-          id BLOB NOT NULL,
-          plannedClimbID BLOB NOT NULL,
-          alarmId BLOB NOT NULL,
+          id TEXT NOT NULL,
+          plannedClimbId BLOB NOT NULL,
+          alarmId TEXT NOT NULL,
           PRIMARY KEY (plannedClimbID, alarmId)
         );
         """,
@@ -529,4 +520,4 @@ extension DatabaseMigrator {
   }
 }
 
-private let singleRowTablePrimaryKeyColumnSQL = "id BLOB PRIMARY KEY CHECK (id = '\(UUID.nil)')"
+private let singleRowTablePrimaryKeyColumnSQL = "id TEXT PRIMARY KEY CHECK (id = '\(UUID.nil)')"

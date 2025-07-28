@@ -1,15 +1,3 @@
-import Foundation
-import StructuredQueriesGRDB
-import Tagged
-
-// MARK: - IDRepresentation
-
-extension ScheduleableAlarm {
-  public typealias IDRepresentation = Tagged<ScheduleableAlarm, UUID.BytesRepresentation>
-}
-
-// MARK: - Conversions
-
 extension ScheduleableAlarm {
   public init(record: ScheduleableAlarmRecord) {
     self.init(id: record.id, title: record.title, date: record.date)
