@@ -87,11 +87,9 @@ public struct SettingsView: View {
           UserSettingsView(model: model)
         }
       }
+      .inlineNavigationTitle("Settings")
       .navigationTitle("Settings")
       .dismissable()
-      #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-      #endif
     }
   }
 }
@@ -109,6 +107,7 @@ private struct UserProfileSectionView: View {
         NavigationLink(value: SettingsModel.Path.userSettings(UserSettingsModel(user: user))) {
           UserCardView(user: user)
         }
+
       case .result(.failure(let error)) where error is User.UnauthorizedError:
         SignInButton(label: .signIn, model: self.model)
 

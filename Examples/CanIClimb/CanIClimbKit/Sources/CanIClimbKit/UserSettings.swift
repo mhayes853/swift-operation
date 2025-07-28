@@ -181,10 +181,7 @@ public struct UserSettingsView: View {
       }
       .disabled(self.model.loadingType != nil)
     }
-    .navigationTitle("Your Account")
-    #if os(iOS)
-      .navigationBarTitleDisplayMode(.inline)
-    #endif
+    .inlineNavigationTitle("Your Account")
     .alert(self.$model.destination.alert) { action in
       Task { try await self.model.alert(action: action) }
     }

@@ -55,7 +55,6 @@ extension MountainsListModel {
 extension MountainsListModel {
   public func settingsInvoked() {
     self.destination = .settings(SettingsModel())
-    print("settings")
   }
 }
 
@@ -67,32 +66,35 @@ extension MountainsListModel {
 
 // MARK: - MountainsListView
 
-public struct MountainsListView: View {
+public struct MountainsListView<SheetContent: View>: View {
   @Bindable private var model: MountainsListModel
-  @State private var selectedDetent = PresentationDetent.height(300)
+  private let sheetContent: (AnyView) -> SheetContent
+  @State private var selectedDetent = PresentationDetent.medium
 
-  public init(model: MountainsListModel) {
+  public init(model: MountainsListModel, sheetContent: @escaping (AnyView) -> SheetContent) {
     self.model = model
+    self.sheetContent = sheetContent
   }
 
   public var body: some View {
     MountainsListMapView(model: self.model)
-      .sheet(item: self.$model.destination.settings) { model in
-        NavigationStack {
-          SettingsView(model: model)
-        }
-      }
       .sheet(isPresented: .constant(true)) {
-        MountainsListSheetContentView(
+        let content = MountainsListSheetContentView(
           model: self.model,
           isFullScreen: self.selectedDetent == .large
         )
         .presentationDetents(
-          [.height(300), .medium, .large],
+          [.height(200), .medium, .large],
           selection: self.$selectedDetent.animation()
         )
         .interactiveDismissDisabled()
         .presentationBackgroundInteraction(.enabled)
+        .sheet(item: self.$model.destination.settings) { model in
+          NavigationStack {
+            SettingsView(model: model)
+          }
+        }
+        self.sheetContent(AnyView(erasing: content))
       }
   }
 }
@@ -214,5 +216,5 @@ private struct MountainsListSearchFieldView: View {
   }
 
   let model = MountainsListModel()
-  MountainsListView(model: model)
+  MountainsListView(model: model) { $0 }
 }

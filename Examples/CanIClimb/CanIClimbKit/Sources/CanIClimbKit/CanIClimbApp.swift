@@ -114,22 +114,24 @@ public struct CanIClimbView: View {
   }
 
   public var body: some View {
-    MountainsListView(model: self.model.mountainsList)
-      .observeQueryAlerts()
-      .task { try? await self.model.appeared() }
-      .onDisappear { Task { await self.model.disappeared() } }
-      .sheet(item: self.$model.devTools) { model in
-        QueryDevToolsView(model: model)
-      }
-      #if os(iOS)
-        .shakeDetection()
-        .fullScreenCover(item: self.$model.destination.onboarding) { model in
-          OnboardingView(model: model)
+    MountainsListView(model: self.model.mountainsList) { content in
+      content
+        .sheet(item: self.$model.devTools) { model in
+          QueryDevToolsView(model: model)
         }
-      #else
-        .sheet(item: self.$model.destination.onboarding) { model in
-          OnboardingView(model: model)
-        }
-      #endif
+        #if os(iOS)
+          .fullScreenCover(item: self.$model.destination.onboarding) { model in
+            OnboardingView(model: model)
+          }
+          .shakeDetection()
+        #else
+          .sheet(item: self.$model.destination.onboarding) { model in
+            OnboardingView(model: model)
+          }
+        #endif
+    }
+    .observeQueryAlerts()
+    .task { try? await self.model.appeared() }
+    .onDisappear { Task { await self.model.disappeared() } }
   }
 }
