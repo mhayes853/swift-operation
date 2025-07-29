@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 import Tagged
 import UUIDV7
 
@@ -69,6 +70,30 @@ extension Mountain.ClimbingDifficulty {
     case 50..<75: .difficult
     case 75..<90: .veryDifficult
     default: .extreme
+    }
+  }
+}
+
+extension Mountain.ClimbingDifficulty.Rating: CustomLocalizedStringResourceConvertible {
+  public var localizedStringResource: LocalizedStringResource {
+    switch self {
+    case .easy: "Easy"
+    case .moderate: "Moderate"
+    case .difficult: "Difficult"
+    case .veryDifficult: "Very Difficult"
+    case .extreme: "Extreme"
+    }
+  }
+}
+
+extension Color {
+  public init(rating: Mountain.ClimbingDifficulty.Rating) {
+    switch rating {
+    case .easy: self = .blue
+    case .moderate: self = .green
+    case .difficult: self = .yellow
+    case .veryDifficult: self = .orange
+    case .extreme: self = .red
     }
   }
 }
