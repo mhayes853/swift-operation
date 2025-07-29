@@ -54,7 +54,7 @@ private struct CardContentView: View {
   }
   
   var body: some View {
-    VStack(alignment: .leading) {
+    let mountainContent = VStack(alignment: .leading) {
       Text(self.mountain.name)
         .lineLimit(2)
         .font(.title3.bold())
@@ -75,10 +75,11 @@ private struct CardContentView: View {
             .formatted(.measurement(width: .abbreviated, usage: .asProvided))
         )
       }
+      .font(.footnote)
     }
     .frame(maxWidth: .infinity, alignment: .leading)
 
-    ImageDataView(url: self.mountain.imageURL) { status in
+    let image = ImageDataView(url: self.mountain.imageURL) { status in
       switch status {
       case .result(.success(let image)):
         image
@@ -94,6 +95,14 @@ private struct CardContentView: View {
         }
         .frame(maxWidth: self.imageSize.width, maxHeight: self.imageSize.height)
       }
+    }
+    
+    if self.dynamicTypeSize.isAccessibilitySize {
+      image
+      mountainContent
+    } else {
+      mountainContent
+      image
     }
   }
 }
