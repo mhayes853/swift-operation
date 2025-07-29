@@ -1,6 +1,7 @@
 import Dependencies
 import MapKit
 import Observation
+import Sharing
 import SharingQuery
 import SwiftUI
 import SwiftUINavigation
@@ -94,7 +95,9 @@ public struct MountainsListView<SheetContent: View>: View {
             SettingsView(model: model)
           }
         }
-        self.sheetContent(AnyView(erasing: content))
+        NavigationStack {
+          self.sheetContent(AnyView(erasing: content))
+        }
       }
   }
 }
@@ -126,35 +129,116 @@ private struct MountainsListSheetContentView: View {
   @Bindable var model: MountainsListModel
   let isFullScreen: Bool
 
-  @ScaledMetric private var profileHeight = 45
+  @State private var hasScrolled = false
 
   var body: some View {
     ScrollView {
-      LazyVStack {
-        HStack(alignment: .center) {
-          MountainsListSearchFieldView(
-            text: self.$model.searchText,
-            isFullScreen: self.isFullScreen
-          )
-
-          Button {
-            self.model.settingsInvoked()
-          } label: {
-            ProfileCircleView(height: self.profileHeight)
-              .accessibilityLabel("Profile")
+      LazyVStack(spacing: 15, pinnedViews: [.sectionHeaders]) {
+        Section {
+          ForEach(self.model.mountains) { page in
+            ForEach(page.value.mountains) { mountain in
+              Button {
+                self.model.mountainDetailInvoked(for: mountain.id)
+              } label: {
+                MountainCardView(mountain: mountain)
+              }
+              .buttonStyle(.plain)
+            }
           }
-          .buttonStyle(.plain)
+          .padding(.horizontal)
+          MountainsListSheetLoadingView(model: self.model)
+            .padding()
+        } header: {
+          MountainsListSheetHeaderView(model: self.model, isFullScreen: self.isFullScreen)
+            .padding()
+            .background(.regularMaterial.opacity(self.hasScrolled ? 1 : 0))
         }
-        .padding(.vertical)
-
-        Picker("Category", selection: self.$model.category) {
-          Text("Recommended").tag(Mountain.Search.Category.recommended)
-          Text("Planned Climbs").tag(Mountain.Search.Category.planned)
-        }
-        .pickerStyle(.segmented)
       }
-      .padding()
     }
+    .onScrollGeometryChange(for: Bool.self) { geometry in
+      geometry.contentOffset.y > geometry.contentInsets.top
+    } action: { _, hasScrolled in
+      withAnimation {
+        self.hasScrolled = hasScrolled
+      }
+    }
+  }
+}
+
+// MARK: - MountainsListSheetHeaderView
+
+private struct MountainsListSheetHeaderView: View {
+  @Bindable var model: MountainsListModel
+  let isFullScreen: Bool
+
+  @ScaledMetric private var profileHeight = 45
+
+  var body: some View {
+    VStack {
+      HStack(alignment: .center) {
+        MountainsListSearchFieldView(
+          text: self.$model.searchText,
+          isFullScreen: self.isFullScreen
+        )
+
+        Button {
+          self.model.settingsInvoked()
+        } label: {
+          ProfileCircleView(height: self.profileHeight)
+            .accessibilityLabel("Profile")
+        }
+        .buttonStyle(.plain)
+      }
+      .padding(.vertical)
+
+      Picker("Category", selection: self.$model.category) {
+        Text("Recommended").tag(Mountain.Search.Category.recommended)
+        Text("Planned Climbs").tag(Mountain.Search.Category.planned)
+      }
+      .pickerStyle(.segmented)
+    }
+  }
+}
+
+// MARK: - MountainsListSheetLoadingView
+
+private struct MountainsListSheetLoadingView: View {
+  @Environment(\.colorScheme) private var colorScheme
+
+  @SharedReader(.networkStatus) private var networkStatus = .connected
+
+  let model: MountainsListModel
+
+  var body: some View {
+    Group {
+      if self.model.$mountains.isLoading {
+        SpinnerView()
+      } else if let error = self.model.$mountains.error {
+        VStack {
+          Text("An Error Occurred")
+            .font(.title3.bold())
+          if self.networkStatus != .connected {
+            Text("Check your internet connection and try again.")
+          } else {
+            Text(error.localizedDescription)
+          }
+          Button("Retry") {
+            Task { try await self.model.$mountains.fetchNextPage() }
+          }
+          .bold()
+          .buttonStyle(.borderedProminent)
+          .tint(self.colorScheme == .light ? .primary : .secondaryBackground)
+        }
+      } else if !self.model.$mountains.hasNextPage {
+        Text("You've reached the end of the list.")
+      } else {
+        SpinnerView()
+          .onAppear {
+            Task { try await self.model.$mountains.fetchNextPage() }
+          }
+      }
+    }
+    .frame(maxWidth: .infinity, alignment: .center)
   }
 }
 

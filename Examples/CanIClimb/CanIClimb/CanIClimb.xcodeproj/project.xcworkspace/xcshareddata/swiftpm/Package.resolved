@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/groue/GRDB.swift",
       "state" : {
-        "revision" : "a5a1be26b4513dc7ec360eb56bc08a345bac6649",
-        "version" : "7.5.0"
+        "revision" : "8ba1bc9a96afc731a000fd4136dd13a5a46297bd",
+        "version" : "7.6.1"
       }
     },
     {
@@ -29,12 +29,21 @@
       }
     },
     {
+      "identity" : "keychain-swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/evgenyneu/keychain-swift",
+      "state" : {
+        "revision" : "5e1b02b6a9dac2a759a1d5dbc175c86bd192a608",
+        "version" : "24.0.0"
+      }
+    },
+    {
       "identity" : "sharing-grdb-icloud",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/sharing-grdb-icloud",
       "state" : {
         "branch" : "cloudkit",
-        "revision" : "3020379a2035b10a77cf62c22fe3e92429acdd6e"
+        "revision" : "bf455f74d56aeedc3dba154772e37d1bbce7dec4"
       }
     },
     {
@@ -69,8 +78,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-collections",
       "state" : {
-        "revision" : "c1805596154bb3a265fd91b8ac0c4433b4348fb0",
-        "version" : "1.2.0"
+        "revision" : "8c0c0a8b49e080e54e5e328cc552821ff07cd341",
+        "version" : "1.2.1"
       }
     },
     {
@@ -114,8 +123,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-log",
       "state" : {
-        "revision" : "3d8596ed08bd13520157f0355e35caed215ffbfa",
-        "version" : "1.6.3"
+        "revision" : "ce592ae52f982c847a4efc0dd881cc9eb32d29f2",
+        "version" : "1.6.4"
       }
     },
     {
@@ -124,7 +133,7 @@
       "location" : "https://github.com/pointfreeco/swift-navigation",
       "state" : {
         "revision" : "ae208d1a5cf33aee1d43734ea780a09ada6e2a21",
-        "version" : "2.3.1"
+        "version" : "2.3.2"
       }
     },
     {
@@ -142,7 +151,7 @@
       "location" : "https://github.com/mhayes853/swift-query",
       "state" : {
         "branch" : "main",
-        "revision" : "428aa1c5e918521bc3a3fbada31bff1d6037e29a"
+        "revision" : "9133549a71d3df9c3242ac64f7af56458622eb42"
       }
     },
     {
@@ -159,8 +168,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-snapshot-testing",
       "state" : {
-        "revision" : "37230a37e83f1b7023be08e1b1a2603fcb1567fb",
-        "version" : "1.18.4"
+        "revision" : "d7e40607dcd6bc26543f5d9433103f06e0b28f8f",
+        "version" : "1.18.6"
       }
     },
     {
@@ -169,7 +178,7 @@
       "location" : "https://github.com/pointfreeco/swift-structured-queries",
       "state" : {
         "branch" : "main",
-        "revision" : "83e47762c29ea3aa9cef256e506086bca22488c3"
+        "revision" : "a2a7c06f5b3c60811558bd9552fbbbd0cc027d91"
       }
     },
     {
@@ -191,12 +200,21 @@
       }
     },
     {
+      "identity" : "swift-uuidv7",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/mhayes853/swift-uuidv7",
+      "state" : {
+        "branch" : "sharing-grdb-icloud",
+        "revision" : "fcbf13e158effede88f8ca2d1c6d215618199dfe"
+      }
+    },
+    {
       "identity" : "xctest-dynamic-overlay",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/xctest-dynamic-overlay",
       "state" : {
-        "revision" : "39de59b2d47f7ef3ca88a039dff3084688fe27f4",
-        "version" : "1.5.2"
+        "revision" : "23e3442166b5122f73f9e3e622cd1e4bafeab3b7",
+        "version" : "1.6.0"
       }
     }
   ],

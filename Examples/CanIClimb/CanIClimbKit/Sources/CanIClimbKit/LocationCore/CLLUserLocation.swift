@@ -5,12 +5,10 @@ import CoreLocation
 @MainActor
 public final class CLUserLocation: NSObject {
   private var manager: CLLocationManager
-  private var permissionContinutations = [
-    UnsafeContinuation<Bool, Never>
-  ]()
+  private var permissionContinutations = [UnsafeContinuation<Bool, Never>]()
   private var coordinateContinuations = [UnsafeContinuation<LocationReading, Error>]()
 
-  override init() {
+  override public init() {
     self.manager = CLLocationManager()
     super.init()
     self.manager.delegate = self

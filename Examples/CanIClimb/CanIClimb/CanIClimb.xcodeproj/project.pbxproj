@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		165C38702E1481F3003E775D /* CanIClimbKit in Frameworks */ = {isa = PBXBuildFile; productRef = 165C386F2E1481F3003E775D /* CanIClimbKit */; };
+		16B575DD2E3955A800113AC1 /* CanIClimbKit in Frameworks */ = {isa = PBXBuildFile; productRef = 16B575DC2E3955A800113AC1 /* CanIClimbKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -28,12 +29,18 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		16B575D02E39559C00113AC1 /* CanIClimbPreview.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CanIClimbPreview.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		16E3E2EE2E1479B30057F981 /* CanIClimb.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CanIClimb.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		16E3E2FB2E1479B40057F981 /* CanIClimbTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CanIClimbTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		16E3E3052E1479B40057F981 /* CanIClimbUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CanIClimbUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		16B575D12E39559C00113AC1 /* CanIClimbPreview */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = CanIClimbPreview;
+			sourceTree = "<group>";
+		};
 		16E3E2F02E1479B30057F981 /* CanIClimb */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = CanIClimb;
@@ -52,6 +59,14 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		16B575CD2E39559C00113AC1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				16B575DD2E3955A800113AC1 /* CanIClimbKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		16E3E2EB2E1479B30057F981 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -77,12 +92,21 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		16B575DB2E3955A800113AC1 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		16E3E2E52E1479B30057F981 = {
 			isa = PBXGroup;
 			children = (
 				16E3E2F02E1479B30057F981 /* CanIClimb */,
 				16E3E2FE2E1479B40057F981 /* CanIClimbTests */,
 				16E3E3082E1479B40057F981 /* CanIClimbUITests */,
+				16B575D12E39559C00113AC1 /* CanIClimbPreview */,
+				16B575DB2E3955A800113AC1 /* Frameworks */,
 				16E3E2EF2E1479B30057F981 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -93,6 +117,7 @@
 				16E3E2EE2E1479B30057F981 /* CanIClimb.app */,
 				16E3E2FB2E1479B40057F981 /* CanIClimbTests.xctest */,
 				16E3E3052E1479B40057F981 /* CanIClimbUITests.xctest */,
+				16B575D02E39559C00113AC1 /* CanIClimbPreview.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -100,6 +125,29 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		16B575CF2E39559C00113AC1 /* CanIClimbPreview */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 16B575DA2E39559E00113AC1 /* Build configuration list for PBXNativeTarget "CanIClimbPreview" */;
+			buildPhases = (
+				16B575CC2E39559C00113AC1 /* Sources */,
+				16B575CD2E39559C00113AC1 /* Frameworks */,
+				16B575CE2E39559C00113AC1 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				16B575D12E39559C00113AC1 /* CanIClimbPreview */,
+			);
+			name = CanIClimbPreview;
+			packageProductDependencies = (
+				16B575DC2E3955A800113AC1 /* CanIClimbKit */,
+			);
+			productName = CanIClimbPreview;
+			productReference = 16B575D02E39559C00113AC1 /* CanIClimbPreview.app */;
+			productType = "com.apple.product-type.application";
+		};
 		16E3E2ED2E1479B30057F981 /* CanIClimb */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 16E3E30F2E1479B40057F981 /* Build configuration list for PBXNativeTarget "CanIClimb" */;
@@ -179,6 +227,9 @@
 				LastSwiftUpdateCheck = 2600;
 				LastUpgradeCheck = 2600;
 				TargetAttributes = {
+					16B575CF2E39559C00113AC1 = {
+						CreatedOnToolsVersion = 26.0;
+					};
 					16E3E2ED2E1479B30057F981 = {
 						CreatedOnToolsVersion = 26.0;
 					};
@@ -212,11 +263,19 @@
 				16E3E2ED2E1479B30057F981 /* CanIClimb */,
 				16E3E2FA2E1479B40057F981 /* CanIClimbTests */,
 				16E3E3042E1479B40057F981 /* CanIClimbUITests */,
+				16B575CF2E39559C00113AC1 /* CanIClimbPreview */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		16B575CE2E39559C00113AC1 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		16E3E2EC2E1479B30057F981 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -241,6 +300,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		16B575CC2E39559C00113AC1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		16E3E2EA2E1479B30057F981 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -278,6 +344,70 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		16B575D82E39559E00113AC1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = J3HVSYHJRQ;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = day.onetask.CanIClimbPreview;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		16B575D92E39559E00113AC1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = J3HVSYHJRQ;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = day.onetask.CanIClimbPreview;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		16E3E30D2E1479B40057F981 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -546,6 +676,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		16B575DA2E39559E00113AC1 /* Build configuration list for PBXNativeTarget "CanIClimbPreview" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				16B575D82E39559E00113AC1 /* Debug */,
+				16B575D92E39559E00113AC1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		16E3E2E92E1479B30057F981 /* Build configuration list for PBXProject "CanIClimb" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -594,6 +733,11 @@
 /* Begin XCSwiftPackageProductDependency section */
 		165C386F2E1481F3003E775D /* CanIClimbKit */ = {
 			isa = XCSwiftPackageProductDependency;
+			productName = CanIClimbKit;
+		};
+		16B575DC2E3955A800113AC1 /* CanIClimbKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 165C386E2E1481F3003E775D /* XCLocalSwiftPackageReference "../CanIClimbKit" */;
 			productName = CanIClimbKit;
 		};
 /* End XCSwiftPackageProductDependency section */
