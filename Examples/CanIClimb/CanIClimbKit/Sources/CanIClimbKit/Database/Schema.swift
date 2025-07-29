@@ -84,6 +84,10 @@ public struct CachedMountainRecord: Hashable, Identifiable, Sendable {
   public var elevationMeters: Double
   public var latitude: Double
   public var longitude: Double
+
+  @Column(as: Mountain.LocationName.JSONRepresentation.self)
+  public var locationName: Mountain.LocationName
+
   public var dateAdded: Date
   public var imageURL: URL
   public var difficulty: Mountain.ClimbingDifficulty
@@ -95,6 +99,7 @@ public struct CachedMountainRecord: Hashable, Identifiable, Sendable {
     elevationMeters: Double,
     latitude: Double,
     longitude: Double,
+    locationName: Mountain.LocationName,
     dateAdded: Date,
     imageURL: URL,
     difficulty: Mountain.ClimbingDifficulty
@@ -105,6 +110,7 @@ public struct CachedMountainRecord: Hashable, Identifiable, Sendable {
     self.elevationMeters = elevationMeters
     self.latitude = latitude
     self.longitude = longitude
+    self.locationName = locationName
     self.dateAdded = dateAdded
     self.imageURL = imageURL
     self.difficulty = difficulty
@@ -397,6 +403,7 @@ extension DatabaseMigrator {
           elevationMeters DOUBLE NOT NULL,
           latitude REAL NOT NULL,
           longitude REAL NOT NULL,
+          locationName TEXT NOT NULL,
           difficulty DOUBLE NOT NULL,
           imageURL TEXT NOT NULL,
           dateAdded TIMESTAMP NOT NULL

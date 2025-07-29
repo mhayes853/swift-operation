@@ -79,6 +79,7 @@ extension Mountain {
       displayDescription: record.displayDescription,
       elevation: Measurement(value: record.elevationMeters, unit: .meters),
       coordinate: LocationCoordinate2D(latitude: record.latitude, longitude: record.longitude),
+      locationName: record.locationName,
       dateAdded: record.dateAdded,
       difficulty: record.difficulty,
       imageURL: record.imageURL
@@ -95,6 +96,7 @@ extension CachedMountainRecord {
       elevationMeters: mountain.elevation.converted(to: .meters).value,
       latitude: mountain.coordinate.latitude,
       longitude: mountain.coordinate.longitude,
+      locationName: mountain.locationName,
       dateAdded: mountain.dateAdded,
       imageURL: mountain.imageURL,
       difficulty: mountain.difficulty

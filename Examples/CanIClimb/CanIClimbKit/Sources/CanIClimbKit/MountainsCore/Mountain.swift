@@ -12,6 +12,7 @@ public struct Mountain: Hashable, Sendable, Codable, Identifiable {
   public var displayDescription: String
   public var elevation: Measurement<UnitLength>
   public var coordinate: LocationCoordinate2D
+  public var locationName: LocationName
   public var dateAdded: Date
   public var difficulty: ClimbingDifficulty
   public var imageURL: URL
@@ -22,6 +23,7 @@ public struct Mountain: Hashable, Sendable, Codable, Identifiable {
     displayDescription: String,
     elevation: Measurement<UnitLength>,
     coordinate: LocationCoordinate2D,
+    locationName: LocationName,
     dateAdded: Date,
     difficulty: ClimbingDifficulty,
     imageURL: URL
@@ -31,13 +33,14 @@ public struct Mountain: Hashable, Sendable, Codable, Identifiable {
     self.displayDescription = displayDescription
     self.elevation = elevation
     self.coordinate = coordinate
+    self.locationName = locationName
     self.dateAdded = dateAdded
     self.difficulty = difficulty
     self.imageURL = imageURL
   }
 }
 
-// MARK: - Difficulty
+// MARK: - ClimbingDifficulty
 
 extension Mountain {
   public struct ClimbingDifficulty: RawRepresentable, Hashable, Sendable, Codable {
@@ -70,6 +73,26 @@ extension Mountain.ClimbingDifficulty {
   }
 }
 
+// MARK: - LocationName
+
+extension Mountain {
+  public struct LocationName: Hashable, Sendable, Codable {
+    public var part1: String
+    public var part2: String
+
+    public init(part1: String, part2: String) {
+      self.part1 = part1
+      self.part2 = part2
+    }
+  }
+}
+
+extension Mountain.LocationName: CustomLocalizedStringResourceConvertible {
+  public var localizedStringResource: LocalizedStringResource {
+    "\(self.part1), \(self.part2)"
+  }
+}
+
 // MARK: - Mocks
 
 extension Mountain {
@@ -79,6 +102,7 @@ extension Mountain {
     displayDescription: "A mountain composed of stupidity.",
     elevation: Measurement(value: 20_000, unit: .feet),
     coordinate: LocationCoordinate2D(latitude: 45, longitude: 45),
+    locationName: LocationName(part1: "Dunning", part2: "Krugger"),
     dateAdded: Date(timeIntervalSince1970: 0),
     difficulty: ClimbingDifficulty(rawValue: 47)!,
     imageURL: URL(
@@ -93,6 +117,7 @@ extension Mountain {
     displayDescription: "A cool mountain on Mars.",
     elevation: Measurement(value: 69_648.95, unit: .feet),
     coordinate: LocationCoordinate2D(latitude: 45, longitude: 45),
+    locationName: LocationName(part1: "Western Tharsis Rise", part2: "Mars"),
     dateAdded: Date(timeIntervalSince1970: 0),
     difficulty: ClimbingDifficulty(rawValue: 100)!,
     imageURL: URL(
