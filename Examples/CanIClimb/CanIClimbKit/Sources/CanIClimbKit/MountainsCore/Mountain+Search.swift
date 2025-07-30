@@ -138,7 +138,7 @@ extension Mountain {
         }
         let searchResult = Mountain.SearchResult(
           mountains: IdentifiedArray(uniqueElements: mountains),
-          hasNextPage: false
+          hasNextPage: true
         )
         continuation.yield(searchResult, using: context)
         throw error

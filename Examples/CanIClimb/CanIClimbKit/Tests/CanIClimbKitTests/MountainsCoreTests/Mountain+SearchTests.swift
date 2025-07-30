@@ -105,7 +105,7 @@ extension DependenciesTestSuite {
                 try? result.get(),
                 InfiniteQueryPage(
                   id: 0,
-                  value: Mountain.SearchResult(mountains: [mountain], hasNextPage: false)
+                  value: Mountain.SearchResult(mountains: [mountain], hasNextPage: true)
                 )
               )
               confirm()
