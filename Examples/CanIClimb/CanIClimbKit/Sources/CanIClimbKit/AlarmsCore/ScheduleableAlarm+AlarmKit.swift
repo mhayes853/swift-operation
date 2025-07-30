@@ -16,13 +16,9 @@
     }
   }
 
-  // MARK: - Shared
-
   extension ScheduleableAlarm.AlarmKitStore {
     public static let shared = ScheduleableAlarm.AlarmKitStore()
   }
-
-  // MARK: - Store Conformance
 
   extension ScheduleableAlarm.AlarmKitStore: ScheduleableAlarm.Store {
     public func requestPermission() async -> Bool {
@@ -55,9 +51,42 @@
     public func all() async throws -> Set<ScheduleableAlarm.ID> {
       try Set(self.manager.alarms.map { ScheduleableAlarm.ID($0.id) })
     }
+
+    private struct NeverMetadata: AlarmMetadata {}
   }
 
-  // MARK: - NeverMetadata
+  extension ScheduleableAlarm.AlarmKitStore: ScheduleableAlarm.Authorizer {
+    public func requestAuthorization() async throws -> ScheduleableAlarm.AuthorizationStatus {
+      try await ScheduleableAlarm.AuthorizationStatus(state: self.manager.requestAuthorization())
+    }
+  }
 
-  private struct NeverMetadata: AlarmMetadata {}
+  extension ScheduleableAlarm.AlarmKitStore: ScheduleableAlarm.AuthorizationStatus.Observer {
+    public nonisolated func statuses() -> AsyncStream<ScheduleableAlarm.AuthorizationStatus> {
+      AsyncStream { continuation in
+        let task = Task {
+          continuation.yield(
+            ScheduleableAlarm.AuthorizationStatus(state: self.manager.authorizationState)
+          )
+          for await state in self.manager.authorizationUpdates {
+            continuation.yield(ScheduleableAlarm.AuthorizationStatus(state: state))
+          }
+          continuation.finish()
+        }
+        continuation.onTermination = { _ in task.cancel() }
+      }
+    }
+  }
+
+  // MARK: - AuthorizationStatus
+
+  extension ScheduleableAlarm.AuthorizationStatus {
+    public init(state: AlarmManager.AuthorizationState) {
+      switch state {
+      case .authorized: self = .authorized
+      case .denied: self = .unauthorized
+      default: self = .notDetermined
+      }
+    }
+  }
 #endif

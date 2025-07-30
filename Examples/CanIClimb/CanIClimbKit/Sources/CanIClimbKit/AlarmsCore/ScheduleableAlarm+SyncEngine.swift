@@ -16,7 +16,7 @@ extension ScheduleableAlarm {
 
     public init(
       database: any DatabaseWriter,
-      store: any Store = ScheduleableAlarm.defaultStore,
+      store: any Store,
       logger: Logger = Logger(label: "caniclimb.scheduleablealarm.syncengine")
     ) {
       self.database = database
@@ -115,8 +115,10 @@ extension ScheduleableAlarm.SyncEngine: DependencyKey {
   public static var liveValue: ScheduleableAlarm.SyncEngine? {
     #if canImport(AlarmKit)
       @Dependency(\.defaultDatabase) var database
-      @Dependency(ScheduleableAlarm.StoreKey.self) var store
-      return ScheduleableAlarm.SyncEngine(database: database, store: store)
+      return ScheduleableAlarm.SyncEngine(
+        database: database,
+        store: ScheduleableAlarm.AlarmKitStore.shared
+      )
     #else
       return nil
     #endif
