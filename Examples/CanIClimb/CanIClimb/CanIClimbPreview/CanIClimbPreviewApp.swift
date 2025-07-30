@@ -28,6 +28,7 @@ struct CanIClimbPreviewApp: App {
           var mountain = Mountain.mock2
           mountain.name = "Mountain \((i + 1) * (j + 1))"
           mountain.id = Mountain.ID()
+          mountain.coordinate = .random()
           mountains.append(mountain)
         }
         searcher.results[.recommended(page: i)] = .success(

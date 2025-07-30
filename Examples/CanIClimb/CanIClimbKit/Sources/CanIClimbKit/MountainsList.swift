@@ -111,11 +111,17 @@ private struct MountainsListMapView: View {
     Map(initialPosition: .userLocation(fallback: .automatic)) {
       ForEach(self.model.mountains) { page in
         ForEach(page.value.mountains) { mountain in
-          Marker(
-            mountain.name,
-            image: "mountain.2.fill",
-            coordinate: CLLocationCoordinate2D(coordinate: mountain.coordinate)
-          )
+          // Annotation(mountain.name, coordinate: CLLocationCoordinate2D(coordinate: mountain.coordinate)) {
+
+          // }
+          // Marker(
+          //   mountain.name,
+          //   image: "mountain.2.fill",
+          //   coordinate: CLLocationCoordinate2D(coordinate: mountain.coordinate)
+          // )
+          Annotation(mountain: mountain) {
+            self.model.mountainDetailInvoked(for: mountain.id)
+          }
         }
       }
     }

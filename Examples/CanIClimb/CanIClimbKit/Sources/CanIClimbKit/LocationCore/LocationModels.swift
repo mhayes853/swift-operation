@@ -13,6 +13,20 @@ public struct LocationCoordinate2D: Hashable, Sendable, Codable {
   }
 }
 
+extension LocationCoordinate2D {
+  public static func random() -> Self {
+    var generator = SystemRandomNumberGenerator()
+    return .random(using: &generator)
+  }
+
+  public static func random(using generator: inout some RandomNumberGenerator) -> Self {
+    LocationCoordinate2D(
+      latitude: .random(in: -90...90, using: &generator),
+      longitude: .random(in: -180...180, using: &generator)
+    )
+  }
+}
+
 // MARK: - LocationReading
 
 public struct LocationReading: Sendable {
