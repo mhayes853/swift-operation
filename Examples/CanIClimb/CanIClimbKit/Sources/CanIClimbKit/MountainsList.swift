@@ -108,24 +108,23 @@ private struct MountainsListMapView: View {
   let model: MountainsListModel
 
   var body: some View {
-    Map(initialPosition: .userLocation(fallback: .automatic)) {
-      ForEach(self.model.mountains) { page in
-        ForEach(page.value.mountains) { mountain in
-          // Annotation(mountain.name, coordinate: CLLocationCoordinate2D(coordinate: mountain.coordinate)) {
-
-          // }
-          // Marker(
-          //   mountain.name,
-          //   image: "mountain.2.fill",
-          //   coordinate: CLLocationCoordinate2D(coordinate: mountain.coordinate)
-          // )
-          Annotation(mountain: mountain) {
-            self.model.mountainDetailInvoked(for: mountain.id)
+    ZStack {
+      Map(initialPosition: .userLocation(fallback: .automatic)) {
+        UserAnnotation()
+        ForEach(self.model.mountains) { page in
+          ForEach(page.value.mountains) { mountain in
+            Annotation(mountain: mountain) {
+              self.model.mountainDetailInvoked(for: mountain.id)
+            }
           }
         }
       }
     }
-    .ignoresSafeArea()
+    .mapControls {
+      MapUserLocationButton()
+      MapCompass()
+      MapScaleView()
+    }
   }
 }
 
