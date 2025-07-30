@@ -21,10 +21,6 @@
   }
 
   extension ScheduleableAlarm.AlarmKitStore: ScheduleableAlarm.Store {
-    public func requestPermission() async -> Bool {
-      (try? await self.manager.requestAuthorization()) == .authorized
-    }
-
     public func schedule(alarm: ScheduleableAlarm) async throws {
       let stopButton = AlarmButton(
         text: "Dismiss",
