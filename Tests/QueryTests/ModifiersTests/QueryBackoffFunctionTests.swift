@@ -34,6 +34,23 @@ struct QueryBackoffFunctionTests {
     let function = QueryBackoffFunction.exponential(1000).jittered(using: ZeroRandomGenerator())
     expectNoDifference(function(10), 0)
   }
+
+  @Test(
+    "CustomStringConvertible",
+    arguments: [
+      (QueryBackoffFunction { _ in 10 }, "Custom"),
+      (QueryBackoffFunction("Blob") { _ in 10 }, "Blob"),
+      (.linear(10), "Linear every 10.0 secs"),
+      (.exponential(1), "Exponential every 1.0 sec"),
+      (.constant(2).jittered(), "Constant 2.0 secs with jitter")
+    ]
+  )
+  func customStringConvertibleWithBackoffFunction(
+    function: QueryBackoffFunction,
+    string: String
+  ) {
+    expectNoDifference(function.description, "QueryBackoffFunction(\(string))")
+  }
 }
 
 private struct ZeroRandomGenerator: RandomNumberGenerator {

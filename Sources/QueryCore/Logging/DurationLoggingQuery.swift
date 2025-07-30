@@ -33,7 +33,7 @@
         let duration = end.timeIntervalSince1970 - start.timeIntervalSince1970
         logger.log(
           level: self.level,
-          "\(query._debugTypeName) took \(duration) seconds to run."
+          "\(query._debugTypeName) took \(duration.durationFormatted()) to run."
         )
       }
       return try await query.fetch(in: context, with: continuation)

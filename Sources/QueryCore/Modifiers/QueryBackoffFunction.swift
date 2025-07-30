@@ -4,6 +4,7 @@ import Foundation
 
 /// A backoff function to use for retrying queries.
 public struct QueryBackoffFunction: Sendable {
+  private let _description: @Sendable () -> String
   private let backoff: @Sendable (Int) -> TimeInterval
 
   /// Creates a backoff function using a closure you specify.
@@ -11,9 +12,15 @@ public struct QueryBackoffFunction: Sendable {
   /// The current retry index is passed to your closure, and you must compute a `TimeInterval` for
   /// how long the backoff should be (in seconds).
   ///
-  /// - Parameter backoff: A closure to compute the backoff.
-  public init(_ backoff: @escaping @Sendable (Int) -> TimeInterval) {
+  /// - Parameters:
+  ///    - description: A description of the backoff function.
+  ///    - backoff: A closure to compute the backoff.
+  public init(
+    _ description: @autoclosure @escaping @Sendable () -> String = "Custom",
+    _ backoff: @escaping @Sendable (Int) -> TimeInterval
+  ) {
     self.backoff = backoff
+    self._description = description
   }
 }
 
@@ -21,14 +28,14 @@ public struct QueryBackoffFunction: Sendable {
 
 extension QueryBackoffFunction {
   /// A backoff function that returns no backoff.
-  public static let noBackoff = Self.constant(0)
+  public static let noBackoff = Self("No Backoff") { _ in 0 }
 
   /// A constant backoff function that always returns the specified `interval`.
   ///
   /// - Parameter interval: The backoff value/
   /// - Returns: A constant backoff function.
   public static func constant(_ interval: TimeInterval) -> Self {
-    Self { _ in interval }
+    Self("Constant \(interval.durationFormatted())") { _ in interval }
   }
 }
 
@@ -40,7 +47,9 @@ extension QueryBackoffFunction {
   /// - Parameter interval: The base interval of backoff.
   /// - Returns: An exponential backoff function.
   public static func exponential(_ interval: TimeInterval) -> Self {
-    Self { $0 == 0 ? 0 : interval * pow(2, TimeInterval($0 - 1)) }
+    Self("Exponential every \(interval.durationFormatted())") {
+      $0 == 0 ? 0 : interval * pow(2, TimeInterval($0 - 1))
+    }
   }
 }
 
@@ -52,7 +61,7 @@ extension QueryBackoffFunction {
   /// - Parameter interval: The base interval of backoff.
   /// - Returns: A linear backoff function.
   public static func linear(_ interval: TimeInterval) -> Self {
-    Self { TimeInterval($0) * interval }
+    Self("Linear every \(interval.durationFormatted())") { TimeInterval($0) * interval }
   }
 }
 
@@ -64,7 +73,9 @@ extension QueryBackoffFunction {
   /// - Parameter interval: The base interval of backoff.
   /// - Returns: A fibonacci backoff function.
   public static func fibonacci(_ interval: TimeInterval) -> Self {
-    Self { TimeInterval(QueryCore.fibonacci($0)) * interval }
+    Self("Fibonacci every \(interval.durationFormatted())") {
+      TimeInterval(QueryCore.fibonacci($0)) * interval
+    }
   }
 }
 
@@ -83,7 +94,7 @@ extension QueryBackoffFunction {
     using generator: T = SystemRandomNumberGenerator()
   ) -> Self {
     let generator = LockedBox(value: generator)
-    return Self { attempt in
+    return Self("\(self.rawDescription) with jitter") { attempt in
       generator.inner.withLock { TimeInterval.random(in: 0..<self(attempt), using: &$0) }
     }
   }
@@ -107,6 +118,19 @@ extension QueryBackoffFunction {
   /// - Returns: A `TimeInterval` for how long a query should wait before the next attempt.
   public func callAsFunction(_ attempt: Int) -> TimeInterval {
     self.backoff(attempt)
+  }
+}
+
+// MARK: - CustomStringConvertible
+
+extension QueryBackoffFunction: CustomStringConvertible {
+  public var description: String {
+    "QueryBackoffFunction(\(self.rawDescription))"
+  }
+
+  /// The description of this backoff function without any additional formatting.
+  public var rawDescription: String {
+    self._description()
   }
 }
 
