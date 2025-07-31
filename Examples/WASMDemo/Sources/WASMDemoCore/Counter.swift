@@ -42,18 +42,30 @@ extension CounterModel {
   }
 }
 
+@MainActor
+private var tokens = [CounterModel.ID: ObserveToken]()
+
 // MARK: - Render Counter
 
 @MainActor
-private var tokens = Set<ObserveToken>()
-
-@MainActor
-public func renderCounter(using model: CounterModel, in container: JSObject) {
-  let counterContainer = document.createElement!("div")
+public func renderCounter(
+  title: String = "Count",
+  using model: CounterModel,
+  in container: JSObject,
+  renderControls: @MainActor (CounterModel, JSObject) -> Void = renderCounterControls
+) {
+  let counterContainer = document.createElement!("div").object!
+  counterContainer.id = .string(model.elementId)
   _ = container.appendChild!(counterContainer)
 
-  renderCounterLabels(title: "Count", using: model, in: counterContainer.object!)
+  renderCounterLabels(title: title, using: model, in: counterContainer)
+  renderControls(model, counterContainer)
+}
 
+// MARK: - Render Controls
+
+@MainActor
+public func renderCounterControls(using model: CounterModel, in container: JSObject) {
   let increment = document.createElement!("button")
   increment.innerText = "Increment"
   increment.onclick = .object(
@@ -81,6 +93,8 @@ public func renderCounter(using model: CounterModel, in container: JSObject) {
   renderJumpButton(for: 1_000_000, using: model, in: container)
 }
 
+// MARK: - Render Jump Button
+
 @MainActor
 private func renderJumpButton(
   for number: Int,
@@ -101,7 +115,7 @@ private func renderJumpButton(
 // MARK: - Render Counter Labels
 
 @MainActor
-public func renderCounterLabels(
+private func renderCounterLabels(
   title: String,
   using model: CounterModel,
   in container: JSObject
@@ -114,7 +128,7 @@ public func renderCounterLabels(
   _ = container.appendChild!(factLabel)
   _ = container.appendChild!(nthPrimeLabel)
 
-  observe {
+  let token = observe {
     countLabel.innerText = .string("\(title) \(model.count)")
 
     switch model.$fact.status {
@@ -145,5 +159,23 @@ public func renderCounterLabels(
       nthPrimeLabel.style.color = "gray"
     }
   }
-  .store(in: &tokens)
+  tokens[model.id] = token
+}
+
+// MARK: - Cleanup Counter
+
+@MainActor
+public func cleanupCounter(for model: CounterModel) {
+  tokens.removeValue(forKey: model.id)
+  if let container = document.getElementById!(model.elementId).object {
+    _ = container.remove!()
+  }
+}
+
+// MARK: - CounterModel Element ID
+
+extension CounterModel {
+  fileprivate var elementId: String {
+    "counter-\(self.id)"
+  }
 }

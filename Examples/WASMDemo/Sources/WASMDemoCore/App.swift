@@ -75,18 +75,24 @@ public func renderApp(model: AppModel, in container: JSObject) {
   let countersContainer = document.createElement!("div")
   _ = container.appendChild!(countersContainer)
 
+  var currentSummedCounter = model.summedCounter()
+  var previousCounters = model.counters
   observe {
-    sumContainer.innerHTML = ""
-    renderCounterLabels(
+    cleanupCounter(for: currentSummedCounter)
+    currentSummedCounter = model.summedCounter()
+    renderCounter(
       title: "Total Sum",
-      using: model.summedCounter(),
+      using: currentSummedCounter,
       in: sumContainer.object!
-    )
+    ) { _, _ in }
 
-    countersContainer.innerHTML = ""
+    for counter in previousCounters {
+      cleanupCounter(for: counter)
+    }
     for counter in model.counters {
       renderCounter(using: counter, in: countersContainer.object!)
     }
+    previousCounters = model.counters
   }
   .store(in: &tokens)
 }
