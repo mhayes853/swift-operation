@@ -57,7 +57,7 @@ extension Int {
       in context: QueryContext,
       with continuation: QueryContinuation<Int?>
     ) async throws -> Int? {
-      await nthPrime(for: self.number)
+      nthPrime(for: self.number)
     }
   }
 }

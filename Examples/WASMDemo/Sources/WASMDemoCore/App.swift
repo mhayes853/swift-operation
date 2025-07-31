@@ -9,7 +9,9 @@ import SwiftNavigation
 @MainActor
 @Observable
 public final class AppModel {
-  public private(set) var counters: IdentifiedArrayOf<CounterModel>
+  public private(set) var counters: IdentifiedArrayOf<CounterModel> {
+    didSet { self.bind() }
+  }
 
   public init() {
     self.counters = [CounterModel(startingAt: 0)]
@@ -18,8 +20,8 @@ public final class AppModel {
 
 extension AppModel {
   public func summedCounter() -> CounterModel {
-    let count = self.counters.reduce(into: 0) { $0 += $1.count }
-    return CounterModel(startingAt: count)
+    let sum = self.counters.reduce(into: 0) { $0 += $1.count }
+    return CounterModel(startingAt: sum)
   }
 }
 
@@ -30,15 +32,23 @@ extension AppModel {
 }
 
 extension AppModel {
-  public func counterRemoved(id: CounterModel.ID) {
-    self.counters.remove(id: id)
+  public func allCleared() {
+    self.counters.removeAll()
+  }
+}
+
+extension AppModel {
+  private func bind() {
+    for counter in self.counters {
+      counter.onRemoved = { [weak self, weak counter] in
+        guard let self, let counter else { return }
+        self.counters.remove(id: counter.id)
+      }
+    }
   }
 }
 
 // MARK: - Render App
-
-@MainActor
-private var tokens = Set<ObserveToken>()
 
 @MainActor
 public func renderApp(model: AppModel, in container: JSObject) {
@@ -65,34 +75,48 @@ public func renderApp(model: AppModel, in container: JSObject) {
   let addCounterButton = document.createElement!("button")
   addCounterButton.innerText = "Add Counter"
   addCounterButton.onclick = .object(
-    JSClosure { _ in
-      model.counterAdded()
+    JSClosure { [weak model] _ in
+      model?.counterAdded()
       return .undefined
     }
   )
   _ = container.appendChild!(addCounterButton)
 
+  let clearAllButton = document.createElement!("button")
+  clearAllButton.innerText = "Clear All Counters"
+  clearAllButton.onclick = .object(
+    JSClosure { [weak model] _ in
+      model?.allCleared()
+      return .undefined
+    }
+  )
+  _ = container.appendChild!(clearAllButton)
+
   let countersContainer = document.createElement!("div")
   _ = container.appendChild!(countersContainer)
 
-  var currentSummedCounter = model.summedCounter()
-  var previousCounters = model.counters
-  observe {
-    cleanupCounter(for: currentSummedCounter)
-    currentSummedCounter = model.summedCounter()
-    renderCounter(
-      title: "Total Sum",
-      using: currentSummedCounter,
-      in: sumContainer.object!
-    ) { _, _ in }
+  var currentSummedCounter: CounterModel?
+  var previousCounterIds = Set<CounterModel.ID>()
+  observe { [weak model] in
+    guard let model else { return }
 
-    for counter in previousCounters {
-      cleanupCounter(for: counter)
+    if let currentSummedCounter {
+      cleanupCounter(for: currentSummedCounter.id)
     }
-    for counter in model.counters {
+    let summedModel = model.summedCounter()
+    currentSummedCounter = summedModel
+    renderCounter(title: "Total Sum", using: summedModel, in: sumContainer.object!) { _, _ in }
+
+    for id in previousCounterIds where model.counters[id: id] == nil {
+      cleanupCounter(for: id)
+    }
+    for counter in model.counters where !previousCounterIds.contains(counter.id) {
       renderCounter(using: counter, in: countersContainer.object!)
     }
-    previousCounters = model.counters
+    previousCounterIds = Set(model.counters.ids)
   }
   .store(in: &tokens)
 }
+
+@MainActor
+private var tokens = Set<ObserveToken>()

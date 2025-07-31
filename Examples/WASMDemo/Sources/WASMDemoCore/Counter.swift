@@ -17,6 +17,8 @@ public final class CounterModel: Identifiable {
 
   public private(set) var count: Int
 
+  public var onRemoved: (() -> Void)?
+
   public init(startingAt number: Int = 0) {
     self.count = number
     self._fact = SharedQuery(NumberFact.query(for: number))
@@ -42,8 +44,11 @@ extension CounterModel {
   }
 }
 
-@MainActor
-private var tokens = [CounterModel.ID: ObserveToken]()
+extension CounterModel {
+  public func removed() {
+    self.onRemoved?()
+  }
+}
 
 // MARK: - Render Counter
 
@@ -55,7 +60,7 @@ public func renderCounter(
   renderControls: @MainActor (CounterModel, JSObject) -> Void = renderCounterControls
 ) {
   let counterContainer = document.createElement!("div").object!
-  counterContainer.id = .string(model.elementId)
+  counterContainer.id = .string(model.id.counterElementId)
   _ = container.appendChild!(counterContainer)
 
   renderCounterLabels(title: title, using: model, in: counterContainer)
@@ -69,8 +74,8 @@ public func renderCounterControls(using model: CounterModel, in container: JSObj
   let increment = document.createElement!("button")
   increment.innerText = "Increment"
   increment.onclick = .object(
-    JSClosure { _ in
-      model.incremented()
+    JSClosure { [weak model] _ in
+      model?.incremented()
       return .undefined
     }
   )
@@ -79,8 +84,8 @@ public func renderCounterControls(using model: CounterModel, in container: JSObj
   let decrement = document.createElement!("button")
   decrement.innerText = "Decrement"
   decrement.onclick = .object(
-    JSClosure { _ in
-      model.decremented()
+    JSClosure { [weak model] _ in
+      model?.decremented()
       return .undefined
     }
   )
@@ -91,6 +96,18 @@ public func renderCounterControls(using model: CounterModel, in container: JSObj
   renderJumpButton(for: 10_000, using: model, in: container)
   renderJumpButton(for: 100_000, using: model, in: container)
   renderJumpButton(for: 1_000_000, using: model, in: container)
+
+  let remove = document.createElement!("button")
+  remove.innerText = "Remove"
+  remove.style.backgroundColor = .string("red")
+  remove.style.color = .string("white")
+  remove.onclick = .object(
+    JSClosure { [weak model] _ in
+      model?.removed()
+      return .undefined
+    }
+  )
+  _ = container.appendChild!(remove)
 }
 
 // MARK: - Render Jump Button
@@ -104,8 +121,8 @@ private func renderJumpButton(
   let jump = document.createElement!("button")
   jump.innerText = .string("Jump to \(number)")
   jump.onclick = .object(
-    JSClosure { _ in
-      model.jumped(to: number)
+    JSClosure { [weak model] _ in
+      model?.jumped(to: number)
       return .undefined
     }
   )
@@ -128,7 +145,9 @@ private func renderCounterLabels(
   _ = container.appendChild!(factLabel)
   _ = container.appendChild!(nthPrimeLabel)
 
-  let token = observe {
+  let token = observe { [weak model] in
+    guard let model else { return }
+
     countLabel.innerText = .string("\(title) \(model.count)")
 
     switch model.$fact.status {
@@ -165,17 +184,22 @@ private func renderCounterLabels(
 // MARK: - Cleanup Counter
 
 @MainActor
-public func cleanupCounter(for model: CounterModel) {
-  tokens.removeValue(forKey: model.id)
-  if let container = document.getElementById!(model.elementId).object {
+public func cleanupCounter(for id: CounterModel.ID) {
+  tokens.removeValue(forKey: id)
+  if let container = document.getElementById!(id.counterElementId).object {
     _ = container.remove!()
   }
 }
 
 // MARK: - CounterModel Element ID
 
-extension CounterModel {
-  fileprivate var elementId: String {
-    "counter-\(self.id)"
+extension ObjectIdentifier {
+  fileprivate var counterElementId: String {
+    "counter-\(self)"
   }
 }
+
+// MARK: - Tokens
+
+@MainActor
+private var tokens = [CounterModel.ID: ObserveToken]()
