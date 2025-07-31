@@ -1,30 +1,40 @@
 import Dependencies
-import JavaScriptEventLoop
-import QueryCore
+import Foundation
+import Query
 
-// MARK: - Query
+// MARK: - NthPrime
 
-extension NumberFact {
-  public static func query(for number: Int) -> some QueryRequest<Self, Query.State> {
-    Query(number: number).taskConfiguration { $0.name = "Fetch number fact for \(number)" }
-  }
+public func nthPrime(for n: Int) -> Int? {
+  guard n > 0 else { return nil }
 
-  public struct Query: QueryRequest, Hashable {
-    let number: Int
+  let upperBound = n < 6 ? 15 : Int(Double(n) * log(Double(n)) + Double(n) * log(log(Double(n))))
 
-    public func fetch(
-      in context: QueryContext,
-      with continuation: QueryContinuation<NumberFact>
-    ) async throws -> NumberFact {
-      @Dependency(NumberFactLoaderKey.self) var loader
-      return try await loader.fact(for: self.number)
+  var isPrime = [Bool](repeating: true, count: upperBound + 1)
+  isPrime[0] = false
+  isPrime[1] = false
+
+  for i in 2...Int(Double(upperBound).squareRoot()) {
+    if isPrime[i] {
+      for multiple in stride(from: i * i, through: upperBound, by: i) {
+        isPrime[multiple] = false
+      }
     }
   }
+
+  var count = 0
+  for (index, isPrime) in isPrime.enumerated() {
+    guard isPrime else { continue }
+    count += 1
+    if count == n {
+      return index
+    }
+  }
+  return nil
 }
 
 // MARK: - Nth Prime Query
 
-extension NumberFact {
+extension Int {
   public static func nthPrimeQuery(
     for number: Int
   ) -> some QueryRequest<Int?, NthPrimeQuery.State> {
@@ -50,10 +60,4 @@ extension NumberFact {
       await nthPrime(for: self.number)
     }
   }
-}
-
-// MARK: - Loader DependencyKey
-
-public enum NumberFactLoaderKey: DependencyKey {
-  public static let liveValue: any NumberFact.Loader = NumberFact.APILoader()
 }

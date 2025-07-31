@@ -19,7 +19,7 @@ final class AppModelTests: XCTestCase, @unchecked Sendable {
     self.loader.contents[expectedFact.number] = expectedFact.content
 
     try await withDependencies {
-      $0[NumberFactLoaderKey.self] = self.loader
+      $0[NumberFact.LoaderKey.self] = self.loader
       $0.defaultQueryClient = .testInstance()
     } operation: {
       let model = AppModel()
@@ -37,7 +37,7 @@ final class AppModelTests: XCTestCase, @unchecked Sendable {
 
   func test_RemovesCounter() {
     withDependencies {
-      $0[NumberFactLoaderKey.self] = self.loader
+      $0[NumberFact.LoaderKey.self] = self.loader
       $0.defaultQueryClient = .testInstance()
     } operation: {
       let model = AppModel()
@@ -61,7 +61,7 @@ final class AppModelTests: XCTestCase, @unchecked Sendable {
     self.loader.contents[expectedFact.number] = expectedFact.content
 
     try await withDependencies {
-      $0[NumberFactLoaderKey.self] = self.loader
+      $0[NumberFact.LoaderKey.self] = self.loader
       $0.defaultQueryClient = .testInstance()
     } operation: {
       let model = AppModel()

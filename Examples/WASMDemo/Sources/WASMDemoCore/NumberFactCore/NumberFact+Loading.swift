@@ -1,11 +1,17 @@
+import Dependencies
 import JavaScriptEventLoop
 @preconcurrency import JavaScriptKit
+import Query
 
 // MARK: - Loader
 
 extension NumberFact {
   public protocol Loader: Sendable {
     func fact(for number: Int) async throws -> NumberFact
+  }
+
+  public enum LoaderKey: DependencyKey {
+    public static let liveValue: any Loader = NumberFact.APILoader()
   }
 }
 
@@ -24,6 +30,26 @@ extension NumberFact {
       .value
       let content = try await JSPromise(response.text().object!)!.value.string!
       return NumberFact(number: number, content: content)
+    }
+  }
+}
+
+// MARK: - Query
+
+extension NumberFact {
+  public static func query(for number: Int) -> some QueryRequest<Self, Query.State> {
+    Query(number: number).taskConfiguration { $0.name = "Fetch number fact for \(number)" }
+  }
+
+  public struct Query: QueryRequest, Hashable {
+    let number: Int
+
+    public func fetch(
+      in context: QueryContext,
+      with continuation: QueryContinuation<NumberFact>
+    ) async throws -> NumberFact {
+      @Dependency(NumberFact.LoaderKey.self) var loader
+      return try await loader.fact(for: self.number)
     }
   }
 }
