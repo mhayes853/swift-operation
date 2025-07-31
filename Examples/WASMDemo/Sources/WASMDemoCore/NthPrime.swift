@@ -1,6 +1,6 @@
 import Foundation
 
-public func nthPrime(for n: Int) async -> Int? {
+public func nthPrime(for n: Int) -> Int? {
   guard n > 0 else { return nil }
 
   let upperBound = n < 6 ? 15 : Int(Double(n) * log(Double(n)) + Double(n) * log(log(Double(n))))

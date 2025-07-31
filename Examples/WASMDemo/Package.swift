@@ -22,7 +22,7 @@ let package = Package(
       branch: "main",
       traits: ["SwiftQueryNavigation", "SwiftQueryLogging", "SwiftQueryWebBrowser"]
     ),
-    .package(url: "https://github.com/swiftwasm/JavaScriptKit", from: "0.26.1")
+    .package(url: "https://github.com/swiftwasm/JavaScriptKit", from: "0.32.1")
   ],
   targets: [
     .executableTarget(name: "WASMDemo", dependencies: ["WASMDemoCore"]),

@@ -2,7 +2,7 @@ import WASMDemoCore
 import XCTest
 
 final class NthPrimeNumberTests: XCTestCase {
-  func test_basics() async {
+  func test_basics() {
     let nums = [
       (-10, nil),
       (0, nil),
@@ -11,14 +11,9 @@ final class NthPrimeNumberTests: XCTestCase {
       (100, 541),
       (1000, 7919)
     ]
-    await withTaskGroup(of: Void.self) { group in
-      for (nth, expected) in nums {
-        group.addTask {
-          let num = await nthPrime(for: nth)
-          XCTAssertEqual(num, expected)
-        }
-      }
-      await group.waitForAll()
+
+    for (nth, expected) in nums {
+      XCTAssertEqual(nthPrime(for: nth), expected)
     }
   }
 }
