@@ -1,4 +1,5 @@
 import Observation
+import SharingQuery
 import SwiftUI
 import SwiftUINavigation
 
@@ -6,8 +7,12 @@ import SwiftUINavigation
 
 @MainActor
 @Observable
-public final class MountainDetailModel: HashableObject {
+public final class MountainDetailModel: HashableObject, Identifiable {
+  @ObservationIgnored
+  @SharedQuery<Mountain.Query.State> public var mountain: Mountain??
+
   public init(id: Mountain.ID) {
+    self._mountain = SharedQuery(Mountain.query(id: id), animation: .bouncy)
   }
 }
 
@@ -21,6 +26,8 @@ public struct MountainDetailView: View {
   }
 
   public var body: some View {
-    Text("Mountain Detail View")
+    if let mountain = self.model.mountain {
+      Text("\(mountain?.name) Details")
+    }
   }
 }

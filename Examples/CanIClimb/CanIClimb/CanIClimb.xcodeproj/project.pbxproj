@@ -35,14 +35,37 @@
 		16E3E3052E1479B40057F981 /* CanIClimbUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CanIClimbUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		16F3988F2E3C0B6000FD6218 /* Exceptions for "CanIClimbPreview" folder in "CanIClimbPreview" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 16B575CF2E39559C00113AC1 /* CanIClimbPreview */;
+		};
+		16F398912E3C0B6C00FD6218 /* Exceptions for "CanIClimb" folder in "CanIClimb" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 16E3E2ED2E1479B30057F981 /* CanIClimb */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		16B575D12E39559C00113AC1 /* CanIClimbPreview */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				16F3988F2E3C0B6000FD6218 /* Exceptions for "CanIClimbPreview" folder in "CanIClimbPreview" target */,
+			);
 			path = CanIClimbPreview;
 			sourceTree = "<group>";
 		};
 		16E3E2F02E1479B30057F981 /* CanIClimb */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				16F398912E3C0B6C00FD6218 /* Exceptions for "CanIClimb" folder in "CanIClimb" target */,
+			);
 			path = CanIClimb;
 			sourceTree = "<group>";
 		};
@@ -349,11 +372,15 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = CanIClimbPreview/CanIClimbPreview.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = J3HVSYHJRQ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CanIClimbPreview/Info.plist;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Your health data is used to create personalized training plans for climbing mountains.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location is used to compare distances and weather to mountains near you.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -381,11 +408,15 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = CanIClimbPreview/CanIClimbPreview.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = J3HVSYHJRQ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CanIClimbPreview/Info.plist;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Your health data is used to create personalized training plans for climbing mountains.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location is used to compare distances and weather to mountains near you.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -540,6 +571,9 @@
 				DEVELOPMENT_TEAM = J3HVSYHJRQ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CanIClimb/Info.plist;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Your health data is used to create personalized training plans for climbing mountains.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location is used to compare distances and weather to mountains near you.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -572,6 +606,9 @@
 				DEVELOPMENT_TEAM = J3HVSYHJRQ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CanIClimb/Info.plist;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Your health data is used to create personalized training plans for climbing mountains.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location is used to compare distances and weather to mountains near you.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
