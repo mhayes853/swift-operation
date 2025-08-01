@@ -2,6 +2,7 @@ import CanIClimbKit
 import CustomDump
 import Foundation
 import Testing
+import Query
 
 @Suite("CanIClimbAPI tests")
 struct CanIClimbAPITests {
@@ -10,12 +11,15 @@ struct CanIClimbAPITests {
   @Test("Signs User In, Saves Refresh Token Securely")
   func signInSavesRefreshTokenSecurely() async throws {
     let credentials = User.SignInCredentials.mock
-    let resp = CanIClimbAPI.AccessTokenResponse.signIn
+    let resp = CanIClimbAPI.Tokens.Response.signIn
     let key = "test_refresh_token"
     let api = CanIClimbAPI(
-      transport: .mock { _ in (200, .json(resp)) },
-      refreshTokenStorageKey: key,
-      secureStorage: self.storage
+      transport: MockHTTPDataTransport { _ in (200, .json(resp)) },
+      tokens: CanIClimbAPI.Tokens(
+        client: QueryClient(),
+        secureStorage: self.storage,
+        refreshTokenKey: key
+      )
     )
 
     expectNoDifference(self.storage[key], nil)
@@ -27,9 +31,9 @@ struct CanIClimbAPITests {
   func signInUsesAccessTokenToAccessUser() async throws {
     let credentials = User.SignInCredentials.mock
     let userResponse = User(id: credentials.userId, name: credentials.name)
-    let tokenResponse = CanIClimbAPI.AccessTokenResponse.signIn
+    let tokenResponse = CanIClimbAPI.Tokens.Response.signIn
     let api = CanIClimbAPI(
-      transport: .mock { request in
+      transport: MockHTTPDataTransport { request in
         if request.url?.path() == "/auth/sign-in" {
           return (200, .json(tokenResponse))
         } else if request.url?.path() == "/user" && request.hasToken(tokenResponse.accessToken) {
@@ -37,7 +41,7 @@ struct CanIClimbAPITests {
         }
         return nil
       },
-      secureStorage: self.storage
+      tokens: self.tokens()
     )
 
     try await api.signIn(with: credentials)
@@ -49,17 +53,17 @@ struct CanIClimbAPITests {
   func refreshTokenWhenNotPresent() async throws {
     let credentials = User.SignInCredentials.mock
     let userResponse = User(id: credentials.userId, name: credentials.name)
-    let tokenResponse1 = CanIClimbAPI.AccessTokenResponse.signIn
-    let tokenResponse2 = CanIClimbAPI.AccessTokenResponse.refresh
+    let tokenResponse1 = CanIClimbAPI.Tokens.Response.signIn
+    let tokenResponse2 = CanIClimbAPI.Tokens.Response.refresh
     let api = CanIClimbAPI(
-      transport: .mock { _ in (200, .json(tokenResponse1)) },
-      secureStorage: self.storage
+      transport: MockHTTPDataTransport { _ in (200, .json(tokenResponse1)) },
+      tokens: self.tokens()
     )
 
     try await api.signIn(with: credentials)
 
     let api2 = CanIClimbAPI(
-      transport: .mock { request in
+      transport: MockHTTPDataTransport { request in
         if request.url?.path() == "/auth/refresh" && request.hasToken(tokenResponse1.refreshToken) {
           return (200, .json(tokenResponse2))
         } else if request.url?.path() == "/user" && request.hasToken(tokenResponse2.accessToken) {
@@ -67,7 +71,7 @@ struct CanIClimbAPITests {
         }
         return nil
       },
-      secureStorage: self.storage
+      tokens: self.tokens()
     )
     let user = try await api2.user()
     expectNoDifference(user, userResponse)
@@ -77,10 +81,10 @@ struct CanIClimbAPITests {
   func refreshTokenWhenAPI401s() async throws {
     let credentials = User.SignInCredentials.mock
     let userResponse = User(id: credentials.userId, name: credentials.name)
-    let tokenResponse1 = CanIClimbAPI.AccessTokenResponse.signIn
-    let tokenResponse2 = CanIClimbAPI.AccessTokenResponse.refresh
+    let tokenResponse1 = CanIClimbAPI.Tokens.Response.signIn
+    let tokenResponse2 = CanIClimbAPI.Tokens.Response.refresh
     let api = CanIClimbAPI(
-      transport: .mock { request in
+      transport: MockHTTPDataTransport { request in
         if request.url?.path() == "/auth/sign-in" {
           return (200, .json(tokenResponse1))
         } else if request.url?.path() == "/auth/refresh"
@@ -92,7 +96,7 @@ struct CanIClimbAPITests {
         }
         return (401, .data(Data()))
       },
-      secureStorage: self.storage
+      tokens: self.tokens()
     )
 
     try await api.signIn(with: credentials)
@@ -102,9 +106,9 @@ struct CanIClimbAPITests {
 
   @Test("Removes Refresh Token When Signing Out")
   func removeRefreshTokenWhenSigningOut() async throws {
-    let tokenResponse = CanIClimbAPI.AccessTokenResponse.signIn
+    let tokenResponse = CanIClimbAPI.Tokens.Response.signIn
     let api = CanIClimbAPI(
-      transport: .mock { request in
+      transport: MockHTTPDataTransport { request in
         if request.url?.path() == "/auth/sign-in" {
           return (200, .json(tokenResponse))
         } else if request.url?.path() == "/auth/sign-out" {
@@ -112,7 +116,7 @@ struct CanIClimbAPITests {
         }
         return (401, .data(Data()))
       },
-      secureStorage: self.storage
+      tokens: self.tokens()
     )
 
     try await api.signIn(with: .mock)
@@ -125,9 +129,9 @@ struct CanIClimbAPITests {
 
   @Test("Throws Error When Sign Out Returns Non-204")
   func throwsErrorWhenSignOutReturnsNon204() async throws {
-    let tokenResponse = CanIClimbAPI.AccessTokenResponse.signIn
+    let tokenResponse = CanIClimbAPI.Tokens.Response.signIn
     let api = CanIClimbAPI(
-      transport: .mock { request in
+      transport: MockHTTPDataTransport { request in
         if request.url?.path() == "/auth/sign-in" {
           return (200, .json(tokenResponse))
         } else if request.url?.path() == "/auth/sign-out" {
@@ -135,7 +139,7 @@ struct CanIClimbAPITests {
         }
         return (401, .data(Data()))
       },
-      secureStorage: self.storage
+      tokens: self.tokens()
     )
 
     try await api.signIn(with: .mock)
@@ -146,9 +150,9 @@ struct CanIClimbAPITests {
 
   @Test("Removes Refresh Token When Account Deleted")
   func removeRefreshTokenWhenAccountDeleted() async throws {
-    let tokenResponse = CanIClimbAPI.AccessTokenResponse.signIn
+    let tokenResponse = CanIClimbAPI.Tokens.Response.signIn
     let api = CanIClimbAPI(
-      transport: .mock { request in
+      transport: MockHTTPDataTransport { request in
         if request.url?.path() == "/auth/sign-in" {
           return (200, .json(tokenResponse))
         } else if request.url?.path() == "/user" && request.httpMethod == "DELETE" {
@@ -156,7 +160,7 @@ struct CanIClimbAPITests {
         }
         return (401, .data(Data()))
       },
-      secureStorage: self.storage
+      tokens: self.tokens()
     )
 
     try await api.signIn(with: .mock)
@@ -169,15 +173,15 @@ struct CanIClimbAPITests {
 
   @Test("Throws Error When Delete Account Returns Non-204")
   func throwsErrorWhenDeleteAccountReturnsNon204() async throws {
-    let tokenResponse = CanIClimbAPI.AccessTokenResponse.signIn
+    let tokenResponse = CanIClimbAPI.Tokens.Response.signIn
     let api = CanIClimbAPI(
-      transport: .mock { request in
+      transport: MockHTTPDataTransport { request in
         if request.url?.path() == "/auth/sign-in" {
           return (200, .json(tokenResponse))
         }
         return (400, .data(Data()))
       },
-      secureStorage: self.storage
+      tokens: self.tokens()
     )
 
     try await api.signIn(with: .mock)
@@ -190,8 +194,8 @@ struct CanIClimbAPITests {
   @Test("Throws Unauthorized Error When Endpoint Responds With 401 and No Refresh Token Available")
   func throwsUnauthorizedErrorWhenEndpointRespondsWith403AndNoRefreshTokenAvailable() async throws {
     let api = CanIClimbAPI(
-      transport: .mock { _ in (401, .data(Data())) },
-      secureStorage: self.storage
+      transport: MockHTTPDataTransport { _ in (401, .data(Data())) },
+      tokens: self.tokens()
     )
     await #expect(throws: User.UnauthorizedError.self) {
       try await api.user()
@@ -200,7 +204,7 @@ struct CanIClimbAPITests {
 
   @Test("Edits User")
   func editsUser() async throws {
-    let tokenResponse = CanIClimbAPI.AccessTokenResponse.signIn
+    let tokenResponse = CanIClimbAPI.Tokens.Response.signIn
 
     var editedUser = User.mock1
     editedUser.subtitle = "Edited"
@@ -208,7 +212,7 @@ struct CanIClimbAPITests {
     let edit = User.Edit(name: editedUser.name, subtitle: editedUser.subtitle)
 
     let api = CanIClimbAPI(
-      transport: .mock { [editedUser] request in
+      transport: MockHTTPDataTransport { [editedUser] request in
         if request.url?.path() == "/auth/sign-in" {
           return (200, .json(tokenResponse))
         } else if request.url?.path() == "/user"
@@ -219,7 +223,7 @@ struct CanIClimbAPITests {
         }
         return (400, .data(Data()))
       },
-      secureStorage: self.storage
+      tokens: self.tokens()
     )
 
     try await api.signIn(with: .mock)
@@ -231,8 +235,8 @@ struct CanIClimbAPITests {
   @Test("Nil When 404s For Mountain Request")
   func nilWhen404sForeMountainRequest() async throws {
     let api = CanIClimbAPI(
-      transport: .mock { _ in (404, .data(Data())) },
-      secureStorage: self.storage
+      transport: MockHTTPDataTransport { _ in (404, .data(Data())) },
+      tokens: self.tokens()
     )
     let mountain = try await api.mountain(with: Mountain.ID())
     expectNoDifference(mountain, nil)
@@ -241,13 +245,13 @@ struct CanIClimbAPITests {
   @Test("Returns Mountain Details")
   func returnsMountainDetails() async throws {
     let api = CanIClimbAPI(
-      transport: .mock { request in
+      transport: MockHTTPDataTransport { request in
         if request.url?.path() == "/mountain/\(Mountain.mock1.id)" {
           return (200, .json(Mountain.mock1))
         }
         return (404, .data(Data()))
       },
-      secureStorage: self.storage
+      tokens: self.tokens()
     )
     let mountain = try await api.mountain(with: Mountain.mock1.id)
     expectNoDifference(mountain, .mock1)
@@ -257,7 +261,7 @@ struct CanIClimbAPITests {
   func returnsMountainSearchResultsForText() async throws {
     let expectedResult = Mountain.SearchResult(mountains: [.mock1], hasNextPage: false)
     let api = CanIClimbAPI(
-      transport: .mock { request in
+      transport: MockHTTPDataTransport { request in
         if request.url?.path() == "/mountains"
           && request.url?.query() == "page=1&category=recommended&text=st"
         {
@@ -265,7 +269,7 @@ struct CanIClimbAPITests {
         }
         return (400, .data(Data()))
       },
-      secureStorage: self.storage
+      tokens: self.tokens()
     )
     let searchResult = try await api.searchMountains(
       by: Mountain.SearchRequest(search: Mountain.Search(text: "st"), page: 1)
@@ -277,7 +281,7 @@ struct CanIClimbAPITests {
   func returnsRecommendedMountainSearchResults() async throws {
     let expectedResult = Mountain.SearchResult(mountains: [.mock1], hasNextPage: false)
     let api = CanIClimbAPI(
-      transport: .mock { request in
+      transport: MockHTTPDataTransport { request in
         if request.url?.path() == "/mountains"
           && request.url?.query() == "page=0&category=recommended"
         {
@@ -285,7 +289,7 @@ struct CanIClimbAPITests {
         }
         return (400, .data(Data()))
       },
-      secureStorage: self.storage
+      tokens: self.tokens()
     )
     let searchResult = try await api.searchMountains(
       by: Mountain.SearchRequest(search: .recommended, page: 0)
@@ -297,7 +301,7 @@ struct CanIClimbAPITests {
   func returnsPlannedMountainSearchResults() async throws {
     let expectedResult = Mountain.SearchResult(mountains: [.mock1], hasNextPage: false)
     let api = CanIClimbAPI(
-      transport: .mock { request in
+      transport: MockHTTPDataTransport { request in
         if request.url?.path() == "/mountains"
           && request.url?.query() == "page=0&category=planned"
         {
@@ -305,16 +309,20 @@ struct CanIClimbAPITests {
         }
         return (400, .data(Data()))
       },
-      secureStorage: self.storage
+      tokens: self.tokens()
     )
     let searchResult = try await api.searchMountains(
       by: Mountain.SearchRequest(search: .planned, page: 0)
     )
     expectNoDifference(searchResult, expectedResult)
   }
+  
+  private func tokens() -> CanIClimbAPI.Tokens {
+    CanIClimbAPI.Tokens(client: QueryClient(), secureStorage: self.storage)
+  }
 }
 
-extension CanIClimbAPI.AccessTokenResponse {
+extension CanIClimbAPI.Tokens.Response {
   fileprivate static let signIn = Self(
     accessToken: "access",
     refreshToken: "refresh"

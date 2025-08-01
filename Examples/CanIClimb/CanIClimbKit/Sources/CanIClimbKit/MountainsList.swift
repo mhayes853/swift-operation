@@ -95,13 +95,22 @@ public struct MountainsListView<SheetContent: View>: View {
             SettingsView(model: model)
           }
         }
-        .fullScreenCover(item: self.$model.destination.mountainDetail) { model in
-          NavigationStack {
-            MountainDetailView(model: model)
+        #if os(iOS)
+          .fullScreenCover(item: self.$model.destination.mountainDetail) { model in
+            NavigationStack {
+              MountainDetailView(model: model)
               .dismissable()
+            }
+            .background(.background)
           }
-          .background(.background)
-        }
+        #else
+          .sheet(item: self.$model.destination.mountainDetail) { model in
+            NavigationStack {
+              MountainDetailView(model: model)
+              .dismissable()
+            }
+          }
+        #endif
         NavigationStack {
           self.sheetContent(AnyView(erasing: content))
         }

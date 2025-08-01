@@ -1,5 +1,13 @@
 import Query
 
+// MARK: - Shared Instance
+
+extension QueryClient {
+  public static let canIClimb = QueryClient(storeCreator: .canIClimb)
+}
+
+// MARK: - CanIClimbStoreCreator
+
 extension QueryClient {
   public struct CanIClimbStoreCreator: StoreCreator {
     let base: any StoreCreator

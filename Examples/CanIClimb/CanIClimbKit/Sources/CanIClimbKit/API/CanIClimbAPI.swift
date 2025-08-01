@@ -6,38 +6,17 @@ import Query
 
 public final class CanIClimbAPI: Sendable {
   private let baseURL: URL
-  private let transport: any HTTPDataTransport
-  private let secureStorage: any SecureStorage
-  private let refreshTokenStorageKey: String
-  private let accessTokenStore: QueryStore<AccessTokenMutation.State>
+  private let transport: any DataTransport
+  private let tokens: Tokens
 
   public init(
     baseURL: URL = .canIClimbAPIBase,
-    transport: any HTTPDataTransport,
-    refreshTokenStorageKey: String = "canIClimbAPI_RefreshToken",
-    secureStorage: any SecureStorage
+    transport: any DataTransport,
+    tokens: Tokens
   ) {
     self.baseURL = baseURL
     self.transport = transport
-    self.secureStorage = secureStorage
-    self.refreshTokenStorageKey = refreshTokenStorageKey
-
-    // NB: Use a query store to control fetches to the access token to prevent duplicate concurrent
-    // requests from either signing the user in, or refreshing the access token. We can also add
-    // automatic retries and exponential backoff with the `retry` modifier.
-    //
-    // Additionally, we'll use a detached store instead of one vended from a `QueryClient` because
-    // there will be no subscribers to this store, is not displayed directly in the UI, and to
-    // avoid the default store cache from evicting the store from memory when the app recieves a
-    // memory pressure notification.
-    self.accessTokenStore = .detached(
-      mutation: AccessTokenMutation()
-        .maxHistory(length: 1)
-        .retry(limit: 3)
-        .backoff(.exponential(1))
-        .delayer(AnyDelayer(isTesting ? .noDelay : .taskSleep))
-        .deduplicated()
-    )
+    self.tokens = tokens
   }
 }
 
@@ -49,7 +28,7 @@ extension CanIClimbAPI {
 
   public static let shared = CanIClimbAPI(
     transport: DummyBackend(),
-    secureStorage: KeychainSecureStorage.shared
+    tokens: Tokens(client: .canIClimb, secureStorage: KeychainSecureStorage.shared)
   )
 }
 
@@ -63,22 +42,16 @@ extension URL {
 
 extension CanIClimbAPI {
   public func signIn(with credentials: User.SignInCredentials) async throws {
-    _ = try await self.accessTokenStore.mutate(
-      with: AccessTokenMutation.Arguments(api: self, request: .signIn(credentials))
-    )
+    try await self.tokens.load {
+      let (data, _) = try await self.perform(request: .signIn(credentials))
+      return try JSONDecoder().decode(Tokens.Response.self, from: data)
+    }
   }
 
   public func signOut() async throws {
-    let (_, resp) = try await self.performRequestWithAccessToken(
-      path: "/auth/sign-out"
-    ) { request in
-      request.httpMethod = "POST"
-      return try await self.transport.data(for: request)
-    }
-    guard (resp as? HTTPURLResponse)?.statusCode == 204 else {
-      throw SignOutFailure(statusCode: (resp as? HTTPURLResponse)?.statusCode)
-    }
-    self.persistedRefreshToken = nil
+    let (_, resp) = try await self.perform(request: .signOut)
+    guard resp.statusCode == 204 else { throw SignOutFailure(statusCode: resp.statusCode) }
+    await self.tokens.clear()
   }
 
   public struct SignOutFailure: Hashable, Error {
@@ -94,9 +67,7 @@ extension CanIClimbAPI {
 
 extension CanIClimbAPI {
   public func user() async throws -> User {
-    let (data, _) = try await self.performRequestWithAccessToken(path: "/user") { request in
-      try await self.transport.data(for: request)
-    }
+    let (data, _) = try await self.perform(request: .currentUser)
     return try JSONDecoder().decode(User.self, from: data)
   }
 }
@@ -105,12 +76,7 @@ extension CanIClimbAPI {
 
 extension CanIClimbAPI {
   public func editUser(with edit: User.Edit) async throws -> User {
-    let body = try JSONEncoder().encode(edit)
-    let (data, _) = try await self.performRequestWithAccessToken(path: "/user") { request in
-      request.httpMethod = "PATCH"
-      request.httpBody = body
-      return try await self.transport.data(for: request)
-    }
+    let (data, _) = try await self.perform(request: .editCurrentUser(edit))
     return try JSONDecoder().decode(User.self, from: data)
   }
 }
@@ -119,14 +85,9 @@ extension CanIClimbAPI {
 
 extension CanIClimbAPI {
   public func deleteUser() async throws {
-    let (_, resp) = try await self.performRequestWithAccessToken(path: "/user") { request in
-      request.httpMethod = "DELETE"
-      return try await self.transport.data(for: request)
-    }
-    guard (resp as? HTTPURLResponse)?.statusCode == 204 else {
-      throw DeleteUserFailure(statusCode: (resp as? HTTPURLResponse)?.statusCode)
-    }
-    self.persistedRefreshToken = nil
+    let (_, resp) = try await self.perform(request: .deleteCurrentUser)
+    guard resp.statusCode == 204 else { throw DeleteUserFailure(statusCode: resp.statusCode) }
+    await self.tokens.clear()
   }
 
   public struct DeleteUserFailure: Hashable, Error {
@@ -144,18 +105,7 @@ extension CanIClimbAPI {
   public func searchMountains(
     by request: Mountain.SearchRequest
   ) async throws -> Mountain.SearchResult {
-    var urlRequest = URLRequest(url: self.baseURL.appending(path: "/mountains"))
-    var queryItems = [URLQueryItem(name: "page", value: "\(request.page)")]
-    switch request.search.category {
-    case .planned: queryItems.append(URLQueryItem(name: "category", value: "planned"))
-    case .recommended: queryItems.append(URLQueryItem(name: "category", value: "recommended"))
-    }
-    if !request.search.text.isEmpty {
-      queryItems.append(URLQueryItem(name: "text", value: request.search.text))
-    }
-    urlRequest.url?.append(queryItems: queryItems)
-
-    let (data, _) = try await self.transport.data(for: urlRequest)
+    let (data, _) = try await self.perform(request: .searchMountains(request))
     return try JSONDecoder().decode(Mountain.SearchResult.self, from: data)
   }
 }
@@ -164,100 +114,37 @@ extension CanIClimbAPI {
 
 extension CanIClimbAPI {
   public func mountain(with id: Mountain.ID) async throws -> Mountain? {
-    let request = URLRequest(url: self.baseURL.appending(path: "/mountain/\(id)"))
-    let (data, resp) = try await self.transport.data(for: request)
-    guard (resp as? HTTPURLResponse)?.statusCode != 404 else { return nil }
+    let (data, resp) = try await self.perform(request: .mountain(id))
+    guard resp.statusCode != 404 else { return nil }
     return try JSONDecoder().decode(Mountain.self, from: data)
   }
 }
 
-// MARK: - Access Token
+// MARK: - Helper
 
 extension CanIClimbAPI {
-  private func performRequestWithAccessToken(
-    path: String,
-    perform: (inout URLRequest) async throws -> (Data, URLResponse)
-  ) async throws -> (Data, URLResponse) {
-    var request = URLRequest(url: self.baseURL.appending(path: path))
-    var accessToken = self.accessTokenStore.currentValue ?? ""
-    if accessToken.isEmpty {
-      accessToken = try await self.accessTokenStore.mutate(
-        with: AccessTokenMutation.Arguments(api: self, request: .refresh)
-      )
+  private func perform(request: Request) async throws -> (Data, HTTPURLResponse) {
+    let (access, refresh) = await self.tokens.bearerValues
+    var requestContext = Request.Context(
+      baseURL: self.baseURL,
+      accessToken: access,
+      refreshToken: refresh
+    )
+    if requestContext.accessToken == nil && requestContext.refreshToken != nil {
+      requestContext.accessToken = try await self.refreshAccessToken(in: requestContext)
     }
-    request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
-    let (data, response) = try await perform(&request)
-    if (response as? HTTPURLResponse)?.statusCode == 401 {
-      accessToken = try await self.accessTokenStore.mutate(
-        with: AccessTokenMutation.Arguments(api: self, request: .refresh)
-      )
-      request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
-      return try await perform(&request)
-    } else {
-      return (data, response)
-    }
+    let (data, response) = try await self.transport.send(request: request, in: requestContext)
+    guard response.statusCode == 401 else { return (data, response) }
+
+    requestContext.accessToken = try await self.refreshAccessToken(in: requestContext)
+    return try await self.transport.send(request: request, in: requestContext)
   }
 
-  public struct AccessTokenResponse: Codable, Hashable, Sendable {
-    public let accessToken: AccessToken
-    public let refreshToken: String?
-
-    public init(accessToken: AccessToken, refreshToken: String?) {
-      self.accessToken = accessToken
-      self.refreshToken = refreshToken
-    }
-  }
-
-  public typealias AccessToken = String
-
-  private enum AccessTokenRequest: Hashable, Sendable {
-    case refresh
-    case signIn(User.SignInCredentials)
-  }
-
-  private struct AccessTokenMutation: MutationRequest, Hashable {
-    struct Arguments: Sendable {
-      let api: CanIClimbAPI
-      let request: AccessTokenRequest
-    }
-
-    func mutate(
-      with arguments: Arguments,
-      in context: QueryContext,
-      with continuation: QueryContinuation<AccessToken>
-    ) async throws -> AccessToken {
-      switch arguments.request {
-      case .refresh: try await arguments.api.refresh()
-      case .signIn(let credentials): try await arguments.api.accessToken(for: credentials)
-      }
-    }
-  }
-
-  private func refresh() async throws -> AccessToken {
-    var request = URLRequest(url: self.baseURL.appending(path: "/auth/refresh"))
-    request.httpMethod = "POST"
-    guard let persistedRefreshToken else { throw User.UnauthorizedError() }
-    request.setValue("Bearer \(persistedRefreshToken)", forHTTPHeaderField: "Authorization")
-    let (data, _) = try await self.transport.data(for: request)
-    return try JSONDecoder().decode(AccessTokenResponse.self, from: data).accessToken
-  }
-
-  private func accessToken(for credentials: User.SignInCredentials) async throws -> AccessToken {
-    var request = URLRequest(url: self.baseURL.appending(path: "/auth/sign-in"))
-    request.httpMethod = "POST"
-    request.httpBody = try JSONEncoder().encode(credentials)
-    let (data, _) = try await self.transport.data(for: request)
-    let response = try JSONDecoder().decode(AccessTokenResponse.self, from: data)
-    if let token = response.refreshToken {
-      self.persistedRefreshToken = token
+  private func refreshAccessToken(in context: Request.Context) async throws -> String {
+    let response = try await self.tokens.load {
+      let (data, _) = try await self.transport.send(request: .refreshAccessToken, in: context)
+      return try JSONDecoder().decode(Tokens.Response.self, from: data)
     }
     return response.accessToken
-  }
-
-  private var persistedRefreshToken: String? {
-    get {
-      self.secureStorage[self.refreshTokenStorageKey].map { String(decoding: $0, as: UTF8.self) }
-    }
-    set { self.secureStorage[self.refreshTokenStorageKey] = newValue.map { Data($0.utf8) } }
   }
 }
