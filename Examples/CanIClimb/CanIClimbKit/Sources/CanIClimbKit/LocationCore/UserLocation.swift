@@ -64,7 +64,7 @@ extension LocationReading {
 // MARK: - UserQuery
 
 extension LocationReading {
-  public static let userQuery = UserQuery().stale(after: fiveMinutes).logDuration()
+  public static let userQuery = UserQuery().stale(after: TimeInterval(duration: .fiveMinutes)).logDuration()
 
   public struct UserQuery: QueryRequest, Hashable {
     public func fetch(
@@ -76,5 +76,3 @@ extension LocationReading {
     }
   }
 }
-
-private let fiveMinutes = TimeInterval(60 * 5)

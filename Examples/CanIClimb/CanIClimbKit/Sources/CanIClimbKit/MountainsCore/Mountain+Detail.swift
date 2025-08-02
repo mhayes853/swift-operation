@@ -1,4 +1,5 @@
 import Dependencies
+import Foundation
 import SharingGRDB
 import SharingQuery
 import StructuredQueries
@@ -36,7 +37,7 @@ extension CanIClimbAPI: Mountain.Loader {}
 
 extension Mountain {
   public static func query(id: Mountain.ID) -> some QueryRequest<Self, Query.State> {
-    Query(id: id)
+    Query(id: id).stale(after: TimeInterval(duration: .fiveMinutes))
   }
 
   public struct Query: QueryRequest {
