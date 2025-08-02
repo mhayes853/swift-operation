@@ -64,13 +64,16 @@ extension ScheduleableAlarm {
     }
     private var continuations = Set<AsyncStream<AuthorizationStatus>.Continuation>()
 
+    public var statusOnRequest = AuthorizationStatus.authorized
+
     public nonisolated init() {}
   }
 }
 
 extension ScheduleableAlarm.MockAuthorization: ScheduleableAlarm.Authorizer {
   public func requestAuthorization() async throws -> ScheduleableAlarm.AuthorizationStatus {
-    self.status
+    self.status = self.statusOnRequest
+    return self.statusOnRequest
   }
 }
 
@@ -90,9 +93,9 @@ extension ScheduleableAlarm.MockAuthorization: ScheduleableAlarm.AuthorizationSt
 
 // MARK: - SharedReaderKey
 
-extension SharedReaderKey where Self == ScheduleableAlarm.AuthorizationStatus.UpdatesKey {
+extension SharedReaderKey where Self == ScheduleableAlarm.AuthorizationStatus.UpdatesKey.Default {
   public static var alarmsAuthorization: Self {
-    ScheduleableAlarm.AuthorizationStatus.UpdatesKey()
+    Self[ScheduleableAlarm.AuthorizationStatus.UpdatesKey(), default: .notDetermined]
   }
 }
 
