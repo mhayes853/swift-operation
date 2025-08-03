@@ -11,13 +11,20 @@ extension QueryRequest {
     success: AlertState<Never>? = nil,
     failure: AlertState<Never>? = nil
   ) -> ModifiedQuery<Self, _AlertStateModifier<Self>> {
+    self.alerts(success: { _ in success }, failure: { _ in failure })
+  }
+
+  public func alerts(
+    success: @escaping @Sendable (Value) -> AlertState<Never>? = { _ in nil },
+    failure: @escaping @Sendable (any Error) -> AlertState<Never>? = { _ in nil }
+  ) -> ModifiedQuery<Self, _AlertStateModifier<Self>> {
     self.modifier(_AlertStateModifier(successAlert: success, failureAlert: failure))
   }
 }
 
 public struct _AlertStateModifier<Query: QueryRequest>: QueryModifier {
-  let successAlert: AlertState<Never>?
-  let failureAlert: AlertState<Never>?
+  let successAlert: @Sendable (Query.Value) -> AlertState<Never>?
+  let failureAlert: @Sendable (any Error) -> AlertState<Never>?
 
   public func fetch(
     in context: QueryContext,
@@ -27,13 +34,13 @@ public struct _AlertStateModifier<Query: QueryRequest>: QueryModifier {
     @Dependency(\.notificationCenter) var center
     do {
       let value = try await query.fetch(in: context, with: continuation)
-      if let successAlert {
+      if let successAlert = self.successAlert(value) {
         await center.post(QueryAlertMessage(alert: successAlert))
       }
       return value
     } catch {
       let isLastRetry = context.queryRetryIndex >= context.queryMaxRetries
-      if let failureAlert, isLastRetry {
+      if isLastRetry, let failureAlert = self.failureAlert(error) {
         await center.post(QueryAlertMessage(alert: failureAlert))
       }
       throw error

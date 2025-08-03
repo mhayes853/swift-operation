@@ -76,6 +76,12 @@ extension Mountain {
 
 extension Mountain {
   public static let planClimbMutation = PlanClimbMutation()
+    .alerts { value in
+      let (mountain, plannedClimb) = value.returnValue
+      return .planClimbSuccess(mountainName: mountain.name, targetDate: plannedClimb.targetDate)
+    } failure: { _ in
+      .planClimbFailure
+    }
 
   public struct PlanClimbMutation: MutationRequest, Hashable {
     public struct Arguments: Sendable {
@@ -91,8 +97,8 @@ extension Mountain {
     public func mutate(
       with arguments: Arguments,
       in context: QueryContext,
-      with continuation: QueryContinuation<PlannedClimb>
-    ) async throws -> PlannedClimb {
+      with continuation: QueryContinuation<(Mountain, PlannedClimb)>
+    ) async throws -> (Mountain, PlannedClimb) {
       @Dependency(Mountain.PlanClimberKey.self) var planner
       @Dependency(\.defaultQueryClient) var client
 
@@ -104,7 +110,7 @@ extension Mountain {
         climbsStore.currentValue?.append(plannedClimb)
       }
 
-      return plannedClimb
+      return (arguments.mountain, plannedClimb)
     }
   }
 }
@@ -127,8 +133,8 @@ extension AlertState where Action == Never {
   }
 
   public static let planClimbFailure = Self.remoteOperationError {
-    TextState("An Error Occurred")
+    TextState("Failed to Plan Climb")
   } message: {
-    TextState("Please try again.")
+    TextState("Your climb could not be planned. Please try again.")
   }
 }
