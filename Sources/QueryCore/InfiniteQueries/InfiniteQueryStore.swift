@@ -97,8 +97,8 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
   private func allPages(
     from value: InfiniteQueryValue<State.PageID, State.PageValue>
   ) -> InfiniteQueryPages<State.PageID, State.PageValue> {
-    switch value.response {
-    case let .allPages(pages): pages
+    switch value.fetchValue {
+    case .allPages(let pages): pages
     default: self.state.currentValue
     }
   }
@@ -167,9 +167,9 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
   private func nextPage(
     from value: InfiniteQueryValue<State.PageID, State.PageValue>
   ) -> InfiniteQueryPage<State.PageID, State.PageValue>? {
-    switch value.response {
-    case let .nextPage(next): next?.page
-    case let .initialPage(page): page
+    switch value.fetchValue {
+    case .nextPage(let next): next.page
+    case .initialPage(let page): page
     default: nil
     }
   }
@@ -241,9 +241,9 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
   private func previousPage(
     from value: InfiniteQueryValue<State.PageID, State.PageValue>
   ) -> InfiniteQueryPage<State.PageID, State.PageValue>? {
-    switch value.response {
-    case let .previousPage(previous): previous?.page
-    case let .initialPage(page): page
+    switch value.fetchValue {
+    case .previousPage(let previous): previous.page
+    case .initialPage(let page): page
     default: nil
     }
   }

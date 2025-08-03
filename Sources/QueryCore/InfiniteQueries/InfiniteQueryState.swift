@@ -175,7 +175,7 @@ extension InfiniteQueryState: _InfiniteQueryStateProtocol {
   ) {
     switch result {
     case .success(let value):
-      switch value.response {
+      switch value.fetchValue {
       case .allPages(let pages):
         self.currentValue = pages
       case .initialPage(let page):
@@ -184,17 +184,16 @@ extension InfiniteQueryState: _InfiniteQueryStateProtocol {
         } else {
           self.currentValue = [page]
         }
-      case .nextPage(let next?):
-        if let index = self.currentValue.firstIndex(where: { $0.id == next.lastPage.id }) {
+      case .nextPage(let next):
+        if let index = self.currentValue.firstIndex(where: { $0.id == next.lastPageId }) {
           let (_, index) = self.currentValue.insert(next.page, at: index + 1)
           self.currentValue[index] = next.page
         }
-      case .previousPage(let previous?):
-        if let index = self.currentValue.firstIndex(where: { $0.id == previous.firstPage.id }) {
+      case .previousPage(let previous):
+        if let index = self.currentValue.firstIndex(where: { $0.id == previous.firstPageId }) {
           let (_, index) = self.currentValue.insert(previous.page, at: index)
           self.currentValue[index] = previous.page
         }
-      default: break
       }
       self.nextPageId = value.nextPageId
       self.previousPageId = value.previousPageId

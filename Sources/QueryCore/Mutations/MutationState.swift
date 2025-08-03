@@ -148,7 +148,7 @@ extension MutationState: _MutationStateProtocol {
     with result: Result<QueryValue, any Error>,
     for task: QueryTask<QueryValue>
   ) {
-    self.history[id: task.id]?.update(with: result.map(\.value))
+    self.history[id: task.id]?.update(with: result.map(\.returnValue))
     guard let last = self.history.last, last.task.id == task.id else { return }
     switch result {
     case .success:
@@ -200,7 +200,7 @@ extension MutationState {
 extension MutationState.HistoryEntry {
   /// The ``QueryTask`` for this entry.
   public var task: QueryTask<Value> {
-    self.baseTask.map(\.value)
+    self.baseTask.map(\.returnValue)
   }
 }
 

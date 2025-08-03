@@ -76,45 +76,63 @@ public enum InfiniteQueryPagingRequest<PageID: Hashable & Sendable>: Hashable, S
 
 /// The data type returned from an ``InfiniteQueryRequest``.
 ///
-/// You do not interact with this type, ``InfiniteQueryRequest`` manages those interactions for you.
+/// You do not construct this type, ``InfiniteQueryRequest`` constructs it for you.
 public struct InfiniteQueryValue<PageID: Hashable & Sendable, PageValue: Sendable>: Sendable {
+  /// The value returned from fetching an ``InfiniteQueryRequest``.
+  public let fetchValue: FetchValue
+
   let nextPageId: PageID?
   let previousPageId: PageID?
-  let response: Response
 }
 
 extension InfiniteQueryValue {
-  enum Response: Sendable {
+  /// A value returned from fetching an ``InfiniteQueryRequest``.
+  public enum FetchValue: Sendable {
+    /// All pages were refetched.
     case allPages(InfiniteQueryPages<PageID, PageValue>)
-    case nextPage(NextPage?)
-    case previousPage(PreviousPage?)
+
+    /// The next page was fetched.
+    case nextPage(NextPage)
+
+    /// The previous page was fetched.
+    case previousPage(PreviousPage)
+
+    /// The initial page was fetched.
     case initialPage(InfiniteQueryPage<PageID, PageValue>)
   }
 }
 
-extension InfiniteQueryValue {
-  struct NextPage: Sendable {
-    let page: InfiniteQueryPage<PageID, PageValue>
-    let lastPage: InfiniteQueryPage<PageID, PageValue>
+extension InfiniteQueryValue.FetchValue {
+  /// Details regarding the next fetched page.
+  public struct NextPage: Sendable {
+    /// The page that was fetched.
+    public let page: InfiniteQueryPage<PageID, PageValue>
+
+    /// The ID of the last page before ``page`` in the pages list.
+    public let lastPageId: PageID
   }
 
-  struct PreviousPage: Sendable {
-    let page: InfiniteQueryPage<PageID, PageValue>
-    let firstPage: InfiniteQueryPage<PageID, PageValue>
+  /// Details regarding the page that will be placed at the beginning of the pages list.
+  public struct PreviousPage: Sendable {
+    /// The page that was fetched.
+    public let page: InfiniteQueryPage<PageID, PageValue>
+
+    /// The ID of the first page after ``page`` in the pages list.
+    public let firstPageId: PageID
   }
 }
 
 extension InfiniteQueryValue: Equatable where PageValue: Equatable {}
 extension InfiniteQueryValue: Hashable where PageValue: Hashable {}
 
-extension InfiniteQueryValue.Response: Equatable where PageValue: Equatable {}
-extension InfiniteQueryValue.Response: Hashable where PageValue: Hashable {}
+extension InfiniteQueryValue.FetchValue: Equatable where PageValue: Equatable {}
+extension InfiniteQueryValue.FetchValue: Hashable where PageValue: Hashable {}
 
-extension InfiniteQueryValue.NextPage: Hashable where PageValue: Hashable {}
-extension InfiniteQueryValue.NextPage: Equatable where PageValue: Equatable {}
+extension InfiniteQueryValue.FetchValue.NextPage: Hashable where PageValue: Hashable {}
+extension InfiniteQueryValue.FetchValue.NextPage: Equatable where PageValue: Equatable {}
 
-extension InfiniteQueryValue.PreviousPage: Hashable where PageValue: Hashable {}
-extension InfiniteQueryValue.PreviousPage: Equatable where PageValue: Equatable {}
+extension InfiniteQueryValue.FetchValue.PreviousPage: Hashable where PageValue: Hashable {}
+extension InfiniteQueryValue.FetchValue.PreviousPage: Equatable where PageValue: Equatable {}
 
 // MARK: - InfiniteQueryRequest
 
@@ -343,9 +361,9 @@ extension InfiniteQueryRequest {
     in context: QueryContext
   ) -> Value {
     InfiniteQueryValue(
+      fetchValue: .allPages(pages),
       nextPageId: pages.last.flatMap { self.pageId(after: $0, using: paging, in: context) },
-      previousPageId: pages.first.flatMap { self.pageId(before: $0, using: paging, in: context) },
-      response: .allPages(pages)
+      previousPageId: pages.first.flatMap { self.pageId(before: $0, using: paging, in: context) }
     )
   }
 
@@ -376,9 +394,9 @@ extension InfiniteQueryRequest {
   ) -> Value {
     let page = InfiniteQueryPage(id: self.initialPageId, value: pageValue)
     return InfiniteQueryValue(
+      fetchValue: .initialPage(page),
       nextPageId: self.pageId(after: page, using: paging, in: context),
-      previousPageId: self.pageId(before: page, using: paging, in: context),
-      response: .initialPage(page)
+      previousPageId: self.pageId(before: page, using: paging, in: context)
     )
   }
 
@@ -416,11 +434,13 @@ extension InfiniteQueryRequest {
   ) -> Value {
     let page = InfiniteQueryPage(id: pageId, value: pageValue)
     return InfiniteQueryValue(
+      fetchValue: .nextPage(
+        InfiniteQueryValue.FetchValue.NextPage(page: page, lastPageId: paging.pages.last!.id)
+      ),
       nextPageId: self.pageId(after: page, using: paging, in: context),
       previousPageId: paging.pages.first.flatMap {
         self.pageId(before: $0, using: paging, in: context)
-      },
-      response: .nextPage(InfiniteQueryValue.NextPage(page: page, lastPage: paging.pages.last!))
+      }
     )
   }
 
@@ -458,11 +478,11 @@ extension InfiniteQueryRequest {
   ) -> Value {
     let page = InfiniteQueryPage(id: pageId, value: pageValue)
     return InfiniteQueryValue(
+      fetchValue: .previousPage(
+        InfiniteQueryValue.FetchValue.PreviousPage(page: page, firstPageId: paging.pages.first!.id)
+      ),
       nextPageId: paging.pages.last.flatMap { self.pageId(after: $0, using: paging, in: context) },
-      previousPageId: self.pageId(before: page, using: paging, in: context),
-      response: .previousPage(
-        InfiniteQueryValue.PreviousPage(page: page, firstPage: paging.pages.first!)
-      )
+      previousPageId: self.pageId(before: page, using: paging, in: context)
     )
   }
 

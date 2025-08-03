@@ -2,9 +2,10 @@
 
 /// The data type returned from a ``MutationRequest``.
 ///
-/// You do not interact with this type, ``MutationRequest`` manages those interactions for you.
-public struct MutationValue<Value: Sendable>: Sendable {
-  let value: Value
+/// You do not construct this type, ``MutationRequest`` constructs  for you.
+public struct MutationValue<ReturnValue: Sendable>: Sendable {
+  /// The value returned from ``MutationRequest/mutate(with:in:with:)``.
+  public let returnValue: ReturnValue
 }
 
 // MARK: - MutationRequest
@@ -92,10 +93,10 @@ extension MutationRequest {
       with: args,
       in: context,
       with: QueryContinuation { result, context in
-        continuation.yield(with: result.map { MutationValue(value: $0) }, using: context)
+        continuation.yield(with: result.map { MutationValue(returnValue: $0) }, using: context)
       }
     )
-    return MutationValue(value: value)
+    return MutationValue(returnValue: value)
   }
 }
 

@@ -38,6 +38,8 @@ struct CanIClimbPreviewApp: App {
       $0[Mountain.SearcherKey.self] = searcher
 
       $0[CKAccountStatus.LoaderKey.self] = CKAccountStatus.MockLoader { .available }
+      
+      $0[User.CurrentLoaderKey.self] = User.MockCurrentLoader(result: .success(.mock1))
 
       try $0.defaultDatabase.write {
         try InternalMetricsRecord.update(in: $0) { $0.hasCompletedOnboarding = true }
