@@ -55,9 +55,7 @@
     public func requestAuthorization() async throws -> ScheduleableAlarm.AuthorizationStatus {
       try await ScheduleableAlarm.AuthorizationStatus(state: self.manager.requestAuthorization())
     }
-  }
-
-  extension ScheduleableAlarm.AlarmKitStore: ScheduleableAlarm.AuthorizationStatus.Observer {
+    
     public nonisolated func statuses() -> AsyncStream<ScheduleableAlarm.AuthorizationStatus> {
       AsyncStream { continuation in
         let task = Task {

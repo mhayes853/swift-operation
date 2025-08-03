@@ -10,12 +10,11 @@ extension DependenciesTestSuite {
   struct PlanClimbModelTests {
     @Test("Authorization For Alarms Is Authorized, Toggles Alarm Toggle")
     func authorizationForAlarmsIsAuthorizedTogglesAlarmToggle() async throws {
-      let authorization = ScheduleableAlarm.MockAuthorization()
-      authorization.status = .authorized
+      let authorizer = ScheduleableAlarm.MockAuthorizer()
+      authorizer.status = .authorized
 
       try await withDependencies {
-        $0[ScheduleableAlarm.AuthorizationStatus.ObserverKey.self] = authorization
-        $0[ScheduleableAlarm.AuthorizerKey.self] = authorization
+        $0[ScheduleableAlarm.AuthorizerKey.self] = authorizer
         $0[Mountain.LoaderKey.self] = Mountain.MockLoader(result: .success(.mock1))
       } operation: {
         let model = PlanClimbModel(mountainId: Mountain.ID())
@@ -28,12 +27,11 @@ extension DependenciesTestSuite {
 
     @Test("Authorization For Alarms Is Authorized, Toggles Alarm Twice, Is Disabled")
     func authorizationForAlarmsIsAuthorizedTogglesAlarmTwiceIsDisabled() async throws {
-      let authorization = ScheduleableAlarm.MockAuthorization()
-      authorization.status = .authorized
+      let authorizer = ScheduleableAlarm.MockAuthorizer()
+      authorizer.status = .authorized
 
       try await withDependencies {
-        $0[ScheduleableAlarm.AuthorizationStatus.ObserverKey.self] = authorization
-        $0[ScheduleableAlarm.AuthorizerKey.self] = authorization
+        $0[ScheduleableAlarm.AuthorizerKey.self] = authorizer
         $0[Mountain.LoaderKey.self] = Mountain.MockLoader(result: .success(.mock1))
       } operation: {
         let model = PlanClimbModel(mountainId: Mountain.ID())
@@ -46,13 +44,12 @@ extension DependenciesTestSuite {
 
     @Test("Toggles Alarm, Asks For Alarms Permission Before Enabling")
     func togglesAlarmAsksForAlarmsPermissionBeforeEnabling() async throws {
-      let authorization = ScheduleableAlarm.MockAuthorization()
-      authorization.status = .notDetermined
-      authorization.statusOnRequest = .authorized
+      let authorizer = ScheduleableAlarm.MockAuthorizer()
+      authorizer.status = .notDetermined
+      authorizer.statusOnRequest = .authorized
 
       try await withDependencies {
-        $0[ScheduleableAlarm.AuthorizationStatus.ObserverKey.self] = authorization
-        $0[ScheduleableAlarm.AuthorizerKey.self] = authorization
+        $0[ScheduleableAlarm.AuthorizerKey.self] = authorizer
         $0[Mountain.LoaderKey.self] = Mountain.MockLoader(result: .success(.mock1))
       } operation: {
         let model = PlanClimbModel(mountainId: Mountain.ID())
@@ -65,13 +62,12 @@ extension DependenciesTestSuite {
 
     @Test("Toggles Alarm, Does Not Enable When Permission Denied")
     func togglesAlarmDoesNotEnableWhenPermissionDenied() async throws {
-      let authorization = ScheduleableAlarm.MockAuthorization()
-      authorization.status = .notDetermined
-      authorization.statusOnRequest = .unauthorized
+      let authorizer = ScheduleableAlarm.MockAuthorizer()
+      authorizer.status = .notDetermined
+      authorizer.statusOnRequest = .unauthorized
 
       try await withDependencies {
-        $0[ScheduleableAlarm.AuthorizationStatus.ObserverKey.self] = authorization
-        $0[ScheduleableAlarm.AuthorizerKey.self] = authorization
+        $0[ScheduleableAlarm.AuthorizerKey.self] = authorizer
         $0[Mountain.LoaderKey.self] = Mountain.MockLoader(result: .success(.mock1))
       } operation: {
         let model = PlanClimbModel(mountainId: Mountain.ID())

@@ -15,8 +15,11 @@ extension ScheduleableAlarm {
 // MARK: - Authorizer
 
 extension ScheduleableAlarm {
-  public protocol Authorizer: Sendable {
+  public protocol Authorizer: AnyObject, Sendable {
+    associatedtype Statuses: AsyncSequence<ScheduleableAlarm.AuthorizationStatus, Never>
+
     func requestAuthorization() async throws -> AuthorizationStatus
+    func statuses() -> Statuses
   }
 
   public enum AuthorizerKey: DependencyKey {
@@ -24,37 +27,17 @@ extension ScheduleableAlarm {
       #if canImport(AlarmKit)
         ScheduleableAlarm.AlarmKitStore.shared
       #else
-        ScheduleableAlarm.MockAuthorization()
+        ScheduleableAlarm.MockAuthorizer()
       #endif
     }
   }
 }
 
-// MARK: - AuthorizationObserver
-
-extension ScheduleableAlarm.AuthorizationStatus {
-  public protocol Observer: Sendable, AnyObject {
-    associatedtype Statuses: AsyncSequence<ScheduleableAlarm.AuthorizationStatus, Never>
-
-    func statuses() -> Statuses
-  }
-
-  public enum ObserverKey: DependencyKey {
-    public static var liveValue: any Observer {
-      #if canImport(AlarmKit)
-        ScheduleableAlarm.AlarmKitStore.shared
-      #else
-        ScheduleableAlarm.MockAuthorization()
-      #endif
-    }
-  }
-}
-
-// MARK: - MockAuthorization
+// MARK: - MockAuthorizer
 
 extension ScheduleableAlarm {
   @MainActor
-  public final class MockAuthorization {
+  public final class MockAuthorizer {
     public var status = AuthorizationStatus.notDetermined {
       didSet {
         for continuation in continuations {
@@ -70,14 +53,12 @@ extension ScheduleableAlarm {
   }
 }
 
-extension ScheduleableAlarm.MockAuthorization: ScheduleableAlarm.Authorizer {
+extension ScheduleableAlarm.MockAuthorizer: ScheduleableAlarm.Authorizer {
   public func requestAuthorization() async throws -> ScheduleableAlarm.AuthorizationStatus {
     self.status = self.statusOnRequest
     return self.statusOnRequest
   }
-}
 
-extension ScheduleableAlarm.MockAuthorization: ScheduleableAlarm.AuthorizationStatus.Observer {
   public nonisolated func statuses() -> AsyncStream<ScheduleableAlarm.AuthorizationStatus> {
     AsyncStream { continuation in
       Task { @MainActor in
@@ -101,11 +82,11 @@ extension SharedReaderKey where Self == ScheduleableAlarm.AuthorizationStatus.Up
 
 extension ScheduleableAlarm.AuthorizationStatus {
   public struct UpdatesKey {
-    private let observer: any Observer
+    private let authorizer: any ScheduleableAlarm.Authorizer
 
     public init() {
-      @Dependency(ScheduleableAlarm.AuthorizationStatus.ObserverKey.self) var observer
-      self.observer = observer
+      @Dependency(ScheduleableAlarm.AuthorizerKey.self) var authorizer
+      self.authorizer = authorizer
     }
   }
 }
@@ -118,7 +99,7 @@ extension ScheduleableAlarm.AuthorizationStatus.UpdatesKey: SharedReaderKey {
   }
 
   public var id: ID {
-    ID(inner: ObjectIdentifier(self.observer))
+    ID(inner: ObjectIdentifier(self.authorizer))
   }
 
   public func load(context: LoadContext<Value>, continuation: LoadContinuation<Value>) {
@@ -130,7 +111,7 @@ extension ScheduleableAlarm.AuthorizationStatus.UpdatesKey: SharedReaderKey {
     subscriber: SharedSubscriber<Value>
   ) -> SharedSubscription {
     let task = Task.immediate {
-      for await status in self.observer.statuses() {
+      for await status in self.authorizer.statuses() {
         subscriber.yield(status)
       }
     }
