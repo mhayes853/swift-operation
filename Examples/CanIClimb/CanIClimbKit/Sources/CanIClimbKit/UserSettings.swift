@@ -54,14 +54,9 @@ extension UserSettingsModel {
 
 extension UserSettingsModel {
   public var submittableEdit: User.Edit? {
-    guard !self.editableFields.name.isEmpty && self.editableFields != self.originalEditableFields
-    else { return nil }
-    if let components = try? PersonNameComponents(self.editableFields.name) {
-      return User.Edit(name: components, subtitle: self.editableFields.subtitle)
-    }
-    var components = PersonNameComponents()
-    components.givenName = self.editableFields.name
-    return User.Edit(name: components, subtitle: self.editableFields.subtitle)
+    guard self.editableFields != self.originalEditableFields else { return nil }
+    guard let name = User.Name(self.editableFields.name) else { return nil }
+    return User.Edit(name: name, subtitle: self.editableFields.subtitle)
   }
 
   public func editSubmitted(edit: User.Edit) async throws {

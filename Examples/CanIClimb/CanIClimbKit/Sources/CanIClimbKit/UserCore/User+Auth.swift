@@ -9,10 +9,10 @@ import SwiftNavigation
 extension User {
   public struct SignInCredentials: Hashable, Sendable, Codable {
     public let userId: User.ID
-    public let name: PersonNameComponents
+    public let name: User.Name
     public let identityToken: Data
 
-    public init(userId: User.ID, name: PersonNameComponents, token: Data) {
+    public init(userId: User.ID, name: User.Name, token: Data) {
       self.userId = userId
       self.name = name
       self.identityToken = token
@@ -29,7 +29,11 @@ extension User.SignInCredentials {
     else {
       return nil
     }
-    self.init(userId: User.ID(rawValue: credentials.user), name: fullName, token: token)
+    self.init(
+      userId: User.ID(rawValue: credentials.user),
+      name: User.Name(components: fullName),
+      token: token
+    )
   }
 }
 

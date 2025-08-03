@@ -336,7 +336,7 @@ extension CanIClimbAPI.Tokens.Response {
 extension User.SignInCredentials {
   fileprivate static let mock = Self(
     userId: "test",
-    name: PersonNameComponents(givenName: "Blob", familyName: "Blob"),
+    name: User.Name("Blob")!,
     token: Data("blob".utf8)
   )
 }

@@ -7,10 +7,10 @@ import SwiftNavigation
 
 extension User {
   public struct Edit: Hashable, Sendable, Codable {
-    public var name: PersonNameComponents
+    public var name: User.Name
     public var subtitle: String
 
-    public init(name: PersonNameComponents, subtitle: String) {
+    public init(name: User.Name, subtitle: String) {
       self.name = name
       self.subtitle = subtitle
     }

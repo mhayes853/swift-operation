@@ -123,12 +123,12 @@ public struct CachedMountainRecord: Hashable, Identifiable, Sendable {
 public struct CachedUserRecord: Hashable, Sendable, Identifiable, Codable {
   public let id: User.ID
 
-  @Column(as: PersonNameComponents.JSONRepresentation.self)
-  public var name: PersonNameComponents
+  @Column(as: User.Name.JSONRepresentation.self)
+  public var name: User.Name
 
   public var subtitle: String
 
-  public init(id: User.ID, name: PersonNameComponents, subtitle: String = "") {
+  public init(id: User.ID, name: User.Name, subtitle: String = "") {
     self.id = id
     self.name = name
     self.subtitle = subtitle
