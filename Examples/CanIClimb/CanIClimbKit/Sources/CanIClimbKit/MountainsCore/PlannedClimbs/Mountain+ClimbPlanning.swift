@@ -1,0 +1,134 @@
+import Dependencies
+import Foundation
+import SharingQuery
+import SwiftNavigation
+
+// MARK: - ClimbPlanCreate
+
+extension Mountain {
+  public struct ClimbPlanCreate: Hashable, Sendable {
+    public let mountainId: Mountain.ID
+    public var targetDate: Date
+    public var alarm: Alarm?
+
+    public init(
+      mountainId: Mountain.ID,
+      targetDate: Date,
+      alarm: Mountain.ClimbPlanCreate.Alarm? = nil
+    ) {
+      self.mountainId = mountainId
+      self.targetDate = targetDate
+      self.alarm = alarm
+    }
+  }
+}
+
+extension Mountain.ClimbPlanCreate {
+  public struct Alarm: Hashable, Sendable {
+    public var name: String
+    public var date: Date
+
+    public init(name: String, date: Date) {
+      self.name = name
+      self.date = date
+    }
+  }
+}
+
+extension Mountain.ClimbPlanCreate {
+  public static let mock1 = Self(
+    mountainId: Mountain.PlannedClimb.mock1.mountainId,
+    targetDate: Mountain.PlannedClimb.mock1.targetDate
+  )
+}
+
+// MARK: - ClimbPlanner
+
+extension Mountain {
+  public protocol PlanClimber: Sendable {
+    func plan(create: ClimbPlanCreate) async throws -> PlannedClimb
+  }
+
+  public enum PlanClimberKey: DependencyKey {
+    public static var liveValue: any PlanClimber {
+      fatalError()
+    }
+  }
+}
+
+extension Mountain {
+  @MainActor
+  public final class MockClimbPlanner: PlanClimber {
+    public var results = [ClimbPlanCreate: Result<PlannedClimb, any Error>]()
+
+    public nonisolated init() {}
+
+    public func plan(create: ClimbPlanCreate) async throws -> PlannedClimb {
+      guard let result = self.results[create] else { throw NoPlanError() }
+      return try result.get()
+    }
+
+    private struct NoPlanError: Error {}
+  }
+}
+
+// MARK: - Mutation
+
+extension Mountain {
+  public static let planClimbMutation = PlanClimbMutation()
+
+  public struct PlanClimbMutation: MutationRequest, Hashable {
+    public struct Arguments: Sendable {
+      public let mountain: Mountain
+      public let create: ClimbPlanCreate
+
+      public init(mountain: Mountain, create: ClimbPlanCreate) {
+        self.mountain = mountain
+        self.create = create
+      }
+    }
+
+    public func mutate(
+      with arguments: Arguments,
+      in context: QueryContext,
+      with continuation: QueryContinuation<PlannedClimb>
+    ) async throws -> PlannedClimb {
+      @Dependency(Mountain.PlanClimberKey.self) var planner
+      @Dependency(\.defaultQueryClient) var client
+
+      let plannedClimb = try await planner.plan(create: arguments.create)
+
+      let climbsStore = client.store(for: Mountain.plannedClimbsQuery(for: arguments.mountain.id))
+      climbsStore.withExclusiveAccess {
+        climbsStore.currentValue = climbsStore.currentValue ?? []
+        climbsStore.currentValue?.append(plannedClimb)
+      }
+
+      return plannedClimb
+    }
+  }
+}
+
+// MARK: - Alerts
+
+extension AlertState where Action == Never {
+  public static func planClimbSuccess(mountainName: String, targetDate: Date) -> Self {
+    Self {
+      TextState("Climb Planned!")
+    } message: {
+      TextState(
+        """
+        Your climb for \(mountainName) has been planned successfully for \
+        \(targetDate.formatted(date: .complete, time: .omitted)) at \
+        \(targetDate.formatted(date: .omitted, time: .shortened))
+        """
+      )
+    }
+  }
+
+  public static let planClimbFailure = Self.remoteOperationError {
+    TextState("An Error Occurred")
+  } message: {
+    TextState("Please try again.")
+  }
+}

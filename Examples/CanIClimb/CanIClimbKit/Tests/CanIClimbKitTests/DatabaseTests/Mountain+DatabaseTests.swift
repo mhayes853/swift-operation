@@ -23,7 +23,7 @@ struct MountainDatabaseTests {
   func searchesMountainsByText(search: Mountain.Search, indicies: [Int]) async throws {
     let results = try await self.database.write { db in
       try Mountain.save(Mountain.searchMocks, in: db)
-      try CachedPlannedClimbRecord.insert { Mountain.PlannedClimb.mocks }
+      try CachedPlannedClimbRecord.insert { CachedPlannedClimbRecord.mocks }
         .execute(db)
       return try Mountain.findAll(matching: search, in: db)
     }
@@ -48,7 +48,7 @@ extension Mountain {
   }()
 }
 
-extension Mountain.PlannedClimb {
+extension CachedPlannedClimbRecord {
   fileprivate static let mocks = [
     Self(
       id: ID(),
