@@ -143,5 +143,22 @@ extension DependenciesTestSuite {
         }
       }
     }
+
+    @Test("Automatically Adjusts Alarm Date Until Changed Manually")
+    func automaticallyAdjustsAlarmDateUntilChangedManually() async throws {
+      withDependencies {
+        $0[ScheduleableAlarm.AuthorizerKey.self] = ScheduleableAlarm.MockAuthorizer()
+        $0[Mountain.LoaderKey.self] = Mountain.MockLoader(result: .success(.mock1))
+      } operation: {
+        let model = PlanClimbModel(mountainId: Mountain.mock1.id)
+
+        model.targetDate = .distantFuture
+        expectNoDifference(model.alarmDate, .distantFuture)
+
+        model.alarmDate = .distantPast
+        model.targetDate = .now
+        expectNoDifference(model.alarmDate, .distantPast)
+      }
+    }
   }
 }

@@ -95,6 +95,17 @@ extension Mountain {
   }
 }
 
+extension Mountain {
+  @MainActor
+  public final class SucceedingClimbPlanner: PlanClimber {
+    public init() {}
+
+    public func plan(create: ClimbPlanCreate) async throws -> PlannedClimb {
+      .mock1
+    }
+  }
+}
+
 // MARK: - Mutation
 
 extension Mountain {

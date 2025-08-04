@@ -235,20 +235,8 @@ private struct MountainsListSheetLoadingView: View {
       if self.model.$mountains.isLoading {
         SpinnerView()
       } else if let error = self.model.$mountains.error {
-        VStack {
-          Text("An Error Occurred")
-            .font(.title3.bold())
-          if self.networkStatus != .connected {
-            Text("Check your internet connection and try again.")
-          } else {
-            Text(error.localizedDescription)
-          }
-          Button("Retry") {
-            Task { try await self.model.$mountains.fetchNextPage() }
-          }
-          .bold()
-          .buttonStyle(.borderedProminent)
-          .tint(self.colorScheme == .light ? .primary : .secondaryBackground)
+        RemoteOperationErrorView(error: error) {
+          Task { try await self.model.$mountains.fetchNextPage() }
         }
       } else if !self.model.$mountains.hasNextPage {
         Text("You've reached the end of the list.")

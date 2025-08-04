@@ -221,7 +221,7 @@ private struct WelcomeView: View {
       systemImageName: "mountain.2.fill",
       imageColor: .primary
     ) {
-      OnboardingButton("Let's Get Started!") {
+      CTAButton("Let's Get Started!") {
         self.model.startInvoked()
       }
     }
@@ -249,7 +249,7 @@ private struct DisclaimerView: View {
       .padding()
     }
     .safeAreaInset(edge: .bottom) {
-      OnboardingButton("Let's Move On") {
+      CTAButton("Let's Move On") {
         self.model.disclaimerAccepted()
       }
       .padding()
@@ -322,7 +322,7 @@ private struct HeightSelectionView: View {
       .padding()
     }
     .safeAreaInset(edge: .bottom) {
-      OnboardingButton("Select Height") {
+      CTAButton("Select Height") {
         self.model.heightSelected()
       }
       .padding()
@@ -391,7 +391,7 @@ private struct WeightSelectionView: View {
       .padding()
     }
     .safeAreaInset(edge: .bottom) {
-      OnboardingButton("Select Weight") {
+      CTAButton("Select Weight") {
         self.model.weightSelected()
       }
       .padding()
@@ -452,7 +452,7 @@ private struct ConnectHealthKitView: View {
       imageColor: .pink
     ) {
       VStack(spacing: 20) {
-        OnboardingButton(
+        CTAButton(
           self.model.connectToHealthKit.isConnected ? "HealthKit Connected" : "Connect HealthKit"
         ) {
           Task { await self.model.connectToHealthKitStepInvoked(action: .connect) }
@@ -488,7 +488,7 @@ private struct ShareLocationView: View {
     ) {
       VStack(spacing: 20) {
         if self.model.hasRequestedLocationSharing {
-          OnboardingButton(
+          CTAButton(
             self.model.isLocationSharingEnabled
               ? "Location Sharing Enabled" : "Location Sharing Disabled"
           ) {
@@ -501,7 +501,7 @@ private struct ShareLocationView: View {
           .tint(.primary)
           .buttonStyle(.plain)
         } else {
-          OnboardingButton("Share Your Location") {
+          CTAButton("Share Your Location") {
             Task { await self.model.locationPermissionStepInvoked(action: .requestPermission) }
           }
           Button("Skip") {
@@ -570,7 +570,7 @@ private struct WrapUpView: View {
       systemImageName: "mountain.2.fill",
       imageColor: .primary
     ) {
-      OnboardingButton("Let's Get Climbing Indeed!") {
+      CTAButton("Let's Get Climbing Indeed!") {
         Task { await withErrorReporting { try await self.model.wrapUpInvoked() } }
       }
     }
@@ -750,30 +750,6 @@ private struct OnboardingOptionView: View {
       .cornerRadius(20)
     }
     .buttonStyle(.plain)
-  }
-}
-
-// MARK: - OnboardingButton
-
-private struct OnboardingButton: View {
-  let action: () -> Void
-  let label: String
-
-  init(_ label: String, action: @escaping () -> Void) {
-    self.action = action
-    self.label = label
-  }
-
-  var body: some View {
-    Button(action: self.action) {
-      Text(self.label)
-        .foregroundStyle(.background)
-        .bold()
-        .padding()
-        .frame(maxWidth: .infinity)
-    }
-    .buttonStyle(.borderedProminent)
-    .tint(.primary)
   }
 }
 

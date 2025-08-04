@@ -1,6 +1,7 @@
 import Dependencies
 import Query
 import Sharing
+import SwiftUI
 
 // MARK: - AuthorizationStatus
 
@@ -112,7 +113,7 @@ extension ScheduleableAlarm.AuthorizationStatus.UpdatesKey: SharedReaderKey {
   ) -> SharedSubscription {
     let task = Task.immediate {
       for await status in self.authorizer.statuses() {
-        subscriber.yield(status)
+        withAnimation { subscriber.yield(status) }
       }
     }
     return SharedSubscription { task.cancel() }
