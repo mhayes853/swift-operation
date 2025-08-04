@@ -104,6 +104,18 @@ extension CachedMountainRecord {
   }
 }
 
+extension Mountain.PlannedClimb {
+  public init(cached record: CachedPlannedClimbRecord, alarm: ScheduleableAlarm?) {
+    self.init(
+      id: record.id,
+      mountainId: record.mountainId,
+      targetDate: record.targetDate,
+      achievedDate: record.achievedDate,
+      alarm: alarm
+    )
+  }
+}
+
 extension CachedPlannedClimbRecord {
   public init(plannedClimb: Mountain.PlannedClimb) {
     self.init(

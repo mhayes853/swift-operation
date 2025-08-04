@@ -42,6 +42,12 @@ extension Mountain.ClimbPlanCreate.Alarm {
   }
 }
 
+extension Mountain.ClimbPlanCreate.Alarm {
+  public func newScheduleableAlarm() -> ScheduleableAlarm {
+    ScheduleableAlarm(id: ScheduleableAlarm.ID(), title: self.name, date: self.date)
+  }
+}
+
 extension Mountain.ClimbPlanCreate {
   public static let mock1 = Self(
     mountainId: Mountain.PlannedClimb.mock1.mountainId,
