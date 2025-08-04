@@ -79,7 +79,7 @@ extension MockHTTPDataTransport.ResponseBody {
 }
 
 extension MockHTTPDataTransport.ResponseBody {
-  fileprivate func data() throws -> Data {
+  public func data() throws -> Data {
     switch self {
     case .data(let data): data
     case .json(let encodable, let encoder): try encoder.encode(encodable)
