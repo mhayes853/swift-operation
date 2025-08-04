@@ -120,6 +120,35 @@ extension CanIClimbAPI {
   }
 }
 
+// MARK: - Planned Climbs
+
+extension CanIClimbAPI {
+  public typealias PlannedClimbResponse = CachedPlannedClimbRecord
+
+  public func plannedClimbs(
+    for id: Mountain.ID
+  ) async throws -> IdentifiedArrayOf<PlannedClimbResponse> {
+    let (data, resp) = try await self.perform(request: .plannedClimbs(id))
+    guard resp.statusCode != 404 else { return [] }
+    return try JSONDecoder().decode(IdentifiedArrayOf<PlannedClimbResponse>.self, from: data)
+  }
+
+  public struct PlanClimbRequest: Hashable, Sendable, Codable {
+    public let mountainId: Mountain.ID
+    public var targetDate: Date
+
+    public init(create: Mountain.ClimbPlanCreate) {
+      self.mountainId = create.mountainId
+      self.targetDate = create.targetDate
+    }
+  }
+
+  public func planClimb(_ request: PlanClimbRequest) async throws -> PlannedClimbResponse {
+    let (data, _) = try await self.perform(request: .planClimb(request))
+    return try JSONDecoder().decode(PlannedClimbResponse.self, from: data)
+  }
+}
+
 // MARK: - Helper
 
 extension CanIClimbAPI {

@@ -1,8 +1,8 @@
 import CanIClimbKit
 import CustomDump
 import Foundation
-import Testing
 import Query
+import Testing
 
 @Suite("CanIClimbAPI tests")
 struct CanIClimbAPITests {
@@ -316,7 +316,51 @@ struct CanIClimbAPITests {
     )
     expectNoDifference(searchResult, expectedResult)
   }
-  
+
+  @Test("Returns Planned Climbs For Mountains")
+  func returnsPlannedClimbsForMountains() async throws {
+    let api = CanIClimbAPI(
+      transport: MockHTTPDataTransport { request in
+        if request.url?.path() == "/mountain/\(Mountain.mock1.id)/climbs" {
+          return (200, .json([CanIClimbAPI.PlannedClimbResponse(plannedClimb: .mock1)]))
+        }
+        return (400, .data(Data()))
+      },
+      tokens: self.tokens()
+    )
+    let result = try await api.plannedClimbs(for: Mountain.mock1.id)
+    expectNoDifference(result, [CanIClimbAPI.PlannedClimbResponse(plannedClimb: .mock1)])
+  }
+
+  @Test("Returns Empty Array For Planned Climbs When Mountain Not Found")
+  func returnsEmptyArrayForPlannedClimbsWhenMountainNotFound() async throws {
+    let api = CanIClimbAPI(
+      transport: MockHTTPDataTransport { _ in (404, .data(Data())) },
+      tokens: self.tokens()
+    )
+    let result = try await api.plannedClimbs(for: Mountain.mock1.id)
+    expectNoDifference(result, [])
+  }
+
+  @Test("Plans Climb")
+  func plansClimb() async throws {
+    let planRequest = CanIClimbAPI.PlanClimbRequest(create: .mock1)
+    let api = CanIClimbAPI(
+      transport: MockHTTPDataTransport { request in
+        if request.url?.path() == "/mountain/\(Mountain.mock1.id)/climbs"
+          && request.httpMethod == "POST"
+          && request.hasBody(planRequest)
+        {
+          return (200, .json(CanIClimbAPI.PlannedClimbResponse(plannedClimb: .mock1)))
+        }
+        return (400, .data(Data()))
+      },
+      tokens: self.tokens()
+    )
+    let result = try await api.planClimb(planRequest)
+    expectNoDifference(result, CanIClimbAPI.PlannedClimbResponse(plannedClimb: .mock1))
+  }
+
   private func tokens() -> CanIClimbAPI.Tokens {
     CanIClimbAPI.Tokens(client: QueryClient(), secureStorage: self.storage)
   }

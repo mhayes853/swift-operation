@@ -3,7 +3,7 @@ import Foundation
 // MARK: - Request
 
 extension CanIClimbAPI {
-  public enum Request: Hashable, Sendable {
+  public enum Request: Equatable, Sendable {
     case refreshAccessToken
     case signIn(User.SignInCredentials)
     case signOut
@@ -14,6 +14,9 @@ extension CanIClimbAPI {
 
     case searchMountains(Mountain.SearchRequest)
     case mountain(Mountain.ID)
+
+    case plannedClimbs(Mountain.ID)
+    case planClimb(PlanClimbRequest)
   }
 }
 
@@ -54,6 +57,10 @@ extension CanIClimbAPI.Request {
       try self.makeSignInRequest(&request, with: credentials)
     case .signOut:
       self.makeSignOutRequest(&request)
+    case .planClimb(let planRequest):
+      try self.makePlanClimbRequest(&request, request: planRequest)
+    case .plannedClimbs(let id):
+      self.makeMountainPlannedClimbsRequest(&request, for: id)
     }
 
     return request
@@ -119,6 +126,19 @@ extension CanIClimbAPI.Request {
 
   private func makeMountainRequest(_ request: inout URLRequest, for id: Mountain.ID) {
     request.url?.append(path: "/mountain/\(id)")
+  }
+
+  private func makePlanClimbRequest(
+    _ urlRequest: inout URLRequest,
+    request: CanIClimbAPI.PlanClimbRequest
+  ) throws {
+    urlRequest.url?.append(path: "/mountain/\(request.mountainId)/climbs")
+    urlRequest.httpMethod = "POST"
+    urlRequest.httpBody = try JSONEncoder().encode(request)
+  }
+
+  private func makeMountainPlannedClimbsRequest(_ request: inout URLRequest, for id: Mountain.ID) {
+    request.url?.append(path: "/mountain/\(id)/climbs")
   }
 }
 

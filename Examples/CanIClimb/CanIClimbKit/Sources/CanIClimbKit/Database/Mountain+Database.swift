@@ -103,3 +103,14 @@ extension CachedMountainRecord {
     )
   }
 }
+
+extension CachedPlannedClimbRecord {
+  public init(plannedClimb: Mountain.PlannedClimb) {
+    self.init(
+      id: plannedClimb.id,
+      mountainId: plannedClimb.mountainId,
+      targetDate: plannedClimb.targetDate,
+      achievedDate: plannedClimb.achievedDate
+    )
+  }
+}
