@@ -11,7 +11,10 @@ public final class MountainDetailModel: HashableObject, Identifiable {
   @ObservationIgnored
   @SharedQuery<Mountain.Query.State> public var mountain: Mountain??
 
-  public var destination: Destination?
+  public var destination: Destination? {
+    didSet { self.bind() }
+  }
+
   private let mountainId: Mountain.ID
 
   public init(id: Mountain.ID) {
@@ -24,6 +27,15 @@ extension MountainDetailModel {
   @CasePathable
   public enum Destination: Hashable, Sendable {
     case planClimb(PlanClimbModel)
+  }
+
+  private func bind() {
+    switch self.destination {
+    case .planClimb(let model):
+      model.onPlanned = { [weak self] _ in self?.destination = nil }
+    default:
+      break
+    }
   }
 }
 

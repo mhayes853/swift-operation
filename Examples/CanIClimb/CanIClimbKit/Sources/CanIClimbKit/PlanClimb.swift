@@ -19,13 +19,18 @@ public final class PlanClimbModel: HashableObject, Identifiable {
   @ObservationIgnored
   @SharedQuery(ScheduleableAlarm.requestAuthorizationMutation) public var requestAlarmAuthorization
 
+  @ObservationIgnored
+  @SharedQuery(Mountain.planClimbMutation) public var planClimb
+
   public var targetDate = Date()
   public var alarmDate = Date()
 
   public private(set) var shouldAddAlarm = false
 
+  @ObservationIgnored public var onPlanned: ((Mountain.PlannedClimb) -> Void)?
+
   public init(mountainId: Mountain.ID) {
-    self._mountain = SharedQuery(Mountain.query(id: mountainId))
+    self._mountain = SharedQuery(Mountain.query(id: mountainId), animation: .bouncy)
   }
 }
 
@@ -47,7 +52,18 @@ extension PlanClimbModel {
 
 extension PlanClimbModel {
   public func submitted() async throws {
-
+    guard case let mountain?? = self.mountain else { return }
+    var create = Mountain.ClimbPlanCreate(mountainId: mountain.id, targetDate: self.targetDate)
+    if self.shouldAddAlarm {
+      create.alarm = Mountain.ClimbPlanCreate.Alarm(
+        mountainName: mountain.name,
+        date: self.alarmDate
+      )
+    }
+    let (_, plannedClimb) = try await self.$planClimb.mutate(
+      with: Mountain.PlanClimbMutation.Arguments(mountain: mountain, create: create)
+    )
+    self.onPlanned?(plannedClimb)
   }
 }
 

@@ -12,7 +12,7 @@ extension DependenciesTestSuite {
     func updatesPlannedClimbedListWhenPlanningNewClimb() async throws {
       try await withDependencies {
         let planner = Mountain.MockClimbPlanner()
-        planner.results[.mock1] = .success(.mock1)
+        planner.setResult(for: .mock1, result: .success(.mock1))
         $0[Mountain.PlanClimberKey.self] = planner
         $0[Mountain.PlannedClimbsLoaderKey.self] = Mountain.MockPlannedClimbsLoader()
       } operation: {

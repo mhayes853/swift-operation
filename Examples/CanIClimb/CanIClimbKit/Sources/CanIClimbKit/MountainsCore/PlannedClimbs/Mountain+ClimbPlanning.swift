@@ -6,7 +6,7 @@ import SwiftNavigation
 // MARK: - ClimbPlanCreate
 
 extension Mountain {
-  public struct ClimbPlanCreate: Hashable, Sendable {
+  public struct ClimbPlanCreate: Equatable, Sendable {
     public let mountainId: Mountain.ID
     public var targetDate: Date
     public var alarm: Alarm?
@@ -24,14 +24,21 @@ extension Mountain {
 }
 
 extension Mountain.ClimbPlanCreate {
-  public struct Alarm: Hashable, Sendable {
-    public var name: String
+  public struct Alarm: Equatable, Sendable {
+    public var name: LocalizedStringResource
     public var date: Date
 
-    public init(name: String, date: Date) {
+    public init(name: LocalizedStringResource, date: Date) {
       self.name = name
       self.date = date
     }
+  }
+}
+
+extension Mountain.ClimbPlanCreate.Alarm {
+  public init(mountainName: String, date: Date) {
+    self.name = "Starting climb for \(mountainName)!"
+    self.date = date
   }
 }
 
@@ -59,12 +66,22 @@ extension Mountain {
 extension Mountain {
   @MainActor
   public final class MockClimbPlanner: PlanClimber {
-    public var results = [ClimbPlanCreate: Result<PlannedClimb, any Error>]()
+    private var results = [(ClimbPlanCreate, Result<PlannedClimb, any Error>)]()
 
     public nonisolated init() {}
 
+    public func setResult(for create: ClimbPlanCreate, result: Result<PlannedClimb, any Error>) {
+      if let index = self.results.firstIndex(where: { $0.0 == create }) {
+        self.results[index] = (create, result)
+      } else {
+        self.results.append((create, result))
+      }
+    }
+
     public func plan(create: ClimbPlanCreate) async throws -> PlannedClimb {
-      guard let result = self.results[create] else { throw NoPlanError() }
+      guard let (_, result) = self.results.first(where: { $0.0 == create }) else {
+        throw NoPlanError()
+      }
       return try result.get()
     }
 
