@@ -52,7 +52,7 @@ extension Mountain {
       @Dependency(\.defaultQueryClient) var client
       @Dependency(\.date) var now
 
-      if context.queryRetryIndex == 0 {
+      if context.isFirstFetchAttempt {
         let climbsStore = client.store(for: Mountain.plannedClimbsQuery(for: arguments.mountainId))
         climbsStore.currentValue?[id: arguments.id]?.achievedDate = now()
       }
