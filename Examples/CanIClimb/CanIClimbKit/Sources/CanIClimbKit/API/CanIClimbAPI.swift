@@ -135,7 +135,11 @@ extension CanIClimbAPI {
     guard resp.statusCode != 404 else { return [] }
     return try JSONDecoder().decode(IdentifiedArrayOf<PlannedClimbResponse>.self, from: data)
   }
+}
 
+// MARK: - Climb Planning
+
+extension CanIClimbAPI {
   public struct PlanClimbRequest: Hashable, Sendable, Codable {
     public let mountainId: Mountain.ID
     public var targetDate: Date
@@ -164,6 +168,22 @@ extension CanIClimbAPI {
     if resp.statusCode != 204 {
       throw UnplanClimbsError(statusCode: resp.statusCode)
     }
+  }
+}
+
+// MARK: - Climb Achieving
+
+extension CanIClimbAPI {
+  public func achieveClimb(for id: Mountain.PlannedClimb.ID) async throws -> PlannedClimbResponse {
+    let (data, _) = try await self.perform(request: .achieveClimb(id))
+    return try JSONDecoder().decode(PlannedClimbResponse.self, from: data)
+  }
+
+  public func unachieveClimb(
+    for id: Mountain.PlannedClimb.ID
+  ) async throws -> PlannedClimbResponse {
+    let (data, _) = try await self.perform(request: .unachieveClimb(id))
+    return try JSONDecoder().decode(PlannedClimbResponse.self, from: data)
   }
 }
 

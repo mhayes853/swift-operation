@@ -21,6 +21,9 @@ extension CanIClimbAPI {
     case plannedClimbs(Mountain.ID)
     case planClimb(PlanClimbRequest)
     case unplanClimbs(OrderedSet<Mountain.PlannedClimb.ID>)
+
+    case achieveClimb(Mountain.PlannedClimb.ID)
+    case unachieveClimb(Mountain.PlannedClimb.ID)
   }
 }
 
@@ -67,6 +70,10 @@ extension CanIClimbAPI.Request {
       self.makeMountainPlannedClimbsRequest(&request, for: id)
     case .unplanClimbs(let ids):
       self.makeUnplanClimbRequest(&request, for: ids)
+    case .achieveClimb(let id):
+      self.makeAchieveClimbRequest(&request, for: id)
+    case .unachieveClimb(let id):
+      self.makeUnachieveClimbRequest(&request, for: id)
     }
 
     return request
@@ -157,6 +164,22 @@ extension CanIClimbAPI.Request {
         URLQueryItem(name: "ids", value: ids.map(\.uuidString).joined(separator: ","))
       ])
     request.httpMethod = "DELETE"
+  }
+
+  private func makeAchieveClimbRequest(
+    _ request: inout URLRequest,
+    for id: Mountain.PlannedClimb.ID
+  ) {
+    request.url?.append(path: "/mountain/climbs/\(id)/achieve")
+    request.httpMethod = "POST"
+  }
+
+  private func makeUnachieveClimbRequest(
+    _ request: inout URLRequest,
+    for id: Mountain.PlannedClimb.ID
+  ) {
+    request.url?.append(path: "/mountain/climbs/\(id)/unachieve")
+    request.httpMethod = "POST"
   }
 }
 

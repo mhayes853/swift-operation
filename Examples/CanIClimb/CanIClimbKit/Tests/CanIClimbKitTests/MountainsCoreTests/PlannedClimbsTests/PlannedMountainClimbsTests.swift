@@ -156,6 +156,67 @@ struct PlannedMountainClimbsTests {
     expectNoDifference(localClimbs, [])
   }
 
+  @Test("Updates Locally Cached Climb When Achieved")
+  func updatesLocallyCachedClimbWhenAchieved() async throws {
+    var achievedClimbResponse = CanIClimbAPI.PlannedClimbResponse(plannedClimb: .mock1)
+    achievedClimbResponse.achievedDate = Date(
+      timeIntervalSince1970: TimeInterval(Int(Date.now.timeIntervalSince1970))
+    )
+
+    let plannedClimbs = PlannedMountainClimbs(
+      database: self.database,
+      api: self.api(
+        transport: .mock { [achievedClimbResponse] request, _ in
+          switch request {
+          case .planClimb:
+            (200, .json(CanIClimbAPI.PlannedClimbResponse(plannedClimb: .mock1)))
+          case .achieveClimb(Mountain.PlannedClimb.mock1.id):
+            (200, .json(achievedClimbResponse))
+          default:
+            (400, .data(Data()))
+          }
+        }
+      )
+    )
+
+    let climb = try await plannedClimbs.plan(create: .mock1)
+    try await plannedClimbs.achieveClimb(id: climb.id)
+    let localClimbs = try await plannedClimbs.localPlannedClimbs(for: Mountain.mock1.id)
+
+    let expectedClimb = Mountain.PlannedClimb(cached: achievedClimbResponse, alarm: nil)
+    expectNoDifference(localClimbs, [expectedClimb])
+  }
+
+  @Test("Updates Locally Cached Climb When Unachieved")
+  func updatesLocallyCachedClimbWhenUnachieved() async throws {
+    var achievedClimbResponse = CanIClimbAPI.PlannedClimbResponse(plannedClimb: .mock1)
+    achievedClimbResponse.achievedDate = Date(
+      timeIntervalSince1970: TimeInterval(Int(Date.now.timeIntervalSince1970))
+    )
+
+    let plannedClimbs = PlannedMountainClimbs(
+      database: self.database,
+      api: self.api(
+        transport: .mock { [achievedClimbResponse] request, _ in
+          switch request {
+          case .plannedClimbs:
+            (200, .json([achievedClimbResponse]))
+          case .unachieveClimb(Mountain.PlannedClimb.mock1.id):
+            (200, .json(CanIClimbAPI.PlannedClimbResponse(plannedClimb: .mock1)))
+          default:
+            (400, .data(Data()))
+          }
+        }
+      )
+    )
+
+    _ = try await plannedClimbs.plannedClimbs(for: Mountain.mock1.id)
+    try await plannedClimbs.unachieveClimb(id: achievedClimbResponse.id)
+    let localClimbs = try await plannedClimbs.localPlannedClimbs(for: Mountain.mock1.id)
+
+    expectNoDifference(localClimbs, [.mock1])
+  }
+
   private func api(
     transport: any CanIClimbAPI.DataTransport
   ) -> CanIClimbAPI {

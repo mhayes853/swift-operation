@@ -151,7 +151,7 @@
       "location" : "https://github.com/mhayes853/swift-query",
       "state" : {
         "branch" : "main",
-        "revision" : "d0f2ab38588c20f65197412dde1f29e30aa064e7"
+        "revision" : "589a3d931c6939f42b203a1b1e03fb6fe883a9aa"
       }
     },
     {
@@ -178,7 +178,7 @@
       "location" : "https://github.com/pointfreeco/swift-structured-queries",
       "state" : {
         "branch" : "main",
-        "revision" : "6b3f436f4da7fd2ea304742d936ac8205e5ef8f8"
+        "revision" : "bb12b34a8bf88af3307784da94caee3765a066f2"
       }
     },
     {

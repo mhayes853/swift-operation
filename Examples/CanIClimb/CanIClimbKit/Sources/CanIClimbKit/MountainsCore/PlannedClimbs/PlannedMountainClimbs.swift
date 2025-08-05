@@ -58,6 +58,26 @@ extension PlannedMountainClimbs: Mountain.PlanClimber {
   }
 }
 
+// MARK: - ClimbAchiever
+
+extension PlannedMountainClimbs: Mountain.ClimbAchiever {
+  public func achieveClimb(id: Mountain.PlannedClimb.ID) async throws {
+    let response = try await self.api.achieveClimb(for: id)
+    try await self.database.write { db in
+      try CachedPlannedClimbRecord.upsert { CachedPlannedClimbRecord.Draft(response) }
+        .execute(db)
+    }
+  }
+
+  public func unachieveClimb(id: Mountain.PlannedClimb.ID) async throws {
+    let response = try await self.api.unachieveClimb(for: id)
+    try await self.database.write { db in
+      try CachedPlannedClimbRecord.upsert { CachedPlannedClimbRecord.Draft(response) }
+        .execute(db)
+    }
+  }
+}
+
 // MARK: - PlannedClimbsLoader
 
 extension PlannedMountainClimbs: Mountain.PlannedClimbsLoader {

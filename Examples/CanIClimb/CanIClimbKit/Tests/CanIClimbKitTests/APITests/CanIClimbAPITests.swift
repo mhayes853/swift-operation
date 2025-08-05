@@ -393,6 +393,42 @@ struct CanIClimbAPITests {
     }
   }
 
+  @Test("Achieves Climb")
+  func achievesClimb() async throws {
+    let id = Mountain.PlannedClimb.ID()
+    let api = CanIClimbAPI(
+      transport: MockHTTPDataTransport { request in
+        if request.url?.path() == "/mountain/climbs/\(id)/achieve"
+          && request.httpMethod == "POST"
+        {
+          return (200, .json(CanIClimbAPI.PlannedClimbResponse(plannedClimb: .mock1)))
+        }
+        return (400, .data(Data()))
+      },
+      tokens: self.tokens()
+    )
+    let climb = try await api.achieveClimb(for: id)
+    expectNoDifference(climb, CanIClimbAPI.PlannedClimbResponse(plannedClimb: .mock1))
+  }
+
+  @Test("Unachieves Climb")
+  func unachievesClimb() async throws {
+    let id = Mountain.PlannedClimb.ID()
+    let api = CanIClimbAPI(
+      transport: MockHTTPDataTransport { request in
+        if request.url?.path() == "/mountain/climbs/\(id)/unachieve"
+          && request.httpMethod == "POST"
+        {
+          return (200, .json(CanIClimbAPI.PlannedClimbResponse(plannedClimb: .mock1)))
+        }
+        return (400, .data(Data()))
+      },
+      tokens: self.tokens()
+    )
+    let climb = try await api.unachieveClimb(for: id)
+    expectNoDifference(climb, CanIClimbAPI.PlannedClimbResponse(plannedClimb: .mock1))
+  }
+
   private func tokens() -> CanIClimbAPI.Tokens {
     CanIClimbAPI.Tokens(client: QueryClient(), secureStorage: self.storage)
   }
