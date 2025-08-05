@@ -1,5 +1,6 @@
 import CloudKit
 import SharingGRDB
+import UUIDV7
 import os
 
 // MARK: - SyncEngine
@@ -7,20 +8,15 @@ import os
 extension SyncEngine {
   public static func canIClimb(writer: any DatabaseWriter) throws -> SyncEngine {
     try SyncEngine(
-      container: .canIClimb,
-      database: writer,
-      logger: os.Logger(subsystem: "day.onetask.CanIClimb", category: "SyncEngine"),
-      tables: [
-        UserHumanityRecord.self
-      ],
-      privateTables: [
-        SettingsRecord.self,
-        InternalMetricsRecord.self,
-        ScheduleableAlarmRecord.self,
-        QueryAnalysisRecord.self,
-        ApplicationLaunchRecord.self,
-        PlannedClimbAlarmRecord.self
-      ]
+      for: writer,
+      tables: UserHumanityRecord.self,
+      SettingsRecord.self,
+      InternalMetricsRecord.self,
+      ScheduleableAlarmRecord.self,
+      QueryAnalysisRecord.self,
+      ApplicationLaunchRecord.self,
+      PlannedClimbAlarmRecord.self,
+      containerIdentifier: CKContainer.canIClimb.containerIdentifier
     )
   }
 }

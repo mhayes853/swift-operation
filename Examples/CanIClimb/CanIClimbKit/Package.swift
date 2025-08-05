@@ -15,7 +15,7 @@ let package = Package(
       branch: "main",
       traits: ["SwiftQueryLogging"]
     ),
-    .package(url: "https://github.com/pointfreeco/sharing-grdb-icloud", branch: "cloudkit"),
+    .package(url: "https://github.com/pointfreeco/sharing-grdb", branch: "cloudkit"),
     .package(url: "https://github.com/mhayes853/structured-queries-tagged", from: "0.1.1"),
     .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.9.2"),
     .package(url: "https://github.com/pointfreeco/swift-navigation", from: "2.3.1"),
@@ -31,7 +31,7 @@ let package = Package(
       name: "CanIClimbKit",
       dependencies: [
         .product(name: "SharingQuery", package: "swift-query"),
-        .product(name: "SharingGRDB", package: "sharing-grdb-icloud"),
+        .product(name: "SharingGRDB", package: "sharing-grdb"),
         .product(name: "StructuredQueriesTagged", package: "structured-queries-tagged"),
         .product(name: "SwiftUINavigation", package: "swift-navigation"),
         .product(name: "UIKitNavigation", package: "swift-navigation"),

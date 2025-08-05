@@ -365,13 +365,6 @@ private func writer(for url: URL?, configuration: Configuration) throws -> any D
 }
 
 private func createTriggers(in db: Database) throws {
-  try CachedPlannedClimbRecord.createTemporaryTrigger(
-    after: .delete(forEachRow: { old in
-      PlannedClimbAlarmRecord.all.where { $0.plannedClimbId.eq(old.id) }.delete()
-    })
-  )
-  .execute(db)
-
   try PlannedClimbAlarmRecord.createTemporaryTrigger(
     after: .delete(forEachRow: { old in ScheduleableAlarmRecord.all.find(old.alarmId).delete() })
   )
@@ -533,8 +526,8 @@ extension DatabaseMigrator {
         """
         CREATE TABLE IF NOT EXISTS PlannedClimbAlarms (
           id TEXT NOT NULL,
-          plannedClimbId BLOB NOT NULL,
-          alarmId TEXT NOT NULL,
+          plannedClimbId BLOB NOT NULL REFERENCES CachedPlannedClimbs(id) ON DELETE CASCADE,
+          alarmId TEXT NOT NULL REFERENCES ScheduleableAlarms(id) ON DELETE CASCADE,
           PRIMARY KEY (plannedClimbID, alarmId)
         );
         """,
