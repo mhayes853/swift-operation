@@ -46,11 +46,7 @@ extension PlannedMountainClimbs: Mountain.PlanClimber {
 
     return Mountain.PlannedClimb(cached: climbRecord, alarm: alarm)
   }
-}
 
-// MARK: - ClimbUnplanner
-
-extension PlannedMountainClimbs: Mountain.ClimbUnplanner {
   public func unplanClimbs(ids: OrderedSet<Mountain.PlannedClimb.ID>) async throws {
     try await self.api.unplanClimbs(ids: ids)
     try await self.database.write { db in

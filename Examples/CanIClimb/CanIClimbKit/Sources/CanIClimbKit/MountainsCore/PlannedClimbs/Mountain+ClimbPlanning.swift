@@ -63,6 +63,7 @@ extension Mountain.ClimbPlanCreate {
 extension Mountain {
   public protocol PlanClimber: Sendable {
     func plan(create: ClimbPlanCreate) async throws -> PlannedClimb
+    func unplanClimbs(ids: OrderedSet<PlannedClimb.ID>) async throws
   }
 
   public enum PlanClimberKey: DependencyKey {
@@ -76,6 +77,8 @@ extension Mountain {
   @MainActor
   public final class MockClimbPlanner: PlanClimber {
     private var results = [(ClimbPlanCreate, Result<PlannedClimb, any Error>)]()
+    public var shouldFailUnplan = false
+    public private(set) var unplannedIdSets = [OrderedSet<Mountain.PlannedClimb.ID>]()
 
     public nonisolated init() {}
 
@@ -89,12 +92,19 @@ extension Mountain {
 
     public func plan(create: ClimbPlanCreate) async throws -> PlannedClimb {
       guard let (_, result) = self.results.first(where: { $0.0 == create }) else {
-        throw NoPlanError()
+        throw SomeError()
       }
       return try result.get()
     }
 
-    private struct NoPlanError: Error {}
+    public func unplanClimbs(ids: OrderedSet<Mountain.PlannedClimb.ID>) async throws {
+      if self.shouldFailUnplan {
+        throw SomeError()
+      }
+      self.unplannedIdSets.append(ids)
+    }
+
+    private struct SomeError: Error {}
   }
 }
 
@@ -104,21 +114,16 @@ extension Mountain {
     public init() {}
 
     public func plan(create: ClimbPlanCreate) async throws -> PlannedClimb {
-      .mock1
+      PlannedClimb(
+        id: Mountain.PlannedClimb.ID(),
+        mountainId: create.mountainId,
+        targetDate: create.targetDate,
+        achievedDate: nil,
+        alarm: create.alarm?.newScheduleableAlarm()
+      )
     }
-  }
-}
 
-// MARK: - ClimbUnplanner
-
-extension Mountain {
-  public protocol ClimbUnplanner: Sendable {
-    func unplanClimbs(ids: OrderedSet<PlannedClimb.ID>) async throws
-  }
-
-  public enum ClimbUnplannerKey: DependencyKey {
-    public static var liveValue: any ClimbUnplanner {
-      fatalError()
+    public func unplanClimbs(ids: OrderedSet<Mountain.PlannedClimb.ID>) async throws {
     }
   }
 }
@@ -166,6 +171,65 @@ extension Mountain {
   }
 }
 
+extension Mountain {
+  public static let unplanClimbsMutation = UnplanClimbsMutation()
+    .alerts { _ in
+      nil
+    } failure: { error in
+      (error as? UnplanClimbsError).map { .unplanClimbsFailure(count: $0.ids.count) }
+    }
+
+  public struct UnplanClimbsMutation: MutationRequest, Hashable {
+    public struct Arguments: Sendable {
+      public let mountainId: Mountain.ID
+      public let ids: OrderedSet<PlannedClimb.ID>
+
+      public init(mountainId: Mountain.ID, ids: OrderedSet<PlannedClimb.ID>) {
+        self.ids = ids
+        self.mountainId = mountainId
+      }
+    }
+
+    public func mutate(
+      with arguments: Arguments,
+      in context: QueryContext,
+      with continuation: QueryContinuation<Void>
+    ) async throws {
+      @Dependency(Mountain.PlanClimberKey.self) var planner
+      @Dependency(\.defaultQueryClient) var client
+
+      let climbsStore = client.store(for: Mountain.plannedClimbsQuery(for: arguments.mountainId))
+      var currentPlans: IdentifiedArrayOf<Mountain.PlannedClimb>?
+      var lastUpdatedAt: Date?
+
+      do {
+        climbsStore.withExclusiveAccess {
+          currentPlans = climbsStore.currentValue
+          climbsStore.currentValue?.removeAll(where: { arguments.ids.contains($0.id) })
+          lastUpdatedAt = climbsStore.valueLastUpdatedAt
+        }
+        try await planner.unplanClimbs(ids: arguments.ids)
+      } catch {
+        climbsStore.withExclusiveAccess {
+          guard climbsStore.valueLastUpdatedAt == lastUpdatedAt else { return }
+          climbsStore.currentValue = currentPlans
+        }
+        throw UnplanClimbsError(ids: arguments.ids, inner: error)
+      }
+    }
+  }
+
+  public struct UnplanClimbsError: Error {
+    public let ids: OrderedSet<PlannedClimb.ID>
+    public let inner: any Error
+
+    public init(ids: OrderedSet<PlannedClimb.ID>, inner: any Error) {
+      self.ids = ids
+      self.inner = inner
+    }
+  }
+}
+
 // MARK: - Alerts
 
 extension AlertState where Action == Never {
@@ -187,5 +251,13 @@ extension AlertState where Action == Never {
     TextState("Failed to Plan Climb")
   } message: {
     TextState("Your climb could not be planned. Please try again.")
+  }
+
+  public static func unplanClimbsFailure(count: Int) -> Self {
+    Self {
+      TextState("Failed to Unplan ^[\(count) Climbs](inflect: true)")
+    } message: {
+      TextState("Your ^[\(count) climbs](inflect: true) could not be unplanned. Please try again.")
+    }
   }
 }
