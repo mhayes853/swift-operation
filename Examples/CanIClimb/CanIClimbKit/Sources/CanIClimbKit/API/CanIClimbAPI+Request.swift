@@ -1,4 +1,7 @@
 import Foundation
+import OrderedCollections
+import Tagged
+import UUIDV7
 
 // MARK: - Request
 
@@ -17,6 +20,7 @@ extension CanIClimbAPI {
 
     case plannedClimbs(Mountain.ID)
     case planClimb(PlanClimbRequest)
+    case unplanClimbs(OrderedSet<Mountain.PlannedClimb.ID>)
   }
 }
 
@@ -61,6 +65,8 @@ extension CanIClimbAPI.Request {
       try self.makePlanClimbRequest(&request, request: planRequest)
     case .plannedClimbs(let id):
       self.makeMountainPlannedClimbsRequest(&request, for: id)
+    case .unplanClimbs(let ids):
+      self.makeUnplanClimbRequest(&request, for: ids)
     }
 
     return request
@@ -139,6 +145,18 @@ extension CanIClimbAPI.Request {
 
   private func makeMountainPlannedClimbsRequest(_ request: inout URLRequest, for id: Mountain.ID) {
     request.url?.append(path: "/mountain/\(id)/climbs")
+  }
+
+  private func makeUnplanClimbRequest(
+    _ request: inout URLRequest,
+    for ids: OrderedSet<Mountain.PlannedClimb.ID>
+  ) {
+    request.url?.append(path: "/mountain/climbs")
+    request.url?
+      .append(queryItems: [
+        URLQueryItem(name: "ids", value: ids.map(\.uuidString).joined(separator: ","))
+      ])
+    request.httpMethod = "DELETE"
   }
 }
 

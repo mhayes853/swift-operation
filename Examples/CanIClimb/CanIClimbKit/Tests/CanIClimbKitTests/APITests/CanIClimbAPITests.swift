@@ -361,6 +361,38 @@ struct CanIClimbAPITests {
     expectNoDifference(result, CanIClimbAPI.PlannedClimbResponse(plannedClimb: .mock1))
   }
 
+  @Test("Unplans Climb")
+  func unplansClimb() async throws {
+    let id1 = Mountain.PlannedClimb.ID()
+    let id2 = Mountain.PlannedClimb.ID()
+    let api = CanIClimbAPI(
+      transport: MockHTTPDataTransport { request in
+        if request.url?.path() == "/mountain/climbs"
+          && request.httpMethod == "DELETE"
+          && request.url?.query() == "ids=\(id1),\(id2)"
+        {
+          return (204, .data(Data()))
+        }
+        return (400, .data(Data()))
+      },
+      tokens: self.tokens()
+    )
+    await #expect(throws: Never.self) {
+      try await api.unplanClimbs(ids: [id1, id2])
+    }
+  }
+
+  @Test("Throws Error When Unplans Climb Returns Non-204")
+  func throwsErrorWhenUnplansClimbReturnsNon204() async throws {
+    let api = CanIClimbAPI(
+      transport: MockHTTPDataTransport { _ in (400, .data(Data())) },
+      tokens: self.tokens()
+    )
+    await #expect(throws: CanIClimbAPI.UnplanClimbsError(statusCode: 400)) {
+      try await api.unplanClimbs(ids: [Mountain.PlannedClimb.ID()])
+    }
+  }
+
   private func tokens() -> CanIClimbAPI.Tokens {
     CanIClimbAPI.Tokens(client: QueryClient(), secureStorage: self.storage)
   }

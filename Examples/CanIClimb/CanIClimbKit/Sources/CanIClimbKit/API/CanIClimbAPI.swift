@@ -1,6 +1,9 @@
 import Foundation
 import IssueReporting
+import OrderedCollections
 import Query
+import Tagged
+import UUIDV7
 
 // MARK: - CanIClimbAPI
 
@@ -146,6 +149,21 @@ extension CanIClimbAPI {
   public func planClimb(_ request: PlanClimbRequest) async throws -> PlannedClimbResponse {
     let (data, _) = try await self.perform(request: .planClimb(request))
     return try JSONDecoder().decode(PlannedClimbResponse.self, from: data)
+  }
+
+  public struct UnplanClimbsError: Hashable, Error {
+    public let statusCode: Int
+
+    public init(statusCode: Int) {
+      self.statusCode = statusCode
+    }
+  }
+
+  public func unplanClimbs(ids: OrderedSet<Mountain.PlannedClimb.ID>) async throws {
+    let (_, resp) = try await self.perform(request: .unplanClimbs(ids))
+    if resp.statusCode != 204 {
+      throw UnplanClimbsError(statusCode: resp.statusCode)
+    }
   }
 }
 
