@@ -46,7 +46,8 @@ extension QueryContext {
   /// The current retry attempt for a query.
   ///
   /// This value starts at 0, but increments every time ``QueryRequest/retry(limit:)``
-  /// retries a query.
+  /// retries a query. An index value of 0 indicates that the query is being fetched for the first
+  /// time, and has not yet been retried.
   public var queryRetryIndex: Int {
     get { self[RetryIndexKey.self] }
     set { self[RetryIndexKey.self] = newValue }
@@ -72,5 +73,19 @@ extension QueryContext {
   /// Whether or not the query is on its last retry attempt.
   public var isLastRetryAttempt: Bool {
     self.queryRetryIndex == self.queryMaxRetries
+  }
+
+  /// Whether or not the query is on its first retry attempt.
+  public var isFirstRetryAttempt: Bool {
+    self.queryRetryIndex == 1
+  }
+
+  /// Whether or not the query is on its initial fetch attempt.
+  ///
+  /// This value is true when the query is being fetched for the first time, and has not been
+  /// retried due to throwing an error. If you want to check if the query is being retried for
+  /// the first time, use ``isFirstRetryAttempt``.
+  public var isFirstFetchAttempt: Bool {
+    self.queryRetryIndex == 0
   }
 }

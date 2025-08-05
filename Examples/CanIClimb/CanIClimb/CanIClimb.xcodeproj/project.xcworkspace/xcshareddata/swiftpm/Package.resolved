@@ -38,12 +38,12 @@
       }
     },
     {
-      "identity" : "sharing-grdb-icloud",
+      "identity" : "sharing-grdb",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/pointfreeco/sharing-grdb-icloud",
+      "location" : "https://github.com/pointfreeco/sharing-grdb",
       "state" : {
         "branch" : "cloudkit",
-        "revision" : "bf455f74d56aeedc3dba154772e37d1bbce7dec4"
+        "revision" : "20e9cd6cf7c761dff1f56cafb6f6c8c6b67a7aec"
       }
     },
     {
@@ -105,8 +105,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-dependencies",
       "state" : {
-        "revision" : "4c90d6b2b9bf0911af87b103bb40f41771891596",
-        "version" : "1.9.2"
+        "revision" : "eefcdaa88d2e2fd82e3405dfb6eb45872011a0b5",
+        "version" : "1.9.3"
       }
     },
     {
@@ -132,8 +132,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-navigation",
       "state" : {
-        "revision" : "ae208d1a5cf33aee1d43734ea780a09ada6e2a21",
-        "version" : "2.3.2"
+        "revision" : "4e89284c1966538109dc783497405bc680e9bc96",
+        "version" : "2.4.0"
       }
     },
     {
@@ -141,8 +141,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-perception",
       "state" : {
-        "revision" : "d924c62a70fca5f43872f286dbd7cef0957f1c01",
-        "version" : "1.6.0"
+        "revision" : "328a0b49e2690135c4c2660661f0ed83f16853e3",
+        "version" : "2.0.4"
       }
     },
     {
@@ -151,7 +151,7 @@
       "location" : "https://github.com/mhayes853/swift-query",
       "state" : {
         "branch" : "main",
-        "revision" : "9133549a71d3df9c3242ac64f7af56458622eb42"
+        "revision" : "d0f2ab38588c20f65197412dde1f29e30aa064e7"
       }
     },
     {
@@ -159,8 +159,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-sharing",
       "state" : {
-        "revision" : "75e846ee3159dc75b3a29bfc24b6ce5a557ddca9",
-        "version" : "2.5.2"
+        "revision" : "5d87dda90ed048f216826efbad404110141161bb",
+        "version" : "2.6.0"
       }
     },
     {
@@ -178,7 +178,7 @@
       "location" : "https://github.com/pointfreeco/swift-structured-queries",
       "state" : {
         "branch" : "main",
-        "revision" : "a2a7c06f5b3c60811558bd9552fbbbd0cc027d91"
+        "revision" : "6b3f436f4da7fd2ea304742d936ac8205e5ef8f8"
       }
     },
     {
@@ -205,7 +205,7 @@
       "location" : "https://github.com/mhayes853/swift-uuidv7",
       "state" : {
         "branch" : "sharing-grdb-icloud",
-        "revision" : "fcbf13e158effede88f8ca2d1c6d215618199dfe"
+        "revision" : "deca62adea3eb4f95b2d580d6ede40390ebb0cd5"
       }
     },
     {
