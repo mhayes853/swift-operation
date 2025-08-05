@@ -1,7 +1,10 @@
 import Dependencies
 import GRDB
 import IdentifiedCollections
+import OrderedCollections
 import StructuredQueriesGRDB
+import Tagged
+import UUIDV7
 
 // MARK: - PlannedMountainClimbs
 
@@ -45,6 +48,20 @@ extension PlannedMountainClimbs: Mountain.PlanClimber {
   }
 }
 
+// MARK: - ClimbUnplanner
+
+extension PlannedMountainClimbs: Mountain.ClimbUnplanner {
+  public func unplanClimbs(ids: OrderedSet<Mountain.PlannedClimb.ID>) async throws {
+    try await self.api.unplanClimbs(ids: ids)
+    try await self.database.write { db in
+      try CachedPlannedClimbRecord.all
+        .delete()
+        .where { $0.id.in(ids.map { #bind($0) }) }
+        .execute(db)
+    }
+  }
+}
+
 // MARK: - PlannedClimbsLoader
 
 extension PlannedMountainClimbs: Mountain.PlannedClimbsLoader {
@@ -55,7 +72,7 @@ extension PlannedMountainClimbs: Mountain.PlannedClimbsLoader {
     return try await self.database.write { db in
       try CachedPlannedClimbRecord.all
         .delete()
-        .where { $0.mountainId.eq(#bind(id)) }
+        .where { $0.id.in(climbRecords.ids.map { #bind($0) }).not() }
         .execute(db)
       try CachedPlannedClimbRecord.upsert {
         climbRecords.map { CachedPlannedClimbRecord.Draft($0) }

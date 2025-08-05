@@ -349,6 +349,10 @@ public func canIClimbDatabase(url: URL? = nil) throws -> any DatabaseWriter {
   #endif
   migrator.registerV1()
   try migrator.migrate(writer)
+
+  try writer.write { db in
+    try createTriggers(in: db)
+  }
   return writer
 }
 
@@ -358,6 +362,20 @@ private func writer(for url: URL?, configuration: Configuration) throws -> any D
   } else {
     try DatabaseQueue(configuration: configuration)
   }
+}
+
+private func createTriggers(in db: Database) throws {
+  try CachedPlannedClimbRecord.createTemporaryTrigger(
+    after: .delete(forEachRow: { old in
+      PlannedClimbAlarmRecord.all.where { $0.plannedClimbId.eq(old.id) }.delete()
+    })
+  )
+  .execute(db)
+
+  try PlannedClimbAlarmRecord.createTemporaryTrigger(
+    after: .delete(forEachRow: { old in ScheduleableAlarmRecord.all.find(old.alarmId).delete() })
+  )
+  .execute(db)
 }
 
 // MARK: - Migrations

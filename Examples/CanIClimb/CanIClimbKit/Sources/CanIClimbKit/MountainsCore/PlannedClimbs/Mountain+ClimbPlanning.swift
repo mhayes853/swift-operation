@@ -1,7 +1,10 @@
 import Dependencies
 import Foundation
+import OrderedCollections
 import SharingQuery
 import SwiftNavigation
+import Tagged
+import UUIDV7
 
 // MARK: - ClimbPlanCreate
 
@@ -106,7 +109,21 @@ extension Mountain {
   }
 }
 
-// MARK: - Mutation
+// MARK: - ClimbUnplanner
+
+extension Mountain {
+  public protocol ClimbUnplanner: Sendable {
+    func unplanClimbs(ids: OrderedSet<PlannedClimb.ID>) async throws
+  }
+
+  public enum ClimbUnplannerKey: DependencyKey {
+    public static var liveValue: any ClimbUnplanner {
+      fatalError()
+    }
+  }
+}
+
+// MARK: - Mutations
 
 extension Mountain {
   public static let planClimbMutation = PlanClimbMutation()

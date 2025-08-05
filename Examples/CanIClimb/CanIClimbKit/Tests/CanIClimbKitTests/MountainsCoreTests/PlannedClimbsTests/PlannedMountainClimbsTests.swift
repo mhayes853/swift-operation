@@ -60,10 +60,12 @@ struct PlannedMountainClimbsTests {
       database: self.database,
       api: self.api(
         transport: .mock { request, _ in
-          if request == .plannedClimbs(Mountain.mock1.id) {
-            return (200, .json([CanIClimbAPI.PlannedClimbResponse(plannedClimb: .mock1)]))
+          switch request {
+          case .plannedClimbs:
+            (200, .json([CanIClimbAPI.PlannedClimbResponse(plannedClimb: .mock1)]))
+          default:
+            (400, .data(Data()))
           }
-          return (400, .data(Data()))
         }
       )
     )
@@ -73,6 +75,35 @@ struct PlannedMountainClimbsTests {
 
     expectNoDifference(localClimbs, climbs)
     expectNoDifference(climbs, [.mock1])
+  }
+
+  @Test("Keeps Alarm Info For Remotely Loaded Climbs")
+  func keepsAlarmInfoForRemotelyLoadedPlannedClimbs() async throws {
+    let plannedClimbs = PlannedMountainClimbs(
+      database: self.database,
+      api: self.api(
+        transport: .mock { request, _ in
+          switch request {
+          case .planClimb:
+            (201, .json(CanIClimbAPI.PlannedClimbResponse(plannedClimb: .mock1)))
+          case .plannedClimbs:
+            (200, .json([CanIClimbAPI.PlannedClimbResponse(plannedClimb: .mock1)]))
+          default:
+            (400, .data(Data()))
+          }
+        }
+      )
+    )
+
+    var create = Mountain.ClimbPlanCreate.mock1
+    create.alarm = Mountain.ClimbPlanCreate.Alarm(
+      mountainName: Mountain.mock1.name,
+      date: .distantFuture
+    )
+    let plannedClimb = try await plannedClimbs.plan(create: create)
+    let climbs = try await plannedClimbs.plannedClimbs(for: Mountain.mock1.id)
+
+    expectNoDifference(climbs.map(\.alarm), [plannedClimb.alarm])
   }
 
   @Test("Removes Locally Cached Planned Climb When Not In List")
@@ -94,11 +125,35 @@ struct PlannedMountainClimbsTests {
     )
 
     _ = try await plannedClimbs.plan(create: .mock1)
-    let climbs = try await plannedClimbs.plannedClimbs(for: Mountain.mock1.id)
+    _ = try await plannedClimbs.plannedClimbs(for: Mountain.mock1.id)
     let localClimbs = try await plannedClimbs.localPlannedClimbs(for: Mountain.mock1.id)
 
-    expectNoDifference(localClimbs, climbs)
-    expectNoDifference(climbs, [])
+    expectNoDifference(localClimbs, [])
+  }
+
+  @Test("Removes Locally Cached Planned Climb When Unplanned")
+  func removesLocallyCachedPlannedClimbWhenUnplanned() async throws {
+    let plannedClimbs = PlannedMountainClimbs(
+      database: self.database,
+      api: self.api(
+        transport: .mock { request, _ in
+          switch request {
+          case .planClimb:
+            (200, .json(CanIClimbAPI.PlannedClimbResponse(plannedClimb: .mock1)))
+          case .unplanClimbs([Mountain.PlannedClimb.mock1.id]):
+            (204, .data(Data()))
+          default:
+            (400, .data(Data()))
+          }
+        }
+      )
+    )
+
+    let climb = try await plannedClimbs.plan(create: .mock1)
+    try await plannedClimbs.unplanClimbs(ids: [climb.id])
+    let localClimbs = try await plannedClimbs.localPlannedClimbs(for: Mountain.mock1.id)
+
+    expectNoDifference(localClimbs, [])
   }
 
   private func api(
