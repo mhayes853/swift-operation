@@ -11,37 +11,11 @@ public final class MountainDetailModel: HashableObject, Identifiable {
   @ObservationIgnored
   @SharedQuery<Mountain.Query.State> public var mountain: Mountain??
 
-  public var destination: Destination? {
-    didSet { self.bind() }
-  }
-
-  private let mountainId: Mountain.ID
+  public let plannedClimbs: PlannedClimbsListModel
 
   public init(id: Mountain.ID) {
     self._mountain = SharedQuery(Mountain.query(id: id), animation: .bouncy)
-    self.mountainId = id
-  }
-}
-
-extension MountainDetailModel {
-  @CasePathable
-  public enum Destination: Hashable, Sendable {
-    case planClimb(PlanClimbModel)
-  }
-
-  private func bind() {
-    switch self.destination {
-    case .planClimb(let model):
-      model.onPlanned = { [weak self] _ in self?.destination = nil }
-    default:
-      break
-    }
-  }
-}
-
-extension MountainDetailModel {
-  public func planClimbInvoked() {
-    self.destination = .planClimb(PlanClimbModel(mountainId: self.mountainId))
+    self.plannedClimbs = PlannedClimbsListModel(mountainId: id)
   }
 }
 
@@ -56,20 +30,10 @@ public struct MountainDetailView: View {
 
   public var body: some View {
     VStack {
-      if let mountain = self.model.mountain {
-        Text("\(mountain?.name) Details")
+      if case let mountain?? = self.model.mountain {
+        Text("\(mountain.name) Details")
       }
-      Button("Plan Climb") {
-        self.model.planClimbInvoked()
-      }
-    }
-    .sheet(item: self.$model.destination.planClimb) { model in
-      NavigationStack {
-        PlanClimbView(model: model)
-          .dismissable()
-      }
-      .presentationDetents([.medium])
-      .presentationDragIndicator(.hidden)
+      PlannedClimbsListView(model: self.model.plannedClimbs)
     }
   }
 }
