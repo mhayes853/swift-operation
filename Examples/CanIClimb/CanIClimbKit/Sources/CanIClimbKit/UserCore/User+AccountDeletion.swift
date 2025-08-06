@@ -6,15 +6,15 @@ import SwiftNavigation
 
 extension User {
   public protocol AccountDeleter: Sendable {
-    func deleteUser() async throws
+    func delete() async throws
   }
 
   public enum AccountDeleterKey: DependencyKey {
-    public static let liveValue: any User.AccountDeleter = CanIClimbAPI.shared
+    public static var liveValue: any User.AccountDeleter {
+      fatalError()
+    }
   }
 }
-
-extension CanIClimbAPI: User.AccountDeleter {}
 
 extension User {
   @MainActor
@@ -24,7 +24,7 @@ extension User {
 
     public init() {}
 
-    public func deleteUser() async throws {
+    public func delete() async throws {
       if let error = error {
         throw error
       }
@@ -47,9 +47,8 @@ extension User {
     ) async throws {
       @Dependency(\.defaultQueryClient) var client
       @Dependency(User.AccountDeleterKey.self) var deleter
-      @Dependency(CurrentUser.self) var currentUser
 
-      try await currentUser.delete(using: deleter)
+      try await deleter.delete()
       let userStore = client.store(for: User.currentQuery)
       userStore.withExclusiveAccess {
         userStore.currentValue = nil

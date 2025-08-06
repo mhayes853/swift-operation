@@ -132,7 +132,6 @@ extension User {
     ) async throws {
       @Dependency(User.AuthenticatorKey.self) var authenticator
       @Dependency(\.defaultQueryClient) var client
-      @Dependency(CurrentUser.self) var currentUser
 
       try await authenticator.signOut()
       let userStore = client.store(for: User.currentQuery)
@@ -140,7 +139,6 @@ extension User {
         userStore.currentValue = nil
         userStore.setResult(to: .failure(User.UnauthorizedError()))
       }
-      try await currentUser.switchUserId(to: nil)
     }
   }
 }

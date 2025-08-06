@@ -21,15 +21,15 @@ extension User {
 
 extension User {
   public protocol Editor: Sendable {
-    func editUser(with edit: Edit) async throws -> User
+    func edit(with edit: Edit) async throws -> User
   }
 
   public enum EditorKey: DependencyKey {
-    public static let liveValue: any User.Editor = CanIClimbAPI.shared
+    public static var liveValue: any User.Editor {
+      fatalError()
+    }
   }
 }
-
-extension CanIClimbAPI: User.Editor {}
 
 extension User {
   @MainActor
@@ -41,7 +41,7 @@ extension User {
       self.result = result
     }
 
-    public func editUser(with edit: User.Edit) async throws -> User {
+    public func edit(with edit: User.Edit) async throws -> User {
       self.edits.append(edit)
       return try self.result.get()
     }
@@ -52,7 +52,7 @@ extension User {
   public struct PassthroughEditor: Editor {
     public init() {}
 
-    public func editUser(with edit: User.Edit) async throws -> User {
+    public func edit(with edit: User.Edit) async throws -> User {
       User(id: User.mock1.id, name: edit.name, subtitle: edit.subtitle)
     }
   }
@@ -80,9 +80,8 @@ extension User {
     ) async throws -> User {
       @Dependency(\.defaultQueryClient) var client
       @Dependency(User.EditorKey.self) var editor
-      @Dependency(CurrentUser.self) var currentUser
 
-      let user = try await currentUser.edit(with: arguments.edit, using: editor)
+      let user = try await editor.edit(with: arguments.edit)
       client.store(for: User.currentQuery).currentValue = user
       return user
     }
