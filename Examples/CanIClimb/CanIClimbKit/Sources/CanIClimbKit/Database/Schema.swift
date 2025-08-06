@@ -48,6 +48,10 @@ public struct UserHumanityRecord: Hashable, Sendable, SingleRowTable {
   public var activityLevel: HumanActivityLevel = .sedentary
   public var workoutFrequency: HumanWorkoutFrequency = .noDays
 
+  public var bmi: HumanBMI {
+    HumanBMI(weight: self.weight, height: self.height)
+  }
+
   public init() {}
 
   public init(
@@ -64,12 +68,6 @@ public struct UserHumanityRecord: Hashable, Sendable, SingleRowTable {
     self.gender = gender
     self.activityLevel = activityLevel
     self.workoutFrequency = workoutFrequency
-  }
-}
-
-extension UserHumanityRecord {
-  public var bmi: HumanBMI {
-    HumanBMI(weight: self.weight, height: self.height)
   }
 }
 
@@ -158,14 +156,12 @@ extension SettingsRecord {
   public enum MetricPreference: String, QueryBindable, CaseIterable {
     case imperial
     case metric
-  }
-}
 
-extension SettingsRecord.MetricPreference {
-  public var unit: UnitMass {
-    switch self {
-    case .imperial: .pounds
-    case .metric: .kilograms
+    public var unit: UnitMass {
+      switch self {
+      case .imperial: .pounds
+      case .metric: .kilograms
+      }
     }
   }
 }
@@ -303,6 +299,10 @@ public struct ScheduleableAlarmRecord: Equatable, Sendable, Identifiable {
 
 @Table("PlannedClimbAlarms")
 public struct PlannedClimbAlarmRecord: Hashable, Sendable, Codable {
+  public typealias ID = Tagged<PlannedClimbAlarmRecord, UUIDV7>
+  public typealias IDRepresentation = Tagged<PlannedClimbAlarmRecord, UUIDV7.BytesRepresentation>
+
+  @Column(as: IDRepresentation.self)
   public var id: ID
 
   @Column(as: Mountain.PlannedClimb.IDRepresentation.self)
@@ -319,11 +319,6 @@ public struct PlannedClimbAlarmRecord: Hashable, Sendable, Codable {
     self.plannedClimbId = plannedClimbId
     self.alarmId = alarmId
   }
-}
-
-extension PlannedClimbAlarmRecord {
-  public typealias ID = Tagged<PlannedClimbAlarmRecord, UUIDV7>
-  public typealias IDRepresentation = Tagged<PlannedClimbAlarmRecord, UUIDV7.BytesRepresentation>
 }
 
 // MARK: - Can I Climb Database

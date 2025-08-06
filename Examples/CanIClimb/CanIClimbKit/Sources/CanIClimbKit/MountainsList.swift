@@ -51,15 +51,11 @@ extension MountainsListModel {
     case settings(SettingsModel)
     case mountainDetail(MountainDetailModel)
   }
-}
 
-extension MountainsListModel {
   public func settingsInvoked() {
     self.destination = .settings(SettingsModel())
   }
-}
 
-extension MountainsListModel {
   public func mountainDetailInvoked(for id: Mountain.ID) {
     self.destination = .mountainDetail(MountainDetailModel(id: id))
   }

@@ -5,6 +5,9 @@ import SharingQuery
 
 extension Mountain {
   public struct Search: Hashable, Sendable {
+      public static let recommended = Self(text: "", category: .recommended)
+      public static let planned = Self(text: "", category: .planned)
+
     public var text: String
     public var category: Category
 
@@ -22,15 +25,18 @@ extension Mountain.Search {
   }
 }
 
-extension Mountain.Search {
-  public static let recommended = Self(text: "", category: .recommended)
-  public static let planned = Self(text: "", category: .planned)
-}
-
 // MARK: - SearchRequest
 
 extension Mountain {
   public struct SearchRequest: Hashable, Sendable {
+    public static func recommended(page: Int, text: String = "") -> Self {
+      Self(search: Mountain.Search(text: text), page: page)
+    }
+
+    public static func planned(page: Int, text: String = "") -> Self {
+      Self(search: Mountain.Search(text: text, category: .planned), page: page)
+    }
+
     public var search: Search
     public var page: Int
 
@@ -38,16 +44,6 @@ extension Mountain {
       self.search = search
       self.page = page
     }
-  }
-}
-
-extension Mountain.SearchRequest {
-  public static func recommended(page: Int, text: String = "") -> Self {
-    Self(search: Mountain.Search(text: text), page: page)
-  }
-
-  public static func planned(page: Int, text: String = "") -> Self {
-    Self(search: Mountain.Search(text: text, category: .planned), page: page)
   }
 }
 

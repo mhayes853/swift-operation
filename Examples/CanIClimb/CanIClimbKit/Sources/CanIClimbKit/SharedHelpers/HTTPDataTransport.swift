@@ -13,16 +13,6 @@ extension URLSession: HTTPDataTransport {}
 
 // MARK: - MockHTTPDataTransport
 
-public final class MockHTTPDataTransport: Sendable {
-  public let handler: Mutex<@Sendable (URLRequest) async throws -> (StatusCode, ResponseBody)?>
-
-  public init(
-    handler: @escaping @Sendable (URLRequest) async throws -> (StatusCode, ResponseBody)?
-  ) {
-    self.handler = Mutex(handler)
-  }
-}
-
 extension HTTPDataTransport where Self == MockHTTPDataTransport {
   public static func mock(
     handler: @escaping @Sendable (
@@ -37,13 +27,21 @@ extension HTTPDataTransport where Self == MockHTTPDataTransport {
   }
 
   public static var throwing: Self {
-    .mock { _ in throw SomeError() }
+    .mock { _ in nil }
   }
 }
 
-private struct SomeError: Error {}
+public final class MockHTTPDataTransport: HTTPDataTransport {
+  public typealias StatusCode = Int
 
-extension MockHTTPDataTransport: HTTPDataTransport {
+  public let handler: Mutex<@Sendable (URLRequest) async throws -> (StatusCode, ResponseBody)?>
+
+  public init(
+    handler: @escaping @Sendable (URLRequest) async throws -> (StatusCode, ResponseBody)?
+  ) {
+    self.handler = Mutex(handler)
+  }
+
   public func data(for request: URLRequest) async throws -> (Data, URLResponse) {
     let handler = self.handler.withLock { $0 }
     guard let (status, body) = try await handler(request) else {
@@ -55,34 +53,26 @@ extension MockHTTPDataTransport: HTTPDataTransport {
       HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: nil)!
     )
   }
-}
 
-extension MockHTTPDataTransport {
-  public typealias StatusCode = Int
+  private struct SomeError: Error {}
 }
 
 extension MockHTTPDataTransport {
   public enum ResponseBody: Sendable {
     case data(Data)
     case json(any Encodable & Sendable, JSONEncoder)
-  }
-}
 
-extension MockHTTPDataTransport.ResponseBody {
-  public static func json(_ encodable: any Encodable & Sendable) -> Self {
-    .json(encodable, JSONEncoder())
-  }
-}
+    public static let empty = Self.data(Data())
 
-extension MockHTTPDataTransport.ResponseBody {
-  public static let empty = Self.data(Data())
-}
+    public static func json(_ encodable: any Encodable & Sendable) -> Self {
+      .json(encodable, JSONEncoder())
+    }
 
-extension MockHTTPDataTransport.ResponseBody {
-  public func data() throws -> Data {
-    switch self {
-    case .data(let data): data
-    case .json(let encodable, let encoder): try encoder.encode(encodable)
+    public func data() throws -> Data {
+      switch self {
+      case .data(let data): data
+      case .json(let encodable, let encoder): try encoder.encode(encodable)
+      }
     }
   }
 }

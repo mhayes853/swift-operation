@@ -3,19 +3,13 @@ import OrderedCollections
 import SharingGRDB
 import Tagged
 
-// MARK: - GroupQueryAnalysisRequest
-
-public struct GroupQueryAnalysisRequest: Hashable, Sendable {
+public struct GroupQueryAnalysisRequest: FetchKeyRequest {
   private let launchId: ApplicationLaunch.ID
 
   public init(launchId: ApplicationLaunch.ID) {
     self.launchId = launchId
   }
-}
 
-// MARK: - FetchKeyRequest
-
-extension GroupQueryAnalysisRequest: FetchKeyRequest {
   public typealias Value = OrderedDictionary<
     QueryAnalysis.QueryName, IdentifiedArrayOf<QueryAnalysis>
   >

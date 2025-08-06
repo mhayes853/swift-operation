@@ -15,7 +15,7 @@ public final class QueryDevToolsModel: HashableObject, Identifiable {
   @ObservationIgnored
   @FetchOne public var selectedLaunch: ApplicationLaunchRecord?
 
-  public var onDismissed: (() -> Void)?
+  @ObservationIgnored public var onDismissed: (() -> Void)?
 
   public var path = [Path]()
 
@@ -31,9 +31,7 @@ public final class QueryDevToolsModel: HashableObject, Identifiable {
       ApplicationLaunchRecord.find(#bind(launchId))
     )
   }
-}
 
-extension QueryDevToolsModel {
   public func launchSelected(id: ApplicationLaunch.ID) async throws {
     try await self.$selectedLaunch.load(
       ApplicationLaunchRecord.find(#bind(id)),
@@ -42,9 +40,7 @@ extension QueryDevToolsModel {
     try await self.$analyzes.load(GroupQueryAnalysisRequest(launchId: id), animation: .bouncy)
     self.path.removeLast()
   }
-}
 
-extension QueryDevToolsModel {
   public func dismissed() {
     self.onDismissed?()
   }

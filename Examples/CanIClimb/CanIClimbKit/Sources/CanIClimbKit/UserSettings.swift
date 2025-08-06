@@ -68,12 +68,6 @@ extension UserSettingsModel {
 }
 
 extension UserSettingsModel {
-  public func deleteAccountInvoked() {
-    self.destination = .alert(.confirmAccountDeletion)
-  }
-}
-
-extension UserSettingsModel {
   public func signOutInvoked() async throws {
     let task = self.$signOut.mutateTask()
     self.indicateLoading()
@@ -130,6 +124,10 @@ extension UserSettingsModel {
   @CasePathable
   public enum Destination: Hashable, Sendable {
     case alert(AlertState<AlertAction>)
+  }
+
+  public func deleteAccountInvoked() {
+    self.destination = .alert(.confirmAccountDeletion)
   }
 }
 

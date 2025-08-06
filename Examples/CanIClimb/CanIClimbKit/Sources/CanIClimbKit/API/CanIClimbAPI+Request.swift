@@ -159,10 +159,8 @@ extension CanIClimbAPI.Request {
     for ids: OrderedSet<Mountain.PlannedClimb.ID>
   ) {
     request.url?.append(path: "/mountain/climbs")
-    request.url?
-      .append(queryItems: [
-        URLQueryItem(name: "ids", value: ids.map(\.uuidString).joined(separator: ","))
-      ])
+    let item = URLQueryItem(name: "ids", value: ids.map(\.uuidString).joined(separator: ","))
+    request.url?.append(queryItems: [item])
     request.httpMethod = "DELETE"
   }
 

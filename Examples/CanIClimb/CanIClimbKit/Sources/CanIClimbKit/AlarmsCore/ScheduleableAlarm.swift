@@ -1,9 +1,9 @@
 import Foundation
 import Tagged
 
-// MARK: - ScheduleableAlarm
-
 public struct ScheduleableAlarm: Equatable, Sendable, Identifiable {
+  public typealias ID = Tagged<ScheduleableAlarm, UUID>
+
   public let id: ScheduleableAlarm.ID
   public var title: LocalizedStringResource
   public var date: Date
@@ -13,10 +13,4 @@ public struct ScheduleableAlarm: Equatable, Sendable, Identifiable {
     self.title = title
     self.date = date
   }
-}
-
-// MARK: - ID
-
-extension ScheduleableAlarm {
-  public typealias ID = Tagged<ScheduleableAlarm, UUID>
 }

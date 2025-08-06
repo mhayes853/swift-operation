@@ -35,19 +35,15 @@ extension Mountain.ClimbPlanCreate {
       self.name = name
       self.date = date
     }
-  }
-}
 
-extension Mountain.ClimbPlanCreate.Alarm {
-  public init(mountainName: String, date: Date) {
-    self.name = "Starting climb for \(mountainName)!"
-    self.date = date
-  }
-}
+    public init(mountainName: String, date: Date) {
+      self.name = "Starting climb for \(mountainName)!"
+      self.date = date
+    }
 
-extension Mountain.ClimbPlanCreate.Alarm {
-  public func newScheduleableAlarm() -> ScheduleableAlarm {
-    ScheduleableAlarm(id: ScheduleableAlarm.ID(), title: self.name, date: self.date)
+    public func newScheduleableAlarm() -> ScheduleableAlarm {
+      ScheduleableAlarm(id: ScheduleableAlarm.ID(), title: self.name, date: self.date)
+    }
   }
 }
 

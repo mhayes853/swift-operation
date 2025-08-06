@@ -20,24 +20,20 @@ extension User {
     public init(components: PersonNameComponents) {
       self.components = components
     }
-  }
-}
 
-extension User.Name {
-  public init?(_ name: String) {
-    guard !name.isEmpty else { return nil }
-    self.components = PersonNameComponents()
-    if let components = try? PersonNameComponents(name) {
-      self.components = components
-    } else {
-      self.components.givenName = name
+    public init?(_ name: String) {
+      guard !name.isEmpty else { return nil }
+      self.components = PersonNameComponents()
+      if let components = try? PersonNameComponents(name) {
+        self.components = components
+      } else {
+        self.components.givenName = name
+      }
     }
-  }
-}
 
-extension User.Name {
-  public func formatted() -> String {
-    self.components.formatted()
+    public func formatted() -> String {
+      self.components.formatted()
+    }
   }
 }
 

@@ -13,9 +13,7 @@ extension SingleRowTable {
     let query = try? Self.find(UUID.nil).fetchOne(db)
     return query ?? Self()
   }
-}
 
-extension SingleRowTable {
   public func save(in db: Database) throws {
     try Self.upsert { Self.Draft(self) }.execute(db)
   }

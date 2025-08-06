@@ -22,17 +22,15 @@ extension QueryAnalysis {
       self.didSucceed = didSucceed
       self.dataDescription = dataDescription
     }
-  }
-}
 
-extension QueryAnalysis.DataResult {
-  public init<T>(result: Result<T, any Error>) {
-    self.didSucceed = result.is(\.success)
-    switch result {
-    case .success(let value):
-      self.dataDescription = String(describing: value)
-    case .failure(let error):
-      self.dataDescription = String(describing: error)
+    public init<T>(result: Result<T, any Error>) {
+      self.didSucceed = result.is(\.success)
+      switch result {
+      case .success(let value):
+        self.dataDescription = String(describing: value)
+      case .failure(let error):
+        self.dataDescription = String(describing: error)
+      }
     }
   }
 }

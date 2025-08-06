@@ -4,8 +4,6 @@ import SharingQuery
 import SwiftUI
 import SwiftUINavigation
 
-// MARK: - ConnectToHealthKitModel
-
 @MainActor
 @Observable
 public final class ConnectToHealthKitModel {
@@ -17,9 +15,7 @@ public final class ConnectToHealthKitModel {
   @SharedQuery(HealthPermissions.requestMutation) private var request: Void?
 
   public init() {}
-}
 
-extension ConnectToHealthKitModel {
   public var isConnected: Bool {
     self._localMetrics.hasConnectedHealthKit
   }

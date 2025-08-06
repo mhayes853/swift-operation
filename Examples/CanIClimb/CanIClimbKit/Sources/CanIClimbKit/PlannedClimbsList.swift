@@ -33,6 +33,10 @@ extension PlannedClimbsListModel {
     case planClimb(PlanClimbModel)
   }
 
+  public func planClimbInvoked() {
+    self.destination = .planClimb(PlanClimbModel(mountainId: self.mountainId))
+  }
+
   private func bind() {
     switch self.destination {
     case .planClimb(let model):
@@ -40,12 +44,6 @@ extension PlannedClimbsListModel {
     default:
       break
     }
-  }
-}
-
-extension PlannedClimbsListModel {
-  public func planClimbInvoked() {
-    self.destination = .planClimb(PlanClimbModel(mountainId: self.mountainId))
   }
 }
 

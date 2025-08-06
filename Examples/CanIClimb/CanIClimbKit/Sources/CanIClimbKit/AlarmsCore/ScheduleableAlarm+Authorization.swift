@@ -38,7 +38,7 @@ extension ScheduleableAlarm {
 
 extension ScheduleableAlarm {
   @MainActor
-  public final class MockAuthorizer {
+  public final class MockAuthorizer: ScheduleableAlarm.Authorizer {
     public var status = AuthorizationStatus.notDetermined {
       didSet {
         for continuation in continuations {
@@ -51,23 +51,21 @@ extension ScheduleableAlarm {
     public var statusOnRequest = AuthorizationStatus.authorized
 
     public nonisolated init() {}
-  }
-}
 
-extension ScheduleableAlarm.MockAuthorizer: ScheduleableAlarm.Authorizer {
-  public func requestAuthorization() async throws -> ScheduleableAlarm.AuthorizationStatus {
-    self.status = self.statusOnRequest
-    return self.statusOnRequest
-  }
+    public func requestAuthorization() async throws -> ScheduleableAlarm.AuthorizationStatus {
+      self.status = self.statusOnRequest
+      return self.statusOnRequest
+    }
 
-  public nonisolated func statuses() -> AsyncStream<ScheduleableAlarm.AuthorizationStatus> {
-    AsyncStream { continuation in
-      Task { @MainActor in
-        continuation.yield(self.status)
-        self.continuations.insert(continuation)
-      }
-      continuation.onTermination = { [weak self] _ in
-        Task { @MainActor in self?.continuations.remove(continuation) }
+    public nonisolated func statuses() -> AsyncStream<ScheduleableAlarm.AuthorizationStatus> {
+      AsyncStream { continuation in
+        Task { @MainActor in
+          continuation.yield(self.status)
+          self.continuations.insert(continuation)
+        }
+        continuation.onTermination = { [weak self] _ in
+          Task { @MainActor in self?.continuations.remove(continuation) }
+        }
       }
     }
   }
@@ -82,41 +80,39 @@ extension SharedReaderKey where Self == ScheduleableAlarm.AuthorizationStatus.Up
 }
 
 extension ScheduleableAlarm.AuthorizationStatus {
-  public struct UpdatesKey {
+  public struct UpdatesKey: SharedReaderKey {
     private let authorizer: any ScheduleableAlarm.Authorizer
 
     public init() {
       @Dependency(ScheduleableAlarm.AuthorizerKey.self) var authorizer
       self.authorizer = authorizer
     }
-  }
-}
 
-extension ScheduleableAlarm.AuthorizationStatus.UpdatesKey: SharedReaderKey {
-  public typealias Value = ScheduleableAlarm.AuthorizationStatus
+    public typealias Value = ScheduleableAlarm.AuthorizationStatus
 
-  public struct ID: Hashable {
-    fileprivate let inner: ObjectIdentifier
-  }
-
-  public var id: ID {
-    ID(inner: ObjectIdentifier(self.authorizer))
-  }
-
-  public func load(context: LoadContext<Value>, continuation: LoadContinuation<Value>) {
-    continuation.resumeReturningInitialValue()
-  }
-
-  public func subscribe(
-    context: LoadContext<Value>,
-    subscriber: SharedSubscriber<Value>
-  ) -> SharedSubscription {
-    let task = Task.immediate {
-      for await status in self.authorizer.statuses() {
-        withAnimation { subscriber.yield(status) }
-      }
+    public struct ID: Hashable {
+      fileprivate let inner: ObjectIdentifier
     }
-    return SharedSubscription { task.cancel() }
+
+    public var id: ID {
+      ID(inner: ObjectIdentifier(self.authorizer))
+    }
+
+    public func load(context: LoadContext<Value>, continuation: LoadContinuation<Value>) {
+      continuation.resumeReturningInitialValue()
+    }
+
+    public func subscribe(
+      context: LoadContext<Value>,
+      subscriber: SharedSubscriber<Value>
+    ) -> SharedSubscription {
+      let task = Task.immediate {
+        for await status in self.authorizer.statuses() {
+          withAnimation { subscriber.yield(status) }
+        }
+      }
+      return SharedSubscription { task.cancel() }
+    }
   }
 }
 

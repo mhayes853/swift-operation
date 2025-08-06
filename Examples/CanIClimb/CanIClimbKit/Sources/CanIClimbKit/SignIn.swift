@@ -19,9 +19,7 @@ public final class SignInModel {
   @ObservationIgnored public var onSignInSuccess: (() -> Void)?
 
   public init() {}
-}
 
-extension SignInModel {
   public func credentialsReceived(
     _ credentials: Result<User.SignInCredentials?, any Error>
   ) async throws {

@@ -15,9 +15,7 @@ public final class DebounceTask {
   }
 
   deinit { self.cancel() }
-}
 
-extension DebounceTask {
   public func schedule() {
     self.cancel()
     let clock = self.clock
@@ -28,9 +26,7 @@ extension DebounceTask {
       try await operation()
     }
   }
-}
 
-extension DebounceTask {
   public func cancel() {
     self.task?.cancel()
   }

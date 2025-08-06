@@ -25,10 +25,7 @@ extension CLLocation {
 extension LocationReading {
   public init(location: CLLocation) {
     self.init(
-      coordinate: LocationCoordinate2D(
-        latitude: location.coordinate.latitude,
-        longitude: location.coordinate.longitude
-      ),
+      coordinate: LocationCoordinate2D(coordinate: location.coordinate),
       altitudeAboveSeaLevel: Measurement(value: location.altitude, unit: .meters)
     )
   }

@@ -18,16 +18,21 @@ public final class HealthPermissions: Sendable {
     self.database = database
     self.requester = requester
   }
-}
 
-// MARK: - Request
-
-extension HealthPermissions {
   public func request() async throws {
     try await self.requester.requestCanIClimbPermissions()
     try await self.database.write { db in
       try LocalInternalMetricsRecord.update(in: db) { $0.hasConnectedHealthKit = true }
     }
+  }
+}
+
+// MARK: - DependencyKey
+
+extension HealthPermissions: DependencyKey {
+  public static var liveValue: HealthPermissions {
+    @Dependency(\.defaultDatabase) var database
+    return HealthPermissions(database: database, requester: HKHealthStore.canIClimb)
   }
 }
 
@@ -70,15 +75,6 @@ extension HealthPermissions {
         throw SomeError()
       }
     }
-  }
-}
-
-// MARK: - DependencyKey
-
-extension HealthPermissions: DependencyKey {
-  public static var liveValue: HealthPermissions {
-    @Dependency(\.defaultDatabase) var database
-    return HealthPermissions(database: database, requester: HKHealthStore.canIClimb)
   }
 }
 

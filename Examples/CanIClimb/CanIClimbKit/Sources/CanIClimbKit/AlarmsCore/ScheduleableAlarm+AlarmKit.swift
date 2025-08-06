@@ -8,16 +8,14 @@
 
   extension ScheduleableAlarm {
     public final actor AlarmKitStore {
+      public static let shared = ScheduleableAlarm.AlarmKitStore()
+
       // NB: I'm not sure why Apple hasn't made AlarmManager Sendable, but since they have a static
       // (and presumably nonisolated) shared instance I'm assuming this is safe.
       private nonisolated(unsafe) let manager = AlarmManager.shared
 
       public init() {}
     }
-  }
-
-  extension ScheduleableAlarm.AlarmKitStore {
-    public static let shared = ScheduleableAlarm.AlarmKitStore()
   }
 
   extension ScheduleableAlarm.AlarmKitStore: ScheduleableAlarm.Store {
@@ -55,7 +53,7 @@
     public func requestAuthorization() async throws -> ScheduleableAlarm.AuthorizationStatus {
       try await ScheduleableAlarm.AuthorizationStatus(state: self.manager.requestAuthorization())
     }
-    
+
     public nonisolated func statuses() -> AsyncStream<ScheduleableAlarm.AuthorizationStatus> {
       AsyncStream { continuation in
         let task = Task {

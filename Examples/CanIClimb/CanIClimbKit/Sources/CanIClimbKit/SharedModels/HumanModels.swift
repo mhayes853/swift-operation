@@ -50,9 +50,7 @@ public struct HumanBMI: Hashable, Sendable {
   public init(score: Double) {
     self.score = score
   }
-}
 
-extension HumanBMI {
   public init(weight: Measurement<UnitMass>, height: HumanHeight) {
     let meters = height.metric.measurement.converted(to: .meters)
     self.score = weight.converted(to: .kilograms).value / (meters.value * meters.value)
@@ -135,9 +133,32 @@ extension HumanWorkoutFrequency: CustomLocalizedStringResourceConvertible {
 // MARK: - HumanHeight
 
 public enum HumanHeight: Codable, Hashable, Sendable {
+  case imperial(Imperial)
+  case metric(Metric)
+}
+
+extension HumanHeight {
   public struct Imperial: Hashable, Codable, Sendable {
+    public static let options: [Self] = {
+      var options = [Self]()
+      for feet in 0...8 {
+        for inches in 0...11 {
+          options.append(Self(feet: feet, inches: inches))
+        }
+      }
+      return options
+    }()
+
     public let feet: Int
     public let inches: Int
+
+    public var measurement: Measurement<UnitLength> {
+      Measurement(value: Double(feet) + Double(inches) / .inchesPerFoot, unit: .feet)
+    }
+
+    public var formatted: String {
+      "\(self.feet) ft \(self.inches) in"
+    }
 
     public init(feet: Int, inches: Int) {
       self.feet = feet
@@ -145,43 +166,6 @@ public enum HumanHeight: Codable, Hashable, Sendable {
     }
   }
 
-  public struct Metric: Hashable, Codable, Sendable {
-    public let centimeters: Double
-
-    public init(centimeters: Double) {
-      self.centimeters = centimeters
-    }
-  }
-
-  case imperial(Imperial)
-  case metric(Metric)
-}
-
-extension HumanHeight.Imperial {
-  public var measurement: Measurement<UnitLength> {
-    Measurement(value: Double(feet) + Double(inches) / .inchesPerFoot, unit: .feet)
-  }
-}
-
-extension HumanHeight.Imperial {
-  public var formatted: String {
-    "\(self.feet) ft \(self.inches) in"
-  }
-}
-
-extension HumanHeight.Imperial {
-  public static let options: [Self] = {
-    var options = [Self]()
-    for feet in 0...8 {
-      for inches in 0...11 {
-        options.append(Self(feet: feet, inches: inches))
-      }
-    }
-    return options
-  }()
-}
-
-extension HumanHeight {
   public var imperial: Imperial {
     get {
       switch self {
@@ -197,23 +181,25 @@ extension HumanHeight {
   }
 }
 
-extension HumanHeight.Metric {
-  public var measurement: Measurement<UnitLength> {
-    Measurement(value: self.centimeters, unit: .centimeters)
-  }
-}
-
-extension HumanHeight.Metric {
-  public var formatted: String {
-    "\(Int(self.centimeters)) cm"
-  }
-}
-
-extension HumanHeight.Metric {
-  public static let options = (0...250).map { Self(centimeters: Double($0)) }
-}
-
 extension HumanHeight {
+  public struct Metric: Hashable, Codable, Sendable {
+    public static let options = (0...250).map { Self(centimeters: Double($0)) }
+
+    public let centimeters: Double
+
+    public var measurement: Measurement<UnitLength> {
+      Measurement(value: self.centimeters, unit: .centimeters)
+    }
+
+    public var formatted: String {
+      "\(Int(self.centimeters)) cm"
+    }
+
+    public init(centimeters: Double) {
+      self.centimeters = centimeters
+    }
+  }
+
   public var metric: Metric {
     get {
       switch self {

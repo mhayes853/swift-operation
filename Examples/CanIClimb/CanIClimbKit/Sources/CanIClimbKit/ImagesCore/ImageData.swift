@@ -19,6 +19,10 @@ extension ImageData: Hashable {
   public static func == (lhs: Self, rhs: Self) -> Bool {
     lhs.data == rhs.data
   }
+
+  public func hash(into hasher: inout Hasher) {
+    hasher.combine(self.data)
+  }
 }
 
 // MARK: - Loading Error

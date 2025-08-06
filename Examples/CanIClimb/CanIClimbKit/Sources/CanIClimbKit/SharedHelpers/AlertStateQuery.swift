@@ -82,7 +82,7 @@ private struct ObserveQueryAlertsModifier: ViewModifier {
           #else
             // NB: Present through UIKit directly on iOS due to SwiftUI dismissing children sheets
             // when an alert is presented from a parent view.
-            let alert = CanIClimbAlertController.withOkButton(state: message.alert)
+            let alert = GlobalAlertController.withOkButton(state: message.alert)
             alert.present()
           #endif
         }

@@ -13,6 +13,8 @@ public protocol SecureStorage: Sendable {
 // NB: KeychainSwift's operations are thread-safe, but some of its member variables are not. Since
 // we're not touching the member variables, we can mark this class as @unchecked Sendable.
 public final class KeychainSecureStorage: SecureStorage, @unchecked Sendable {
+  public static let shared = KeychainSecureStorage()
+
   private let keychain = KeychainSwift()
 
   private init() {
@@ -29,10 +31,6 @@ public final class KeychainSecureStorage: SecureStorage, @unchecked Sendable {
       }
     }
   }
-}
-
-extension KeychainSecureStorage {
-  public static let shared = KeychainSecureStorage()
 }
 
 // MARK: - InMemorySecureStorage

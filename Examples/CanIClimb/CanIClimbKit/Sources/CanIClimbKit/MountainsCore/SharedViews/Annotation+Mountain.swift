@@ -2,6 +2,8 @@ import CoreLocation
 import MapKit
 import SwiftUI
 
+// MARK: - Annotation
+
 extension Annotation where Label == Text, Content == MountainAnnotationView {
   public init(mountain: Mountain, onTapped: @escaping () -> Void) {
     self.init(mountain.name, coordinate: CLLocationCoordinate2D(coordinate: mountain.coordinate)) {
@@ -9,6 +11,8 @@ extension Annotation where Label == Text, Content == MountainAnnotationView {
     }
   }
 }
+
+// MARK: - MountainAnnotationView
 
 public struct MountainAnnotationView: View {
   let mountain: Mountain

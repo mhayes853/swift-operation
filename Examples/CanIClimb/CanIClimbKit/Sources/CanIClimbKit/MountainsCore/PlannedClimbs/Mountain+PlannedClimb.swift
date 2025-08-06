@@ -6,6 +6,8 @@ import UUIDV7
 
 extension Mountain {
   public struct PlannedClimb: Equatable, Sendable, Identifiable {
+    public typealias ID = Tagged<Self, UUIDV7>
+
     public let id: ID
     public let mountainId: Mountain.ID
 
@@ -27,12 +29,6 @@ extension Mountain {
       self.alarm = alarm
     }
   }
-}
-
-// MARK: - ID
-
-extension Mountain.PlannedClimb {
-  public typealias ID = Tagged<Self, UUIDV7>
 }
 
 // MARK: - Mocks

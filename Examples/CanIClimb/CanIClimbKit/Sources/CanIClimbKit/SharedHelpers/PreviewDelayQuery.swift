@@ -1,8 +1,6 @@
 import Dependencies
 import Query
 
-// MARK: - Random Delay
-
 extension QueryRequest {
   public func previewDelay(
     shouldDisable: Bool = false,
