@@ -8,11 +8,14 @@ import StructuredQueries
 
 extension Mountain {
   public protocol Loader: Sendable {
+    func localMountain(with id: Mountain.ID) async throws -> Mountain?
     func mountain(with id: Mountain.ID) async throws -> Mountain?
   }
 
   public enum LoaderKey: DependencyKey {
-    public static let liveValue: any Loader = CanIClimbAPI.shared
+    public static var liveValue: any Loader {
+      fatalError()
+    }
   }
 }
 
@@ -20,9 +23,14 @@ extension Mountain {
   @MainActor
   public final class MockLoader: Loader {
     public var result: Result<Mountain?, any Error>
+    public var localResult: Mountain?
 
     public init(result: Result<Mountain?, any Error>) {
       self.result = result
+    }
+
+    public func localMountain(with id: Mountain.ID) async throws -> Mountain? {
+      self.localResult
     }
 
     public func mountain(with id: Mountain.ID) async throws -> Mountain? {
@@ -30,8 +38,6 @@ extension Mountain {
     }
   }
 }
-
-extension CanIClimbAPI: Mountain.Loader {}
 
 // MARK: - Query
 
@@ -51,20 +57,13 @@ extension Mountain {
       in context: QueryContext,
       with continuation: QueryContinuation<Mountain?>
     ) async throws -> Mountain? {
-      @Dependency(Mountain.LoaderKey.self) var loader
-      @Dependency(\.defaultDatabase) var database
+      let loader = Dependency(Mountain.LoaderKey.self).wrappedValue
 
       async let mountain = loader.mountain(with: self.id)
-      let localMountain = try await database.read { try Mountain.find(by: self.id, in: $0) }
-      if let localMountain {
+      if let localMountain = try await loader.localMountain(with: self.id) {
         continuation.yield(localMountain)
       }
-      guard let mountain = try await mountain else {
-        try await database.write { try Mountain.delete(by: self.id, in: $0) }
-        return nil
-      }
-      try await database.write { try Mountain.save(CollectionOfOne(mountain), in: $0) }
-      return mountain
+      return try await mountain
     }
   }
 }

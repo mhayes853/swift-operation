@@ -340,6 +340,11 @@ public func canIClimbDatabase(url: URL? = nil) throws -> any DatabaseWriter {
   configuration.prepareDatabase { db in
     db.add(function: .localizedStandardContains)
     db.addUUIDV7Functions()
+    #if DEBUG
+      db.trace(options: .profile) {
+        print("\($0.expandedDescription)")
+      }
+    #endif
   }
 
   let writer = try writer(for: url, configuration: configuration)

@@ -4,57 +4,6 @@ import StructuredQueriesGRDB
 import Tagged
 import UUIDV7
 
-// MARK: - Saving
-
-extension Mountain {
-  public static func save(_ mountains: some Sequence<Self>, in db: Database) throws {
-    let cachedMountains = mountains.map {
-      CachedMountainRecord.Draft(CachedMountainRecord(mountain: $0))
-    }
-    try CachedMountainRecord.upsert { cachedMountains }
-      .execute(db)
-  }
-}
-
-// MARK: - Deleting
-
-extension Mountain {
-  public static func delete(by id: ID, in db: Database) throws {
-    try CachedMountainRecord.delete()
-      .where { $0.id.eq(#bind(id)) }
-      .execute(db)
-  }
-}
-
-// MARK: - Loading
-
-extension Mountain {
-  public static func find(by id: ID, in db: Database) throws -> Self? {
-    try CachedMountainRecord.find(#bind(id))
-      .fetchOne(db)
-      .map(Mountain.init(cached:))
-  }
-
-  public static func findAll(matching search: Search, in db: Database) throws -> [Self] {
-    try CachedMountainRecord.all
-      .leftJoin(CachedPlannedClimbRecord.all) { $0.id.eq($1.mountainId) }
-      .where {
-        let doesMatch = search.text.eq("")
-          .or(#sql("localizedStandardContains(\($0.name), \(bind: search.text))"))
-        switch search.category {
-        case .recommended:
-          doesMatch
-        case .planned:
-          doesMatch.and($1.id.isNot(nil))
-        }
-      }
-      .order { (m, _) in m.dateAdded.desc() }
-      .select { (m, _) in m }
-      .fetchAll(db)
-      .map(Mountain.init(cached:))
-  }
-}
-
 // MARK: - QueryBindable
 
 extension Mountain.ClimbingDifficulty: QueryBindable {}
@@ -103,6 +52,8 @@ extension CachedMountainRecord {
     )
   }
 }
+
+// MARK: - PlannedClimb Conversions
 
 extension Mountain.PlannedClimb {
   public init(cached record: CachedPlannedClimbRecord, alarm: ScheduleableAlarm?) {
