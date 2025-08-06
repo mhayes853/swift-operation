@@ -1,3 +1,4 @@
+import Dependencies
 import GRDB
 import IdentifiedCollections
 import StructuredQueriesGRDB

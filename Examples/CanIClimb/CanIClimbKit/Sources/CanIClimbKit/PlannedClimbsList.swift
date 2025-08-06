@@ -1,12 +1,20 @@
+import IdentifiedCollections
 import Observation
+import SharingQuery
 import SwiftUI
 import SwiftUINavigation
+import Tagged
+import UUIDV7
 
 // MARK: - PlannedClimbsListModel
 
 @MainActor
 @Observable
 public final class PlannedClimbsListModel {
+  @ObservationIgnored
+  @SharedQuery<Mountain.PlannedClimbsQuery.State>
+  public var plannedClimbs: IdentifiedArrayOf<Mountain.PlannedClimb>?
+
   public var destination: Destination? {
     didSet { self.bind() }
   }
@@ -15,6 +23,7 @@ public final class PlannedClimbsListModel {
 
   public init(mountainId: Mountain.ID) {
     self.mountainId = mountainId
+    self._plannedClimbs = SharedQuery(Mountain.plannedClimbsQuery(for: mountainId))
   }
 }
 
