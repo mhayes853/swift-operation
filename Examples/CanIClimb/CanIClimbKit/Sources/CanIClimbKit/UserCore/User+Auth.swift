@@ -59,11 +59,11 @@ extension User {
   }
 
   public enum AuthenticatorKey: DependencyKey {
-    public static let liveValue: any User.Authenticator = CanIClimbAPI.shared
+    public static var liveValue: any User.Authenticator {
+      CurrentUser.shared
+    }
   }
 }
-
-extension CanIClimbAPI: User.Authenticator {}
 
 extension User {
   @MainActor

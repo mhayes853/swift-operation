@@ -9,10 +9,19 @@ public final class CurrentUser: Sendable {
   private let database: any DatabaseWriter
   private let api: CanIClimbAPI
 
-  public init(database: any DatabaseWriter, api: CanIClimbAPI = .shared) {
+  public init(database: any DatabaseWriter, api: CanIClimbAPI) {
     self.database = database
     self.api = api
   }
+}
+
+// MARK: - Shared Instance
+
+extension CurrentUser {
+  public static let shared: CurrentUser = {
+    @Dependency(\.defaultDatabase) var database
+    return CurrentUser(database: database, api: .shared)
+  }()
 }
 
 // MARK: - Authenticator
@@ -71,21 +80,12 @@ extension CurrentUser {
       try CachedUserRecord.delete().execute(db)
     }
   }
-}
 
-extension CurrentUser {
   private func saveLocalUser(_ user: User) async throws {
     try await self.database.write { db in
       try LocalInternalMetricsRecord.update(in: db) { $0.currentUserId = user.id }
       try CachedUserRecord.upsert { CachedUserRecord.Draft(user) }
         .execute(db)
     }
-  }
-}
-
-extension CurrentUser: DependencyKey {
-  public static var liveValue: CurrentUser {
-    @Dependency(\.defaultDatabase) var database
-    return CurrentUser(database: database)
   }
 }

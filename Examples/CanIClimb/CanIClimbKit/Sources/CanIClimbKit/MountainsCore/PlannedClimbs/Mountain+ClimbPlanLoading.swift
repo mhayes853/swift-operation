@@ -13,7 +13,7 @@ extension Mountain {
 
   public enum PlannedClimbsLoaderKey: DependencyKey {
     public static var liveValue: any PlannedClimbsLoader {
-      fatalError()
+      PlannedMountainClimbs.shared
     }
   }
 }

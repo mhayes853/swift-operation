@@ -14,7 +14,7 @@ extension Mountain {
 
   public enum LoaderKey: DependencyKey {
     public static var liveValue: any Loader {
-      fatalError()
+      Mountains.shared
     }
   }
 }

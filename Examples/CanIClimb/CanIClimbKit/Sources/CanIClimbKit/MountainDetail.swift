@@ -13,9 +13,18 @@ public final class MountainDetailModel: HashableObject, Identifiable {
 
   public let plannedClimbs: PlannedClimbsListModel
 
+  public var selectedTab = Tab.mountain
+
   public init(id: Mountain.ID) {
     self._mountain = SharedQuery(Mountain.query(id: id), animation: .bouncy)
     self.plannedClimbs = PlannedClimbsListModel(mountainId: id)
+  }
+}
+
+extension MountainDetailModel {
+  public enum Tab: Hashable, Sendable {
+    case mountain
+    case plannedClimbs
   }
 }
 
@@ -29,11 +38,20 @@ public struct MountainDetailView: View {
   }
 
   public var body: some View {
-    VStack {
-      if case let mountain?? = self.model.mountain {
+    switch self.model.$mountain.status {
+    case .result(.success(let mountain?)):
+      VStack {
         Text("\(mountain.name) Details")
+        PlannedClimbsListView(model: self.model.plannedClimbs)
       }
-      PlannedClimbsListView(model: self.model.plannedClimbs)
+    case .result(.success(nil)):
+      Text("Mountain not found")
+    case .result(.failure(let error)):
+      RemoteOperationErrorView(error: error) {
+        Task { try await self.model.$mountain.fetch() }
+      }
+    default:
+      SpinnerView()
     }
   }
 }

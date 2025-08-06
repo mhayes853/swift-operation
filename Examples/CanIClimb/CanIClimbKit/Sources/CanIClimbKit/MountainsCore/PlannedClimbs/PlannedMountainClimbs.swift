@@ -18,6 +18,15 @@ public final class PlannedMountainClimbs: Sendable {
   }
 }
 
+// MARK: - Shared Instance
+
+extension PlannedMountainClimbs {
+  public static let shared: PlannedMountainClimbs = {
+    @Dependency(\.defaultDatabase) var database
+    return PlannedMountainClimbs(database: database, api: .shared)
+  }()
+}
+
 // MARK: - PlanClimber
 
 extension PlannedMountainClimbs: Mountain.PlanClimber {

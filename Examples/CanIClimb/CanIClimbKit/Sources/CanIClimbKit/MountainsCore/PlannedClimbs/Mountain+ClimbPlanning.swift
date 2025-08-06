@@ -68,7 +68,7 @@ extension Mountain {
 
   public enum PlanClimberKey: DependencyKey {
     public static var liveValue: any PlanClimber {
-      fatalError()
+      PlannedMountainClimbs.shared
     }
   }
 }

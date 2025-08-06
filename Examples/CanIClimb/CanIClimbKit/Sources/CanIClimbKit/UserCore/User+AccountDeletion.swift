@@ -11,7 +11,7 @@ extension User {
 
   public enum AccountDeleterKey: DependencyKey {
     public static var liveValue: any User.AccountDeleter {
-      fatalError()
+      CurrentUser.shared
     }
   }
 }

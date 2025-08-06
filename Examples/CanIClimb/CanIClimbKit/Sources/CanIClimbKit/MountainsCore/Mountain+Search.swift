@@ -75,7 +75,7 @@ extension Mountain {
 
   public enum SearcherKey: DependencyKey {
     public static var liveValue: any Mountain.Searcher {
-      fatalError()
+      Mountains.shared
     }
   }
 }

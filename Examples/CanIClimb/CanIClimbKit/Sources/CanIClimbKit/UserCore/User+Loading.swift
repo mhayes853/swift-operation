@@ -11,7 +11,7 @@ extension User {
 
   public enum CurrentLoaderKey: DependencyKey {
     public static var liveValue: any User.CurrentLoader {
-      fatalError()
+      CurrentUser.shared
     }
   }
 }

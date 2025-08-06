@@ -15,6 +15,15 @@ public final class Mountains: Sendable {
   }
 }
 
+// MARK: - Shared
+
+extension Mountains {
+  public static let shared: Mountains = {
+    @Dependency(\.defaultDatabase) var database
+    return Mountains(database: database, api: .shared)
+  }()
+}
+
 // MARK: - Searcher
 
 extension Mountains: Mountain.Searcher {

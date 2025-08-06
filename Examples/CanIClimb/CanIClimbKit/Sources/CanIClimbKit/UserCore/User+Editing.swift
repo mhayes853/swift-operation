@@ -26,7 +26,7 @@ extension User {
 
   public enum EditorKey: DependencyKey {
     public static var liveValue: any User.Editor {
-      fatalError()
+      CurrentUser.shared
     }
   }
 }
