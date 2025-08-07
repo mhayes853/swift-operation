@@ -40,10 +40,7 @@ public struct MountainDetailView: View {
   public var body: some View {
     switch self.model.$mountain.status {
     case .result(.success(let mountain?)):
-      VStack {
-        Text("\(mountain.name) Details")
-        PlannedClimbsListView(model: self.model.plannedClimbs)
-      }
+      MountainView(model: self.model, mountain: mountain)
     case .result(.success(nil)):
       Text("Mountain not found")
     case .result(.failure(let error)):
@@ -53,5 +50,100 @@ public struct MountainDetailView: View {
     default:
       SpinnerView()
     }
+  }
+}
+
+// MARK: - MountainView
+
+private struct MountainView: View {
+  let model: MountainDetailModel
+  let mountain: Mountain
+
+  @State private var hasScrolledPastImage = false
+
+  var body: some View {
+    ScrollView {
+      VStack {
+        MountainImageView(mountain: mountain)
+        PlannedClimbsListView(model: self.model.plannedClimbs)
+        Rectangle()
+          .frame(height: 1200)
+      }
+    }
+    .onScrollGeometryChange(for: Bool.self) { geometry in
+      geometry.contentOffset.y > geometry.contentInsets.top + 150
+    } action: { _, hasScrolled in
+      withAnimation(.easeInOut(duration: 0.2)) {
+        self.hasScrolledPastImage = hasScrolled
+      }
+    }
+    .toolbar {
+      ToolbarItem(placement: .principal) {
+        Text(self.mountain.name)
+          .font(.headline)
+          .opacity(self.hasScrolledPastImage ? 1 : 0)
+      }
+    }
+  }
+}
+
+// MARK: - MountainImageView
+
+private struct MountainImageView: View {
+  @SharedQuery<ImageData.Query.State> private var image: ImageData?
+
+  let mountain: Mountain
+
+  @ScaledMetric private var imageGradientStop = 0.2
+
+  init(mountain: Mountain) {
+    self.mountain = mountain
+    self._image = SharedQuery(ImageData.query(for: mountain.imageURL))
+  }
+
+  var body: some View {
+    ZStack {
+      let text = HStack {
+        Text(self.mountain.name)
+          .font(.title.bold())
+        Spacer()
+      }
+      .padding()
+      .frame(maxHeight: .infinity, alignment: .bottom)
+
+      ImageDataView(url: self.mountain.imageURL) {
+        switch $0 {
+        case .result(.success(let image)):
+          image
+            .resizable()
+            .scaledToFill()
+          image
+            .resizable()
+            .scaledToFill()
+            .blur(radius: 10)
+            .mask(
+              LinearGradient(
+                stops: [
+                  Gradient.Stop(color: .white, location: 0),
+                  Gradient.Stop(color: .white, location: self.imageGradientStop),
+                  Gradient.Stop(color: .clear, location: 1)
+                ],
+                startPoint: .bottom,
+                endPoint: .top
+              )
+            )
+          text
+        default:
+          ZStack {
+            Rectangle()
+              .fill(.gray.gradient)
+            SpinnerView()
+          }
+          text
+        }
+      }
+    }
+    .frame(height: 300)
+    .ignoresSafeArea()
   }
 }
