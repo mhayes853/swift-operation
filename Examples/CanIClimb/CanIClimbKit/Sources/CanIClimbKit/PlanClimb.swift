@@ -121,7 +121,7 @@ private struct PlanClimbFormView: View {
       AlarmSectionView(model: self.model)
     }
     .safeAreaInset(edge: .bottom) {
-      CTAButton("Plan Climb") {
+      CTAButton("Plan Climb", systemImage: "plus") {
         Task { try await self.model.submitted() }
       }
       .disabled(self.model.$planClimb.isLoading)

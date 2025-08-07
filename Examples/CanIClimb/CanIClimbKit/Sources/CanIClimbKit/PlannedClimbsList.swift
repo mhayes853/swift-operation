@@ -57,16 +57,14 @@ public struct PlannedClimbsListView: View {
   }
 
   public var body: some View {
-    Button("Plan Climb") {
-      self.model.planClimbInvoked()
-    }
-    .sheet(item: self.$model.destination.planClimb) { model in
-      NavigationStack {
-        PlanClimbView(model: model)
-          .dismissable()
+    Text("Planned Climbs")
+      .sheet(item: self.$model.destination.planClimb) { model in
+        NavigationStack {
+          PlanClimbView(model: model)
+            .dismissable()
+        }
+        .presentationDetents([.medium])
+        .presentationDragIndicator(.hidden)
       }
-      .presentationDetents([.medium])
-      .presentationDragIndicator(.hidden)
-    }
   }
 }

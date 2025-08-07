@@ -43,7 +43,7 @@ public struct MountainDetailView: View {
       Text("Mountain not found")
     case .result(.failure(let error)):
       if case let mountain?? = self.model.mountain {
-        MountainView(model: self.model, mountain: mountain)
+        MountainDetailScrollView(model: self.model, mountain: mountain)
       } else {
         RemoteOperationErrorView(error: error) {
           Task { try await self.model.$mountain.fetch() }
@@ -51,7 +51,7 @@ public struct MountainDetailView: View {
       }
     default:
       if case let mountain?? = self.model.mountain {
-        MountainView(model: self.model, mountain: mountain)
+        MountainDetailScrollView(model: self.model, mountain: mountain)
       } else {
         SpinnerView()
       }
@@ -61,8 +61,8 @@ public struct MountainDetailView: View {
 
 // MARK: - MountainView
 
-private struct MountainView: View {
-  let model: MountainDetailModel
+private struct MountainDetailScrollView: View {
+  @Bindable var model: MountainDetailModel
   let mountain: Mountain
 
   @State private var hasScrolledPastImage = false
@@ -71,8 +71,23 @@ private struct MountainView: View {
     ScrollView {
       VStack {
         MountainImageView(mountain: mountain)
-        PlannedClimbsListView(model: self.model.plannedClimbs)
+
+        Picker("Mountain or Planned Climbs", selection: self.$model.selectedTab) {
+          Label("Mountain", systemImage: "mountain.2.fill")
+            .tag(MountainDetailModel.Tab.mountain)
+          Label("Planned Climbs", systemImage: "figure.climbing")
+            .tag(MountainDetailModel.Tab.plannedClimbs)
+        }
+        .pickerStyle(.segmented)
+
+        switch self.model.selectedTab {
+        case .mountain:
+          Text("Mountain Stuffs")
+        case .plannedClimbs:
+          PlannedClimbsListView(model: self.model.plannedClimbs)
+        }
       }
+      .padding()
     }
     .onScrollGeometryChange(for: Bool.self) { geometry in
       geometry.contentOffset.y > geometry.contentInsets.top + 150
@@ -89,6 +104,14 @@ private struct MountainView: View {
         Text(self.mountain.name)
           .font(.headline)
           .opacity(self.hasScrolledPastImage ? 1 : 0)
+      }
+    }
+    .safeAreaInset(edge: .bottom) {
+      if self.model.selectedTab == .plannedClimbs {
+        CTAButton("Plan New Climb", systemImage: "plus") {
+          self.model.plannedClimbs.planClimbInvoked()
+        }
+        .padding()
       }
     }
   }
@@ -156,7 +179,6 @@ private struct MountainImageView: View {
     .frame(height: 300)
     .frame(maxWidth: .infinity)
     .clipShape(RoundedRectangle(cornerRadius: 20))
-    .padding()
     .ignoresSafeArea()
   }
 }
