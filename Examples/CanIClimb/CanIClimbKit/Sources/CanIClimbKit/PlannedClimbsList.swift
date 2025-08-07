@@ -57,14 +57,50 @@ public struct PlannedClimbsListView: View {
   }
 
   public var body: some View {
-    Text("Planned Climbs")
-      .sheet(item: self.$model.destination.planClimb) { model in
-        NavigationStack {
-          PlanClimbView(model: model)
-            .dismissable()
+    Group {
+      switch self.model.$plannedClimbs.status {
+      case .result(.failure(let error)):
+        if let climbs = self.model.plannedClimbs {
+          ListView(model: model, climbs: climbs)
+        } else {
+          RemoteOperationErrorView(error: error) {
+            Task { try await self.model.$plannedClimbs.fetch() }
+          }
         }
-        .presentationDetents([.medium])
-        .presentationDragIndicator(.hidden)
+      default:
+        if let climbs = self.model.plannedClimbs {
+          ListView(model: model, climbs: climbs)
+        } else {
+          SpinnerView()
+        }
       }
+    }
+    .sheet(item: self.$model.destination.planClimb) { model in
+      NavigationStack {
+        PlanClimbView(model: model)
+          .dismissable()
+      }
+      .presentationDetents([.medium])
+      .presentationDragIndicator(.hidden)
+    }
+  }
+}
+
+// MARK: - ListView
+
+private struct ListView: View {
+  let model: PlannedClimbsListModel
+  let climbs: IdentifiedArrayOf<Mountain.PlannedClimb>
+
+  public var body: some View {
+    if self.climbs.isEmpty {
+      ContentUnavailableView("No Planned Climbs", systemImage: "exclamationmark.circle")
+    } else {
+      LazyVStack(spacing: 10) {
+        ForEach(self.climbs) { climb in
+          PlannedMountainClimbCardView(plannedClimb: climb)
+        }
+      }
+    }
   }
 }
