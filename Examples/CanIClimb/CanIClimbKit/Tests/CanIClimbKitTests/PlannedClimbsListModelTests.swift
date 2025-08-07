@@ -16,6 +16,7 @@ extension DependenciesTestSuite {
         let planner = Mountain.MockClimbPlanner()
         planner.setResult(for: .mock1, result: .success(.mock1))
         $0[Mountain.PlanClimberKey.self] = planner
+        $0[Mountain.PlannedClimbsLoaderKey.self] = Mountain.MockPlannedClimbsLoader()
       } operation: {
         let model = PlannedClimbsListModel(mountainId: Mountain.mock1.id)
         model.planClimbInvoked()

@@ -45,6 +45,7 @@ extension Mountains: Mountain.Searcher {
         }
         .order { (m, _) in m.dateAdded.desc() }
         .select { (m, _) in m }
+        .distinct()
         .fetchAll(db)
         .map(Mountain.init(cached:))
     }

@@ -9,7 +9,7 @@ extension Mountain {
     public typealias ID = Tagged<Self, UUIDV7>
 
     public let id: ID
-    public let mountainId: Mountain.ID
+    public var mountainId: Mountain.ID
 
     public var targetDate: Date
     public var achievedDate: Date?

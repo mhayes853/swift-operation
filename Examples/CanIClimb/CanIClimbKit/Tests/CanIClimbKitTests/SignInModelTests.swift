@@ -11,7 +11,6 @@ extension DependenciesTestSuite {
   @Suite(
     "SignInModel tests",
     .dependencies {
-      $0[CurrentUser.self] = CurrentUser(database: $0.defaultDatabase)
       $0.defaultNetworkObserver = MockNetworkObserver()
     }
   )

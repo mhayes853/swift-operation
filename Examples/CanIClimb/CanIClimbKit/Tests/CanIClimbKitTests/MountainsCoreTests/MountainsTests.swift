@@ -116,6 +116,45 @@ struct MountainsTests {
     let expected = searchMocksIndicies.map { Mountain.searchMocks[$0] }
     expectNoDifference(Array(localMountains), expected)
   }
+
+  @Test("Only Local Searches 1 Copy Of Mountain With Multiple Planned Climbs")
+  func onlyLocalSearches1CopyOfMountainWithMultiplePlannedClimbs() async throws {
+    var planned1 = Mountain.PlannedClimb.mock1
+    var planned2 = Mountain.PlannedClimb(
+      cached: CachedPlannedClimbRecord.searchMocks[0],
+      alarm: nil
+    )
+    planned2.mountainId = Mountain.searchMocks[1].id
+    planned1.mountainId = planned2.mountainId
+
+    let api = CanIClimbAPI.testInstance(
+      transport: .mock { [planned1, planned2] request, _ in
+        switch request {
+        case .plannedClimbs:
+          (
+            200,
+            .json([
+              CanIClimbAPI.PlannedClimbResponse(plannedClimb: planned1),
+              CanIClimbAPI.PlannedClimbResponse(plannedClimb: planned2)
+            ])
+          )
+        case .searchMountains:
+          (200, .json(Mountain.SearchResult(mountains: Mountain.searchMocks, hasNextPage: false)))
+        default:
+          (404, .data(Data()))
+        }
+      }
+    )
+
+    let mountains = Mountains(database: self.database, api: api)
+    let plannedClimbs = PlannedMountainClimbs(database: self.database, api: api)
+
+    _ = try await plannedClimbs.plannedClimbs(for: planned1.mountainId)
+    _ = try await mountains.searchMountains(by: .recommended(page: 0))
+
+    let localMountains = try await mountains.localSearchMountains(by: .planned)
+    expectNoDifference(localMountains, [Mountain.searchMocks[1]])
+  }
 }
 
 extension Mountain {
