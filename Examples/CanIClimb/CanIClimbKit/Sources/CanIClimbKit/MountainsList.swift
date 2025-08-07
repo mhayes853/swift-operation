@@ -97,7 +97,7 @@ public struct MountainsListView<SheetContent: View>: View {
               MountainDetailView(model: model)
               .dismissable()
             }
-            .background(.background)
+            .background(.regularMaterial)
           }
         #else
           .sheet(item: self.$model.destination.mountainDetail) { model in

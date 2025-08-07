@@ -69,7 +69,7 @@ private struct MountainDetailScrollView: View {
 
   var body: some View {
     ScrollView {
-      VStack {
+      VStack(spacing: 20) {
         MountainImageView(mountain: mountain)
 
         Picker("Mountain or Planned Climbs", selection: self.$model.selectedTab) {
@@ -179,6 +179,7 @@ private struct MountainImageView: View {
     .frame(height: 300)
     .frame(maxWidth: .infinity)
     .clipShape(RoundedRectangle(cornerRadius: 20))
+    .shadow(color: .black.opacity(0.15), radius: 15, y: 10)
     .ignoresSafeArea()
   }
 }
