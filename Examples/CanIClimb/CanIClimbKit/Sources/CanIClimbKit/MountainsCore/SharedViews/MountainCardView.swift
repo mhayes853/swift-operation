@@ -5,7 +5,7 @@ import SwiftUI
 public struct MountainCardView: View {
   @Environment(\.colorScheme) private var colorScheme
   @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-  
+
   private let mountain: Mountain
 
   @ScaledMetric private var cardHeight = CGFloat(200)
@@ -42,9 +42,9 @@ public struct MountainCardView: View {
 
 private struct CardContentView: View {
   @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-  
+
   let mountain: Mountain
-  
+
   private var imageSize: CGSize {
     if self.dynamicTypeSize.isAccessibilitySize {
       CGSize(width: .infinity, height: 150.0)
@@ -52,7 +52,7 @@ private struct CardContentView: View {
       CGSize(width: 150.0, height: .infinity)
     }
   }
-  
+
   var body: some View {
     let mountainContent = VStack(alignment: .leading) {
       Text(self.mountain.name)
@@ -62,20 +62,13 @@ private struct CardContentView: View {
       Text(self.mountain.locationName.localizedStringResource)
         .font(.caption)
         .foregroundStyle(.secondary)
-      
-      DifficultyView(difficulty: self.mountain.difficulty)
+
+      MountainDifficultyView(difficulty: self.mountain.difficulty)
         .padding(.top, 5)
-      
+
       Spacer()
-      
-      HStack(alignment: .center) {
-        Image(systemName: "mountain.2.fill")
-        Text(
-          self.mountain.elevation.converted(to: .feet)
-            .formatted(.measurement(width: .abbreviated, usage: .asProvided))
-        )
-      }
-      .font(.footnote)
+
+      ElevationLabel(elevation: self.mountain.elevation)
     }
     .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -96,7 +89,7 @@ private struct CardContentView: View {
         .frame(maxWidth: self.imageSize.width, maxHeight: self.imageSize.height)
       }
     }
-    
+
     if self.dynamicTypeSize.isAccessibilitySize {
       image
       mountainContent
@@ -107,29 +100,10 @@ private struct CardContentView: View {
   }
 }
 
-// MARK: - DifficultyView
-
-private struct DifficultyView: View {
-  let difficulty: Mountain.ClimbingDifficulty
-  
-  var body: some View {
-    Group {
-      let formattedDifficulty = self.difficulty.rawValue.formatted(.number)
-      let formattedRating = self.difficulty.rating.localizedStringResource
-      Text("\(formattedRating): \(formattedDifficulty)")
-    }
-    .font(.footnote.bold())
-    .foregroundStyle(.white)
-    .padding(10)
-    .background(Color(rating: self.difficulty.rating).gradient)
-    .clipShape(Capsule())
-  }
-}
-
 #Preview {
   var mountain = Mountain.mock2
   let _ = mountain.difficulty = Mountain.ClimbingDifficulty(rawValue: 100)!
-  
+
   MountainCardView(mountain: mountain)
     .padding()
 }

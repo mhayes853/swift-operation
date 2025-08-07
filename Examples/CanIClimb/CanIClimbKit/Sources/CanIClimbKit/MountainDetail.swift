@@ -39,16 +39,22 @@ public struct MountainDetailView: View {
 
   public var body: some View {
     switch self.model.$mountain.status {
-    case .result(.success(let mountain?)):
-      MountainView(model: self.model, mountain: mountain)
     case .result(.success(nil)):
       Text("Mountain not found")
     case .result(.failure(let error)):
-      RemoteOperationErrorView(error: error) {
-        Task { try await self.model.$mountain.fetch() }
+      if case let mountain?? = self.model.mountain {
+        MountainView(model: self.model, mountain: mountain)
+      } else {
+        RemoteOperationErrorView(error: error) {
+          Task { try await self.model.$mountain.fetch() }
+        }
       }
     default:
-      SpinnerView()
+      if case let mountain?? = self.model.mountain {
+        MountainView(model: self.model, mountain: mountain)
+      } else {
+        SpinnerView()
+      }
     }
   }
 }
@@ -66,8 +72,6 @@ private struct MountainView: View {
       VStack {
         MountainImageView(mountain: mountain)
         PlannedClimbsListView(model: self.model.plannedClimbs)
-        Rectangle()
-          .frame(height: 1200)
       }
     }
     .onScrollGeometryChange(for: Bool.self) { geometry in
@@ -77,6 +81,9 @@ private struct MountainView: View {
         self.hasScrolledPastImage = hasScrolled
       }
     }
+    #if os(iOS)
+      .navigationBarTitleDisplayMode(.inline)
+    #endif
     .toolbar {
       ToolbarItem(placement: .principal) {
         Text(self.mountain.name)
@@ -104,9 +111,14 @@ private struct MountainImageView: View {
   var body: some View {
     ZStack {
       let text = HStack {
-        Text(self.mountain.name)
-          .font(.title.bold())
+        VStack(alignment: .leading) {
+          Text(self.mountain.name)
+            .font(.title.bold())
+          ElevationLabel(elevation: self.mountain.elevation)
+            .foregroundColor(.gray)
+        }
         Spacer()
+        MountainDifficultyView(difficulty: self.mountain.difficulty)
       }
       .padding()
       .frame(maxHeight: .infinity, alignment: .bottom)
@@ -114,25 +126,31 @@ private struct MountainImageView: View {
       ImageDataView(url: self.mountain.imageURL) {
         switch $0 {
         case .result(.success(let image)):
-          image
-            .resizable()
-            .scaledToFill()
-          image
-            .resizable()
-            .scaledToFill()
-            .blur(radius: 10)
-            .mask(
-              LinearGradient(
-                stops: [
-                  Gradient.Stop(color: .white, location: 0),
-                  Gradient.Stop(color: .white, location: self.imageGradientStop),
-                  Gradient.Stop(color: .clear, location: 1)
-                ],
-                startPoint: .bottom,
-                endPoint: .top
+          GeometryReader { proxy in
+            image
+              .resizable()
+              .scaledToFill()
+              .frame(width: proxy.size.width)
+            image
+              .resizable()
+              .scaledToFill()
+              .frame(width: proxy.size.width)
+              .blur(radius: 10)
+              .offset(y: 10)
+              .mask(
+                LinearGradient(
+                  stops: [
+                    Gradient.Stop(color: .white, location: 0),
+                    Gradient.Stop(color: .white, location: self.imageGradientStop),
+                    Gradient.Stop(color: .clear, location: 1)
+                  ],
+                  startPoint: .bottom,
+                  endPoint: .top
+                )
               )
-            )
-          text
+            text
+              .foregroundStyle(.black)
+          }
         default:
           ZStack {
             Rectangle()
@@ -144,6 +162,9 @@ private struct MountainImageView: View {
       }
     }
     .frame(height: 300)
+    .frame(maxWidth: .infinity)
+    .clipShape(RoundedRectangle(cornerRadius: 20))
+    .padding()
     .ignoresSafeArea()
   }
 }
