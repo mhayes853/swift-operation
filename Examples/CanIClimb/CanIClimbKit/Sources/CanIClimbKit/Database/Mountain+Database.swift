@@ -7,6 +7,7 @@ import UUIDV7
 // MARK: - QueryBindable
 
 extension Mountain.ClimbingDifficulty: QueryBindable {}
+extension Mountain.Image.ColorScheme: QueryBindable {}
 
 // MARK: - IDRepresentation
 
@@ -31,7 +32,7 @@ extension Mountain {
       locationName: record.locationName,
       dateAdded: record.dateAdded,
       difficulty: record.difficulty,
-      imageURL: record.imageURL
+      image: Image(url: record.imageURL, colorScheme: record.imageColorScheme),
     )
   }
 }
@@ -47,7 +48,8 @@ extension CachedMountainRecord {
       longitude: mountain.coordinate.longitude,
       locationName: mountain.locationName,
       dateAdded: mountain.dateAdded,
-      imageURL: mountain.imageURL,
+      imageURL: mountain.image.url,
+      imageColorScheme: mountain.image.colorScheme,
       difficulty: mountain.difficulty
     )
   }

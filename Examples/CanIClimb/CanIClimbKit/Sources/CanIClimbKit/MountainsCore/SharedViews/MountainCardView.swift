@@ -59,20 +59,19 @@ private struct CardContentView: View {
         .lineLimit(2)
         .font(.title3.bold())
 
-      Text(self.mountain.locationName.localizedStringResource)
-        .font(.caption)
+      MountainLocationNameLabel(name: self.mountain.locationName)
         .foregroundStyle(.secondary)
 
-      MountainDifficultyView(difficulty: self.mountain.difficulty)
-        .padding(.top, 5)
+      ElevationLabel(elevation: self.mountain.elevation)
+        .foregroundStyle(.secondary)
 
       Spacer()
 
-      ElevationLabel(elevation: self.mountain.elevation)
+      MountainDifficultyView(difficulty: self.mountain.difficulty)
     }
     .frame(maxWidth: .infinity, alignment: .leading)
 
-    let image = ImageDataView(url: self.mountain.imageURL) { status in
+    let image = ImageDataView(url: self.mountain.image.url) { status in
       switch status {
       case .result(.success(let image)):
         image

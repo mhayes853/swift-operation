@@ -105,25 +105,12 @@ private struct MountainImageView: View {
 
   init(mountain: Mountain) {
     self.mountain = mountain
-    self._image = SharedQuery(ImageData.query(for: mountain.imageURL))
+    self._image = SharedQuery(ImageData.query(for: mountain.image.url))
   }
 
   var body: some View {
     ZStack {
-      let text = HStack {
-        VStack(alignment: .leading) {
-          Text(self.mountain.name)
-            .font(.title.bold())
-          ElevationLabel(elevation: self.mountain.elevation)
-            .foregroundColor(.gray)
-        }
-        Spacer()
-        MountainDifficultyView(difficulty: self.mountain.difficulty)
-      }
-      .padding()
-      .frame(maxHeight: .infinity, alignment: .bottom)
-
-      ImageDataView(url: self.mountain.imageURL) {
+      ImageDataView(url: self.mountain.image.url) {
         switch $0 {
         case .result(.success(let image)):
           GeometryReader { proxy in
@@ -137,6 +124,7 @@ private struct MountainImageView: View {
               .frame(width: proxy.size.width)
               .blur(radius: 10)
               .offset(y: 10)
+              .background(.ultraThinMaterial)
               .mask(
                 LinearGradient(
                   stops: [
@@ -148,8 +136,10 @@ private struct MountainImageView: View {
                   endPoint: .top
                 )
               )
-            text
-              .foregroundStyle(.black)
+            MountainDetailLabel(mountain: self.mountain)
+              .colorScheme(ColorScheme(mountainImageScheme: self.mountain.image.colorScheme))
+              .padding()
+              .frame(maxHeight: .infinity, alignment: .bottom)
           }
         default:
           ZStack {
@@ -157,7 +147,9 @@ private struct MountainImageView: View {
               .fill(.gray.gradient)
             SpinnerView()
           }
-          text
+          MountainDetailLabel(mountain: self.mountain)
+            .padding()
+            .frame(maxHeight: .infinity, alignment: .bottom)
         }
       }
     }
@@ -166,5 +158,33 @@ private struct MountainImageView: View {
     .clipShape(RoundedRectangle(cornerRadius: 20))
     .padding()
     .ignoresSafeArea()
+  }
+}
+
+private struct MountainDetailLabel: View {
+  let mountain: Mountain
+
+  @ScaledMetric private var columnSize = CGFloat(50)
+
+  var body: some View {
+    HStack {
+      VStack(alignment: .leading) {
+        Text(self.mountain.name)
+          .font(.title.bold())
+        Spacer()
+        MountainLocationNameLabel(name: self.mountain.locationName)
+          .foregroundStyle(.secondary)
+      }
+      .frame(height: self.columnSize)
+      Spacer()
+      VStack(alignment: .center) {
+        MountainDifficultyView(difficulty: self.mountain.difficulty)
+        Spacer()
+        ElevationLabel(elevation: self.mountain.elevation)
+          .foregroundColor(.secondary)
+      }
+      .frame(height: self.columnSize)
+    }
+    .dynamicTypeSize(...(.xxxLarge))
   }
 }

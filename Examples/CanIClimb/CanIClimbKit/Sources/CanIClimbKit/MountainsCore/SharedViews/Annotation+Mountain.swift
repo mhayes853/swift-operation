@@ -19,7 +19,7 @@ public struct MountainAnnotationView: View {
   let onTapped: () -> Void
 
   public var body: some View {
-    ImageDataView(url: mountain.imageURL) { status in
+    ImageDataView(url: mountain.image.url) { status in
       ZStack {
         switch status {
         case .result(.success(let image)):

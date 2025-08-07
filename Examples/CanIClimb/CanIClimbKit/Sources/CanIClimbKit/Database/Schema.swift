@@ -88,6 +88,7 @@ public struct CachedMountainRecord: Hashable, Identifiable, Sendable {
 
   public var dateAdded: Date
   public var imageURL: URL
+  public var imageColorScheme: Mountain.Image.ColorScheme
   public var difficulty: Mountain.ClimbingDifficulty
 
   public init(
@@ -100,6 +101,7 @@ public struct CachedMountainRecord: Hashable, Identifiable, Sendable {
     locationName: Mountain.LocationName,
     dateAdded: Date,
     imageURL: URL,
+    imageColorScheme: Mountain.Image.ColorScheme,
     difficulty: Mountain.ClimbingDifficulty
   ) {
     self.id = id
@@ -111,6 +113,7 @@ public struct CachedMountainRecord: Hashable, Identifiable, Sendable {
     self.locationName = locationName
     self.dateAdded = dateAdded
     self.imageURL = imageURL
+    self.imageColorScheme = imageColorScheme
     self.difficulty = difficulty
   }
 }
@@ -366,7 +369,13 @@ private func writer(for url: URL?, configuration: Configuration) throws -> any D
 
 private func createTriggers(in db: Database) throws {
   try PlannedClimbAlarmRecord.createTemporaryTrigger(
-    after: .delete(forEachRow: { old in ScheduleableAlarmRecord.all.find(old.alarmId).delete() })
+    after: .delete(
+      forEachRow: { old in
+        ScheduleableAlarmRecord.all
+          .find(old.alarmId)
+          .delete()
+      }
+    )
   )
   .execute(db)
 }
@@ -417,6 +426,7 @@ extension DatabaseMigrator {
           locationName TEXT NOT NULL,
           difficulty DOUBLE NOT NULL,
           imageURL TEXT NOT NULL,
+          imageColorScheme TEXT NOT NULL,
           dateAdded TIMESTAMP NOT NULL
         );
         """,

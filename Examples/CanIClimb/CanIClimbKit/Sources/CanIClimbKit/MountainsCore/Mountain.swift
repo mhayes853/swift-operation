@@ -16,7 +16,7 @@ public struct Mountain: Hashable, Sendable, Codable, Identifiable {
   public var locationName: LocationName
   public var dateAdded: Date
   public var difficulty: ClimbingDifficulty
-  public var imageURL: URL
+  public var image: Image
 
   public init(
     id: Mountain.ID,
@@ -27,7 +27,7 @@ public struct Mountain: Hashable, Sendable, Codable, Identifiable {
     locationName: LocationName,
     dateAdded: Date,
     difficulty: ClimbingDifficulty,
-    imageURL: URL
+    image: Image
   ) {
     self.id = id
     self.name = name
@@ -37,7 +37,37 @@ public struct Mountain: Hashable, Sendable, Codable, Identifiable {
     self.locationName = locationName
     self.dateAdded = dateAdded
     self.difficulty = difficulty
-    self.imageURL = imageURL
+    self.image = image
+  }
+}
+
+// MARK: - Image
+
+extension Mountain {
+  public struct Image: Hashable, Sendable, Codable {
+    public var url: URL
+    public var colorScheme: ColorScheme
+
+    public init(url: URL, colorScheme: ColorScheme) {
+      self.url = url
+      self.colorScheme = colorScheme
+    }
+  }
+}
+
+extension Mountain.Image {
+  public enum ColorScheme: String, Hashable, Sendable, Codable {
+    case light
+    case dark
+  }
+}
+
+extension ColorScheme {
+  public init(mountainImageScheme: Mountain.Image.ColorScheme) {
+    switch mountainImageScheme {
+    case .light: self = .light
+    case .dark: self = .dark
+    }
   }
 }
 
@@ -130,10 +160,13 @@ extension Mountain {
     locationName: LocationName(part1: "Dunning", part2: "Krugger"),
     dateAdded: Date(timeIntervalSince1970: 0),
     difficulty: ClimbingDifficulty(rawValue: 47)!,
-    imageURL: URL(
-      string:
-        "https://paragliding.ch/wp-content/uploads/2024/03/Bildschirmfoto-2024-03-07-um-22.18.44.png"
-    )!
+    image: Image(
+      url: URL(
+        string:
+          "https://paragliding.ch/wp-content/uploads/2024/03/Bildschirmfoto-2024-03-07-um-22.18.44.png"
+      )!,
+      colorScheme: .light
+    )
   )
 
   public static let mock2 = Self(
@@ -145,9 +178,9 @@ extension Mountain {
     locationName: LocationName(part1: "Western Tharsis Rise", part2: "Mars"),
     dateAdded: Date(timeIntervalSince1970: 0),
     difficulty: ClimbingDifficulty(rawValue: 100)!,
-    imageURL: URL(
-      string:
-        "https://lowell.edu/wp-content/uploads/2020/09/maxresdefault-1024x576.jpg"
-    )!
+    image: Image(
+      url: URL(string: "https://lowell.edu/wp-content/uploads/2020/09/maxresdefault-1024x576.jpg")!,
+      colorScheme: .dark
+    )
   )
 }
