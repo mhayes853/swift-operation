@@ -24,7 +24,8 @@ let package = Package(
       url: "https://github.com/mhayes853/swift-uuidv7",
       branch: "sharing-grdb-icloud",
       traits: ["SwiftUUIDV7SharingGRDB", "SwiftUUIDV7Tagged", "SwiftUUIDV7Dependencies"]
-    )
+    ),
+    .package(url: "https://github.com/apple/swift-collections", from: "1.2.1")
   ],
   targets: [
     .target(
@@ -36,7 +37,9 @@ let package = Package(
         .product(name: "SwiftUINavigation", package: "swift-navigation"),
         .product(name: "UIKitNavigation", package: "swift-navigation"),
         .product(name: "KeychainSwift", package: "keychain-swift"),
-        .product(name: "UUIDV7", package: "swift-uuidv7")
+        .product(name: "UUIDV7", package: "swift-uuidv7"),
+        .product(name: "DequeModule", package: "swift-collections"),
+        .product(name: "OrderedCollections", package: "swift-collections")
       ]
     ),
     .testTarget(

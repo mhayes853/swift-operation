@@ -11,6 +11,7 @@ public final class CanIClimbAPI: Sendable {
   private let baseURL: URL
   private let transport: any DataTransport
   private let tokens: Tokens
+  private let achieveQueue = SerialTaskQueue(priority: .userInitiated)
 
   public init(
     baseURL: URL = .canIClimbAPIBase,
@@ -175,15 +176,19 @@ extension CanIClimbAPI {
 
 extension CanIClimbAPI {
   public func achieveClimb(for id: Mountain.PlannedClimb.ID) async throws -> PlannedClimbResponse {
-    let (data, _) = try await self.perform(request: .achieveClimb(id))
-    return try JSONDecoder().decode(PlannedClimbResponse.self, from: data)
+    try await self.achieveQueue.run {
+      let (data, _) = try await self.perform(request: .achieveClimb(id))
+      return try JSONDecoder().decode(PlannedClimbResponse.self, from: data)
+    }
   }
 
   public func unachieveClimb(
     for id: Mountain.PlannedClimb.ID
   ) async throws -> PlannedClimbResponse {
-    let (data, _) = try await self.perform(request: .unachieveClimb(id))
-    return try JSONDecoder().decode(PlannedClimbResponse.self, from: data)
+    try await self.achieveQueue.run {
+      let (data, _) = try await self.perform(request: .unachieveClimb(id))
+      return try JSONDecoder().decode(PlannedClimbResponse.self, from: data)
+    }
   }
 }
 

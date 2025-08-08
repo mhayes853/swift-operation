@@ -1,5 +1,5 @@
 {
-  "originHash" : "9312bc04b83b38fb1531b454fbf8c5393137b7ab30576b08571ea29d56e88f0b",
+  "originHash" : "4676f6c8820b26a36fd78960488319f6366c6370148cc598f085bd132ea387cf",
   "pins" : [
     {
       "identity" : "combine-schedulers",
@@ -43,7 +43,7 @@
       "location" : "https://github.com/pointfreeco/sharing-grdb",
       "state" : {
         "branch" : "cloudkit",
-        "revision" : "20e9cd6cf7c761dff1f56cafb6f6c8c6b67a7aec"
+        "revision" : "5d9290f9310d645c8f89da9c5def5ff2da3d9b1a"
       }
     },
     {
@@ -151,7 +151,7 @@
       "location" : "https://github.com/mhayes853/swift-query",
       "state" : {
         "branch" : "main",
-        "revision" : "589a3d931c6939f42b203a1b1e03fb6fe883a9aa"
+        "revision" : "7da6105ab83e55033c4075eaebcc88e5cac51a41"
       }
     },
     {
@@ -213,8 +213,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/xctest-dynamic-overlay",
       "state" : {
-        "revision" : "23e3442166b5122f73f9e3e622cd1e4bafeab3b7",
-        "version" : "1.6.0"
+        "revision" : "b2ed9eabefe56202ee4939dd9fc46b6241c88317",
+        "version" : "1.6.1"
       }
     }
   ],
