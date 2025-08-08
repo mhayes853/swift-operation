@@ -1,12 +1,14 @@
-import ConcurrencyExtras
-import IdentifiedCollections
+import DequeModule
+import Synchronization
 
 // TODO: - Could this be a modifier in the library at some point?
 
+// MARK: - SerialTaskQueue
+
 public final actor SerialTaskQueue {
   private let priority: TaskPriority
-  private var currentId = 0
-  private var queue = IdentifiedArrayOf<TaskState>()
+  private var drainTask: Task<Void, Never>?
+  private var queue = Deque<QueueTask>()
 
   public init(priority: TaskPriority) {
     self.priority = priority
@@ -15,40 +17,76 @@ public final actor SerialTaskQueue {
   public func run<T: Sendable>(
     _ task: @escaping @Sendable () async throws -> T
   ) async throws -> T {
-    let runnerId = self.currentId
-    self.currentId += 1
-
-    let state = TaskState(id: runnerId) { try await task() }
-    for i in 0..<self.queue.count {
-      self.queue[i].count += 1
-    }
-    self.queue.append(state)
-
-    var result: Result<any Sendable, any Error>?
-
-    let ids = self.queue.ids
-    for id in ids {
-      let state = self.queue[id: id]!
-      let task = self.queue[id: id]!.task ?? Task(priority: self.priority) { try await state.fn() }
-      self.queue[id: id]!.task = task
-      result = await Result { try await task.cancellableValue }
-      self.queue[id: id]!.count -= 1
-      if self.queue[id: id]!.count == 0 {
-        self.queue.remove(id: id)
+    let queueTask = QueueTask()
+    return try await withTaskCancellationHandler {
+      try await withUnsafeThrowingContinuation { continuation in
+        queueTask.schedule(continuation: continuation, task)
+        self.queue.append(queueTask)
+        self.beginDrainingIfNeeded()
       }
-      if id == runnerId {
-        break
-      }
+    } onCancel: {
+      queueTask.cancel()
     }
-    return try result!.map { $0 as! T }.get()
+  }
+
+  private func beginDrainingIfNeeded() {
+    guard self.drainTask == nil else { return }
+    self.drainTask = Task {
+      while let task = self.queue.popFirst() {
+        await task.run(with: self.priority)
+      }
+      self.drainTask = nil
+    }
   }
 }
 
+// MARK: - QueueTask
+
 extension SerialTaskQueue {
-  private struct TaskState: Sendable, Identifiable {
-    let id: Int
-    var count = 1
-    var fn: @Sendable () async throws -> any Sendable
-    var task: Task<any Sendable, any Error>?
+  private final class QueueTask: Sendable {
+    private struct State {
+      var fn: (@Sendable () async -> Void)?
+      var onCancel: (@Sendable () -> Void)?
+      var isCancelled = false
+      var task: Task<Void, Never>?
+    }
+
+    private let state = Mutex(State())
+
+    func schedule<T: Sendable>(
+      continuation: UnsafeContinuation<T, any Error>,
+      _ fn: @escaping @Sendable () async throws -> T
+    ) {
+      self.state.withLock { state in
+        state.fn = {
+          do {
+            let value = try await fn()
+            continuation.resume(returning: value)
+          } catch {
+            if !(error is CancellationError) {
+              continuation.resume(throwing: error)
+            }
+          }
+        }
+        state.onCancel = { continuation.resume(throwing: CancellationError()) }
+      }
+    }
+
+    func cancel() {
+      self.state.withLock { state in
+        state.isCancelled = true
+        state.onCancel?()
+        state.task?.cancel()
+      }
+    }
+
+    func run(with priority: TaskPriority) async {
+      let task: Task<Void, Never>? = self.state.withLock { state in
+        guard let fn = state.fn, !state.isCancelled, state.task == nil else { return nil }
+        state.task = Task(priority: priority) { await fn() }
+        return state.task
+      }
+      await task?.value
+    }
   }
 }
