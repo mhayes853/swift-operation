@@ -5,7 +5,7 @@ extension ScheduleableAlarm {
 }
 
 extension ScheduleableAlarmRecord {
-  public init(alarm: ScheduleableAlarm, isScheduled: Bool = false) {
-    self.init(id: alarm.id, title: alarm.title, date: alarm.date, isScheduled: isScheduled)
+  public init(alarm: ScheduleableAlarm, status: Status = .pending) {
+    self.init(id: alarm.id, title: alarm.title, date: alarm.date, status: status)
   }
 }

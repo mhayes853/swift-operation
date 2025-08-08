@@ -59,7 +59,7 @@ extension ScheduleableAlarm.SyncEngine {
         guard let self else { return }
         do {
           let results = try await self.store.replaceAll(with: alarms)
-          try await self.updateIsScheduled(for: results)
+          try await self.updateStatus(for: results)
           await self.callbacks?.onScheduleNewAlarms?(results)
           self.logger.info("Scheduled \(results.count) new alarms!")
         } catch {
@@ -72,8 +72,8 @@ extension ScheduleableAlarm.SyncEngine {
   private func removeCancelledAlarmsFromDatabase() async throws {
     let ids = try await self.store.all()
     try await self.database.write { db in
-      try ScheduleableAlarmRecord.delete()
-        .where { $0.id.in(ids.map { #bind($0) }).not().and($0.isScheduled.not()) }
+      try ScheduleableAlarmRecord.update { $0.status = .finished }
+        .where { $0.id.in(ids.map { #bind($0) }).not().and($0.status.eq(#bind(.scheduled))) }
         .execute(db)
     }
   }
@@ -81,19 +81,21 @@ extension ScheduleableAlarm.SyncEngine {
   private func alarmsObservation() -> some AsyncSequence<[ScheduleableAlarm], any Error> {
     let region = SQLRequest(sql: "SELECT id, title, date FROM ScheduleableAlarms")
     let observation = ValueObservation.tracking(region: region) {
-      try ScheduleableAlarmRecord.all.fetchAll($0)
+      try ScheduleableAlarmRecord.all
+        .where { $0.status.eq(#bind(.finished)).not() }
+        .fetchAll($0)
     }
     return observation.values(in: self.database)
       .map { alarms in alarms.map { ScheduleableAlarm(record: $0) } }
   }
 
-  private func updateIsScheduled(
+  private func updateStatus(
     for results: [(ScheduleableAlarm, (any Error)?)]
   ) async throws {
     try await self.database.write { db in
       for (alarm, error) in results {
         try ScheduleableAlarmRecord.find(#bind(alarm.id))
-          .update { $0.isScheduled = error != nil }
+          .update { $0.status = error == nil ? .scheduled : .pending }
           .execute(db)
       }
     }

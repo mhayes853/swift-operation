@@ -40,8 +40,6 @@ public struct PlannedMountainClimbCardView: View {
           .frame(width: self.iconSize)
         if let alarm = self.plannedClimb.alarm {
           Text("Alarm set for \(alarm.date.formatted(.dateTime))")
-        } else if Date.now > self.plannedClimb.targetDate {
-          Text("--")
         } else {
           Text("No alarm set")
         }

@@ -89,11 +89,12 @@ final class ScheduleableAlarmSyncEngineTests: XCTestCase, @unchecked Sendable {
     await self.fulfillment(of: [expectation], timeout: 1)
   }
 
-  func testRemovesAlarmsThatHaveBeenRemovedFromStoreOnBeginObserving() async throws {
+  func testFinishesAlarmsThatHaveBeenRemovedFromStoreOnBeginObserving() async throws {
     let expectation = self.expectation(description: "Alarm scheduled")
     await self.observer.setCallbacks(
       ScheduleableAlarm.SyncEngine.Callbacks { scheduled in
         guard !scheduled.isEmpty else { return }
+        print(scheduled)
         Task { @MainActor in
           await self.observer.stop()
           expectation.fulfill()
@@ -107,7 +108,8 @@ final class ScheduleableAlarmSyncEngineTests: XCTestCase, @unchecked Sendable {
       date: .distantFuture
     )
     try await self.database.write {
-      try ScheduleableAlarmRecord.insert { ScheduleableAlarmRecord(alarm: alarm) }.execute($0)
+      try ScheduleableAlarmRecord.insert { ScheduleableAlarmRecord(alarm: alarm) }
+        .execute($0)
     }
     await self.fulfillment(of: [expectation], timeout: 1)
     await self.observer.setCallbacks(nil)
@@ -119,7 +121,8 @@ final class ScheduleableAlarmSyncEngineTests: XCTestCase, @unchecked Sendable {
     let alarms = try await self.database.read {
       try ScheduleableAlarmRecord.all.fetchAll($0)
     }
-    expectNoDifference(alarms, [])
+    expectNoDifference(alarms.map(\.id), [alarm.id])
+    expectNoDifference(alarms.map(\.status), [.finished])
   }
 
   func testDoesNotRemoveAlarmsThatCouldNotBeScheduledWhenObservingStarted() async throws {
@@ -156,5 +159,31 @@ final class ScheduleableAlarmSyncEngineTests: XCTestCase, @unchecked Sendable {
     }
 
     expectNoDifference(alarms.map(\.id), [alarm.id])
+  }
+
+  func testDoesNotScheduleAlarmsThatAreFinished() async throws {
+    let expectation = self.expectation(description: "Alarm scheduled")
+    expectation.assertForOverFulfill = false
+    await self.observer.setCallbacks(
+      ScheduleableAlarm.SyncEngine.Callbacks { scheduled in
+        guard scheduled.isEmpty else { return }
+        expectation.fulfill()
+      }
+    )
+
+    let alarm = ScheduleableAlarmRecord(
+      id: ScheduleableAlarm.ID(),
+      title: "Blob Jr",
+      date: .distantFuture,
+      status: .finished
+    )
+    try await self.database.write {
+      try ScheduleableAlarmRecord.insert { alarm }
+        .execute($0)
+    }
+    await self.fulfillment(of: [expectation], timeout: 1)
+
+    let alarmIds = self.store.all()
+    expectNoDifference(alarmIds, [])
   }
 }

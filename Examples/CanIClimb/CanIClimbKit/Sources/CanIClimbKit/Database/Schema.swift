@@ -283,18 +283,26 @@ public struct ScheduleableAlarmRecord: Equatable, Sendable, Identifiable {
   public var title: LocalizedStringResource
 
   public var date: Date
-  public var isScheduled: Bool
+  public var status: Status
 
   public init(
     id: ScheduleableAlarm.ID,
     title: LocalizedStringResource,
     date: Date,
-    isScheduled: Bool
+    status: Status
   ) {
     self.id = id
     self.title = title
     self.date = date
-    self.isScheduled = isScheduled
+    self.status = status
+  }
+}
+
+extension ScheduleableAlarmRecord {
+  public enum Status: String, Hashable, Sendable, QueryBindable {
+    case scheduled
+    case finished
+    case pending
   }
 }
 
@@ -326,7 +334,10 @@ public struct PlannedClimbAlarmRecord: Hashable, Sendable, Codable {
 
 // MARK: - Can I Climb Database
 
-public func canIClimbDatabase(url: URL? = nil) throws -> any DatabaseWriter {
+public func canIClimbDatabase(
+  url: URL? = nil,
+  isTracingEnabled: Bool = true
+) throws -> any DatabaseWriter {
   if let url {
     try FileManager.default.createDirectory(
       at: url.deletingLastPathComponent(),
@@ -339,8 +350,10 @@ public func canIClimbDatabase(url: URL? = nil) throws -> any DatabaseWriter {
     db.add(function: .localizedStandardContains)
     db.addUUIDV7Functions()
     #if DEBUG
-      db.trace(options: .profile) {
-        print("\($0.expandedDescription)")
+      if isTracingEnabled {
+        db.trace(options: .profile) {
+          print("\($0.expandedDescription)")
+        }
       }
     #endif
   }
@@ -524,7 +537,7 @@ extension DatabaseMigrator {
           id TEXT PRIMARY KEY,
           title TEXT NOT NULL,
           date REAL NOT NULL,
-          isScheduled BOOLEAN NOT NULL
+          status TEXT NOT NULL
         );
         """,
         as: Void.self
