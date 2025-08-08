@@ -32,7 +32,7 @@ public struct MountainCardView: View {
         ? AnyShapeStyle(Color.secondaryBackground)
         : AnyShapeStyle(.background)
     )
-    .clipShape(RoundedRectangle(cornerRadius: 20))
+    .clipShape(RoundedRectangle(cornerRadius: 30))
     .shadow(color: Color.black.opacity(self.colorScheme == .light ? 0.15 : 0), radius: 15, y: 10)
     .frame(height: self.cardHeight)
   }

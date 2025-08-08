@@ -56,6 +56,6 @@ public struct PlannedMountainClimbCardView: View {
         ? AnyShapeStyle(Color.secondaryBackground)
         : AnyShapeStyle(.background)
     )
-    .clipShape(RoundedRectangle(cornerRadius: 20))
+    .clipShape(RoundedRectangle(cornerRadius: 30))
   }
 }

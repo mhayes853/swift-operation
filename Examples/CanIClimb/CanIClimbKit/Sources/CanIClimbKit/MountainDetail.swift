@@ -167,7 +167,7 @@ private struct MountainImageView: View {
     }
     .frame(height: 300)
     .frame(maxWidth: .infinity)
-    .clipShape(RoundedRectangle(cornerRadius: 20))
+    .clipShape(RoundedRectangle(cornerRadius: 30))
     .shadow(color: .black.opacity(0.15), radius: 15, y: 10)
     .ignoresSafeArea()
   }
