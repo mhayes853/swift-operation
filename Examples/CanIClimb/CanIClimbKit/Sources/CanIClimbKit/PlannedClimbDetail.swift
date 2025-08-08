@@ -7,7 +7,7 @@ import SwiftUINavigation
 
 @MainActor
 @Observable
-public final class PlannedClimbDetailModel {
+public final class PlannedClimbDetailModel: HashableObject, Identifiable {
   @ObservationIgnored
   @SharedQuery<Mountain.Query.State> public var mountain: Mountain??
 
@@ -22,12 +22,17 @@ public final class PlannedClimbDetailModel {
 
   @ObservationIgnored public var onUnplanned: (() -> Void)?
 
-  public let plannedClimb: Mountain.PlannedClimb
+  @ObservationIgnored
+  @SharedReader public var plannedClimb: Mountain.PlannedClimb
+
   public var destination: Destination?
 
-  public init(plannedClimb: Mountain.PlannedClimb) {
-    self.plannedClimb = plannedClimb
-    self._mountain = SharedQuery(Mountain.query(id: plannedClimb.mountainId), animation: .bouncy)
+  public init(plannedClimb: SharedReader<Mountain.PlannedClimb>) {
+    self._plannedClimb = plannedClimb
+    self._mountain = SharedQuery(
+      Mountain.query(id: plannedClimb.wrappedValue.mountainId),
+      animation: .bouncy
+    )
   }
 }
 
@@ -38,7 +43,19 @@ extension PlannedClimbDetailModel {
   }
 
   public func alert(action: AlertAction?) async throws {
-
+    switch action {
+    case .confirmUnplanClimb:
+      guard case let mountain?? = self.mountain else { return }
+      try await self.$unplanClimb.mutate(
+        with: Mountain.UnplanClimbsMutation.Arguments(
+          mountainId: mountain.id,
+          ids: [self.plannedClimb.id]
+        )
+      )
+      self.onUnplanned?()
+    default:
+      break
+    }
   }
 
   public func cancelInvoked() {
@@ -63,10 +80,10 @@ extension AlertState where Action == PlannedClimbDetailModel.AlertAction {
       TextState("Cancel Climb?")
     } actions: {
       ButtonState(role: .cancel) {
-        TextState("Cancel")
+        TextState("Go Back")
       }
       ButtonState(role: .destructive, action: .confirmUnplanClimb) {
-        TextState("Cancel")
+        TextState("Cancel Climb")
       }
     } message: {
       TextState(
@@ -83,15 +100,87 @@ extension AlertState where Action == PlannedClimbDetailModel.AlertAction {
 // MARK: - PlannedClimbDetailView
 
 public struct PlannedClimbDetailView: View {
-  private let model: PlannedClimbDetailModel
+  @Bindable private var model: PlannedClimbDetailModel
 
   public init(model: PlannedClimbDetailModel) {
     self.model = model
   }
 
   public var body: some View {
-    Form {
-
+    RemoteQueryStateView(self.model.$mountain) { mountain in
+      if let mountain {
+        DetailView(model: self.model, mountain: mountain)
+      } else {
+        Text("Mountain not found")
+      }
     }
+    .alert(self.$model.destination.alert) { action in
+      Task { try await self.model.alert(action: action) }
+    }
+  }
+}
+
+// MARK: - DetailView
+
+private struct DetailView: View {
+  @Environment(\.colorScheme) private var colorScheme
+
+  let model: PlannedClimbDetailModel
+  let mountain: Mountain
+
+  var body: some View {
+    ScrollView {
+      PlannedMountainClimbCardView(plannedClimb: self.model.plannedClimb)
+        .padding()
+    }
+    .toolbar {
+      #if os(iOS)
+        if self.model.$unplanClimb.isLoading {
+          ToolbarItem(placement: .topBarTrailing) {
+            SpinnerView()
+          }
+        }
+      #endif
+    }
+    .safeAreaInset(edge: .bottom) {
+      VStack {
+        if self.model.plannedClimb.achievedDate != nil {
+          CTAButton(
+            "Mark Incomplete",
+            systemImage: "medal",
+            tint: .secondaryBackground,
+            foregroundStyle: self.colorScheme == .dark
+              ? AnyShapeStyle(.white)
+              : AnyShapeStyle(.black)
+          ) {
+            Task {
+              try await self.model.$unachieveClimb.mutate(
+                with: Mountain.UnachieveClimbMutation.Arguments(
+                  id: self.model.plannedClimb.id,
+                  mountainId: self.mountain.id
+                )
+              )
+            }
+          }
+        } else {
+          CTAButton("Mark Complete", systemImage: "medal.fill") {
+            Task {
+              try await self.model.$achieveClimb.mutate(
+                with: Mountain.AchieveClimbMutation.Arguments(
+                  id: self.model.plannedClimb.id,
+                  mountainId: self.mountain.id
+                )
+              )
+            }
+          }
+        }
+        CTAButton("Cancel Climb", tint: .red, foregroundStyle: AnyShapeStyle(.white)) {
+          self.model.cancelInvoked()
+        }
+      }
+      .disabled(self.model.$unplanClimb.isLoading)
+      .padding()
+    }
+    .inlineNavigationTitle("Climb for \(self.mountain.name)")
   }
 }

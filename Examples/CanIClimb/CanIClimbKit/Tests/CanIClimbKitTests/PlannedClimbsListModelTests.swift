@@ -29,5 +29,62 @@ extension DependenciesTestSuite {
         expectNoDifference(model.destination, nil)
       }
     }
+
+    @Test("Achieves Climb, Updates Detail Model")
+    func achievesClimbUpdatesDetailModel() async throws {
+      try await withDependencies {
+        $0[Mountain.LoaderKey.self] = Mountain.MockLoader(result: .success(.mock1))
+
+        let loader = Mountain.MockPlannedClimbsLoader()
+        loader.results[Mountain.mock1.id] = .success([.mock1])
+        $0[Mountain.PlannedClimbsLoaderKey.self] = loader
+
+        $0[Mountain.ClimbAchieverKey.self] = Mountain.NoopClimbAchiever()
+        $0.date = .constant(.distantFuture)
+      } operation: {
+        let model = PlannedClimbsListModel(mountainId: Mountain.mock1.id)
+        try await model.$plannedClimbs.load()
+
+        model.plannedClimbDetailInvoked(id: Mountain.PlannedClimb.mock1.id)
+
+        let detailModel = try #require(model.destination?[case: \.plannedClimbDetail])
+        try await detailModel.$mountain.load()
+        try await detailModel.$achieveClimb.mutate(
+          with: Mountain.AchieveClimbMutation.Arguments(
+            id: Mountain.PlannedClimb.mock1.id,
+            mountainId: Mountain.mock1.id
+          )
+        )
+        expectNoDifference(detailModel.plannedClimb.achievedDate, .distantFuture)
+        expectNoDifference(
+          model.plannedClimbs?[id: Mountain.PlannedClimb.mock1.id]?.achievedDate,
+          .distantFuture
+        )
+      }
+    }
+
+    @Test("Cancels Climb, Dismisses Detail Model")
+    func cancelsClimbDismissesDetailModel() async throws {
+      try await withDependencies {
+        $0[Mountain.LoaderKey.self] = Mountain.MockLoader(result: .success(.mock1))
+
+        let loader = Mountain.MockPlannedClimbsLoader()
+        loader.results[Mountain.mock1.id] = .success([.mock1])
+        $0[Mountain.PlannedClimbsLoaderKey.self] = loader
+
+        $0[Mountain.PlanClimberKey.self] = Mountain.MockClimbPlanner()
+      } operation: {
+        let model = PlannedClimbsListModel(mountainId: Mountain.mock1.id)
+        try await model.$plannedClimbs.load()
+
+        model.plannedClimbDetailInvoked(id: Mountain.PlannedClimb.mock1.id)
+
+        let detailModel = try #require(model.destination?[case: \.plannedClimbDetail])
+        try await detailModel.$mountain.load()
+        detailModel.cancelInvoked()
+        try await detailModel.alert(action: .confirmUnplanClimb)
+        expectNoDifference(model.destination, nil)
+      }
+    }
   }
 }

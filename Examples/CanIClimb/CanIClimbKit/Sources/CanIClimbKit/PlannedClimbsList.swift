@@ -1,5 +1,6 @@
 import IdentifiedCollections
 import Observation
+import Sharing
 import SharingQuery
 import SwiftUI
 import SwiftUINavigation
@@ -34,16 +35,24 @@ extension PlannedClimbsListModel {
   @CasePathable
   public enum Destination: Hashable, Sendable {
     case planClimb(PlanClimbModel)
+    case plannedClimbDetail(PlannedClimbDetailModel)
   }
 
   public func planClimbInvoked() {
     self.destination = .planClimb(PlanClimbModel(mountainId: self.mountainId))
   }
 
+  public func plannedClimbDetailInvoked(id: Mountain.PlannedClimb.ID) {
+    self.destination = SharedReader(self.$plannedClimbs.sharedReader.read { $0?[id: id] })
+      .map { .plannedClimbDetail(PlannedClimbDetailModel(plannedClimb: $0)) }
+  }
+
   private func bind() {
     switch self.destination {
     case .planClimb(let model):
       model.onPlanned = { [weak self] _ in self?.destination = nil }
+    case .plannedClimbDetail(let model):
+      model.onUnplanned = { [weak self] in self?.destination = nil }
     default:
       break
     }
@@ -73,6 +82,14 @@ public struct PlannedClimbsListView: View {
       .presentationDetents([.medium])
       .presentationDragIndicator(.hidden)
     }
+    .sheet(item: self.$model.destination.plannedClimbDetail) { model in
+      NavigationStack {
+        PlannedClimbDetailView(model: model)
+          .dismissable()
+      }
+      .presentationDetents([.medium])
+      .presentationDragIndicator(.hidden)
+    }
   }
 }
 
@@ -91,7 +108,12 @@ private struct ListView: View {
       )
     } else {
       ForEach(self.climbs) { climb in
-        PlannedMountainClimbCardView(plannedClimb: climb)
+        Button {
+          self.model.plannedClimbDetailInvoked(id: climb.id)
+        } label: {
+          PlannedMountainClimbCardView(plannedClimb: climb)
+        }
+        .buttonStyle(.plain)
       }
     }
   }
