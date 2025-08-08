@@ -38,22 +38,11 @@ public struct MountainDetailView: View {
   }
 
   public var body: some View {
-    switch self.model.$mountain.status {
-    case .result(.success(nil)):
-      Text("Mountain not found")
-    case .result(.failure(let error)):
-      if case let mountain?? = self.model.mountain {
+    RemoteQueryStateView(self.model.$mountain) { mountain in
+      if let mountain {
         MountainDetailScrollView(model: self.model, mountain: mountain)
       } else {
-        RemoteOperationErrorView(error: error) {
-          Task { try await self.model.$mountain.fetch() }
-        }
-      }
-    default:
-      if case let mountain?? = self.model.mountain {
-        MountainDetailScrollView(model: self.model, mountain: mountain)
-      } else {
-        SpinnerView()
+        ContentUnavailableView("Mountain not found", systemImage: "mountain.2.fill")
       }
     }
   }

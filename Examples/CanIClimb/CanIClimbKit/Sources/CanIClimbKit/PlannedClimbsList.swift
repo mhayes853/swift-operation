@@ -61,21 +61,8 @@ public struct PlannedClimbsListView: View {
 
   public var body: some View {
     LazyVStack(spacing: 10) {
-      switch self.model.$plannedClimbs.status {
-      case .result(.failure(let error)):
-        if let climbs = self.model.plannedClimbs {
-          ListView(model: model, climbs: climbs)
-        } else {
-          RemoteOperationErrorView(error: error) {
-            Task { try await self.model.$plannedClimbs.fetch() }
-          }
-        }
-      default:
-        if let climbs = self.model.plannedClimbs {
-          ListView(model: model, climbs: climbs)
-        } else {
-          SpinnerView()
-        }
+      RemoteQueryStateView(self.model.$plannedClimbs) { climbs in
+        ListView(model: model, climbs: climbs)
       }
     }
     .sheet(item: self.$model.destination.planClimb) { model in

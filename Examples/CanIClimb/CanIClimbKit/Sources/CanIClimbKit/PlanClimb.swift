@@ -94,17 +94,12 @@ public struct PlanClimbView: View {
   }
 
   public var body: some View {
-    switch self.model.$mountain.status {
-    case .result(.success(let mountain?)):
-      PlanClimbFormView(mountain: mountain, model: self.model)
-    case .result(.success(nil)):
-      ContentUnavailableView("Mountain Not Found", image: "mountain.2.fill")
-    case .result(.failure(let error)):
-      RemoteOperationErrorView(error: error) {
-        Task { try await self.model.$mountain.fetch() }
+    RemoteQueryStateView(self.model.$mountain) { mountain in
+      if let mountain = mountain {
+        PlanClimbFormView(mountain: mountain, model: self.model)
+      } else {
+        ContentUnavailableView("Mountain not Found", image: "mountain.2.fill")
       }
-    default:
-      SpinnerView()
     }
   }
 }

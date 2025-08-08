@@ -77,24 +77,6 @@ extension UserSettingsModel {
 }
 
 extension UserSettingsModel {
-  public func alert(action: AlertAction?) async throws {
-    switch action {
-    case .accountDeletionConfirmed:
-      try await self.deleteAccount()
-    default:
-      break
-    }
-  }
-
-  private func deleteAccount() async throws {
-    let task = self.$deleteAccount.mutateTask()
-    self.indicateLoading()
-    try await task.runIfNeeded()
-    self.onSignOut?(.accountDeleted)
-  }
-}
-
-extension UserSettingsModel {
   private func indicateLoading() {
     guard let loadingType else { return }
     self.onLoading?(loadingType)
@@ -128,6 +110,22 @@ extension UserSettingsModel {
 
   public func deleteAccountInvoked() {
     self.destination = .alert(.confirmAccountDeletion)
+  }
+
+  public func alert(action: AlertAction?) async throws {
+    switch action {
+    case .accountDeletionConfirmed:
+      try await self.deleteAccount()
+    default:
+      break
+    }
+  }
+
+  private func deleteAccount() async throws {
+    let task = self.$deleteAccount.mutateTask()
+    self.indicateLoading()
+    try await task.runIfNeeded()
+    self.onSignOut?(.accountDeleted)
   }
 }
 
