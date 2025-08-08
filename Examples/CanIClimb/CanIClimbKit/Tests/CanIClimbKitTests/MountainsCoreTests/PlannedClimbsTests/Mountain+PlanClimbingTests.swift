@@ -1,6 +1,7 @@
 import CanIClimbKit
 import CustomDump
 import Dependencies
+import Foundation
 import SharingQuery
 import Synchronization
 import Testing
@@ -9,22 +10,44 @@ extension DependenciesTestSuite {
   @MainActor
   @Suite("Mountain+PlanClimbing tests")
   struct MountainPlanClimbingTests {
-    @Test("Updates Planned Climbed List When Planning New Climb")
+    @Test("Updates Planned Climbed List With Insertion When Planning New Climb")
     func updatesPlannedClimbedListWhenPlanningNewClimb() async throws {
+      let c1 = Mountain.PlannedClimb.mock1
+      let c2 = Mountain.PlannedClimb(
+        id: Mountain.PlannedClimb.ID(),
+        mountainId: c1.mountainId,
+        targetDate: c1.targetDate + TimeInterval(1000),
+        achievedDate: nil,
+        alarm: nil
+      )
+      let c3 = Mountain.PlannedClimb(
+        id: Mountain.PlannedClimb.ID(),
+        mountainId: c1.mountainId,
+        targetDate: c1.targetDate + TimeInterval(500),
+        achievedDate: nil,
+        alarm: nil
+      )
+
       try await withDependencies {
         let planner = Mountain.MockClimbPlanner()
-        planner.setResult(for: .mock1, result: .success(.mock1))
+        planner.setResult(for: .mock1, result: .success(c3))
         $0[Mountain.PlanClimberKey.self] = planner
-        $0[Mountain.PlannedClimbsLoaderKey.self] = Mountain.MockPlannedClimbsLoader()
+
+        let loader = Mountain.MockPlannedClimbsLoader()
+        loader.results[Mountain.mock1.id] = .success([c2, c1])
+        $0[Mountain.PlannedClimbsLoaderKey.self] = loader
       } operation: {
         @Dependency(\.defaultQueryClient) var client
-        let climbsStore = client.store(for: Mountain.plannedClimbsQuery(for: Mountain.mock1.id))
-        let planStore = client.store(for: Mountain.planClimbMutation)
 
+        let climbsStore = client.store(for: Mountain.plannedClimbsQuery(for: Mountain.mock1.id))
+        try await climbsStore.fetch()
+
+        let planStore = client.store(for: Mountain.planClimbMutation)
         try await planStore.mutate(
           with: Mountain.PlanClimbMutation.Arguments(mountain: .mock1, create: .mock1)
         )
-        expectNoDifference(climbsStore.currentValue, [.mock1])
+
+        expectNoDifference(climbsStore.currentValue, [c2, c3, c1])
       }
     }
 

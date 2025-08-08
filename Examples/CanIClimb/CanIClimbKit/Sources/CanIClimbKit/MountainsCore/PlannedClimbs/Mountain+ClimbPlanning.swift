@@ -158,8 +158,10 @@ extension Mountain {
 
       let climbsStore = client.store(for: Mountain.plannedClimbsQuery(for: arguments.mountain.id))
       climbsStore.withExclusiveAccess {
-        climbsStore.currentValue = climbsStore.currentValue ?? []
-        climbsStore.currentValue?.append(plannedClimb)
+        var currentValue = climbsStore.currentValue ?? []
+        currentValue.append(plannedClimb)
+        currentValue.sort { $0.targetDate > $1.targetDate }
+        climbsStore.currentValue = currentValue
       }
 
       return (arguments.mountain, plannedClimb)

@@ -70,9 +70,9 @@ private struct MountainDetailScrollView: View {
   var body: some View {
     ScrollView {
       VStack(spacing: 20) {
-        MountainImageView(mountain: mountain)
+        MountainImageView(mountain: self.mountain)
 
-        Picker("Mountain or Planned Climbs", selection: self.$model.selectedTab) {
+        Picker("Mountain or Planned Climbs", selection: self.$model.selectedTab.animation()) {
           Label("Mountain", systemImage: "mountain.2.fill")
             .tag(MountainDetailModel.Tab.mountain)
           Label("Planned Climbs", systemImage: "figure.climbing")

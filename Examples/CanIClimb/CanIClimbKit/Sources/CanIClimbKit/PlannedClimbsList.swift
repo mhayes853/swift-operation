@@ -23,7 +23,10 @@ public final class PlannedClimbsListModel {
 
   public init(mountainId: Mountain.ID) {
     self.mountainId = mountainId
-    self._plannedClimbs = SharedQuery(Mountain.plannedClimbsQuery(for: mountainId))
+    self._plannedClimbs = SharedQuery(
+      Mountain.plannedClimbsQuery(for: mountainId),
+      animation: .bouncy
+    )
   }
 }
 
@@ -57,7 +60,7 @@ public struct PlannedClimbsListView: View {
   }
 
   public var body: some View {
-    Group {
+    LazyVStack(spacing: 10) {
       switch self.model.$plannedClimbs.status {
       case .result(.failure(let error)):
         if let climbs = self.model.plannedClimbs {
@@ -94,12 +97,14 @@ private struct ListView: View {
 
   public var body: some View {
     if self.climbs.isEmpty {
-      ContentUnavailableView("No Planned Climbs", systemImage: "exclamationmark.circle")
+      ContentUnavailableView(
+        "No Planned Climbs",
+        systemImage: "exclamationmark.circle",
+        description: Text("Get started by planning your first climb!")
+      )
     } else {
-      LazyVStack(spacing: 10) {
-        ForEach(self.climbs) { climb in
-          PlannedMountainClimbCardView(plannedClimb: climb)
-        }
+      ForEach(self.climbs) { climb in
+        PlannedMountainClimbCardView(plannedClimb: climb)
       }
     }
   }

@@ -118,6 +118,7 @@ extension PlannedMountainClimbs: Mountain.PlannedClimbsLoader {
     in db: Database
   ) throws -> IdentifiedArrayOf<Mountain.PlannedClimb> {
     let records = try CachedPlannedClimbRecord.all
+      .order { $0.targetDate.desc() }
       .leftJoin(PlannedClimbAlarmRecord.all) { $0.id.eq($1.plannedClimbId) }
       .leftJoin(ScheduleableAlarmRecord.all) { (_, climbAlarm, alarm) in
         climbAlarm.alarmId.eq(alarm.id)

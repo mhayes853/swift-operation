@@ -5,8 +5,8 @@ import SharingQuery
 
 extension Mountain {
   public struct Search: Hashable, Sendable {
-      public static let recommended = Self(text: "", category: .recommended)
-      public static let planned = Self(text: "", category: .planned)
+    public static let recommended = Self(text: "", category: .recommended)
+    public static let planned = Self(text: "", category: .planned)
 
     public var text: String
     public var category: Category
@@ -158,7 +158,11 @@ extension QueryClient {
         if let store = stores[.mountain(with: mountain.id)] {
           store.currentValue = mountain
         } else {
-          stores.update(createStore(for: Mountain.query(id: mountain.id), initialValue: mountain))
+          // NB: Creating the store with the initial value does not set valueLastUpdatedAt, which
+          // is required for stale detection.
+          let store = createStore(for: Mountain.query(id: mountain.id), initialValue: nil)
+          store.currentValue = mountain
+          stores.update(store)
         }
       }
     }

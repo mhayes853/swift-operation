@@ -47,35 +47,6 @@ extension DependenciesTestSuite {
       }
     }
 
-    // @Test("Caches Individual Mountains")
-    // func cachesIndividualMountains() async throws {
-    //   try await withDependencies {
-    //     let searcher = Mountain.MockSearcher()
-    //     searcher.results[.recommended(page: 0)] = .success(
-    //       Mountain.SearchResult(mountains: [.mock1], hasNextPage: false)
-    //     )
-    //     $0[Mountain.SearcherKey.self] = searcher
-    //     $0[Mountain.LoaderKey.self] = Mountain.MockLoader(result: .success(nil))
-    //   } operation: {
-    //     @Dependency(\.defaultQueryClient) var client
-    //     let searchStore = client.store(for: Mountain.searchQuery(.recommended))
-    //     try await searchStore.fetchNextPage()
-
-    //     let mountainStore = client.store(for: Mountain.query(id: Mountain.mock1.id))
-
-    //     try await confirmation { confirm in
-    //       let handler = QueryEventHandler<Mountain.Query.State>(
-    //         onResultReceived: { result, context in
-    //           guard context.queryResultUpdateReason == .yieldedResult else { return }
-    //           expectNoDifference(try? result.get(), .mock1)
-    //           confirm()
-    //         }
-    //       )
-    //       try await mountainStore.fetch(handler: handler)
-    //     }
-    //   }
-    // }
-
     @Test("Yields Cached Mountains When Unable To Search Remotely On Page 0")
     func yieldsCachedMountainsWhenUnableToSearchRemotely() async throws {
       struct SomeError: Error {}
