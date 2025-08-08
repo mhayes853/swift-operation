@@ -252,10 +252,18 @@ extension AlertState where Action == Never {
   }
 
   public static func unplanClimbsFailure(count: Int) -> Self {
-    Self {
-      TextState("Failed to Unplan ^[\(count) Climbs](inflect: true)")
+    Self.remoteOperationError {
+      if count == 1 {
+        TextState("Failed to Unplan Climb")
+      } else {
+        TextState("Failed to Unplan \(count) Climbs")
+      }
     } message: {
-      TextState("Your ^[\(count) climbs](inflect: true) could not be unplanned. Please try again.")
+      if count == 1 {
+        TextState("Your climb could not be unplanned. Please try again.")
+      } else {
+        TextState("Your \(count) climbs could not be unplanned. Please try again.")
+      }
     }
   }
 }
