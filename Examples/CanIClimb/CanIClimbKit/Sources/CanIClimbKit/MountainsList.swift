@@ -94,16 +94,14 @@ public struct MountainsListView<SheetContent: View>: View {
         #if os(iOS)
           .fullScreenCover(item: self.$model.destination.mountainDetail) { model in
             NavigationStack {
-              MountainDetailView(model: model)
-              .dismissable()
+              MountainDetailView(model: model).dismissable()
             }
-            .background(.regularMaterial)
+            .presentationBackground(.regularMaterial)
           }
         #else
           .sheet(item: self.$model.destination.mountainDetail) { model in
             NavigationStack {
-              MountainDetailView(model: model)
-              .dismissable()
+              MountainDetailView(model: model).dismissable()
             }
           }
         #endif
