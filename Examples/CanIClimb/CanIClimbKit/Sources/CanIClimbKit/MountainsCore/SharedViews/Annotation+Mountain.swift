@@ -6,7 +6,10 @@ import SwiftUI
 
 extension Annotation where Label == Text, Content == MountainAnnotationView {
   public init(mountain: Mountain, onTapped: @escaping () -> Void) {
-    self.init(mountain.name, coordinate: CLLocationCoordinate2D(coordinate: mountain.coordinate)) {
+    self.init(
+      mountain.name,
+      coordinate: CLLocationCoordinate2D(coordinate: mountain.location.coordinate)
+    ) {
       MountainAnnotationView(mountain: mountain, onTapped: onTapped)
     }
   }

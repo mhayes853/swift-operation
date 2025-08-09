@@ -83,8 +83,8 @@ public struct CachedMountainRecord: Hashable, Identifiable, Sendable {
   public var latitude: Double
   public var longitude: Double
 
-  @Column(as: Mountain.LocationName.JSONRepresentation.self)
-  public var locationName: Mountain.LocationName
+  @Column(as: Mountain.Location.Name.JSONRepresentation.self)
+  public var locationName: Mountain.Location.Name
 
   public var dateAdded: Date
   public var imageURL: URL
@@ -98,7 +98,7 @@ public struct CachedMountainRecord: Hashable, Identifiable, Sendable {
     elevationMeters: Double,
     latitude: Double,
     longitude: Double,
-    locationName: Mountain.LocationName,
+    locationName: Mountain.Location.Name,
     dateAdded: Date,
     imageURL: URL,
     imageColorScheme: Mountain.Image.ColorScheme,

@@ -59,7 +59,7 @@ private struct CardContentView: View {
         .lineLimit(2)
         .font(.title3.bold())
 
-      MountainLocationNameLabel(name: self.mountain.locationName)
+      MountainLocationNameLabel(name: self.mountain.location.name)
         .foregroundStyle(.secondary)
 
       ElevationLabel(elevation: self.mountain.elevation)

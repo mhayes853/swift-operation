@@ -184,7 +184,7 @@ private struct MountainDetailLabel: View {
         Text(self.mountain.name)
           .font(.title.bold())
         Spacer()
-        MountainLocationNameLabel(name: self.mountain.locationName)
+        MountainLocationNameLabel(name: self.mountain.location.name)
           .foregroundStyle(.secondary)
       }
       .frame(height: self.columnSize)

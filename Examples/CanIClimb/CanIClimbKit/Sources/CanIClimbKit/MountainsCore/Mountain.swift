@@ -12,8 +12,7 @@ public struct Mountain: Hashable, Sendable, Codable, Identifiable {
   public var name: String
   public var displayDescription: String
   public var elevation: Measurement<UnitLength>
-  public var coordinate: LocationCoordinate2D
-  public var locationName: LocationName
+  public var location: Location
   public var dateAdded: Date
   public var difficulty: ClimbingDifficulty
   public var image: Image
@@ -23,8 +22,7 @@ public struct Mountain: Hashable, Sendable, Codable, Identifiable {
     name: String,
     displayDescription: String,
     elevation: Measurement<UnitLength>,
-    coordinate: LocationCoordinate2D,
-    locationName: LocationName,
+    location: Location,
     dateAdded: Date,
     difficulty: ClimbingDifficulty,
     image: Image
@@ -33,8 +31,7 @@ public struct Mountain: Hashable, Sendable, Codable, Identifiable {
     self.name = name
     self.displayDescription = displayDescription
     self.elevation = elevation
-    self.coordinate = coordinate
-    self.locationName = locationName
+    self.location = location
     self.dateAdded = dateAdded
     self.difficulty = difficulty
     self.image = image
@@ -128,10 +125,22 @@ extension Color {
   }
 }
 
-// MARK: - LocationName
+// MARK: - Location
 
 extension Mountain {
-  public struct LocationName: Hashable, Sendable, Codable {
+  public struct Location: Hashable, Sendable, Codable {
+    public var coordinate: LocationCoordinate2D
+    public var name: Name
+
+    public init(coordinate: LocationCoordinate2D, name: Mountain.Location.Name) {
+      self.coordinate = coordinate
+      self.name = name
+    }
+  }
+}
+
+extension Mountain.Location {
+  public struct Name: Hashable, Sendable, Codable {
     public var part1: String
     public var part2: String
 
@@ -142,7 +151,7 @@ extension Mountain {
   }
 }
 
-extension Mountain.LocationName: CustomLocalizedStringResourceConvertible {
+extension Mountain.Location.Name: CustomLocalizedStringResourceConvertible {
   public var localizedStringResource: LocalizedStringResource {
     "\(self.part1), \(self.part2)"
   }
@@ -156,8 +165,10 @@ extension Mountain {
     name: "Mt. Stupid",
     displayDescription: "A mountain composed of stupidity.",
     elevation: Measurement(value: 20_000, unit: .feet),
-    coordinate: LocationCoordinate2D(latitude: 45, longitude: 45),
-    locationName: LocationName(part1: "Dunning", part2: "Krugger"),
+    location: Location(
+      coordinate: LocationCoordinate2D(latitude: 45, longitude: 45),
+      name: Location.Name(part1: "Dunning", part2: "Krugger")
+    ),
     dateAdded: Date(timeIntervalSince1970: 0),
     difficulty: ClimbingDifficulty(rawValue: 47)!,
     image: Image(
@@ -174,8 +185,10 @@ extension Mountain {
     name: "Olympus Mons",
     displayDescription: "A cool mountain on Mars.",
     elevation: Measurement(value: 69_648.95, unit: .feet),
-    coordinate: LocationCoordinate2D(latitude: 45, longitude: 45),
-    locationName: LocationName(part1: "Western Tharsis Rise", part2: "Mars"),
+    location: Location(
+      coordinate: LocationCoordinate2D(latitude: 45, longitude: 45),
+      name: Location.Name(part1: "Western Tharsis Rise", part2: "Mars")
+    ),
     dateAdded: Date(timeIntervalSince1970: 0),
     difficulty: ClimbingDifficulty(rawValue: 100)!,
     image: Image(

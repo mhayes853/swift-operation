@@ -1,9 +1,9 @@
 import SwiftUI
 
 public struct MountainLocationNameLabel: View {
-  private let name: Mountain.LocationName
+  private let name: Mountain.Location.Name
 
-  public init(name: Mountain.LocationName) {
+  public init(name: Mountain.Location.Name) {
     self.name = name
   }
 
