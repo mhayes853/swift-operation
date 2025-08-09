@@ -85,7 +85,9 @@ extension Mountain {
       @Dependency(\.defaultQueryClient) var client
 
       let climbsStore = client.store(for: Mountain.plannedClimbsQuery(for: arguments.mountainId))
-      climbsStore.currentValue?[id: arguments.id]?.achievedDate = nil
+      if context.isFirstFetchAttempt {
+        climbsStore.currentValue?[id: arguments.id]?.achievedDate = nil
+      }
 
       try await achiever.unachieveClimb(id: arguments.id)
     }

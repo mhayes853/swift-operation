@@ -6,6 +6,7 @@ import Query
 import SharingGRDB
 import SharingQuery
 import SwiftUI
+import Tagged
 import UUIDV7
 
 @main
@@ -22,6 +23,7 @@ struct CanIClimbPreviewApp: App {
       $0[DeviceInfo.self] = DeviceInfo.current
 
       let searcher = Mountain.MockSearcher()
+      let plannedClimbs = Mountain.MockPlannedClimbsLoader()
       for i in 0..<10 {
         var mountains = IdentifiedArrayOf<Mountain>()
         for j in 0..<10 {
@@ -30,6 +32,26 @@ struct CanIClimbPreviewApp: App {
           mountain.id = Mountain.ID()
           mountain.coordinate = .random()
           mountains.append(mountain)
+          
+          guard j.isMultiple(of: 2) else { continue }
+          
+          var climbs = IdentifiedArrayOf<Mountain.PlannedClimb>()
+          for k in 0..<10 {
+            let alarm = ScheduleableAlarm(
+              id: ScheduleableAlarm.ID(),
+              title: "My Alarm",
+              date: .now + 8000
+            )
+            let climb = Mountain.PlannedClimb(
+              id: Mountain.PlannedClimb.ID(),
+              mountainId: mountain.id,
+              targetDate: .now + 10_000,
+              achievedDate: k.isMultiple(of: 2) ? .now + 5000 : nil,
+              alarm: k.isMultiple(of: 3) ? alarm : nil
+            )
+            climbs.append(climb)
+          }
+          plannedClimbs.results[mountain.id] = .success(climbs)
         }
         searcher.results[.recommended(page: i)] = .success(
           Mountain.SearchResult(mountains: mountains, hasNextPage: i < 9)
@@ -40,6 +62,9 @@ struct CanIClimbPreviewApp: App {
       $0[CKAccountStatus.LoaderKey.self] = CKAccountStatus.MockLoader { .available }
       
       $0[User.CurrentLoaderKey.self] = User.MockCurrentLoader(result: .success(.mock1))
+      
+      $0[Mountain.PlanClimberKey.self] = Mountain.SucceedingClimbPlanner()
+      $0[Mountain.PlannedClimbsLoaderKey.self] = plannedClimbs
 
       try $0.defaultDatabase.write {
         try InternalMetricsRecord.update(in: $0) { $0.hasCompletedOnboarding = true }

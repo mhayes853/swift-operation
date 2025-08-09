@@ -43,7 +43,7 @@
       "location" : "https://github.com/pointfreeco/sharing-grdb",
       "state" : {
         "branch" : "cloudkit",
-        "revision" : "20e9cd6cf7c761dff1f56cafb6f6c8c6b67a7aec"
+        "revision" : "29930e7f74e2330118e32a78d44c48a8f40266b8"
       }
     },
     {
@@ -151,7 +151,7 @@
       "location" : "https://github.com/mhayes853/swift-query",
       "state" : {
         "branch" : "main",
-        "revision" : "d0f2ab38588c20f65197412dde1f29e30aa064e7"
+        "revision" : "3306fa3c2add3448dd101dd9fab840bab475a7b6"
       }
     },
     {
@@ -178,7 +178,7 @@
       "location" : "https://github.com/pointfreeco/swift-structured-queries",
       "state" : {
         "branch" : "main",
-        "revision" : "6b3f436f4da7fd2ea304742d936ac8205e5ef8f8"
+        "revision" : "bb12b34a8bf88af3307784da94caee3765a066f2"
       }
     },
     {
@@ -213,8 +213,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/xctest-dynamic-overlay",
       "state" : {
-        "revision" : "23e3442166b5122f73f9e3e622cd1e4bafeab3b7",
-        "version" : "1.6.0"
+        "revision" : "b2ed9eabefe56202ee4939dd9fc46b6241c88317",
+        "version" : "1.6.1"
       }
     }
   ],
