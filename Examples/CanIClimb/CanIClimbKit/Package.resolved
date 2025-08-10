@@ -24,8 +24,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swiftwasm/JavaScriptKit",
       "state" : {
-        "revision" : "f4d52190ad1a4011c489165d43d25ae8e321bc4d",
-        "version" : "0.26.2"
+        "revision" : "3674e5774c5bc09896abcdbfcd7a5ff0a05737ef",
+        "version" : "0.32.1"
       }
     },
     {
@@ -43,7 +43,7 @@
       "location" : "https://github.com/pointfreeco/sharing-grdb",
       "state" : {
         "branch" : "cloudkit",
-        "revision" : "5d9290f9310d645c8f89da9c5def5ff2da3d9b1a"
+        "revision" : "29930e7f74e2330118e32a78d44c48a8f40266b8"
       }
     },
     {
@@ -151,7 +151,7 @@
       "location" : "https://github.com/mhayes853/swift-query",
       "state" : {
         "branch" : "main",
-        "revision" : "7da6105ab83e55033c4075eaebcc88e5cac51a41"
+        "revision" : "3d22e4437469835d5c2db4327a45542104704d65"
       }
     },
     {
@@ -186,8 +186,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swiftlang/swift-syntax",
       "state" : {
-        "revision" : "f99ae8aa18f0cf0d53481901f88a0991dc3bd4a2",
-        "version" : "601.0.1"
+        "revision" : "0687f71944021d616d34d922343dcef086855920",
+        "version" : "600.0.1"
       }
     },
     {

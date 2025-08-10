@@ -17,30 +17,29 @@ public final class MountainDetailTravelEstimatesModel {
   public private(set) var estimates = [TravelType: SharedQuery<TravelEstimate.Query.State>]()
   public var destination: Destination?
   @ObservationIgnored public var onUserLocationChanged: (() -> Void)?
-  @ObservationIgnored private var subscription = QuerySubscription.empty
+  @ObservationIgnored private var task: Task<Void, Never>?
 
   public init(location: Mountain.Location) {
     self.location = location
-    self.subscription = self.$userLocation.store.subscribe(
-      with: QueryEventHandler { [weak self] state, _ in
-        Task { @MainActor in
-          guard let self else { return }
-          if let userLocation = state.currentValue {
-            for type in TravelType.allCases {
-              let request = TravelEstimate.Request(
-                travelType: type,
-                origin: userLocation.coordinate,
-                destination: location.coordinate
-              )
-              self.estimates[type] = SharedQuery(TravelEstimate.query(for: request))
-            }
-          } else {
-            self.estimates.removeAll()
+    let userLocation = self.$userLocation
+    self.task = Task { [weak self] in
+      for await element in userLocation.states {
+        guard let self else { return }
+        if let userLocation = element.state.currentValue {
+          for type in TravelType.allCases {
+            let request = TravelEstimate.Request(
+              travelType: type,
+              origin: userLocation.coordinate,
+              destination: location.coordinate
+            )
+            self.estimates[type] = SharedQuery(TravelEstimate.query(for: request))
           }
-          self.onUserLocationChanged?()
+        } else {
+          self.estimates.removeAll()
         }
+        self.onUserLocationChanged?()
       }
-    )
+    }
   }
 
   public func travelRouteInvoked(travelType: TravelType) async {
