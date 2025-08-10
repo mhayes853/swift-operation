@@ -29,7 +29,7 @@ struct SerialTaskQueueTests {
   func throwsErrorFromQueuedTask() async throws {
     struct SomeError: Error {}
     let queue = SerialTaskQueue(priority: .high)
-    
+
     await #expect(throws: SomeError.self) {
       try await queue.run { throw SomeError() }
     }
@@ -46,6 +46,18 @@ struct SerialTaskQueueTests {
 
     try await confirmation { confirm in
       try await queue.run { confirm() }
+    }
+  }
+
+  @Test("Cancels All Queued Tasks When Reset")
+  func cancelsAllQueuedTasksWhenReset() async {
+    let queue = SerialTaskQueue(priority: .high)
+    let task = Task.immediate {
+      try await queue.run { try Task.checkCancellation() }
+    }
+    await queue.reset()
+    await #expect(throws: CancellationError.self) {
+      try await task.value
     }
   }
 }

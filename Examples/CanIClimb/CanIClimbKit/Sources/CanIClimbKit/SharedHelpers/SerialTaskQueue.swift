@@ -1,3 +1,4 @@
+import ConcurrencyExtras
 import DequeModule
 import Synchronization
 
@@ -12,6 +13,10 @@ public final actor SerialTaskQueue {
 
   public init(priority: TaskPriority) {
     self.priority = priority
+  }
+
+  isolated deinit {
+    self.reset()
   }
 
   public func run<T: Sendable>(
@@ -29,10 +34,17 @@ public final actor SerialTaskQueue {
     }
   }
 
+  public func reset() {
+    self.drainTask?.cancel()
+    for task in self.queue {
+      task.cancel()
+    }
+  }
+
   private func beginDrainingIfNeeded() {
     guard self.drainTask == nil else { return }
     self.drainTask = Task {
-      while let task = self.queue.popFirst() {
+      while let task = self.queue.popFirst(), !Task.isCancelled {
         await task.run(with: self.priority)
       }
       self.drainTask = nil
@@ -58,6 +70,10 @@ extension SerialTaskQueue {
       _ fn: @escaping @Sendable () async throws -> T
     ) {
       self.state.withLock { state in
+        guard !state.isCancelled else {
+          continuation.resume(throwing: CancellationError())
+          return
+        }
         state.fn = {
           do {
             let value = try await fn()
@@ -86,7 +102,7 @@ extension SerialTaskQueue {
         state.task = Task(priority: priority) { await fn() }
         return state.task
       }
-      await task?.value
+      await task?.cancellableValue
     }
   }
 }
