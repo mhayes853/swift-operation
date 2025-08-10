@@ -1,5 +1,7 @@
 import Foundation
 
+// MARK: - TravelEstimate
+
 public struct TravelEstimate: Hashable, Sendable {
   public var travelType: TravelType
   public var duration: TimeInterval
@@ -19,5 +21,19 @@ public struct TravelEstimate: Hashable, Sendable {
     self.distance = distance
     self.origin = origin
     self.destination = destination
+  }
+}
+
+// MARK: - Mocks
+
+extension TravelEstimate {
+  public static func mock(for travelType: TravelType) -> Self {
+    Self(
+      travelType: travelType,
+      duration: 10_000,
+      distance: Measurement(value: 1000, unit: .meters),
+      origin: .alcatraz,
+      destination: .mountFuji
+    )
   }
 }

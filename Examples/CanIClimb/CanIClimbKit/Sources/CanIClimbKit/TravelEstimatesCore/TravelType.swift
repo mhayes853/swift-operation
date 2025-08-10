@@ -1,4 +1,4 @@
-public enum TravelType: Hashable, Sendable {
+public enum TravelType: Hashable, Sendable, CaseIterable {
   case walking
   case driving
   case cycling

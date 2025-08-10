@@ -27,6 +27,12 @@ extension LocationCoordinate2D {
   }
 }
 
+extension LocationCoordinate2D {
+  public static let alcatraz = Self(latitude: 37.825858, longitude: -122.422202)
+  public static let everest = Self(latitude: 27.9881, longitude: 86.9250)
+  public static let mountFuji = Self(latitude: 35.3606, longitude: 138.7273)
+}
+
 // MARK: - LocationReading
 
 public struct LocationReading: Sendable {

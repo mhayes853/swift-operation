@@ -22,6 +22,12 @@ extension TravelEstimate {
   }
 }
 
+extension TravelEstimate.Request {
+  public static func mock(for travelType: TravelType) -> Self {
+    Self(travelType: travelType, origin: .alcatraz, destination: .everest)
+  }
+}
+
 // MARK: - Loader
 
 extension TravelEstimate {
@@ -31,6 +37,22 @@ extension TravelEstimate {
 
   public enum LoaderKey: DependencyKey {
     public static let liveValue: any Loader = MapKitLoader.shared
+  }
+}
+
+extension TravelEstimate {
+  @MainActor
+  public final class MockLoader: Loader {
+    public var results = [Request: Result<TravelEstimate, any Error>]()
+
+    public init() {}
+
+    public func estimate(for request: Request) async throws -> TravelEstimate {
+      guard let result = self.results[request] else { throw SomeError() }
+      return try result.get()
+    }
+
+    private struct SomeError: Error {}
   }
 }
 
