@@ -2,21 +2,29 @@ import Dependencies
 import MapKit
 import Query
 
-// MARK: - Loader
+// MARK: - Request
 
 extension TravelEstimate {
   public struct Request: Hashable, Sendable {
-    public var kind: Kind
+    public var travelType: TravelType
     public var origin: LocationCoordinate2D
     public var destination: LocationCoordinate2D
 
-    public init(kind: Kind, origin: LocationCoordinate2D, destination: LocationCoordinate2D) {
-      self.kind = kind
+    public init(
+      travelType: TravelType,
+      origin: LocationCoordinate2D,
+      destination: LocationCoordinate2D
+    ) {
+      self.travelType = travelType
       self.origin = origin
       self.destination = destination
     }
   }
+}
 
+// MARK: - Loader
+
+extension TravelEstimate {
   public protocol Loader: Sendable {
     func estimate(for request: Request) async throws -> TravelEstimate
   }

@@ -1,6 +1,8 @@
 import Foundation
 import MapKit
 
+// MARK: - MKMapItem
+
 extension MKMapItem {
   public convenience init(location: Mountain.Location) {
     self.init(
@@ -10,5 +12,16 @@ extension MKMapItem {
         shortAddress: nil
       )
     )
+  }
+}
+
+// MARK: - Open In Maps
+
+extension Mountain.Location {
+  public func openDirectionsInMaps(travelType: TravelType) async {
+    await MKMapItem(location: self)
+      .openInMaps(
+        launchOptions: [MKLaunchOptionsDirectionsModeKey: travelType.mkLaunchOptionsDirectionMode]
+      )
   }
 }

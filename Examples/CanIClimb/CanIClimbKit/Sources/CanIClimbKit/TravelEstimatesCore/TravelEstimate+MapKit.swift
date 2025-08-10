@@ -25,31 +25,7 @@ extension MKDirections.Request {
     self.init()
     self.source = MKMapItem(coordinate: request.origin)
     self.destination = MKMapItem(coordinate: request.destination)
-    self.transportType = MKDirectionsTransportType(kind: request.kind)
-  }
-}
-
-// MARK: - DirectionsTransportType
-
-extension MKDirectionsTransportType {
-  public init(kind: TravelEstimate.Kind) {
-    switch kind {
-    case .driving: self = .automobile
-    case .cycling: self = .cycling
-    case .walking: self = .walking
-    case .publicTransport: self = .transit
-    }
-  }
-}
-
-extension TravelEstimate.Kind {
-  public init(transportType: MKDirectionsTransportType) {
-    switch transportType {
-    case .automobile: self = .driving
-    case .cycling: self = .cycling
-    case .walking: self = .walking
-    default: self = .publicTransport
-    }
+    self.transportType = MKDirectionsTransportType(travelType: request.travelType)
   }
 }
 
@@ -58,7 +34,7 @@ extension TravelEstimate.Kind {
 extension TravelEstimate {
   public init(response: MKDirections.ETAResponse) {
     self.init(
-      kind: Kind(transportType: response.transportType),
+      travelType: TravelType(transportType: response.transportType),
       duration: response.expectedTravelTime,
       distance: Measurement(value: response.distance, unit: .meters),
       origin: LocationCoordinate2D(coordinate: response.source.location.coordinate),
