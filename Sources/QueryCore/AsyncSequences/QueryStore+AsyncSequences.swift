@@ -18,13 +18,26 @@ extension QueryStore {
   ///
   /// For every `AsyncIterator` created with this sequence, a new subscription is added to the
   /// underlying store.
-  public struct AsyncStates: AsyncSequence {
+  public struct AsyncStates: AsyncSequence, Sendable {
     public struct Element {
       public let state: State
       public let context: QueryContext
     }
 
     fileprivate let store: QueryStore<State>
+
+    public struct AsyncIterator: AsyncIteratorProtocol {
+      fileprivate var base: AsyncStream<Element>.AsyncIterator
+
+      public mutating func next() async -> Element? {
+        await self.base.next()
+      }
+
+      @available(iOS 18.0, macOS 15.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, *)
+      public mutating func next(isolation actor: isolated (any Actor)?) async -> Element? {
+        await self.base.next(isolation: actor)
+      }
+    }
 
     public func makeAsyncIterator() -> AsyncIterator {
       let stream = AsyncStream<Element> { continuation in
@@ -59,15 +72,5 @@ extension QueryStore {
   /// underlying store.
   public var states: AsyncStates {
     AsyncStates(store: self)
-  }
-}
-
-extension QueryStore.AsyncStates {
-  public struct AsyncIterator: AsyncIteratorProtocol {
-    fileprivate var base: AsyncStream<Element>.AsyncIterator
-
-    public mutating func next() async -> Element? {
-      await self.base.next()
-    }
   }
 }

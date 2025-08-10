@@ -108,7 +108,7 @@ let package = Package(
 
 #if !os(Windows)
   package.dependencies.append(
-    .package(url: "https://github.com/swiftwasm/JavaScriptKit", from: "0.26.1"),
+    .package(url: "https://github.com/swiftwasm/JavaScriptKit", from: "0.32.1"),
   )
   package.targets.append(
     contentsOf: [
