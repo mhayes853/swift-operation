@@ -156,7 +156,7 @@ private struct LaunchPickerView: View {
         } label: {
           HStack {
             LaunchLabelView(launch: launch)
-            Spacer()
+            TappableSpacer()
             Image(systemName: "chevron.right")
               .foregroundColor(.secondary)
           }

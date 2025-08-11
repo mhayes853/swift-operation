@@ -5,7 +5,7 @@ import SwiftUI
 // MARK: - Annotation
 
 extension Annotation where Label == Text, Content == MountainAnnotationView {
-  public init(mountain: Mountain, onTapped: @escaping () -> Void) {
+  public init(mountain: Mountain, onTapped: (() -> Void)? = nil) {
     self.init(
       mountain.name,
       coordinate: CLLocationCoordinate2D(coordinate: mountain.location.coordinate)
@@ -19,7 +19,7 @@ extension Annotation where Label == Text, Content == MountainAnnotationView {
 
 public struct MountainAnnotationView: View {
   let mountain: Mountain
-  let onTapped: () -> Void
+  let onTapped: (() -> Void)?
 
   public var body: some View {
     ImageDataView(url: mountain.image.url) { status in
@@ -43,7 +43,7 @@ public struct MountainAnnotationView: View {
       .clipShape(Circle())
     }
     .onTapGesture {
-      self.onTapped()
+      self.onTapped?()
     }
   }
 }

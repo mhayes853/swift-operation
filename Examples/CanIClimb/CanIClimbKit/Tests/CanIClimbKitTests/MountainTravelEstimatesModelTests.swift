@@ -5,7 +5,7 @@ import Foundation
 import XCTest
 
 @MainActor
-final class MountainDetailTravelEstimatesModelTests: XCTestCase {
+final class MountainTravelEstimatesModelTests: XCTestCase {
   func testFetchesEstimatesWhenUserLocationChanges() async throws {
     try await withDependencies {
       let userLocation = MockUserLocation()
@@ -28,7 +28,7 @@ final class MountainDetailTravelEstimatesModelTests: XCTestCase {
       }
       $0[TravelEstimate.LoaderKey.self] = loader
     } operation: {
-      let model = MountainDetailTravelEstimatesModel(location: Mountain.mock1.location)
+      let model = MountainTravelEstimatesModel(mountain: .mock1)
       try await model.$userLocation.load()
 
       for type in TravelType.allCases {
