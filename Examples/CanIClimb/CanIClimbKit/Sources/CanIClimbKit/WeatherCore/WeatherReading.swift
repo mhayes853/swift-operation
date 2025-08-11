@@ -70,3 +70,34 @@ extension WeatherReading {
     }
   }
 }
+
+// MARK: - Mocks
+
+extension WeatherReading {
+  public static func mock(
+    location: LocationReading = LocationReading(
+      coordinate: .alcatraz,
+      altitudeAboveSeaLevel: Measurement(value: 0, unit: .meters)
+    ),
+    systemImageName: String = "sun.max",
+    condition: Condition = .clear,
+    humidity: Double = 50,
+    temperature: Measurement<UnitTemperature> = Measurement(value: 20, unit: .celsius),
+    feelsLikeTemperature: Measurement<UnitTemperature> = Measurement(value: 20, unit: .celsius),
+    visibility: Measurement<UnitLength> = Measurement(value: 10, unit: .kilometers),
+    wind: Wind = .init(direction: .north, speed: Measurement(value: 10, unit: .kilometersPerHour)),
+    cloudCover: CloudCover = .init(lowAltitude: 0, midAltitude: 0, highAltitude: 0)
+  ) -> Self {
+    Self(
+      location: location,
+      systemImageName: systemImageName,
+      condition: condition,
+      humidity: humidity,
+      temperature: temperature,
+      feelsLikeTemperature: feelsLikeTemperature,
+      visibility: visibility,
+      wind: wind,
+      cloudCover: cloudCover
+    )
+  }
+}
