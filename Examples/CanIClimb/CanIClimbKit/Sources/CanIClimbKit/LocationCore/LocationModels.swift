@@ -35,7 +35,7 @@ extension LocationCoordinate2D {
 
 // MARK: - LocationReading
 
-public struct LocationReading: Sendable {
+public struct LocationReading: Hashable, Sendable {
   public var coordinate: LocationCoordinate2D
   public var altitudeAboveSeaLevel: Measurement<UnitLength>
 
