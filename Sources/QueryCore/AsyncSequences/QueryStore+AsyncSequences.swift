@@ -19,7 +19,7 @@ extension QueryStore {
   /// For every `AsyncIterator` created with this sequence, a new subscription is added to the
   /// underlying store.
   public struct AsyncStates: AsyncSequence, Sendable {
-    public struct Element {
+    public struct Element: Sendable {
       public let state: State
       public let context: QueryContext
     }

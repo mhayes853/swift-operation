@@ -2,6 +2,7 @@ import Observation
 import SharingQuery
 import SwiftUI
 import SwiftUINavigation
+import AsyncAlgorithms
 
 // MARK: - MountainDetailModel
 
@@ -27,7 +28,9 @@ public final class MountainDetailModel: HashableObject, Identifiable {
   }
 
   public func appeared() async {
-
+      for await (e1, e2) in zip(self.$mountain.states, self.$userLocation.states) {
+          self.detailsUpdated(mountainStatus: e1.state.status, userLocationStatus: e2.state.status)
+      }
   }
 
   public func detailsUpdated(
@@ -61,6 +64,7 @@ public struct MountainDetailView: View {
         ContentUnavailableView("Mountain not found", systemImage: "mountain.2.fill")
       }
     }
+    .task { await self.model.appeared() }
   }
 }
 
