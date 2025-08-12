@@ -73,14 +73,16 @@ extension QueryControls {
   ///
   //  // ✅ No data races.
   /// controls.withExclusiveAccess {
-  ///   controls.yield(controls.state.currentValue + 1)
+  ///   $0.yield($0.state.currentValue + 1)
   /// }
   /// ```
   ///
   /// - Parameter fn: A closure with exclusive access to the controls.
   /// - Returns: Whatever `fn` returns.
-  public func withExclusiveAccess<T>(_ fn: () throws -> sending T) rethrows -> sending T {
-    try self.store?.withExclusiveAccess(fn) ?? (try fn())
+  public func withExclusiveAccess<T>(
+    _ fn: (Self) throws -> sending T
+  ) rethrows -> sending T {
+    try self.store?.withExclusiveAccess { _ in try fn(self) } ?? (try fn(self))
   }
 }
 

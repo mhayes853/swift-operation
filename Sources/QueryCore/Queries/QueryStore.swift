@@ -79,7 +79,7 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
     var state: State
     var taskHerdId: Int
     var context: QueryContext
-    var controllerSubscriptions: [QuerySubscription]
+    var controllerSubscription: QuerySubscription
     var subscribeTask: Task<State.QueryValue, any Error>?
   }
 
@@ -100,7 +100,7 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
         state: initialState,
         taskHerdId: 0,
         context: context,
-        controllerSubscriptions: [],
+        controllerSubscription: .empty,
         subscribeTask: nil
       )
     )
@@ -109,9 +109,7 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
   }
 
   deinit {
-    self.values.withLock {
-      $0.controllerSubscriptions.forEach { $0.cancel() }
-    }
+    self.values.withLock { $0.controllerSubscription.cancel() }
   }
 
   private func setupQuery(with initialContext: QueryContext, initialState: State) {
@@ -121,13 +119,15 @@ public final class QueryStore<State: QueryStateProtocol>: Sendable {
       initialState: initialState
     )
     self.values.withLock { state in
+      var subs = [QuerySubscription]()
       for controller in state.context.queryControllers {
         func open<C: QueryController>(_ controller: C) -> QuerySubscription {
           guard let controls = controls as? QueryControls<C.State> else { return .empty }
           return controller.control(with: controls)
         }
-        state.controllerSubscriptions.append(open(controller))
+        subs.append(open(controller))
       }
+      state.controllerSubscription = .combined(subs)
     }
   }
 }
@@ -286,14 +286,16 @@ extension QueryStore {
   ///
   //  // ✅ No data races.
   /// store.withExclusiveAccess {
-  ///   store.currentValue += 1
+  ///   $0.currentValue += 1
   /// }
   /// ```
   ///
   /// - Parameter fn: A closure with exclusive access to this store.
   /// - Returns: Whatever `fn` returns.
-  public func withExclusiveAccess<T>(_ fn: () throws -> sending T) rethrows -> sending T {
-    try self.values.withLock { _ in try fn() }
+  public func withExclusiveAccess<T>(
+    _ fn: (QueryStore<State>) throws -> sending T
+  ) rethrows -> sending T {
+    try self.values.withLock { _ in try fn(self) }
   }
 }
 

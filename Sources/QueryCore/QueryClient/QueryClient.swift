@@ -293,10 +293,11 @@ extension QueryClient {
   /// - Returns: Whatever `fn` returns.
   public func withStores<T>(
     matching path: QueryPath,
-    perform fn: @Sendable (
-      inout QueryPathableCollection<OpaqueQueryStore>,
-      borrowing CreateStore
-    ) throws -> sending T
+    perform fn:
+      @Sendable (
+        inout QueryPathableCollection<OpaqueQueryStore>,
+        borrowing CreateStore
+      ) throws -> sending T
   ) rethrows -> T {
     try self.state.withLock { state in
       let createStore = state.createStore()
@@ -333,10 +334,11 @@ extension QueryClient {
   public func withStores<T, State: QueryStateProtocol>(
     matching path: QueryPath,
     of stateType: State.Type,
-    perform fn: @Sendable (
-      inout QueryPathableCollection<QueryStore<State>>,
-      borrowing CreateStore
-    ) throws -> sending T
+    perform fn:
+      @Sendable (
+        inout QueryPathableCollection<QueryStore<State>>,
+        borrowing CreateStore
+      ) throws -> sending T
   ) rethrows -> T {
     try self.state.withLock { state in
       let createStore = state.createStore()
@@ -420,11 +422,12 @@ extension QueryWarning {
     A new QueryStore instance will be created for the type with the duplicate key, and this store \
     will not be retained within the QueryClient. This means that the state will not be shared \
     between different QueryStore instances, and you will not be able to pattern match the query \
-    when calling ``QueryClient.queries(path:)``.
+    when calling ``QueryClient.stores(matching:)``.
 
-    To fix this, ensure that all of your QueryProtocol conformances return unique QueryPath \
-    instances. If your QueryProtocol conformance type conforms to Hashable, the default QueryPath \
-    is represented by a single element path containing the instance of the query itself.
+    To fix this, ensure that all of your QueryRequest conformances return unique QueryPath \
+    instances. If your QueryRequest conformance type conforms to Hashable or Identifiable, the \
+    default QueryPath is represented by a single element path containing the instance of the query \
+    or its id respectively.
     """
   }
 }

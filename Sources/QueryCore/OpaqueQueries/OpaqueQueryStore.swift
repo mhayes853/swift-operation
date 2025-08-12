@@ -102,14 +102,16 @@ extension OpaqueQueryStore {
   ///
   /// // ✅ No data races.
   /// store.withExclusiveAccess {
-  ///   store.currentValue = (store.currentValue as! Int) + 1
+  ///   $0.currentValue = ($0.currentValue as! Int) + 1
   /// }
   /// ```
   ///
   /// - Parameter fn: A closure with exclusive access to the store.
   /// - Returns: Whatever `fn` returns.
-  public func withExclusiveAccess<T>(_ fn: () throws -> sending T) rethrows -> sending T {
-    try self._base.withExclusiveAccess(fn)
+  public func withExclusiveAccess<T>(
+    _ fn: (OpaqueQueryStore) throws -> sending T
+  ) rethrows -> sending T {
+    try self._base.opaqueWithExclusiveAccess { try fn(self) }
   }
 }
 
@@ -252,7 +254,7 @@ private protocol OpaqueableQueryStore: Sendable {
   var context: QueryContext { get nonmutating set }
   var subscriberCount: Int { get }
   var isStale: Bool { get }
-  func withExclusiveAccess<T>(_ fn: () throws -> sending T) rethrows -> sending T
+  func opaqueWithExclusiveAccess<T>(_ fn: () throws -> sending T) rethrows -> sending T
 
   func opaqueSetResult(to result: Result<(any Sendable)?, any Error>, using context: QueryContext?)
   func opaqueFetch(
@@ -287,5 +289,9 @@ extension QueryStore: OpaqueableQueryStore {
 
   func opaqueSubscribe(with handler: OpaqueQueryEventHandler) -> QuerySubscription {
     self.subscribe(with: handler.casted(to: State.self))
+  }
+
+  func opaqueWithExclusiveAccess<T>(_ fn: () throws -> sending T) rethrows -> sending T {
+    try self.withExclusiveAccess { _ in try fn() }
   }
 }

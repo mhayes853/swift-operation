@@ -36,7 +36,7 @@ extension QueryClient {
   /// Only stores that have no active subscribers are evicted from the cache, and you can customize
   /// the ``MemoryPressure`` value at which a store is evicted via the
   /// ``QueryRequest/evictWhen(pressure:)`` modifier.
-  public final class DefaultStoreCache: @unchecked Sendable {
+  public final class DefaultStoreCache: QueryClient.StoreCache, Sendable {
     private struct State {
       var stores = QueryPathableCollection<OpaqueQueryStore>()
       var subscription = QuerySubscription.empty
@@ -60,21 +60,19 @@ extension QueryClient {
         state.subscription = subscription ?? .empty
       }
     }
-  }
-}
 
-extension QueryClient.DefaultStoreCache: QueryClient.StoreCache {
-  public func withStores<T>(
-    _ body: (inout sending QueryPathableCollection<OpaqueQueryStore>) throws -> sending T
-  ) rethrows -> sending T {
-    try self.state.withLock { try body(&$0.stores) }
+    public func withStores<T>(
+      _ body: (inout sending QueryPathableCollection<OpaqueQueryStore>) throws -> sending T
+    ) rethrows -> sending T {
+      try self.state.withLock { try body(&$0.stores) }
+    }
   }
 }
 
 extension OpaqueQueryStore {
   fileprivate func isEvictable(from pressure: MemoryPressure) -> Bool {
     self.withExclusiveAccess {
-      self.subscriberCount == 0 && self.context.evictableMemoryPressure.contains(pressure)
+      $0.subscriberCount == 0 && $0.context.evictableMemoryPressure.contains(pressure)
     }
   }
 }

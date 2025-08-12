@@ -161,14 +161,16 @@ extension SharedQuery {
   ///
   ///  // ✅ No data races.
   /// $value.withExclusiveAccess {
-  ///   $value.currentValue += 1
+  ///   $0.currentValue += 1
   /// }
   /// ```
   ///
   /// - Parameter fn: A closure with exclusive access to the properties of this property wrapper.
   /// - Returns: Whatever `fn` returns.
-  public func withExclusiveAccess<T>(_ fn: () throws -> sending T) rethrows -> sending T {
-    try self.store.withExclusiveAccess(fn)
+  public func withExclusiveAccess<T>(
+    _ fn: (Self) throws -> sending T
+  ) rethrows -> sending T {
+    try self.store.withExclusiveAccess { _ in try fn(self) }
   }
 }
 
