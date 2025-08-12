@@ -85,7 +85,7 @@ extension WeatherReading {
     temperature: Measurement<UnitTemperature> = Measurement(value: 20, unit: .celsius),
     feelsLikeTemperature: Measurement<UnitTemperature> = Measurement(value: 20, unit: .celsius),
     visibility: Measurement<UnitLength> = Measurement(value: 10, unit: .kilometers),
-    wind: Wind = .init(direction: .north, speed: Measurement(value: 10, unit: .kilometersPerHour)),
+    wind: Wind = Wind(direction: .north, speed: Measurement(value: 10, unit: .kilometersPerHour)),
     cloudCover: CloudCover = .init(lowAltitude: 0, midAltitude: 0, highAltitude: 0)
   ) -> Self {
     Self(

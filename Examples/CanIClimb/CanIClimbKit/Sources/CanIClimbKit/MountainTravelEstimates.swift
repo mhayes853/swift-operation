@@ -11,38 +11,32 @@ import SwiftUINavigation
 @MainActor
 @Observable
 public final class MountainTravelEstimatesModel {
-  @ObservationIgnored
-  @SharedQuery(LocationReading.userQuery) public var userLocation
-
   public let mountain: Mountain
   public private(set) var estimates = [TravelType: SharedQuery<TravelEstimate.Query.State>]()
   public var destination: Destination?
-  @ObservationIgnored public var onUserLocationChanged: (() -> Void)?
-  @ObservationIgnored private var task: Task<Void, Never>?
+  public private(set) var userLocation: Result<LocationReading, any Error>?
 
   @ObservationIgnored
   @Dependency(Mountain.Location.MapsOpenerKey.self) private var opener
 
   public init(mountain: Mountain) {
     self.mountain = mountain
-    let userLocation = self.$userLocation
-    self.task = Task { [weak self] in
-      for await element in userLocation.states {
-        guard let self else { return }
-        if let userLocation = element.state.currentValue {
-          for type in TravelType.allCases {
-            let request = TravelEstimate.Request(
-              travelType: type,
-              origin: userLocation.coordinate,
-              destination: mountain.location.coordinate
-            )
-            self.estimates[type] = SharedQuery(TravelEstimate.query(for: request))
-          }
-        } else {
-          self.estimates.removeAll()
-        }
-        self.onUserLocationChanged?()
+  }
+
+  public func userLocationUpdated(reading: Result<LocationReading, any Error>) {
+    self.userLocation = reading
+    switch reading {
+    case .success(let location):
+      for type in TravelType.allCases {
+        let request = TravelEstimate.Request(
+          travelType: type,
+          origin: location.coordinate,
+          destination: mountain.location.coordinate
+        )
+        self.estimates[type] = SharedQuery(TravelEstimate.query(for: request))
       }
+    case .failure:
+      self.estimates.removeAll()
     }
   }
 
