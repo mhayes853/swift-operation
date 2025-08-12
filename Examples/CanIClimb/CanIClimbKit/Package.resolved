@@ -1,5 +1,5 @@
 {
-  "originHash" : "b0fec8535cff5377b61571f0feebfc7e781a1d705fc4cbe18cd8dd2361d7f5dc",
+  "originHash" : "efb9a55a2c036a8bd1ad7dcce3646dc248a3f5173de7d17cf9842dcda99dafc2",
   "pins" : [
     {
       "identity" : "combine-schedulers",
@@ -151,7 +151,7 @@
       "location" : "https://github.com/mhayes853/swift-query",
       "state" : {
         "branch" : "main",
-        "revision" : "449b8bc2157dd0086a930b284514635f8407f442"
+        "revision" : "896cf1ee2037c4edcdfcf9b343403ce75a6d9261"
       }
     },
     {
