@@ -17,16 +17,14 @@ public final class CounterModel: Identifiable {
 
   public private(set) var count: Int
 
-  public var onRemoved: (() -> Void)?
+  @ObservationIgnored public var onRemoved: (() -> Void)?
 
   public init(startingAt number: Int = 0) {
     self.count = number
     self._fact = SharedQuery(NumberFact.query(for: number))
     self._nthPrime = SharedQuery(Int.nthPrimeQuery(for: number))
   }
-}
 
-extension CounterModel {
   public func incremented() {
     self.jumped(to: self.count + 1)
   }
@@ -34,17 +32,13 @@ extension CounterModel {
   public func decremented() {
     self.jumped(to: self.count - 1)
   }
-}
 
-extension CounterModel {
   public func jumped(to number: Int) {
     self.count = number
     self.$fact = SharedQuery(NumberFact.query(for: number))
     self.$nthPrime = SharedQuery(Int.nthPrimeQuery(for: number))
   }
-}
 
-extension CounterModel {
   public func removed() {
     self.onRemoved?()
   }
@@ -151,11 +145,11 @@ private func renderCounterLabels(
     countLabel.innerText = .string("\(title) \(model.count)")
 
     switch model.$fact.status {
-    case let .result(.success(fact)):
+    case .result(.success(let fact)):
       factLabel.innerText = .string(fact.content)
       factLabel.style.color = "black"
 
-    case let .result(.failure(error)):
+    case .result(.failure(let error)):
       factLabel.innerText = .string("Error: \(error.localizedDescription)")
       factLabel.style.color = "red"
 

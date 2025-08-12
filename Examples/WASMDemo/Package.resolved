@@ -1,5 +1,5 @@
 {
-  "originHash" : "ec0ea365bcf35f394d9c859bcef29fcc7be7e9885009a76970584d6d605157b9",
+  "originHash" : "e3495d06c94509f47153a951a00a6e9d5af43ec1565210b803ce2a6a0cd561b5",
   "pins" : [
     {
       "identity" : "combine-schedulers",
@@ -67,10 +67,10 @@
     {
       "identity" : "swift-dependencies",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/zp-dzordz/swift-dependencies",
+      "location" : "https://github.com/pointfreeco/swift-dependencies",
       "state" : {
-        "branch" : "fix-for-WASM-builds",
-        "revision" : "fe9471f99ffc12bf01a4e687a870aa09ca6b74bb"
+        "revision" : "eefcdaa88d2e2fd82e3405dfb6eb45872011a0b5",
+        "version" : "1.9.3"
       }
     },
     {
@@ -105,8 +105,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-perception",
       "state" : {
-        "revision" : "d924c62a70fca5f43872f286dbd7cef0957f1c01",
-        "version" : "1.6.0"
+        "revision" : "328a0b49e2690135c4c2660661f0ed83f16853e3",
+        "version" : "2.0.4"
       }
     },
     {
@@ -115,7 +115,7 @@
       "location" : "https://github.com/mhayes853/swift-query",
       "state" : {
         "branch" : "main",
-        "revision" : "dff19b8d515d15ac4fc4e28b62758d9bb3e3f6fe"
+        "revision" : "9daa9ca504f6a7abed33903e6df3e38989e2eedf"
       }
     },
     {
@@ -124,7 +124,7 @@
       "location" : "https://github.com/mhayes853/swift-sharing",
       "state" : {
         "branch" : "fix-macos-toolchain-build",
-        "revision" : "d08636735c6128a1dfdb7d8585f7e25f8e0cfe6e"
+        "revision" : "872f2e4e0da7c73a582e218bad84b12da280a6e4"
       }
     },
     {
@@ -141,8 +141,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/xctest-dynamic-overlay",
       "state" : {
-        "revision" : "23e3442166b5122f73f9e3e622cd1e4bafeab3b7",
-        "version" : "1.6.0"
+        "revision" : "b2ed9eabefe56202ee4939dd9fc46b6241c88317",
+        "version" : "1.6.1"
       }
     }
   ],

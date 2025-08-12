@@ -16,28 +16,20 @@ public final class AppModel {
   public init() {
     self.counters = [CounterModel(startingAt: 0)]
   }
-}
 
-extension AppModel {
   public func summedCounter() -> CounterModel {
     let sum = self.counters.reduce(into: 0) { $0 += $1.count }
     return CounterModel(startingAt: sum)
   }
-}
 
-extension AppModel {
   public func counterAdded() {
     self.counters.append(CounterModel(startingAt: 0))
   }
-}
 
-extension AppModel {
   public func allCleared() {
     self.counters.removeAll()
   }
-}
 
-extension AppModel {
   private func bind() {
     for counter in self.counters {
       counter.onRemoved = { [weak self, weak counter] in

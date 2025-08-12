@@ -46,7 +46,12 @@ extension Int {
       .taskConfiguration {
         @Dependency(WebWorkerTaskExecutorKey.self) var executor
         $0.name = "Nth prime for \(number)"
-        $0.executorPreference = executor
+
+        // NB: Only defer to web worker when the number is large enough to require significant
+        // computation.
+        if number > 1000 {
+          $0.executorPreference = executor
+        }
       }
   }
 
