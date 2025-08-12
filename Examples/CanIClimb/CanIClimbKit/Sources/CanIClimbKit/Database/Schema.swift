@@ -3,7 +3,7 @@ import IssueReporting
 import SharingGRDB
 import StructuredQueries
 import StructuredQueriesGRDB
-import StructuredQueriesTagged
+import Tagged
 import UUIDV7
 
 // MARK: - InternalMetricsRecord

@@ -11,13 +11,29 @@ public final class MountainDetailModel: HashableObject, Identifiable {
   @ObservationIgnored
   @SharedQuery<Mountain.Query.State> public var mountain: Mountain??
 
+  @ObservationIgnored
+  @SharedQuery(LocationReading.userQuery) public var userLocation
+
   public let plannedClimbs: PlannedClimbsListModel
 
   public var selectedTab = Tab.mountain
 
+  public private(set) var weather: MountainWeatherModel?
+  public private(set) var travelEstimates: MountainTravelEstimatesModel?
+
   public init(id: Mountain.ID) {
     self._mountain = SharedQuery(Mountain.query(id: id), animation: .bouncy)
     self.plannedClimbs = PlannedClimbsListModel(mountainId: id)
+  }
+
+  public func appeared() async {
+
+  }
+
+  public func detailsUpdated(
+    mountainStatus: QueryStatus<Mountain?>,
+    userLocationStatus: QueryStatus<LocationReading>
+  ) {
   }
 }
 
@@ -172,6 +188,8 @@ private struct MountainImageView: View {
     .ignoresSafeArea()
   }
 }
+
+// MARK: - MountainDetailLabel
 
 private struct MountainDetailLabel: View {
   let mountain: Mountain
