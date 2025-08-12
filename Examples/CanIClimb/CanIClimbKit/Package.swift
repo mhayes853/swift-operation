@@ -17,10 +17,9 @@ let package = Package(
     ),
     .package(
       url: "https://github.com/pointfreeco/swift-structured-queries",
-      from: "0.11.0",
+      from: "0.12.1",
       traits: ["StructuredQueriesTagged"]
     ),
-    .package(url: "https://github.com/pointfreeco/swift-tagged", from: "0.10.0"),
     .package(url: "https://github.com/pointfreeco/sharing-grdb", branch: "cloudkit"),
     .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.9.2"),
     .package(url: "https://github.com/pointfreeco/swift-navigation", from: "2.3.1"),
@@ -45,8 +44,7 @@ let package = Package(
         .product(name: "UUIDV7", package: "swift-uuidv7"),
         .product(name: "DequeModule", package: "swift-collections"),
         .product(name: "OrderedCollections", package: "swift-collections"),
-        .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
-        .product(name: "Tagged", package: "swift-tagged")
+        .product(name: "AsyncAlgorithms", package: "swift-async-algorithms")
       ]
     ),
     .testTarget(

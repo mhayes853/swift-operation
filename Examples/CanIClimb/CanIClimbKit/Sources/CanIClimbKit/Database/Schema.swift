@@ -156,7 +156,7 @@ public struct SettingsRecord: Sendable, SingleRowTable {
 }
 
 extension SettingsRecord {
-  public enum MetricPreference: String, QueryBindable, CaseIterable {
+  public enum MetricPreference: String, QueryBindable, CaseIterable, Sendable {
     case imperial
     case metric
 
@@ -179,7 +179,7 @@ extension SettingsRecord.MetricPreference: CustomLocalizedStringResourceConverti
 }
 
 extension SettingsRecord {
-  public enum TemperaturePreference: String, QueryBindable, CaseIterable {
+  public enum TemperaturePreference: String, QueryBindable, CaseIterable, Sendable {
     case celsius
     case fahrenheit
     case kelvin

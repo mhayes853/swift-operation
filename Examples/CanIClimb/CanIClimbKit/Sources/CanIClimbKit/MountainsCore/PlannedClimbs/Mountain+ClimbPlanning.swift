@@ -158,10 +158,10 @@ extension Mountain {
 
       let climbsStore = client.store(for: Mountain.plannedClimbsQuery(for: arguments.mountain.id))
       climbsStore.withExclusiveAccess {
-        var currentValue = climbsStore.currentValue ?? []
+        var currentValue = $0.currentValue ?? []
         currentValue.append(plannedClimb)
         currentValue.sort { $0.targetDate > $1.targetDate }
-        climbsStore.currentValue = currentValue
+        $0.currentValue = currentValue
       }
 
       return (arguments.mountain, plannedClimb)
@@ -202,15 +202,15 @@ extension Mountain {
 
       do {
         climbsStore.withExclusiveAccess {
-          currentPlans = climbsStore.currentValue
-          climbsStore.currentValue?.removeAll(where: { arguments.ids.contains($0.id) })
-          lastUpdatedAt = climbsStore.valueLastUpdatedAt
+          currentPlans = $0.currentValue
+          $0.currentValue?.removeAll(where: { arguments.ids.contains($0.id) })
+          lastUpdatedAt = $0.valueLastUpdatedAt
         }
         try await planner.unplanClimbs(ids: arguments.ids)
       } catch {
         climbsStore.withExclusiveAccess {
-          guard climbsStore.valueLastUpdatedAt == lastUpdatedAt else { return }
-          climbsStore.currentValue = currentPlans
+          guard $0.valueLastUpdatedAt == lastUpdatedAt else { return }
+          $0.currentValue = currentPlans
         }
         throw UnplanClimbsError(ids: arguments.ids, inner: error)
       }
