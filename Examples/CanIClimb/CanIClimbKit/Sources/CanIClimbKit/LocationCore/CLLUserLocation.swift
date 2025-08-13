@@ -76,6 +76,8 @@ extension CLUserLocation: CLLocationManagerDelegate {
     _ manager: CLLocationManager,
     didFailWithError error: Error
   ) {
+    let error: any Error =
+      (error as? CLError).flatMap { UserLocationUnauthorizedError(error: $0) } ?? error
     Task { await self.failCoordinateFetch(with: error) }
   }
 
@@ -84,5 +86,16 @@ extension CLUserLocation: CLLocationManagerDelegate {
       continuation.resume(throwing: error)
     }
     self.coordinateContinuations.removeAll()
+  }
+}
+
+// MARK: CLError
+
+extension UserLocationUnauthorizedError {
+  private static let errorCodes = Set([CLError.Code.denied, .promptDeclined])
+
+  public init?(error: CLError) {
+    guard Self.errorCodes.contains(error.code) else { return nil }
+    self.init()
   }
 }

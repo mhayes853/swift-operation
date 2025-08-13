@@ -15,6 +15,10 @@ public enum UserLocationKey: DependencyKey {
   }
 }
 
+public struct UserLocationUnauthorizedError: Error {
+  public init() {}
+}
+
 // MARK: - MockUserLocation
 
 @MainActor

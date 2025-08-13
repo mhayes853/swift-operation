@@ -17,8 +17,8 @@ extension DependenciesTestSuite {
         )
 
         let weatherModel = try #require(ctx.model.weather)
-        _ = try await weatherModel.$mountainWeather.activeTasks.first?.runIfNeeded()
-        expectNoDifference(weatherModel.mountainWeather, .mock(location: ctx.mountainLocation))
+        _ = try await weatherModel.mountainWeatherDetail.$reading.activeTasks.first?.runIfNeeded()
+        expectNoDifference(weatherModel.mountainWeatherDetail.reading, .mock(location: ctx.mountainLocation))
 
         expectNoDifference(ctx.model.travelEstimates?.mountain, .mock1)
       }
@@ -45,12 +45,12 @@ extension DependenciesTestSuite {
         )
 
         let weatherModel = try #require(ctx.model.weather)
-        _ = try await weatherModel.$mountainWeather.activeTasks.first?.runIfNeeded()
-        expectNoDifference(weatherModel.mountainWeather, .mock(location: ctx.mountainLocation))
+        _ = try await weatherModel.mountainWeatherDetail.$reading.activeTasks.first?.runIfNeeded()
+        expectNoDifference(weatherModel.mountainWeatherDetail.reading, .mock(location: ctx.mountainLocation))
 
-        _ = try await weatherModel.userWeather?.load()
+        _ = try await weatherModel.userWeatherDetail?.$reading.load()
         expectNoDifference(
-          weatherModel.userWeather?.wrappedValue,
+          weatherModel.userWeatherDetail?.reading,
           .mock(location: ctx.userLocation)
         )
 
