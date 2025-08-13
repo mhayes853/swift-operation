@@ -28,12 +28,7 @@ public final class MountainWeatherModel {
   public func userLocationUpdated(reading: Result<LocationReading, any Error>) {
     self.userLocation = reading
     self.userWeather = (try? reading.get())
-      .map {
-        SharedQuery(
-          WeatherReading.currentQuery(for: $0.coordinate),
-          animation: .bouncy
-        )
-      }
+      .map { SharedQuery(WeatherReading.currentQuery(for: $0.coordinate), animation: .bouncy) }
   }
 }
 

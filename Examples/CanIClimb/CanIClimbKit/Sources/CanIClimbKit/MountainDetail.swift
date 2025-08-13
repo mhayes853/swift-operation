@@ -1,8 +1,8 @@
+import AsyncAlgorithms
 import Observation
 import SharingQuery
 import SwiftUI
 import SwiftUINavigation
-import AsyncAlgorithms
 
 // MARK: - MountainDetailModel
 
@@ -28,15 +28,34 @@ public final class MountainDetailModel: HashableObject, Identifiable {
   }
 
   public func appeared() async {
-      for await (e1, e2) in zip(self.$mountain.states, self.$userLocation.states) {
-          self.detailsUpdated(mountainStatus: e1.state.status, userLocationStatus: e2.state.status)
-      }
+    for await (e1, e2) in zip(self.$mountain.states, self.$userLocation.states) {
+      self.detailsUpdated(mountainStatus: e1.state.status, userLocationStatus: e2.state.status)
+    }
   }
 
   public func detailsUpdated(
     mountainStatus: QueryStatus<Mountain?>,
     userLocationStatus: QueryStatus<LocationReading>
   ) {
+    switch mountainStatus {
+    case .result(.success(let mountain?)):
+      if self.weather?.mountain != mountain {
+        self.weather = MountainWeatherModel(mountain: mountain)
+      }
+      if self.travelEstimates?.mountain != mountain {
+        self.travelEstimates = MountainTravelEstimatesModel(mountain: mountain)
+      }
+    case .result(.failure), .result(.success(nil)):
+      self.weather = nil
+      self.travelEstimates = nil
+    default:
+      break
+    }
+
+    if case .result(let locationResult) = userLocationStatus {
+      self.weather?.userLocationUpdated(reading: locationResult)
+      self.travelEstimates?.userLocationUpdated(reading: locationResult)
+    }
   }
 }
 

@@ -44,3 +44,12 @@ public struct LocationReading: Hashable, Sendable {
     self.altitudeAboveSeaLevel = altitudeAboveSeaLevel
   }
 }
+
+extension LocationReading {
+  public static func mock(
+    coordinate: LocationCoordinate2D = .alcatraz,
+    altitudeAboveSeaLevel: Measurement<UnitLength> = Measurement(value: 0, unit: .meters)
+  ) -> Self {
+    LocationReading(coordinate: coordinate, altitudeAboveSeaLevel: altitudeAboveSeaLevel)
+  }
+}
