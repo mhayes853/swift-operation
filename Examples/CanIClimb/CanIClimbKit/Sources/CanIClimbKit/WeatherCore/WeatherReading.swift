@@ -15,6 +15,9 @@ public struct WeatherReading: Hashable, Sendable {
   public var visibility: Measurement<UnitLength>
   public var wind: Wind
   public var cloudCover: CloudCover
+  public var precipitationIntensity: Measurement<UnitSpeed>
+  public var pressure: Pressure
+  public var uvIndex: UVIndex
 
   public init(
     location: LocationReading,
@@ -24,8 +27,11 @@ public struct WeatherReading: Hashable, Sendable {
     temperature: Measurement<UnitTemperature>,
     feelsLikeTemperature: Measurement<UnitTemperature>,
     visibility: Measurement<UnitLength>,
-    wind: WeatherReading.Wind,
-    cloudCover: WeatherReading.CloudCover
+    wind: Wind,
+    cloudCover: CloudCover,
+    precipitationIntensity: Measurement<UnitSpeed>,
+    pressure: Pressure,
+    uvIndex: UVIndex
   ) {
     self.location = location
     self.systemImageName = systemImageName
@@ -36,6 +42,9 @@ public struct WeatherReading: Hashable, Sendable {
     self.visibility = visibility
     self.wind = wind
     self.cloudCover = cloudCover
+    self.precipitationIntensity = precipitationIntensity
+    self.pressure = pressure
+    self.uvIndex = uvIndex
   }
 }
 
@@ -71,6 +80,38 @@ extension WeatherReading {
   }
 }
 
+// MARK: - Pressure
+
+extension WeatherReading {
+  public struct Pressure: Hashable, Sendable {
+    public typealias Trend = WeatherKit.PressureTrend
+
+    public var amount: Measurement<UnitPressure>
+    public var trend: Trend
+
+    public init(amount: Measurement<UnitPressure>, trend: Trend) {
+      self.amount = amount
+      self.trend = trend
+    }
+  }
+}
+
+// MARK: - UVIndex
+
+extension WeatherReading {
+  public struct UVIndex: Hashable, Sendable {
+    public typealias ExposureCategory = WeatherKit.UVIndex.ExposureCategory
+
+    public var amount: Int
+    public var exposureCategory: ExposureCategory
+
+    public init(amount: Int, exposureCategory: ExposureCategory) {
+      self.amount = amount
+      self.exposureCategory = exposureCategory
+    }
+  }
+}
+
 // MARK: - Mocks
 
 extension WeatherReading {
@@ -86,7 +127,13 @@ extension WeatherReading {
     feelsLikeTemperature: Measurement<UnitTemperature> = Measurement(value: 20, unit: .celsius),
     visibility: Measurement<UnitLength> = Measurement(value: 10, unit: .kilometers),
     wind: Wind = Wind(direction: .north, speed: Measurement(value: 10, unit: .kilometersPerHour)),
-    cloudCover: CloudCover = CloudCover(lowAltitude: 0, midAltitude: 0, highAltitude: 0)
+    cloudCover: CloudCover = CloudCover(lowAltitude: 0, midAltitude: 0, highAltitude: 0),
+    precipitationIntensity: Measurement<UnitSpeed> = Measurement(value: 0, unit: .metersPerSecond),
+    pressure: Pressure = Pressure(
+      amount: Measurement(value: 1013, unit: .hectopascals),
+      trend: .steady
+    ),
+    uvIndex: UVIndex = UVIndex(amount: 0, exposureCategory: .low)
   ) -> Self {
     Self(
       location: location,
@@ -97,7 +144,10 @@ extension WeatherReading {
       feelsLikeTemperature: feelsLikeTemperature,
       visibility: visibility,
       wind: wind,
-      cloudCover: cloudCover
+      cloudCover: cloudCover,
+      precipitationIntensity: precipitationIntensity,
+      pressure: pressure,
+      uvIndex: uvIndex
     )
   }
 }

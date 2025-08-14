@@ -14,7 +14,10 @@ extension WeatherReading {
       feelsLikeTemperature: currentWeather.apparentTemperature,
       visibility: currentWeather.visibility,
       wind: Wind(wind: currentWeather.wind),
-      cloudCover: CloudCover(cloudCoverByAltitude: currentWeather.cloudCoverByAltitude)
+      cloudCover: CloudCover(cloudCoverByAltitude: currentWeather.cloudCoverByAltitude),
+      precipitationIntensity: currentWeather.precipitationIntensity,
+      pressure: Pressure(weather: currentWeather),
+      uvIndex: UVIndex(uvIndex: currentWeather.uvIndex)
     )
   }
 }
@@ -32,6 +35,18 @@ extension WeatherReading.CloudCover {
       midAltitude: cloudCoverByAltitude.medium,
       highAltitude: cloudCoverByAltitude.high
     )
+  }
+}
+
+extension WeatherReading.UVIndex {
+  public init(uvIndex: WeatherKit.UVIndex) {
+    self.init(amount: uvIndex.value, exposureCategory: uvIndex.category)
+  }
+}
+
+extension WeatherReading.Pressure {
+  public init(weather: CurrentWeather) {
+    self.init(amount: weather.pressure, trend: weather.pressureTrend)
   }
 }
 

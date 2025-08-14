@@ -264,7 +264,7 @@ private struct WeatherReadingFormView: View {
         Spacer()
       }
     }
-    
+
     Section {
       WeatherInfoLabel(systemImageName: "humidity.fill", title: "Humidity") {
         Text(self.weather.humidity.formatted(.percent))
@@ -272,7 +272,7 @@ private struct WeatherReadingFormView: View {
     } header: {
       Text("Humidity")
     }
-    
+
     Section {
       WeatherInfoLabel(systemImageName: "eye.fill", title: "Visibility") {
         Text(self.weather.visibility.formatted())
@@ -280,7 +280,15 @@ private struct WeatherReadingFormView: View {
     } header: {
       Text("Visibility")
     }
-    
+
+    Section {
+      WeatherInfoLabel(systemImageName: "cloud.rain.fill", title: "Intensity") {
+        Text(self.weather.precipitationIntensity.formatted())
+      }
+    } header: {
+      Text("Precipitation")
+    }
+
     Section {
       WeatherInfoLabel(systemImageName: "gauge.with.dots.needle.33percent", title: "Direction") {
         Text(self.weather.wind.direction.description)
@@ -291,16 +299,38 @@ private struct WeatherReadingFormView: View {
     } header: {
       Text("Wind")
     }
-    
+
+    Section {
+      WeatherInfoLabel(systemImageName: "thermometer.tirepressure", title: "Amount") {
+        Text(self.weather.pressure.amount.formatted())
+      }
+      WeatherInfoLabel(systemImageName: "chart.line.uptrend.xyaxis", title: "Trend") {
+        Text(self.weather.pressure.trend.description)
+      }
+    } header: {
+      Text("Pressure")
+    }
+
+    Section {
+      WeatherInfoLabel(systemImageName: "rays", title: "Amount") {
+        Text("\(self.weather.uvIndex.amount)")
+      }
+      WeatherInfoLabel(systemImageName: "allergens.fill", title: "Exposure") {
+        Text(self.weather.uvIndex.exposureCategory.description)
+      }
+    } header: {
+      Text("UV Index")
+    }
+
     Section {
       WeatherInfoLabel(systemImageName: "water.waves", title: "Low Altitude") {
         Text(self.weather.cloudCover.lowAltitude.formatted(.percent))
       }
       WeatherInfoLabel(systemImageName: "mountain.2.fill", title: "Medium Altitude") {
-        Text(self.weather.cloudCover.lowAltitude.formatted(.percent))
+        Text(self.weather.cloudCover.midAltitude.formatted(.percent))
       }
       WeatherInfoLabel(systemImageName: "airplane.cloud", title: "High Altitude") {
-        Text(self.weather.cloudCover.lowAltitude.formatted(.percent))
+        Text(self.weather.cloudCover.highAltitude.formatted(.percent))
       }
     } header: {
       Text("Cloud Cover")
@@ -312,17 +342,17 @@ private struct WeatherInfoLabel<Content: View>: View {
   let systemImageName: String
   let title: LocalizedStringKey
   @ViewBuilder let content: () -> Content
-  
+
   @ScaledMetric private var imageSize = CGFloat(30)
-  
+
   var body: some View {
     HStack(alignment: .center) {
       Image(systemName: self.systemImageName)
         .frame(width: self.imageSize)
       Text(self.title)
-      
+
       Spacer()
-      
+
       self.content()
     }
   }
@@ -333,7 +363,7 @@ private struct WeatherInfoLabel<Content: View>: View {
   let _ = prepareDependencies {
     $0.defaultDatabase = try! canIClimbDatabase()
     try! $0.defaultDatabase.write { db in
-      try SettingsRecord.update(in: db) { $0.temperaturePreference = .kelvin }
+      try SettingsRecord.update(in: db) { $0.temperaturePreference = .celsius }
     }
 
     let weather = WeatherReading.MockCurrentReader()
