@@ -39,7 +39,7 @@ extension QueryStatus {
   /// The result value, if the status indicates that the query finished successfully.
   public var resultValue: Value? {
     switch self {
-    case let .result(.success(value)): value
+    case .result(.success(let value)): value
     default: nil
     }
   }
@@ -47,9 +47,22 @@ extension QueryStatus {
   /// The result error, if the status indicates that the query finished unsuccessfully.
   public var resultError: Error? {
     switch self {
-    case let .result(.failure(error)): error
+    case .result(.failure(let error)): error
     default: nil
     }
+  }
+
+  /// The result, if the status indicates that the query finished.
+  public var result: Result<Value, Error>? {
+    switch self {
+    case .result(let result): result
+    default: nil
+    }
+  }
+
+  /// Whether or not the query finished.
+  public var isFinished: Bool {
+    self.result != nil
   }
 
   /// Whether or not the query finished successfully.
@@ -86,8 +99,8 @@ extension QueryStatus {
     _ transform: (Value) throws(E) -> NewValue
   ) throws(E) -> QueryStatus<NewValue> {
     switch self {
-    case let .result(.success(value)): try .result(.success(transform(value)))
-    case let .result(.failure(error)): .result(.failure(error))
+    case .result(.success(let value)): try .result(.success(transform(value)))
+    case .result(.failure(let error)): .result(.failure(error))
     case .idle: .idle
     case .loading: .loading
     }
@@ -111,8 +124,8 @@ extension QueryStatus {
     _ transform: (Value) throws(E) -> QueryStatus<NewValue>
   ) throws(E) -> QueryStatus<NewValue> {
     switch self {
-    case let .result(.success(value)): try transform(value)
-    case let .result(.failure(error)): .result(.failure(error))
+    case .result(.success(let value)): try transform(value)
+    case .result(.failure(let error)): .result(.failure(error))
     case .idle: .idle
     case .loading: .loading
     }
