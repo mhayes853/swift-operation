@@ -142,13 +142,13 @@ public struct CachedUserRecord: Hashable, Sendable, Identifiable, Codable {
 public struct SettingsRecord: Sendable, SingleRowTable {
   public private(set) var id: UUID = .nil
   public var metricPreference: MetricPreference = .imperial
-  public var temperaturePreference: TemperaturePreference = .celsius
+  public var temperaturePreference: TemperaturePreference = .fahrenheit
 
   public init() {}
 
   public init(
     metricPreference: SettingsRecord.MetricPreference = .imperial,
-    temperaturePreference: SettingsRecord.TemperaturePreference = .celsius
+    temperaturePreference: SettingsRecord.TemperaturePreference = .fahrenheit
   ) {
     self.metricPreference = metricPreference
     self.temperaturePreference = temperaturePreference
@@ -183,6 +183,14 @@ extension SettingsRecord {
     case celsius
     case fahrenheit
     case kelvin
+
+    public var unit: UnitTemperature {
+      switch self {
+      case .celsius: .celsius
+      case .fahrenheit: .fahrenheit
+      case .kelvin: .kelvin
+      }
+    }
   }
 }
 
@@ -193,6 +201,13 @@ extension SettingsRecord.TemperaturePreference: CustomLocalizedStringResourceCon
     case .fahrenheit: "Fahrenheit"
     case .kelvin: "Kelvin"
     }
+  }
+}
+
+extension Measurement where UnitType == UnitTemperature {
+  public func formatted(preference: SettingsRecord.TemperaturePreference) -> String {
+    self.converted(to: preference.unit)
+      .formatted(.measurement(width: .abbreviated, usage: .asProvided))
   }
 }
 
