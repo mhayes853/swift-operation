@@ -195,7 +195,7 @@ private struct WeatherSnippetView: View {
 private struct WeatherDetailView: View {
   let detail: MountainWeatherModel.Detail
 
-  @SingleRow(SettingsRecord.self) private var settings
+  @SingleRow(SettingsRecord.self) var settings
 
   var body: some View {
     Form {
@@ -226,6 +226,28 @@ private struct WeatherDetailView: View {
           Text(self.detail.locationName)
         }
       }
+
+      #if os(iOS)
+        ToolbarItem(placement: .topBarTrailing) {
+          Menu {
+            Picker("Temperature Units", selection: self.$settings.temperaturePreference) {
+              ForEach(SettingsRecord.TemperaturePreference.allCases, id: \.self) { preference in
+                Text(preference.localizedStringResource)
+                  .tag(preference)
+              }
+            }
+
+            Picker("Measurement Units", selection: self.$settings.metricPreference) {
+              ForEach(SettingsRecord.MetricPreference.allCases, id: \.self) { preference in
+                Text(preference.localizedStringResource)
+                  .tag(preference)
+              }
+            }
+          } label: {
+            Image(systemName: "thermometer.high")
+          }
+        }
+      #endif
     }
   }
 }
@@ -271,7 +293,9 @@ private struct WeatherReadingFormView: View {
 
     Section {
       WeatherInfoLabel(systemImageName: "eye.fill", title: "Visibility") {
-        Text(self.weather.visibility.formatted())
+        Text(
+          self.weather.visibility.longLengthFormatted(preference: self.settings.metricPreference)
+        )
       }
     } header: {
       Text("Visibility")
@@ -279,7 +303,9 @@ private struct WeatherReadingFormView: View {
 
     Section {
       WeatherInfoLabel(systemImageName: "cloud.rain.fill", title: "Intensity") {
-        Text(self.weather.precipitationIntensity.formatted())
+        Text(
+          self.weather.precipitationIntensity.formatted(preference: self.settings.metricPreference)
+        )
       }
     } header: {
       Text("Precipitation")
@@ -290,7 +316,7 @@ private struct WeatherReadingFormView: View {
         Text(self.weather.wind.direction.description)
       }
       WeatherInfoLabel(systemImageName: "wind", title: "Speed") {
-        Text(self.weather.wind.speed.formatted())
+        Text(self.weather.wind.speed.formatted(preference: self.settings.metricPreference))
       }
     } header: {
       Text("Wind")
@@ -298,7 +324,7 @@ private struct WeatherReadingFormView: View {
 
     Section {
       WeatherInfoLabel(systemImageName: "thermometer.tirepressure", title: "Amount") {
-        Text(self.weather.pressure.amount.formatted())
+        Text(self.weather.pressure.amount.formatted(preference: self.settings.metricPreference))
       }
       WeatherInfoLabel(systemImageName: "chart.line.uptrend.xyaxis", title: "Trend") {
         Text(self.weather.pressure.trend.description)

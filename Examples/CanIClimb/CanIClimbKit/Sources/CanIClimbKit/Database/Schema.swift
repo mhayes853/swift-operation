@@ -160,10 +160,31 @@ extension SettingsRecord {
     case imperial
     case metric
 
-    public var unit: UnitMass {
+    public var unitMass: UnitMass {
       switch self {
       case .imperial: .pounds
       case .metric: .kilograms
+      }
+    }
+
+    public var unitSpeed: UnitSpeed {
+      switch self {
+      case .imperial: .milesPerHour
+      case .metric: .kilometersPerHour
+      }
+    }
+
+    public var unitPressure: UnitPressure {
+      switch self {
+      case .imperial: .poundsForcePerSquareInch
+      case .metric: .kilopascals
+      }
+    }
+
+    public var unitLongLength: UnitLength {
+      switch self {
+      case .imperial: .miles
+      case .metric: .kilometers
       }
     }
   }
@@ -175,6 +196,45 @@ extension SettingsRecord.MetricPreference: CustomLocalizedStringResourceConverti
     case .metric: "Metric (cm, kg)"
     case .imperial: "Imperial (ft, lbs)"
     }
+  }
+}
+
+extension Measurement where UnitType == UnitSpeed {
+  public func formatted(preference: SettingsRecord.MetricPreference) -> String {
+    self.converted(to: preference.unitSpeed)
+      .formatted(
+        .measurement(
+          width: .abbreviated,
+          usage: .asProvided,
+          numberFormatStyle: .number.precision(.fractionLength(0...2))
+        )
+      )
+  }
+}
+
+extension Measurement where UnitType == UnitPressure {
+  public func formatted(preference: SettingsRecord.MetricPreference) -> String {
+    self.converted(to: preference.unitPressure)
+      .formatted(
+        .measurement(
+          width: .abbreviated,
+          usage: .asProvided,
+          numberFormatStyle: .number.precision(.fractionLength(0...2))
+        )
+      )
+  }
+}
+
+extension Measurement where UnitType == UnitLength {
+  public func longLengthFormatted(preference: SettingsRecord.MetricPreference) -> String {
+    self.converted(to: preference.unitLongLength)
+      .formatted(
+        .measurement(
+          width: .abbreviated,
+          usage: .asProvided,
+          numberFormatStyle: .number.precision(.fractionLength(0...2))
+        )
+      )
   }
 }
 
@@ -207,7 +267,13 @@ extension SettingsRecord.TemperaturePreference: CustomLocalizedStringResourceCon
 extension Measurement where UnitType == UnitTemperature {
   public func formatted(preference: SettingsRecord.TemperaturePreference) -> String {
     self.converted(to: preference.unit)
-      .formatted(.measurement(width: .abbreviated, usage: .asProvided))
+      .formatted(
+        .measurement(
+          width: .abbreviated,
+          usage: .asProvided,
+          numberFormatStyle: .number.precision(.fractionLength(0...1))
+        )
+      )
   }
 }
 

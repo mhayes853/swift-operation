@@ -339,7 +339,7 @@ private struct WeightSelectionView: View {
   init(model: OnboardingModel) {
     self.model = model
     self._selectedValue = State(
-      initialValue: Int(model.userProfile.weight.converted(to: model.metricPreference.unit).value)
+      initialValue: Int(model.userProfile.weight.converted(to: model.metricPreference.unitMass).value)
     )
   }
 
@@ -371,14 +371,14 @@ private struct WeightSelectionView: View {
           .onChange(of: self.model.metricPreference) { old, new in
             let oldMeasurement = Measurement<UnitMass>(
               value: Double(self.selectedValue),
-              unit: old.unit
+              unit: old.unitMass
             )
-            self.selectedValue = Int(oldMeasurement.converted(to: new.unit).value)
+            self.selectedValue = Int(oldMeasurement.converted(to: new.unitMass).value)
           }
           .onChange(of: self.selectedValue) {
             self.model.userProfile.weight = Measurement(
               value: Double(self.selectedValue),
-              unit: self.model.metricPreference.unit
+              unit: self.model.metricPreference.unitMass
             )
           }
         OnboardingBMIView(bmi: self.model.userProfile.bmi)

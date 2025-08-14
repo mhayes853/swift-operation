@@ -36,19 +36,15 @@ extension SingleRowTable {
 
 @propertyWrapper
 public struct SingleRow<Table: SingleRowTable & Sendable> {
-  @Fetch(SingleRowTableRequest<Table>()) private var value = Table()
-
-  @Dependency(\.defaultDatabase) private var database
+  @State private var reference = Reference()
 
   public var wrappedValue: Table {
-    get { self.value }
-    set {
-      withErrorReporting {
-        try self.database.write { db in
-          try Table.update(in: db) { $0 = newValue }
-        }
-      }
-    }
+    get { self.reference._wrappedValue }
+    nonmutating set { self.reference._wrappedValue = newValue }
+  }
+
+  public var projectedValue: Binding<Table> {
+    self.$reference._wrappedValue
   }
 
   public init(_ type: Table.Type) {
@@ -57,7 +53,33 @@ public struct SingleRow<Table: SingleRowTable & Sendable> {
 
 extension SingleRow: DynamicProperty {
   public func update() {
-    self.$value.update()
+    self.reference.update()
+  }
+}
+
+extension SingleRow {
+  @Observable
+  fileprivate final class Reference {
+    @ObservationIgnored
+    @Fetch(SingleRowTableRequest<Table>()) private var value = Table()
+
+    @ObservationIgnored
+    @Dependency(\.defaultDatabase) private var database
+
+    func update() {
+      self.$value.update()
+    }
+
+    var _wrappedValue: Table {
+      get { self.value }
+      set {
+        withErrorReporting {
+          try self.database.write { db in
+            try Table.update(in: db) { $0 = newValue }
+          }
+        }
+      }
+    }
   }
 }
 
