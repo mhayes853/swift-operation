@@ -30,7 +30,8 @@ let package = Package(
       traits: ["SwiftUUIDV7SharingGRDB", "SwiftUUIDV7Tagged", "SwiftUUIDV7Dependencies"]
     ),
     .package(url: "https://github.com/apple/swift-collections", from: "1.2.1"),
-    .package(url: "https://github.com/apple/swift-async-algorithms", from: "1.0.4")
+    .package(url: "https://github.com/apple/swift-async-algorithms", from: "1.0.4"),
+    .package(url: "https://github.com/n3d1117/ExpandableText", from: "1.0.0")
   ],
   targets: [
     .target(
@@ -44,7 +45,12 @@ let package = Package(
         .product(name: "UUIDV7", package: "swift-uuidv7"),
         .product(name: "DequeModule", package: "swift-collections"),
         .product(name: "OrderedCollections", package: "swift-collections"),
-        .product(name: "AsyncAlgorithms", package: "swift-async-algorithms")
+        .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
+        .product(
+          name: "ExpandableText",
+          package: "ExpandableText",
+          condition: .when(platforms: [.iOS])
+        )
       ]
     ),
     .testTarget(

@@ -92,6 +92,8 @@ public struct MountainTravelEstimatesView: View {
   public var body: some View {
     VStack(alignment: .leading) {
       MountainLocationNameLabel(name: self.model.mountain.location.name)
+        .foregroundStyle(.secondary)
+        .bold()
         .onTapGesture { self.model.mapInvoked() }
       MapView(model: self.model)
       TravelEstimatesView(model: self.model)
@@ -117,7 +119,7 @@ private struct MapView: View {
           distance: 5000
         )
       ),
-      interactionModes: .all
+      interactionModes: []
     ) {
       Annotation(mountain: self.model.mountain) {
         self.model.mapInvoked()

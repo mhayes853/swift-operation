@@ -108,11 +108,17 @@ public struct MountainWeatherView: View {
         VStack {
           HStack(alignment: .center) {
             WeatherSnippetView(model: model, detail: model.userWeatherDetail)
+              .frame(maxWidth: .infinity)
             Divider()
               .padding(.horizontal)
             WeatherSnippetView(model: model, detail: model.mountainWeatherDetail)
+              .frame(maxWidth: .infinity)
           }
-          WeatherAttributionView()
+          HStack {
+            Spacer()
+            WeatherAttributionView()
+            Spacer()
+          }
         }
       }
     }
@@ -141,6 +147,7 @@ private struct WeatherSnippetView: View {
         Image(systemName: self.detail.systemImageName)
         Text(self.detail.locationName)
       }
+      .font(.footnote.bold())
       .foregroundStyle(.secondary)
 
       if let unauthorizedText = self.detail.unauthorizedText {
@@ -168,7 +175,11 @@ private struct WeatherSnippetView: View {
             .foregroundStyle(.secondary)
 
         default:
-          SpinnerView()
+          HStack {
+            Spacer()
+            SpinnerView()
+            Spacer()
+          }
         }
       }
     }
@@ -213,7 +224,11 @@ private struct WeatherDetailView: View {
           }
         }
       } else {
-        SpinnerView()
+        HStack {
+          Spacer()
+          SpinnerView()
+          Spacer()
+        }
       }
     }
     #if os(iOS)

@@ -4,6 +4,10 @@ import SharingQuery
 import SwiftUI
 import SwiftUINavigation
 
+#if canImport(ExpandableText)
+  import ExpandableText
+#endif
+
 // MARK: - MountainDetailModel
 
 @MainActor
@@ -110,7 +114,7 @@ private struct MountainDetailScrollView: View {
 
         switch self.model.selectedTab {
         case .mountain:
-          Text("Mountain Stuffs")
+          MountainDetailsView(model: self.model, mountain: self.mountain)
         case .plannedClimbs:
           PlannedClimbsListView(model: self.model.plannedClimbs)
         }
@@ -187,7 +191,7 @@ private struct MountainImageView: View {
                   endPoint: .top
                 )
               )
-            MountainDetailLabel(mountain: self.mountain)
+            MountainImageLabel(mountain: self.mountain)
               .colorScheme(ColorScheme(mountainImageScheme: self.mountain.image.colorScheme))
               .padding()
               .frame(maxHeight: .infinity, alignment: .bottom)
@@ -198,7 +202,7 @@ private struct MountainImageView: View {
               .fill(.gray.gradient)
             SpinnerView()
           }
-          MountainDetailLabel(mountain: self.mountain)
+          MountainImageLabel(mountain: self.mountain)
             .padding()
             .frame(maxHeight: .infinity, alignment: .bottom)
         }
@@ -214,7 +218,7 @@ private struct MountainImageView: View {
 
 // MARK: - MountainDetailLabel
 
-private struct MountainDetailLabel: View {
+private struct MountainImageLabel: View {
   let mountain: Mountain
 
   @ScaledMetric private var columnSize = CGFloat(50)
@@ -239,5 +243,71 @@ private struct MountainDetailLabel: View {
       .frame(height: self.columnSize)
     }
     .dynamicTypeSize(...(.xxxLarge))
+  }
+}
+
+// MARK: - MountainDetailsView
+
+private struct MountainDetailsView: View {
+  let model: MountainDetailModel
+  let mountain: Mountain
+
+  @ScaledMetric private var travelEstimatesSize = CGFloat(450)
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 20) {
+      MountainDetailSectionView(title: "About") {
+        #if canImport(ExpandableText)
+          ExpandableText(self.mountain.displayDescription)
+        #else
+          Text(self.mountain.displayDescription)
+        #endif
+      }
+
+      if let weatherModel = self.model.weather {
+        MountainDetailSectionView(title: "Weather Comparison") {
+          MountainWeatherView(model: weatherModel)
+        }
+      }
+
+      if let travelEstimatesModel = self.model.travelEstimates {
+        MountainDetailSectionView(title: "Directions") {
+          MountainTravelEstimatesView(model: travelEstimatesModel)
+            .frame(height: self.travelEstimatesSize)
+        }
+      }
+    }
+  }
+}
+
+// MARK: - MountainDetailSectionView
+
+private struct MountainDetailSectionView<Content: View>: View {
+  @Environment(\.colorScheme) private var colorScheme
+
+  let title: LocalizedStringKey
+  @ViewBuilder let content: () -> Content
+
+  var body: some View {
+    VStack(alignment: .leading) {
+      Text(self.title)
+        .font(.headline)
+        .padding(.leading)
+
+      self.content()
+        .frame(maxWidth: .infinity)
+        .padding()
+        .background(
+          self.colorScheme == .dark
+            ? AnyShapeStyle(Color.secondaryBackground)
+            : AnyShapeStyle(.background)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 30))
+        .shadow(
+          color: Color.black.opacity(self.colorScheme == .light ? 0.15 : 0),
+          radius: 15,
+          y: 10
+        )
+    }
   }
 }

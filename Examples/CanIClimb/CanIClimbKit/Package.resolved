@@ -1,5 +1,5 @@
 {
-  "originHash" : "efb9a55a2c036a8bd1ad7dcce3646dc248a3f5173de7d17cf9842dcda99dafc2",
+  "originHash" : "d857de1332903e644d7fc1db5b47dafe6d57c1a70ab391629756517dce7d950e",
   "pins" : [
     {
       "identity" : "combine-schedulers",
@@ -8,6 +8,15 @@
       "state" : {
         "revision" : "5928286acce13def418ec36d05a001a9641086f2",
         "version" : "1.0.3"
+      }
+    },
+    {
+      "identity" : "expandabletext",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/n3d1117/ExpandableText",
+      "state" : {
+        "revision" : "3707127edfb075d26f6f14c940702974ed887f33",
+        "version" : "1.0.0"
       }
     },
     {
@@ -43,7 +52,7 @@
       "location" : "https://github.com/pointfreeco/sharing-grdb",
       "state" : {
         "branch" : "cloudkit",
-        "revision" : "d256118953bc05bdbd5fca8044bc92cd6f23fecd"
+        "revision" : "4ed79c4bc231ff8658abfc8c02c520f2b18dea0e"
       }
     },
     {
@@ -151,7 +160,7 @@
       "location" : "https://github.com/mhayes853/swift-query",
       "state" : {
         "branch" : "main",
-        "revision" : "896cf1ee2037c4edcdfcf9b343403ce75a6d9261"
+        "revision" : "7e88f9de56efa4492966e5a73b25c023515545df"
       }
     },
     {
