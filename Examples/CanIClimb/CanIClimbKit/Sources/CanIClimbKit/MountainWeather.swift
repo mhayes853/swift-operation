@@ -13,15 +13,8 @@ public final class MountainWeatherModel {
   @ObservationIgnored
   @SharedQuery<WeatherReading.CurrentQuery.State> private var mountainWeather: WeatherReading?
 
-  @ObservationIgnored
-  @Fetch(wrappedValue: SettingsRecord(), .singleRow(SettingsRecord.self)) private var settings
-
   public var destination: Destination?
   public let mountain: Mountain
-
-  public var temperaturePreference: SettingsRecord.TemperaturePreference {
-    self.settings.temperaturePreference
-  }
 
   private var userWeather: SharedQuery<WeatherReading.CurrentQuery.State>?
   private var userLocation: Result<LocationReading, any Error>?
@@ -125,7 +118,7 @@ public struct MountainWeatherView: View {
     }
     .sheet(item: self.$model.destination.detail) { detail in
       NavigationStack {
-        WeatherDetailView(detail: detail, temperaturePreference: self.model.temperaturePreference)
+        WeatherDetailView(detail: detail)
           .dismissable()
       }
     }
@@ -136,6 +129,8 @@ public struct MountainWeatherView: View {
 
 private struct WeatherSnippetView: View {
   @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+  @SingleRow(SettingsRecord.self) private var settings
 
   let model: MountainWeatherModel
   let detail: MountainWeatherModel.Detail
@@ -156,13 +151,13 @@ private struct WeatherSnippetView: View {
           VStack(alignment: .leading) {
             HStack(alignment: .center) {
               Image(systemName: weather.systemImageName)
-              Text(weather.temperature.formatted(preference: self.model.temperaturePreference))
+              Text(weather.temperature.formatted(preference: self.settings.temperaturePreference))
             }
             .font(.title3.bold())
             Group {
               Text(weather.condition.description)
               let feelsLike = weather.feelsLikeTemperature
-                .formatted(preference: self.model.temperaturePreference)
+                .formatted(preference: self.settings.temperaturePreference)
               Text("Feels Like: \(feelsLike)")
             }
             .font(.footnote)
@@ -199,7 +194,8 @@ private struct WeatherSnippetView: View {
 
 private struct WeatherDetailView: View {
   let detail: MountainWeatherModel.Detail
-  let temperaturePreference: SettingsRecord.TemperaturePreference
+
+  @SingleRow(SettingsRecord.self) private var settings
 
   var body: some View {
     Form {
@@ -207,10 +203,7 @@ private struct WeatherDetailView: View {
         Text(unauthorizedText)
       } else if let reading = self.detail.reading {
         RemoteQueryStateView(reading) { weather in
-          WeatherReadingFormView(
-            weather: weather,
-            temperaturePreference: self.temperaturePreference
-          )
+          WeatherReadingFormView(weather: weather)
           Section {
             HStack {
               Spacer()
@@ -241,7 +234,8 @@ private struct WeatherDetailView: View {
 
 private struct WeatherReadingFormView: View {
   let weather: WeatherReading
-  let temperaturePreference: SettingsRecord.TemperaturePreference
+
+  @SingleRow(SettingsRecord.self) private var settings
 
   var body: some View {
     Section {
@@ -250,13 +244,15 @@ private struct WeatherReadingFormView: View {
         VStack(alignment: .leading) {
           HStack(alignment: .center) {
             Image(systemName: self.weather.systemImageName)
-            Text(self.weather.temperature.formatted(preference: self.temperaturePreference))
+            Text(
+              self.weather.temperature.formatted(preference: self.settings.temperaturePreference)
+            )
           }
           .font(.title.bold())
           Group {
             Text(self.weather.condition.description)
             let feelsLike = weather.feelsLikeTemperature
-              .formatted(preference: self.temperaturePreference)
+              .formatted(preference: self.settings.temperaturePreference)
             Text("Feels Like: \(feelsLike)")
           }
           .foregroundStyle(.secondary)

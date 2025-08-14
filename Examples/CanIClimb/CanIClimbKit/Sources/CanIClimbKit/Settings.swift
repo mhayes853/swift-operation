@@ -12,24 +12,13 @@ import SwiftUINavigation
 @Observable
 public final class SettingsModel: HashableObject, Identifiable {
   @ObservationIgnored
-  @Fetch(wrappedValue: SettingsRecord(), .singleRow(SettingsRecord.self)) private var _settings
-
-  @ObservationIgnored
-  @Fetch(wrappedValue: UserHumanityRecord(), .singleRow(UserHumanityRecord.self))
-  private var _userProfile
-
-  @ObservationIgnored
   @Dependency(\.defaultDatabase) private var database
 
-  public var settings: SettingsRecord {
-    get { self._settings }
-    set { try? self.database.write { try newValue.save(in: $0) } }
-  }
+  @ObservationIgnored
+  @SingleRow(SettingsRecord.self) public var settings
 
-  public var userProfile: UserHumanityRecord {
-    get { self._userProfile }
-    set { try? self.database.write { try newValue.save(in: $0) } }
-  }
+  @ObservationIgnored
+  @SingleRow(UserHumanityRecord.self) public var userProfile
 
   public var path = [Path]() {
     didSet { self.bind() }

@@ -1,6 +1,9 @@
+import Dependencies
 import Foundation
+import IssueReporting
 import SharingGRDB
 import StructuredQueries
+import SwiftUI
 
 // MARK: - SingleRowTable
 
@@ -29,18 +32,39 @@ extension SingleRowTable {
   }
 }
 
-// MARK: - SingleRowTableRequest
+// MARK: - SingleRow
 
-public struct SingleRowTableRequest<Table: SingleRowTable>: FetchKeyRequest {
-  public func fetch(_ db: Database) throws -> Table {
-    Table.find(in: db)
+@propertyWrapper
+public struct SingleRow<Table: SingleRowTable & Sendable> {
+  @Fetch(SingleRowTableRequest<Table>()) private var value = Table()
+
+  @Dependency(\.defaultDatabase) private var database
+
+  public var wrappedValue: Table {
+    get { self.value }
+    set {
+      withErrorReporting {
+        try self.database.write { db in
+          try Table.update(in: db) { $0 = newValue }
+        }
+      }
+    }
+  }
+
+  public init(_ type: Table.Type) {
   }
 }
 
-extension FetchKeyRequest {
-  public static func singleRow<Table: SingleRowTable>(
-    _ table: Table.Type
-  ) -> SingleRowTableRequest<Table> where Self == SingleRowTableRequest<Table> {
-    SingleRowTableRequest()
+extension SingleRow: DynamicProperty {
+  public func update() {
+    self.$value.update()
+  }
+}
+
+// MARK: - SingleRowTableRequest
+
+private struct SingleRowTableRequest<Table: SingleRowTable>: FetchKeyRequest {
+  func fetch(_ db: Database) throws -> Table {
+    Table.find(in: db)
   }
 }

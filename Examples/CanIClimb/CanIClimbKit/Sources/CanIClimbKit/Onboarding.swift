@@ -28,7 +28,7 @@ public final class OnboardingModel: HashableObject, Identifiable {
   @SharedQuery(LocationReading.requestUserPermissionMutation) private var requestLocationPermission
 
   @ObservationIgnored
-  @Fetch(wrappedValue: SettingsRecord(), .singleRow(SettingsRecord.self)) private var _settings
+  @SingleRow(SettingsRecord.self) private var _settings
 
   public init() {
     self.signIn.onSignInSuccess = { [weak self] in self?.path.append(.wrapUp) }
@@ -38,11 +38,7 @@ public final class OnboardingModel: HashableObject, Identifiable {
 extension OnboardingModel {
   public var metricPreference: SettingsRecord.MetricPreference {
     get { self._settings.metricPreference }
-    set {
-      try? self.database.write { db in
-        try SettingsRecord.update(in: db) { $0.metricPreference = newValue }
-      }
-    }
+    set { self._settings.metricPreference = newValue }
   }
 }
 

@@ -8,8 +8,7 @@ import SwiftUINavigation
 @Observable
 public final class ConnectToHealthKitModel {
   @ObservationIgnored
-  @Fetch(wrappedValue: LocalInternalMetricsRecord(), .singleRow(LocalInternalMetricsRecord.self))
-  private var _localMetrics
+  @SingleRow(LocalInternalMetricsRecord.self) private var _localMetrics
 
   @ObservationIgnored
   @SharedQuery(HealthPermissions.requestMutation) private var request: Void?
