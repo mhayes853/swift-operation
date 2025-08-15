@@ -30,8 +30,8 @@ final class ScheduleableAlarmSyncEngineTests: XCTestCase, @unchecked Sendable {
       title: "Blob",
       date: .distantFuture
     )
-    await self.observer.setCallbacks(
-      ScheduleableAlarm.SyncEngine.Callbacks { scheduled in
+    await isolate(self.observer) {
+      $0.onScheduleNewAlarms = { scheduled in
         guard !scheduled.isEmpty else { return }
         Task { @MainActor in
           expectNoDifference(alarm.id, scheduled[0].0.id)
@@ -39,7 +39,7 @@ final class ScheduleableAlarmSyncEngineTests: XCTestCase, @unchecked Sendable {
           expectation.fulfill()
         }
       }
-    )
+    }
 
     try await self.database.write {
       try ScheduleableAlarmRecord.insert { ScheduleableAlarmRecord(alarm: alarm) }
@@ -65,8 +65,8 @@ final class ScheduleableAlarmSyncEngineTests: XCTestCase, @unchecked Sendable {
     try await self.store.schedule(alarm: a1)
     a1.date = .distantFuture - 1000
 
-    await self.observer.setCallbacks(
-      ScheduleableAlarm.SyncEngine.Callbacks { [a1] scheduled in
+    await isolate(self.observer) { [a1] in
+      $0.onScheduleNewAlarms = { [a1] scheduled in
         guard !scheduled.isEmpty else { return }
         Task { @MainActor in
           expectNoDifference(Set(scheduled.map(\.0.date)), [a1.date, a2.date])
@@ -76,7 +76,7 @@ final class ScheduleableAlarmSyncEngineTests: XCTestCase, @unchecked Sendable {
           expectation.fulfill()
         }
       }
-    )
+    }
 
     try await self.database.write { [a1] in
       try ScheduleableAlarmRecord.insert {
@@ -91,8 +91,8 @@ final class ScheduleableAlarmSyncEngineTests: XCTestCase, @unchecked Sendable {
 
   func testFinishesAlarmsThatHaveBeenRemovedFromStoreOnBeginObserving() async throws {
     let expectation = self.expectation(description: "Alarm scheduled")
-    await self.observer.setCallbacks(
-      ScheduleableAlarm.SyncEngine.Callbacks { scheduled in
+    await isolate(self.observer) {
+      $0.onScheduleNewAlarms = { scheduled in
         guard !scheduled.isEmpty else { return }
         print(scheduled)
         Task { @MainActor in
@@ -100,7 +100,7 @@ final class ScheduleableAlarmSyncEngineTests: XCTestCase, @unchecked Sendable {
           expectation.fulfill()
         }
       }
-    )
+    }
 
     let alarm = ScheduleableAlarm(
       id: ScheduleableAlarm.ID(),
@@ -112,7 +112,7 @@ final class ScheduleableAlarmSyncEngineTests: XCTestCase, @unchecked Sendable {
         .execute($0)
     }
     await self.fulfillment(of: [expectation], timeout: 1)
-    await self.observer.setCallbacks(nil)
+    await isolate(self.observer) { $0.onScheduleNewAlarms = nil }
 
     try await self.store.cancel(id: alarm.id)
 
@@ -127,15 +127,15 @@ final class ScheduleableAlarmSyncEngineTests: XCTestCase, @unchecked Sendable {
 
   func testDoesNotRemoveAlarmsThatCouldNotBeScheduledWhenObservingStarted() async throws {
     let expectation = self.expectation(description: "Alarm scheduled")
-    await self.observer.setCallbacks(
-      ScheduleableAlarm.SyncEngine.Callbacks { scheduled in
+    await isolate(self.observer) {
+      $0.onScheduleNewAlarms = { scheduled in
         guard !scheduled.isEmpty else { return }
         Task { @MainActor in
           await self.observer.stop()
           expectation.fulfill()
         }
       }
-    )
+    }
 
     struct SomeError: Error {}
     self.store.failToScheduleError = SomeError()
@@ -150,7 +150,7 @@ final class ScheduleableAlarmSyncEngineTests: XCTestCase, @unchecked Sendable {
         .execute($0)
     }
     await self.fulfillment(of: [expectation], timeout: 1)
-    await self.observer.setCallbacks(nil)
+    await isolate(self.observer) { $0.onScheduleNewAlarms = nil }
 
     try await self.observer.start()
 
@@ -164,12 +164,12 @@ final class ScheduleableAlarmSyncEngineTests: XCTestCase, @unchecked Sendable {
   func testDoesNotScheduleAlarmsThatAreFinished() async throws {
     let expectation = self.expectation(description: "Alarm scheduled")
     expectation.assertForOverFulfill = false
-    await self.observer.setCallbacks(
-      ScheduleableAlarm.SyncEngine.Callbacks { scheduled in
+    await isolate(self.observer) {
+      $0.onScheduleNewAlarms = { scheduled in
         guard scheduled.isEmpty else { return }
         expectation.fulfill()
       }
-    )
+    }
 
     let alarm = ScheduleableAlarmRecord(
       id: ScheduleableAlarm.ID(),

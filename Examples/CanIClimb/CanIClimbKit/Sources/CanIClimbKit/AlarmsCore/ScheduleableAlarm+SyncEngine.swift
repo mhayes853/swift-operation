@@ -12,7 +12,7 @@ extension ScheduleableAlarm {
     private let logger: Logger
     private var task: Task<Void, any Error>?
 
-    private var callbacks: Callbacks?
+    public var onScheduleNewAlarms: (@Sendable ([(ScheduleableAlarm, (any Error)?)]) -> Void)?
 
     public init(
       database: any DatabaseWriter,
@@ -23,24 +23,6 @@ extension ScheduleableAlarm {
       self.store = store
       self.logger = logger
     }
-  }
-}
-
-// MARK: - Callbacks
-
-extension ScheduleableAlarm.SyncEngine {
-  public struct Callbacks: Sendable {
-    public var onScheduleNewAlarms: (@Sendable ([(ScheduleableAlarm, (any Error)?)]) -> Void)?
-
-    public init(
-      onScheduleNewAlarms: (@Sendable ([(ScheduleableAlarm, (any Error)?)]) -> Void)? = nil
-    ) {
-      self.onScheduleNewAlarms = onScheduleNewAlarms
-    }
-  }
-
-  public func setCallbacks(_ callbacks: Callbacks?) {
-    self.callbacks = callbacks
   }
 }
 
@@ -60,7 +42,7 @@ extension ScheduleableAlarm.SyncEngine {
         do {
           let results = try await self.store.replaceAll(with: alarms)
           try await self.updateStatus(for: results)
-          await self.callbacks?.onScheduleNewAlarms?(results)
+          await self.onScheduleNewAlarms?(results)
           self.logger.info("Scheduled \(results.count) new alarms!")
         } catch {
           self.logger.error("Failed to schedule new alarms: \(String(describing: error)).")
