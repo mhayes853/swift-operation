@@ -391,6 +391,7 @@ private struct WeatherInfoLabel<Content: View>: View {
       Spacer()
 
       self.content()
+        .foregroundStyle(.secondary)
     }
   }
 }

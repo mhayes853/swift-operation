@@ -30,6 +30,16 @@ extension WeatherReading {
   }
 }
 
+extension WeatherReading {
+  public struct SucceedingCurrentReader: CurrentReader {
+    public init() {}
+
+    public func reading(for coordinate: LocationCoordinate2D) async throws -> WeatherReading {
+      .mock()
+    }
+  }
+}
+
 // MARK: - Query
 
 extension WeatherReading {
