@@ -30,7 +30,10 @@ struct CanIClimbPreviewApp: App {
           var mountain = Mountain.mock2
           mountain.name = "Mountain \((i + 1) * (j + 1))"
           mountain.id = Mountain.ID()
-          mountain.coordinate = .random()
+          mountain.location = Mountain.Location(
+            coordinate: .random(),
+            name: mountain.location.name
+          )
           mountains.append(mountain)
           
           guard j.isMultiple(of: 2) else { continue }
@@ -65,6 +68,8 @@ struct CanIClimbPreviewApp: App {
       
       $0[Mountain.PlanClimberKey.self] = Mountain.SucceedingClimbPlanner()
       $0[Mountain.PlannedClimbsLoaderKey.self] = plannedClimbs
+      
+      $0[WeatherReading.CurrentReaderKey.self] = WeatherReading.SucceedingCurrentReader()
 
       try $0.defaultDatabase.write {
         try InternalMetricsRecord.update(in: $0) { $0.hasCompletedOnboarding = true }

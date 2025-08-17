@@ -11,6 +11,15 @@
       }
     },
     {
+      "identity" : "expandabletext",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/n3d1117/ExpandableText",
+      "state" : {
+        "revision" : "3707127edfb075d26f6f14c940702974ed887f33",
+        "version" : "1.0.0"
+      }
+    },
+    {
       "identity" : "grdb.swift",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/groue/GRDB.swift",
@@ -24,8 +33,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swiftwasm/JavaScriptKit",
       "state" : {
-        "revision" : "f4d52190ad1a4011c489165d43d25ae8e321bc4d",
-        "version" : "0.26.2"
+        "revision" : "3674e5774c5bc09896abcdbfcd7a5ff0a05737ef",
+        "version" : "0.32.1"
       }
     },
     {
@@ -43,16 +52,16 @@
       "location" : "https://github.com/pointfreeco/sharing-grdb",
       "state" : {
         "branch" : "cloudkit",
-        "revision" : "29930e7f74e2330118e32a78d44c48a8f40266b8"
+        "revision" : "4ed79c4bc231ff8658abfc8c02c520f2b18dea0e"
       }
     },
     {
-      "identity" : "structured-queries-tagged",
+      "identity" : "swift-async-algorithms",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/mhayes853/structured-queries-tagged",
+      "location" : "https://github.com/apple/swift-async-algorithms",
       "state" : {
-        "revision" : "2c2ad32391b815708ee533630699b9d7166ca811",
-        "version" : "0.1.1"
+        "revision" : "042e1c4d9d19748c9c228f8d4ebc97bb1e339b0b",
+        "version" : "1.0.4"
       }
     },
     {
@@ -141,8 +150,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-perception",
       "state" : {
-        "revision" : "328a0b49e2690135c4c2660661f0ed83f16853e3",
-        "version" : "2.0.4"
+        "revision" : "7d3509c7f4de78ad3eb3d804e036fb62e3585141",
+        "version" : "2.0.5"
       }
     },
     {
@@ -151,7 +160,7 @@
       "location" : "https://github.com/mhayes853/swift-query",
       "state" : {
         "branch" : "main",
-        "revision" : "3306fa3c2add3448dd101dd9fab840bab475a7b6"
+        "revision" : "7e88f9de56efa4492966e5a73b25c023515545df"
       }
     },
     {
@@ -159,8 +168,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-sharing",
       "state" : {
-        "revision" : "5d87dda90ed048f216826efbad404110141161bb",
-        "version" : "2.6.0"
+        "revision" : "bddb52233714512f63e0dfa8cd0ee8203103f3b1",
+        "version" : "2.7.1"
       }
     },
     {
@@ -177,8 +186,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-structured-queries",
       "state" : {
-        "branch" : "main",
-        "revision" : "bb12b34a8bf88af3307784da94caee3765a066f2"
+        "revision" : "2468f4e34d909d11c053d773562c03ffea40a72e",
+        "version" : "0.12.1"
       }
     },
     {
@@ -186,8 +195,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swiftlang/swift-syntax",
       "state" : {
-        "revision" : "f99ae8aa18f0cf0d53481901f88a0991dc3bd4a2",
-        "version" : "601.0.1"
+        "revision" : "0687f71944021d616d34d922343dcef086855920",
+        "version" : "600.0.1"
       }
     },
     {
