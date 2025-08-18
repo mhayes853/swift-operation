@@ -43,6 +43,10 @@ import Sharing
 public struct SharedQuery<State: QueryStateProtocol>: Sendable {
   @Shared var value: QueryStateKeyValue<State>
 
+  /// Whether or not this shared query is backed by a user specified `QueryRequest`.
+  ///
+  /// This property is true if this shared query was not created with a `QueryRequest` through
+  /// ``init(initialState:)``.
   public private(set) var isBacked = true
 
   public var wrappedValue: State.StateValue {
@@ -62,6 +66,9 @@ public struct SharedQuery<State: QueryStateProtocol>: Sendable {
     nonmutating set { self.$value = newValue.$value }
   }
 
+  /// Creates an unbacked shared query.
+  ///
+  /// - Parameter initialState: The initial state of the query.
   public init(initialState: State) {
     self._value = Shared(
       value: QueryStateKeyValue(
@@ -75,18 +82,29 @@ public struct SharedQuery<State: QueryStateProtocol>: Sendable {
 // MARK: - Unbacked Initializers
 
 extension SharedQuery {
+  /// Creates an unbacked shared query.
+  ///
+  /// - Parameter wrappedValue: The initial value of the query.
   public init<Value: Sendable>(
     wrappedValue: State.StateValue = nil
   ) where State == QueryState<Value?, Value> {
     self.init(initialState: QueryState(initialValue: wrappedValue))
   }
 
+  /// Creates an unbacked shared query.
+  ///
+  /// - Parameter wrappedValue: The initial value of the query.
   public init<Value: Sendable>(
     wrappedValue: State.StateValue
   ) where State == QueryState<Value, Value> {
     self.init(initialState: QueryState(initialValue: wrappedValue))
   }
 
+  /// Creates an unbacked shared query.
+  ///
+  /// - Parameters:
+  ///   - wrappedValue: The initial value of the query.
+  ///   - initialPageId: The initial page id of the query.
   public init<PageID, PageValue>(
     wrappedValue: State.StateValue,
     initialPageId: PageID
@@ -96,6 +114,9 @@ extension SharedQuery {
     )
   }
 
+  /// Creates an unbacked shared query.
+  ///
+  /// - Parameter wrappedValue: The initial value of the query.
   public init<Arguments, ReturnValue>(
     wrappedValue: State.StateValue
   ) where State == MutationState<Arguments, ReturnValue> {
