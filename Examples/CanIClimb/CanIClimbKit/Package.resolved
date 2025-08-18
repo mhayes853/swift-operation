@@ -1,5 +1,5 @@
 {
-  "originHash" : "d857de1332903e644d7fc1db5b47dafe6d57c1a70ab391629756517dce7d950e",
+  "originHash" : "ff69e0cea2c3af17cef069092f5f6fe466f1c91c9a9ffb1dfe5c77f1e2c4e192",
   "pins" : [
     {
       "identity" : "combine-schedulers",
@@ -33,8 +33,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swiftwasm/JavaScriptKit",
       "state" : {
-        "revision" : "3674e5774c5bc09896abcdbfcd7a5ff0a05737ef",
-        "version" : "0.32.1"
+        "revision" : "7510b04120bb26a25dd287af71de47065d577c7e",
+        "version" : "0.33.1"
       }
     },
     {
@@ -52,7 +52,7 @@
       "location" : "https://github.com/pointfreeco/sharing-grdb",
       "state" : {
         "branch" : "cloudkit",
-        "revision" : "4ed79c4bc231ff8658abfc8c02c520f2b18dea0e"
+        "revision" : "0738ccef98b1553a10f3b4edec43719ca919db8b"
       }
     },
     {
@@ -160,7 +160,7 @@
       "location" : "https://github.com/mhayes853/swift-query",
       "state" : {
         "branch" : "main",
-        "revision" : "7e88f9de56efa4492966e5a73b25c023515545df"
+        "revision" : "95c294700e06fe98d32a7663dcfff311e97f399e"
       }
     },
     {
@@ -168,8 +168,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-sharing",
       "state" : {
-        "revision" : "bddb52233714512f63e0dfa8cd0ee8203103f3b1",
-        "version" : "2.7.1"
+        "revision" : "530c98ac2c3e393615616bd6d8fc604600c99f6f",
+        "version" : "2.7.2"
       }
     },
     {

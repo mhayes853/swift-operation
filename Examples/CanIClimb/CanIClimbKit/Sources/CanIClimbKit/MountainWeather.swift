@@ -16,7 +16,9 @@ public final class MountainWeatherModel {
   public var destination: Destination?
   public let mountain: Mountain
 
-  private var userWeather: SharedQuery<WeatherReading.CurrentQuery.State>?
+  @ObservationIgnored
+  @SharedQuery<WeatherReading.CurrentQuery.State> private var userWeather: WeatherReading?
+
   private var userLocation: Result<LocationReading, any Error>?
 
   public init(mountain: Mountain) {
@@ -25,12 +27,20 @@ public final class MountainWeatherModel {
       WeatherReading.currentQuery(for: mountain.location.coordinate),
       animation: .bouncy
     )
+    self._userWeather = SharedQuery(wrappedValue: nil)
   }
 
   public func userLocationUpdated(reading: Result<LocationReading, any Error>) {
     self.userLocation = reading
-    self.userWeather = (try? reading.get())
-      .map { SharedQuery(WeatherReading.currentQuery(for: $0.coordinate), animation: .bouncy) }
+    switch reading {
+    case .success(let location):
+      self.$userWeather = SharedQuery(
+        WeatherReading.currentQuery(for: location.coordinate),
+        animation: .bouncy
+      )
+    case .failure:
+      self.$userWeather = SharedQuery(wrappedValue: nil)
+    }
   }
 }
 
@@ -45,7 +55,7 @@ extension MountainWeatherModel {
     public let systemImageName: String
     public let locationName: LocalizedStringResource
     public let unauthorizedText: LocalizedStringResource?
-    public var reading: SharedQuery<WeatherReading.CurrentQuery.State>?
+    @SharedQuery<WeatherReading.CurrentQuery.State> public var reading: WeatherReading?
   }
 
   public var userWeatherDetail: Detail {
@@ -59,7 +69,7 @@ extension MountainWeatherModel {
       systemImageName: "location.fill",
       locationName: "Your Location",
       unauthorizedText: isAuthorized ? nil : "Your location access has been denied.",
-      reading: self.userWeather
+      reading: self.$userWeather
     )
   }
 
@@ -153,7 +163,7 @@ private struct WeatherSnippetView: View {
       if let unauthorizedText = self.detail.unauthorizedText {
         Text(unauthorizedText)
       } else {
-        switch self.detail.reading?.status {
+        switch self.detail.$reading.status {
         case .result(.success(let weather)):
           VStack(alignment: .leading) {
             HStack(alignment: .center) {
@@ -212,8 +222,8 @@ private struct WeatherDetailView: View {
     Form {
       if let unauthorizedText = self.detail.unauthorizedText {
         Text(unauthorizedText)
-      } else if let reading = self.detail.reading {
-        RemoteQueryStateView(reading) { weather in
+      } else if self.detail.$reading.isBacked {
+        RemoteQueryStateView(self.detail.$reading) { weather in
           WeatherReadingFormView(weather: weather)
           Section {
             HStack {
