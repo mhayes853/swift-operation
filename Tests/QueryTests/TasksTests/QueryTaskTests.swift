@@ -1,6 +1,7 @@
 import CustomDump
 import Foundation
 @_spi(Warnings) import Query
+@_spi(Warnings) import QueryTestHelpers
 import Testing
 
 func isRunningTestsFromXcode() -> Bool {

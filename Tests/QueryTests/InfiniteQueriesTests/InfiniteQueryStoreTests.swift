@@ -1,9 +1,8 @@
 import CustomDump
 import Foundation
+import Query
 import QueryTestHelpers
 import Testing
-
-@testable import Query
 
 @Suite("InfiniteQueryStore tests")
 struct InfiniteQueryStoreTests {
@@ -1015,7 +1014,7 @@ struct InfiniteQueryStoreTests {
   func includesYieldedUpdateReasonInPageResultEvents() async throws {
     let store = self.client.store(for: FailableInfiniteQuery(shouldYield: true))
 
-    await confirmation { confirm in
+    _ = await confirmation { confirm in
       await #expect(throws: Error.self) {
         try await store.fetchNextPage(
           handler: InfiniteQueryEventHandler(
@@ -1033,7 +1032,7 @@ struct InfiniteQueryStoreTests {
   func includesFinalResultUpdateReasonInPageResultEvents() async throws {
     let store = self.client.store(for: FailableInfiniteQuery())
 
-    await confirmation { confirm in
+    _ = await confirmation { confirm in
       await #expect(throws: Error.self) {
         try await store.fetchNextPage(
           handler: InfiniteQueryEventHandler(

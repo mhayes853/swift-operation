@@ -54,14 +54,16 @@ extension MutationState: _MutationStateProtocol {
   public typealias QueryValue = MutationValue<Value>
 
   public var currentValue: StateValue {
-    switch (self.history.last?.status.resultValue, self.yielded) {
-    case (let historyValue?, nil):
-      return historyValue
+    switch (self.history.last?.status, self.yielded) {
+    case (let status?, nil):
+      return status.resultValue
     case (nil, .success(let value, _)):
       return value
-    case (let historyValue?, .success(let value, let lastUpdatedAt)):
+    case (let status?, .success(let value, let lastUpdatedAt)):
       guard let historyValueLastUpdatedAt else { return value }
-      return historyValueLastUpdatedAt > lastUpdatedAt ? historyValue : value
+      return historyValueLastUpdatedAt > lastUpdatedAt ? status.resultValue : value
+    case (nil, nil):
+      return self.initialValue
     default:
       return nil
     }

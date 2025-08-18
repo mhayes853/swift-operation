@@ -1,7 +1,7 @@
 import CustomDump
 import Dependencies
-import QueryTestHelpers
-import SharingQuery
+@_spi(Warnings) import QueryTestHelpers
+@_spi(Warnings) import SharingQuery
 import Testing
 
 @Suite("QueryKey tests")
@@ -10,10 +10,12 @@ struct QueryKeyTests {
   func fetchesValue() async throws {
     @Dependency(\.defaultQueryClient) var client
 
-    @SharedQuery(TestQuery()) var value
+    let query = TestQuery().withTaskMegaYield()
+
+    @SharedQuery(query) var value
 
     expectNoDifference(value, nil)
-    _ = try await client.store(for: TestQuery()).activeTasks.first?.runIfNeeded()
+    _ = try await client.store(for: query).activeTasks.first?.runIfNeeded()
     expectNoDifference(value, TestQuery.value)
   }
 
@@ -21,10 +23,12 @@ struct QueryKeyTests {
   func fetchesError() async throws {
     @Dependency(\.defaultQueryClient) var client
 
-    @SharedQuery(FailingQuery()) var value
+    let query = FailingQuery().withTaskMegaYield()
+
+    @SharedQuery(query) var value
 
     expectNoDifference($value.error as? FailingQuery.SomeError, nil)
-    _ = try? await client.store(for: FailingQuery()).activeTasks.first?.runIfNeeded()
+    _ = try? await client.store(for: query).activeTasks.first?.runIfNeeded()
     expectNoDifference($value.error as? FailingQuery.SomeError, FailingQuery.SomeError())
   }
 
@@ -75,5 +79,38 @@ struct QueryKeyTests {
 
     let store = client.store(for: query)
     expectNoDifference(store.subscriberCount, 2)
+  }
+
+  @Test("Backed Query Is Not Unbacked")
+  func backedQueryIsBacked() async throws {
+    @SharedQuery(TestQuery().disableAutomaticFetching()) var value
+    expectNoDifference($value.isBacked, true)
+  }
+
+  @Test("Unbacked Query")
+  func unbackedQuery() async throws {
+    @SharedQuery<TestQuery.State> var value = TestQuery.value
+    expectNoDifference(value, TestQuery.value)
+    expectNoDifference($value.isBacked, false)
+  }
+
+  @Test("Unbacked Mutation")
+  func unbackedMutation() async throws {
+    @SharedQuery<EmptyMutation.State> var value = "blob"
+    expectNoDifference(value, "blob")
+    expectNoDifference($value.isBacked, false)
+  }
+
+  @Test("Reports Issue When Fetching Unbacked Query")
+  func reportsIssueWhenFetchingUnbackedQuery() async throws {
+    @SharedQuery<TestQuery.State> var value = TestQuery.value
+
+    await #expect(throws: Error.self) {
+      try await withKnownIssue {
+        try await $value.fetch()
+      } matching: { issue in
+        issue.comments.contains(.warning(.unbackedQueryFetch(type: TestQuery.State.self)))
+      }
+    }
   }
 }

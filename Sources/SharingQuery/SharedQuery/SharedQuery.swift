@@ -43,6 +43,8 @@ import Sharing
 public struct SharedQuery<State: QueryStateProtocol>: Sendable {
   @Shared var value: QueryStateKeyValue<State>
 
+  public private(set) var isBacked = true
+
   public var wrappedValue: State.StateValue {
     get { self.value.currentValue }
     @available(
@@ -58,6 +60,46 @@ public struct SharedQuery<State: QueryStateProtocol>: Sendable {
   public var projectedValue: Self {
     get { self }
     nonmutating set { self.$value = newValue.$value }
+  }
+
+  public init(initialState: State) {
+    self._value = Shared(
+      value: QueryStateKeyValue(
+        store: .detached(query: UnbackedQuery(), initialState: initialState)
+      )
+    )
+    self.isBacked = false
+  }
+}
+
+// MARK: - Unbacked Initializers
+
+extension SharedQuery {
+  public init<Value: Sendable>(
+    wrappedValue: State.StateValue = nil
+  ) where State == QueryState<Value?, Value> {
+    self.init(initialState: QueryState(initialValue: wrappedValue))
+  }
+
+  public init<Value: Sendable>(
+    wrappedValue: State.StateValue
+  ) where State == QueryState<Value, Value> {
+    self.init(initialState: QueryState(initialValue: wrappedValue))
+  }
+
+  public init<PageID, PageValue>(
+    wrappedValue: State.StateValue,
+    initialPageId: PageID
+  ) where State == InfiniteQueryState<PageID, PageValue> {
+    self.init(
+      initialState: InfiniteQueryState(initialValue: wrappedValue, initialPageId: initialPageId)
+    )
+  }
+
+  public init<Arguments, ReturnValue>(
+    wrappedValue: State.StateValue
+  ) where State == MutationState<Arguments, ReturnValue> {
+    self.init(initialState: MutationState(initialValue: wrappedValue))
   }
 }
 

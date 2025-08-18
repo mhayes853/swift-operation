@@ -1,7 +1,7 @@
 import CustomDump
 import Foundation
 @_spi(Warnings) import Query
-import QueryTestHelpers
+@_spi(Warnings) import QueryTestHelpers
 import Testing
 
 @Suite("QueryController tests")

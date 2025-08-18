@@ -11,8 +11,6 @@
       let expectation = self.expectation(description: "observes value")
       expectation.assertForOverFulfill = false
 
-      let values = Lock([Int]())
-
       let query = TestQuery().disableAutomaticFetching()
       var transaction = UITransaction()
       transaction[TestKey.self] = 10

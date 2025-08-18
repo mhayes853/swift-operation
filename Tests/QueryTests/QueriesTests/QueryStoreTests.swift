@@ -1,6 +1,6 @@
 import CustomDump
 @_spi(Warnings) import Query
-import QueryTestHelpers
+@_spi(Warnings) import QueryTestHelpers
 import Testing
 import XCTest
 

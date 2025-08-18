@@ -1,7 +1,7 @@
 import CustomDump
 import Foundation
 @_spi(Warnings) import Query
-import QueryTestHelpers
+@_spi(Warnings) import QueryTestHelpers
 import Testing
 
 @Suite("MutationStore tests")
@@ -583,5 +583,32 @@ struct MutationStoreTests {
     expectNoDifference(try? store.history[1].currentResult?.get(), "blob")
     expectNoDifference(store.history.count, 2)
     expectNoDifference(store.errorUpdateCount, 0)
+  }
+
+  @Test("Uses Initial Value Initially")
+  func mutationWithInitialValue() {
+    let store = self.client.store(for: EmptyMutation(), initialValue: "blob")
+    expectNoDifference(store.currentValue, "blob")
+  }
+
+  @Test("Does Not Use Initial Value After Yielding New Value")
+  func doesNotUseInitialValueAfterYieldingNewValue() {
+    let store = self.client.store(for: EmptyMutation(), initialValue: "blob")
+    store.currentValue = nil
+    expectNoDifference(store.currentValue, nil)
+  }
+
+  @Test("Does Not Use Initial Value After Mutating")
+  func doesNotUseInitialValueAfterMutating() async throws {
+    let store = self.client.store(for: EmptyMutation(), initialValue: "blob")
+    try await store.mutate(with: "blob jr")
+    expectNoDifference(store.currentValue, "blob jr")
+  }
+
+  @Test("Does Not Use Initial Value After Failing Mutation")
+  func doesNotUseInitialValueAfterFailingMutation() async throws {
+    let store = self.client.store(for: FailableMutation(), initialValue: "blob")
+    _ = try? await store.mutate(with: "blob jr")
+    expectNoDifference(store.currentValue, nil)
   }
 }

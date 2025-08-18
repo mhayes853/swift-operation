@@ -1,4 +1,4 @@
-func typeName(
+package func typeName(
   _ type: Any.Type,
   qualified: Bool = true,
   genericsAbbreviated: Bool = true
