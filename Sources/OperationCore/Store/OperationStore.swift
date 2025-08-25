@@ -88,7 +88,7 @@ public final class OperationStore<State: OperationState>: @unchecked Sendable {
   private let operation: any OperationRequest<State.OperationValue, State>
 
   private let values: RecursiveLock<Values>
-  private let subscriptions: OperationSubscriptions<QueryEventHandler<State>>
+  private let subscriptions: OperationSubscriptions<OperationEventHandler<State>>
 
   private init<Operation: OperationRequest & Sendable>(
     operation: Operation,
@@ -321,16 +321,17 @@ extension OperationStore {
 // MARK: - Fetch
 
 extension OperationStore {
-  /// Fetches the query's data.
+  /// Fetches the operation's data.
   ///
   /// - Parameters:
   ///   - context: The ``OperationContext`` to use for the underlying ``OperationTask``.
-  ///   - handler: A ``QueryEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
+  ///   - handler: A ``OperationEventHandler`` to subscribe to events from fetching the data.
+  ///     (This does not add an active subscriber to the store.)
   /// - Returns: The fetched data.
   @discardableResult
   public func fetch(
     using context: OperationContext? = nil,
-    handler: QueryEventHandler<State> = QueryEventHandler()
+    handler: OperationEventHandler<State> = OperationEventHandler()
   ) async throws -> State.OperationValue {
     let (subscription, _) = self.subscriptions.add(handler: handler, isTemporary: true)
     defer { subscription.cancel() }
@@ -470,16 +471,16 @@ extension OperationStore {
     self.subscriptions.count
   }
 
-  /// Subscribes to events from this store using a ``QueryEventHandler``.
+  /// Subscribes to events from this store using an ``OperationEventHandler``.
   ///
   /// If the subscription is the first active subscription on this store, this method will begin
-  /// fetching the query's data if both ``isStale`` and ``isAutomaticFetchingEnabled`` are true. If
+  /// fetching the operation's data if both ``isStale`` and ``isAutomaticFetchingEnabled`` are true. If
   /// the subscriber count drops to 0 whilst performing this data fetch, then the fetch is
   /// cancelled and a `CancellationError` will be present on the ``state`` property.
   ///
   /// - Parameter handler: The event handler.
   /// - Returns: A ``OperationSubscription``.
-  public func subscribe(with handler: QueryEventHandler<State>) -> OperationSubscription {
+  public func subscribe(with handler: OperationEventHandler<State>) -> OperationSubscription {
     let subscription = self.values.withLock { values in
       handler.onStateChanged?(self.state, self.context)
       let (subscription, isFirst) = self.subscriptions.add(handler: handler)

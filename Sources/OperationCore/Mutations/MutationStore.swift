@@ -90,7 +90,7 @@ extension OperationStore where State: _MutationStateProtocol {
   ) async throws -> State.Value {
     try await self.fetch(
       using: self.taskConfiguration(with: arguments, using: context),
-      handler: self.OperationStoreHandler(for: handler)
+      handler: self.operationEventHandler(for: handler)
     )
     .returnValue
   }
@@ -176,7 +176,7 @@ extension OperationStore where State: _MutationStateProtocol {
   ) async throws -> State.Value {
     try await self.fetch(
       using: self.retryTaskConfiguration(using: context),
-      handler: self.OperationStoreHandler(for: handler)
+      handler: self.operationEventHandler(for: handler)
     )
     .returnValue
   }
@@ -224,17 +224,17 @@ extension OperationStore where State: _MutationStateProtocol {
   public func subscribe(
     with handler: MutationEventHandler<State.Arguments, State.Value>
   ) async throws -> OperationSubscription {
-    self.subscribe(with: self.OperationStoreHandler(for: handler))
+    self.subscribe(with: self.operationEventHandler(for: handler))
   }
 }
 
 // MARK: - Event Handler
 
 extension OperationStore where State: _MutationStateProtocol {
-  private func OperationStoreHandler(
+  private func operationEventHandler(
     for handler: MutationEventHandler<State.Arguments, State.Value>
-  ) -> QueryEventHandler<State> {
-    QueryEventHandler(
+  ) -> OperationEventHandler<State> {
+    OperationEventHandler(
       onStateChanged: {
         handler.onStateChanged?($0 as! MutationState<State.Arguments, State.Value>, $1)
       },

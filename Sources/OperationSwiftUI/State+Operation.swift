@@ -313,13 +313,30 @@
   // MARK: - Fetch
 
   extension State.Operation {
+    /// Fetches the operation's data.
+    ///
+    /// - Parameters:
+    ///   - context: The `OperationContext` to use for the underlying `OperationTask`.
+    ///   - handler: A `OperationEventHandler` to subscribe to events from fetching the data.
+    ///   (This does not add an active subscriber to the store.)
+    /// - Returns: The fetched data.
+    @discardableResult
+    public func fetch(
+      using context: OperationContext? = nil,
+      handler: OperationEventHandler<State> = OperationEventHandler()
+    ) async throws -> State.OperationValue {
+      try await self.store.fetch(using: context, handler: handler)
+    }
+
     /// Fetches the query's data.
     ///
     /// - Parameters:
     ///   - context: The `OperationContext` to use for the underlying `OperationTask`.
-    ///   - handler: A `QueryEventHandler` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
+    ///   - handler: A `QueryEventHandler` to subscribe to events from fetching the data.
+    ///   (This does not add an active subscriber to the store.)
     /// - Returns: The fetched data.
     @discardableResult
+    @_disfavoredOverload
     public func fetch(
       using context: OperationContext? = nil,
       handler: QueryEventHandler<State> = QueryEventHandler()
@@ -718,9 +735,9 @@
     /// - Parameters:
     ///   - context: The `OperationContext` for the task.
     /// - Returns: A task to retry the most recently used arguments on the mutation.
-    public func retryLatestTask(using context: OperationContext? = nil) -> OperationTask<
-      State.Value
-    > {
+    public func retryLatestTask(
+      using context: OperationContext? = nil
+    ) -> OperationTask<State.Value> {
       self.store.retryLatestTask(using: context)
     }
   }

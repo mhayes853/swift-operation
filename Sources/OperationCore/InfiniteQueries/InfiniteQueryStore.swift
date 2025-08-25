@@ -103,9 +103,9 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
     }
   }
 
-  private func fetchAllPagesTaskConfiguration(using context: OperationContext? = nil)
-    -> OperationContext
-  {
+  private func fetchAllPagesTaskConfiguration(
+    using context: OperationContext? = nil
+  ) -> OperationContext {
     var context = self.ensuredContext(from: context)
     context.infiniteValues?.fetchType = .allPages
     context.operationTaskConfiguration.name = self.fetchAllPagesTaskName
@@ -178,8 +178,9 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
     }
   }
 
-  private func fetchNextPageTaskConfiguration(using context: OperationContext?) -> OperationContext
-  {
+  private func fetchNextPageTaskConfiguration(
+    using context: OperationContext?
+  ) -> OperationContext {
     var context = self.ensuredContext(from: context)
     context.infiniteValues?.fetchType = .nextPage
     context.operationTaskConfiguration.name =
@@ -255,9 +256,9 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
     }
   }
 
-  private func fetchPreviousPageTaskConfiguration(using context: OperationContext?)
-    -> OperationContext
-  {
+  private func fetchPreviousPageTaskConfiguration(
+    using context: OperationContext?
+  ) -> OperationContext {
     var context = self.ensuredContext(from: context)
     context.infiniteValues?.fetchType = .previousPage
     context.operationTaskConfiguration.name =
@@ -280,7 +281,7 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
     let subscription = context.infiniteValues?
       .addRequestSubscriber(from: handler, isTemporary: true)
     defer { subscription?.cancel() }
-    return try await self.fetch(using: context, handler: self.OperationStoreHandler(for: handler))
+    return try await self.fetch(using: context, handler: self.operationEventHandler(for: handler))
   }
 }
 
@@ -301,7 +302,7 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
     let context = self.ensuredContext(from: nil)
     let contextSubscription = context.infiniteValues?
       .addRequestSubscriber(from: handler, isTemporary: false)
-    let baseSubscription = self.subscribe(with: self.OperationStoreHandler(for: handler))
+    let baseSubscription = self.subscribe(with: self.operationEventHandler(for: handler))
     return .combined([baseSubscription, contextSubscription ?? .empty])
   }
 }
@@ -309,10 +310,10 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
 // MARK: - InfiniteQueryEventHandler
 
 extension OperationStore where State: _InfiniteQueryStateProtocol {
-  private func OperationStoreHandler(
+  private func operationEventHandler(
     for handler: InfiniteQueryEventHandler<State.PageID, State.PageValue>
-  ) -> QueryEventHandler<State> {
-    QueryEventHandler(
+  ) -> OperationEventHandler<State> {
+    OperationEventHandler(
       onStateChanged: {
         handler.onStateChanged?($0 as! InfiniteQueryState<State.PageID, State.PageValue>, $1)
       },
