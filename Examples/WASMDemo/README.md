@@ -1,12 +1,12 @@
 # WASMDemo
 
-A simple demo of how to use Swift Query and WASM to build a browser application.
+A simple demo of how to use Swift Operation and WASM to build a browser application.
 
 Inspired by [PointFree's](https://www.pointfree.co/) obsession with counters, the app is a simple counter app that displays a cool fact of the current number, and the nth prime number of the current number.
 
 ![An image displaying the counter app with the network status indicating that the user is connected to the internet, a total sum counter of 1,100,108, and various other counters each displaying a number fact and the nth prime number of the current count.](./assets/app.png)
 
-You can see how Swift Query will easily remember the state of previous queries as you increment and decrement each counter. If you switch to another browser tab, then back to the app, the app will automatically refresh the latest data from the number fact API.
+You can see how Swift Operation will easily remember the state of previous queries as you increment and decrement each counter. If you switch to another browser tab, then back to the app, the app will automatically refresh the latest data from the number fact API.
 
 The app makes use of the `SharingQuery` integration such that it can use the `@SharedOperation` property wrapper, and uses [swift-dependencies](https://github.com/pointfreeco/swift-dependencies) for dependency injection within queries.
 

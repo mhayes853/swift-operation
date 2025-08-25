@@ -16,7 +16,7 @@ Your app may also display long lists of fetched data that support infinite scrol
 
 All of this can require lots of boilerplate code to manage, and is not code that generally relates directly to the features of your application.
 
-***Swift Query, provides a simple framework to manage this complexity, with the flexibility to adapt to any data fetching needs for your app.***
+***Swift Operation, provides a simple framework to manage this complexity, with the flexibility to adapt to any data fetching needs for your app.***
 
 ## Getting Started
 
@@ -313,22 +313,22 @@ So in no particular order, here are the primary design principles of this librar
    1. Just because you don’t like to put all your logic directly in a SwiftUI `View` doesn’t mean that you shouldn’t be able to use the full power of the library (unlike SwiftData).
    2. What architectural patterns or platforms you're deploying on have no concern with the library. Determing that is you, your team's, and your company’s job, not mine. As a result, it’s for the best that the library gives you a set of generic tools to integrate the library into your app's architecture.
 
-## When Not To Use Swift Query
+## When Not To Use Swift Operation
 
-Swift Query is a powerful library for fetching and managing asynchronous data, but it's not suitable for every problem. For these kinds of applications, consider using another library, or even just rolling your own solution.
+Swift Operation is a powerful library for fetching and managing asynchronous data, but it's not suitable for every problem. For these kinds of applications, consider using another library, or even just rolling your own solution.
 
 - Applications with primarily local data stored with SQLite, Core/Swift Data, Realm, etc.
-  - For these applications, you'll be better off using the SDKs directly that manage the local data, or if you're using SQLite you may look into [SharingGRDB](https://github.com/pointfreeco/sharing-grdb) instead. Swift Query adds lots of extra noise such as loading states and multistage queries that isn't necessary if all of your data is stored locally on disk, and can be fetched with little delay.
+  - For these applications, you'll be better off using the SDKs directly that manage the local data, or if you're using SQLite you may look into [SharingGRDB](https://github.com/pointfreeco/sharing-grdb) instead. Swift Operation adds lots of extra noise such as loading states and multistage queries that isn't necessary if all of your data is stored locally on disk, and can be fetched with little delay.
 - Applications that primarily stream live data such from sources such as websockets.
-  - Swift Query can work well with live data such as websockets via yielding live updates from the query using a `OperationController`. However, if your data is mostly "streamed" and not really "fetched", then you may be able to skip the noise of Swift Query and utilize [Sharing](https://github.com/pointfreeco/swift-sharing) directly for managing state.
+  - Swift Operation can work well with live data such as websockets via yielding live updates from the query using a `OperationController`. However, if your data is mostly "streamed" and not really "fetched", then you may be able to skip the noise of Swift Operation and utilize [Sharing](https://github.com/pointfreeco/swift-sharing) directly for managing state.
 
 ## Installation
 
-You can add Swift Query to an Xcode project by adding it to your project as a package.
+You can add Swift Operation to an Xcode project by adding it to your project as a package.
 
 > https://github.com/mhayes853/swift-query
 
-If you want to use Swift Query in a [SwiftPM](https://swift.org/package-manager/) project,
+If you want to use Swift Operation in a [SwiftPM](https://swift.org/package-manager/) project,
 it's as simple as adding it to your `Package.swift`:
 
 ``` swift

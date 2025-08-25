@@ -1,6 +1,6 @@
 # ``OperationSwiftUI``
 
-A SwiftUI adapter for Swift Query.
+A SwiftUI adapter for Swift Operation.
 
 ## Overview
 

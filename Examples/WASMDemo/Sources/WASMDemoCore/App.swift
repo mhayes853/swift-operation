@@ -49,7 +49,7 @@ public func renderApp(model: AppModel, in container: JSObject) {
 
   let description = document.createElement!("p")
   description.innerText = """
-    This is a sample browser app built using Swift Query and WASM. You can add and \
+    This is a sample browser app built using Swift Operation and WASM. You can add and \
     remove counters to see some cool facts about numbers!
 
     The top counter displays the sum of all the counters, and you can also see your \

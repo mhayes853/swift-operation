@@ -8,7 +8,7 @@ One of the library's guiding design principles is to not care about what archite
 
 At it's core, the ``QueryRequest`` protocol works with _any_ async function, and is not inherently tied to network requests. This design gives you the flexibility to use the library no matter how your data is fetched. For simple apps it may very well be fine to fetch data using `URLSession` directly inside ``QueryRequest/fetch(in:with:)``, but for a larger more complicated application you'll almost certainly want a sophisticated network layer that encapsulates the details of how data is fetched.
 
-***Swift Query is designed to enhance your app's network logic regardless if it's represented by a sophisticated network layer or not.***
+***Swift Operation is designed to enhance your app's network logic regardless if it's represented by a sophisticated network layer or not.***
 
 ## With and Without a Dedicated Network Layer
 
@@ -119,8 +119,8 @@ The latter example with a dedicated network layer is more robust, and will gener
 
 On the flipside, the former example without a dedicated network layer does not offer any affordances to customize its behavior. It will always fetch from the hardcoded URL using `URLSession.shared`. As such, it's not possible to change the server environment, or mock certain types of responses for testing. However, it's significantly less lines of code due to not having the indirection present in a dedicated networking layer.
 
-Regardless of your architectural choices, Swift Query will function the exact same in both scenarios. Retries, backoff strategies, automatic refetching, and state management all function the same due to the library's decision to abstract over a general async function opposed to a dedicated networking service.
+Regardless of your architectural choices, Swift Operation will function the exact same in both scenarios. Retries, backoff strategies, automatic refetching, and state management all function the same due to the library's decision to abstract over a general async function opposed to a dedicated networking service.
 
 ## Conclusion
 
-In this article, you learned how the library can fit into your app's networking logic. Whether or not you decide to create a sophisticated networking layer is up to how you want to architect your application. Swift Query will work the same regardless of your choice due to the library's focus on abstracting a general async function rather than abstracting over the network itself.
+In this article, you learned how the library can fit into your app's networking logic. Whether or not you decide to create a sophisticated networking layer is up to how you want to architect your application. Swift Operation will work the same regardless of your choice due to the library's focus on abstracting a general async function rather than abstracting over the network itself.

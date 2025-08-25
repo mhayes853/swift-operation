@@ -1,6 +1,6 @@
 # ``SharingQuery``
 
-A [Sharing](https://github.com/pointfreeco/swift-sharing) adapter for Swift Query.
+A [Sharing](https://github.com/pointfreeco/swift-sharing) adapter for Swift Operation.
 
 ## Overview
 

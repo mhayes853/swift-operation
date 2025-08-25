@@ -428,11 +428,11 @@ private struct SocialsSectionView: View {
   var body: some View {
     Section {
       Link(
-        "Swift Query Github Repo",
+        "Swift Operation Github Repo",
         destination: URL(string: "https://github.com/mhayes853/swift-query")!
       )
       Link(
-        "Swift Query Introduction Blog Post",
+        "Swift Operation Introduction Blog Post",
         destination: URL(string: "https://whypeople.xyz/swift-query")!
       )
       Link(
@@ -446,7 +446,7 @@ private struct SocialsSectionView: View {
     } footer: {
       Text(
         """
-        This demo app was built to showcase Swift Query alongside other libraries in a moderately \
+        This demo app was built to showcase Swift Operation alongside other libraries in a moderately \
         complex application. Check out the links to learn more.
         """
       )
