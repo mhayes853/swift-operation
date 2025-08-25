@@ -1,5 +1,5 @@
 {
-  "originHash" : "e3495d06c94509f47153a951a00a6e9d5af43ec1565210b803ce2a6a0cd561b5",
+  "originHash" : "4cac737567bccc9494d19d36162b2578d0ca276f15b283d96386cd31a3ddb8bf",
   "pins" : [
     {
       "identity" : "combine-schedulers",
@@ -17,6 +17,15 @@
       "state" : {
         "revision" : "3674e5774c5bc09896abcdbfcd7a5ff0a05737ef",
         "version" : "0.32.1"
+      }
+    },
+    {
+      "identity" : "swift-atomics",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-atomics",
+      "state" : {
+        "revision" : "b601256eab081c0f92f059e12818ac1d4f178ff7",
+        "version" : "1.3.0"
       }
     },
     {
@@ -101,21 +110,21 @@
       }
     },
     {
+      "identity" : "swift-operation",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/mhayes853/swift-operation",
+      "state" : {
+        "branch" : "main",
+        "revision" : "3699d52ddd5e2272707eb01c60e2a0aced5ce718"
+      }
+    },
+    {
       "identity" : "swift-perception",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-perception",
       "state" : {
         "revision" : "328a0b49e2690135c4c2660661f0ed83f16853e3",
         "version" : "2.0.4"
-      }
-    },
-    {
-      "identity" : "swift-query",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/mhayes853/swift-query",
-      "state" : {
-        "branch" : "main",
-        "revision" : "9daa9ca504f6a7abed33903e6df3e38989e2eedf"
       }
     },
     {

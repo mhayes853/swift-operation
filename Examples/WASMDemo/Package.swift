@@ -12,9 +12,9 @@ let package = Package(
       branch: "fix-macos-toolchain-build"
     ),
     .package(
-      url: "https://github.com/mhayes853/swift-query",
+      url: "https://github.com/mhayes853/swift-operation",
       branch: "main",
-      traits: ["SwiftQueryNavigation", "SwiftQueryLogging", "SwiftQueryWebBrowser"]
+      traits: ["SwiftOperationNavigation", "SwiftOperationLogging", "SwiftOperationWebBrowser"]
     ),
     .package(url: "https://github.com/swiftwasm/JavaScriptKit", from: "0.32.1")
   ],
@@ -23,7 +23,7 @@ let package = Package(
     .target(
       name: "WASMDemoCore",
       dependencies: [
-        .product(name: "SharingQuery", package: "swift-query"),
+        .product(name: "SharingOperation", package: "swift-operation"),
         .product(name: "JavaScriptKit", package: "JavaScriptKit"),
         .product(name: "JavaScriptEventLoop", package: "JavaScriptKit")
       ]
