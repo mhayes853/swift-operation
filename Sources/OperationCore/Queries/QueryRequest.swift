@@ -148,67 +148,42 @@
 ///
 /// > Note: See <doc:MultistageQueries> for a list of advanced use cases involving
 /// > ``OperationContinuation``.
-public protocol QueryRequest<Value, State>: OperationPathable, Sendable
-where State.OperationValue == Value {
-  /// The data type that your query fetches.
-  associatedtype Value: Sendable
+public protocol QueryRequest<RValue, State>: OperationRequest, Sendable where Self.RValue == Value {
+  associatedtype RValue: Sendable
 
   /// The state type of your query.
-  associatedtype State: OperationState = QueryState<Value?, Value>
-
-  var _debugTypeName: String { get }
-
-  /// A ``OperationPath`` that uniquely identifies your query.
-  ///
-  /// If your query conforms to Hashable or Identifiable, then this requirement is implemented by
-  /// default. However, if you want to take advantage of pattern matching, then you'll want to
-  /// implement this requirement manually.
-  ///
-  /// See <doc:PatternMatchingAndStateManagement> for more.
-  var path: OperationPath { get }
-
-  /// Sets up the initial ``OperationContext`` that gets passed to ``fetch(in:with:)``.
-  ///
-  /// This method is called a single time when a ``OperationStore`` is initialized with your query.
-  ///
-  /// - Parameter context: The context to setup.
-  func setup(context: inout OperationContext)
+  associatedtype State: OperationState = QueryState<RValue?, RValue>
 
   /// Fetches the data for your query.
   ///
   /// - Parameters:
-  ///   - context: A ``OperationContext`` that is passed to your query from a ``OperationStore``.
-  ///   - continuation: A ``OperationContinuation`` that allows you to yield values while you're fetching data. See <doc:MultistageQueries> for more.
+  ///   - context: A ``OperationContext`` that is passed to your query.
+  ///   - continuation: A ``OperationContinuation`` that allows you to yield values while you're
+  ///   fetching data. See <doc:MultistageQueries> for more.
   /// - Returns: The fetched value from your query.
   func fetch(
     in context: OperationContext,
+    with continuation: OperationContinuation<RValue>
+  ) async throws -> RValue
+}
+
+// MARK: - Fetch
+
+extension QueryRequest {
+  public func fetch(
+    isolation: isolated (any Actor)?,
+    in context: OperationContext,
     with continuation: OperationContinuation<Value>
-  ) async throws -> Value
-}
-
-// MARK: - Setup
-
-extension QueryRequest {
-  public func setup(context: inout OperationContext) {
+  ) async throws -> Value {
+    try await self.fetch(in: context, with: continuation)
   }
 }
 
-// MARK: - Path Defaults
+private struct SomeQuery: QueryRequest, Hashable {
+  func fetch(in context: OperationContext, with continuation: OperationContinuation<Int>)
+    async throws -> Int
+  {
+    0
 
-extension QueryRequest where Self: Hashable {
-  public var path: OperationPath {
-    OperationPath(self)
   }
-}
-
-extension QueryRequest where Self: Identifiable, ID: Sendable {
-  public var path: OperationPath {
-    OperationPath(self.id)
-  }
-}
-
-// MARK: - Debug Type Name Default
-
-extension QueryRequest {
-  public var _debugTypeName: String { typeName(Self.self) }
 }
