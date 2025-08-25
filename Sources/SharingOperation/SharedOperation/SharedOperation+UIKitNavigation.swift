@@ -15,6 +15,31 @@
     }
   }
 
+  // MARK: - Operation State Initializer
+
+  extension SharedOperation {
+    /// Creates a shared operation.
+    ///
+    /// - Parameters:
+    ///   - operation: The `OperationRequest`.
+    ///   - initialState: The initial state.
+    ///   - client: A `OperationClient` to obtain the `OperationStore` from.
+    ///   - scheduler: The ``SharedOperationStateScheduler`` to schedule state updates on.
+    public init<Operation: OperationRequest & Sendable>(
+      _ operation: Operation,
+      initialState: Operation.State,
+      client: OperationClient? = nil,
+      animation: UIKitAnimation
+    ) where State == Operation.State {
+      self.init(
+        operation,
+        initialState: initialState,
+        client: client,
+        scheduler: .transaction(UITransaction(animation: animation))
+      )
+    }
+  }
+
   // MARK: - Query State Initializer
 
   extension SharedOperation {

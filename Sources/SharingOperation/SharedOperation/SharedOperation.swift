@@ -66,13 +66,33 @@ public struct SharedOperation<State: OperationState>: Sendable {
     nonmutating set { self.$value = newValue.$value }
   }
 
+  /// Creates a shared operation.
+  ///
+  /// - Parameters:
+  ///   - operation: The `OperationRequest`.
+  ///   - initialState: The initial state.
+  ///   - client: A `OperationClient` to obtain the `OperationStore` from.
+  ///   - scheduler: The ``SharedOperationStateScheduler`` to schedule state updates on.
+  public init<Operation: OperationRequest & Sendable>(
+    _ operation: Operation,
+    initialState: Operation.State,
+    client: OperationClient? = nil,
+    scheduler: some SharedOperationStateScheduler = .synchronous
+  ) where State == Operation.State {
+    @Dependency(\.defaultOperationClient) var OperationClient
+    self.init(
+      store: (client ?? OperationClient).store(for: operation, initialState: initialState),
+      scheduler: scheduler
+    )
+  }
+
   /// Creates an unbacked shared query.
   ///
   /// - Parameter initialState: The initial state of the query.
   public init(initialState: State) {
     self._value = Shared(
       value: OperationStateKeyValue(
-        store: .detached(query: UnbackedQuery(), initialState: initialState)
+        store: .detached(operation: UnbackedOperation(), initialState: initialState)
       )
     )
     self.isBacked = false
@@ -146,6 +166,7 @@ extension SharedOperation {
 // MARK: - QueryState Initializer
 
 extension SharedOperation {
+
   /// Creates a shared query.
   ///
   /// - Parameters:
@@ -153,17 +174,14 @@ extension SharedOperation {
   ///   - initialState: The initial state.
   ///   - client: A `OperationClient` to obtain the `OperationStore` from.
   ///   - scheduler: The ``SharedOperationStateScheduler`` to schedule state updates on.
+  @_disfavoredOverload
   public init<Query: QueryRequest>(
     _ query: Query,
     initialState: Query.State,
     client: OperationClient? = nil,
     scheduler: some SharedOperationStateScheduler = .synchronous
   ) where State == Query.State {
-    @Dependency(\.defaultOperationClient) var OperationClient
-    self.init(
-      store: (client ?? OperationClient).store(for: query, initialState: initialState),
-      scheduler: scheduler
-    )
+    self.init(query, initialState: initialState, client: client, scheduler: scheduler)
   }
 }
 

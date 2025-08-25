@@ -91,20 +91,20 @@
         self.transaction = MainActorTransaction(transaction: transaction)
       }
 
-      /// Creates a state property for the specified `QueryRequest`.
+      /// Creates a state property for the specified `OperationRequest`.
       ///
       /// - Parameters:
-      ///   - query: The query to observe.
+      ///   - operation: The operation to observe.
       ///   - initialState: The initially supplied state.
       ///   - client: An optional `OperationClient` to override ``SwiftUICore/EnvironmentValues/OperationClient``.
       ///   - transaction: The transaction to apply to state updates.
-      public init<Query: QueryRequest>(
-        _ query: Query,
-        initialState: Query.State,
+      public init<Operation: OperationRequest & Sendable>(
+        _ operation: Operation,
+        initialState: Operation.State,
         client: OperationClient? = nil,
         transaction: Transaction? = nil
-      ) where State == Query.State {
-        self._store = { (client ?? $0).store(for: query, initialState: initialState) }
+      ) where State == Operation.State {
+        self._store = { (client ?? $0).store(for: operation, initialState: initialState) }
         self._state = SwiftUI.State(initialValue: initialState)
         self.transaction = MainActorTransaction(transaction: transaction)
       }

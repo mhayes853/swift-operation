@@ -42,20 +42,20 @@ where State.OperationValue == Value {
 
 // MARK: - Setup
 
-extension QueryRequest {
+extension OperationRequest {
   public func setup(context: inout OperationContext) {
   }
 }
 
 // MARK: - Path Defaults
 
-extension QueryRequest where Self: Hashable {
+extension OperationRequest where Self: Hashable & Sendable {
   public var path: OperationPath {
     OperationPath(self)
   }
 }
 
-extension QueryRequest where Self: Identifiable, ID: Sendable {
+extension OperationRequest where Self: Identifiable, ID: Sendable {
   public var path: OperationPath {
     OperationPath(self.id)
   }
@@ -63,6 +63,6 @@ extension QueryRequest where Self: Identifiable, ID: Sendable {
 
 // MARK: - Debug Type Name Default
 
-extension QueryRequest {
+extension OperationRequest {
   public var _debugTypeName: String { typeName(Self.self) }
 }

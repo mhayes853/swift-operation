@@ -1,6 +1,6 @@
 import Operation
 
-final class TestOperationController<Query: QueryRequest>: OperationController {
+final class TestOperationController<Operation: OperationRequest>: OperationController {
   typealias State = Query.State
 
   let controls = RecursiveLock<OperationControls<State>?>(nil)

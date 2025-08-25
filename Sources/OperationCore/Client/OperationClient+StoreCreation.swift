@@ -7,7 +7,7 @@ extension OperationClient {
   /// operations.
   /// ```swift
   /// struct MyStoreCreator: OperationClient.StoreCreator {
-  ///    func store<Operation: OperationRequest>(
+  ///    func store<Operation: OperationRequest & Sendable>(
   ///      for operation: Operation,
   ///      in context: OperationContext,
   ///      with initialState: Operation.State
@@ -41,7 +41,7 @@ extension OperationClient {
     ///   - context: The initial ``OperationContext`` of the store.
     ///   - initialState: The initial state of the operation.
     /// - Returns: A ``OperationStore``.
-    func store<Operation: OperationRequest>(
+    func store<Operation: OperationRequest & Sendable>(
       for operation: Operation,
       in context: OperationContext,
       with initialState: Operation.State

@@ -50,16 +50,16 @@ extension OperationClient {
     let networkObserver: (any NetworkObserver)?
     let activityObserver: (any ApplicationActivityObserver)?
 
-    public func store<Query: QueryRequest>(
-      for query: Query,
+    public func store<Operation: OperationRequest & Sendable>(
+      for operation: Operation,
       in context: OperationContext,
-      with initialState: Query.State
-    ) -> OperationStore<Query.State> {
+      with initialState: Operation.State
+    ) -> OperationStore<Operation.State> {
       let backoff = self.backoff ?? context.operationBackoffFunction
       let delayer = AnyDelayer(self.delayer ?? context.operationDelayer)
-      if query is any MutationRequest {
+      if operation is any MutationRequest {
         return .detached(
-          query: query.retry(limit: self.retryLimit)
+          operation: operation.retry(limit: self.retryLimit)
             .backoff(backoff)
             .delayer(delayer),
           initialState: initialState,
@@ -67,8 +67,8 @@ extension OperationClient {
         )
       }
       return .detached(
-        query:
-          query.retry(limit: self.retryLimit)
+        operation:
+          operation.retry(limit: self.retryLimit)
           .backoff(backoff)
           .delayer(delayer)
           .enableAutomaticFetching(
