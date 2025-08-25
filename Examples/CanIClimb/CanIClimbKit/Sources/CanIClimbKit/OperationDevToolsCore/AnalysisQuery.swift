@@ -38,9 +38,9 @@ public struct _AnalysisModifier<Query: QueryRequest>: QueryModifier {
     let analysis = OperationAnalysis(
       id: OperationAnalysis.ID(uuidv7()),
       launchId: launchId,
-      query: query,
-      queryRetryAttempt: context.operationRetryIndex,
-      queryRuntimeDuration: time,
+      operation: query,
+      operationRetryAttempt: context.operationRetryIndex,
+      operationRuntimeDuration: time,
       yieldedResults: yields.withLock { $0 },
       finalResult: result
     )
@@ -64,21 +64,21 @@ extension OperationAnalysis {
   public init<Query: QueryRequest>(
     id: OperationAnalysis.ID,
     launchId: ApplicationLaunch.ID,
-    query: Query,
-    queryRetryAttempt: Int,
-    queryRuntimeDuration: Duration,
+    operation: Query,
+    operationRetryAttempt: Int,
+    operationRuntimeDuration: Duration,
     yieldedResults: [Result<Query.Value, any Error>],
     finalResult: Result<Query.Value, any Error>
   ) {
     self.init(
       id: id,
       launchId: launchId,
-      queryRetryAttempt: queryRetryAttempt,
-      queryRuntimeDuration: TimeInterval(duration: queryRuntimeDuration),
-      queryName: query.analysisName,
-      operationPathDescription: query.path.description,
+      operationRetryAttempt: operationRetryAttempt,
+      operationRuntimeDuration: TimeInterval(duration: operationRuntimeDuration),
+      operationName: operation.analysisName,
+      operationPathDescription: operation.path.description,
       yieldedOperationDataResults: yieldedResults.map { DataResult(result: $0) },
-      queryDataResult: DataResult(result: finalResult)
+      operationDataResult: DataResult(result: finalResult)
     )
   }
 }

@@ -257,5 +257,5 @@ private struct ManageAccountSectionView: View {
         .dismissable()
     }
   }
-  .observeQueryAlerts()
+  .observeOperationAlerts()
 }

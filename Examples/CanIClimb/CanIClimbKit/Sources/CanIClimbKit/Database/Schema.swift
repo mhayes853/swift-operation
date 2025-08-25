@@ -337,7 +337,7 @@ public struct OperationAnalysisRecord: Hashable, Sendable, Identifiable {
     self.operationName = operationName
     self.operationPathDescription = operationPathDescription
     self.yieldedOperationDataResults = yieldedOperationDataResults
-    self.queryDataResult = queryDataResult
+    self.operationDataResult = operationDataResult
   }
 }
 

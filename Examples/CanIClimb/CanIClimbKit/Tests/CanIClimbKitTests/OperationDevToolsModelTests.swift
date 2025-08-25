@@ -45,7 +45,7 @@ extension DependenciesTestSuite {
       try await model.$analyzes.load()
       expectNoDifference(
         model.analyzes,
-        [OperationAnalysis.mock1.queryName: [OperationAnalysis.mock1]]
+        [OperationAnalysis.mock1.operationName: [OperationAnalysis.mock1]]
       )
       expectNoDifference(model.selectedLaunch, launch1)
 
@@ -53,7 +53,7 @@ extension DependenciesTestSuite {
       try await model.launchSelected(id: OperationAnalysis.mock2.launchId)
       expectNoDifference(
         model.analyzes,
-        [OperationAnalysis.mock2.queryName: [OperationAnalysis.mock2]]
+        [OperationAnalysis.mock2.operationName: [OperationAnalysis.mock2]]
       )
       expectNoDifference(model.selectedLaunch, launch2)
       expectNoDifference(model.path, [])

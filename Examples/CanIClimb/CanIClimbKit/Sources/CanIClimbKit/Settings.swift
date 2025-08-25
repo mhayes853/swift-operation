@@ -493,5 +493,5 @@ private struct DisclaimerSectionView: View {
   .sheet(isPresented: $isPresented) {
     SettingsView(model: SettingsModel())
   }
-  .observeQueryAlerts()
+  .observeOperationAlerts()
 }

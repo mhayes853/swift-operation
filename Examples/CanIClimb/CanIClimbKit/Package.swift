@@ -11,7 +11,7 @@ let package = Package(
   ],
   dependencies: [
     .package(
-      url: "https://github.com/mhayes853/swift-query",
+      url: "https://github.com/mhayes853/swift-operation",
       branch: "main",
       traits: ["SwiftOperationLogging"]
     ),
@@ -37,7 +37,7 @@ let package = Package(
     .target(
       name: "CanIClimbKit",
       dependencies: [
-        .product(name: "SharingOperation", package: "swift-query"),
+        .product(name: "SharingOperation", package: "swift-operation"),
         .product(name: "SharingGRDB", package: "sharing-grdb"),
         .product(name: "SwiftUINavigation", package: "swift-navigation"),
         .product(name: "UIKitNavigation", package: "swift-navigation"),

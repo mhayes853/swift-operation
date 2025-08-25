@@ -41,22 +41,22 @@ extension OperationAnalysis {
   public static let mock1 = Self(
     id: ID(),
     launchId: ApplicationLaunch.ID(),
-    queryRetryAttempt: 0,
-    queryRuntimeDuration: 1,
-    queryName: "Mock1",
+    operationRetryAttempt: 0,
+    operationRuntimeDuration: 1,
+    operationName: "Mock1",
     operationPathDescription: "OperationPath([\"mock1\"])",
     yieldedOperationDataResults: [],
-    queryDataResult: DataResult(didSucceed: true, dataDescription: "Something(count: 10)")
+    operationDataResult: DataResult(didSucceed: true, dataDescription: "Something(count: 10)")
   )
 
   public static let mock2 = Self(
     id: ID(),
     launchId: ApplicationLaunch.ID(),
-    queryRetryAttempt: 0,
-    queryRuntimeDuration: 1,
-    queryName: "Mock2",
+    operationRetryAttempt: 0,
+    operationRuntimeDuration: 1,
+    operationName: "Mock2",
     operationPathDescription: "OperationPath([\"mock2\"])",
     yieldedOperationDataResults: [],
-    queryDataResult: DataResult(didSucceed: true, dataDescription: "Something(count: 20)")
+    operationDataResult: DataResult(didSucceed: true, dataDescription: "Something(count: 20)")
   )
 }

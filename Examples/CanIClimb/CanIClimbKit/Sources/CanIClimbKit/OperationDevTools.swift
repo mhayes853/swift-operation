@@ -121,10 +121,10 @@ private struct AnalysisListSectionView: View {
       ForEach(self.analyzes) { analysis in
         NavigationLink(value: OperationDevToolsModel.Path.analysisDetail(analysis, self.launch)) {
           VStack(alignment: .leading) {
-            Text(analysis.queryDataResult.dataDescription)
+            Text(analysis.operationDataResult.dataDescription)
               .lineLimit(2)
               .font(.headline)
-            if analysis.queryDataResult.didSucceed {
+            if analysis.operationDataResult.didSucceed {
               Text("Success")
                 .font(.caption)
                 .foregroundColor(.green)
@@ -182,7 +182,7 @@ private struct OperationAnalysisView: View {
         AnalysisYieldedResultsSectionView(results: self.analysis.yieldedOperationDataResults)
       }
     }
-    .navigationTitle(self.analysis.queryName.rawValue)
+    .navigationTitle(self.analysis.operationName.rawValue)
   }
 }
 
@@ -201,7 +201,7 @@ private struct AnalysisSectionView: View {
         Text("Result")
           .font(.headline)
         Spacer()
-        if analysis.queryDataResult.didSucceed {
+        if analysis.operationDataResult.didSucceed {
           Text("Success")
             .foregroundColor(.green)
         } else {
@@ -213,14 +213,14 @@ private struct AnalysisSectionView: View {
       HStack {
         Text("Data").font(.headline)
         Spacer()
-        Text(self.analysis.queryDataResult.dataDescription)
+        Text(self.analysis.operationDataResult.dataDescription)
       }
 
       HStack {
         Text("Duration").font(.headline)
         Spacer()
         let time = Measurement<UnitDuration>(
-          value: self.analysis.queryRuntimeDuration,
+          value: self.analysis.operationRuntimeDuration,
           unit: .seconds
         )
         Text(time.formatted())
@@ -229,7 +229,7 @@ private struct AnalysisSectionView: View {
       HStack {
         Text("Retry Attempt").font(.headline)
         Spacer()
-        Text("\(self.analysis.queryRetryAttempt)")
+        Text("\(self.analysis.operationRetryAttempt)")
       }
 
       HStack {
@@ -280,7 +280,7 @@ private struct AnalysisYieldedResultsSectionView: View {
     } footer: {
       Text(
         """
-        Yielded results do not represent the final results of a query, but rather the intermediate \
+        Yielded results do not represent the final results of an operation, but rather the intermediate \
         results yielded to the `OperationContinuation` before the final result was produced.
         """
       )

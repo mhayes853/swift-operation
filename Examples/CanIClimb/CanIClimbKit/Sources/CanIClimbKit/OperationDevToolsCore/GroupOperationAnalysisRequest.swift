@@ -20,7 +20,7 @@ public struct GroupOperationAnalysisRequest: FetchKeyRequest {
       .order(by: \.id)
       .fetchAll(db)
       .reduce(into: Value()) { value, analysis in
-        value[analysis.queryName, default: []].append(analysis)
+        value[analysis.operationName, default: []].append(analysis)
       }
   }
 }

@@ -29,9 +29,9 @@ extension DependenciesTestSuite {
           OperationAnalysis(
             id: OperationAnalysis.ID(UUIDV7(timeIntervalSince1970: 0, 0)),
             launchId: launchId,
-            query: query,
-            queryRetryAttempt: 0,
-            queryRuntimeDuration: .testDuration,
+            operation: query,
+            operationRetryAttempt: 0,
+            operationRuntimeDuration: .testDuration,
             yieldedResults: [],
             finalResult: .success(TestQuery.value)
           )
@@ -52,18 +52,18 @@ extension DependenciesTestSuite {
           OperationAnalysis(
             id: OperationAnalysis.ID(UUIDV7(timeIntervalSince1970: 0, 0)),
             launchId: launchId,
-            query: query,
-            queryRetryAttempt: 0,
-            queryRuntimeDuration: .testDuration,
+            operation: query,
+            operationRetryAttempt: 0,
+            operationRuntimeDuration: .testDuration,
             yieldedResults: [],
             finalResult: .failure(SomeError())
           ),
           OperationAnalysis(
             id: OperationAnalysis.ID(UUIDV7(timeIntervalSince1970: 0, 1)),
             launchId: launchId,
-            query: query,
-            queryRetryAttempt: 1,
-            queryRuntimeDuration: .testDuration,
+            operation: query,
+            operationRetryAttempt: 1,
+            operationRuntimeDuration: .testDuration,
             yieldedResults: [],
             finalResult: .failure(SomeError())
           )
@@ -84,9 +84,9 @@ extension DependenciesTestSuite {
           OperationAnalysis(
             id: OperationAnalysis.ID(UUIDV7(timeIntervalSince1970: 0, 0)),
             launchId: launchId,
-            query: query,
-            queryRetryAttempt: 0,
-            queryRuntimeDuration: .testDuration,
+            operation: query,
+            operationRetryAttempt: 0,
+            operationRuntimeDuration: .testDuration,
             yieldedResults: [.success(TestQuery.value), .success(TestQuery.value)],
             finalResult: .success(TestQuery.value)
           )
@@ -115,9 +115,9 @@ extension DependenciesTestSuite {
             OperationAnalysis(
               id: OperationAnalysis.ID(UUIDV7(timeIntervalSince1970: 0, 0)),
               launchId: launchId1,
-              query: query,
-              queryRetryAttempt: 0,
-              queryRuntimeDuration: .testDuration,
+              operation: query,
+              operationRetryAttempt: 0,
+              operationRuntimeDuration: .testDuration,
               yieldedResults: [.success(TestQuery.value)],
               finalResult: .success(TestQuery.value)
             )
@@ -131,9 +131,9 @@ extension DependenciesTestSuite {
             OperationAnalysis(
               id: OperationAnalysis.ID(UUIDV7(timeIntervalSince1970: 0, 1)),
               launchId: launchId2,
-              query: query,
-              queryRetryAttempt: 0,
-              queryRuntimeDuration: .testDuration,
+              operation: query,
+              operationRetryAttempt: 0,
+              operationRuntimeDuration: .testDuration,
               yieldedResults: [.success(TestQuery.value)],
               finalResult: .success(TestQuery.value)
             )
@@ -159,9 +159,9 @@ extension DependenciesTestSuite {
           OperationAnalysis(
             id: OperationAnalysis.ID(UUIDV7(timeIntervalSince1970: 0, 0)),
             launchId: launchId,
-            query: query,
-            queryRetryAttempt: 0,
-            queryRuntimeDuration: .testDuration,
+            operation: query,
+            operationRetryAttempt: 0,
+            operationRuntimeDuration: .testDuration,
             yieldedResults: [],
             finalResult: .success(TestQuery.value)
           )
@@ -170,9 +170,9 @@ extension DependenciesTestSuite {
           OperationAnalysis(
             id: OperationAnalysis.ID(UUIDV7(timeIntervalSince1970: 0, 1)),
             launchId: launchId,
-            query: query2,
-            queryRetryAttempt: 0,
-            queryRuntimeDuration: .testDuration,
+            operation: query2,
+            operationRetryAttempt: 0,
+            operationRuntimeDuration: .testDuration,
             yieldedResults: [],
             finalResult: .success(TestQuery2.value)
           )
