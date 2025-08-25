@@ -17,7 +17,7 @@ extension OperationStore {
   ) -> OperationStore<MutationState<Arguments, Value>>
   where State == MutationState<Arguments, Value> {
     .detached(
-      query: mutation,
+      operation: mutation,
       initialState: MutationState(),
       initialContext: initialContext
     )
@@ -41,7 +41,7 @@ extension OperationStore {
   ) -> OperationStore<MutationState<Arguments, Value>>
   where State == MutationState<Arguments, Value> {
     .detached(
-      query: mutation,
+      operation: mutation,
       initialState: MutationState(initialValue: initialValue),
       initialContext: initialContext
     )
@@ -65,7 +65,7 @@ extension OperationStore {
   ) -> OperationStore<MutationState<Arguments, Value>>
   where State == MutationState<Arguments, Value> {
     .detached(
-      query: mutation,
+      operation: mutation,
       initialState: initialState,
       initialContext: initialContext
     )
@@ -194,8 +194,9 @@ extension OperationStore where State: _MutationStateProtocol {
   /// - Parameters:
   ///   - context: The ``OperationContext`` for the task.
   /// - Returns: A task to retry the most recently used arguments on the mutation.
-  public func retryLatestTask(using context: OperationContext? = nil) -> OperationTask<State.Value>
-  {
+  public func retryLatestTask(
+    using context: OperationContext? = nil
+  ) -> OperationTask<State.Value> {
     self.fetchTask(using: self.retryTaskConfiguration(using: context)).map(\.returnValue)
   }
 

@@ -4,7 +4,7 @@ Learn how to use the ``OperationController`` protocol to automate fetching and s
 
 ## Overview
 
-The `OperationController` protocol gives you control over the state of a query from within a ``QueryModifier`` perspective itself. For instance, the ``QueryRequest/refetchOnChange(of:)`` modifier uses a `OperationController` under the hood to refetch your query whenever a `FetchCondition` changes from false to true. This makes it easy to declaratively describe whenever a query should be refetched.
+The `OperationController` protocol gives you control over the state of a query from within a ``OperationModifier`` perspective itself. For instance, the ``QueryRequest/refetchOnChange(of:)`` modifier uses a `OperationController` under the hood to refetch your query whenever a `FetchCondition` changes from false to true. This makes it easy to declaratively describe whenever a query should be refetched.
 
 ```swift
 struct MyQuery: QueryRequest, Hashable {

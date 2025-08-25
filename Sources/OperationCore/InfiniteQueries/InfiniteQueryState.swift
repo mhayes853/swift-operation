@@ -212,8 +212,9 @@ extension InfiniteQueryState: _InfiniteQueryStateProtocol {
     }
   }
 
-  public mutating func finishFetchTask(_ task: OperationTask<InfiniteQueryValue<PageID, PageValue>>)
-  {
+  public mutating func finishFetchTask(
+    _ task: OperationTask<InfiniteQueryValue<PageID, PageValue>>
+  ) {
     self.allPagesActiveTasks.remove(id: task.id)
     self.initialPageActiveTasks.remove(id: task.id)
     self.nextPageActiveTasks.remove(id: task.id)

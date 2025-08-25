@@ -6,23 +6,23 @@ import UIKitNavigation
 
 // MARK: - Query Modifier
 
-extension QueryRequest {
+extension OperationRequest {
   public func alerts(
     success: AlertState<Never>? = nil,
     failure: AlertState<Never>? = nil
-  ) -> ModifiedQuery<Self, _AlertStateModifier<Self>> {
+  ) -> ModifiedOperation<Self, _AlertStateModifier<Self>> {
     self.alerts(success: { _ in success }, failure: { _ in failure })
   }
 
   public func alerts(
     success: @escaping @Sendable (Value) -> AlertState<Never>? = { _ in nil },
     failure: @escaping @Sendable (any Error) -> AlertState<Never>? = { _ in nil }
-  ) -> ModifiedQuery<Self, _AlertStateModifier<Self>> {
+  ) -> ModifiedOperation<Self, _AlertStateModifier<Self>> {
     self.modifier(_AlertStateModifier(successAlert: success, failureAlert: failure))
   }
 }
 
-public struct _AlertStateModifier<Query: QueryRequest>: QueryModifier {
+public struct _AlertStateModifier<Operation: OperationRequest>: OperationModifier {
   let successAlert: @Sendable (Query.Value) -> AlertState<Never>?
   let failureAlert: @Sendable (any Error) -> AlertState<Never>?
 

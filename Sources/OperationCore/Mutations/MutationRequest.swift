@@ -57,7 +57,7 @@ public struct MutationValue<ReturnValue: Sendable>: Sendable {
 /// > Notice: A purple runtime warning and test failure will be issued in Xcode if you call
 /// > `retryLatest` without ever having called `mutate` first. Additionally, your mutation will
 /// > throw an error.
-public protocol MutationRequest<Arguments, ReturnValue>: QueryRequest
+public protocol MutationRequest<Arguments, ReturnValue>: OperationRequest, Sendable
 where Value == MutationValue<ReturnValue>, State == MutationState<Arguments, ReturnValue> {
   /// The data type of the arguments to submit to the mutation.
   associatedtype Arguments: Sendable
@@ -83,6 +83,7 @@ where Value == MutationValue<ReturnValue>, State == MutationState<Arguments, Ret
 
 extension MutationRequest {
   public func fetch(
+    isolation: isolated (any Actor)?,
     in context: OperationContext,
     with continuation: OperationContinuation<Value>
   ) async throws -> Value {

@@ -1,4 +1,4 @@
-extension QueryRequest {
+extension OperationRequest {
   /// Suspends this query's execution while the specified ``FetchCondition`` is false.
   ///
   /// When this query is suspended, it will remain in a perpetual loading state in your UI until
@@ -9,27 +9,31 @@ extension QueryRequest {
   /// > instead.
   ///
   /// - Parameter condition: The ``FetchCondition`` to suspend on.
-  /// - Returns: A ``ModifiedQuery``.
+  /// - Returns: A ``ModifiedOperation``.
   public func suspend<Condition: FetchCondition>(
     on condition: Condition
-  ) -> ModifiedQuery<Self, _SuspendModifier<Self, Condition>> {
+  ) -> ModifiedOperation<Self, _SuspendModifier<Self, Condition>> {
     self.modifier(_SuspendModifier(condition: condition))
   }
 }
 
-public struct _SuspendModifier<Query: QueryRequest, Condition: FetchCondition>: QueryModifier {
+public struct _SuspendModifier<
+  Operation: OperationRequest,
+  Condition: FetchCondition
+>: OperationModifier, Sendable {
   let condition: Condition
 
   public func fetch(
+    isolation: isolated (any Actor)?,
     in context: OperationContext,
-    using query: Query,
-    with continuation: OperationContinuation<Query.Value>
-  ) async throws -> Query.Value {
+    using operation: Operation,
+    with continuation: OperationContinuation<Operation.Value>
+  ) async throws -> Operation.Value {
     guard !self.condition.isSatisfied(in: context) else {
-      return try await query.fetch(in: context, with: continuation)
+      return try await operation.fetch(isolation: isolation, in: context, with: continuation)
     }
     try await self.waitForTrue(in: context)
-    return try await query.fetch(in: context, with: continuation)
+    return try await operation.fetch(isolation: isolation, in: context, with: continuation)
   }
 
   private func waitForTrue(in context: OperationContext) async throws {

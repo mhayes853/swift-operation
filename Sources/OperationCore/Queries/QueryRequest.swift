@@ -62,7 +62,7 @@
 /// > Note: See <doc:PatternMatchingAndStateManagement> to learn more about global state
 /// > management practices.
 ///
-/// You can also attach reusable logic to your query through the ``QueryModifier`` protocol. For
+/// You can also attach reusable logic to your query through the ``OperationModifier`` protocol. For
 /// instance, you can add retry logic to your query like so.
 ///
 /// ```swift
@@ -148,11 +148,12 @@
 ///
 /// > Note: See <doc:MultistageQueries> for a list of advanced use cases involving
 /// > ``OperationContinuation``.
-public protocol QueryRequest<RValue, State>: OperationRequest, Sendable where Self.RValue == Value {
-  associatedtype RValue: Sendable
+public protocol QueryRequest<ReturnValue, State>: OperationRequest, Sendable
+where Self.ReturnValue == Value {
+  associatedtype ReturnValue: Sendable
 
   /// The state type of your query.
-  associatedtype State: OperationState = QueryState<RValue?, RValue>
+  associatedtype State: OperationState = QueryState<ReturnValue?, ReturnValue>
 
   /// Fetches the data for your query.
   ///
@@ -163,8 +164,8 @@ public protocol QueryRequest<RValue, State>: OperationRequest, Sendable where Se
   /// - Returns: The fetched value from your query.
   func fetch(
     in context: OperationContext,
-    with continuation: OperationContinuation<RValue>
-  ) async throws -> RValue
+    with continuation: OperationContinuation<ReturnValue>
+  ) async throws -> ReturnValue
 }
 
 // MARK: - Fetch
@@ -176,14 +177,5 @@ extension QueryRequest {
     with continuation: OperationContinuation<Value>
   ) async throws -> Value {
     try await self.fetch(in: context, with: continuation)
-  }
-}
-
-private struct SomeQuery: QueryRequest, Hashable {
-  func fetch(in context: OperationContext, with continuation: OperationContinuation<Int>)
-    async throws -> Int
-  {
-    0
-
   }
 }

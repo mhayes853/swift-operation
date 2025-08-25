@@ -144,7 +144,7 @@ To get around the aforementioned performance issue, we can utilize a `OperationP
 ``QueryRequest``, and all protocols that inherit from it such as ``InfiniteQueryRequest`` and ``MutationRequest`` have an optional `path` requirement. When your query type conforms to Hashable, this requirement is automatically implemented as follows.
 
 ```swift
-extension QueryRequest where Self: Hashable {
+extension OperationRequest where Self: Hashable {
   var path: OperationPath { [self] }
 }
 ```

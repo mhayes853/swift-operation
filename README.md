@@ -294,15 +294,15 @@ This library was mainly inspired by the popular [Tanstack Query](https://tanstac
 
 So in no particular order, here are the primary design principles of this library:
 1. **Queries should be easy to create and compose together.**
-   1. The former is achieved through making `QueryRequest` only having 1 requirement that requires a manual implementation, and the latter through `QueryModifier`.
+   1. The former is achieved through making `QueryRequest` only having 1 requirement that requires a manual implementation, and the latter through `OperationModifier`.
 2. **The library's components should be as decoupled as possible.**
    1. For instance, if you just want to use the `QueryRequest` in a headless fashion and not care about the state management provided by `OperationStore`, you can write your own code that just uses `QueryRequest` directly.
    2. You may also not want to use the `OperationClient` for some reason (eg. you want 2 separate store instances for the same query), as such you can create stores without a client through `OperationStore.detached`.
    3. You also may not like how some of the built-in query modifiers are implemented, say retries, and thus you could write your own retry modifier.
 3. **Essential functionallity should be built on top of generic extendable abstractions, and should not be baked into the library.**
    1. For instance, checking whether the network is down, or if the app is currently focused are built on top of `FetchCondition`. This is unlike Tanstack Query, which bakes the notion of connectivity and application focus state directly into the queries themselves.
-   2. Another case would be common query modifiers such as retries. Retries are built on top of the generic `QueryModifier` system, and unlike Tanstack Query retries are not baked into the query itself.
-   3. Even `QueryModifier` is built on top of `QueryRequest`, as under the hood a `ModifiedQuery` is used to represent a query which has a modifier attached to it.
+   2. Another case would be common query modifiers such as retries. Retries are built on top of the generic `OperationModifier` system, and unlike Tanstack Query retries are not baked into the query itself.
+   3. Even `OperationModifier` is built on top of `QueryRequest`, as under the hood a `ModifiedOperation` is used to represent a query which has a modifier attached to it.
 4. **The library should adapt to any data fetching paradigmn.**
    1. The library provides 3 data fetching paradigms, the most basic paradigm (ie. Just fetch the data with no strings attached) represented by `QueryRequest`, infinite/paginated queries represented by `InfiniteQueryRequest`, and mutations (eg. making a POST request to an API, or updating remote data) represented by `MutationRequest`.
    2. You should be able to create your own data fetching paradigm for your own purposes. For instance, one could theoretically create a query paradigm for fetching recursive data such as nested comment threads, and that could be represented via some `RecursiveQueryRequest` protocol.

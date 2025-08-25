@@ -1,42 +1,43 @@
 // MARK: - RetryModifier
 
-extension QueryRequest {
+extension OperationRequest {
   /// Applies a retry strategy to this query.
   ///
   /// - Parameters:
   ///   - limit: The maximum number of retries.
-  /// - Returns: A ``ModifiedQuery``.
-  public func retry(limit: Int) -> ModifiedQuery<Self, _RetryModifier<Self>> {
+  /// - Returns: A ``ModifiedOperation``.
+  public func retry(limit: Int) -> ModifiedOperation<Self, _RetryModifier<Self>> {
     self.modifier(_RetryModifier(limit: limit))
   }
 }
 
-public struct _RetryModifier<Query: QueryRequest>: QueryModifier {
+public struct _RetryModifier<Operation: OperationRequest>: OperationModifier, Sendable {
   let limit: Int
 
-  public func setup(context: inout OperationContext, using query: Query) {
+  public func setup(context: inout OperationContext, using operation: Operation) {
     context.operationMaxRetries = self.limit
-    query.setup(context: &context)
+    operation.setup(context: &context)
   }
 
   public func fetch(
+    isolation: isolated (any Actor)?,
     in context: OperationContext,
-    using query: Query,
-    with continuation: OperationContinuation<Query.Value>
-  ) async throws -> Query.Value {
+    using operation: Operation,
+    with continuation: OperationContinuation<Operation.Value>
+  ) async throws -> Operation.Value {
     var context = context
     for index in 0..<context.operationMaxRetries {
       try Task.checkCancellation()
       do {
         context.operationRetryIndex = index
-        return try await query.fetch(in: context, with: continuation)
+        return try await operation.fetch(isolation: isolation, in: context, with: continuation)
       } catch {
-        try await context.queryDelayer.delay(for: context.operationBackoffFunction(index + 1))
+        try await context.operationDelayer.delay(for: context.operationBackoffFunction(index + 1))
       }
     }
     try Task.checkCancellation()
     context.operationRetryIndex = context.operationMaxRetries
-    return try await query.fetch(in: context, with: continuation)
+    return try await operation.fetch(isolation: isolation, in: context, with: continuation)
   }
 }
 

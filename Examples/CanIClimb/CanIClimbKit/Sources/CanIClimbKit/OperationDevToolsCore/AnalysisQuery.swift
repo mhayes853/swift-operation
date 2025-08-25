@@ -5,15 +5,15 @@ import Operation
 import Synchronization
 import UUIDV7
 
-// MARK: - QueryModifier
+// MARK: - OperationModifier
 
-extension QueryRequest {
-  public func analyzed() -> ModifiedQuery<Self, _AnalysisModifier<Self>> {
+extension OperationRequest {
+  public func analyzed() -> ModifiedOperation<Self, _AnalysisModifier<Self>> {
     self.modifier(_AnalysisModifier())
   }
 }
 
-public struct _AnalysisModifier<Query: QueryRequest>: QueryModifier {
+public struct _AnalysisModifier<Query: QueryRequest>: OperationModifier {
   public func fetch(
     in context: OperationContext,
     using query: Query,
@@ -54,7 +54,7 @@ public struct _AnalysisModifier<Query: QueryRequest>: QueryModifier {
 
 // MARK: - Helper Initializer
 
-extension QueryRequest {
+extension OperationRequest {
   public var analysisName: OperationAnalysis.OperationName {
     OperationAnalysis.OperationName(self._debugTypeName)
   }

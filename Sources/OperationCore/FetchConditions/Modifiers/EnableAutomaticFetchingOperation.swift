@@ -1,6 +1,6 @@
-// MARK: - QueryProtocol
+// MARK: - OperationRequest
 
-extension QueryRequest {
+extension OperationRequest {
   /// Disables automatic fetching for this query based on whether or not `isDisabled` is true.
   ///
   /// Automatic fetching is defined as the process of data being fetched from this query without
@@ -18,10 +18,10 @@ extension QueryRequest {
   /// ``QueryRequest`` conformances, and disabled for all ``MutationRequest`` conformances.
   ///
   /// - Parameter isDisabled: Whether or not to disable automatic fetching.
-  /// - Returns: A ``ModifiedQuery``.
+  /// - Returns: A ``ModifiedOperation``.
   public func disableAutomaticFetching(
     _ isDisabled: Bool = true
-  ) -> ModifiedQuery<Self, _EnableAutomaticFetchingModifier<Self, AlwaysCondition>> {
+  ) -> ModifiedOperation<Self, _EnableAutomaticFetchingModifier<Self, AlwaysCondition>> {
     self.enableAutomaticFetching(onlyWhen: .always(!isDisabled))
   }
 
@@ -42,18 +42,18 @@ extension QueryRequest {
   /// ``QueryRequest`` conformances, and disabled for all ``MutationRequest`` conformances.
   ///
   /// - Parameter condition: The ``FetchCondition`` to enable automatic fetching on.
-  /// - Returns: A ``ModifiedQuery``.
+  /// - Returns: A ``ModifiedOperation``.
   public func enableAutomaticFetching<Condition: FetchCondition>(
     onlyWhen condition: Condition
-  ) -> ModifiedQuery<Self, _EnableAutomaticFetchingModifier<Self, Condition>> {
+  ) -> ModifiedOperation<Self, _EnableAutomaticFetchingModifier<Self, Condition>> {
     self.modifier(_EnableAutomaticFetchingModifier(condition: condition))
   }
 }
 
 public struct _EnableAutomaticFetchingModifier<
-  Query: QueryRequest,
+  Operation: OperationRequest,
   Condition: FetchCondition
->: _ContextUpdatingQueryModifier {
+>: _ContextUpdatingOperationModifier {
   let condition: any FetchCondition
 
   public func setup(context: inout OperationContext) {
@@ -64,8 +64,8 @@ public struct _EnableAutomaticFetchingModifier<
 // MARK: - OperationContext
 
 extension OperationContext {
-  /// The ``FetchCondition`` that determines whether or not automatic fetching is enabled for a
-  /// query.
+  /// The ``FetchCondition`` that determines whether or not automatic fetching is enabled for an
+  /// operation.
   ///
   /// The default value of this context property is a condition that always returns false.
   /// However, if you use the default initializer of a ``OperationClient``, then the condition will have

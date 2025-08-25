@@ -8,18 +8,18 @@ extension MutationRequest {
   /// The length must be greater than 0.
   ///
   /// - Parameter length: The maximum length of the history (must be greater than 0).
-  /// - Returns: A ``ModifiedQuery``.
+  /// - Returns: A ``ModifiedOperation``.
   public func maxHistory(
     length: Int
-  ) -> ModifiedQuery<Self, _MaxHistoryLengthModifier<Self>> {
+  ) -> ModifiedOperation<Self, _MaxHistoryLengthModifier<Self>> {
     precondition(length > 0, _tooSmallMutationHistoryLengthMessage(got: length))
     return self.modifier(_MaxHistoryLengthModifier(length: length))
   }
 }
 
 public struct _MaxHistoryLengthModifier<
-  Query: MutationRequest
->: _ContextUpdatingQueryModifier {
+  Operation: MutationRequest
+>: _ContextUpdatingOperationModifier {
   let length: Int
 
   public func setup(context: inout OperationContext) {

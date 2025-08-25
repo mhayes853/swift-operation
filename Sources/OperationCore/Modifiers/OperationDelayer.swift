@@ -1,11 +1,11 @@
 import Foundation
 
-// MARK: - QueryDelayer
+// MARK: - OperationDelayer
 
 /// A protocol for artificially delaying queries.
 ///
 /// Artificial delays are useful for adding backoff to query retries, avoiding rate limits, and
-/// much more. You can override the ``OperationContext/queryDelayer`` context property to override the
+/// much more. You can override the ``OperationContext/operationDelayer`` context property to override the
 /// delay mechanism for your queries.
 public protocol OperationDelayer: Sendable {
   /// Delay for the specified number of seconds.
@@ -16,7 +16,7 @@ public protocol OperationDelayer: Sendable {
 
 // MARK: - Task Sleep Delayer
 
-/// A ``QueryDelayer`` that uses a `Task.sleep` for delaying.
+/// A ``OperationDelayer`` that uses a `Task.sleep` for delaying.
 public struct TaskSleepDelayer: OperationDelayer {
   public func delay(for seconds: TimeInterval) async throws {
     try await Task.sleep(nanoseconds: UInt64(TimeInterval(NSEC_PER_SEC) * seconds))
@@ -24,7 +24,7 @@ public struct TaskSleepDelayer: OperationDelayer {
 }
 
 extension OperationDelayer where Self == TaskSleepDelayer {
-  /// A ``QueryDelayer`` that uses a `Task.sleep` for delaying.
+  /// A ``OperationDelayer`` that uses a `Task.sleep` for delaying.
   public static var taskSleep: Self {
     TaskSleepDelayer()
   }
@@ -36,7 +36,7 @@ extension OperationDelayer where Self == TaskSleepDelayer {
 
 // MARK: - Clock Delayer
 
-/// A ``QueryDelayer`` that uses the `Clock` protocol to delay queries.
+/// A ``OperationDelayer`` that uses the `Clock` protocol to delay queries.
 @available(iOS 16.0, macOS 13.0, watchOS 9.0, tvOS 16.0, *)
 public struct ClockDelayer<C: Clock> where C.Duration == Duration {
   let clock: C
@@ -51,10 +51,10 @@ extension ClockDelayer: OperationDelayer {
 
 @available(iOS 16.0, macOS 13.0, watchOS 9.0, tvOS 16.0, *)
 extension OperationDelayer {
-  /// A ``QueryDelayer`` that uses the `Clock` protocol to delay queries.
+  /// A ``OperationDelayer`` that uses the `Clock` protocol to delay queries.
   ///
   /// - Parameter clock: The `Clock` to use to perform delays.
-  /// - Returns: A ``ClockDelayer``.
+  /// - Returns: A ``OperationDelayer``.
   public static func clock<C: Clock>(_ clock: C) -> Self where Self == ClockDelayer<C> {
     Self(clock: clock)
   }
@@ -62,7 +62,7 @@ extension OperationDelayer {
 
 // MARK: - NoDelayer
 
-/// A ``QueryDelayer`` that performs no delays.
+/// A ``OperationDelayer`` that performs no delays.
 ///
 /// This is especially useful for testing, where having delays can slow down your test suite.
 public struct NoDelayer: OperationDelayer {
@@ -73,7 +73,7 @@ public struct NoDelayer: OperationDelayer {
 }
 
 extension OperationDelayer where Self == NoDelayer {
-  /// A ``QueryDelayer`` that performs no delays.
+  /// A ``OperationDelayer`` that performs no delays.
   ///
   /// This is especially useful for testing, where having delays can slow down your test suite.
   public static var noDelay: Self { NoDelayer() }
@@ -81,13 +81,13 @@ extension OperationDelayer where Self == NoDelayer {
 
 // MARK: - AnyDelayer
 
-/// A type-erased ``QueryDelayer``.
+/// A type-erased ``OperationDelayer``.
 public struct AnyDelayer: OperationDelayer {
   public let base: any OperationDelayer
 
-  /// Creates a type-erased ``QueryDelayer``.
+  /// Creates a type-erased ``OperationDelayer``.
   ///
-  /// - Parameter base: The ``QueryDelayer`` to erase.
+  /// - Parameter base: The ``OperationDelayer`` to erase.
   public init(_ base: any OperationDelayer) {
     self.base = base
   }
@@ -97,40 +97,40 @@ public struct AnyDelayer: OperationDelayer {
   }
 }
 
-// MARK: - QueryModifier
+// MARK: - OperationModifier
 
-extension QueryRequest {
-  /// Sets the ``QueryDelayer`` to use for this query.
+extension OperationRequest {
+  /// Sets the ``OperationDelayer`` to use for this query.
   ///
-  /// - Parameter delayer: The ``QueryDelayer`` to use.
-  /// - Returns: A ``ModifiedQuery``.
+  /// - Parameter delayer: The ``OperationDelayer`` to use.
+  /// - Returns: A ``ModifiedOperation``.
   public func delayer<Delayer>(
     _ delayer: Delayer
-  ) -> ModifiedQuery<Self, _DelayerModifier<Self, Delayer>> {
+  ) -> ModifiedOperation<Self, _DelayerModifier<Self, Delayer>> {
     self.modifier(_DelayerModifier(delayer: delayer))
   }
 }
 
 public struct _DelayerModifier<
-  Query: QueryRequest,
+  Operation: OperationRequest,
   Delayer: OperationDelayer
->: _ContextUpdatingQueryModifier {
+>: _ContextUpdatingOperationModifier {
   let delayer: Delayer
 
   public func setup(context: inout OperationContext) {
-    context.queryDelayer = self.delayer
+    context.operationDelayer = self.delayer
   }
 }
 
 // MARK: - OperationContext
 
 extension OperationContext {
-  /// The current ``QueryDelayer`` in this context.
+  /// The current ``OperationDelayer`` in this context.
   ///
   /// The default value is platform dependent. On Darwin platforms,
-  /// ``QueryDelayer/taskSleep`` is the default value, and ``QueryDelayer/clock(_:)`` is the
+  /// ``OperationDelayer/taskSleep`` is the default value, and ``OperationDelayer/clock(_:)`` is the
   /// default value on all other platforms.
-  public var queryDelayer: any OperationDelayer {
+  public var operationDelayer: any OperationDelayer {
     get { self[OperationDelayerKey.self] }
     set { self[OperationDelayerKey.self] = newValue }
   }

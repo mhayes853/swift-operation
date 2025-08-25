@@ -62,7 +62,7 @@ extension Quote {
 
 // MARK: - Refetch On Notification
 
-extension QueryRequest {
+extension OperationRequest {
   func refetchOnPost(
     of name: Notification.Name,
     center: NotificationCenter = .default

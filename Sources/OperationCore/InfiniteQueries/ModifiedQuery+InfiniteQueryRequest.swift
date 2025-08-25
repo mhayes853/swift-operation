@@ -1,9 +1,9 @@
-extension ModifiedQuery: InfiniteQueryRequest where Query: InfiniteQueryRequest {
-  public typealias PageValue = Query.PageValue
-  public typealias PageID = Query.PageID
+extension ModifiedOperation: InfiniteQueryRequest where Operation: InfiniteQueryRequest {
+  public typealias PageValue = Operation.PageValue
+  public typealias PageID = Operation.PageID
 
   public var initialPageId: PageID {
-    self.query.initialPageId
+    self.operation.initialPageId
   }
 
   public func pageId(
@@ -11,7 +11,7 @@ extension ModifiedQuery: InfiniteQueryRequest where Query: InfiniteQueryRequest 
     using paging: InfiniteQueryPaging<PageID, PageValue>,
     in context: OperationContext
   ) -> PageID? {
-    self.query.pageId(after: page, using: paging, in: context)
+    self.operation.pageId(after: page, using: paging, in: context)
   }
 
   public func pageId(
@@ -19,7 +19,7 @@ extension ModifiedQuery: InfiniteQueryRequest where Query: InfiniteQueryRequest 
     using paging: InfiniteQueryPaging<PageID, PageValue>,
     in context: OperationContext
   ) -> PageID? {
-    self.query.pageId(before: page, using: paging, in: context)
+    self.operation.pageId(before: page, using: paging, in: context)
   }
 
   public func fetchPage(
@@ -27,6 +27,6 @@ extension ModifiedQuery: InfiniteQueryRequest where Query: InfiniteQueryRequest 
     in context: OperationContext,
     with continuation: OperationContinuation<PageValue>
   ) async throws -> PageValue {
-    try await self.query.fetchPage(using: paging, in: context, with: continuation)
+    try await self.operation.fetchPage(using: paging, in: context, with: continuation)
   }
 }

@@ -1,7 +1,7 @@
 import Foundation
 import Operation
 
-extension QueryRequest {
+extension OperationRequest {
   public func refetchOnPost(
     of name: Notification.Name,
     center: NotificationCenter = .default

@@ -1,11 +1,11 @@
-extension QueryRequest {
+extension OperationRequest where Self: Sendable {
   /// Deduplicates fetches to this query.
   ///
   /// When 2 fetches on this query occur at the same time, the second fetch will not invoke this
   /// query, but rather wait for the result of the first fetch.
   ///
-  /// - Returns: A ``ModifiedQuery``.
-  public func deduplicated() -> ModifiedQuery<Self, _DeduplicationModifier<Self>> {
+  /// - Returns: A ``ModifiedOperation``.
+  public func deduplicated() -> ModifiedOperation<Self, _DeduplicationModifier<Self>> {
     self.modifier(
       _DeduplicationModifier { i1, i2 in
         if let query = self as? any InfiniteQueryRequest {
@@ -23,57 +23,62 @@ extension QueryRequest {
   /// query, but rather wait for the result of the first fetch.
   ///
   /// - Parameter removeDuplicates: A predicate to distinguish duplicate fetch attempts.
-  /// - Returns: A ``ModifiedQuery``.
+  /// - Returns: A ``ModifiedOperation``.
   public func deduplicated(
     by removeDuplicates: @escaping @Sendable (OperationContext, OperationContext) -> Bool
-  ) -> ModifiedQuery<Self, _DeduplicationModifier<Self>> {
+  ) -> ModifiedOperation<Self, _DeduplicationModifier<Self>> {
     self.modifier(_DeduplicationModifier(removeDuplicates: removeDuplicates))
   }
 }
 
-public struct _DeduplicationModifier<Query: QueryRequest>: QueryModifier {
+public struct _DeduplicationModifier<
+  Operation: OperationRequest & Sendable
+>: OperationModifier, Sendable {
   private let removeDuplicates: @Sendable (OperationContext, OperationContext) -> Bool
 
   init(removeDuplicates: @escaping @Sendable (OperationContext, OperationContext) -> Bool) {
     self.removeDuplicates = removeDuplicates
   }
 
-  public func setup(context: inout OperationContext, using query: Query) {
-    context.deduplicationStorage = DeduplicationStorage<Query>(
+  public func setup(context: inout OperationContext, using operation: Operation) {
+    context.deduplicationStorage = DeduplicationStorage<Operation>(
       removeDuplicates: self.removeDuplicates
     )
-    query.setup(context: &context)
+    operation.setup(context: &context)
   }
 
   public func fetch(
+    isolation: isolated (any Actor)?,
     in context: OperationContext,
-    using query: Query,
-    with continuation: OperationContinuation<Query.Value>
-  ) async throws -> Query.Value {
-    guard let storage = context.deduplicationStorage as? DeduplicationStorage<Query> else {
-      return try await query.fetch(in: context, with: continuation)
+    using operation: Operation,
+    with continuation: OperationContinuation<Operation.Value>
+  ) async throws -> Operation.Value {
+    guard let storage = context.deduplicationStorage as? DeduplicationStorage<Operation> else {
+      return try await operation.fetch(isolation: isolation, in: context, with: continuation)
     }
-    return try await storage.fetch(query: query, in: context, with: continuation)
+    return try await storage.fetch(operation: operation, in: context, with: continuation)
   }
 }
 
 // MARK: - DeduplicationStorage
 
-private final actor DeduplicationStorage<Query: QueryRequest> {
+private final actor DeduplicationStorage<Operation: OperationRequest & Sendable> {
   private let removeDuplicates: @Sendable (OperationContext, OperationContext) -> Bool
 
   private var idCounter = 0
-  private var entries = [(id: Int, context: OperationContext, task: Task<Query.Value, any Error>)]()
+  private var entries = [
+    (id: Int, context: OperationContext, task: Task<Operation.Value, any Error>)
+  ]()
 
   init(removeDuplicates: @escaping @Sendable (OperationContext, OperationContext) -> Bool) {
     self.removeDuplicates = removeDuplicates
   }
 
   func fetch(
-    query: Query,
+    operation: Operation,
     in context: OperationContext,
-    with continuation: OperationContinuation<Query.Value>
-  ) async throws -> Query.Value {
+    with continuation: OperationContinuation<Operation.Value>
+  ) async throws -> Operation.Value {
     if let task = self.task(for: context) {
       return try await task.cancellableValue
     }
@@ -81,13 +86,13 @@ private final actor DeduplicationStorage<Query: QueryRequest> {
     let id = self.idCounter
     let task = Task {
       defer { self.entries.removeAll { $0.id == id } }
-      return try await query.fetch(in: context, with: continuation)
+      return try await operation.fetch(isolation: self, in: context, with: continuation)
     }
     self.entries.append((id, context, task))
     return try await task.cancellableValue
   }
 
-  private func task(for context: OperationContext) -> Task<Query.Value, any Error>? {
+  private func task(for context: OperationContext) -> Task<Operation.Value, any Error>? {
     self.entries.first(where: { self.removeDuplicates($0.context, context) })?.task
   }
 }

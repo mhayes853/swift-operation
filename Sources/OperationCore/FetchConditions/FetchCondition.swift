@@ -1,4 +1,4 @@
-/// A protocol describing a condition for when ``QueryRequest`` should fetch its data.
+/// A protocol describing a condition for when ``OperationRequest`` should fetch its data.
 ///
 /// Fetch conditions power many features of the library such as: Automatically refetching your
 /// queries when the app re-enters from the background, automatically refetching when the user's

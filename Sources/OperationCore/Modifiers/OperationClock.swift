@@ -86,22 +86,22 @@ extension OperationClock {
   }
 }
 
-// MARK: - QueryModifier
+// MARK: - OperationModifier
 
-extension QueryRequest {
-  /// The ``OperationClock`` to use for this query.
+extension OperationRequest {
+  /// The ``OperationClock`` to use for this operation.
   ///
   /// - Parameter clock: A ``OperationClock``.
-  /// - Returns: A ``ModifiedQuery``.
-  public func clock<C>(_ clock: C) -> ModifiedQuery<Self, _OperationClockModifier<Self, C>> {
+  /// - Returns: A ``ModifiedOperation``.
+  public func clock<C>(_ clock: C) -> ModifiedOperation<Self, _OperationClockModifier<Self, C>> {
     self.modifier(_OperationClockModifier(clock: clock))
   }
 }
 
 public struct _OperationClockModifier<
-  Query: QueryRequest,
+  Operation: OperationRequest,
   C: OperationClock
->: _ContextUpdatingQueryModifier {
+>: _ContextUpdatingOperationModifier {
   let clock: C
 
   public func setup(context: inout OperationContext) {

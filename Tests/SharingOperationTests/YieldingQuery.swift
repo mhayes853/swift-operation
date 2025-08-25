@@ -1,6 +1,6 @@
 import Operation
 
-struct WithTaskMegaYieldModifier<Query: QueryRequest>: QueryModifier {
+struct WithTaskMegaYieldModifier<Operation: OperationRequest>: OperationModifier {
   func fetch(
     in context: OperationContext,
     using query: Query,
@@ -11,8 +11,8 @@ struct WithTaskMegaYieldModifier<Query: QueryRequest>: QueryModifier {
   }
 }
 
-extension QueryRequest {
-  func withTaskMegaYield() -> ModifiedQuery<Self, WithTaskMegaYieldModifier<Self>> {
+extension OperationRequest {
+  func withTaskMegaYield() -> ModifiedOperation<Self, WithTaskMegaYieldModifier<Self>> {
     self.modifier(WithTaskMegaYieldModifier())
   }
 }

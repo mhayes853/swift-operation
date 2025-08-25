@@ -63,13 +63,13 @@ public final class OperationClient: Sendable {
     let storeCreator: any OperationClient.StoreCreator
     var storeCache: any StoreCache
     var initialContext: OperationContext
-    var queryTypes = [OperationPath: Any.Type]()
+    var operationTypes = [OperationPath: Any.Type]()
 
     func createStore() -> CreateStore {
       CreateStore(
         creator: self.storeCreator,
         initialContext: self.initialContext,
-        queryTypes: MutableBox(value: self.queryTypes)
+        operationTypes: MutableBox(value: self.operationTypes)
       )
     }
   }
@@ -107,6 +107,19 @@ extension OperationClient {
 // MARK: - Store
 
 extension OperationClient {
+  /// Retrieves the ``OperationStore`` for a ``OperationRequest``.
+  ///
+  /// - Parameters:
+  ///   - operation: The operation.
+  ///   - initialState: The initial state of the operation.
+  /// - Returns: A ``OperationStore``.
+  public func store<Operation: OperationRequest & Sendable>(
+    for operation: Operation,
+    initialState: Operation.State
+  ) -> OperationStore<Operation.State> {
+    self.withStoreCreation(for: operation) { $0(for: operation, initialState: initialState) }
+  }
+
   /// Retrieves the ``OperationStore`` for a ``QueryRequest``.
   ///
   /// - Parameters:
@@ -183,20 +196,22 @@ extension OperationClient {
     self.withStoreCreation(for: mutation) { $0(for: mutation, initialValue: initialValue) }
   }
 
-  private func withStoreCreation<Query: QueryRequest>(
-    for query: Query,
-    _ create: @Sendable (borrowing CreateStore) -> OperationStore<Query.State>
-  ) -> OperationStore<Query.State> {
+  private func withStoreCreation<Operation: OperationRequest & Sendable>(
+    for operation: Operation,
+    _ create: @Sendable (borrowing CreateStore) -> OperationStore<Operation.State>
+  ) -> OperationStore<Operation.State> {
     self.state.withLock { state in
       let createStore = state.createStore()
-      defer { state.queryTypes = createStore.queryTypes.value }
+      defer { state.operationTypes = createStore.operationTypes.value }
       return state.storeCache.withStores { stores in
-        if let opaqueStore = stores[query.path] {
-          if let queryType = state.queryTypes[query.path], queryType != Query.self {
-            reportWarning(.duplicatePath(expectedType: queryType, foundType: Query.self))
+        if let opaqueStore = stores[operation.path] {
+          if let operationType = state.operationTypes[operation.path],
+            operationType != Operation.self
+          {
+            reportWarning(.duplicatePath(expectedType: operationType, foundType: Operation.self))
             return create(createStore)
           }
-          return opaqueStore.base as! OperationStore<Query.State>
+          return opaqueStore.base as! OperationStore<Operation.State>
         }
         let store = create(createStore)
         stores.update(OpaqueOperationStore(erasing: store))
@@ -225,9 +240,9 @@ extension OperationClient {
   ///
   /// - Parameter path: The path of the stores.
   /// - Returns: A collection of ``OpaqueOperationStore`` instances.
-  public func stores(matching path: OperationPath) -> OperationPathableCollection<
-    OpaqueOperationStore
-  > {
+  public func stores(
+    matching path: OperationPath
+  ) -> OperationPathableCollection<OpaqueOperationStore> {
     self.state.withLock { $0.storeCache.stores().collection(matching: path) }
   }
 
@@ -303,7 +318,7 @@ extension OperationClient {
   ) rethrows -> T {
     try self.state.withLock { state in
       let createStore = state.createStore()
-      defer { state.queryTypes = createStore.queryTypes.value }
+      defer { state.operationTypes = createStore.operationTypes.value }
       return try state.storeCache.withStores { stores in
         let beforeEntries = stores.collection(matching: path)
         var afterEntries = beforeEntries
@@ -344,7 +359,7 @@ extension OperationClient {
   ) rethrows -> T {
     try self.state.withLock { state in
       let createStore = state.createStore()
-      defer { state.queryTypes = createStore.queryTypes.value }
+      defer { state.operationTypes = createStore.operationTypes.value }
       return try state.storeCache.withStores { stores in
         let beforeEntries = OperationPathableCollection<OperationStore<State>>(
           stores.collection(matching: path).compactMap { $0.base as? OperationStore<State> }
@@ -412,7 +427,7 @@ extension OperationContext {
 extension OperationWarning {
   public static func duplicatePath(expectedType: Any.Type, foundType: Any.Type) -> Self {
     """
-    A OperationClient has detected a duplicate OperationPath used for different QueryProtocol conformances.
+    A OperationClient has detected a duplicate OperationPath used for different OperationRequest conformances.
 
         Expected: \(String(reflecting: expectedType))
            Found: \(String(reflecting: foundType))
@@ -426,8 +441,8 @@ extension OperationWarning {
     between different OperationStore instances, and you will not be able to pattern match the query \
     when calling ``OperationClient.stores(matching:)``.
 
-    To fix this, ensure that all of your QueryRequest conformances return unique OperationPath \
-    instances. If your QueryRequest conformance type conforms to Hashable or Identifiable, the \
+    To fix this, ensure that all of your OperationRequest conformances return unique OperationPath \
+    instances. If your OperationRequest conformance type conforms to Hashable or Identifiable, the \
     default OperationPath is represented by a single element path containing the instance of the query \
     or its id respectively.
     """

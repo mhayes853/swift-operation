@@ -2,7 +2,7 @@ import Foundation
 
 // MARK: - StaleWhenRevalidateQuery
 
-extension QueryRequest {
+extension OperationRequest {
   /// Marks ``OperationStore/isStale`` as true for this query whenever the specified predicate is true.
   ///
   /// Chaining multiple instances of any modifier that begins with `stale` will result in an OR
@@ -19,10 +19,10 @@ extension QueryRequest {
   /// ```
   ///
   /// - Parameter predicate: A predicate to evaluate whether or not ``OperationStore/isStale`` is true.
-  /// - Returns: A ``ModifiedQuery``.
+  /// - Returns: A ``ModifiedOperation``.
   public func staleWhen(
     predicate: @escaping @Sendable (State, OperationContext) -> Bool
-  ) -> ModifiedQuery<Self, _StaleWhenModifier<Self>> {
+  ) -> ModifiedOperation<Self, _StaleWhenModifier<Self>> {
     self.modifier(_StaleWhenModifier(predicate: predicate))
   }
 
@@ -40,10 +40,10 @@ extension QueryRequest {
   /// ```
   ///
   /// - Parameter condition: A ``FetchCondition`` to indicate whether or not ``OperationStore/isStale`` is true.
-  /// - Returns: A ``ModifiedQuery``.
+  /// - Returns: A ``ModifiedOperation``.
   public func staleWhen(
     condition: some FetchCondition
-  ) -> ModifiedQuery<Self, _StaleWhenModifier<Self>> {
+  ) -> ModifiedOperation<Self, _StaleWhenModifier<Self>> {
     self.modifier(
       _StaleWhenModifier { _, context in condition.isSatisfied(in: context) }
     )
@@ -64,8 +64,8 @@ extension QueryRequest {
   /// }
   /// ```
   ///
-  /// - Returns: A ``ModifiedQuery``.
-  public func staleWhenNoValue() -> ModifiedQuery<Self, _StaleWhenModifier<Self>>
+  /// - Returns: A ``ModifiedOperation``.
+  public func staleWhenNoValue() -> ModifiedOperation<Self, _StaleWhenModifier<Self>>
   where State.StateValue == Value? {
     self.staleWhen { state, _ in state.currentValue == nil }
   }
@@ -84,8 +84,10 @@ extension QueryRequest {
   /// ```
   ///
   /// - Parameter seconds: A `TimeInterval` at which ``OperationStore/isStale`` is true after a successful fetch.
-  /// - Returns: A ``ModifiedQuery``.
-  public func stale(after seconds: TimeInterval) -> ModifiedQuery<Self, _StaleWhenModifier<Self>> {
+  /// - Returns: A ``ModifiedOperation``.
+  public func stale(
+    after seconds: TimeInterval
+  ) -> ModifiedOperation<Self, _StaleWhenModifier<Self>> {
     self.modifier(
       _StaleWhenModifier { state, context in
         guard let date = state.valueLastUpdatedAt else { return true }
@@ -96,12 +98,14 @@ extension QueryRequest {
   }
 }
 
-public struct _StaleWhenModifier<Query: QueryRequest>: _ContextUpdatingQueryModifier {
-  let predicate: @Sendable (Query.State, OperationContext) -> Bool
+public struct _StaleWhenModifier<
+  Operation: OperationRequest
+>: _ContextUpdatingOperationModifier, Sendable {
+  let predicate: @Sendable (Operation.State, OperationContext) -> Bool
 
   public func setup(context: inout OperationContext) {
     context.staleWhenRevalidateCondition.add { state, context in
-      guard let state = state.base as? Query.State else {
+      guard let state = state.base as? Operation.State else {
         return false
       }
       return predicate(state, context)
@@ -116,19 +120,13 @@ public struct StaleWhenRevalidateCondition: Sendable {
   private var predicates = [@Sendable (OpaqueOperationState, OperationContext) -> Bool]()
 
   public init() {}
-}
 
-@_spi(StaleWhenRevalidateCondition)
-extension StaleWhenRevalidateCondition {
   public mutating func add(
     predicate: @escaping @Sendable (OpaqueOperationState, OperationContext) -> Bool
   ) {
     self.predicates.append(predicate)
   }
-}
 
-@_spi(StaleWhenRevalidateCondition)
-extension StaleWhenRevalidateCondition {
   public func evaluate(state: some OperationState, in context: OperationContext) -> Bool {
     let opaqueState = OpaqueOperationState(state)
     var current = true

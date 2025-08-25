@@ -1,6 +1,6 @@
 // MARK: - QueryRequest
 
-extension QueryRequest {
+extension OperationRequest {
   /// Indicates what severities that this query should be evicted from
   /// ``OperationClient/DefaultStoreCache`` upon receiving a memory pressure notification.
   ///
@@ -13,15 +13,17 @@ extension QueryRequest {
   /// ```
   ///
   /// - Parameter pressure: The ``MemoryPressure`` at which this query should be evicted.
-  /// - Returns: A ``ModifiedQuery``.
+  /// - Returns: A ``ModifiedOperation``.
   public func evictWhen(
     pressure: MemoryPressure
-  ) -> ModifiedQuery<Self, _EvictWhenPressureModifier<Self>> {
+  ) -> ModifiedOperation<Self, _EvictWhenPressureModifier<Self>> {
     self.modifier(_EvictWhenPressureModifier(pressure: pressure))
   }
 }
 
-public struct _EvictWhenPressureModifier<Query: QueryRequest>: _ContextUpdatingQueryModifier {
+public struct _EvictWhenPressureModifier<
+  Operation: OperationRequest
+>: _ContextUpdatingOperationModifier {
   let pressure: MemoryPressure
 
   public func setup(context: inout OperationContext) {

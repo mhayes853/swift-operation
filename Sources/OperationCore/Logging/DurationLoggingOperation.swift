@@ -2,30 +2,31 @@
   import Logging
   import Foundation
 
-  extension QueryRequest {
+  extension OperationRequest {
     /// Logs the runtime duration of each fetch for this query in seconds.
     ///
     /// - Parameters:
     ///   - logger: A `Logger` to use (defaults to the logger in ``OperationContext``.
     ///   - level: The level to log the duration message at.
-    /// - Returns: A ``ModifiedQuery``.
+    /// - Returns: A ``ModifiedOperation``.
     public func logDuration(
       with logger: Logger? = nil,
       at level: Logger.Level = .info
-    ) -> ModifiedQuery<Self, _DurationLoggingModifier<Self>> {
+    ) -> ModifiedOperation<Self, _DurationLoggingModifier<Self>> {
       self.modifier(_DurationLoggingModifier(logger: logger, level: level))
     }
   }
 
-  public struct _DurationLoggingModifier<Query: QueryRequest>: QueryModifier {
+  public struct _DurationLoggingModifier<Operation: OperationRequest>: OperationModifier, Sendable {
     let logger: Logger?
     let level: Logger.Level
 
     public func fetch(
+      isolation: isolated (any Actor)?,
       in context: OperationContext,
-      using query: Query,
-      with continuation: OperationContinuation<Query.Value>
-    ) async throws -> Query.Value {
+      using operation: Operation,
+      with continuation: OperationContinuation<Operation.Value>
+    ) async throws -> Operation.Value {
       let logger = self.logger ?? context.operationLogger
       let start = context.operationClock.now()
       defer {
@@ -35,12 +36,12 @@
           level: self.level,
           "An operation finished running.",
           metadata: [
-            "operation.type": "\(query._debugTypeName)",
+            "operation.type": "\(operation._debugTypeName)",
             "operation.duration": "\(duration.durationFormatted())"
           ]
         )
       }
-      return try await query.fetch(in: context, with: continuation)
+      return try await operation.fetch(isolation: isolation, in: context, with: continuation)
     }
   }
 #endif

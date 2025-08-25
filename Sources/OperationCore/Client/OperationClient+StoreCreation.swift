@@ -4,25 +4,25 @@ extension OperationClient {
   /// A protocol that controls how a ``OperationClient`` creates ``OperationStore`` instances.
   ///
   /// Conform to this protocol when you want to apply custom modifiers by default to all of your
-  /// queries.
+  /// operations.
   /// ```swift
   /// struct MyStoreCreator: OperationClient.StoreCreator {
-  ///    func store<Query: QueryRequest>(
-  ///      for query: Query,
+  ///    func store<Operation: OperationRequest>(
+  ///      for operation: Operation,
   ///      in context: OperationContext,
-  ///      with initialState: Query.State
-  ///    ) -> OperationStore<Query.State> {
-  ///      if query is any MutationRequest {
+  ///      with initialState: Operation.State
+  ///    ) -> OperationStore<Operation.State> {
+  ///      if operation is any MutationRequest {
   ///        // Modifiers applied only to mutations
   ///        return .detached(
-  ///          query: query.retry(limit: 3),
+  ///          operation: operation.retry(limit: 3),
   ///          initialState: initialState,
   ///          initialContext: context
   ///        )
   ///      }
-  ///      // Modifiers applied only to queries and infinite queries
+  ///      // Modifiers applied only to operations and infinite operations
   ///      return .detached(
-  ///        query: query.retry(limit: 3)
+  ///        operation: operation.retry(limit: 3)
   ///          .enableAutomaticFetching(onlyWhen: .always(true))
   ///          .customModifier()
   ///          .deduplicated(),
@@ -32,20 +32,20 @@ extension OperationClient {
   ///    }
   ///  }
   /// ```
-  /// Read <doc:QueryDefaults> to learn more about how to set defaults for your queries.
+  /// Read <doc:QueryDefaults> to learn more about how to set defaults for your operations.
   public protocol StoreCreator {
-    /// Creates a ``OperationStore`` for the specified ``QueryRequest``.
+    /// Creates a ``OperationStore`` for the specified ``OperationRequest``.
     ///
     /// - Parameters:
-    ///   - query: The query.
+    ///   - operation: The operation.
     ///   - context: The initial ``OperationContext`` of the store.
-    ///   - initialState: The initial state of the query.
+    ///   - initialState: The initial state of the operation.
     /// - Returns: A ``OperationStore``.
-    func store<Query: QueryRequest>(
-      for query: Query,
+    func store<Operation: OperationRequest>(
+      for operation: Operation,
       in context: OperationContext,
-      with initialState: Query.State
-    ) -> OperationStore<Query.State>
+      with initialState: Operation.State
+    ) -> OperationStore<Operation.State>
   }
 }
 
@@ -79,23 +79,37 @@ extension OperationClient {
   public struct CreateStore: ~Copyable {
     let creator: any OperationClient.StoreCreator
     let initialContext: OperationContext
-    let queryTypes: MutableBox<[OperationPath: Any.Type]>
+    let operationTypes: MutableBox<[OperationPath: Any.Type]>
   }
 }
 
 extension OperationClient.CreateStore {
+  /// Creates a ``OperationStore`` for an ``OperationRequest``.
+  ///
+  /// - Parameters:
+  ///   - operation: The operation,.
+  ///   - initialState: The initial state of the operation.
+  /// - Returns: An ``OperationStore``.
+  public func callAsFunction<Operation: OperationRequest & Sendable>(
+    for operation: Operation,
+    initialState: Operation.State
+  ) -> OperationStore<Operation.State> {
+    self.operationTypes.value[operation.path] = Operation.self
+    return self.creator.store(for: operation, in: self.initialContext, with: initialState)
+  }
+
   /// Creates a ``OperationStore`` for a ``QueryRequest``.
   ///
   /// - Parameters:
   ///   - query: The query.
   ///   - initialState: The initial state of the query.
   /// - Returns: A ``OperationStore``.
+  @_disfavoredOverload
   public func callAsFunction<Query: QueryRequest>(
     for query: Query,
     initialState: Query.State
   ) -> OperationStore<Query.State> {
-    self.queryTypes.value[query.path] = Query.self
-    return self.creator.store(for: query, in: self.initialContext, with: initialState)
+    self(for: query, initialState: initialState)
   }
 
   /// Creates a ``OperationStore`` for a ``QueryRequest``.

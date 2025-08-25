@@ -1,16 +1,16 @@
 import Dependencies
 import Operation
 
-extension QueryRequest {
+extension OperationRequest {
   public func previewDelay(
     shouldDisable: Bool = false,
     _ delay: Duration? = nil
-  ) -> ModifiedQuery<Self, _PreviewDelayModifier<Self>> {
+  ) -> ModifiedOperation<Self, _PreviewDelayModifier<Self>> {
     self.modifier(_PreviewDelayModifier(shouldDisable: shouldDisable, delay: delay))
   }
 }
 
-public struct _PreviewDelayModifier<Query: QueryRequest>: QueryModifier {
+public struct _PreviewDelayModifier<Query: QueryRequest>: OperationModifier {
   let shouldDisable: Bool
   let delay: Duration?
 

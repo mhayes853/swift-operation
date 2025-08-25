@@ -74,7 +74,7 @@ import Foundation
 /// // ...
 /// ```
 @dynamicMemberLookup
-public final class OperationStore<State: OperationState>: Sendable {
+public final class OperationStore<State: OperationState>: @unchecked Sendable {
   private struct Values {
     var state: State
     var taskHerdId: Int
@@ -83,18 +83,21 @@ public final class OperationStore<State: OperationState>: Sendable {
     var subscribeTask: Task<State.OperationValue, any Error>?
   }
 
-  private let query: any QueryRequest<State.OperationValue, State>
+  // NB: Does not compile when adding '& Sendable' for some reason. We'll make the store
+  // @unchecked Sendable because it can only be constructed with a Sendable operation.
+  private let operation: any OperationRequest<State.OperationValue, State>
+
   private let values: RecursiveLock<Values>
   private let subscriptions: OperationSubscriptions<QueryEventHandler<State>>
 
-  private init<Query: QueryRequest>(
-    query: Query,
-    initialState: Query.State,
+  private init<Operation: OperationRequest & Sendable>(
+    operation: Operation,
+    initialState: Operation.State,
     initialContext: OperationContext
-  ) where State == Query.State, State.OperationValue == Query.Value {
+  ) where State == Operation.State, State.OperationValue == Operation.Value {
     var context = initialContext
-    query.setup(context: &context)
-    self.query = query
+    operation.setup(context: &context)
+    self.operation = operation
     self.values = RecursiveLock(
       Values(
         state: initialState,
@@ -105,14 +108,14 @@ public final class OperationStore<State: OperationState>: Sendable {
       )
     )
     self.subscriptions = OperationSubscriptions()
-    self.setupQuery(with: context, initialState: initialState)
+    self.setupOperation(with: context, initialState: initialState)
   }
 
   deinit {
     self.values.withLock { $0.controllerSubscription.cancel() }
   }
 
-  private func setupQuery(with initialContext: OperationContext, initialState: State) {
+  private func setupOperation(with initialContext: OperationContext, initialState: State) {
     let controls = OperationControls(
       store: self,
       defaultContext: initialContext,
@@ -142,70 +145,18 @@ extension OperationStore {
   /// Only use a detached store if you want a separate instances of a query runtime for the same query.
   ///
   /// - Parameters:
-  ///   - query: The ``QueryRequest``.
+  ///   - operation: The ``OperationRequest``.
   ///   - initialState: The initial state.
   ///   - initialContext: The default ``OperationContext``.
   /// - Returns: A store.
-  public static func detached<Query: QueryRequest>(
-    query: Query,
-    initialState: Query.State,
+  public static func detached<Operation: OperationRequest & Sendable>(
+    operation: Operation,
+    initialState: Operation.State,
     initialContext: OperationContext = OperationContext()
-  ) -> OperationStore<Query.State> where State == Query.State {
-    OperationStore<Query.State>(
-      query: query,
+  ) -> OperationStore<Operation.State> where State == Operation.State {
+    OperationStore<Operation.State>(
+      operation: operation,
       initialState: initialState,
-      initialContext: initialContext
-    )
-  }
-
-  /// Creates a detached store.
-  ///
-  /// Detached stores are not connected to a ``OperationClient``. As such, accessing the
-  /// ``OperationContext/OperationClient`` context property in your query will always yield a nil value.
-  /// Only use a detached store if you want a separate instances of a query runtime for the same query.
-  ///
-  /// - Parameters:
-  ///   - query: The ``QueryRequest``.
-  ///   - initialValue: The initial value.
-  ///   - initialContext: The default ``OperationContext``.
-  /// - Returns: A store.
-  public static func detached<Query: QueryRequest>(
-    query: Query,
-    initialValue: Query.State.StateValue,
-    initialContext: OperationContext = OperationContext()
-  ) -> OperationStore<Query.State>
-  where
-    Query.State == QueryState<Query.Value?, Query.Value>,
-    State == QueryState<Query.Value?, Query.Value>
-  {
-    OperationStore<Query.State>(
-      query: query,
-      initialState: Query.State(initialValue: initialValue),
-      initialContext: initialContext
-    )
-  }
-
-  /// Creates a detached store.
-  ///
-  /// Detached stores are not connected to a ``OperationClient``. As such, accessing the
-  /// ``OperationContext/OperationClient`` context property in your query will always yield a nil value.
-  /// Only use a detached store if you want a separate instances of a query runtime for the same query.
-  ///
-  /// - Parameters:
-  ///   - query: The default ``QueryRequest``.
-  ///   - initialContext: The default ``OperationContext``.
-  /// - Returns: A store.
-  public static func detached<Query: QueryRequest>(
-    query: DefaultQuery<Query>,
-    initialContext: OperationContext = OperationContext()
-  ) -> OperationStore<DefaultQuery<Query>.State>
-  where
-    DefaultQuery<Query>.State == QueryState<Query.Value, Query.Value>,
-    State == DefaultQuery<Query>.State
-  {
-    OperationStore<DefaultQuery<Query>.State>(
-      query: query,
-      initialState: DefaultQuery<Query>.State(initialValue: query.defaultValue),
       initialContext: initialContext
     )
   }
@@ -216,7 +167,7 @@ extension OperationStore {
 extension OperationStore: OperationPathable {
   /// The ``OperationPath`` of the query managed by this store.
   public var path: OperationPath {
-    self.query.path
+    self.operation.path
   }
 }
 
@@ -395,9 +346,9 @@ extension OperationStore {
   /// - Parameter context: The ``OperationContext`` for the task.
   /// - Returns: A task to fetch the query's data.
   @discardableResult
-  public func fetchTask(using context: OperationContext? = nil) -> OperationTask<
-    State.OperationValue
-  > {
+  public func fetchTask(
+    using context: OperationContext? = nil
+  ) -> OperationTask<State.OperationValue> {
     self.editValuesWithStateChangeEvent(in: context) { values in
       var context = context ?? self.context
       context.currentFetchingOperationStore = OpaqueOperationStore(erasing: self)
@@ -430,7 +381,8 @@ extension OperationStore {
         task.inner.withLock { $0 = .finished }
       }
       do {
-        let value = try await self.query.fetch(
+        let value = try await self.operation.fetch(
+          isolation: nil,
           in: context,
           with: self.operationContinuation(
             task: task,

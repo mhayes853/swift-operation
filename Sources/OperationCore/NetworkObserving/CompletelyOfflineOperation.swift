@@ -1,4 +1,4 @@
-extension QueryRequest {
+extension OperationRequest {
   /// Indicates that the query runs completely offline, and therefore does not attempt to make any
   /// network connections.
   ///
@@ -17,15 +17,17 @@ extension QueryRequest {
   /// - That ``OperationContext/operationBackoffFunction`` is set to ``OperationBackoffFunction/noBackoff``.
   ///
   /// - Parameter isOffline: Whether the query is completely offline. Defaults to `true`. If false, no modifications are made to the query.
-  /// - Returns: A ``ModifiedQuery``.
+  /// - Returns: A ``ModifiedOperation``.
   public func completelyOffline(
     _ isOffline: Bool = true
-  ) -> ModifiedQuery<Self, _CompletelyOfflineModifier<Self>> {
+  ) -> ModifiedOperation<Self, _CompletelyOfflineModifier<Self>> {
     self.modifier(_CompletelyOfflineModifier(isOffline: isOffline))
   }
 }
 
-public struct _CompletelyOfflineModifier<Query: QueryRequest>: _ContextUpdatingQueryModifier {
+public struct _CompletelyOfflineModifier<
+  Operation: OperationRequest
+>: _ContextUpdatingOperationModifier {
   let isOffline: Bool
 
   public func setup(context: inout OperationContext) {

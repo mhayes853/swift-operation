@@ -56,7 +56,7 @@ extension OperationClient {
       with initialState: Query.State
     ) -> OperationStore<Query.State> {
       let backoff = self.backoff ?? context.operationBackoffFunction
-      let delayer = AnyDelayer(self.delayer ?? context.queryDelayer)
+      let delayer = AnyDelayer(self.delayer ?? context.operationDelayer)
       if query is any MutationRequest {
         return .detached(
           query: query.retry(limit: self.retryLimit)

@@ -221,7 +221,7 @@ extension InfiniteQueryValue.FetchValue.PreviousPage: Equatable where PageValue:
 ///  ``OperationStore/fetchPreviousPage(using:handler:)`` respectively. If you just want to check
 ///  whether or not fetching additional pages is possible, you can check the boolean properties
 ///  ``InfiniteQueryState/hasNextPage`` or ``InfiniteQueryState/hasPreviousPage``.
-public protocol InfiniteQueryRequest<PageID, PageValue>: QueryRequest
+public protocol InfiniteQueryRequest<PageID, PageValue>: OperationRequest, Sendable
 where
   Value == InfiniteQueryValue<PageID, PageValue>,
   State == InfiniteQueryState<PageID, PageValue>
@@ -294,6 +294,7 @@ extension InfiniteQueryRequest {
   }
 
   public func fetch(
+    isolation: isolated (any Actor)?,
     in context: OperationContext,
     with continuation: OperationContinuation<Value>
   ) async throws -> Value {

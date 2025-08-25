@@ -1,19 +1,19 @@
-extension QueryRequest {
+extension OperationRequest {
   /// Indicates what level of ``NetworkConnectionStatus`` is necessary for this query to be
   /// considered as "connected to the network".
   ///
   /// - Parameter status: The ``NetworkConnectionStatus``.
-  /// - Returns: A ``ModifiedQuery``.
+  /// - Returns: A ``ModifiedOperation``.
   public func satisfiedConnectionStatus(
     _ status: NetworkConnectionStatus
-  ) -> ModifiedQuery<Self, _SatisfiedConnectionStatusModifier<Self>> {
+  ) -> ModifiedOperation<Self, _SatisfiedConnectionStatusModifier<Self>> {
     self.modifier(_SatisfiedConnectionStatusModifier(status: status))
   }
 }
 
 public struct _SatisfiedConnectionStatusModifier<
-  Query: QueryRequest
->: _ContextUpdatingQueryModifier {
+  Operation: OperationRequest
+>: _ContextUpdatingOperationModifier {
   let status: NetworkConnectionStatus
 
   public func setup(context: inout OperationContext) {

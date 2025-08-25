@@ -21,7 +21,7 @@ extension OperationStore {
     initialContext: OperationContext = OperationContext()
   ) -> OperationStore<State> where State == InfiniteQueryState<State.PageID, State.PageValue> {
     .detached(
-      query: query,
+      operation: query,
       initialState: InfiniteQueryState(
         initialValue: initialValue,
         initialPageId: query.initialPageId

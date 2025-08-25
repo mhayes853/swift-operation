@@ -134,23 +134,23 @@ extension OperationBackoffFunction: CustomStringConvertible {
   }
 }
 
-// MARK: - QueryModifier
+// MARK: - OperationModifier
 
-extension QueryRequest {
-  /// Sets the ``OperationBackoffFunction`` to use for this query.
+extension OperationRequest {
+  /// Sets the ``OperationBackoffFunction`` to use for this operation.
   ///
   /// - Parameter function: The ``OperationBackoffFunction`` to use.
-  /// - Returns: A ``ModifiedQuery``.
+  /// - Returns: A ``ModifiedOperation``.
   public func backoff(
     _ function: OperationBackoffFunction
-  ) -> ModifiedQuery<Self, _OperationBackoffFunctionModifier<Self>> {
+  ) -> ModifiedOperation<Self, _OperationBackoffFunctionModifier<Self>> {
     self.modifier(_OperationBackoffFunctionModifier(function: function))
   }
 }
 
 public struct _OperationBackoffFunctionModifier<
-  Query: QueryRequest
->: _ContextUpdatingQueryModifier {
+  Operation: OperationRequest
+>: _ContextUpdatingOperationModifier {
   let function: OperationBackoffFunction
 
   public func setup(context: inout OperationContext) {

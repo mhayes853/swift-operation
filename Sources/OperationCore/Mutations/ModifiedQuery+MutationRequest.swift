@@ -1,9 +1,9 @@
-extension ModifiedQuery: MutationRequest where Query: MutationRequest {
+extension ModifiedOperation: MutationRequest where Operation: MutationRequest {
   public func mutate(
-    with arguments: Query.Arguments,
+    with arguments: Operation.Arguments,
     in context: OperationContext,
-    with continuation: OperationContinuation<Query.ReturnValue>
-  ) async throws -> Query.ReturnValue {
-    try await self.query.mutate(with: arguments, in: context, with: continuation)
+    with continuation: OperationContinuation<Operation.ReturnValue>
+  ) async throws -> Operation.ReturnValue {
+    try await self.operation.mutate(with: arguments, in: context, with: continuation)
   }
 }

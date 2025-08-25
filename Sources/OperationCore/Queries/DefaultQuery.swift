@@ -1,4 +1,4 @@
-extension QueryRequest {
+extension OperationRequest {
   /// Adds a default value to this query.
   ///
   /// - Parameter value: The default value for this query.

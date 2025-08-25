@@ -15,7 +15,7 @@ extension InfiniteQueryRequest {
 /// A query that provides a default value to an ``InfiniteQueryRequest``.
 ///
 /// You create instances of this query through ``InfiniteQueryRequest/defaultValue(_:)``.
-public struct DefaultInfiniteQuery<Query: InfiniteQueryRequest>: QueryRequest {
+public struct DefaultInfiniteQuery<Query: InfiniteQueryRequest>: OperationRequest {
   let _defaultValue: @Sendable () -> Query.State.StateValue
 
   /// The base query.
@@ -39,10 +39,11 @@ public struct DefaultInfiniteQuery<Query: InfiniteQueryRequest>: QueryRequest {
   }
 
   public func fetch(
+    isolation: isolated (any Actor)?,
     in context: OperationContext,
     with continuation: OperationContinuation<Query.Value>
   ) async throws -> Query.Value {
-    try await self.query.fetch(in: context, with: continuation)
+    try await self.query.fetch(isolation: isolation, in: context, with: continuation)
   }
 }
 
