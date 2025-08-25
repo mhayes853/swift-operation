@@ -1,7 +1,7 @@
 import CanIClimbKit
 import CustomDump
 import Dependencies
-import SharingQuery
+import SharingOperation
 import Testing
 
 extension DependenciesTestSuite {

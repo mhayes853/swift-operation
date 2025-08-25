@@ -1,5 +1,5 @@
 import Dependencies
-import Query
+import Operation
 
 extension QueryRequest {
   public func previewDelay(

@@ -1,6 +1,6 @@
 import Dependencies
 import Foundation
-import SharingQuery
+import SharingOperation
 import SwiftNavigation
 
 // MARK: - Edit

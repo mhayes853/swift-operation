@@ -1,6 +1,6 @@
 import CustomDump
 import Dependencies
-import SharingQuery
+import SharingOperation
 import Testing
 
 @testable import CaseStudies

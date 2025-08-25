@@ -1,6 +1,6 @@
 import CloudKit
 import Dependencies
-import Query
+import Operation
 
 // MARK: - Query
 

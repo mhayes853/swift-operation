@@ -2,7 +2,7 @@ import AuthenticationServices
 import Dependencies
 import IssueReporting
 import Observation
-import SharingQuery
+import SharingOperation
 import SwiftUI
 import SwiftUINavigation
 

@@ -1,5 +1,5 @@
 import Foundation
-import Query
+import Operation
 
 // MARK: - Tokens
 

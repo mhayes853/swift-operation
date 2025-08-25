@@ -1,4 +1,4 @@
-import Query
+import Operation
 import SwiftUI
 
 struct BasicQueryStateView<State: QueryStateProtocol, Content: View>: View
@@ -8,10 +8,10 @@ where State.StateValue == State.StatusValue? {
 
   var body: some View {
     switch self.state.status {
-    case let .result(.success(value)):
+    case .result(.success(let value)):
       self.content(value)
 
-    case let .result(.failure(error)):
+    case .result(.failure(let error)):
       Text(error.localizedDescription).foregroundStyle(.red)
 
     default:
@@ -31,10 +31,10 @@ struct BasicInfiniteQueryStateView<State: _InfiniteQueryStateProtocol, Content: 
 
   var body: some View {
     switch self.state.status {
-    case let .result(.success(value)):
+    case .result(.success(let value)):
       self.content(value)
 
-    case let .result(.failure(error)):
+    case .result(.failure(let error)):
       Text(error.localizedDescription).foregroundStyle(.red)
 
     default:

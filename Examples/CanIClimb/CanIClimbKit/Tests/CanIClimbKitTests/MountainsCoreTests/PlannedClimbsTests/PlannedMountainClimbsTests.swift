@@ -2,7 +2,7 @@ import CanIClimbKit
 import CustomDump
 import Foundation
 import GRDB
-import Query
+import Operation
 import Testing
 
 @Suite("PlannedMountainClimbs tests")

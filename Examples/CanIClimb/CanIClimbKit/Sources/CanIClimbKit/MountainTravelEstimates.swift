@@ -2,7 +2,7 @@ import Combine
 import Dependencies
 import MapKit
 import Observation
-import SharingQuery
+import SharingOperation
 import SwiftUI
 import SwiftUINavigation
 

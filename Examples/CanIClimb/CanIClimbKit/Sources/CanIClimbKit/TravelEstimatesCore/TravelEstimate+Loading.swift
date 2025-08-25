@@ -1,6 +1,6 @@
 import Dependencies
 import MapKit
-import Query
+import Operation
 
 // MARK: - Request
 

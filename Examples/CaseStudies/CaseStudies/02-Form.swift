@@ -1,5 +1,5 @@
 import IssueReporting
-import SharingQuery
+import SharingOperation
 import SwiftUI
 import SwiftUINavigation
 

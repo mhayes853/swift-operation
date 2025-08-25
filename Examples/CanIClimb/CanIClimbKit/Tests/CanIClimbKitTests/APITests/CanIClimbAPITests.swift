@@ -1,7 +1,7 @@
 import CanIClimbKit
 import CustomDump
 import Foundation
-import Query
+import Operation
 import Testing
 
 @Suite("CanIClimbAPI tests")

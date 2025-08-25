@@ -1,5 +1,5 @@
 import Foundation
-import Query
+import Operation
 
 extension QueryRequest {
   public func refetchOnPost(

@@ -1,5 +1,5 @@
 import Dependencies
-import SharingQuery
+import SharingOperation
 import Tagged
 import UUIDV7
 

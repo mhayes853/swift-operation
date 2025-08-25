@@ -1,5 +1,5 @@
 import Foundation
-import SharingQuery
+import SharingOperation
 import SwiftUI
 
 struct BasicSharingCaseStudy: CaseStudy {

@@ -1,4 +1,4 @@
-import Query
+import Operation
 
 extension QueryClient {
   static func testInstance() -> QueryClient {

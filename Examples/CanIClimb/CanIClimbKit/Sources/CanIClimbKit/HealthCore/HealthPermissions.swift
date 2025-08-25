@@ -1,7 +1,7 @@
 import Dependencies
 import GRDB
 import HealthKit
-import Query
+import Operation
 import StructuredQueriesGRDB
 import SwiftUINavigation
 

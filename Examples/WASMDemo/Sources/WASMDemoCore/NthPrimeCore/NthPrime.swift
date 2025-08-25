@@ -1,6 +1,6 @@
 import Dependencies
 import Foundation
-import Query
+import Operation
 
 // MARK: - NthPrime
 

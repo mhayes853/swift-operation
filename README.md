@@ -1,4 +1,4 @@
-# Swift Query (WIP)
+# Swift Operation (WIP)
 
 [![CI](https://github.com/mhayes853/swift-query/actions/workflows/ci.yml/badge.svg)](https://github.com/mhayes853/swift-query/actions/workflows/ci.yml)
 
@@ -23,7 +23,7 @@ All of this can require lots of boilerplate code to manage, and is not code that
 The first thing you'll need to do is create a data type and a `QueryRequest` for the data you want to fetch.
 
 ```swift
-import Query
+import Operation
 
 struct Post: Codable, Sendable, Identifiable {
   typealias ID = Int
@@ -81,7 +81,7 @@ From here, there are a variety of ways that you can proceed depending on what te
 In SwiftUI, you can easily observe the state of your query inside a view.
 
 ```swift
-import QuerySwiftUI
+import OperationSwiftUI
 
 struct PostView: View {
   @State.Query<Post.Query> var state: Post.Query.State
@@ -113,7 +113,7 @@ struct PostView: View {
 With [Sharing](https://github.com/pointfreeco/swift-sharing), you can easily observe the state of your query using the `@SharedQuery` property wrapper.
 
 ```swift
-import SharingQuery
+import SharingOperation
 
 // This will begin fetching the post.
 @SharedQuery(Post.query(for: 1)) var post

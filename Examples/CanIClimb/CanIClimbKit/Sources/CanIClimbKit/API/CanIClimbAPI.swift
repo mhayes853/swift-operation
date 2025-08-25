@@ -1,7 +1,7 @@
 import Foundation
 import IssueReporting
+import Operation
 import OrderedCollections
-import Query
 import Tagged
 import UUIDV7
 

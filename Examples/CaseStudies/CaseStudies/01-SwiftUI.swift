@@ -1,5 +1,5 @@
 import Foundation
-import QuerySwiftUI
+import OperationSwiftUI
 import SwiftUI
 
 struct BasicSwiftUICaseStudy: CaseStudy {

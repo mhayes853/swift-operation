@@ -1,7 +1,7 @@
 import IdentifiedCollections
 import Observation
 import Sharing
-import SharingQuery
+import SharingOperation
 import SwiftUI
 import SwiftUINavigation
 import Tagged

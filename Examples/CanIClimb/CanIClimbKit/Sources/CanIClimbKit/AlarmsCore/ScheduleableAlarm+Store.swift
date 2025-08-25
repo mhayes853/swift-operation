@@ -1,6 +1,6 @@
 import Dependencies
 import IdentifiedCollections
-import Query
+import Operation
 import Tagged
 
 // MARK: - Store

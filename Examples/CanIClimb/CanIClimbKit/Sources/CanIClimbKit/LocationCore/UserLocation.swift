@@ -1,6 +1,6 @@
 import CoreLocation
 import Dependencies
-import Query
+import Operation
 
 // MARK: - UserLocation
 

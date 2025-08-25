@@ -1,7 +1,7 @@
 import ConcurrencyExtras
 import Dependencies
 import Foundation
-import Query
+import Operation
 import Synchronization
 import UUIDV7
 

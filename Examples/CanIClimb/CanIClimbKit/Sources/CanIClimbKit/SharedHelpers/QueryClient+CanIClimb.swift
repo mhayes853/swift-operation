@@ -1,4 +1,4 @@
-import Query
+import Operation
 
 // MARK: - Shared Instance
 

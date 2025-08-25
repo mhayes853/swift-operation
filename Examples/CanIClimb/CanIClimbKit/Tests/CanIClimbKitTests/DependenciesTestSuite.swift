@@ -1,6 +1,6 @@
 import CanIClimbKit
 import DependenciesTestSupport
-import SharingQuery
+import SharingOperation
 import Testing
 
 @Suite(

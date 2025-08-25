@@ -1,7 +1,7 @@
 import Foundation
 import JavaScriptKit
 import Observation
-import SharingQuery
+import SharingOperation
 import SwiftNavigation
 
 // MARK: - CounterModel

@@ -3,7 +3,7 @@ import CustomDump
 import DependenciesTestSupport
 import Foundation
 import SharingGRDB
-import SharingQuery
+import SharingOperation
 import Testing
 
 extension DependenciesTestSuite {

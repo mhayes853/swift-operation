@@ -1,5 +1,5 @@
 import CanIClimbKit
-import Query
+import Operation
 
 extension CanIClimbAPI {
   static func testInstance(

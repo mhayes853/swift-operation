@@ -1,7 +1,7 @@
 import Dependencies
 import Foundation
 import SharingGRDB
-import SharingQuery
+import SharingOperation
 import StructuredQueries
 
 // MARK: - Loader

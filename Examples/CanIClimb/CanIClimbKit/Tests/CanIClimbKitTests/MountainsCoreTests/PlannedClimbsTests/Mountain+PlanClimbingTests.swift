@@ -2,7 +2,7 @@ import CanIClimbKit
 import CustomDump
 import Dependencies
 import Foundation
-import SharingQuery
+import SharingOperation
 import Synchronization
 import Testing
 

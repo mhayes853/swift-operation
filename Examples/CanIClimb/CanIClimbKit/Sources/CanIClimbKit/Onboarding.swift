@@ -1,6 +1,6 @@
 import Observation
 import SharingGRDB
-import SharingQuery
+import SharingOperation
 import SwiftUI
 import SwiftUINavigation
 
@@ -339,7 +339,9 @@ private struct WeightSelectionView: View {
   init(model: OnboardingModel) {
     self.model = model
     self._selectedValue = State(
-      initialValue: Int(model.userProfile.weight.converted(to: model.metricPreference.unitMass).value)
+      initialValue: Int(
+        model.userProfile.weight.converted(to: model.metricPreference.unitMass).value
+      )
     )
   }
 

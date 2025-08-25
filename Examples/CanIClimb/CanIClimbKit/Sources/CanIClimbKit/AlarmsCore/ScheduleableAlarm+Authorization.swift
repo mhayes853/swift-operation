@@ -1,5 +1,5 @@
 import Dependencies
-import Query
+import Operation
 import Sharing
 import SwiftUI
 

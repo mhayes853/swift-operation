@@ -1,6 +1,6 @@
 import Dependencies
-import QuerySwiftUI
-import SharingQuery
+import OperationSwiftUI
+import SharingOperation
 import SwiftUI
 
 // MARK: - ContentView

@@ -1,6 +1,6 @@
 import Dependencies
 import Foundation
-import QuerySwiftUI
+import OperationSwiftUI
 import SwiftUI
 
 // MARK: - BasicUIKitCaseStudy
@@ -105,10 +105,10 @@ final class BasicUIKitQuoteStatusView: UIView {
     self.subviews.forEach { $0.removeFromSuperview() }
     self.indicator.stopAnimating()
     switch state.status {
-    case let .result(.success(q)):
+    case .result(.success(let q)):
       self.addQuoteSubview(quote: q)
 
-    case let .result(.failure(error)):
+    case .result(.failure(let error)):
       self.addErrorLabel(error: error)
 
     default:

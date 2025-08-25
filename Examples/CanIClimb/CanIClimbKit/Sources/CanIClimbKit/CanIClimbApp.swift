@@ -1,6 +1,6 @@
 import Dependencies
 import Observation
-import Query
+import Operation
 import SharingGRDB
 import SwiftUI
 import SwiftUINavigation

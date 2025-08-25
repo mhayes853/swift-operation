@@ -1,6 +1,6 @@
 import Dependencies
 import GRDB
-import Query
+import Operation
 import StructuredQueriesGRDB
 
 // MARK: - CurrentUser

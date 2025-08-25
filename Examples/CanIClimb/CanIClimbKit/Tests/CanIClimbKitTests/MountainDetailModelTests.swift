@@ -1,7 +1,7 @@
 import CanIClimbKit
 import CustomDump
 import Dependencies
-import Query
+import Operation
 import Testing
 
 extension DependenciesTestSuite {

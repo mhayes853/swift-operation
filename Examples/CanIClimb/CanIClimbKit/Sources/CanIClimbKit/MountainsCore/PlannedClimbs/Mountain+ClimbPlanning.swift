@@ -1,7 +1,7 @@
 import Dependencies
 import Foundation
 import OrderedCollections
-import SharingQuery
+import SharingOperation
 import SwiftNavigation
 import Tagged
 import UUIDV7

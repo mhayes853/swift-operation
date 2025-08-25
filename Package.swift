@@ -4,35 +4,35 @@
 import PackageDescription
 
 let package = Package(
-  name: "swift-query",
+  name: "swift-operation",
   platforms: [.iOS(.v13), .macOS(.v10_15), .tvOS(.v13), .watchOS(.v6), .macCatalyst(.v13)],
   products: [
-    .library(name: "SharingQuery", targets: ["SharingQuery"]),
-    .library(name: "Query", targets: ["Query"]),
-    .library(name: "QuerySwiftUI", targets: ["QuerySwiftUI"])
+    .library(name: "SharingOperation", targets: ["SharingOperation"]),
+    .library(name: "Operation", targets: ["Operation"]),
+    .library(name: "OperationSwiftUI", targets: ["OperationSwiftUI"])
   ],
   traits: [
     .trait(
-      name: "SwiftQueryWebBrowser",
+      name: "SwiftOperationWebBrowser",
       description:
         "Integrates web browser APIs with the library. (Only enable for WASM Browser Applications)",
       enabledTraits: []
     ),
     .trait(
-      name: "SwiftQueryNavigation",
-      description: "Integrates SwiftNavigation's UITransaction with SharingQuery."
+      name: "SwiftOperationNavigation",
+      description: "Integrates SwiftNavigation's UITransaction with SharingOperation."
     ),
     .trait(
-      name: "SwiftQueryUIKitNavigation",
-      description: "Integrates UIKitNavigation's UIKitAnimation with SharingQuery.",
-      enabledTraits: ["SwiftQueryNavigation"]
+      name: "SwiftOperationUIKitNavigation",
+      description: "Integrates UIKitNavigation's UIKitAnimation with SharingOperation.",
+      enabledTraits: ["SwiftOperationNavigation"]
     ),
     .trait(
-      name: "SwiftQueryAppKitNavigation",
-      description: "Integrates AppKitNavigation's AppKitAnimation with SharingQuery.",
-      enabledTraits: ["SwiftQueryNavigation"]
+      name: "SwiftOperationAppKitNavigation",
+      description: "Integrates AppKitNavigation's AppKitAnimation with SharingOperation.",
+      enabledTraits: ["SwiftOperationNavigation"]
     ),
-    .trait(name: "SwiftQueryLogging", description: "Integrates swift-log with the library.")
+    .trait(name: "SwiftOperationLogging", description: "Integrates swift-log with the library.")
   ],
   dependencies: [
     .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.9.3"),
@@ -50,22 +50,22 @@ let package = Package(
   ],
   targets: [
     .target(
-      name: "SharingQuery",
+      name: "SharingOperation",
       dependencies: [
-        "Query",
+        "Operation",
         .product(name: "Sharing", package: "swift-sharing"),
         .product(name: "Dependencies", package: "swift-dependencies"),
         .product(
           name: "SwiftNavigation",
           package: "swift-navigation",
-          condition: .when(traits: ["SwiftQueryNavigation"])
+          condition: .when(traits: ["SwiftOperationNavigation"])
         ),
         .product(
           name: "UIKitNavigation",
           package: "swift-navigation",
           condition: .when(
             platforms: [.iOS, .tvOS, .visionOS, .macCatalyst],
-            traits: ["SwiftQueryUIKitNavigation"]
+            traits: ["SwiftOperationUIKitNavigation"]
           )
         ),
         .product(
@@ -73,34 +73,34 @@ let package = Package(
           package: "swift-navigation",
           condition: .when(
             platforms: [.macOS, .macCatalyst],
-            traits: ["SwiftQueryAppKitNavigation"]
+            traits: ["SwiftOperationAppKitNavigation"]
           )
         )
       ]
     ),
-    .target(name: "Query", dependencies: ["QueryCore"]),
+    .target(name: "Operation", dependencies: ["OperationCore"]),
     .target(
-      name: "QueryCore",
+      name: "OperationCore",
       dependencies: [
         .product(name: "IssueReporting", package: "xctest-dynamic-overlay"),
         .product(name: "IdentifiedCollections", package: "swift-identified-collections"),
         .product(
           name: "Logging",
           package: "swift-log",
-          condition: .when(traits: ["SwiftQueryLogging"])
+          condition: .when(traits: ["SwiftOperationLogging"])
         )
       ],
       swiftSettings: [
         .define(
-          "SWIFT_QUERY_EXIT_TESTABLE",
+          "SWIFT_OPERATION_EXIT_TESTABLE_PLATFORM",
           .when(platforms: [.macOS, .linux, .windows])
         )
       ]
     ),
-    .target(name: "QuerySwiftUI", dependencies: ["Query"]),
+    .target(name: "OperationSwiftUI", dependencies: ["Operation"]),
     .target(
-      name: "QueryTestHelpers",
-      dependencies: ["Query", .product(name: "CustomDump", package: "swift-custom-dump")]
+      name: "OperationTestHelpers",
+      dependencies: ["Operation", .product(name: "CustomDump", package: "swift-custom-dump")]
     )
   ],
   swiftLanguageModes: [.v6]
@@ -113,9 +113,9 @@ let package = Package(
   package.targets.append(
     contentsOf: [
       .target(
-        name: "QueryBrowser",
+        name: "OperationWebBrowser",
         dependencies: [
-          "QueryCore",
+          "OperationCore",
           .product(
             name: "JavaScriptKit",
             package: "JavaScriptKit",
@@ -133,9 +133,9 @@ let package = Package(
         ]
       ),
       .testTarget(
-        name: "QueryWASMTests",
+        name: "OperationWebBrowserTests",
         dependencies: [
-          "QueryBrowser",
+          "OperationWebBrowser",
           .product(
             name: "JavaScriptEventLoopTestSupport",
             package: "JavaScriptKit",
@@ -145,14 +145,16 @@ let package = Package(
       )
     ]
   )
-  let queryTarget = package.targets.first { $0.name == "Query" }
-  queryTarget?.dependencies
-    .append(.target(name: "QueryBrowser", condition: .when(traits: ["SwiftQueryWebBrowser"])))
+  let operationTarget = package.targets.first { $0.name == "Operation" }
+  operationTarget?.dependencies
+    .append(
+      .target(name: "OperationWebBrowser", condition: .when(traits: ["SwiftOperationWebBrowser"]))
+    )
 #endif
 
-var queryTestsDependencies: [Target.Dependency] = [
-  "Query",
-  "QueryTestHelpers",
+var operationTestsDependencies: [Target.Dependency] = [
+  "Operation",
+  "OperationTestHelpers",
   .product(name: "CustomDump", package: "swift-custom-dump"),
   .product(name: "IssueReportingTestSupport", package: "xctest-dynamic-overlay")
 ]
@@ -161,20 +163,20 @@ if Context.environment["TEST_WASM"] != "1" {
   package.targets.append(
     contentsOf: [
       .testTarget(
-        name: "SharingQueryTests",
+        name: "SharingOperationTests",
         dependencies: [
-          "SharingQuery",
-          "QueryTestHelpers",
+          "SharingOperation",
+          "OperationTestHelpers",
           .product(name: "CustomDump", package: "swift-custom-dump"),
           .product(name: "IssueReportingTestSupport", package: "xctest-dynamic-overlay")
         ]
       ),
-      .testTarget(name: "QueryTests", dependencies: queryTestsDependencies),
+      .testTarget(name: "OperationTests", dependencies: operationTestsDependencies),
       .testTarget(
-        name: "QuerySwiftUITests",
+        name: "OperationSwiftUITests",
         dependencies: [
-          "QuerySwiftUI",
-          "QueryTestHelpers",
+          "OperationSwiftUI",
+          "OperationTestHelpers",
           .product(name: "CustomDump", package: "swift-custom-dump"),
           .product(
             name: "ViewInspector",

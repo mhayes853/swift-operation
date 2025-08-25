@@ -1,7 +1,7 @@
 import Dependencies
 import JavaScriptEventLoop
 @preconcurrency import JavaScriptKit
-import Query
+import Operation
 
 // MARK: - Loader
 

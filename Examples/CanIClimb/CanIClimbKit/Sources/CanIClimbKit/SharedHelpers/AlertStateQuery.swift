@@ -1,5 +1,5 @@
 import Dependencies
-import Query
+import Operation
 import SwiftUI
 import SwiftUINavigation
 import UIKitNavigation

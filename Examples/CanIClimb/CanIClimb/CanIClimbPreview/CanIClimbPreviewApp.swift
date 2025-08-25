@@ -2,9 +2,9 @@ import CanIClimbKit
 import CloudKit
 import Dependencies
 import IdentifiedCollections
-import Query
+import Operation
 import SharingGRDB
-import SharingQuery
+import SharingOperation
 import SwiftUI
 import Tagged
 import UUIDV7
@@ -35,9 +35,9 @@ struct CanIClimbPreviewApp: App {
             name: mountain.location.name
           )
           mountains.append(mountain)
-          
+
           guard j.isMultiple(of: 2) else { continue }
-          
+
           var climbs = IdentifiedArrayOf<Mountain.PlannedClimb>()
           for k in 0..<10 {
             let alarm = ScheduleableAlarm(
@@ -63,12 +63,12 @@ struct CanIClimbPreviewApp: App {
       $0[Mountain.SearcherKey.self] = searcher
 
       $0[CKAccountStatus.LoaderKey.self] = CKAccountStatus.MockLoader { .available }
-      
+
       $0[User.CurrentLoaderKey.self] = User.MockCurrentLoader(result: .success(.mock1))
-      
+
       $0[Mountain.PlanClimberKey.self] = Mountain.SucceedingClimbPlanner()
       $0[Mountain.PlannedClimbsLoaderKey.self] = plannedClimbs
-      
+
       $0[WeatherReading.CurrentReaderKey.self] = WeatherReading.SucceedingCurrentReader()
 
       try $0.defaultDatabase.write {

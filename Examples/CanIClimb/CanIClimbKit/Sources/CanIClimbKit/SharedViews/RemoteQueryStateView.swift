@@ -1,4 +1,4 @@
-import SharingQuery
+import SharingOperation
 import SwiftUI
 
 public struct RemoteQueryStateView<
