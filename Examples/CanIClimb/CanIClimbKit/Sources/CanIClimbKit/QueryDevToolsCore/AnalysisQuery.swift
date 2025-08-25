@@ -15,9 +15,9 @@ extension QueryRequest {
 
 public struct _AnalysisModifier<Query: QueryRequest>: QueryModifier {
   public func fetch(
-    in context: QueryContext,
+    in context: OperationContext,
     using query: Query,
-    with continuation: QueryContinuation<Query.Value>
+    with continuation: OperationContinuation<Query.Value>
   ) async throws -> Query.Value {
     @Dependency(\.defaultDatabase) var database
     @Dependency(\.continuousClock) var clock
@@ -25,7 +25,7 @@ public struct _AnalysisModifier<Query: QueryRequest>: QueryModifier {
     @Dependency(\.uuidv7) var uuidv7
 
     let yields = Mutex([Result<Query.Value, any Error>]())
-    let continuation = QueryContinuation<Query.Value> { result, context in
+    let continuation = OperationContinuation<Query.Value> { result, context in
       yields.withLock { $0.append(result) }
       continuation.yield(with: result, using: context)
     }
@@ -35,17 +35,17 @@ public struct _AnalysisModifier<Query: QueryRequest>: QueryModifier {
       result = await Result { try await query.fetch(in: context, with: continuation) }
     }
 
-    let analysis = QueryAnalysis(
-      id: QueryAnalysis.ID(uuidv7()),
+    let analysis = OperationAnalysis(
+      id: OperationAnalysis.ID(uuidv7()),
       launchId: launchId,
       query: query,
-      queryRetryAttempt: context.queryRetryIndex,
+      queryRetryAttempt: context.operationRetryIndex,
       queryRuntimeDuration: time,
       yieldedResults: yields.withLock { $0 },
       finalResult: result
     )
     try await database.write {
-      try QueryAnalysisRecord.insert { QueryAnalysisRecord.Draft(analysis) }.execute($0)
+      try OperationAnalysisRecord.insert { OperationAnalysisRecord.Draft(analysis) }.execute($0)
     }
 
     return try result.get()
@@ -55,14 +55,14 @@ public struct _AnalysisModifier<Query: QueryRequest>: QueryModifier {
 // MARK: - Helper Initializer
 
 extension QueryRequest {
-  public var analysisName: QueryAnalysis.QueryName {
-    QueryAnalysis.QueryName(self._debugTypeName)
+  public var analysisName: OperationAnalysis.OperationName {
+    OperationAnalysis.OperationName(self._debugTypeName)
   }
 }
 
-extension QueryAnalysis {
+extension OperationAnalysis {
   public init<Query: QueryRequest>(
-    id: QueryAnalysis.ID,
+    id: OperationAnalysis.ID,
     launchId: ApplicationLaunch.ID,
     query: Query,
     queryRetryAttempt: Int,
@@ -76,8 +76,8 @@ extension QueryAnalysis {
       queryRetryAttempt: queryRetryAttempt,
       queryRuntimeDuration: TimeInterval(duration: queryRuntimeDuration),
       queryName: query.analysisName,
-      queryPathDescription: query.path.description,
-      yieldedQueryDataResults: yieldedResults.map { DataResult(result: $0) },
+      operationPathDescription: query.path.description,
+      yieldedOperationDataResults: yieldedResults.map { DataResult(result: $0) },
       queryDataResult: DataResult(result: finalResult)
     )
   }

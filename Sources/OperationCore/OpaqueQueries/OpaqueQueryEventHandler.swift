@@ -1,31 +1,32 @@
-// MARK: - OpaqueQueryEventHandler
+// MARK: - OpaqueOperationEventHandler
 
-/// An event handler that is passed to ``OpaqueQueryStore/subscribe(with:)``.
-public struct OpaqueQueryEventHandler: Sendable {
+/// An event handler that is passed to ``OpaqueOperationStore/subscribe(with:)``.
+public struct OpaqueOperationEventHandler: Sendable {
   /// A callback that is invoked when the state changes.
-  public var onStateChanged: (@Sendable (OpaqueQueryState, QueryContext) -> Void)?
+  public var onStateChanged: (@Sendable (OpaqueOperationState, OperationContext) -> Void)?
 
-  /// A callback that is invoked when fetching begins on the ``OpaqueQueryStore``.
-  public var onFetchingStarted: (@Sendable (QueryContext) -> Void)?
+  /// A callback that is invoked when fetching begins on the ``OpaqueOperationStore``.
+  public var onFetchingStarted: (@Sendable (OperationContext) -> Void)?
 
-  /// A callback that is invoked when fetching ends on the ``OpaqueQueryStore``.
-  public var onFetchingEnded: (@Sendable (QueryContext) -> Void)?
+  /// A callback that is invoked when fetching ends on the ``OpaqueOperationStore``.
+  public var onFetchingEnded: (@Sendable (OperationContext) -> Void)?
 
-  /// A callback that is invoked when a result is received from fetching on a ``OpaqueQueryStore``.
-  public var onResultReceived: (@Sendable (Result<any Sendable, any Error>, QueryContext) -> Void)?
+  /// A callback that is invoked when a result is received from fetching on a ``OpaqueOperationStore``.
+  public var onResultReceived:
+    (@Sendable (Result<any Sendable, any Error>, OperationContext) -> Void)?
 
   /// Creates an event handler.
   ///
   /// - Parameters:
   ///   - onStateChanged: A callback that is invoked when the state changes.
-  ///   - onFetchingStarted: A callback that is invoked when fetching begins on the ``OpaqueQueryStore``.
-  ///   - onFetchingEnded: A callback that is invoked when fetching ends on the ``OpaqueQueryStore``.
-  ///   - onResultReceived: A callback that is invoked when a result is received from fetching on a ``OpaqueQueryStore``.
+  ///   - onFetchingStarted: A callback that is invoked when fetching begins on the ``OpaqueOperationStore``.
+  ///   - onFetchingEnded: A callback that is invoked when fetching ends on the ``OpaqueOperationStore``.
+  ///   - onResultReceived: A callback that is invoked when a result is received from fetching on a ``OpaqueOperationStore``.
   public init(
-    onStateChanged: (@Sendable (OpaqueQueryState, QueryContext) -> Void)? = nil,
-    onFetchingStarted: (@Sendable (QueryContext) -> Void)? = nil,
-    onFetchingEnded: (@Sendable (QueryContext) -> Void)? = nil,
-    onResultReceived: (@Sendable (Result<any Sendable, any Error>, QueryContext) -> Void)? = nil
+    onStateChanged: (@Sendable (OpaqueOperationState, OperationContext) -> Void)? = nil,
+    onFetchingStarted: (@Sendable (OperationContext) -> Void)? = nil,
+    onFetchingEnded: (@Sendable (OperationContext) -> Void)? = nil,
+    onResultReceived: (@Sendable (Result<any Sendable, any Error>, OperationContext) -> Void)? = nil
   ) {
     self.onFetchingEnded = onFetchingEnded
     self.onFetchingStarted = onFetchingStarted
@@ -36,19 +37,19 @@ public struct OpaqueQueryEventHandler: Sendable {
 
 // MARK: - Casting
 
-extension OpaqueQueryEventHandler {
-  func casted<State: QueryStateProtocol>(to stateType: State.Type) -> QueryEventHandler<State> {
+extension OpaqueOperationEventHandler {
+  func casted<State: OperationState>(to stateType: State.Type) -> QueryEventHandler<State> {
     QueryEventHandler<State>(
       onStateChanged: { state, context in
-        self.onStateChanged?(OpaqueQueryState(state), context)
+        self.onStateChanged?(OpaqueOperationState(state), context)
       },
       onFetchingStarted: self.onFetchingStarted,
       onFetchingEnded: self.onFetchingEnded,
       onResultReceived: { result, context in
         switch result {
-        case let .success(value):
+        case .success(let value):
           self.onResultReceived?(.success(value), context)
-        case let .failure(error):
+        case .failure(let error):
           self.onResultReceived?(.failure(error), context)
         }
       }

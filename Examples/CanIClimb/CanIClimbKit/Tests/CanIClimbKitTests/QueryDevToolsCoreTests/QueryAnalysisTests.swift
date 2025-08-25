@@ -2,8 +2,8 @@ import CanIClimbKit
 import CustomDump
 import Testing
 
-@Suite("QueryAnalysis tests")
-struct QueryAnalysisTests {
+@Suite("OperationAnalysis tests")
+struct OperationAnalysisTests {
   struct SomeError: Error {}
 
   struct Something {
@@ -15,18 +15,21 @@ struct QueryAnalysisTests {
     arguments: [
       (
         Result<Something, any Error>.success(Something(field: "blob")),
-        QueryAnalysis.DataResult(didSucceed: true, dataDescription: "Something(field: \"blob\")")
+        OperationAnalysis.DataResult(
+          didSucceed: true,
+          dataDescription: "Something(field: \"blob\")"
+        )
       ),
       (
         .failure(SomeError()),
-        QueryAnalysis.DataResult(didSucceed: false, dataDescription: "SomeError()")
+        OperationAnalysis.DataResult(didSucceed: false, dataDescription: "SomeError()")
       )
     ]
   )
   func dataResultInitialization(
     result: Result<Something, any Error>,
-    dataResult: QueryAnalysis.DataResult
+    dataResult: OperationAnalysis.DataResult
   ) {
-    expectNoDifference(QueryAnalysis.DataResult(result: result), dataResult)
+    expectNoDifference(OperationAnalysis.DataResult(result: result), dataResult)
   }
 }

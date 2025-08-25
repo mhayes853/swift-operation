@@ -1,15 +1,15 @@
 #if SwiftOperationLogging
   import Logging
 
-  extension QueryContext {
-    /// A `Logger` instance used for logging query-related events.
-    public var queryLogger: Logger {
-      get { self[QueryLoggerKey.self] }
-      set { self[QueryLoggerKey.self] = newValue }
+  extension OperationContext {
+    /// A `Logger` instance used for logging operation events.
+    public var operationLogger: Logger {
+      get { self[OperationLoggerKey.self] }
+      set { self[OperationLoggerKey.self] = newValue }
     }
 
-    private enum QueryLoggerKey: Key {
-      static let defaultValue = Logger(label: "swift.query")
+    private enum OperationLoggerKey: Key {
+      static let defaultValue = Logger(label: "swift.operation")
     }
   }
 #endif

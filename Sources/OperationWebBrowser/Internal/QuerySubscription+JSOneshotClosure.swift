@@ -3,7 +3,7 @@
   import JavaScriptKit
   import OperationCore
 
-  extension QuerySubscription {
+  extension OperationSubscription {
     static func jsClosure(_ body: @escaping (sending [JSValue]) -> JSValue) -> Self {
       let closure = JSSending.transfer(JSClosure(body))
       return Self {

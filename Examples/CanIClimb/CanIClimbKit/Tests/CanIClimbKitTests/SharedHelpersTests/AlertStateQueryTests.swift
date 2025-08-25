@@ -21,12 +21,12 @@ extension DependenciesTestSuite {
     ) async throws {
       @Dependency(\.notificationCenter) var center
 
-      let store = QueryStore.detached(
+      let store = OperationStore.detached(
         query: TestQuery(shouldFail: shouldFail).alerts(success: .success, failure: .failure),
         initialValue: nil
       )
       await confirmation { confirm in
-        let token = center.addObserver(for: QueryAlertMessage.self) { message in
+        let token = center.addObserver(for: OperationAlertMessage.self) { message in
           expectNoDifference(message.alert, alert)
           confirm()
         }
@@ -39,14 +39,14 @@ extension DependenciesTestSuite {
     func onlyPostsFailureAlertOnceWhenRetried() async throws {
       @Dependency(\.notificationCenter) var center
 
-      let store = QueryStore.detached(
+      let store = OperationStore.detached(
         query: TestQuery(shouldFail: true).alerts(success: .success, failure: .failure)
           .delayer(.noDelay)
           .retry(limit: 3),
         initialValue: nil
       )
       await confirmation(expectedCount: 1) { confirm in
-        let token = center.addObserver(for: QueryAlertMessage.self) { _ in
+        let token = center.addObserver(for: OperationAlertMessage.self) { _ in
           confirm()
         }
         _ = try? await store.fetch()
@@ -64,8 +64,8 @@ extension AlertState where Action == Never {
 private struct TestQuery: QueryRequest, Hashable {
   let shouldFail: Bool
   func fetch(
-    in context: QueryContext,
-    with continuation: QueryContinuation<Int>
+    in context: OperationContext,
+    with continuation: OperationContinuation<Int>
   ) async throws -> Int {
     if self.shouldFail {
       struct SomeError: Error {}

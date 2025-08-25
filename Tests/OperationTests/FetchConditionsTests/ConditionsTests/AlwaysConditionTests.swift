@@ -8,7 +8,7 @@ struct AlwaysConditionTests {
   func emitsInitial() {
     let c: some FetchCondition = .always(true, shouldEmitInitialValue: true)
     let value = RecursiveLock<Bool?>(nil)
-    let subscription = c.subscribe(in: QueryContext()) { v in
+    let subscription = c.subscribe(in: OperationContext()) { v in
       value.withLock { $0 = v }
     }
 
@@ -21,7 +21,7 @@ struct AlwaysConditionTests {
   func doesNotEmitInitialByDefault() {
     let c: some FetchCondition = .always(true)
     let value = RecursiveLock<Bool?>(nil)
-    let subscription = c.subscribe(in: QueryContext()) { v in
+    let subscription = c.subscribe(in: OperationContext()) { v in
       value.withLock { $0 = v }
     }
 

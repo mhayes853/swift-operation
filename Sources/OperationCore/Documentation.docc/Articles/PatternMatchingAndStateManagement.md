@@ -1,6 +1,6 @@
 # Query Pattern Matching and State Management
 
-Learn how to utilize ``QueryPath`` and ``QueryClient`` to pattern match queries and manage state.
+Learn how to utilize ``OperationPath`` and ``OperationClient`` to pattern match queries and manage state.
 
 ## Overview
 
@@ -41,15 +41,15 @@ extension User {
     func pageId(
       after page: InfiniteQueryPage<Int, [User]>,
       using paging: InfiniteQueryPaging<Int, [User]>,
-      in context: QueryContext
+      in context: OperationContext
     ) -> Int? {
       page.id + 1
     }
 
     func fetchPage(
       using paging: InfiniteQueryPaging<Int, [User]>,
-      in context: QueryContext,
-      with continuation: QueryContinuation<[User]>
+      in context: OperationContext,
+      with continuation: OperationContinuation<[User]>
     ) async throws -> [User] {
       try await fetchFriends(userId: userId, page: paging.pageId)
     }
@@ -68,8 +68,8 @@ extension User {
 
     func mutate(
       with arguments: Arguments,
-      in context: QueryContext,
-      with continuation: QueryContinuation<Void>
+      in context: OperationContext,
+      with continuation: OperationContinuation<Void>
     ) async throws {
       try await sendFriendRequest(userId: arguments.userId)
     }
@@ -79,7 +79,7 @@ extension User {
 
 The problem here is that when `User.SendFriendRequestMutation` runs successfully, all screens that utilize `User.FriendsQuery` are now displaying outdated data as we haven't explicitly updated the query state of those screens to indicate that the friend request was sent.
 
-Utilizing both ``QueryClient`` in conjunction with ``QueryPath`` will make managing this state straight forward.
+Utilizing both ``OperationClient`` in conjunction with ``OperationPath`` will make managing this state straight forward.
 
 ## Marking Friend Requests As Sent
 
@@ -108,7 +108,7 @@ extension InfiniteQueryPages<Int, [User]> {
 
 ## Updating Query State After a Mutation
 
-When a user sends a friend request to a user, we'll want to update the friends list query of the receiving user. The most basic approach for handling this is to reach into the ``QueryContext`` that's passed to the mutation, and then grab the `QueryClient` from it. From there, we can peak into the ``QueryStore`` for the corresponding friend list query and update its state.
+When a user sends a friend request to a user, we'll want to update the friends list query of the receiving user. The most basic approach for handling this is to reach into the ``OperationContext`` that's passed to the mutation, and then grab the `OperationClient` from it. From there, we can peak into the ``OperationStore`` for the corresponding friend list query and update its state.
 
 ```swift
 struct SendFriendRequestMutation: MutationRequest, Hashable {
@@ -116,13 +116,13 @@ struct SendFriendRequestMutation: MutationRequest, Hashable {
 
   func mutate(
     with arguments: Arguments,
-    in context: QueryContext,
-    with continuation: QueryContinuation<Void>
+    in context: OperationContext,
+    with continuation: OperationContinuation<Void>
   ) async throws {
     try await sendFriendRequest(userId: arguments.userId)
 
     // Friend request sent successfully, now update the friends list.
-    guard let client = context.queryClient else { return }
+    guard let client = context.operationClient else { return }
     let query = UserFriendsQuery(userId: arguments.userId)
     let store = client.store(for: query)
     store.withExclusiveAccess {
@@ -135,27 +135,27 @@ struct SendFriendRequestMutation: MutationRequest, Hashable {
 }
 ```
 
-This works, however it's considerably likely that we'll have multiple instances of `User.FriendsQuery` that need to display the relationship status between the current user and the receiving user. Unfortunately, taking stores off the `QueryClient` in a loop is quite inefficient, however the library provides better tools for managing this.
+This works, however it's considerably likely that we'll have multiple instances of `User.FriendsQuery` that need to display the relationship status between the current user and the receiving user. Unfortunately, taking stores off the `OperationClient` in a loop is quite inefficient, however the library provides better tools for managing this.
 
-## QueryPath and Store Pattern Matching
+## OperationPath and Store Pattern Matching
 
-To get around the aforementioned performance issue, we can utilize a `QueryPath` to pattern match the existing `QueryStore`s inside the `QueryClient`.
+To get around the aforementioned performance issue, we can utilize a `OperationPath` to pattern match the existing `OperationStore`s inside the `OperationClient`.
 
 ``QueryRequest``, and all protocols that inherit from it such as ``InfiniteQueryRequest`` and ``MutationRequest`` have an optional `path` requirement. When your query type conforms to Hashable, this requirement is automatically implemented as follows.
 
 ```swift
 extension QueryRequest where Self: Hashable {
-  var path: QueryPath { [self] }
+  var path: OperationPath { [self] }
 }
 ```
 
-This implementation, while convenient, does not take advantage of the full power of `QueryPath`. To understand why, we'll need to briefly cover what a `QueryPath` represents.
+This implementation, while convenient, does not take advantage of the full power of `OperationPath`. To understand why, we'll need to briefly cover what a `OperationPath` represents.
 
-### QueryPath Basics
+### OperationPath Basics
 
-At the very least, you can think of a `QueryPath` as an identifier for a query. This identifier is essentially an array of `Hashable` elements that uniquely identify the query. Under the hood, `QueryClient` utilizes a query's path as key into a dictionary of `QueryStore`s. If you're familiar with [Tanstack Query](https://tanstack.com/query/latest/docs/framework/react/guides/query-keys), `QueryPath` is analogous to the `queryKey` property.
+At the very least, you can think of a `OperationPath` as an identifier for a query. This identifier is essentially an array of `Hashable` elements that uniquely identify the query. Under the hood, `OperationClient` utilizes a query's path as key into a dictionary of `OperationStore`s. If you're familiar with [Tanstack Query](https://tanstack.com/query/latest/docs/framework/react/guides/query-keys), `OperationPath` is analogous to the `queryKey` property.
 
-If we remove the conformance to `Hashable` on `User.FriendsQuery`, we'll be forced to fill in a custom `QueryPath`.
+If we remove the conformance to `Hashable` on `User.FriendsQuery`, we'll be forced to fill in a custom `OperationPath`.
 
 ```swift
 struct FriendsQuery: InfiniteQueryRequest {
@@ -164,7 +164,7 @@ struct FriendsQuery: InfiniteQueryRequest {
 
   let userId: Int
 
-  var path: QueryPath {
+  var path: OperationPath {
     ["user-friends", userId]
   }
 
@@ -174,24 +174,24 @@ struct FriendsQuery: InfiniteQueryRequest {
 
 In this case, we have 2 identifying components of the query. First, we use a string to represent that this query is for a list of friends, and secondly we use the `userId` to represent the user for whom we are fetching friends.
 
-The real power of splitting the path into an array of multiple components is that you can pattern match the query utilizing a prefix. For instance, you can get access to the `QueryStore`s for all user friend list queries on a `QueryClient` by checking if the path starts with `["user-friends"]`.
+The real power of splitting the path into an array of multiple components is that you can pattern match the query utilizing a prefix. For instance, you can get access to the `OperationStore`s for all user friend list queries on a `OperationClient` by checking if the path starts with `["user-friends"]`.
 
 ```swift
-queryClient.stores(
+OperationClient.stores(
   matching: ["user-friends"],
   of: User.FriendsQuery.State.self
 )
 ```
 
-This will return back a `[QueryPath: QueryStore<User.FriendsQuery.State>]` that you can use to access the current state of all friends list queries in our app.
+This will return back a `[OperationPath: OperationStore<User.FriendsQuery.State>]` that you can use to access the current state of all friends list queries in our app.
 
-> Note: An ``OpaqueQueryStore`` is a fully type erased `QueryStore`. You can still access and mutate the state on the store, but you will have to make the appropriate casts from `any Sendable` to the type of data you're working with.
+> Note: An ``OpaqueOperationStore`` is a fully type erased `OperationStore`. You can still access and mutate the state on the store, but you will have to make the appropriate casts from `any Sendable` to the type of data you're working with.
 
-Now that we have a basic understanding of `QueryPath`, we can explore how to use it effectively in our social app.
+Now that we have a basic understanding of `OperationPath`, we can explore how to use it effectively in our social app.
 
 ### Pattern Matching in SendFriendRequestMutation
 
-With a basic understanding of `QueryPath`, it is actually quite simple to update the state for all `User.FriendsQuery` instances in our app when sending a friend request succeeds.
+With a basic understanding of `OperationPath`, it is actually quite simple to update the state for all `User.FriendsQuery` instances in our app when sending a friend request succeeds.
 
 ```swift
 struct SendFriendRequestMutation: MutationRequest, Hashable {
@@ -199,14 +199,14 @@ struct SendFriendRequestMutation: MutationRequest, Hashable {
 
   func mutate(
     with arguments: Arguments,
-    in context: QueryContext,
-    with continuation: QueryContinuation<Void>
+    in context: OperationContext,
+    with continuation: OperationContinuation<Void>
   ) async throws {
     try await sendFriendRequest(userId: arguments.userId)
 
     // Friend request sent successfully, now update all
     // friends lists in the app.
-    guard let client = context.queryClient else { return }
+    guard let client = context.operationClient else { return }
     let stores = client.stores(
       matching: ["user-friends"],
       of: User.FriendsQuery.State.self
@@ -235,8 +235,8 @@ struct SendFriendRequestMutation: MutationRequest, Hashable {
 
   func mutate(
     with arguments: Arguments,
-    in context: QueryContext,
-    with continuation: QueryContinuation<Void>
+    in context: OperationContext,
+    with continuation: OperationContinuation<Void>
   ) async throws {
     // Optimistically update the user relationships, and reset them to the
     // default state if the mutation fails.
@@ -260,9 +260,9 @@ struct SendFriendRequestMutation: MutationRequest, Hashable {
   private func updateRelationships(
     to relationship: User.Relationship,
     userId: Int,
-    in context: QueryContext
+    in context: OperationContext
   ) {
-    guard let client = context.queryClient else { return }
+    guard let client = context.operationClient else { return }
     let stores = client.stores(
       matching: ["user-friends"],
       of: User.FriendsQuery.State.self
@@ -289,14 +289,14 @@ struct SendFriendRequestMutation: MutationRequest, Hashable {
 
   func mutate(
     with arguments: Arguments,
-    in context: QueryContext,
-    with continuation: QueryContinuation<Void>
+    in context: OperationContext,
+    with continuation: OperationContinuation<Void>
   ) async throws {
     try await sendFriendRequest(userId: arguments.userId)
 
     // Friend request sent successfully, now refetch all
     // friends lists in the app.
-    guard let client = context.queryClient else { return }
+    guard let client = context.operationClient else { return }
     Task {
       try await withThrowingTaskGroup(of: Void.self) { group in
         for store in client.stores(matching: ["user-friends"]) {
@@ -310,4 +310,4 @@ struct SendFriendRequestMutation: MutationRequest, Hashable {
 
 ## Conclusion
 
-In this article, you learned how to use the library to manage asynchronous data fetched by your queries. `QueryClient` can hold the `QueryStore` instances for your queries, and you can utilize `QueryPath` to pattern match these stores. In addition to setting the value of a `QueryStore` directly, you also can decide to refetch the data for a query in order to keep it's state as fresh as possible.
+In this article, you learned how to use the library to manage asynchronous data fetched by your queries. `OperationClient` can hold the `OperationStore` instances for your queries, and you can utilize `OperationPath` to pattern match these stores. In addition to setting the value of a `OperationStore` directly, you also can decide to refetch the data for a query in order to keep it's state as fresh as possible.

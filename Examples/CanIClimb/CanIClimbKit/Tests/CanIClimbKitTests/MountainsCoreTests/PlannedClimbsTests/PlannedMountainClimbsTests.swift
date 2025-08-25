@@ -222,7 +222,7 @@ struct PlannedMountainClimbsTests {
   ) -> CanIClimbAPI {
     CanIClimbAPI(
       transport: transport,
-      tokens: CanIClimbAPI.Tokens(client: QueryClient(), secureStorage: InMemorySecureStorage())
+      tokens: CanIClimbAPI.Tokens(client: OperationClient(), secureStorage: InMemorySecureStorage())
     )
   }
 }

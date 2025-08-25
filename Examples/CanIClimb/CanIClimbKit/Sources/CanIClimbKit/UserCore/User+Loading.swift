@@ -43,8 +43,8 @@ extension User {
 
   public struct CurrentQuery: QueryRequest, Hashable {
     public func fetch(
-      in context: QueryContext,
-      with continuation: QueryContinuation<User>
+      in context: OperationContext,
+      with continuation: OperationContinuation<User>
     ) async throws -> User {
       let loader = Dependency(User.CurrentLoaderKey.self).wrappedValue
 

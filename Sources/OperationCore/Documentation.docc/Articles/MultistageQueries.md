@@ -1,12 +1,12 @@
 # Multistage Queries
 
-Learn how to utilize ``QueryContinuation`` to yield multiple data updates from your query when fetching.
+Learn how to utilize ``OperationContinuation`` to yield multiple data updates from your query when fetching.
 
 ## Overview
 
 In many cases, it can be useful to yield multiple data updates from your query when fetching. For instance, you may want to populate your UI with locally stored or cached data while you fetch fresh data from a server. Or, you maybe your query represents a multistep or long-running business workflow, and you want to yield data for each step to your UI to update the user on its progress. Another possibility could be streaming data from a server that comes in over time in chunks such as LLM responses.
 
-All of this is possible by utilizing the `QueryContinuation` that's passed to your query's `fetch` method. Let's explore how we can use it!
+All of this is possible by utilizing the `OperationContinuation` that's passed to your query's `fetch` method. Let's explore how we can use it!
 
 ## Yielding Cached Data While Fetching Fresh Data
 
@@ -41,8 +41,8 @@ extension QueryData {
     let key: String
 
     func fetch(
-      in context: QueryContext,
-      with continuation: QueryContinuation<QueryData>
+      in context: OperationContext,
+      with continuation: OperationContinuation<QueryData>
     ) async throws -> QueryData {
       if let cachedData = Cache.shared[key] {
         continuation.yield(cachedData)
@@ -55,9 +55,9 @@ extension QueryData {
 }
 ```
 
-> Note: Instead of using a singleton for `Cache`, you may consider using a custom property on the ``QueryContext`` allowing you to do things like reliably running tests in parallel no matter what key is used.
+> Note: Instead of using a singleton for `Cache`, you may consider using a custom property on the ``OperationContext`` allowing you to do things like reliably running tests in parallel no matter what key is used.
 > ```swift
-> extension QueryContext {
+> extension OperationContext {
 >   var cache: Cache {
 >     get { self[CacheKey.self] }
 >     set { self[CacheKey.self] = newValue }
@@ -76,8 +76,8 @@ extension QueryData {
 >   let key: String
 >
 >   func fetch(
->     in context: QueryContext,
->     with continuation: QueryContinuation<QueryData>
+>     in context: OperationContext,
+>     with continuation: OperationContinuation<QueryData>
 >   ) async throws -> QueryData {
 > -     if let cachedData = Cache.shared[key] {
 > +     if let cachedData = context.cache[key] {
@@ -100,7 +100,7 @@ import SwiftUI
 import Operation
 
 struct ContentView: View {
-  @State.Query(QueryData.cacheableQuery(for: "example")) var state
+  @State.Operation(QueryData.cacheableQuery(for: "example")) var state
 
   var body: some View {
     VStack {
@@ -125,8 +125,8 @@ struct DiskCacheableQuery: QueryRequest, Hashable {
   let key: String
 
   func fetch(
-    in context: QueryContext,
-    with continuation: QueryContinuation<QueryData>
+    in context: OperationContext,
+    with continuation: OperationContinuation<QueryData>
   ) async throws -> QueryData {
     let path = URL.documentsDirectory.appending(path: "cache/\(key)")
     do {
@@ -150,21 +150,21 @@ If we can't load data from the disk, we'll yield an error from the query. Howeve
 
 ## Yielding Data Over Time
 
-Another use case for `QueryContinuation` would be to yield data from a remote source as it comes in chunks.
+Another use case for `OperationContinuation` would be to yield data from a remote source as it comes in chunks.
 
 ```swift
 struct LinesQuery: QueryRequest, Hashable {
   let url: URL
 
   func fetch(
-    in context: QueryContext,
-    with continuation: QueryContinuation<[String]>
+    in context: OperationContext,
+    with continuation: OperationContinuation<[String]>
   ) async throws -> [String] {
     // Apply a time freeze to the context so that
     // valueLastUpdatedAt remains consistent when
     // many chunks of data are yielded.
     var context = context
-    context.queryClock = context.queryClock.frozen()
+    context.operationClock = context.operationClock.frozen()
     var lines = [String]()
     for try await line in url.lines {
       lines.append(line)
@@ -211,15 +211,15 @@ extension EventsList {
   struct NearbyEventsQuery: QueryRequest {
     let region: Region
 
-    var path: QueryPath {
+    var path: OperationPath {
       ["nearby-events", region]
     }
 
     func fetch(
-      in context: QueryContext,
-      with continuation: QueryContinuation<EventsList>
+      in context: OperationContext,
+      with continuation: OperationContinuation<EventsList>
     ) async throws -> EventsList {
-      guard let client = context.queryClient else {
+      guard let client = context.operationClient else {
         return try await fetchActualEventList(region)
       }
       // Look for other EventLists we've fetched and use the data from
@@ -234,7 +234,7 @@ extension EventsList {
   }
 }
 
-extension QueryContext {
+extension OperationContext {
   var distanceThreshold: Double {
     get { self[DistanceThresholdKey.self] }
     set { self[DistanceThresholdKey.self] = newValue }
@@ -246,8 +246,8 @@ extension QueryContext {
 }
 ```
 
-In `NearbyEventsQuery` we utilize the pattern matching ability of ``QueryClient`` and ``QueryPath`` to find previous event lists that we've fetched around the query's region. If the event lists's `region` is within some distance threshold to the query's distance, then we can yield the events from that list whilst we fetch the actual events list for the query's region.
+In `NearbyEventsQuery` we utilize the pattern matching ability of ``OperationClient`` and ``OperationPath`` to find previous event lists that we've fetched around the query's region. If the event lists's `region` is within some distance threshold to the query's distance, then we can yield the events from that list whilst we fetch the actual events list for the query's region.
 
 ## Conclusion
 
-In this article, you learned how to use `QueryContinuation` to yield multiple data updates from your query. With `QueryContinuation` its possible to implement a variety of fetching paradigms that allow your UI to be responsive whilst long or even flakey data fetching workflows occur in the background. When you yield either data or an error from your query, your UI can still remain in a loading state as the `isLoading` property is still true whilst you haven't returned from your query's `fetch` method.
+In this article, you learned how to use `OperationContinuation` to yield multiple data updates from your query. With `OperationContinuation` its possible to implement a variety of fetching paradigms that allow your UI to be responsive whilst long or even flakey data fetching workflows occur in the background. When you yield either data or an error from your query, your UI can still remain in a loading state as the `isLoading` property is still true whilst you haven't returned from your query's `fetch` method.

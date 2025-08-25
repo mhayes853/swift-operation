@@ -32,7 +32,7 @@ struct PostQueryTests {
     try await withDependencies {
       $0[PostsKey.self] = DummyJSONAPI(transport: transport)
     } operation: {
-      @SharedQuery(Post.query(for: 1)) var post
+      @SharedOperation(Post.query(for: 1)) var post
       try await $post.load()
 
       let expectedPost = Post(
@@ -57,7 +57,7 @@ struct PostQueryTests {
     try await withDependencies {
       $0[PostsKey.self] = DummyJSONAPI(transport: transport)
     } operation: {
-      @SharedQuery(Post.query(for: 1)) var post
+      @SharedOperation(Post.query(for: 1)) var post
       try await $post.load()
 
       expectNoDifference(post, .some(nil))
@@ -95,7 +95,7 @@ struct PostQueryTests {
     try await withDependencies {
       $0[PostSearcherKey.self] = DummyJSONAPI(transport: transport)
     } operation: {
-      @SharedQuery(Post.searchQuery(by: "blob")) var posts
+      @SharedOperation(Post.searchQuery(by: "blob")) var posts
       try await $posts.load()
 
       let expectedPost = Post(
@@ -154,7 +154,7 @@ struct PostQueryTests {
     try await withDependencies {
       $0[PostListByTagLoaderKey.self] = DummyJSONAPI(transport: transport)
     } operation: {
-      @SharedQuery(Post.listByTagQuery(tag: "mystery")) var list
+      @SharedOperation(Post.listByTagQuery(tag: "mystery")) var list
       try await $list.load()
 
       let expectedPost = Post(
@@ -214,7 +214,7 @@ struct PostQueryTests {
     try await withDependencies {
       $0[PostListByTagLoaderKey.self] = DummyJSONAPI(transport: transport)
     } operation: {
-      @SharedQuery(Post.listByTagQuery(tag: "mystery")) var list
+      @SharedOperation(Post.listByTagQuery(tag: "mystery")) var list
       try await $list.load()
 
       expectNoDifference($list.nextPageId, nil)

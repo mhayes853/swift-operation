@@ -13,7 +13,7 @@ let package = Package(
     .package(
       url: "https://github.com/mhayes853/swift-query",
       branch: "main",
-      traits: ["SwiftQueryLogging"]
+      traits: ["SwiftOperationLogging"]
     ),
     .package(
       url: "https://github.com/pointfreeco/swift-structured-queries",
@@ -37,7 +37,7 @@ let package = Package(
     .target(
       name: "CanIClimbKit",
       dependencies: [
-        .product(name: "SharingQuery", package: "swift-query"),
+        .product(name: "SharingOperation", package: "swift-query"),
         .product(name: "SharingGRDB", package: "sharing-grdb"),
         .product(name: "SwiftUINavigation", package: "swift-navigation"),
         .product(name: "UIKitNavigation", package: "swift-navigation"),

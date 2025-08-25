@@ -119,18 +119,18 @@ extension Mountain {
     public func pageId(
       after page: InfiniteQueryPage<PageID, PageValue>,
       using paging: InfiniteQueryPaging<PageID, PageValue>,
-      in context: QueryContext
+      in context: OperationContext
     ) -> PageID? {
       page.value.hasNextPage ? page.id + 1 : nil
     }
 
     public func fetchPage(
       using paging: InfiniteQueryPaging<PageID, PageValue>,
-      in context: QueryContext,
-      with continuation: QueryContinuation<PageValue>
+      in context: OperationContext,
+      with continuation: OperationContinuation<PageValue>
     ) async throws -> PageValue {
       @Dependency(Mountain.SearcherKey.self) var searcher
-      @Dependency(\.defaultQueryClient) var client
+      @Dependency(\.defaultOperationClient) var client
 
       do {
         let request = Mountain.SearchRequest(search: self.search, page: paging.pageId)
@@ -151,7 +151,7 @@ extension Mountain {
   }
 }
 
-extension QueryClient {
+extension OperationClient {
   fileprivate func updateDetailQueries(mountains: IdentifiedArrayOf<Mountain>) {
     self.withStores(matching: .mountain, of: Mountain.Query.State.self) { stores, createStore in
       for mountain in mountains {

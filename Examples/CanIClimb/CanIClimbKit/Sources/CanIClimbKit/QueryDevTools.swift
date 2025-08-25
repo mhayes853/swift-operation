@@ -4,13 +4,13 @@ import SharingGRDB
 import SwiftUI
 import SwiftUINavigation
 
-// MARK: - QueryDevToolsModel
+// MARK: - OperationDevToolsModel
 
 @MainActor
 @Observable
-public final class QueryDevToolsModel: HashableObject, Identifiable {
+public final class OperationDevToolsModel: HashableObject, Identifiable {
   @ObservationIgnored
-  @Fetch public var analyzes: GroupQueryAnalysisRequest.Value
+  @Fetch public var analyzes: GroupOperationAnalysisRequest.Value
 
   @ObservationIgnored
   @FetchOne public var selectedLaunch: ApplicationLaunchRecord?
@@ -22,8 +22,8 @@ public final class QueryDevToolsModel: HashableObject, Identifiable {
   public init() {
     @Dependency(ApplicationLaunch.ID.self) var launchId
     self._analyzes = Fetch(
-      wrappedValue: GroupQueryAnalysisRequest.Value(),
-      GroupQueryAnalysisRequest(launchId: launchId),
+      wrappedValue: GroupOperationAnalysisRequest.Value(),
+      GroupOperationAnalysisRequest(launchId: launchId),
       animation: .bouncy
     )
     self._selectedLaunch = FetchOne(
@@ -37,7 +37,7 @@ public final class QueryDevToolsModel: HashableObject, Identifiable {
       ApplicationLaunchRecord.find(#bind(id)),
       animation: .bouncy
     )
-    try await self.$analyzes.load(GroupQueryAnalysisRequest(launchId: id), animation: .bouncy)
+    try await self.$analyzes.load(GroupOperationAnalysisRequest(launchId: id), animation: .bouncy)
     self.path.removeLast()
   }
 
@@ -46,33 +46,33 @@ public final class QueryDevToolsModel: HashableObject, Identifiable {
   }
 }
 
-extension QueryDevToolsModel {
+extension OperationDevToolsModel {
   @CasePathable
   public enum Path: Hashable, Sendable {
     case selectLaunch
-    case analysisDetail(QueryAnalysis, ApplicationLaunch)
+    case analysisDetail(OperationAnalysis, ApplicationLaunch)
   }
 }
 
-// MARK: - QueryDevToolsView
+// MARK: - OperationDevToolsView
 
-public struct QueryDevToolsView: View {
-  @Bindable private var model: QueryDevToolsModel
+public struct OperationDevToolsView: View {
+  @Bindable private var model: OperationDevToolsModel
 
-  public init(model: QueryDevToolsModel) {
+  public init(model: OperationDevToolsModel) {
     self.model = model
   }
 
   public var body: some View {
     NavigationStack(path: self.$model.path) {
       AnalyzesListView(model: self.model)
-        .navigationTitle("Query Dev Tools")
-        .navigationDestination(for: QueryDevToolsModel.Path.self) { path in
+        .navigationTitle("Operation Dev Tools")
+        .navigationDestination(for: OperationDevToolsModel.Path.self) { path in
           switch path {
           case .selectLaunch:
             LaunchPickerView(model: self.model)
           case .analysisDetail(let analysis, let launch):
-            QueryAnalysisView(analysis: analysis, launch: launch)
+            OperationAnalysisView(analysis: analysis, launch: launch)
           }
         }
         .dismissable { self.model.dismissed() }
@@ -83,7 +83,7 @@ public struct QueryDevToolsView: View {
 // MARK: - AnalyzesListView
 
 private struct AnalyzesListView: View {
-  let model: QueryDevToolsModel
+  let model: OperationDevToolsModel
 
   public var body: some View {
     List {
@@ -102,7 +102,7 @@ private struct SelectedLaunchSectionView: View {
 
   var body: some View {
     Section {
-      NavigationLink(value: QueryDevToolsModel.Path.selectLaunch) {
+      NavigationLink(value: OperationDevToolsModel.Path.selectLaunch) {
         LaunchLabelView(launch: self.launch)
       }
     } header: {
@@ -112,14 +112,14 @@ private struct SelectedLaunchSectionView: View {
 }
 
 private struct AnalysisListSectionView: View {
-  let name: QueryAnalysis.QueryName
-  let analyzes: IdentifiedArrayOf<QueryAnalysis>
+  let name: OperationAnalysis.OperationName
+  let analyzes: IdentifiedArrayOf<OperationAnalysis>
   let launch: ApplicationLaunch
 
   var body: some View {
     Section {
       ForEach(self.analyzes) { analysis in
-        NavigationLink(value: QueryDevToolsModel.Path.analysisDetail(analysis, self.launch)) {
+        NavigationLink(value: OperationDevToolsModel.Path.analysisDetail(analysis, self.launch)) {
           VStack(alignment: .leading) {
             Text(analysis.queryDataResult.dataDescription)
               .lineLimit(2)
@@ -145,7 +145,7 @@ private struct AnalysisListSectionView: View {
 // MARK: - LaunchPickerView
 
 private struct LaunchPickerView: View {
-  let model: QueryDevToolsModel
+  let model: OperationDevToolsModel
   @FetchAll(ApplicationLaunchRecord.all.order(by: \.id)) private var launches
 
   public var body: some View {
@@ -168,18 +168,18 @@ private struct LaunchPickerView: View {
   }
 }
 
-// MARK: - QueryAnalysisView
+// MARK: - OperationAnalysisView
 
-private struct QueryAnalysisView: View {
-  let analysis: QueryAnalysis
+private struct OperationAnalysisView: View {
+  let analysis: OperationAnalysis
   let launch: ApplicationLaunch
 
   public var body: some View {
     Form {
       AnalysisLaunchSectionView(launch: self.launch)
       AnalysisSectionView(analysis: self.analysis)
-      if !self.analysis.yieldedQueryDataResults.isEmpty {
-        AnalysisYieldedResultsSectionView(results: self.analysis.yieldedQueryDataResults)
+      if !self.analysis.yieldedOperationDataResults.isEmpty {
+        AnalysisYieldedResultsSectionView(results: self.analysis.yieldedOperationDataResults)
       }
     }
     .navigationTitle(self.analysis.queryName.rawValue)
@@ -187,14 +187,14 @@ private struct QueryAnalysisView: View {
 }
 
 private struct AnalysisSectionView: View {
-  let analysis: QueryAnalysis
+  let analysis: OperationAnalysis
 
   var body: some View {
     Section {
       HStack {
         Text("Path").font(.headline)
         Spacer()
-        Text(self.analysis.queryPathDescription)
+        Text(self.analysis.operationPathDescription)
       }
 
       HStack {
@@ -239,7 +239,7 @@ private struct AnalysisSectionView: View {
       }
 
     } header: {
-      Text("Query")
+      Text("Operation")
     }
   }
 }
@@ -257,7 +257,7 @@ private struct AnalysisLaunchSectionView: View {
 }
 
 private struct AnalysisYieldedResultsSectionView: View {
-  let results: [QueryAnalysis.DataResult]
+  let results: [OperationAnalysis.DataResult]
 
   var body: some View {
     Section {
@@ -281,7 +281,7 @@ private struct AnalysisYieldedResultsSectionView: View {
       Text(
         """
         Yielded results do not represent the final results of a query, but rather the intermediate \
-        results yielded to the `QueryContinuation` before the final result was produced.
+        results yielded to the `OperationContinuation` before the final result was produced.
         """
       )
     }
@@ -309,37 +309,37 @@ private struct LaunchLabelView: View {
 
   let _ = try! prepareDependencies {
     $0.defaultDatabase = try canIClimbDatabase()
-    $0[ApplicationLaunch.ID.self] = QueryAnalysis.mock1.launchId
+    $0[ApplicationLaunch.ID.self] = OperationAnalysis.mock1.launchId
 
-    var a2 = QueryAnalysisRecord.mock2
-    a2.yieldedQueryDataResults = [
-      QueryAnalysis.DataResult(didSucceed: true, dataDescription: "Value 1"),
-      QueryAnalysis.DataResult(didSucceed: false, dataDescription: "Value 2")
+    var a2 = OperationAnalysisRecord.mock2
+    a2.yieldedOperationDataResults = [
+      OperationAnalysis.DataResult(didSucceed: true, dataDescription: "Value 1"),
+      OperationAnalysis.DataResult(didSucceed: false, dataDescription: "Value 2")
     ]
 
     try $0.defaultDatabase.write { db in
       try db.seed {
-        QueryAnalysisRecord.mock1
+        OperationAnalysisRecord.mock1
         a2
 
         ApplicationLaunchRecord(
-          id: QueryAnalysis.mock1.launchId,
+          id: OperationAnalysis.mock1.launchId,
           localizedDeviceName: DeviceInfo.testValue.localizedModelName
         )
         ApplicationLaunchRecord(
-          id: QueryAnalysis.mock2.launchId,
+          id: OperationAnalysis.mock2.launchId,
           localizedDeviceName: DeviceInfo.testValue.localizedModelName
         )
       }
     }
   }
 
-  let model = QueryDevToolsModel()
+  let model = OperationDevToolsModel()
 
   Button("Present") {
     isPresenting = true
   }
   .sheet(isPresented: $isPresenting) {
-    QueryDevToolsView(model: model)
+    OperationDevToolsView(model: model)
   }
 }

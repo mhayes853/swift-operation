@@ -22,7 +22,7 @@
   }
 
   extension WindowVisibilityObserver: ApplicationActivityObserver {
-    public func subscribe(_ handler: @escaping @Sendable (Bool) -> Void) -> QuerySubscription {
+    public func subscribe(_ handler: @escaping @Sendable (Bool) -> Void) -> OperationSubscription {
       let window = JSObject.global.window.object!
       let document = window[dynamicMember: self.documentProperty].object!
       handler(document.visibilityState == .string("visible"))

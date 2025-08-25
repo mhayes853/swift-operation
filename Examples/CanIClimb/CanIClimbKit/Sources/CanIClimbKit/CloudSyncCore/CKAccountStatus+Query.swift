@@ -10,8 +10,8 @@ extension CKAccountStatus {
 
   public struct CurrentQuery: QueryRequest, Hashable {
     public func fetch(
-      in context: QueryContext,
-      with continuation: QueryContinuation<CKAccountStatus>
+      in context: OperationContext,
+      with continuation: OperationContinuation<CKAccountStatus>
     ) async throws -> CKAccountStatus {
       @Dependency(CKAccountStatus.LoaderKey.self) var loader
       return try await loader.accountStatus()

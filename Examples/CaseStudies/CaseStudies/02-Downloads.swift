@@ -9,7 +9,7 @@ struct DownloadsCaseStudy: CaseStudy {
   let title: LocalizedStringKey = "Dowloads"
   let description: LocalizedStringKey = """
     If your app needs to download a file, you can still do so while reporting on its progress \
-    using a query. We'll use the `QueryContinuation` handed to the download query to report the \
+    using a query. We'll use the `OperationContinuation` handed to the download query to report the \
     progress of the download from an `AsyncThrowingStream`.
 
     Additionally, for such expensive queries, you may want to opt out of automatic fetching by \
@@ -17,7 +17,7 @@ struct DownloadsCaseStudy: CaseStudy {
     will only fetch data when you explicitly call `fetch`.
     """
 
-  @SharedQuery(Download.query(for: .hugeFile), animation: .bouncy) private var download
+  @SharedOperation(Download.query(for: .hugeFile), animation: .bouncy) private var download
 
   var content: some View {
     if let download {
@@ -93,8 +93,8 @@ extension Download {
     let url: URL
 
     func fetch(
-      in context: QueryContext,
-      with continuation: QueryContinuation<Download>
+      in context: OperationContext,
+      with continuation: OperationContinuation<Download>
     ) async throws -> Download {
       @Dependency(FileDownloaderKey.self) var downloader
       var download = Download(progress: 0, url: nil)

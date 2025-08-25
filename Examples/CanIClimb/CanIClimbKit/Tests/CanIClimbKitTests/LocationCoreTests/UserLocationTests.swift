@@ -27,8 +27,8 @@ extension DependenciesTestSuite {
           location.isAuthorized = isAuthorized
           $0[UserLocationKey.self] = location
         } operation: {
-          @SharedQuery(LocationReading.userQuery) var userLocation
-          @SharedQuery(LocationReading.requestUserPermissionMutation) var request
+          @SharedOperation(LocationReading.userQuery) var userLocation
+          @SharedOperation(LocationReading.requestUserPermissionMutation) var request
 
           _ = try await $userLocation.activeTasks.first?.runIfNeeded()
 

@@ -3,9 +3,9 @@ import Operation
 final class TestMemoryPressureSource: MemoryPressureSource, Sendable {
   typealias Handler = @Sendable (MemoryPressure) -> Void
 
-  private let subscribers = QuerySubscriptions<Handler>()
+  private let subscribers = OperationSubscriptions<Handler>()
 
-  func subscribe(with handler: @escaping Handler) -> QuerySubscription {
+  func subscribe(with handler: @escaping Handler) -> OperationSubscription {
     return self.subscribers.add(handler: handler).subscription
   }
 

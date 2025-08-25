@@ -11,12 +11,12 @@ public final class ApplicationIsActiveCondition: Sendable {
   }
 
   private let state: LockedBox<State>
-  private let subscriptions: QuerySubscriptions<Handler>
-  private let observerSubscription: QuerySubscription
+  private let subscriptions: OperationSubscriptions<Handler>
+  private let observerSubscription: OperationSubscription
 
   fileprivate init(observer: some ApplicationActivityObserver) {
     let state = LockedBox(value: State(isActive: true))
-    let subscriptions = QuerySubscriptions<Handler>()
+    let subscriptions = OperationSubscriptions<Handler>()
     self.observerSubscription = observer.subscribe { isActive in
       state.inner.withLock { state in
         guard state.isActive != isActive else { return }
@@ -32,16 +32,16 @@ public final class ApplicationIsActiveCondition: Sendable {
 // MARK: - FetchConditionObserver Conformance
 
 extension ApplicationIsActiveCondition: FetchCondition {
-  public func isSatisfied(in context: QueryContext) -> Bool {
+  public func isSatisfied(in context: OperationContext) -> Bool {
     self.state.inner.withLock { state in
       context.isApplicationActiveRefetchingEnabled && state.isActive
     }
   }
 
   public func subscribe(
-    in context: QueryContext,
+    in context: OperationContext,
     _ observer: @escaping @Sendable (Bool) -> Void
-  ) -> QuerySubscription {
+  ) -> OperationSubscription {
     guard context.isApplicationActiveRefetchingEnabled else {
       observer(false)
       return .empty

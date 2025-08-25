@@ -4,7 +4,7 @@
 public final class MockNetworkObserver {
   private typealias Handler = @Sendable (NetworkConnectionStatus) -> Void
 
-  private let subscriptions = QuerySubscriptions<Handler>()
+  private let subscriptions = OperationSubscriptions<Handler>()
   private let status: Lock<NetworkConnectionStatus>
 
   /// Creates a mock observer.
@@ -45,7 +45,7 @@ extension MockNetworkObserver: NetworkObserver {
 
   public func subscribe(
     with handler: @escaping @Sendable (NetworkConnectionStatus) -> Void
-  ) -> QuerySubscription {
+  ) -> OperationSubscription {
     handler(self.currentStatus)
     let (subscription, _) = self.subscriptions.add(handler: handler)
     return subscription

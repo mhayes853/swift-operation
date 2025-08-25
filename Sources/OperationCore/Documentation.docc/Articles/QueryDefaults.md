@@ -24,22 +24,22 @@ let query = YourQuery().defaultValue("i am the default value")
 let value: String = client.store(for: query).currentValue // ✅ Compiles
 ```
 
-## Default QueryContext
+## Default OperationContext
 
-The ``QueryClient`` holds onto a default ``QueryContext`` that is used to initialize every store it holds. By overriding this context, you can provide default contexts for your queries.
+The ``OperationClient`` holds onto a default ``OperationContext`` that is used to initialize every store it holds. By overriding this context, you can provide default contexts for your queries.
 
 ```swift
-let client = QueryClient()
+let client = OperationClient()
 client.defaultContext.maxRetries = 0
 ```
 
-The above example effectively disables retries for all queries since all future ``QueryStore``'s created by the client will use the default context.
+The above example effectively disables retries for all queries since all future ``OperationStore``'s created by the client will use the default context.
 
 > Note: Mutating the default context like this has no effect on stores that have already been created within the query client. It only affects stores created afterwards.
 
 ## Default Query Modifiers
 
-The default `QueryClient` already applies a set of default modifiers for both queries and mutations. Here's a list for both.
+The default `OperationClient` already applies a set of default modifiers for both queries and mutations. Here's a list for both.
 
 **Queries**
 - Deduplication
@@ -51,12 +51,12 @@ The default `QueryClient` already applies a set of default modifiers for both qu
 **Mutations**
 - Retries
 
-> Note: By default in testing environments, the `QueryClient` disables retries, backoff, refetching on network reconnection, refetching on the app reentering from the background, and artificial delays for queries and mutations.
+> Note: By default in testing environments, the `OperationClient` disables retries, backoff, refetching on network reconnection, refetching on the app reentering from the background, and artificial delays for queries and mutations.
 
-You can configure these defaults by utilizing the `storeCreator` parameter in the `QueryClient` initializer.
+You can configure these defaults by utilizing the `storeCreator` parameter in the `OperationClient` initializer.
 
 ```swift
-let client = QueryClient(
+let client = OperationClient(
   storeCreator: .default(
     retryLimit: 10,
     networkObserver: MockNetworkObserver()
@@ -65,15 +65,15 @@ let client = QueryClient(
 )
 ```
 
-If you want to apply a custom modifier on all of your queries by default, you can make a conformance to the ``QueryClient/StoreCreator`` protocol. The protocol gives you the entirety of control over how a `QueryClient` constructs a store for a query, giving you the chance to apply whatever modifiers that your query needs.
+If you want to apply a custom modifier on all of your queries by default, you can make a conformance to the ``OperationClient/StoreCreator`` protocol. The protocol gives you the entirety of control over how a `OperationClient` constructs a store for a query, giving you the chance to apply whatever modifiers that your query needs.
 
 ```swift
-struct MyStoreCreator: QueryClient.StoreCreator {
+struct MyStoreCreator: OperationClient.StoreCreator {
   func store<Query: QueryRequest>(
     for query: Query,
-    in context: QueryContext,
+    in context: OperationContext,
     with initialState: Query.State
-  ) -> QueryStore<Query.State> {
+  ) -> OperationStore<Query.State> {
     if query is any MutationRequest {
       // Modifiers applied only to mutations
       return .detached(
@@ -94,7 +94,7 @@ struct MyStoreCreator: QueryClient.StoreCreator {
   }
 }
 
-let client = QueryClient(storeCreator: MyStoreCreator())
+let client = OperationClient(storeCreator: MyStoreCreator())
 ```
 
 ## Conclusion

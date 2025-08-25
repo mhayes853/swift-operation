@@ -12,7 +12,7 @@ import SwiftUINavigation
 @Observable
 public final class SignInModel {
   @ObservationIgnored
-  @SharedQuery(User.signInMutation, animation: .bouncy) public var signIn: Void?
+  @SharedOperation(User.signInMutation, animation: .bouncy) public var signIn: Void?
 
   public var destination: Destination?
 
@@ -86,7 +86,7 @@ extension EnvironmentValues {
     let authenticator = User.MockAuthenticator()
     authenticator.requiredCredentials = .mock1
     $0.defaultDatabase = try! canIClimbDatabase()
-    $0.defaultQueryClient = QueryClient(storeCreator: .canIClimb)
+    $0.defaultOperationClient = OperationClient(storeCreator: .canIClimb)
     $0[User.AuthenticatorKey.self] = authenticator
     $0[User.CurrentLoaderKey.self] = User.MockCurrentLoader(result: .success(.mock1))
   }
@@ -95,5 +95,5 @@ extension EnvironmentValues {
     .frame(maxHeight: 60)
     .padding()
     .environment(\.signInButtonMockCredentials, .mock1)
-    .observeQueryAlerts()
+    .observeOperationAlerts()
 }

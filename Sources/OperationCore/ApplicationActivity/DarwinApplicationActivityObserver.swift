@@ -29,7 +29,7 @@
   extension DarwinApplicationActivityObserver {
     public nonisolated func subscribe(
       _ handler: @escaping @Sendable (Bool) -> Void
-    ) -> QuerySubscription {
+    ) -> OperationSubscription {
       let state = Lock<NotificationsState?>(nil)
       MainActor.runImmediatelyIfAble {
         state.withLock { state in
@@ -42,7 +42,7 @@
           )
         }
       }
-      return QuerySubscription { state.withLock { $0?.cancel() } }
+      return OperationSubscription { state.withLock { $0?.cancel() } }
     }
   }
 

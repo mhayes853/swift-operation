@@ -12,7 +12,7 @@ struct StaleWhenRevalidateQueryTests {
     func trueWhenEmpty() {
       let condition = StaleWhenRevalidateCondition()
       expectNoDifference(
-        condition.evaluate(state: QueryState<Int?, Int>(initialValue: nil), in: QueryContext()),
+        condition.evaluate(state: QueryState<Int?, Int>(initialValue: nil), in: OperationContext()),
         true
       )
     }
@@ -22,7 +22,7 @@ struct StaleWhenRevalidateQueryTests {
       var condition = StaleWhenRevalidateCondition()
       condition.add { state, _ in state.error == nil }
       expectNoDifference(
-        condition.evaluate(state: QueryState<Int?, Int>(initialValue: nil), in: QueryContext()),
+        condition.evaluate(state: QueryState<Int?, Int>(initialValue: nil), in: OperationContext()),
         true
       )
     }
@@ -32,7 +32,7 @@ struct StaleWhenRevalidateQueryTests {
       var condition = StaleWhenRevalidateCondition()
       condition.add { state, _ in state.valueUpdateCount > 0 }
       expectNoDifference(
-        condition.evaluate(state: QueryState<Int?, Int>(initialValue: nil), in: QueryContext()),
+        condition.evaluate(state: QueryState<Int?, Int>(initialValue: nil), in: OperationContext()),
         false
       )
     }
@@ -43,7 +43,7 @@ struct StaleWhenRevalidateQueryTests {
       condition.add { state, _ in state.valueUpdateCount > 0 }
       condition.add { state, _ in state.isLoading }
       expectNoDifference(
-        condition.evaluate(state: QueryState<Int?, Int>(initialValue: nil), in: QueryContext()),
+        condition.evaluate(state: QueryState<Int?, Int>(initialValue: nil), in: OperationContext()),
         false
       )
     }
@@ -51,7 +51,7 @@ struct StaleWhenRevalidateQueryTests {
     @Test("Ors All Predicates")
     func orsAllPredicates() {
       var condition = StaleWhenRevalidateCondition()
-      let context = QueryContext()
+      let context = OperationContext()
       condition.add { _, c in c.testCount > 0 }
       condition.add { _, c in c.testCount == 0 }
       condition.add { _, c in c.testCount < 0 }
@@ -62,16 +62,16 @@ struct StaleWhenRevalidateQueryTests {
 
   @Test("Store Is Always Stale By Default")
   func storeIsAlwaysStaleByDefault() {
-    let store = QueryStore.detached(query: TestQuery(), initialValue: nil)
+    let store = OperationStore.detached(query: TestQuery(), initialValue: nil)
     expectNoDifference(store.isStale, true)
   }
 
   @Test("Stale After Seconds")
   func staleAfterSeconds() async throws {
-    let clock = TestQueryClock(date: Date())
+    let clock = TestOperationClock(date: Date())
     let query = TestQuery().stale(after: 1)
-    let store = QueryStore.detached(query: query, initialValue: nil)
-    store.context.queryClock = clock
+    let store = OperationStore.detached(query: query, initialValue: nil)
+    store.context.operationClock = clock
 
     expectNoDifference(store.isStale, true)
 
@@ -85,7 +85,7 @@ struct StaleWhenRevalidateQueryTests {
   @Test("Stale When No Value")
   func staleWhenHasValue() async throws {
     let query = TestQuery().staleWhenNoValue()
-    let store = QueryStore.detached(query: query, initialValue: nil)
+    let store = OperationStore.detached(query: query, initialValue: nil)
 
     expectNoDifference(store.isStale, true)
     try await store.fetch()
@@ -95,7 +95,7 @@ struct StaleWhenRevalidateQueryTests {
   @Test("Stale When Condition")
   func staleWhenCondition() async throws {
     let query = TestQuery().staleWhen { state, _ in state.valueUpdateCount == 0 }
-    let store = QueryStore.detached(query: query, initialValue: nil)
+    let store = OperationStore.detached(query: query, initialValue: nil)
 
     expectNoDifference(store.isStale, true)
 
@@ -108,7 +108,7 @@ struct StaleWhenRevalidateQueryTests {
     let condition = TestCondition()
     condition.send(true)
     let query = TestQuery().staleWhen(condition: condition)
-    let store = QueryStore.detached(query: query, initialValue: nil)
+    let store = OperationStore.detached(query: query, initialValue: nil)
 
     expectNoDifference(store.isStale, true)
 
@@ -118,10 +118,10 @@ struct StaleWhenRevalidateQueryTests {
 
   @Test("Ors Stale Modifiers Together")
   func orsStaleModifiersTogether() async throws {
-    let clock = TestQueryClock(date: Date())
+    let clock = TestOperationClock(date: Date())
     let query = TestQuery().stale(after: 1000).staleWhen { state, _ in state.valueUpdateCount == 0 }
-    let store = QueryStore.detached(query: query, initialValue: nil)
-    store.context.queryClock = clock
+    let store = OperationStore.detached(query: query, initialValue: nil)
+    store.context.operationClock = clock
 
     expectNoDifference(store.isStale, true)
 
@@ -135,10 +135,10 @@ struct StaleWhenRevalidateQueryTests {
   @Test("Condition False When Incorrect State Type Evaluated")
   func conditionFalseWhenIncorrectStateTypeEvaluated() async throws {
     let query = TestQuery().staleWhen { state, _ in state.valueUpdateCount == 0 }
-    let store = QueryStore.detached(query: query, initialValue: nil)
+    let store = OperationStore.detached(query: query, initialValue: nil)
     let state = MutationState<Int, String>()
     expectNoDifference(
-      store.context.staleWhenRevalidateCondition.evaluate(state: state, in: QueryContext()),
+      store.context.staleWhenRevalidateCondition.evaluate(state: state, in: OperationContext()),
       false
     )
   }
@@ -147,7 +147,7 @@ struct StaleWhenRevalidateQueryTests {
   func fetchesOnSubscriptionWhenStale() async throws {
     let query = TestQuery().enableAutomaticFetching(onlyWhen: .always(true))
       .staleWhen(condition: .always(true))
-    let store = QueryStore.detached(query: query, initialValue: nil)
+    let store = OperationStore.detached(query: query, initialValue: nil)
 
     let subscription = store.subscribe(with: QueryEventHandler())
     _ = try await store.activeTasks.first?.runIfNeeded()
@@ -158,7 +158,7 @@ struct StaleWhenRevalidateQueryTests {
   @Test("Does Not Fetch On Subscription When Not Stale")
   func doesNotFetchOnSubscriptionWhenNotStale() async throws {
     let query = TestQuery().staleWhen(condition: .always(false))
-    let store = QueryStore.detached(query: query, initialValue: nil)
+    let store = OperationStore.detached(query: query, initialValue: nil)
 
     let subscription = store.subscribe(with: QueryEventHandler())
     expectNoDifference(store.activeTasks, [])
@@ -166,7 +166,7 @@ struct StaleWhenRevalidateQueryTests {
   }
 }
 
-extension QueryContext {
+extension OperationContext {
   fileprivate var testCount: Int {
     get { self[TestCountKey.self] }
     set { self[TestCountKey.self] = newValue }

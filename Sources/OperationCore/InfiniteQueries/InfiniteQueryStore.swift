@@ -3,23 +3,23 @@ import IdentifiedCollections
 
 // MARK: - Detached
 
-extension QueryStore {
+extension OperationStore {
   /// Creates a detached store.
   ///
-  /// Detached stores are not connected to a ``QueryClient``. As such, accessing the
-  /// ``QueryContext/queryClient`` context property in your query will always yield a nil value.
+  /// Detached stores are not connected to a ``OperationClient``. As such, accessing the
+  /// ``OperationContext/OperationClient`` context property in your query will always yield a nil value.
   /// Only use a detached store if you want a separate instances of a query runtime for the same query.
   ///
   /// - Parameters:
   ///   - query: The ``InfiniteQueryRequest``.
   ///   - initialValue: The initial value.
-  ///   - initialContext: The default ``QueryContext``.
+  ///   - initialContext: The default ``OperationContext``.
   /// - Returns: A store.
   public static func detached<Query: InfiniteQueryRequest<State.PageID, State.PageValue>>(
     query: Query,
     initialValue: Query.State.StateValue = [],
-    initialContext: QueryContext = QueryContext()
-  ) -> QueryStore<State> where State == InfiniteQueryState<State.PageID, State.PageValue> {
+    initialContext: OperationContext = OperationContext()
+  ) -> OperationStore<State> where State == InfiniteQueryState<State.PageID, State.PageValue> {
     .detached(
       query: query,
       initialState: InfiniteQueryState(
@@ -32,25 +32,25 @@ extension QueryStore {
 
   /// Creates a detached store.
   ///
-  /// Detached stores are not connected to a ``QueryClient``. As such, accessing the
-  /// ``QueryContext/queryClient`` context property in your query will always yield a nil value.
+  /// Detached stores are not connected to a ``OperationClient``. As such, accessing the
+  /// ``OperationContext/OperationClient`` context property in your query will always yield a nil value.
   /// Only use a detached store if you want a separate instances of a query runtime for the same query.
   ///
   /// - Parameters:
   ///   - query: The ``InfiniteQueryRequest``.
-  ///   - initialContext: The default ``QueryContext``.
+  ///   - initialContext: The default ``OperationContext``.
   /// - Returns: A store.
   public static func detached<Query: InfiniteQueryRequest<State.PageID, State.PageValue>>(
     query: DefaultInfiniteQuery<Query>,
-    initialContext: QueryContext = QueryContext()
-  ) -> QueryStore<State> where State == InfiniteQueryState<State.PageID, State.PageValue> {
+    initialContext: OperationContext = OperationContext()
+  ) -> OperationStore<State> where State == InfiniteQueryState<State.PageID, State.PageValue> {
     .detached(query: query, initialValue: query.defaultValue, initialContext: initialContext)
   }
 }
 
 // MARK: - Fetch All Pages
 
-extension QueryStore where State: _InfiniteQueryStateProtocol {
+extension OperationStore where State: _InfiniteQueryStateProtocol {
   /// Refetches all existing pages on the query.
   ///
   /// This method will refetch pages in a waterfall effect, starting from the first page, and then
@@ -59,12 +59,12 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
   /// If no pages have been fetched previously, then no pages will be fetched.
   ///
   /// - Parameters:
-  ///   - context: The ``QueryContext`` to use for the underlying ``QueryTask``.
+  ///   - context: The ``OperationContext`` to use for the underlying ``OperationTask``.
   ///   - handler: An ``InfiniteQueryEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: The fetched data.
   @discardableResult
   public func refetchAllPages(
-    using context: QueryContext? = nil,
+    using context: OperationContext? = nil,
     handler: InfiniteQueryEventHandler<State.PageID, State.PageValue> = InfiniteQueryEventHandler()
   ) async throws -> InfiniteQueryPages<State.PageID, State.PageValue> {
     let value = try await self.fetch(
@@ -74,7 +74,7 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
     return self.allPages(from: value)
   }
 
-  /// Creates a ``QueryTask`` that refetches all existing pages on the query.
+  /// Creates a ``OperationTask`` that refetches all existing pages on the query.
   ///
   /// The task will refetch pages in a waterfall effect, starting from the first page, and then
   /// continuing until either the last page is fetched, or until no more pages can be fetched.
@@ -82,14 +82,14 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
   /// If no pages have been fetched previously, then no pages will be fetched.
   ///
   /// The returned task does not begin fetching immediately. Rather you must call
-  /// ``QueryTask/runIfNeeded()`` to fetch the data.
+  /// ``OperationTask/runIfNeeded()`` to fetch the data.
   ///
   /// - Parameters:
-  ///   - context: The ``QueryContext`` to use for the underlying ``QueryTask``.
+  ///   - context: The ``OperationContext`` to use for the underlying ``OperationTask``.
   /// - Returns: A task to refetch all pages.
   public func refetchAllPagesTask(
-    using context: QueryContext? = nil
-  ) -> QueryTask<InfiniteQueryPages<State.PageID, State.PageValue>> {
+    using context: OperationContext? = nil
+  ) -> OperationTask<InfiniteQueryPages<State.PageID, State.PageValue>> {
     self.fetchTask(using: self.fetchAllPagesTaskConfiguration(using: context))
       .map(self.allPages(from:))
   }
@@ -103,10 +103,12 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
     }
   }
 
-  private func fetchAllPagesTaskConfiguration(using context: QueryContext? = nil) -> QueryContext {
+  private func fetchAllPagesTaskConfiguration(using context: OperationContext? = nil)
+    -> OperationContext
+  {
     var context = self.ensuredContext(from: context)
     context.infiniteValues?.fetchType = .allPages
-    context.queryTaskConfiguration.name = self.fetchAllPagesTaskName
+    context.operationTaskConfiguration.name = self.fetchAllPagesTaskName
     return context
   }
 
@@ -117,7 +119,7 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
 
 // MARK: - Fetch Next Page
 
-extension QueryStore where State: _InfiniteQueryStateProtocol {
+extension OperationStore where State: _InfiniteQueryStateProtocol {
   /// Fetches the page that will be placed after the last page in ``currentValue``.
   ///
   /// If no pages have been previously fetched, the initial page is fetched.
@@ -125,12 +127,12 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
   /// This method can fetch data in parallel with ``fetchPreviousPage(using:handler:)``.
   ///
   /// - Parameters:
-  ///   - context: The ``QueryContext`` to use for the underlying ``QueryTask``.
+  ///   - context: The ``OperationContext`` to use for the underlying ``OperationTask``.
   ///   - handler: An ``InfiniteQueryEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: The fetched page.
   @discardableResult
   public func fetchNextPage(
-    using context: QueryContext? = nil,
+    using context: OperationContext? = nil,
     handler: InfiniteQueryEventHandler<State.PageID, State.PageValue> = InfiniteQueryEventHandler()
   ) async throws -> InfiniteQueryPage<State.PageID, State.PageValue>? {
     guard self.hasNextPage else { return nil }
@@ -141,7 +143,7 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
     return self.nextPage(from: value)
   }
 
-  /// Creates a ``QueryTask`` to fetch the page that will be placed after the last page in
+  /// Creates a ``OperationTask`` to fetch the page that will be placed after the last page in
   /// ``currentValue``.
   ///
   /// If no pages have been previously fetched, the initial page is fetched.
@@ -149,16 +151,18 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
   /// The task can fetch data in parallel with ``fetchPreviousPage(using:handler:)``.
   ///
   /// The returned task does not begin fetching immediately. Rather you must call
-  /// ``QueryTask/runIfNeeded()`` to fetch the data.
+  /// ``OperationTask/runIfNeeded()`` to fetch the data.
   ///
   /// - Parameters:
-  ///   - context: The ``QueryContext`` to use for the underlying ``QueryTask``.
+  ///   - context: The ``OperationContext`` to use for the underlying ``OperationTask``.
   /// - Returns: The fetched page.
   public func fetchNextPageTask(
-    using context: QueryContext? = nil
-  ) -> QueryTask<InfiniteQueryPage<State.PageID, State.PageValue>?> {
+    using context: OperationContext? = nil
+  ) -> OperationTask<InfiniteQueryPage<State.PageID, State.PageValue>?> {
     guard self.hasNextPage else {
-      return QueryTask(context: self.fetchNextPageTaskConfiguration(using: context)) { _, _ in nil }
+      return OperationTask(context: self.fetchNextPageTaskConfiguration(using: context)) { _, _ in
+        nil
+      }
     }
     return self.fetchTask(using: self.fetchNextPageTaskConfiguration(using: context))
       .map(self.nextPage(from:))
@@ -174,11 +178,12 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
     }
   }
 
-  private func fetchNextPageTaskConfiguration(using context: QueryContext?) -> QueryContext {
+  private func fetchNextPageTaskConfiguration(using context: OperationContext?) -> OperationContext
+  {
     var context = self.ensuredContext(from: context)
     context.infiniteValues?.fetchType = .nextPage
-    context.queryTaskConfiguration.name =
-      context.queryTaskConfiguration.name ?? self.fetchNextPageTaskName
+    context.operationTaskConfiguration.name =
+      context.operationTaskConfiguration.name ?? self.fetchNextPageTaskName
     return context
   }
 
@@ -189,7 +194,7 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
 
 // MARK: - Fetch Previous Page
 
-extension QueryStore where State: _InfiniteQueryStateProtocol {
+extension OperationStore where State: _InfiniteQueryStateProtocol {
   /// Fetches the page that will be placed before the first page in ``currentValue``.
   ///
   /// If no pages have been previously fetched, the initial page is fetched.
@@ -197,12 +202,12 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
   /// This method can fetch data in parallel with ``fetchNextPage(using:handler:)``.
   ///
   /// - Parameters:
-  ///   - context: The ``QueryContext`` to use for the underlying ``QueryTask``.
+  ///   - context: The ``OperationContext`` to use for the underlying ``OperationTask``.
   ///   - handler: An ``InfiniteQueryEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: The fetched page.
   @discardableResult
   public func fetchPreviousPage(
-    using context: QueryContext? = nil,
+    using context: OperationContext? = nil,
     handler: InfiniteQueryEventHandler<State.PageID, State.PageValue> = InfiniteQueryEventHandler()
   ) async throws -> InfiniteQueryPage<State.PageID, State.PageValue>? {
     guard self.hasPreviousPage else { return nil }
@@ -213,7 +218,7 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
     return self.previousPage(from: value)
   }
 
-  /// Creates a ``QueryTask`` to fetch the page that will be placed before the first page in
+  /// Creates a ``OperationTask`` to fetch the page that will be placed before the first page in
   /// ``currentValue``.
   ///
   /// If no pages have been previously fetched, the initial page is fetched.
@@ -221,16 +226,18 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
   /// The task can fetch data in parallel with ``fetchNextPage(using:handler:)``.
   ///
   /// The returned task does not begin fetching immediately. Rather you must call
-  /// ``QueryTask/runIfNeeded()`` to fetch the data.
+  /// ``OperationTask/runIfNeeded()`` to fetch the data.
   ///
   /// - Parameters:
-  ///   - context: The ``QueryContext`` to use for the underlying ``QueryTask``.
+  ///   - context: The ``OperationContext`` to use for the underlying ``OperationTask``.
   /// - Returns: The fetched page.
   public func fetchPreviousPageTask(
-    using context: QueryContext? = nil
-  ) -> QueryTask<InfiniteQueryPage<State.PageID, State.PageValue>?> {
+    using context: OperationContext? = nil
+  ) -> OperationTask<InfiniteQueryPage<State.PageID, State.PageValue>?> {
     guard self.hasPreviousPage else {
-      return QueryTask(context: self.fetchPreviousPageTaskConfiguration(using: context)) { _, _ in
+      return OperationTask(context: self.fetchPreviousPageTaskConfiguration(using: context)) {
+        _,
+        _ in
         nil
       }
     }
@@ -248,11 +255,13 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
     }
   }
 
-  private func fetchPreviousPageTaskConfiguration(using context: QueryContext?) -> QueryContext {
+  private func fetchPreviousPageTaskConfiguration(using context: OperationContext?)
+    -> OperationContext
+  {
     var context = self.ensuredContext(from: context)
     context.infiniteValues?.fetchType = .previousPage
-    context.queryTaskConfiguration.name =
-      context.queryTaskConfiguration.name ?? self.fetchPreviousPageTaskName
+    context.operationTaskConfiguration.name =
+      context.operationTaskConfiguration.name ?? self.fetchPreviousPageTaskName
     return context
   }
 
@@ -263,21 +272,21 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
 
 // MARK: - Fetch
 
-extension QueryStore where State: _InfiniteQueryStateProtocol {
+extension OperationStore where State: _InfiniteQueryStateProtocol {
   private func fetch(
-    using context: QueryContext,
+    using context: OperationContext,
     handler: InfiniteQueryEventHandler<State.PageID, State.PageValue>
   ) async throws -> InfiniteQueryValue<State.PageID, State.PageValue> {
     let subscription = context.infiniteValues?
       .addRequestSubscriber(from: handler, isTemporary: true)
     defer { subscription?.cancel() }
-    return try await self.fetch(using: context, handler: self.queryStoreHandler(for: handler))
+    return try await self.fetch(using: context, handler: self.OperationStoreHandler(for: handler))
   }
 }
 
 // MARK: - Subscribe
 
-extension QueryStore where State: _InfiniteQueryStateProtocol {
+extension OperationStore where State: _InfiniteQueryStateProtocol {
   /// Subscribes to events from this store using a ``InfiniteQueryEventHandler``.
   ///
   /// If the subscription is the first active subscription on this store, this method will begin
@@ -288,19 +297,19 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
   /// - Parameter handler: The event handler.
   public func subscribe(
     with handler: InfiniteQueryEventHandler<State.PageID, State.PageValue>
-  ) -> QuerySubscription {
+  ) -> OperationSubscription {
     let context = self.ensuredContext(from: nil)
     let contextSubscription = context.infiniteValues?
       .addRequestSubscriber(from: handler, isTemporary: false)
-    let baseSubscription = self.subscribe(with: self.queryStoreHandler(for: handler))
+    let baseSubscription = self.subscribe(with: self.OperationStoreHandler(for: handler))
     return .combined([baseSubscription, contextSubscription ?? .empty])
   }
 }
 
 // MARK: - InfiniteQueryEventHandler
 
-extension QueryStore where State: _InfiniteQueryStateProtocol {
-  private func queryStoreHandler(
+extension OperationStore where State: _InfiniteQueryStateProtocol {
+  private func OperationStoreHandler(
     for handler: InfiniteQueryEventHandler<State.PageID, State.PageValue>
   ) -> QueryEventHandler<State> {
     QueryEventHandler(
@@ -310,7 +319,7 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
       onFetchingStarted: handler.onFetchingStarted,
       onFetchingEnded: handler.onFetchingEnded,
       onResultReceived: { result, context in
-        guard context.queryResultUpdateReason == .returnedFinalResult else { return }
+        guard context.operationResultUpdateReason == .returnedFinalResult else { return }
         handler.onResultReceived?(result.map { [weak self] _ in self?.currentValue ?? [] }, context)
       }
     )
@@ -319,8 +328,8 @@ extension QueryStore where State: _InfiniteQueryStateProtocol {
 
 // MARK: - Context
 
-extension QueryStore where State: _InfiniteQueryStateProtocol {
-  private func ensuredContext(from context: QueryContext?) -> QueryContext {
+extension OperationStore where State: _InfiniteQueryStateProtocol {
+  private func ensuredContext(from context: OperationContext?) -> OperationContext {
     let values = self.context.ensureInfiniteValues()
     var context = context ?? self.context
     context.infiniteValues?.requestSubscriptions = values.requestSubscriptions

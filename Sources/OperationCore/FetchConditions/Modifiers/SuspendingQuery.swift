@@ -21,9 +21,9 @@ public struct _SuspendModifier<Query: QueryRequest, Condition: FetchCondition>: 
   let condition: Condition
 
   public func fetch(
-    in context: QueryContext,
+    in context: OperationContext,
     using query: Query,
-    with continuation: QueryContinuation<Query.Value>
+    with continuation: OperationContinuation<Query.Value>
   ) async throws -> Query.Value {
     guard !self.condition.isSatisfied(in: context) else {
       return try await query.fetch(in: context, with: continuation)
@@ -32,9 +32,9 @@ public struct _SuspendModifier<Query: QueryRequest, Condition: FetchCondition>: 
     return try await query.fetch(in: context, with: continuation)
   }
 
-  private func waitForTrue(in context: QueryContext) async throws {
+  private func waitForTrue(in context: OperationContext) async throws {
     try Task.checkCancellation()
-    var subscription: QuerySubscription?
+    var subscription: OperationSubscription?
     let state = Lock<
       (didFinish: Bool, continuation: UnsafeContinuation<Void, any Error>?)
     >((false, nil))

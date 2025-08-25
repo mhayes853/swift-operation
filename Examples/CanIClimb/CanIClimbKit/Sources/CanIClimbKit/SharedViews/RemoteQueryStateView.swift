@@ -1,15 +1,15 @@
 import SharingOperation
 import SwiftUI
 
-public struct RemoteQueryStateView<
-  State: QueryStateProtocol,
+public struct RemoteOperationStateView<
+  State: OperationState,
   Content: View
 >: View where State.StateValue == State.StatusValue? {
-  private let shared: SharedQuery<State>
+  private let shared: SharedOperation<State>
   private let content: (State.StatusValue) -> Content
 
   public init(
-    _ shared: SharedQuery<State>,
+    _ shared: SharedOperation<State>,
     @ViewBuilder content: @escaping (State.StatusValue) -> Content
   ) {
     self.shared = shared

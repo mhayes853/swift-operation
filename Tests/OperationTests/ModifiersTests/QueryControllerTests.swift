@@ -4,12 +4,12 @@ import Foundation
 @_spi(Warnings) import OperationTestHelpers
 import Testing
 
-@Suite("QueryController tests")
-struct QueryControllerTests {
+@Suite("OperationController tests")
+struct OperationControllerTests {
   @Test("Unsubscribes When Store Deallocated")
   func unsubscribeWhenStoreDeallocated() {
-    let controller = TestQueryController<TestQuery>()
-    var store: QueryStore<TestQuery.State>? = .detached(
+    let controller = TestOperationController<TestQuery>()
+    var store: OperationStore<TestQuery.State>? = .detached(
       query: TestQuery().controlled(by: controller),
       initialValue: nil
     )
@@ -22,8 +22,8 @@ struct QueryControllerTests {
 
   @Test("Does Not Return Refetch Task When Automatic Fetching Disabled")
   func doesNotReturnRefetchTaskWhenAutomaticFetchingDisabled() {
-    let controller = TestQueryController<TestQuery>()
-    let store = QueryStore.detached(
+    let controller = TestOperationController<TestQuery>()
+    let store = OperationStore.detached(
       query: TestQuery().controlled(by: controller)
         .disableAutomaticFetching(),
       initialValue: nil
@@ -36,8 +36,8 @@ struct QueryControllerTests {
 
   @Test("Refetches Data")
   func refetchesData() async throws {
-    let controller = TestQueryController<TestQuery>()
-    let store = QueryStore.detached(
+    let controller = TestOperationController<TestQuery>()
+    let store = OperationStore.detached(
       query: TestQuery().controlled(by: controller)
         .enableAutomaticFetching(onlyWhen: .always(true)),
       initialValue: nil
@@ -51,15 +51,15 @@ struct QueryControllerTests {
 
   @Test("Yields New State Value To Query")
   func yieldsNewStateValueToQuery() async throws {
-    let controller = TestQueryController<TestQuery>()
-    let store = QueryStore.detached(
+    let controller = TestOperationController<TestQuery>()
+    let store = OperationStore.detached(
       query: TestQuery().controlled(by: controller)
         .enableAutomaticFetching(onlyWhen: .always(true)),
       initialValue: nil
     )
 
     let date = RecursiveLock(Date())
-    store.context.queryClock = .custom { date.withLock { $0 } }
+    store.context.operationClock = .custom { date.withLock { $0 } }
 
     controller.controls.withLock { $0?.yield(10) }
     expectNoDifference(store.currentValue, 10)
@@ -75,15 +75,15 @@ struct QueryControllerTests {
 
   @Test("Yields New Error Value To Query")
   func yieldsNewErrorValueToQuery() async throws {
-    let controller = TestQueryController<TestQuery>()
-    let store = QueryStore.detached(
+    let controller = TestOperationController<TestQuery>()
+    let store = OperationStore.detached(
       query: TestQuery().controlled(by: controller)
         .enableAutomaticFetching(onlyWhen: .always(true)),
       initialValue: nil
     )
 
     let date = RecursiveLock(Date())
-    store.context.queryClock = .custom { date.withLock { $0 } }
+    store.context.operationClock = .custom { date.withLock { $0 } }
 
     controller.controls.withLock { $0?.yield(throwing: SomeError.a) }
     expectNoDifference(store.error as? SomeError, .a)
@@ -99,13 +99,13 @@ struct QueryControllerTests {
 
   @Test("Yields New State Value To Query, Emits State Changed Event")
   func yieldsNewStateValueToQueryEmitsStateChangedEvent() async throws {
-    let controller = TestQueryController<TestQuery>()
-    let store = QueryStore.detached(
+    let controller = TestOperationController<TestQuery>()
+    let store = OperationStore.detached(
       query: TestQuery().controlled(by: controller)
         .disableAutomaticFetching(),
       initialValue: nil
     )
-    let collector = QueryStoreEventsCollector<TestQuery.State>()
+    let collector = OperationStoreEventsCollector<TestQuery.State>()
     let subscription = store.subscribe(with: collector.eventHandler())
     controller.controls.withLock { $0?.yield(10) }
     collector.expectEventsMatch([.stateChanged, .stateChanged])
@@ -114,8 +114,8 @@ struct QueryControllerTests {
 
   @Test("Yields Reset To Query")
   func yieldsResetToQuery() async throws {
-    let controller = TestQueryController<TestQuery>()
-    let store = QueryStore.detached(
+    let controller = TestOperationController<TestQuery>()
+    let store = OperationStore.detached(
       query: TestQuery().controlled(by: controller),
       initialValue: nil
     )
@@ -128,8 +128,8 @@ struct QueryControllerTests {
 
   @Test("Yield Result Based Off Of Current State")
   func yieldResultToQueryBasedOffCurrentState() async throws {
-    let controller = TestQueryController<TestQuery>()
-    let store = QueryStore.detached(
+    let controller = TestOperationController<TestQuery>()
+    let store = OperationStore.detached(
       query: TestQuery().controlled(by: controller),
       initialValue: nil
     )
@@ -144,10 +144,10 @@ struct QueryControllerTests {
 
   @Test("Reports Issue When Accessing Controls When Controller Is Deallocated")
   func reportsIssueWhenAccessingControlsWhenControllerIsDeallocated() async throws {
-    final class EvilController<State: QueryStateProtocol>: QueryController {
-      let controls = Lock<QueryControls<State>?>(nil)
+    final class EvilController<State: OperationState>: OperationController {
+      let controls = Lock<OperationControls<State>?>(nil)
 
-      func control(with controls: QueryControls<State>) -> QuerySubscription {
+      func control(with controls: OperationControls<State>) -> OperationSubscription {
         self.controls.withLock { $0 = controls }
         return .empty
       }
@@ -155,7 +155,7 @@ struct QueryControllerTests {
 
     let controller = EvilController<TestQuery.State>()
     do {
-      _ = QueryStore.detached(
+      _ = OperationStore.detached(
         query: TestQuery().controlled(by: controller),
         initialValue: nil
       )

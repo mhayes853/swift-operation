@@ -68,7 +68,7 @@ struct FormCaseStudy: CaseStudy {
 @Observable
 final class FormModel {
   @ObservationIgnored
-  @SharedQuery(FormName.updateMutation, animation: .bouncy) var update
+  @SharedOperation(FormName.updateMutation, animation: .bouncy) var update
 
   var name = ""
   var alert: AlertState<AlertAction>?
@@ -159,8 +159,8 @@ extension FormName {
 
     func mutate(
       with arguments: Arguments,
-      in context: QueryContext,
-      with continuation: QueryContinuation<UpdateResult>
+      in context: OperationContext,
+      with continuation: OperationContinuation<UpdateResult>
     ) async throws -> UpdateResult {
       try await context.queryDelayer.delay(for: isTesting ? 0 : 0.5)
       if takenNames.contains(where: { $0.lowercased() == arguments.name.rawValue.lowercased() }) {

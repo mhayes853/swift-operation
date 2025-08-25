@@ -3,8 +3,8 @@ import IdentifiedCollections
 
 // MARK: - _MutationStateProtocol
 
-public protocol _MutationStateProtocol<Arguments, Value>: QueryStateProtocol
-where StateValue == Value?, StatusValue == Value, QueryValue == MutationValue<Value> {
+public protocol _MutationStateProtocol<Arguments, Value>: OperationState
+where StateValue == Value?, StatusValue == Value, OperationValue == MutationValue<Value> {
   associatedtype Arguments: Sendable
   associatedtype Value: Sendable
 }
@@ -19,7 +19,7 @@ where StateValue == Value?, StatusValue == Value, QueryValue == MutationValue<Va
 /// attempt and much more.
 ///
 /// > Warning: You should not call any of the `mutating` methods directly on this type, rather a
-/// > ``QueryStore`` will call them at the appropriate time for you.
+/// > ``OperationStore`` will call them at the appropriate time for you.
 public struct MutationState<Arguments: Sendable, Value: Sendable> {
   public private(set) var valueUpdateCount = 0
   private var historyValueLastUpdatedAt: Date?
@@ -31,8 +31,8 @@ public struct MutationState<Arguments: Sendable, Value: Sendable> {
   /// The history of this mutation.
   ///
   /// This array stores all ongoing and previous attempts of fetching a mutation. Each attempt is
-  /// marked by a ``HistoryEntry`` that contains the ``QueryTask`` used by the attempt,
-  /// and information on the outcome of the attempt such as its ``QueryStatus``.
+  /// marked by a ``HistoryEntry`` that contains the ``OperationTask`` used by the attempt,
+  /// and information on the outcome of the attempt such as its ``OperationStatus``.
   ///
   /// You can use the history to implement UI flows that block known invalid inputs, prevent users
   /// from performing actions after they're known to fail, and much more.
@@ -46,12 +46,12 @@ public struct MutationState<Arguments: Sendable, Value: Sendable> {
   }
 }
 
-// MARK: - QueryStateProtocol
+// MARK: - OperationState
 
 extension MutationState: _MutationStateProtocol {
   public typealias StateValue = Value?
   public typealias StatusValue = Value
-  public typealias QueryValue = MutationValue<Value>
+  public typealias OperationValue = MutationValue<Value>
 
   public var currentValue: StateValue {
     switch (self.history.last?.status, self.yielded) {
@@ -113,7 +113,7 @@ extension MutationState: _MutationStateProtocol {
     self.history.last?.status.isLoading ?? false
   }
 
-  public mutating func scheduleFetchTask(_ task: inout QueryTask<QueryValue>) {
+  public mutating func scheduleFetchTask(_ task: inout OperationTask<OperationValue>) {
     let args = task.context.mutationArgs(as: Arguments.self) ?? self.history.last?.arguments
     guard let args else {
       reportWarning(.mutationWithNoArgumentsOrHistory)
@@ -126,7 +126,7 @@ extension MutationState: _MutationStateProtocol {
     }
   }
 
-  public mutating func reset(using context: QueryContext) -> ResetEffect {
+  public mutating func reset(using context: OperationContext) -> ResetEffect {
     let tasksToCancel = self.history.map(\.baseTask)
     self = Self(initialValue: self.initialValue)
     return ResetEffect(tasksToCancel: tasksToCancel)
@@ -134,21 +134,21 @@ extension MutationState: _MutationStateProtocol {
 
   public mutating func update(
     with result: Result<Value?, any Error>,
-    using context: QueryContext
+    using context: OperationContext
   ) {
     switch result {
     case .success(let value):
-      self.yielded = .success(value, context.queryClock.now())
+      self.yielded = .success(value, context.operationClock.now())
       self.valueUpdateCount += 1
     case .failure(let error):
-      self.yielded = .failure(error, context.queryClock.now())
+      self.yielded = .failure(error, context.operationClock.now())
       self.errorUpdateCount += 1
     }
   }
 
   public mutating func update(
-    with result: Result<QueryValue, any Error>,
-    for task: QueryTask<QueryValue>
+    with result: Result<OperationValue, any Error>,
+    for task: OperationTask<OperationValue>
   ) {
     self.history[id: task.id]?.update(with: result.map(\.returnValue))
     guard let last = self.history.last, last.task.id == task.id else { return }
@@ -162,7 +162,7 @@ extension MutationState: _MutationStateProtocol {
     }
   }
 
-  public mutating func finishFetchTask(_ task: QueryTask<QueryValue>) {
+  public mutating func finishFetchTask(_ task: OperationTask<OperationValue>) {
     self.history[id: task.id]?.finish()
   }
 }
@@ -184,15 +184,15 @@ extension MutationState {
     /// The date this entry was last modified.
     public private(set) var lastUpdatedAt: Date?
 
-    /// The current ``QueryStatus`` of the mutation attempt represented by this entry.
-    public private(set) var status: QueryStatus<StatusValue>
+    /// The current ``OperationStatus`` of the mutation attempt represented by this entry.
+    public private(set) var status: OperationStatus<StatusValue>
 
-    fileprivate let baseTask: QueryTask<QueryValue>
+    fileprivate let baseTask: OperationTask<OperationValue>
 
-    fileprivate init(task: QueryTask<QueryValue>, args: Arguments) {
+    fileprivate init(task: OperationTask<OperationValue>, args: Arguments) {
       self.baseTask = task
       self.arguments = args
-      self.startDate = task.context.queryClock.now()
+      self.startDate = task.context.operationClock.now()
       self.lastUpdatedAt = nil
       self.status = .loading
     }
@@ -200,14 +200,14 @@ extension MutationState {
 }
 
 extension MutationState.HistoryEntry {
-  /// The ``QueryTask`` for this entry.
-  public var task: QueryTask<Value> {
+  /// The ``OperationTask`` for this entry.
+  public var task: OperationTask<Value> {
     self.baseTask.map(\.returnValue)
   }
 }
 
 extension MutationState.HistoryEntry: Identifiable {
-  public var id: QueryTaskIdentifier {
+  public var id: OperationTaskIdentifier {
     self.task.id
   }
 }
@@ -215,7 +215,7 @@ extension MutationState.HistoryEntry: Identifiable {
 extension MutationState.HistoryEntry {
   fileprivate mutating func update(with result: Result<Value, any Error>) {
     self.currentResult = result
-    self.lastUpdatedAt = self.task.context.queryClock.now()
+    self.lastUpdatedAt = self.task.context.operationClock.now()
   }
 
   fileprivate mutating func finish() {
@@ -236,16 +236,16 @@ extension MutationState {
 
 // MARK: - Warnings
 
-extension QueryWarning {
-  public static let mutationWithNoArgumentsOrHistory = QueryWarning(
+extension OperationWarning {
+  public static let mutationWithNoArgumentsOrHistory = OperationWarning(
     """
     The latest mutation attempt was retried, but the retried mutation has no history.
 
-    Calling `fetch` or `retryLatest` on a `QueryStore` that uses a mutation will retry the latest \
+    Calling `fetch` or `retryLatest` on a `OperationStore` that uses a mutation will retry the latest \
     mutation attempt in the history (ie. recalling `mutate`, but with the same arguments), but \
     this is impossible if there is no history for the mutation.
 
-    Make sure to call `mutate` on the store first before calling `fetch` on the `QueryStore` \
+    Make sure to call `mutate` on the store first before calling `fetch` on the `OperationStore` \
     instance, or before calling `retryLatest` on the `MutationStore`.
     """
   )

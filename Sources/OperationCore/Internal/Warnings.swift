@@ -1,19 +1,19 @@
 import IssueReporting
 
-// MARK: - QueryWarning
+// MARK: - OperationWarning
 
 @_spi(Warnings)
-public struct QueryWarning: Sendable, Hashable {
+public struct OperationWarning: Sendable, Hashable {
   public let message: String
 }
 
-extension QueryWarning: ExpressibleByStringLiteral {
+extension OperationWarning: ExpressibleByStringLiteral {
   public init(stringLiteral value: String) {
     self.init(message: value)
   }
 }
 
-extension QueryWarning: ExpressibleByStringInterpolation {
+extension OperationWarning: ExpressibleByStringInterpolation {
   public init(stringInterpolation: StringInterpolation) {
     self.init(message: stringInterpolation.description)
   }
@@ -23,7 +23,7 @@ extension QueryWarning: ExpressibleByStringInterpolation {
 
 @_transparent
 @_spi(Warnings) public func reportWarning(
-  _ warning: QueryWarning,
+  _ warning: OperationWarning,
   fileID: StaticString = #fileID,
   filePath: StaticString = #filePath,
   line: UInt = #line,

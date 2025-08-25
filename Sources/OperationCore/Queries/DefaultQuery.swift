@@ -27,7 +27,7 @@ where Query.State == QueryState<Query.Value?, Query.Value> {
     self._defaultValue()
   }
 
-  public var path: QueryPath {
+  public var path: OperationPath {
     self.query.path
   }
 
@@ -35,13 +35,13 @@ where Query.State == QueryState<Query.Value?, Query.Value> {
     self.query._debugTypeName
   }
 
-  public func setup(context: inout QueryContext) {
+  public func setup(context: inout OperationContext) {
     self.query.setup(context: &context)
   }
 
   public func fetch(
-    in context: QueryContext,
-    with continuation: QueryContinuation<Query.Value>
+    in context: OperationContext,
+    with continuation: OperationContinuation<Query.Value>
   ) async throws -> Query.Value {
     try await self.query.fetch(in: context, with: continuation)
   }

@@ -6,7 +6,7 @@ import SwiftUI
 // MARK: - ContentView
 
 struct ContentView: View {
-  @Dependency(\.defaultQueryClient) private var client
+  @Dependency(\.defaultOperationClient) private var client
 
   var body: some View {
     NavigationStack {
@@ -35,7 +35,7 @@ struct ContentView: View {
         }
       }
       .navigationTitle("Case Studies")
-      .queryClient(self.client)
+      .OperationClient(self.client)
     }
   }
 }

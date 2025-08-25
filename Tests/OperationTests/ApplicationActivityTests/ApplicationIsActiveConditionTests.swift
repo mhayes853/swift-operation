@@ -16,7 +16,7 @@
         notificationCenter: self.center
       )
       let condition: some FetchCondition = .applicationIsActive(observer: observer)
-      expectNoDifference(condition.isSatisfied(in: QueryContext()), isActive)
+      expectNoDifference(condition.isSatisfied(in: OperationContext()), isActive)
     }
 
     @Test("Is Always False When Context Disables Focus Fetching", arguments: [true, false])
@@ -26,7 +26,7 @@
         notificationCenter: self.center
       )
       let condition: some FetchCondition = .applicationIsActive(observer: observer)
-      var context = QueryContext()
+      var context = OperationContext()
       context.isApplicationActiveRefetchingEnabled = false
       expectNoDifference(condition.isSatisfied(in: context), false)
     }
@@ -39,7 +39,7 @@
       )
       let condition: some FetchCondition = .applicationIsActive(observer: observer)
       let satisfactions = Lock([Bool]())
-      var context = QueryContext()
+      var context = OperationContext()
       context.isApplicationActiveRefetchingEnabled = false
       let subscription = condition.subscribe(in: context) { value in
         satisfactions.withLock { $0.append(value) }
@@ -57,7 +57,7 @@
       )
       let condition: some FetchCondition = .applicationIsActive(observer: observer)
       let satisfactions = Lock([Bool]())
-      let subscription = condition.subscribe(in: QueryContext()) { value in
+      let subscription = condition.subscribe(in: OperationContext()) { value in
         satisfactions.withLock { $0.append(value) }
       }
       self.center.post(name: .fakeDidBecomeActive, object: nil)
@@ -73,7 +73,7 @@
       )
       let condition: some FetchCondition = .applicationIsActive(observer: observer)
       let satisfactions = Lock([Bool]())
-      let subscription = condition.subscribe(in: QueryContext()) { value in
+      let subscription = condition.subscribe(in: OperationContext()) { value in
         satisfactions.withLock { $0.append(value) }
       }
       satisfactions.withLock { expectNoDifference($0, [true]) }
@@ -99,7 +99,7 @@
       )
       let condition: some FetchCondition = .applicationIsActive(observer: observer)
       let satisfactions = RecursiveLock([Bool]())
-      let subscription = condition.subscribe(in: QueryContext()) { value in
+      let subscription = condition.subscribe(in: OperationContext()) { value in
         satisfactions.withLock { $0.append(value) }
       }
       self.center.post(name: .fakeWillResignActive, object: nil)

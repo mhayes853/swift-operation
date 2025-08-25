@@ -8,11 +8,11 @@ import Testing
 struct QueryKeyTests {
   @Test("Fetches Value")
   func fetchesValue() async throws {
-    @Dependency(\.defaultQueryClient) var client
+    @Dependency(\.defaultOperationClient) var client
 
     let query = TestQuery().withTaskMegaYield()
 
-    @SharedQuery(query) var value
+    @SharedOperation(query) var value
 
     expectNoDifference(value, nil)
     _ = try await client.store(for: query).activeTasks.first?.runIfNeeded()
@@ -21,11 +21,11 @@ struct QueryKeyTests {
 
   @Test("Fetches Error")
   func fetchesError() async throws {
-    @Dependency(\.defaultQueryClient) var client
+    @Dependency(\.defaultOperationClient) var client
 
     let query = FailingQuery().withTaskMegaYield()
 
-    @SharedQuery(query) var value
+    @SharedOperation(query) var value
 
     expectNoDifference($value.error as? FailingQuery.SomeError, nil)
     _ = try? await client.store(for: query).activeTasks.first?.runIfNeeded()
@@ -34,10 +34,10 @@ struct QueryKeyTests {
 
   @Test("Set Value, Updates Value In Store")
   func setValueUpdatesValueInStore() async throws {
-    @Dependency(\.defaultQueryClient) var client
+    @Dependency(\.defaultOperationClient) var client
 
     let query = TestQuery().disableAutomaticFetching()
-    @SharedQuery(query) var value
+    @SharedOperation(query) var value
 
     $value.withLock { $0 = TestQuery.value + 1 }
     expectNoDifference(value, TestQuery.value + 1)
@@ -46,24 +46,24 @@ struct QueryKeyTests {
 
   @Test("Shares State With Shared Queries")
   func sharesStateWithSharedQueries() async throws {
-    @Dependency(\.defaultQueryClient) var client
+    @Dependency(\.defaultOperationClient) var client
 
     let query = TestQuery().disableAutomaticFetching()
-    @SharedQuery(query) var value
-    @SharedQuery(query) var state
+    @SharedOperation(query) var value
+    @SharedOperation(query) var state
 
     $value.withLock { $0 = TestQuery.value + 1 }
     expectNoDifference(value, TestQuery.value + 1)
     expectNoDifference(state, value)
   }
 
-  @Test("Makes Separate Subscribers When Using QueryKey And QueryStateKey In Conjunction")
-  func makesSeparateSubscribersWhenUsingQueryKeyAndQueryStateKeyInConjunction() async throws {
-    @Dependency(\.defaultQueryClient) var client
+  @Test("Makes Separate Subscribers When Using QueryKey And OperationStateKey In Conjunction")
+  func makesSeparateSubscribersWhenUsingQueryKeyAndOperationStateKeyInConjunction() async throws {
+    @Dependency(\.defaultOperationClient) var client
 
     let query = TestQuery().disableAutomaticFetching()
-    @SharedQuery(query) var value
-    @SharedQuery(query) var state
+    @SharedOperation(query) var value
+    @SharedOperation(query) var state
 
     let store = client.store(for: query)
     expectNoDifference(store.subscriberCount, 2)
@@ -71,11 +71,11 @@ struct QueryKeyTests {
 
   @Test("Makes Separate Subscribers When Using QueryKeys With The Same Query")
   func makesSeparateSubscribersWhenUsingQueryKeysWithTheSameQuery() async throws {
-    @Dependency(\.defaultQueryClient) var client
+    @Dependency(\.defaultOperationClient) var client
 
     let query = TestQuery().disableAutomaticFetching()
-    @SharedQuery(query) var value
-    @SharedQuery(query) var state
+    @SharedOperation(query) var value
+    @SharedOperation(query) var state
 
     let store = client.store(for: query)
     expectNoDifference(store.subscriberCount, 2)
@@ -83,27 +83,27 @@ struct QueryKeyTests {
 
   @Test("Backed Query Is Not Unbacked")
   func backedQueryIsBacked() async throws {
-    @SharedQuery(TestQuery().disableAutomaticFetching()) var value
+    @SharedOperation(TestQuery().disableAutomaticFetching()) var value
     expectNoDifference($value.isBacked, true)
   }
 
   @Test("Unbacked Query")
   func unbackedQuery() async throws {
-    @SharedQuery<TestQuery.State> var value = TestQuery.value
+    @SharedOperation<TestQuery.State> var value = TestQuery.value
     expectNoDifference(value, TestQuery.value)
     expectNoDifference($value.isBacked, false)
   }
 
   @Test("Unbacked Mutation")
   func unbackedMutation() async throws {
-    @SharedQuery<EmptyMutation.State> var value = "blob"
+    @SharedOperation<EmptyMutation.State> var value = "blob"
     expectNoDifference(value, "blob")
     expectNoDifference($value.isBacked, false)
   }
 
   @Test("Reports Issue When Fetching Unbacked Query")
   func reportsIssueWhenFetchingUnbackedQuery() async throws {
-    @SharedQuery<TestQuery.State> var value = TestQuery.value
+    @SharedOperation<TestQuery.State> var value = TestQuery.value
 
     await #expect(throws: Error.self) {
       try await withKnownIssue {

@@ -26,7 +26,7 @@ public struct DefaultInfiniteQuery<Query: InfiniteQueryRequest>: QueryRequest {
     self._defaultValue()
   }
 
-  public var path: QueryPath {
+  public var path: OperationPath {
     self.query.path
   }
 
@@ -34,13 +34,13 @@ public struct DefaultInfiniteQuery<Query: InfiniteQueryRequest>: QueryRequest {
     self.query._debugTypeName
   }
 
-  public func setup(context: inout QueryContext) {
+  public func setup(context: inout OperationContext) {
     self.query.setup(context: &context)
   }
 
   public func fetch(
-    in context: QueryContext,
-    with continuation: QueryContinuation<Query.Value>
+    in context: OperationContext,
+    with continuation: OperationContinuation<Query.Value>
   ) async throws -> Query.Value {
     try await self.query.fetch(in: context, with: continuation)
   }
@@ -58,7 +58,7 @@ extension DefaultInfiniteQuery: InfiniteQueryRequest {
   public func pageId(
     after page: InfiniteQueryPage<PageID, PageValue>,
     using paging: InfiniteQueryPaging<PageID, PageValue>,
-    in context: QueryContext
+    in context: OperationContext
   ) -> PageID? {
     self.query.pageId(after: page, using: paging, in: context)
   }
@@ -66,15 +66,15 @@ extension DefaultInfiniteQuery: InfiniteQueryRequest {
   public func pageId(
     before page: InfiniteQueryPage<PageID, PageValue>,
     using paging: InfiniteQueryPaging<PageID, PageValue>,
-    in context: QueryContext
+    in context: OperationContext
   ) -> PageID? {
     self.query.pageId(before: page, using: paging, in: context)
   }
 
   public func fetchPage(
     using paging: InfiniteQueryPaging<PageID, PageValue>,
-    in context: QueryContext,
-    with continuation: QueryContinuation<PageValue>
+    in context: OperationContext,
+    with continuation: OperationContinuation<PageValue>
   ) async throws -> PageValue {
     try await self.query.fetchPage(using: paging, in: context, with: continuation)
   }

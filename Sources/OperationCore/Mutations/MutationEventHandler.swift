@@ -1,32 +1,33 @@
-/// An event handler that's passed to ``QueryStore/subscribe(with:)-7si49``.
+/// An event handler that's passed to ``OperationStore/subscribe(with:)-7si49``.
 public struct MutationEventHandler<Arguments: Sendable, Value: Sendable>: Sendable {
   /// A callback that is invoked when the mutation state changes.
-  public var onStateChanged: (@Sendable (MutationState<Arguments, Value>, QueryContext) -> Void)?
+  public var onStateChanged:
+    (@Sendable (MutationState<Arguments, Value>, OperationContext) -> Void)?
 
-  /// A callback that is invoked when a mutation is started on the ``QueryStore``.
-  public var onMutatingStarted: (@Sendable (Arguments, QueryContext) -> Void)?
+  /// A callback that is invoked when a mutation is started on the ``OperationStore``.
+  public var onMutatingStarted: (@Sendable (Arguments, OperationContext) -> Void)?
 
-  /// A callback that is invoked when a mutation ends on the ``QueryStore``.
-  public var onMutatingEnded: (@Sendable (Arguments, QueryContext) -> Void)?
+  /// A callback that is invoked when a mutation ends on the ``OperationStore``.
+  public var onMutatingEnded: (@Sendable (Arguments, OperationContext) -> Void)?
 
   /// A callback that is invoked when a mutation emits a result.
   public var onMutationResultReceived:
-    (@Sendable (Arguments, Result<Value, any Error>, QueryContext) -> Void)?
+    (@Sendable (Arguments, Result<Value, any Error>, OperationContext) -> Void)?
 
   /// Creates an event handler.
   ///
   /// - Parameters:
   ///   - onStateChanged: A callback that is invoked when the mutation state changes.
-  ///   - onMutatingStarted: A callback that is invoked when a mutation is started on the ``QueryStore``.
+  ///   - onMutatingStarted: A callback that is invoked when a mutation is started on the ``OperationStore``.
   ///   - onMutationResultReceived: A callback that is invoked when a mutation emits a result.
-  ///   - onMutatingEnded: A callback that is invoked when a mutation ends on the ``QueryStore``.
+  ///   - onMutatingEnded: A callback that is invoked when a mutation ends on the ``OperationStore``.
   public init(
-    onStateChanged: (@Sendable (MutationState<Arguments, Value>, QueryContext) -> Void)? = nil,
-    onMutatingStarted: (@Sendable (Arguments, QueryContext) -> Void)? = nil,
+    onStateChanged: (@Sendable (MutationState<Arguments, Value>, OperationContext) -> Void)? = nil,
+    onMutatingStarted: (@Sendable (Arguments, OperationContext) -> Void)? = nil,
     onMutationResultReceived: (
-      @Sendable (Arguments, Result<Value, any Error>, QueryContext) -> Void
+      @Sendable (Arguments, Result<Value, any Error>, OperationContext) -> Void
     )? = nil,
-    onMutatingEnded: (@Sendable (Arguments, QueryContext) -> Void)? = nil
+    onMutatingEnded: (@Sendable (Arguments, OperationContext) -> Void)? = nil
   ) {
     self.onMutatingStarted = onMutatingStarted
     self.onMutationResultReceived = onMutationResultReceived

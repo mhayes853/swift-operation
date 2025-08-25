@@ -67,8 +67,8 @@ extension TravelEstimate {
     let request: Request
 
     public func fetch(
-      in context: QueryContext,
-      with continuation: QueryContinuation<TravelEstimate>
+      in context: OperationContext,
+      with continuation: OperationContinuation<TravelEstimate>
     ) async throws -> TravelEstimate {
       @Dependency(TravelEstimate.LoaderKey.self) var loader
       return try await loader.estimate(for: self.request)

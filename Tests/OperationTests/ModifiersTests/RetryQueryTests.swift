@@ -12,7 +12,7 @@ struct RetryQueryTests {
       .delayer(.noDelay)
       .retry(limit: 0)
       .defaultValue("blob")
-    let store = QueryStore.detached(query: query)
+    let store = OperationStore.detached(query: query)
     await #expect(throws: FailingQuery.SomeError.self) {
       try await store.fetch()
     }
@@ -21,7 +21,7 @@ struct RetryQueryTests {
   @Test("Fetch Errors, Then Retries The Specified Number Of Times")
   func fetchErrorsThenRetriesTheSpecifiedNumberOfTimes() async {
     let query = CountingQuery()
-    let store = QueryStore.detached(
+    let store = OperationStore.detached(
       query: query.backoff(.noBackoff)
         .delayer(.noDelay)
         .retry(limit: 3),
@@ -39,7 +39,7 @@ struct RetryQueryTests {
   @Test("Succeeds On Second Refetch, Returns Value")
   func succeedsOnSecondRefetchReturnsValue() async throws {
     let query = SucceedOnNthRefetchQuery(index: 2)
-    let store = QueryStore.detached(
+    let store = OperationStore.detached(
       query: query.backoff(.noBackoff)
         .delayer(.noDelay)
         .retry(limit: 3),
@@ -52,7 +52,7 @@ struct RetryQueryTests {
   @Test("Succeeds On Final Refetch, Returns Value")
   func succeedsOnFinalRefetchReturnsValue() async throws {
     let query = SucceedOnNthRefetchQuery(index: 3)
-    let store = QueryStore.detached(
+    let store = OperationStore.detached(
       query: query.backoff(.noBackoff)
         .delayer(.noDelay)
         .retry(limit: 3),
@@ -66,7 +66,7 @@ struct RetryQueryTests {
   func doesNotRetryEveryPageFetchWhenFetchingAllPages() async throws {
     let query = FlakeyInfiniteQuery()
     query.values.withLock { $0.failOnPageId = -1 }
-    let store = QueryStore.detached(
+    let store = OperationStore.detached(
       query: query.backoff(.noBackoff)
         .delayer(.noDelay)
         .retry(limit: 3)
@@ -94,21 +94,21 @@ struct RetryQueryTests {
     let query = FailingQuery().backoff(.noBackoff)
       .delayer(.noDelay)
       .retry(limit: 10)
-    let store = QueryStore.detached(query: query, initialValue: nil)
-    expectNoDifference(store.context.queryMaxRetries, 10)
+    let store = OperationStore.detached(query: query, initialValue: nil)
+    expectNoDifference(store.context.operationMaxRetries, 10)
   }
 
   @Test("Uses Context Max Retries Over Query Limit")
   func usesContextMaxRetriesOverQueryLimit() async throws {
     let query = CountingQuery()
     await query.ensureFails()
-    let store = QueryStore.detached(
+    let store = OperationStore.detached(
       query: query.backoff(.noBackoff)
         .delayer(.noDelay)
         .retry(limit: 3),
       initialValue: nil
     )
-    store.context.queryMaxRetries = 10
+    store.context.operationMaxRetries = 10
     _ = try? await store.fetch()
     let count = await query.fetchCount
     expectNoDifference(count, 11)
@@ -121,7 +121,7 @@ struct RetryQueryTests {
       .delayer(delayer)
       .backoff(.linear(1000))
       .retry(limit: 5)
-    let store = QueryStore.detached(query: query, initialValue: nil)
+    let store = OperationStore.detached(query: query, initialValue: nil)
     _ = try? await store.fetch()
     expectNoDifference(delayer.delays, [1000, 2000, 3000, 4000, 5000])
   }

@@ -51,8 +51,8 @@ extension DependenciesTestSuite {
       }
     }
 
-    @Test("Presents QueryDevTools When Device Shaken After Appearance")
-    func presentsQueryDevToolsWhenDeviceShaken() async throws {
+    @Test("Presents OperationDevTools When Device Shaken After Appearance")
+    func presentsOperationDevToolsWhenDeviceShaken() async throws {
       @Dependency(\.notificationCenter) var center
 
       let model = CanIClimbModel()
@@ -65,8 +65,8 @@ extension DependenciesTestSuite {
       await model.disappeared()
     }
 
-    @Test("Dismisses QueryDevTools When Dismissed")
-    func dismissesQueryDevToolsWhenDismissed() async throws {
+    @Test("Dismisses OperationDevTools When Dismissed")
+    func dismissesOperationDevToolsWhenDismissed() async throws {
       @Dependency(\.notificationCenter) var center
 
       let model = CanIClimbModel()
@@ -79,8 +79,8 @@ extension DependenciesTestSuite {
       await model.disappeared()
     }
 
-    @Test("Does Not Re-Present QueryDevTools When Device Shaken After Appearance")
-    func doesNotRePresentQueryDevToolsWhenDeviceShaken() async throws {
+    @Test("Does Not Re-Present OperationDevTools When Device Shaken After Appearance")
+    func doesNotRePresentOperationDevToolsWhenDeviceShaken() async throws {
       @Dependency(\.notificationCenter) var center
 
       let model = CanIClimbModel()
@@ -96,8 +96,8 @@ extension DependenciesTestSuite {
       await model.disappeared()
     }
 
-    @Test("Stops Presenting QueryDevTools When Device Shaken After Disappearance")
-    func stopsPresentingQueryDevToolsWhenDeviceShakenAfterDisappearance() async throws {
+    @Test("Stops Presenting OperationDevTools When Device Shaken After Disappearance")
+    func stopsPresentingOperationDevToolsWhenDeviceShakenAfterDisappearance() async throws {
       @Dependency(\.notificationCenter) var center
 
       let model = CanIClimbModel()

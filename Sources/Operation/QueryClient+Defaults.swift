@@ -7,14 +7,14 @@ import OperationCore
 
 // MARK: - Default Init
 
-extension QueryClient {
+extension OperationClient {
   /// Creates a client.
   ///
   /// - Parameters:
-  ///   - defaultContext: The default ``QueryContext`` to use for each ``QueryStore`` created by the client.
+  ///   - defaultContext: The default ``OperationContext`` to use for each ``OperationStore`` created by the client.
   ///   - storeCache: The ``StoreCache`` to use.
   public convenience init(
-    defaultContext: QueryContext = QueryContext(),
+    defaultContext: OperationContext = OperationContext(),
     storeCache: sending some StoreCache = DefaultStoreCache()
   ) {
     self.init(
@@ -27,7 +27,7 @@ extension QueryClient {
 
 // MARK: - DefaultStoreCreator
 
-extension QueryClient {
+extension OperationClient {
   /// The default `StoreCreator` used by a query client.
   ///
   /// This store creator applies a set of default modifiers to both `QueryRequest` and
@@ -44,18 +44,18 @@ extension QueryClient {
   /// - Retries
   public struct DefaultStoreCreator: StoreCreator {
     let retryLimit: Int
-    let backoff: QueryBackoffFunction?
-    let delayer: (any QueryDelayer)?
+    let backoff: OperationBackoffFunction?
+    let delayer: (any OperationDelayer)?
     let queryEnableAutomaticFetchingCondition: any FetchCondition
     let networkObserver: (any NetworkObserver)?
     let activityObserver: (any ApplicationActivityObserver)?
 
     public func store<Query: QueryRequest>(
       for query: Query,
-      in context: QueryContext,
+      in context: OperationContext,
       with initialState: Query.State
-    ) -> QueryStore<Query.State> {
-      let backoff = self.backoff ?? context.queryBackoffFunction
+    ) -> OperationStore<Query.State> {
+      let backoff = self.backoff ?? context.operationBackoffFunction
       let delayer = AnyDelayer(self.delayer ?? context.queryDelayer)
       if query is any MutationRequest {
         return .detached(
@@ -98,11 +98,11 @@ extension QueryClient {
   }
 }
 
-extension QueryClient.StoreCreator where Self == QueryClient.DefaultStoreCreator {
+extension OperationClient.StoreCreator where Self == OperationClient.DefaultStoreCreator {
   /// The default `StoreCreator` used by a query client for testing.
   ///
   /// In testing, retries are disabled, and the network status and application activity status are
-  /// not observed, delays are disabled, and the backoff function is `QueryBackoffFunction.noBackoff`.
+  /// not observed, delays are disabled, and the backoff function is `OperationBackoffFunction.noBackoff`.
   public static var defaultTesting: Self {
     .default(
       retryLimit: 0,
@@ -137,14 +137,14 @@ extension QueryClient.StoreCreator where Self == QueryClient.DefaultStoreCreator
   ///   whether or not automatic fetching is enabled for queries (and not mutations).
   ///   - networkObserver: The default `NetworkObserver` to use.
   ///   - activityObserver: The default `ApplicationActivityObserver` to use.
-  /// - Returns: A ``QueryCore/QueryClient/DefaultStoreCreator``.
+  /// - Returns: A ``QueryCore/OperationClient/DefaultStoreCreator``.
   public static func `default`(
     retryLimit: Int = 3,
-    backoff: QueryBackoffFunction? = nil,
-    delayer: (any QueryDelayer)? = nil,
+    backoff: OperationBackoffFunction? = nil,
+    delayer: (any OperationDelayer)? = nil,
     queryEnableAutomaticFetchingCondition: any FetchCondition = .always(true),
-    networkObserver: (any NetworkObserver)? = QueryClient.defaultNetworkObserver,
-    activityObserver: (any ApplicationActivityObserver)? = QueryClient
+    networkObserver: (any NetworkObserver)? = OperationClient.defaultNetworkObserver,
+    activityObserver: (any ApplicationActivityObserver)? = OperationClient
       .defaultApplicationActivityObserver
   ) -> Self {
     Self(
@@ -160,7 +160,7 @@ extension QueryClient.StoreCreator where Self == QueryClient.DefaultStoreCreator
 
 // MARK: - Defaults
 
-extension QueryClient {
+extension OperationClient {
   /// The default ``NetworkObserver`` to use for observing the user's connection status.
   ///
   /// - On Darwin platforms, `NWPathMonitorObserver` is used.

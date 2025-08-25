@@ -11,16 +11,17 @@ import SwiftUINavigation
 @Observable
 public final class PlanClimbModel: HashableObject, Identifiable {
   @ObservationIgnored
-  @SharedQuery<Mountain.Query.State> public var mountain: Mountain??
+  @SharedOperation<Mountain.Query.State> public var mountain: Mountain??
 
   @ObservationIgnored
   @SharedReader(.alarmsAuthorization) public var alarmsAuthorization
 
   @ObservationIgnored
-  @SharedQuery(ScheduleableAlarm.requestAuthorizationMutation) public var requestAlarmAuthorization
+  @SharedOperation(ScheduleableAlarm.requestAuthorizationMutation) public
+    var requestAlarmAuthorization
 
   @ObservationIgnored
-  @SharedQuery(Mountain.planClimbMutation) public var planClimb
+  @SharedOperation(Mountain.planClimbMutation) public var planClimb
 
   public var targetDate = Date() {
     didSet {
@@ -37,7 +38,7 @@ public final class PlanClimbModel: HashableObject, Identifiable {
   @ObservationIgnored public var onPlanned: ((Mountain.PlannedClimb) -> Void)?
 
   public init(mountainId: Mountain.ID) {
-    self._mountain = SharedQuery(Mountain.query(id: mountainId), animation: .bouncy)
+    self._mountain = SharedOperation(Mountain.query(id: mountainId), animation: .bouncy)
   }
 }
 
@@ -94,7 +95,7 @@ public struct PlanClimbView: View {
   }
 
   public var body: some View {
-    RemoteQueryStateView(self.model.$mountain) { mountain in
+    RemoteOperationStateView(self.model.$mountain) { mountain in
       if let mountain = mountain {
         PlanClimbFormView(mountain: mountain, model: self.model)
       } else {

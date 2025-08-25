@@ -45,8 +45,8 @@ extension NumberFact {
     let number: Int
 
     public func fetch(
-      in context: QueryContext,
-      with continuation: QueryContinuation<NumberFact>
+      in context: OperationContext,
+      with continuation: OperationContinuation<NumberFact>
     ) async throws -> NumberFact {
       @Dependency(NumberFact.LoaderKey.self) var loader
       return try await loader.fact(for: self.number)

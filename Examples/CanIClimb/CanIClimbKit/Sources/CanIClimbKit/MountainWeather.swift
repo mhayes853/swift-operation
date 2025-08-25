@@ -11,35 +11,35 @@ import SwiftUINavigation
 @Observable
 public final class MountainWeatherModel {
   @ObservationIgnored
-  @SharedQuery<WeatherReading.CurrentQuery.State> private var mountainWeather: WeatherReading?
+  @SharedOperation<WeatherReading.CurrentQuery.State> private var mountainWeather: WeatherReading?
 
   public var destination: Destination?
   public let mountain: Mountain
 
   @ObservationIgnored
-  @SharedQuery<WeatherReading.CurrentQuery.State> private var userWeather: WeatherReading?
+  @SharedOperation<WeatherReading.CurrentQuery.State> private var userWeather: WeatherReading?
 
   private var userLocation: Result<LocationReading, any Error>?
 
   public init(mountain: Mountain) {
     self.mountain = mountain
-    self._mountainWeather = SharedQuery(
+    self._mountainWeather = SharedOperation(
       WeatherReading.currentQuery(for: mountain.location.coordinate),
       animation: .bouncy
     )
-    self._userWeather = SharedQuery(wrappedValue: nil)
+    self._userWeather = SharedOperation(wrappedValue: nil)
   }
 
   public func userLocationUpdated(reading: Result<LocationReading, any Error>) {
     self.userLocation = reading
     switch reading {
     case .success(let location):
-      self.$userWeather = SharedQuery(
+      self.$userWeather = SharedOperation(
         WeatherReading.currentQuery(for: location.coordinate),
         animation: .bouncy
       )
     case .failure:
-      self.$userWeather = SharedQuery(wrappedValue: nil)
+      self.$userWeather = SharedOperation(wrappedValue: nil)
     }
   }
 }
@@ -55,7 +55,7 @@ extension MountainWeatherModel {
     public let systemImageName: String
     public let locationName: LocalizedStringResource
     public let unauthorizedText: LocalizedStringResource?
-    @SharedQuery<WeatherReading.CurrentQuery.State> public var reading: WeatherReading?
+    @SharedOperation<WeatherReading.CurrentQuery.State> public var reading: WeatherReading?
   }
 
   public var userWeatherDetail: Detail {
@@ -223,7 +223,7 @@ private struct WeatherDetailView: View {
       if let unauthorizedText = self.detail.unauthorizedText {
         Text(unauthorizedText)
       } else if self.detail.$reading.isBacked {
-        RemoteQueryStateView(self.detail.$reading) { weather in
+        RemoteOperationStateView(self.detail.$reading) { weather in
           WeatherReadingFormView(weather: weather)
           Section {
             HStack {

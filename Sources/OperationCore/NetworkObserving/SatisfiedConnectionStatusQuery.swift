@@ -16,7 +16,7 @@ public struct _SatisfiedConnectionStatusModifier<
 >: _ContextUpdatingQueryModifier {
   let status: NetworkConnectionStatus
 
-  public func setup(context: inout QueryContext) {
+  public func setup(context: inout OperationContext) {
     context.satisfiedConnectionStatus = self.status
   }
 }

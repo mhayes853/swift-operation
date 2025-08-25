@@ -108,11 +108,11 @@ extension User {
 
     public func mutate(
       with arguments: Arguments,
-      in context: QueryContext,
-      with continuation: QueryContinuation<Void>
+      in context: OperationContext,
+      with continuation: OperationContinuation<Void>
     ) async throws {
       @Dependency(User.AuthenticatorKey.self) var authenticator
-      @Dependency(\.defaultQueryClient) var client
+      @Dependency(\.defaultOperationClient) var client
 
       try await authenticator.signIn(with: arguments.credentials)
       Task.immediate { try await client.store(for: User.currentQuery).fetch() }
@@ -127,11 +127,11 @@ extension User {
   public struct SignOutMutation: MutationRequest, Hashable {
     public func mutate(
       with arguments: Void,
-      in context: QueryContext,
-      with continuation: QueryContinuation<Void>
+      in context: OperationContext,
+      with continuation: OperationContinuation<Void>
     ) async throws {
       @Dependency(User.AuthenticatorKey.self) var authenticator
-      @Dependency(\.defaultQueryClient) var client
+      @Dependency(\.defaultOperationClient) var client
 
       try await authenticator.signOut()
       let userStore = client.store(for: User.currentQuery)

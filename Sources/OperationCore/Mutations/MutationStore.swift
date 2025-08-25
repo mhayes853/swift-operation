@@ -1,20 +1,21 @@
 // MARK: - Detached
 
-extension QueryStore {
+extension OperationStore {
   /// Creates a detached store.
   ///
-  /// Detached stores are not connected to a ``QueryClient``. As such, accessing the
-  /// ``QueryContext/queryClient`` context property in your query will always yield a nil value.
+  /// Detached stores are not connected to a ``OperationClient``. As such, accessing the
+  /// ``OperationContext/OperationClient`` context property in your query will always yield a nil value.
   /// Only use a detached store if you want a separate instances of a query runtime for the same query.
   ///
   /// - Parameters:
   ///   - mutation: The ``MutationRequest``.
-  ///   - initialContext: The default ``QueryContext``.
+  ///   - initialContext: The default ``OperationContext``.
   /// - Returns: A store.
   public static func detached<Arguments, Value, Mutation: MutationRequest<Arguments, Value>>(
     mutation: Mutation,
-    initialContext: QueryContext = QueryContext()
-  ) -> QueryStore<MutationState<Arguments, Value>> where State == MutationState<Arguments, Value> {
+    initialContext: OperationContext = OperationContext()
+  ) -> OperationStore<MutationState<Arguments, Value>>
+  where State == MutationState<Arguments, Value> {
     .detached(
       query: mutation,
       initialState: MutationState(),
@@ -24,20 +25,21 @@ extension QueryStore {
 
   /// Creates a detached store.
   ///
-  /// Detached stores are not connected to a ``QueryClient``. As such, accessing the
-  /// ``QueryContext/queryClient`` context property in your query will always yield a nil value.
+  /// Detached stores are not connected to a ``OperationClient``. As such, accessing the
+  /// ``OperationContext/OperationClient`` context property in your query will always yield a nil value.
   /// Only use a detached store if you want a separate instances of a query runtime for the same query.
   ///
   /// - Parameters:
   ///   - mutation: The ``MutationRequest``.
   ///   - initialValue: The initial value.
-  ///   - initialContext: The default ``QueryContext``.
+  ///   - initialContext: The default ``OperationContext``.
   /// - Returns: A store.
   public static func detached<Arguments, Value, Mutation: MutationRequest<Arguments, Value>>(
     mutation: Mutation,
     initialValue: Value?,
-    initialContext: QueryContext = QueryContext()
-  ) -> QueryStore<MutationState<Arguments, Value>> where State == MutationState<Arguments, Value> {
+    initialContext: OperationContext = OperationContext()
+  ) -> OperationStore<MutationState<Arguments, Value>>
+  where State == MutationState<Arguments, Value> {
     .detached(
       query: mutation,
       initialState: MutationState(initialValue: initialValue),
@@ -47,20 +49,21 @@ extension QueryStore {
 
   /// Creates a detached store.
   ///
-  /// Detached stores are not connected to a ``QueryClient``. As such, accessing the
-  /// ``QueryContext/queryClient`` context property in your query will always yield a nil value.
+  /// Detached stores are not connected to a ``OperationClient``. As such, accessing the
+  /// ``OperationContext/OperationClient`` context property in your query will always yield a nil value.
   /// Only use a detached store if you want a separate instances of a query runtime for the same query.
   ///
   /// - Parameters:
   ///   - mutation: The ``MutationRequest``.
   ///   - initialState: The initial state.
-  ///   - initialContext: The default ``QueryContext``.
+  ///   - initialContext: The default ``OperationContext``.
   /// - Returns: A store.
   public static func detached<Arguments, Value, Mutation: MutationRequest<Arguments, Value>>(
     mutation: Mutation,
     initialState: State,
-    initialContext: QueryContext = QueryContext()
-  ) -> QueryStore<MutationState<Arguments, Value>> where State == MutationState<Arguments, Value> {
+    initialContext: OperationContext = OperationContext()
+  ) -> OperationStore<MutationState<Arguments, Value>>
+  where State == MutationState<Arguments, Value> {
     .detached(
       query: mutation,
       initialState: initialState,
@@ -71,51 +74,52 @@ extension QueryStore {
 
 // MARK: - Mutate
 
-extension QueryStore where State: _MutationStateProtocol {
+extension OperationStore where State: _MutationStateProtocol {
   /// Performs a mutation.
   ///
   /// - Parameters:
   ///   - arguments: The set of arguments to mutate with.
-  ///   - context: The ``QueryContext`` used by the underlying ``QueryTask``.
+  ///   - context: The ``OperationContext`` used by the underlying ``OperationTask``.
   ///   - handler: A ``QueryEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: The mutated value.
   @discardableResult
   public func mutate(
     with arguments: State.Arguments,
-    using context: QueryContext? = nil,
+    using context: OperationContext? = nil,
     handler: MutationEventHandler<State.Arguments, State.Value> = MutationEventHandler()
   ) async throws -> State.Value {
     try await self.fetch(
       using: self.taskConfiguration(with: arguments, using: context),
-      handler: self.queryStoreHandler(for: handler)
+      handler: self.OperationStoreHandler(for: handler)
     )
     .returnValue
   }
 
-  /// Creates a ``QueryTask`` that performs a mutation.
+  /// Creates a ``OperationTask`` that performs a mutation.
   ///
   /// The returned task does not begin fetching immediately. Rather you must call
-  /// ``QueryTask/runIfNeeded()`` to fetch the data.
+  /// ``OperationTask/runIfNeeded()`` to fetch the data.
   ///
   /// - Parameters:
   ///   - arguments: The set of arguments to mutate with.
-  ///   - context: The ``QueryContext`` for the task.
+  ///   - context: The ``OperationContext`` for the task.
   /// - Returns: A task to perform the mutation.
   public func mutateTask(
     with arguments: State.Arguments,
-    using context: QueryContext? = nil
-  ) -> QueryTask<State.Value> {
+    using context: OperationContext? = nil
+  ) -> OperationTask<State.Value> {
     self.fetchTask(using: self.taskConfiguration(with: arguments, using: context))
       .map(\.returnValue)
   }
 
   private func taskConfiguration(
     with arguments: State.Arguments,
-    using base: QueryContext?
-  ) -> QueryContext {
+    using base: OperationContext?
+  ) -> OperationContext {
     var context = base ?? self.context
     context.mutationValues.arguments = arguments
-    context.queryTaskConfiguration.name = context.queryTaskConfiguration.name ?? self.mutateTaskName
+    context.operationTaskConfiguration.name =
+      context.operationTaskConfiguration.name ?? self.mutateTaskName
     return context
   }
 
@@ -124,37 +128,37 @@ extension QueryStore where State: _MutationStateProtocol {
   }
 }
 
-extension QueryStore where State: _MutationStateProtocol, State.Arguments == Void {
+extension OperationStore where State: _MutationStateProtocol, State.Arguments == Void {
   /// Performs a mutation with no arguments.
   ///
   /// - Parameters:
-  ///   - context: The ``QueryContext`` used by the underlying ``QueryTask``.
+  ///   - context: The ``OperationContext`` used by the underlying ``OperationTask``.
   ///   - handler: A ``MutationEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: The mutated value.
   @discardableResult
   public func mutate(
-    using context: QueryContext? = nil,
+    using context: OperationContext? = nil,
     handler: MutationEventHandler<State.Arguments, State.Value> = MutationEventHandler()
   ) async throws -> State.Value {
     try await self.mutate(with: (), using: context, handler: handler)
   }
 
-  /// Creates a ``QueryTask`` that performs a mutation with no arguments.
+  /// Creates a ``OperationTask`` that performs a mutation with no arguments.
   ///
   /// The returned task does not begin fetching immediately. Rather you must call
-  /// ``QueryTask/runIfNeeded()`` to fetch the data.
+  /// ``OperationTask/runIfNeeded()`` to fetch the data.
   ///
   /// - Parameters:
-  ///   - context: The ``QueryContext`` for the task.
+  ///   - context: The ``OperationContext`` for the task.
   /// - Returns: A task to perform the mutation.
-  public func mutateTask(using context: QueryContext? = nil) -> QueryTask<State.Value> {
+  public func mutateTask(using context: OperationContext? = nil) -> OperationTask<State.Value> {
     self.mutateTask(with: (), using: context)
   }
 }
 
 // MARK: - Retry Latest
 
-extension QueryStore where State: _MutationStateProtocol {
+extension OperationStore where State: _MutationStateProtocol {
   /// Retries the mutation with the most recently used set of arguments.
   ///
   /// > Important: Calling this method without previously having called ``mutate(using:handler:)``
@@ -162,44 +166,45 @@ extension QueryStore where State: _MutationStateProtocol {
   /// > test. Additionally, the mutation will also throw an error.
   ///
   /// - Parameters:
-  ///   - context: The ``QueryContext`` used by the underlying ``QueryTask``.
+  ///   - context: The ``OperationContext`` used by the underlying ``OperationTask``.
   ///   - handler: A ``MutationEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: The mutated value.
   @discardableResult
   public func retryLatest(
-    using context: QueryContext? = nil,
+    using context: OperationContext? = nil,
     handler: MutationEventHandler<State.Arguments, State.Value> = MutationEventHandler()
   ) async throws -> State.Value {
     try await self.fetch(
       using: self.retryTaskConfiguration(using: context),
-      handler: self.queryStoreHandler(for: handler)
+      handler: self.OperationStoreHandler(for: handler)
     )
     .returnValue
   }
 
-  /// Creates a ``QueryTask`` that retries the mutation with the most recently used set of
+  /// Creates a ``OperationTask`` that retries the mutation with the most recently used set of
   /// arguments.
   ///
   /// The returned task does not begin fetching immediately. Rather you must call
-  /// ``QueryTask/runIfNeeded()`` to fetch the data.
+  /// ``OperationTask/runIfNeeded()`` to fetch the data.
   ///
   /// > Important: Calling this method without previously having called ``mutate(using:handler:)``
   /// > will result in a purple runtime warning in Xcode, and a test failure for current running
   /// > test. Additionally, the mutation will also throw an error.
   ///
   /// - Parameters:
-  ///   - context: The ``QueryContext`` for the task.
+  ///   - context: The ``OperationContext`` for the task.
   /// - Returns: A task to retry the most recently used arguments on the mutation.
-  public func retryLatestTask(using context: QueryContext? = nil) -> QueryTask<State.Value> {
+  public func retryLatestTask(using context: OperationContext? = nil) -> OperationTask<State.Value>
+  {
     self.fetchTask(using: self.retryTaskConfiguration(using: context)).map(\.returnValue)
   }
 
   private func retryTaskConfiguration(
-    using base: QueryContext?
-  ) -> QueryContext {
+    using base: OperationContext?
+  ) -> OperationContext {
     var context = base ?? self.context
-    context.queryTaskConfiguration.name =
-      context.queryTaskConfiguration.name ?? self.retryLatestTaskName
+    context.operationTaskConfiguration.name =
+      context.operationTaskConfiguration.name ?? self.retryLatestTaskName
     return context
   }
 
@@ -210,22 +215,22 @@ extension QueryStore where State: _MutationStateProtocol {
 
 // MARK: - Subscribe
 
-extension QueryStore where State: _MutationStateProtocol {
+extension OperationStore where State: _MutationStateProtocol {
   /// Subscribes to events from this store using a ``MutationEventHandler``.
   ///
   /// - Parameter handler: The event handler.
-  /// - Returns: A ``QuerySubscription``.
+  /// - Returns: A ``OperationSubscription``.
   public func subscribe(
     with handler: MutationEventHandler<State.Arguments, State.Value>
-  ) async throws -> QuerySubscription {
-    self.subscribe(with: self.queryStoreHandler(for: handler))
+  ) async throws -> OperationSubscription {
+    self.subscribe(with: self.OperationStoreHandler(for: handler))
   }
 }
 
 // MARK: - Event Handler
 
-extension QueryStore where State: _MutationStateProtocol {
-  private func queryStoreHandler(
+extension OperationStore where State: _MutationStateProtocol {
+  private func OperationStoreHandler(
     for handler: MutationEventHandler<State.Arguments, State.Value>
   ) -> QueryEventHandler<State> {
     QueryEventHandler(

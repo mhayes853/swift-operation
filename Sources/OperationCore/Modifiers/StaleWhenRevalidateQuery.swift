@@ -3,7 +3,7 @@ import Foundation
 // MARK: - StaleWhenRevalidateQuery
 
 extension QueryRequest {
-  /// Marks ``QueryStore/isStale`` as true for this query whenever the specified predicate is true.
+  /// Marks ``OperationStore/isStale`` as true for this query whenever the specified predicate is true.
   ///
   /// Chaining multiple instances of any modifier that begins with `stale` will result in an OR
   /// operation being applied between the diffent conditions. For instance, the following queries
@@ -18,15 +18,15 @@ extension QueryRequest {
   /// }
   /// ```
   ///
-  /// - Parameter predicate: A predicate to evaluate whether or not ``QueryStore/isStale`` is true.
+  /// - Parameter predicate: A predicate to evaluate whether or not ``OperationStore/isStale`` is true.
   /// - Returns: A ``ModifiedQuery``.
   public func staleWhen(
-    predicate: @escaping @Sendable (State, QueryContext) -> Bool
+    predicate: @escaping @Sendable (State, OperationContext) -> Bool
   ) -> ModifiedQuery<Self, _StaleWhenModifier<Self>> {
     self.modifier(_StaleWhenModifier(predicate: predicate))
   }
 
-  /// Marks ``QueryStore/isStale`` as true for this query whenever the specified ``FetchCondition`` is true.
+  /// Marks ``OperationStore/isStale`` as true for this query whenever the specified ``FetchCondition`` is true.
   ///
   /// Chaining multiple instances of any modifier that begins with `stale` will result in an OR
   /// operation being applied between the diffent conditions. For instance, the following queries
@@ -39,7 +39,7 @@ extension QueryRequest {
   /// let q2 = MyQuery().staleWhen(condition: cond1 || cond2)
   /// ```
   ///
-  /// - Parameter condition: A ``FetchCondition`` to indicate whether or not ``QueryStore/isStale`` is true.
+  /// - Parameter condition: A ``FetchCondition`` to indicate whether or not ``OperationStore/isStale`` is true.
   /// - Returns: A ``ModifiedQuery``.
   public func staleWhen(
     condition: some FetchCondition
@@ -49,7 +49,7 @@ extension QueryRequest {
     )
   }
 
-  /// Marks ``QueryStore/isStale`` as true for this query whenever its current value is nil.
+  /// Marks ``OperationStore/isStale`` as true for this query whenever its current value is nil.
   ///
   /// Chaining multiple instances of any modifier that begins with `stale` will result in an OR
   /// operation being applied between the diffent conditions. For instance, the following queries
@@ -70,7 +70,7 @@ extension QueryRequest {
     self.staleWhen { state, _ in state.currentValue == nil }
   }
 
-  /// Marks ``QueryStore/isStale`` as true for this query when the specified number of seconds has
+  /// Marks ``OperationStore/isStale`` as true for this query when the specified number of seconds has
   /// elapsed since the last time this query was successfully fetched..
   ///
   /// Chaining multiple instances of any modifier that begins with `stale` will result in an OR
@@ -83,13 +83,13 @@ extension QueryRequest {
   ///   .staleWhen { state, _ in state.currentValue == 1 }
   /// ```
   ///
-  /// - Parameter seconds: A `TimeInterval` at which ``QueryStore/isStale`` is true after a successful fetch.
+  /// - Parameter seconds: A `TimeInterval` at which ``OperationStore/isStale`` is true after a successful fetch.
   /// - Returns: A ``ModifiedQuery``.
   public func stale(after seconds: TimeInterval) -> ModifiedQuery<Self, _StaleWhenModifier<Self>> {
     self.modifier(
       _StaleWhenModifier { state, context in
         guard let date = state.valueLastUpdatedAt else { return true }
-        let now = context.queryClock.now()
+        let now = context.operationClock.now()
         return now.timeIntervalSince(date) > seconds
       }
     )
@@ -97,9 +97,9 @@ extension QueryRequest {
 }
 
 public struct _StaleWhenModifier<Query: QueryRequest>: _ContextUpdatingQueryModifier {
-  let predicate: @Sendable (Query.State, QueryContext) -> Bool
+  let predicate: @Sendable (Query.State, OperationContext) -> Bool
 
-  public func setup(context: inout QueryContext) {
+  public func setup(context: inout OperationContext) {
     context.staleWhenRevalidateCondition.add { state, context in
       guard let state = state.base as? Query.State else {
         return false
@@ -113,7 +113,7 @@ public struct _StaleWhenModifier<Query: QueryRequest>: _ContextUpdatingQueryModi
 
 @_spi(StaleWhenRevalidateCondition)
 public struct StaleWhenRevalidateCondition: Sendable {
-  private var predicates = [@Sendable (OpaqueQueryState, QueryContext) -> Bool]()
+  private var predicates = [@Sendable (OpaqueOperationState, OperationContext) -> Bool]()
 
   public init() {}
 }
@@ -121,7 +121,7 @@ public struct StaleWhenRevalidateCondition: Sendable {
 @_spi(StaleWhenRevalidateCondition)
 extension StaleWhenRevalidateCondition {
   public mutating func add(
-    predicate: @escaping @Sendable (OpaqueQueryState, QueryContext) -> Bool
+    predicate: @escaping @Sendable (OpaqueOperationState, OperationContext) -> Bool
   ) {
     self.predicates.append(predicate)
   }
@@ -129,8 +129,8 @@ extension StaleWhenRevalidateCondition {
 
 @_spi(StaleWhenRevalidateCondition)
 extension StaleWhenRevalidateCondition {
-  public func evaluate(state: some QueryStateProtocol, in context: QueryContext) -> Bool {
-    let opaqueState = OpaqueQueryState(state)
+  public func evaluate(state: some OperationState, in context: OperationContext) -> Bool {
+    let opaqueState = OpaqueOperationState(state)
     var current = true
     for predicate in self.predicates {
       current = predicate(opaqueState, context)
@@ -142,10 +142,10 @@ extension StaleWhenRevalidateCondition {
   }
 }
 
-// MARK: - QueryContext
+// MARK: - OperationContext
 
 @_spi(StaleWhenRevalidateCondition)
-extension QueryContext {
+extension OperationContext {
   public var staleWhenRevalidateCondition: StaleWhenRevalidateCondition {
     get { self[StaleWhenRevalidateConditionKey.self] }
     set { self[StaleWhenRevalidateConditionKey.self] = newValue }

@@ -5,11 +5,11 @@ import SwiftUI
 struct BasicSwiftUICaseStudy: CaseStudy {
   let title: LocalizedStringKey = "Basic SwiftUI"
   let description: LocalizedStringKey = """
-    Basic usage of the library using the `@State.Query` property wrapper to fetch a random quote \
+    Basic usage of the library using the `@State.Operation` property wrapper to fetch a random quote \
     from the Dummy JSON API in SwiftUI.
     """
 
-  @State.Query(Quote.randomQuery) private var quote
+  @State.Operation(Quote.randomQuery) private var quote
 
   var content: some View {
     VStack(alignment: .leading, spacing: 20) {

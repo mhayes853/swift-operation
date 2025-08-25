@@ -32,8 +32,8 @@ extension Recipe {
 
   struct RandomQuery: QueryRequest, Hashable {
     func fetch(
-      in context: QueryContext,
-      with continuation: QueryContinuation<Recipe?>
+      in context: OperationContext,
+      with continuation: OperationContinuation<Recipe?>
     ) async throws -> Recipe? {
       @Dependency(\.withRandomNumberGenerator) var withRNG
       @Dependency(RecipeIDLoaderKey.self) var loader

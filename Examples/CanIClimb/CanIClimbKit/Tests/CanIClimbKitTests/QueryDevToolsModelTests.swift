@@ -5,30 +5,30 @@ import Testing
 
 extension DependenciesTestSuite {
   @MainActor
-  @Suite("QueryDevToolsModel tests")
-  struct QueryDevToolsModelTests {
+  @Suite("OperationDevToolsModel tests")
+  struct OperationDevToolsModelTests {
     @Test(
       "Queries Analyzes List",
       .dependencies {
-        $0[ApplicationLaunch.ID.self] = QueryAnalysis.mock1.launchId
+        $0[ApplicationLaunch.ID.self] = OperationAnalysis.mock1.launchId
       }
     )
     func queriesAnalyzesList() async throws {
       @Dependency(\.defaultDatabase) var database
 
       let launch1 = ApplicationLaunchRecord(
-        id: QueryAnalysis.mock1.launchId,
+        id: OperationAnalysis.mock1.launchId,
         localizedDeviceName: DeviceInfo.testValue.localizedModelName
       )
       let launch2 = ApplicationLaunchRecord(
-        id: QueryAnalysis.mock2.launchId,
+        id: OperationAnalysis.mock2.launchId,
         localizedDeviceName: DeviceInfo.testValue.localizedModelName
       )
 
       try await database.write { db in
-        try QueryAnalysisRecord.insert {
-          QueryAnalysisRecord.mock1
-          QueryAnalysisRecord.mock2
+        try OperationAnalysisRecord.insert {
+          OperationAnalysisRecord.mock1
+          OperationAnalysisRecord.mock2
         }
         .execute(db)
 
@@ -39,16 +39,22 @@ extension DependenciesTestSuite {
         .execute(db)
       }
 
-      let model = QueryDevToolsModel()
+      let model = OperationDevToolsModel()
 
       try await model.$selectedLaunch.load()
       try await model.$analyzes.load()
-      expectNoDifference(model.analyzes, [QueryAnalysis.mock1.queryName: [QueryAnalysis.mock1]])
+      expectNoDifference(
+        model.analyzes,
+        [OperationAnalysis.mock1.queryName: [OperationAnalysis.mock1]]
+      )
       expectNoDifference(model.selectedLaunch, launch1)
 
       model.path.append(.selectLaunch)
-      try await model.launchSelected(id: QueryAnalysis.mock2.launchId)
-      expectNoDifference(model.analyzes, [QueryAnalysis.mock2.queryName: [QueryAnalysis.mock2]])
+      try await model.launchSelected(id: OperationAnalysis.mock2.launchId)
+      expectNoDifference(
+        model.analyzes,
+        [OperationAnalysis.mock2.queryName: [OperationAnalysis.mock2]]
+      )
       expectNoDifference(model.selectedLaunch, launch2)
       expectNoDifference(model.path, [])
     }

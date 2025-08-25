@@ -13,14 +13,14 @@ public struct AnyFetchCondition: FetchCondition {
     self.base = condition
   }
 
-  public func isSatisfied(in context: QueryContext) -> Bool {
+  public func isSatisfied(in context: OperationContext) -> Bool {
     self.base.isSatisfied(in: context)
   }
 
   public func subscribe(
-    in context: QueryContext,
+    in context: OperationContext,
     _ observer: @escaping @Sendable (Bool) -> Void
-  ) -> QuerySubscription {
+  ) -> OperationSubscription {
     self.base.subscribe(in: context, observer)
   }
 }

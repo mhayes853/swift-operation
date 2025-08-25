@@ -303,40 +303,40 @@ public struct CachedPlannedClimbRecord: Hashable, Sendable, Codable, Identifiabl
   }
 }
 
-// MARK: - QueryAnalysisRecord
+// MARK: - OperationAnalysisRecord
 
-@Table("QueryAnalysis")
-public struct QueryAnalysisRecord: Hashable, Sendable, Identifiable {
-  public let id: QueryAnalysis.ID
+@Table("OperationAnalysis")
+public struct OperationAnalysisRecord: Hashable, Sendable, Identifiable {
+  public let id: OperationAnalysis.ID
   public let launchId: ApplicationLaunch.ID
-  public var queryRetryAttempt: Int
-  public var queryRuntimeDuration: TimeInterval
-  public var queryName: QueryAnalysis.QueryName
-  public var queryPathDescription: String
+  public var operationRetryAttempt: Int
+  public var operationRuntimeDuration: TimeInterval
+  public var operationName: OperationAnalysis.OperationName
+  public var operationPathDescription: String
 
-  @Column(as: [QueryAnalysis.DataResult].JSONRepresentation.self)
-  public var yieldedQueryDataResults: [QueryAnalysis.DataResult]
+  @Column(as: [OperationAnalysis.DataResult].JSONRepresentation.self)
+  public var yieldedOperationDataResults: [OperationAnalysis.DataResult]
 
-  @Column(as: QueryAnalysis.DataResult.JSONRepresentation.self)
-  public var queryDataResult: QueryAnalysis.DataResult
+  @Column(as: OperationAnalysis.DataResult.JSONRepresentation.self)
+  public var operationDataResult: OperationAnalysis.DataResult
 
   public init(
-    id: QueryAnalysis.ID,
+    id: OperationAnalysis.ID,
     launchId: ApplicationLaunch.ID,
-    queryRetryAttempt: Int,
-    queryRuntimeDuration: TimeInterval,
-    queryName: QueryAnalysis.QueryName,
-    queryPathDescription: String,
-    yieldedQueryDataResults: [QueryAnalysis.DataResult],
-    queryDataResult: QueryAnalysis.DataResult
+    operationRetryAttempt: Int,
+    operationRuntimeDuration: TimeInterval,
+    operationName: OperationAnalysis.OperationName,
+    operationPathDescription: String,
+    yieldedOperationDataResults: [OperationAnalysis.DataResult],
+    operationDataResult: OperationAnalysis.DataResult
   ) {
     self.id = id
     self.launchId = launchId
-    self.queryRetryAttempt = queryRetryAttempt
-    self.queryRuntimeDuration = queryRuntimeDuration
-    self.queryName = queryName
-    self.queryPathDescription = queryPathDescription
-    self.yieldedQueryDataResults = yieldedQueryDataResults
+    self.operationRetryAttempt = operationRetryAttempt
+    self.operationRuntimeDuration = operationRuntimeDuration
+    self.operationName = operationName
+    self.operationPathDescription = operationPathDescription
+    self.yieldedOperationDataResults = yieldedOperationDataResults
     self.queryDataResult = queryDataResult
   }
 }
@@ -584,15 +584,15 @@ extension DatabaseMigrator {
     self.registerMigration("create query analysis table") { db in
       try #sql(
         """
-        CREATE TABLE IF NOT EXISTS QueryAnalysis (
+        CREATE TABLE IF NOT EXISTS OperationAnalysis (
           id TEXT PRIMARY KEY,
           launchId BLOB NOT NULL,
-          queryRetryAttempt INTEGER NOT NULL,
-          queryRuntimeDuration REAL NOT NULL,
-          queryName TEXT NOT NULL,
-          queryPathDescription TEXT NOT NULL,
-          yieldedQueryDataResults TEXT NOT NULL,
-          queryDataResult TEXT NOT NULL
+          operationRetryAttempt INTEGER NOT NULL,
+          operationRuntimeDuration REAL NOT NULL,
+          operationName TEXT NOT NULL,
+          operationPathDescription TEXT NOT NULL,
+          yieldedOperationDataResults TEXT NOT NULL,
+          operationDataResult TEXT NOT NULL
         );
         """,
         as: Void.self

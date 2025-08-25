@@ -10,7 +10,7 @@ extension DependenciesTestSuite {
     @Test("Refetches When Notification Posted")
     func refetchesWhenNotificationPosted() async throws {
       let center = NotificationCenter()
-      @SharedQuery(TestQuery().refetchOnPost(of: .fake, center: center)) var num
+      @SharedOperation(TestQuery().refetchOnPost(of: .fake, center: center)) var num
 
       _ = try await $num.activeTasks.first?.runIfNeeded()
 
@@ -25,8 +25,8 @@ extension DependenciesTestSuite {
 
 private struct TestQuery: QueryRequest, Hashable {
   func fetch(
-    in context: QueryContext,
-    with continuation: QueryContinuation<Int>
+    in context: OperationContext,
+    with continuation: OperationContinuation<Int>
   ) async throws -> Int {
     0
   }

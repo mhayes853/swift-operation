@@ -8,8 +8,8 @@ struct NotConditionTests {
   func returnsOppositeOfBaseConditionWhenSatisfied() {
     let condition: some FetchCondition = .always(true)
     let newCondition = !condition
-    expectNoDifference(newCondition.isSatisfied(in: QueryContext()), false)
-    expectNoDifference(!newCondition.isSatisfied(in: QueryContext()), true)
+    expectNoDifference(newCondition.isSatisfied(in: OperationContext()), false)
+    expectNoDifference(!newCondition.isSatisfied(in: OperationContext()), true)
   }
 
   @Test("Emits Opposite Of Base Condition Observed Value")
@@ -17,7 +17,7 @@ struct NotConditionTests {
     let condition = TestCondition()
     let values = RecursiveLock([Bool]())
     let subscription = (!condition)
-      .subscribe(in: QueryContext()) { value in
+      .subscribe(in: OperationContext()) { value in
         values.withLock { $0.append(value) }
       }
 

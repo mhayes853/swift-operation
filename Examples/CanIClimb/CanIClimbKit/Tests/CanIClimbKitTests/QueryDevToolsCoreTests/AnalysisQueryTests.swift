@@ -20,14 +20,14 @@ extension DependenciesTestSuite {
       @Dependency(ApplicationLaunch.ID.self) var launchId
 
       let query = TestQuery().analyzed()
-      let store = QueryStore.detached(query: query, initialValue: nil)
+      let store = OperationStore.detached(query: query, initialValue: nil)
       let value = try await store.fetch()
       expectNoDifference(value, TestQuery.value)
 
       try await expectGroupedAnalyses([
         query.analysisName: [
-          QueryAnalysis(
-            id: QueryAnalysis.ID(UUIDV7(timeIntervalSince1970: 0, 0)),
+          OperationAnalysis(
+            id: OperationAnalysis.ID(UUIDV7(timeIntervalSince1970: 0, 0)),
             launchId: launchId,
             query: query,
             queryRetryAttempt: 0,
@@ -44,13 +44,13 @@ extension DependenciesTestSuite {
       @Dependency(ApplicationLaunch.ID.self) var launchId
 
       let query = TestQuery(shouldFail: true).analyzed().retry(limit: 1).delayer(.noDelay)
-      let store = QueryStore.detached(query: query, initialValue: nil)
+      let store = OperationStore.detached(query: query, initialValue: nil)
       _ = try? await store.fetch()
 
       try await expectGroupedAnalyses([
         query.analysisName: [
-          QueryAnalysis(
-            id: QueryAnalysis.ID(UUIDV7(timeIntervalSince1970: 0, 0)),
+          OperationAnalysis(
+            id: OperationAnalysis.ID(UUIDV7(timeIntervalSince1970: 0, 0)),
             launchId: launchId,
             query: query,
             queryRetryAttempt: 0,
@@ -58,8 +58,8 @@ extension DependenciesTestSuite {
             yieldedResults: [],
             finalResult: .failure(SomeError())
           ),
-          QueryAnalysis(
-            id: QueryAnalysis.ID(UUIDV7(timeIntervalSince1970: 0, 1)),
+          OperationAnalysis(
+            id: OperationAnalysis.ID(UUIDV7(timeIntervalSince1970: 0, 1)),
             launchId: launchId,
             query: query,
             queryRetryAttempt: 1,
@@ -76,13 +76,13 @@ extension DependenciesTestSuite {
       @Dependency(ApplicationLaunch.ID.self) var launchId
 
       let query = TestQuery(yieldCount: 2).analyzed()
-      let store = QueryStore.detached(query: query, initialValue: nil)
+      let store = OperationStore.detached(query: query, initialValue: nil)
       try await store.fetch()
 
       try await expectGroupedAnalyses([
         query.analysisName: [
-          QueryAnalysis(
-            id: QueryAnalysis.ID(UUIDV7(timeIntervalSince1970: 0, 0)),
+          OperationAnalysis(
+            id: OperationAnalysis.ID(UUIDV7(timeIntervalSince1970: 0, 0)),
             launchId: launchId,
             query: query,
             queryRetryAttempt: 0,
@@ -100,7 +100,7 @@ extension DependenciesTestSuite {
       let launchId2 = ApplicationLaunch.ID()
 
       let query = TestQuery(yieldCount: 1).analyzed()
-      let store = QueryStore.detached(query: query, initialValue: nil)
+      let store = OperationStore.detached(query: query, initialValue: nil)
       try await store.fetch()
       try await withDependencies {
         $0[ApplicationLaunch.ID.self] = launchId2
@@ -112,8 +112,8 @@ extension DependenciesTestSuite {
         for: launchId1,
         [
           query.analysisName: [
-            QueryAnalysis(
-              id: QueryAnalysis.ID(UUIDV7(timeIntervalSince1970: 0, 0)),
+            OperationAnalysis(
+              id: OperationAnalysis.ID(UUIDV7(timeIntervalSince1970: 0, 0)),
               launchId: launchId1,
               query: query,
               queryRetryAttempt: 0,
@@ -128,8 +128,8 @@ extension DependenciesTestSuite {
         for: launchId2,
         [
           query.analysisName: [
-            QueryAnalysis(
-              id: QueryAnalysis.ID(UUIDV7(timeIntervalSince1970: 0, 1)),
+            OperationAnalysis(
+              id: OperationAnalysis.ID(UUIDV7(timeIntervalSince1970: 0, 1)),
               launchId: launchId2,
               query: query,
               queryRetryAttempt: 0,
@@ -143,21 +143,21 @@ extension DependenciesTestSuite {
     }
 
     @Test("Groups Analyses By Query Name")
-    func groupsAnalysesByQueryName() async throws {
+    func groupsAnalysesByOperationName() async throws {
       @Dependency(ApplicationLaunch.ID.self) var launchId
 
       let query = TestQuery().analyzed()
       let query2 = TestQuery2().analyzed()
 
-      let store = QueryStore.detached(query: query, initialValue: nil)
-      let store2 = QueryStore.detached(query: query2, initialValue: nil)
+      let store = OperationStore.detached(query: query, initialValue: nil)
+      let store2 = OperationStore.detached(query: query2, initialValue: nil)
       try await store.fetch()
       try await store2.fetch()
 
       try await expectGroupedAnalyses([
         query.analysisName: [
-          QueryAnalysis(
-            id: QueryAnalysis.ID(UUIDV7(timeIntervalSince1970: 0, 0)),
+          OperationAnalysis(
+            id: OperationAnalysis.ID(UUIDV7(timeIntervalSince1970: 0, 0)),
             launchId: launchId,
             query: query,
             queryRetryAttempt: 0,
@@ -167,8 +167,8 @@ extension DependenciesTestSuite {
           )
         ],
         query2.analysisName: [
-          QueryAnalysis(
-            id: QueryAnalysis.ID(UUIDV7(timeIntervalSince1970: 0, 1)),
+          OperationAnalysis(
+            id: OperationAnalysis.ID(UUIDV7(timeIntervalSince1970: 0, 1)),
             launchId: launchId,
             query: query2,
             queryRetryAttempt: 0,
@@ -184,13 +184,13 @@ extension DependenciesTestSuite {
 
 private func expectGroupedAnalyses(
   for launchId: ApplicationLaunch.ID? = nil,
-  _ value: GroupQueryAnalysisRequest.Value
+  _ value: GroupOperationAnalysisRequest.Value
 ) async throws {
   @Dependency(ApplicationLaunch.ID.self) var defaultLaunchId
   @Dependency(\.defaultDatabase) var database
 
   let launchId = launchId ?? defaultLaunchId
-  let request = GroupQueryAnalysisRequest(launchId: launchId)
+  let request = GroupOperationAnalysisRequest(launchId: launchId)
   let grouped = try await database.read { try request.fetch($0) }
   expectNoDifference(grouped, value)
 }
@@ -202,8 +202,8 @@ private struct TestQuery: QueryRequest, Hashable {
   var shouldFail = false
 
   func fetch(
-    in context: QueryContext,
-    with continuation: QueryContinuation<Int>
+    in context: OperationContext,
+    with continuation: OperationContinuation<Int>
   ) async throws -> Int {
     if self.shouldFail {
       throw SomeError()
@@ -219,8 +219,8 @@ private struct TestQuery2: QueryRequest, Hashable {
   static let value = 400
 
   func fetch(
-    in context: QueryContext,
-    with continuation: QueryContinuation<Int>
+    in context: OperationContext,
+    with continuation: OperationContinuation<Int>
   ) async throws -> Int {
     Self.value
   }

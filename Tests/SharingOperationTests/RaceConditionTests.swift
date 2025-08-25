@@ -8,10 +8,10 @@ import Testing
 struct RaceConditionTests {
   @Test("Race Condition")
   func raceCondition() async throws {
-    @Dependency(\.defaultQueryClient) var client
+    @Dependency(\.defaultOperationClient) var client
 
     let t1 = Task { @MainActor in
-      @SharedQuery(TestQuery()) var q1
+      @SharedOperation(TestQuery()) var q1
       return try await $q1.fetch()
     }
     let t2 = Task {

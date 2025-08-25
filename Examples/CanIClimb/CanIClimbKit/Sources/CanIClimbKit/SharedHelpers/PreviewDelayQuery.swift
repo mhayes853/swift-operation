@@ -14,15 +14,15 @@ public struct _PreviewDelayModifier<Query: QueryRequest>: QueryModifier {
   let shouldDisable: Bool
   let delay: Duration?
 
-  public func setup(context: inout QueryContext, using query: Query) {
+  public func setup(context: inout OperationContext, using query: Query) {
     context[DisablePreviewDelayKey.self] = self.shouldDisable
     query.setup(context: &context)
   }
 
   public func fetch(
-    in context: QueryContext,
+    in context: OperationContext,
     using query: Query,
-    with continuation: QueryContinuation<Query.Value>
+    with continuation: OperationContinuation<Query.Value>
   ) async throws -> Query.Value {
     @Dependency(\.context) var mode
     guard mode == .preview && !context[DisablePreviewDelayKey.self] else {
@@ -37,6 +37,6 @@ public struct _PreviewDelayModifier<Query: QueryRequest>: QueryModifier {
   }
 }
 
-private enum DisablePreviewDelayKey: QueryContext.Key {
+private enum DisablePreviewDelayKey: OperationContext.Key {
   static let defaultValue = false
 }

@@ -10,10 +10,10 @@ import SwiftNavigation
 @Observable
 public final class CounterModel: Identifiable {
   @ObservationIgnored
-  @SharedQuery<NumberFact.Query.State> public var fact: NumberFact?
+  @SharedOperation<NumberFact.Query.State> public var fact: NumberFact?
 
   @ObservationIgnored
-  @SharedQuery<Int.NthPrimeQuery.State> public var nthPrime: Int??
+  @SharedOperation<Int.NthPrimeQuery.State> public var nthPrime: Int??
 
   public private(set) var count: Int
 
@@ -21,8 +21,8 @@ public final class CounterModel: Identifiable {
 
   public init(startingAt number: Int = 0) {
     self.count = number
-    self._fact = SharedQuery(NumberFact.query(for: number))
-    self._nthPrime = SharedQuery(Int.nthPrimeQuery(for: number))
+    self._fact = SharedOperation(NumberFact.query(for: number))
+    self._nthPrime = SharedOperation(Int.nthPrimeQuery(for: number))
   }
 
   public func incremented() {
@@ -35,8 +35,8 @@ public final class CounterModel: Identifiable {
 
   public func jumped(to number: Int) {
     self.count = number
-    self.$fact = SharedQuery(NumberFact.query(for: number))
-    self.$nthPrime = SharedQuery(Int.nthPrimeQuery(for: number))
+    self.$fact = SharedOperation(NumberFact.query(for: number))
+    self.$nthPrime = SharedOperation(Int.nthPrimeQuery(for: number))
   }
 
   public func removed() {

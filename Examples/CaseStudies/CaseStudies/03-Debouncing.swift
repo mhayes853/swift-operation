@@ -50,7 +50,7 @@ struct DebouncingCaseStudy: CaseStudy {
 @Observable
 final class DebouncingModel {
   @ObservationIgnored
-  @SharedQuery(Post.searchQuery(by: ""), animation: .bouncy) var posts
+  @SharedOperation(Post.searchQuery(by: ""), animation: .bouncy) var posts
 
   var text = "" {
     didSet { self.debounceTask?.schedule() }
@@ -62,7 +62,7 @@ final class DebouncingModel {
     @Dependency(\.continuousClock) var clock
     self.debounceTask = DebounceTask(clock: clock, duration: debounceTime) { [weak self] in
       guard let self else { return }
-      self.$posts = SharedQuery(Post.searchQuery(by: self.text), animation: .bouncy)
+      self.$posts = SharedOperation(Post.searchQuery(by: self.text), animation: .bouncy)
     }
   }
 }

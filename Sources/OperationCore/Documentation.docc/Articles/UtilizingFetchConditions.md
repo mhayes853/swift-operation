@@ -10,11 +10,11 @@ The library provides many built-in modifiers that utilize fetch conditions. Let'
 
 ## Automatic Fetching
 
-``QueryStore`` has a notion of automatic fetching, which essentially means that the data for the query in the store can be fetched without having to manually call `fetch` on the store. You can check whether or not automatic fetching is enabled on your `QueryStore` via the `isAutomaticFetchingEnabled` property. By default, all ``QueryRequest`` conformances have automatic fetching enabled, and all ``MutationRequest`` conformances have automatic fetching disabled.
+``OperationStore`` has a notion of automatic fetching, which essentially means that the data for the query in the store can be fetched without having to manually call `fetch` on the store. You can check whether or not automatic fetching is enabled on your `OperationStore` via the `isAutomaticFetchingEnabled` property. By default, all ``QueryRequest`` conformances have automatic fetching enabled, and all ``MutationRequest`` conformances have automatic fetching disabled.
 
 Automatic fetching covers the following scenarios:
-- Fetching when a new subscription to the store is added via ``QueryStore/subscribe(with:)-93jyd``.
-- Fetching from within a ``QueryController``.
+- Fetching when a new subscription to the store is added via ``OperationStore/subscribe(with:)-93jyd``.
+- Fetching from within a ``OperationController``.
   - This includes automatically refetching based on changes to `FetchCondition`s.
 
 To control whether or not automatic fetching is enabled, you can utilize the ``QueryRequest/enableAutomaticFetching(onlyWhen:)`` modifier alongside a `FetchCondition`.
@@ -52,7 +52,7 @@ The example above will refetch the query whenever the network comes back online 
 
 ## Stale When Revalidate
 
-`QueryStore` has a notion of stale-when-revalidate when fetching data. When a new subscriber is added to the store via ``QueryStore/subscribe(with:)-93jyd``, the store will refetch the data if both ``QueryStore/isStale`` and ``QueryStore/isAutomaticFetchingEnabled`` are true. You can control the value of `isStale` via a `FetchCondition`.
+`OperationStore` has a notion of stale-when-revalidate when fetching data. When a new subscriber is added to the store via ``OperationStore/subscribe(with:)-93jyd``, the store will refetch the data if both ``OperationStore/isStale`` and ``OperationStore/isAutomaticFetchingEnabled`` are true. You can control the value of `isStale` via a `FetchCondition`.
 
 ```swift
 import Combine
@@ -124,19 +124,19 @@ protocol UserAuthentication {
 struct UserLoggedInCondition<Auth: UserAuthentication>: FetchCondition {
   let auth: Auth
 
-  func isSatisfied(in context: QueryContext) -> Bool {
+  func isSatisfied(in context: OperationContext) -> Bool {
     auth.accessToken != nil
   }
 
   func subscribe(
-    in context: QueryContext,
+    in context: OperationContext,
     _ observer: @escaping @Sendable (Bool) -> Void
-  ) -> QuerySubscription {
+  ) -> OperationSubscription {
     observer(isSatisfied(in: context))
     let subscription = auth.subscribe { accessToken in
       observer(accessToken != nil)
     }
-    return QuerySubscription { subscription.cancel() }
+    return OperationSubscription { subscription.cancel() }
   }
 }
 ```

@@ -67,12 +67,12 @@ extension NumberFormatter {
 final class ExpensiveLocalComputationModel {
   var count = 0 {
     didSet {
-      self.$nthPrime = SharedQuery(Int.nthPrimeQuery(for: self.count))
+      self.$nthPrime = SharedOperation(Int.nthPrimeQuery(for: self.count))
     }
   }
 
   @ObservationIgnored
-  @SharedQuery(Int.nthPrimeQuery(for: 0)) var nthPrime
+  @SharedOperation(Int.nthPrimeQuery(for: 0)) var nthPrime
 }
 
 // MARK: - Nth Prime
@@ -88,8 +88,8 @@ extension Int {
     let n: Int
 
     func fetch(
-      in context: QueryContext,
-      with continuation: QueryContinuation<Int?>
+      in context: OperationContext,
+      with continuation: OperationContinuation<Int?>
     ) async throws -> Int? {
       await nthPrime(for: self.n)
     }

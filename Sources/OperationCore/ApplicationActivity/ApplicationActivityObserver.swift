@@ -11,6 +11,6 @@ public protocol ApplicationActivityObserver: Sendable {
   ///
   /// - Parameter handler: A closure that will be called when the application becomes active or
   ///   inactive.
-  /// - Returns: A ``QuerySubscription``.
-  func subscribe(_ handler: @escaping @Sendable (Bool) -> Void) -> QuerySubscription
+  /// - Returns: A ``OperationSubscription``.
+  func subscribe(_ handler: @escaping @Sendable (Bool) -> Void) -> OperationSubscription
 }

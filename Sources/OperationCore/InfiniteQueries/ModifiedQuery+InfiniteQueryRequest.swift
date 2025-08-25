@@ -9,7 +9,7 @@ extension ModifiedQuery: InfiniteQueryRequest where Query: InfiniteQueryRequest 
   public func pageId(
     after page: InfiniteQueryPage<PageID, PageValue>,
     using paging: InfiniteQueryPaging<PageID, PageValue>,
-    in context: QueryContext
+    in context: OperationContext
   ) -> PageID? {
     self.query.pageId(after: page, using: paging, in: context)
   }
@@ -17,15 +17,15 @@ extension ModifiedQuery: InfiniteQueryRequest where Query: InfiniteQueryRequest 
   public func pageId(
     before page: InfiniteQueryPage<PageID, PageValue>,
     using paging: InfiniteQueryPaging<PageID, PageValue>,
-    in context: QueryContext
+    in context: OperationContext
   ) -> PageID? {
     self.query.pageId(before: page, using: paging, in: context)
   }
 
   public func fetchPage(
     using paging: InfiniteQueryPaging<PageID, PageValue>,
-    in context: QueryContext,
-    with continuation: QueryContinuation<PageValue>
+    in context: OperationContext,
+    with continuation: OperationContinuation<PageValue>
   ) async throws -> PageValue {
     try await self.query.fetchPage(using: paging, in: context, with: continuation)
   }

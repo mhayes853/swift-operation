@@ -12,7 +12,7 @@ import SwiftUINavigation
 @Observable
 public final class MountainsListModel {
   @ObservationIgnored
-  @SharedQuery(Mountain.searchQuery(.recommended)) public var mountains
+  @SharedOperation(Mountain.searchQuery(.recommended)) public var mountains
 
   public var searchText = "" {
     didSet { self.debounceTask?.schedule() }
@@ -41,7 +41,7 @@ public final class MountainsListModel {
 extension MountainsListModel {
   private func updateMountainsQuery() {
     let search = Mountain.Search(text: self.searchText, category: self.category)
-    self.$mountains = SharedQuery(Mountain.searchQuery(search))
+    self.$mountains = SharedOperation(Mountain.searchQuery(search))
   }
 }
 

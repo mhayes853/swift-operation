@@ -42,8 +42,8 @@ extension Quote {
 
   struct RandomQuery: QueryRequest, Hashable {
     func fetch(
-      in context: QueryContext,
-      with continuation: QueryContinuation<Quote>
+      in context: OperationContext,
+      with continuation: OperationContinuation<Quote>
     ) async throws -> Quote {
       @Dependency(QuoteRandomLoaderKey.self) var loader
       return try await loader.randomQuote()

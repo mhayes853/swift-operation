@@ -86,7 +86,7 @@ public struct SettingsView: View {
 // MARK: - UserProfileSectionView
 
 private struct UserProfileSectionView: View {
-  @SharedQuery(User.currentQuery, animation: .bouncy) private var user
+  @SharedOperation(User.currentQuery, animation: .bouncy) private var user
   let model: SignInModel
 
   var body: some View {
@@ -123,7 +123,7 @@ private struct UserProfileSectionView: View {
 // MARK: - CloudSyncSectionView
 
 private struct CloudSyncSectionView: View {
-  @SharedQuery(CKAccountStatus.currentQuery, animation: .bouncy) private var accountStatus
+  @SharedOperation(CKAccountStatus.currentQuery, animation: .bouncy) private var accountStatus
 
   public var body: some View {
     Section {
@@ -472,7 +472,7 @@ private struct DisclaimerSectionView: View {
   let _ = prepareDependencies {
     $0[CKAccountStatus.LoaderKey.self] = CKAccountStatus.MockLoader { .available }
     $0.defaultDatabase = try! canIClimbDatabase()
-    $0.defaultQueryClient = QueryClient(storeCreator: .canIClimb)
+    $0.defaultOperationClient = OperationClient(storeCreator: .canIClimb)
 
     var requester = HealthPermissions.MockRequester()
     // requester.shouldFail = true

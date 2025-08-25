@@ -45,11 +45,11 @@ extension Mountain {
 
     public func mutate(
       with arguments: Arguments,
-      in context: QueryContext,
-      with continuation: QueryContinuation<Void>
+      in context: OperationContext,
+      with continuation: OperationContinuation<Void>
     ) async throws {
       @Dependency(Mountain.ClimbAchieverKey.self) var achiever
-      @Dependency(\.defaultQueryClient) var client
+      @Dependency(\.defaultOperationClient) var client
       @Dependency(\.date) var now
 
       if context.isFirstFetchAttempt {
@@ -78,11 +78,11 @@ extension Mountain {
 
     public func mutate(
       with arguments: Arguments,
-      in context: QueryContext,
-      with continuation: QueryContinuation<Void>
+      in context: OperationContext,
+      with continuation: OperationContinuation<Void>
     ) async throws {
       @Dependency(Mountain.ClimbAchieverKey.self) var achiever
-      @Dependency(\.defaultQueryClient) var client
+      @Dependency(\.defaultOperationClient) var client
 
       let climbsStore = client.store(for: Mountain.plannedClimbsQuery(for: arguments.mountainId))
       if context.isFirstFetchAttempt {

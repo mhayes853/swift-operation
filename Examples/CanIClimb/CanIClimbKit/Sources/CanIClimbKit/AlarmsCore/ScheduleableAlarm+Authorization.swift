@@ -126,8 +126,8 @@ extension ScheduleableAlarm {
 
     public func mutate(
       with arguments: Void,
-      in context: QueryContext,
-      with continuation: QueryContinuation<AuthorizationStatus>
+      in context: OperationContext,
+      with continuation: OperationContinuation<AuthorizationStatus>
     ) async throws -> AuthorizationStatus {
       @Dependency(ScheduleableAlarm.AuthorizerKey.self) var authorizer
       return try await authorizer.requestAuthorization()

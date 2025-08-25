@@ -4,9 +4,9 @@ import OperationTestHelpers
 import SharingOperation
 import Testing
 
-@Suite("QueryStateKey tests")
-struct QueryStateKeyTests {
-  private let client = QueryClient()
+@Suite("OperationStateKey tests")
+struct OperationStateKeyTests {
+  private let client = OperationClient()
 
   @Test("Uses Current Store State")
   func usesCurrentStoreState() async throws {
@@ -14,14 +14,14 @@ struct QueryStateKeyTests {
     let store = self.client.store(for: query)
     try await store.fetch()
 
-    @SharedQuery(query, client: self.client) var state
+    @SharedOperation(query, client: self.client) var state
 
     expectNoDifference(state, TestQuery.value)
   }
 
   @Test("Fetches Value")
   func fetchesValues() async throws {
-    @SharedQuery(TestQuery(), client: self.client) var state
+    @SharedOperation(TestQuery(), client: self.client) var state
 
     expectNoDifference($state.status.isSuccessful, false)
     expectNoDifference($state.shared.wrappedValue, nil)
@@ -33,7 +33,7 @@ struct QueryStateKeyTests {
   #if canImport(SwiftUI)
     @Test("Fetches Value With Animation, Completes Synchronously For Testing")
     func fetchesValuesWithAnimationCompletesSynchronouslyForTesting() async throws {
-      @SharedQuery(
+      @SharedOperation(
         TestQuery().disableAutomaticFetching(),
         client: self.client,
         animation: .bouncy()
@@ -47,7 +47,7 @@ struct QueryStateKeyTests {
 
   @Test("Fetches Error")
   func fetchesError() async throws {
-    @SharedQuery(FailingQuery(), client: self.client) var state
+    @SharedOperation(FailingQuery(), client: self.client) var state
 
     expectNoDifference($state.error as? FailingQuery.SomeError, nil)
     expectNoDifference($state.shared.loadError as? FailingQuery.SomeError, nil)
@@ -59,7 +59,7 @@ struct QueryStateKeyTests {
   @Test("Refetches Error")
   func refetchesError() async throws {
     let query = FlakeyQuery()
-    @SharedQuery(query, client: self.client) var state
+    @SharedOperation(query, client: self.client) var state
 
     _ = try? await self.client.store(for: FlakeyQuery()).activeTasks.first?.runIfNeeded()
 
@@ -74,14 +74,14 @@ struct QueryStateKeyTests {
 
   @Test("Only Has One Active Task When Loading Initial Data")
   func onlyHasOneActiveTaskWhenLoadingInitialData() async throws {
-    @SharedQuery(EndlessQuery(), client: self.client) var state
+    @SharedOperation(EndlessQuery(), client: self.client) var state
 
     expectNoDifference($state.activeTasks.count, 1)
   }
 
   @Test("Refetches Value")
   func refetchesValues() async throws {
-    @SharedQuery(TestQuery(), client: self.client) var state
+    @SharedOperation(TestQuery(), client: self.client) var state
     let store = self.client.store(for: TestQuery())
 
     _ = try await store.activeTasks.first?.runIfNeeded()
@@ -97,7 +97,7 @@ struct QueryStateKeyTests {
     let query = TestQuery().disableAutomaticFetching()
     let store = self.client.store(for: query)
 
-    @SharedQuery(store: store) var state
+    @SharedOperation(store: store) var state
 
     expectNoDifference(store.activeTasks, [])
   }
@@ -107,7 +107,7 @@ struct QueryStateKeyTests {
     let query = TestQuery().disableAutomaticFetching()
     let store = self.client.store(for: query)
 
-    @SharedQuery(store: store) var state
+    @SharedOperation(store: store) var state
 
     expectNoDifference($state.isLoading, false)
     expectNoDifference($state.shared.isLoading, false)
@@ -129,7 +129,7 @@ struct QueryStateKeyTests {
     let query = TestQuery().disableAutomaticFetching()
     let store = self.client.store(for: query)
 
-    @SharedQuery(store: store) var state
+    @SharedOperation(store: store) var state
 
     expectNoDifference($state.isLoading, false)
   }
@@ -139,7 +139,7 @@ struct QueryStateKeyTests {
     let query = EndlessQuery().enableAutomaticFetching(onlyWhen: .always(true))
     let store = self.client.store(for: query)
 
-    @SharedQuery(store: store) var state
+    @SharedOperation(store: store) var state
 
     expectNoDifference($state.isLoading, true)
   }
@@ -149,7 +149,7 @@ struct QueryStateKeyTests {
     let query = ContinuingQuery()
     let store = self.client.store(for: query.enableAutomaticFetching(onlyWhen: .always(true)))
 
-    @SharedQuery(store: store) var state
+    @SharedOperation(store: store) var state
     query.onYield = { _ in
       expectNoDifference(state != nil, true)
       expectNoDifference(state != ContinuingQuery.finalValue, true)
@@ -164,11 +164,11 @@ struct QueryStateKeyTests {
     expectNoDifference(state, ContinuingQuery.finalValue)
   }
 
-  @Test("Makes Separate Subscribers When Using QueryStateKeys With The Same Query")
-  func makesSeparateSubscribersWhenUsingQueryStateKeysWithTheSameQuery() async throws {
+  @Test("Makes Separate Subscribers When Using OperationStateKeys With The Same Query")
+  func makesSeparateSubscribersWhenUsingOperationStateKeysWithTheSameQuery() async throws {
     let query = TestQuery().disableAutomaticFetching()
-    @SharedQuery(query, client: self.client) var value
-    @SharedQuery(query, client: self.client) var state
+    @SharedOperation(query, client: self.client) var value
+    @SharedOperation(query, client: self.client) var state
 
     let store = self.client.store(for: query)
     expectNoDifference(store.subscriberCount, 2)

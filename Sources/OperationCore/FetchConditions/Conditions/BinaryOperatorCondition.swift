@@ -14,14 +14,14 @@ public struct BinaryOperatorCondition<
 // MARK: - FetchCondition Conformance
 
 extension BinaryOperatorCondition: FetchCondition {
-  public func isSatisfied(in context: QueryContext) -> Bool {
+  public func isSatisfied(in context: OperationContext) -> Bool {
     self.op.evaluate(self.left.isSatisfied(in: context), self.right.isSatisfied(in: context))
   }
 
   public func subscribe(
-    in context: QueryContext,
+    in context: OperationContext,
     _ observer: @escaping @Sendable (Bool) -> Void
-  ) -> QuerySubscription {
+  ) -> OperationSubscription {
     // TODO: - Flatten nested BinaryOperatorConditions in the lock to improve performance.
     let state = Lock(
       (left: self.left.isSatisfied(in: context), right: self.right.isSatisfied(in: context))

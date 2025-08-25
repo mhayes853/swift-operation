@@ -3,15 +3,15 @@ import IssueReporting
 import Operation
 import Testing
 
-// MARK: - _QueryStoreEvent
+// MARK: - _OperationStoreEvent
 
-package protocol QueryStoreEventProtocol: Sendable {
+package protocol OperationStoreEventProtocol: Sendable {
   func isMatch(with other: Self) -> Bool
 }
 
-// MARK: - QueryStoreEventCollector
+// MARK: - OperationStoreEventCollector
 
-package final class _QueryStoreEventsCollector<Event: QueryStoreEventProtocol>: Sendable {
+package final class _OperationStoreEventsCollector<Event: OperationStoreEventProtocol>: Sendable {
   private let events = RecursiveLock([Event]())
 
   package init() {}
@@ -44,7 +44,7 @@ package enum MutationStoreEvent<Arguments: Equatable & Sendable, Value: Equatabl
   case stateChanged
 }
 
-extension MutationStoreEvent: QueryStoreEventProtocol {
+extension MutationStoreEvent: OperationStoreEventProtocol {
   package func isMatch(with other: Self) -> Bool {
     switch (self, other) {
     case (.mutatingStarted(let a), .mutatingStarted(let b)):
@@ -70,7 +70,7 @@ extension MutationStoreEvent: QueryStoreEventProtocol {
 package typealias MutationStoreEventsCollector<
   Arguments: Equatable & Sendable,
   Value: Equatable & Sendable
-> = _QueryStoreEventsCollector<MutationStoreEvent<Arguments, Value>>
+> = _OperationStoreEventsCollector<MutationStoreEvent<Arguments, Value>>
 
 extension MutationStoreEventsCollector {
   package func eventHandler<Arguments: Equatable & Sendable, Value: Equatable & Sendable>()
@@ -87,9 +87,9 @@ extension MutationStoreEventsCollector {
   }
 }
 
-// MARK: - InfiniteQueryStoreEvent
+// MARK: - InfiniteOperationStoreEvent
 
-package enum InfiniteQueryStoreEvent<
+package enum InfiniteOperationStoreEvent<
   PageID: Hashable & Sendable,
   PageValue: Equatable & Sendable
 >: Sendable {
@@ -102,7 +102,7 @@ package enum InfiniteQueryStoreEvent<
   case stateChanged
 }
 
-extension InfiniteQueryStoreEvent: QueryStoreEventProtocol {
+extension InfiniteOperationStoreEvent: OperationStoreEventProtocol {
   package func isMatch(with other: Self) -> Bool {
     switch (self, other) {
     case (.fetchingStarted, .fetchingStarted):
@@ -138,15 +138,15 @@ extension InfiniteQueryStoreEvent: QueryStoreEventProtocol {
   }
 }
 
-package typealias InfiniteQueryStoreEventsCollector<
+package typealias InfiniteOperationStoreEventsCollector<
   PageID: Hashable & Sendable,
   PageValue: Sendable & Equatable
-> = _QueryStoreEventsCollector<InfiniteQueryStoreEvent<PageID, PageValue>>
+> = _OperationStoreEventsCollector<InfiniteOperationStoreEvent<PageID, PageValue>>
 
-extension InfiniteQueryStoreEventsCollector {
+extension InfiniteOperationStoreEventsCollector {
   package func eventHandler<PageID: Hashable & Sendable, PageValue: Sendable & Equatable>()
     -> InfiniteQueryEventHandler<PageID, PageValue>
-  where Event == InfiniteQueryStoreEvent<PageID, PageValue> {
+  where Event == InfiniteOperationStoreEvent<PageID, PageValue> {
     InfiniteQueryEventHandler(
       onStateChanged: { _, _ in self.events.withLock { $0.append(.stateChanged) } },
       onFetchingStarted: { _ in self.events.withLock { $0.append(.fetchingStarted) } },
@@ -164,17 +164,17 @@ extension InfiniteQueryStoreEventsCollector {
   }
 }
 
-// MARK: - QueryStoreEvent
+// MARK: - OperationStoreEvent
 
-package enum QueryStoreEvent<State: QueryStateProtocol>: Sendable
-where State.QueryValue: Equatable {
+package enum OperationStoreEvent<State: OperationState>: Sendable
+where State.OperationValue: Equatable {
   case fetchingStarted
   case fetchingEnded
   case stateChanged
-  case resultReceived(Result<State.QueryValue, any Error>)
+  case resultReceived(Result<State.OperationValue, any Error>)
 }
 
-extension QueryStoreEvent: QueryStoreEventProtocol {
+extension OperationStoreEvent: OperationStoreEventProtocol {
   package func isMatch(with other: Self) -> Bool {
     switch (self, other) {
     case (.fetchingStarted, .fetchingStarted):
@@ -198,13 +198,13 @@ extension QueryStoreEvent: QueryStoreEventProtocol {
   }
 }
 
-package typealias QueryStoreEventsCollector<
-  State: QueryStateProtocol
-> = _QueryStoreEventsCollector<QueryStoreEvent<State>> where State.QueryValue: Equatable
+package typealias OperationStoreEventsCollector<
+  State: OperationState
+> = _OperationStoreEventsCollector<OperationStoreEvent<State>> where State.OperationValue: Equatable
 
-extension QueryStoreEventsCollector {
+extension OperationStoreEventsCollector {
   package func eventHandler<State>() -> QueryEventHandler<State>
-  where Event == QueryStoreEvent<State> {
+  where Event == OperationStoreEvent<State> {
     QueryEventHandler(
       onStateChanged: { _, _ in self.events.withLock { $0.append(.stateChanged) } },
       onFetchingStarted: { _ in self.events.withLock { $0.append(.fetchingStarted) } },
@@ -216,7 +216,7 @@ extension QueryStoreEventsCollector {
 
 // MARK: - Helpers
 
-private func reportEventsDiff<Event: QueryStoreEventProtocol>(_ a: [Event], _ b: [Event]) {
+private func reportEventsDiff<Event: OperationStoreEventProtocol>(_ a: [Event], _ b: [Event]) {
   reportIssue(
     """
     Events do not match:

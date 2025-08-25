@@ -37,8 +37,8 @@ extension ImageData {
     let url: URL
 
     public func fetch(
-      in context: QueryContext,
-      with continuation: QueryContinuation<ImageData>
+      in context: OperationContext,
+      with continuation: OperationContinuation<ImageData>
     ) async throws -> ImageData {
       @Dependency(ImageData.LoaderKey.self) var loader
       return try await loader.image(for: self.url)

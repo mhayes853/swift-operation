@@ -1,10 +1,10 @@
-# Utilizing QueryControllers
+# Utilizing OperationControllers
 
-Learn how to use the ``QueryController`` protocol to automate fetching and state updates on your queries.
+Learn how to use the ``OperationController`` protocol to automate fetching and state updates on your queries.
 
 ## Overview
 
-The `QueryController` protocol gives you control over the state of a query from within a ``QueryModifier`` perspective itself. For instance, the ``QueryRequest/refetchOnChange(of:)`` modifier uses a `QueryController` under the hood to refetch your query whenever a `FetchCondition` changes from false to true. This makes it easy to declaratively describe whenever a query should be refetched.
+The `OperationController` protocol gives you control over the state of a query from within a ``QueryModifier`` perspective itself. For instance, the ``QueryRequest/refetchOnChange(of:)`` modifier uses a `OperationController` under the hood to refetch your query whenever a `FetchCondition` changes from false to true. This makes it easy to declaratively describe whenever a query should be refetched.
 
 ```swift
 struct MyQuery: QueryRequest, Hashable {
@@ -17,25 +17,25 @@ let query = MyQuery().refetchOnChange(
 )
 ```
 
-You too can utilize the `QueryController` protocol to build such automations.
+You too can utilize the `OperationController` protocol to build such automations.
 
-## Creating a QueryController
+## Creating a OperationController
 
-The `QueryController` protocol has a single function requirement that hands you an instance of ``QueryControls``, and forces you to return a ``QuerySubscription`` to perform any cleanup work in your controller.
+The `OperationController` protocol has a single function requirement that hands you an instance of ``OperationControls``, and forces you to return a ``OperationSubscription`` to perform any cleanup work in your controller.
 
 ```swift
-final class MyController<State: QueryStateProtocol>: QueryController {
-  func control(with controls: QueryControls<State>) -> QuerySubscription {
+final class MyController<State: OperationState>: OperationController {
+  func control(with controls: OperationControls<State>) -> OperationSubscription {
     // ...
   }
 }
 ```
 
-The `QueryControls` data type is effectively a limited version of ``QueryStore`` that allows you to yield state updates from the query, and perform refetches.
+The `OperationControls` data type is effectively a limited version of ``OperationStore`` that allows you to yield state updates from the query, and perform refetches.
 
 ```swift
-final class MyController<State: QueryStateProtocol>: QueryController {
-  func control(with controls: QueryControls<State>) -> QuerySubscription {
+final class MyController<State: OperationState>: OperationController {
+  func control(with controls: OperationControls<State>) -> OperationSubscription {
     // Yielding state.
     controls.yield(/* Construct a state value. */)
 
@@ -44,25 +44,25 @@ final class MyController<State: QueryStateProtocol>: QueryController {
 
     // Yielding a refetch.
     Task {
-      let result: State.QueryValue? = try await controls.yieldRefetch()
+      let result: State.OperationValue? = try await controls.yieldRefetch()
     }
     return .empty
   }
 }
 ```
 
-> Note: ``QueryControls/yieldRefetch(with:)`` returns nil when automatic fetching is disabled on the query. In other words, if ``QueryStore/isAutomaticFetchingEnabled`` property is false, then you cannot yield a refetch on the query. You can check if yielding a refetch is possible on `QueryControls` via ``QueryControls/canYieldRefetch``.
+> Note: ``OperationControls/yieldRefetch(with:)`` returns nil when automatic fetching is disabled on the query. In other words, if ``OperationStore/isAutomaticFetchingEnabled`` property is false, then you cannot yield a refetch on the query. You can check if yielding a refetch is possible on `OperationControls` via ``OperationControls/canYieldRefetch``.
 
-Now that we understand the basics of creating a `QueryController`, let's delve into some use cases.
+Now that we understand the basics of creating a `OperationController`, let's delve into some use cases.
 
 ## Firestore Subscriptions
 
-Firebase allows you to both fetch and observe your data at the same time from Firestore. Using the sdk, you can model a ``QueryRequest`` around fetching the data, and then use a `QueryController` to subscribe to data changes and yield them from the query.
+Firebase allows you to both fetch and observe your data at the same time from Firestore. Using the sdk, you can model a ``QueryRequest`` around fetching the data, and then use a `OperationController` to subscribe to data changes and yield them from the query.
 
-To start, we'll create a ``QueryContext`` property for the firestore database instance. Doing so will allow you to inject an instance of firestore that connects to a local firebase emulator for testing and development purposes.
+To start, we'll create a ``OperationContext`` property for the firestore database instance. Doing so will allow you to inject an instance of firestore that connects to a local firebase emulator for testing and development purposes.
 
 ```swift
-extension QueryContext {
+extension OperationContext {
   var firestore: Firestore {
     get { self[FirestoreKey.self] }
     set { self[FirestoreKey.self] = newValue }
@@ -95,8 +95,8 @@ extension User {
     let userId: String
 
     func fetch(
-      in context: QueryContext,
-      with continuation: QueryContinuation<User>
+      in context: OperationContext,
+      with continuation: OperationContinuation<User>
     ) async throws -> User {
       try await context.firestore.collection("users")
         .document(userId)
@@ -106,21 +106,21 @@ extension User {
 }
 ```
 
-In the meantime, we'll also subscribe to the publisher of a `DocumentSnapshot` inside a `QueryController`, and drop the first snapshot as the query is already fetching that data. From there on, all snapshots will be decoded into a `User`, and yielded as state through the `QueryControls`.
+In the meantime, we'll also subscribe to the publisher of a `DocumentSnapshot` inside a `OperationController`, and drop the first snapshot as the query is already fetching that data. From there on, all snapshots will be decoded into a `User`, and yielded as state through the `OperationControls`.
 
 ```swift
 import Combine
 
 final class FirestoreUserController<
-  State: QueryStateProtocol
->: QueryController {
+  State: OperationState
+>: OperationController {
   let userId: String
 
   init(userId: String) {
     self.userId = userId
   }
 
-  func control(with controls: QueryControls<State>) -> QuerySubscription {
+  func control(with controls: OperationControls<State>) -> OperationSubscription {
     let docRef = controls.context.firestore
       .collection("users")
       .document(userId)
@@ -129,7 +129,7 @@ final class FirestoreUserController<
       .sink { snapshot in
         controls.yield(with: Result { try snapshot.data(as: User.self) })
       }
-    return QuerySubscription { cancellable.cancel() }
+    return OperationSubscription { cancellable.cancel() }
   }
 }
 ```
@@ -150,4 +150,4 @@ extension User {
 
 ## Conclusion
 
-In this article, you learned about the `QueryController` protocol, and what it represents in the library. You learned how to create controllers, and how they can be utilized to create reusable pieces of logic that invoke your queries.
+In this article, you learned about the `OperationController` protocol, and what it represents in the library. You learned how to create controllers, and how they can be utilized to create reusable pieces of logic that invoke your queries.

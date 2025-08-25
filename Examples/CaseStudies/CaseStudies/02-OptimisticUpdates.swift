@@ -15,7 +15,7 @@ struct OptimisticUpdatesCaseStudy: CaseStudy {
     In this example, when the like button is pressed on a post, we'll immediately increment the \
     like counter to make the view as responsive as possible inside a `MutationRequest`. However, \
     if the mutation fails, we'll revert the like. We can achieve this by accessing the \
-    default `QueryClient` inside the mutation. Then, we access the underlying `QueryStore` that \
+    default `OperationClient` inside the mutation. Then, we access the underlying `OperationStore` that \
     powers the post query, and update its `likeCount` appropriately.
 
     While the optimistic update logic could be placed inside `OptimisticUpdatesModel`, doing so would only \
@@ -49,15 +49,15 @@ struct OptimisticUpdatesCaseStudy: CaseStudy {
 @Observable
 final class OptimisticUpdatesModel {
   @ObservationIgnored
-  @SharedQuery<Post.Query.State> var post: Post??
+  @SharedOperation<Post.Query.State> var post: Post??
 
   @ObservationIgnored
-  @SharedQuery(Post.interactMutation) var interact: Void?
+  @SharedOperation(Post.interactMutation) var interact: Void?
 
   var alert: AlertState<AlertAction>?
 
   init(id: Int) {
-    self._post = SharedQuery(Post.query(for: id), animation: .bouncy)
+    self._post = SharedOperation(Post.query(for: id), animation: .bouncy)
   }
 }
 
@@ -114,10 +114,10 @@ extension Post {
 
     func mutate(
       with arguments: Arguments,
-      in context: QueryContext,
-      with continuation: QueryContinuation<Void>
+      in context: OperationContext,
+      with continuation: OperationContinuation<Void>
     ) async throws {
-      @Dependency(\.defaultQueryClient) var client
+      @Dependency(\.defaultOperationClient) var client
       @Dependency(PostInteractorKey.self) var interactor
       let postStore = client.store(for: Post.query(for: arguments.postId))
 

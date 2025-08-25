@@ -8,7 +8,7 @@ struct SuspendQueryTests {
   @Test("Condition True When Query Starts, Runs Query Immediately")
   func conditionTrueWhenQueryStartsRunsQueryImmediately() async throws {
     let query = TestQuery().suspend(on: .always(true))
-    let store = QueryStore.detached(query: query, initialValue: nil)
+    let store = OperationStore.detached(query: query, initialValue: nil)
     let value = try await store.fetch()
     expectNoDifference(value, TestQuery.value)
   }
@@ -22,7 +22,7 @@ struct SuspendQueryTests {
     condition.send(false)
 
     let query = TestQuery().disableAutomaticFetching().suspend(on: condition)
-    let store = QueryStore.detached(query: query, initialValue: nil)
+    let store = OperationStore.detached(query: query, initialValue: nil)
     let subscription = store.subscribe(
       with: QueryEventHandler(onFetchingStarted: { _ in subcontinuation.yield() })
     )
@@ -47,7 +47,7 @@ struct SuspendQueryTests {
     let condition = TestCondition()
     condition.send(false)
     let query = TestQuery().disableAutomaticFetching().suspend(on: condition)
-    let store = QueryStore.detached(query: query, initialValue: nil)
+    let store = OperationStore.detached(query: query, initialValue: nil)
     let subscription = store.subscribe(
       with: QueryEventHandler(onFetchingStarted: { _ in subcontinuation.yield() })
     )
@@ -75,7 +75,7 @@ struct SuspendQueryTests {
     let condition = TestCondition()
     condition.send(false)
     let query = TestQuery().disableAutomaticFetching().suspend(on: condition)
-    let store = QueryStore.detached(query: query, initialValue: nil)
+    let store = OperationStore.detached(query: query, initialValue: nil)
     let subscription = store.subscribe(
       with: QueryEventHandler(onFetchingStarted: { _ in subcontinuation.yield() })
     )
@@ -97,7 +97,7 @@ struct SuspendQueryTests {
     let condition = TestCondition()
     condition.send(false)
     let query = TestQuery().suspend(on: .always(false))
-    let store = QueryStore.detached(query: query, initialValue: nil)
+    let store = OperationStore.detached(query: query, initialValue: nil)
 
     let task = Task { try await store.fetch() }
     task.cancel()
@@ -112,7 +112,7 @@ struct SuspendQueryTests {
     let condition = TestCondition()
     condition.send(false)
     let query = TestQuery().suspend(on: condition)
-    let store = QueryStore.detached(query: query, initialValue: nil)
+    let store = OperationStore.detached(query: query, initialValue: nil)
 
     let task = Task { try await store.fetch() }
     task.cancel()
@@ -125,7 +125,7 @@ struct SuspendQueryTests {
     let condition = TestCondition()
     condition.send(false)
     let query = TestQuery().suspend(on: condition)
-    let store = QueryStore.detached(query: query, initialValue: nil)
+    let store = OperationStore.detached(query: query, initialValue: nil)
 
     let task = Task { try await store.fetch() }
     task.cancel()

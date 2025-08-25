@@ -4,7 +4,7 @@ import Testing
 
 @Suite("StateManagement tests")
 struct StateManagementTests {
-  private let client = QueryClient()
+  private let client = OperationClient()
 
   @Test("Updates UserFriendsList From Mutation")
   func updatesUserFriendsListFromMutation() async throws {
@@ -46,22 +46,22 @@ private struct UserFriendsQuery: InfiniteQueryRequest {
   let userId: Int
   let initialPageId = 0
 
-  var path: QueryPath {
+  var path: OperationPath {
     ["user-friends", self.userId]
   }
 
   func pageId(
     after page: InfiniteQueryPage<Int, [User]>,
     using paging: InfiniteQueryPaging<Int, [User]>,
-    in context: QueryContext
+    in context: OperationContext
   ) -> Int? {
     page.id + 1
   }
 
   func fetchPage(
     using paging: InfiniteQueryPaging<Int, [User]>,
-    in context: QueryContext,
-    with continuation: QueryContinuation<[User]>
+    in context: OperationContext,
+    with continuation: OperationContinuation<[User]>
   ) async throws -> [User] {
     [User(id: 10, relationship: .notFriends)]
   }
@@ -74,10 +74,10 @@ private struct SendFriendRequestMutation: MutationRequest, Hashable {
 
   func mutate(
     with arguments: Arguments,
-    in context: QueryContext,
-    with continuation: QueryContinuation<Void>
+    in context: OperationContext,
+    with continuation: OperationContinuation<Void>
   ) async throws {
-    guard let client = context.queryClient else { return }
+    guard let client = context.operationClient else { return }
     for store in client.stores(matching: ["user-friends"], of: UserFriendsQuery.State.self) {
       let pages = store.currentValue.map { page in
         var page = page

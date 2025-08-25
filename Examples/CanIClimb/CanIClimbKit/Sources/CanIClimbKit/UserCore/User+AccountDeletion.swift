@@ -42,10 +42,10 @@ extension User {
   public struct DeleteMutation: MutationRequest, Hashable {
     public func mutate(
       with arguments: Void,
-      in context: QueryContext,
-      with continuation: QueryContinuation<Void>
+      in context: OperationContext,
+      with continuation: OperationContinuation<Void>
     ) async throws {
-      @Dependency(\.defaultQueryClient) var client
+      @Dependency(\.defaultOperationClient) var client
       @Dependency(User.AccountDeleterKey.self) var deleter
 
       try await deleter.delete()

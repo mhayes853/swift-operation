@@ -27,21 +27,21 @@ public struct _AlertStateModifier<Query: QueryRequest>: QueryModifier {
   let failureAlert: @Sendable (any Error) -> AlertState<Never>?
 
   public func fetch(
-    in context: QueryContext,
+    in context: OperationContext,
     using query: Query,
-    with continuation: QueryContinuation<Query.Value>
+    with continuation: OperationContinuation<Query.Value>
   ) async throws -> Query.Value {
     @Dependency(\.notificationCenter) var center
     do {
       let value = try await query.fetch(in: context, with: continuation)
       if let successAlert = self.successAlert(value) {
-        await center.post(QueryAlertMessage(alert: successAlert))
+        await center.post(OperationAlertMessage(alert: successAlert))
       }
       return value
     } catch {
-      let isLastRetry = context.queryRetryIndex >= context.queryMaxRetries
+      let isLastRetry = context.operationRetryIndex >= context.operationMaxRetries
       if isLastRetry, let failureAlert = self.failureAlert(error) {
-        await center.post(QueryAlertMessage(alert: failureAlert))
+        await center.post(OperationAlertMessage(alert: failureAlert))
       }
       throw error
     }
@@ -50,11 +50,11 @@ public struct _AlertStateModifier<Query: QueryRequest>: QueryModifier {
 
 // MARK: - Notification
 
-public struct QueryAlertMessage: NotificationCenter.MainActorMessage {
+public struct OperationAlertMessage: NotificationCenter.MainActorMessage {
   public typealias Subject = AnyObject
 
   public static var name: Notification.Name {
-    Notification.Name("QueryAlertMessageNotification")
+    Notification.Name("OperationAlertMessageNotification")
   }
 
   public let alert: AlertState<Never>
@@ -63,12 +63,12 @@ public struct QueryAlertMessage: NotificationCenter.MainActorMessage {
 // MARK: - View Modifier
 
 extension View {
-  public func observeQueryAlerts() -> some View {
-    self.modifier(ObserveQueryAlertsModifier())
+  public func observeOperationAlerts() -> some View {
+    self.modifier(ObserveOperationAlertsModifier())
   }
 }
 
-private struct ObserveQueryAlertsModifier: ViewModifier {
+private struct ObserveOperationAlertsModifier: ViewModifier {
   @State private var alert: AlertState<Never>?
   @State private var token: NotificationCenter.ObservationToken?
   @Dependency(\.notificationCenter) var center
@@ -76,7 +76,7 @@ private struct ObserveQueryAlertsModifier: ViewModifier {
   func body(content: Content) -> some View {
     content
       .onAppear {
-        self.token = self.center.addObserver(for: QueryAlertMessage.self) { message in
+        self.token = self.center.addObserver(for: OperationAlertMessage.self) { message in
           #if os(macOS)
             self.alert = message.alert
           #else

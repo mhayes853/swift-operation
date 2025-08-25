@@ -13,12 +13,12 @@ import IdentifiedCollections
 /// type as `QueryValue`. A nil value for ``currentValue`` indicates that the query has not yet
 /// fetched any data, or has been yielded any value.
 ///
-/// You can also access all active ``QueryTask`` instances on this state through the
+/// You can also access all active ``OperationTask`` instances on this state through the
 /// ``activeTasks`` property. Tasks are removed from `activeTasks` when ``finishFetchTask(_:)`` is
-/// called by a ``QueryStore``.
+/// called by a ``OperationStore``.
 ///
 /// > Warning: You should not call any of the `mutating` methods directly on this type, rather a
-/// > ``QueryStore`` will call them at the appropriate time for you.
+/// > ``OperationStore`` will call them at the appropriate time for you.
 public struct QueryState<StateValue: Sendable, QueryValue: Sendable> {
   public private(set) var currentValue: StateValue
   public let initialValue: StateValue
@@ -28,8 +28,8 @@ public struct QueryState<StateValue: Sendable, QueryValue: Sendable> {
   public private(set) var errorUpdateCount = 0
   public private(set) var errorLastUpdatedAt: Date?
 
-  /// The active ``QueryTask`` instances held by this state.
-  public private(set) var activeTasks = IdentifiedArrayOf<QueryTask<QueryValue>>()
+  /// The active ``OperationTask`` instances held by this state.
+  public private(set) var activeTasks = IdentifiedArrayOf<OperationTask<QueryValue>>()
 
   /// Creates a query state.
   ///
@@ -53,18 +53,18 @@ public struct QueryState<StateValue: Sendable, QueryValue: Sendable> {
 
 // MARK: - Fetch Task
 
-extension QueryState: QueryStateProtocol {
+extension QueryState: OperationState {
   public typealias StatusValue = QueryValue
 
   public var isLoading: Bool {
     !self.activeTasks.isEmpty
   }
 
-  public mutating func scheduleFetchTask(_ task: inout QueryTask<QueryValue>) {
+  public mutating func scheduleFetchTask(_ task: inout OperationTask<QueryValue>) {
     self.activeTasks.append(task)
   }
 
-  public mutating func reset(using context: QueryContext) -> ResetEffect {
+  public mutating func reset(using context: OperationContext) -> ResetEffect {
     let tasksToCancel = self.activeTasks
     self = Self(_initialValue: self.initialValue)
     return ResetEffect(tasksToCancel: tasksToCancel)
@@ -72,29 +72,29 @@ extension QueryState: QueryStateProtocol {
 
   public mutating func update(
     with result: Result<StateValue, any Error>,
-    using context: QueryContext
+    using context: OperationContext
   ) {
     switch result {
     case .success(let value):
       self.currentValue = value
       self.valueUpdateCount += 1
-      self.valueLastUpdatedAt = context.queryClock.now()
+      self.valueLastUpdatedAt = context.operationClock.now()
       self.error = nil
     case .failure(let error):
       self.error = error
       self.errorUpdateCount += 1
-      self.errorLastUpdatedAt = context.queryClock.now()
+      self.errorLastUpdatedAt = context.operationClock.now()
     }
   }
 
   public mutating func update(
     with result: Result<QueryValue, any Error>,
-    for task: QueryTask<QueryValue>
+    for task: OperationTask<QueryValue>
   ) {
     self.update(with: result.map { $0 as! StateValue }, using: task.context)
   }
 
-  public mutating func finishFetchTask(_ task: QueryTask<QueryValue>) {
+  public mutating func finishFetchTask(_ task: OperationTask<QueryValue>) {
     self.activeTasks.remove(id: task.id)
   }
 }

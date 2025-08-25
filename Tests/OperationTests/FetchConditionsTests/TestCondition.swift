@@ -4,20 +4,20 @@ final class TestCondition: FetchCondition {
   private typealias Handler = @Sendable (Bool) -> Void
 
   private let value = RecursiveLock(false)
-  private let subscribers = QuerySubscriptions<Handler>()
+  private let subscribers = OperationSubscriptions<Handler>()
 
   var subscriberCount: Int {
     self.subscribers.count
   }
 
-  func isSatisfied(in context: QueryContext) -> Bool {
+  func isSatisfied(in context: OperationContext) -> Bool {
     self.value.withLock { $0 }
   }
 
   func subscribe(
-    in context: QueryContext,
+    in context: OperationContext,
     _ observer: @escaping @Sendable (Bool) -> Void
-  ) -> QuerySubscription {
+  ) -> OperationSubscription {
     self.subscribers.add(handler: observer).0
   }
 

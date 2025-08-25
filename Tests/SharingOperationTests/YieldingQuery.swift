@@ -2,9 +2,9 @@ import Operation
 
 struct WithTaskMegaYieldModifier<Query: QueryRequest>: QueryModifier {
   func fetch(
-    in context: QueryContext,
+    in context: OperationContext,
     using query: Query,
-    with continuation: QueryContinuation<Query.Value>
+    with continuation: OperationContinuation<Query.Value>
   ) async throws -> Query.Value {
     await Task.megaYield()
     return try await query.fetch(in: context, with: continuation)

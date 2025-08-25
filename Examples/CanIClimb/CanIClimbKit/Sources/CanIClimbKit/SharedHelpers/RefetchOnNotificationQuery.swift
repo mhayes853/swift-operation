@@ -10,11 +10,11 @@ extension QueryRequest {
   }
 }
 
-public struct _RefetchOnNotificationController<State: QueryStateProtocol>: QueryController {
+public struct _RefetchOnNotificationController<State: OperationState>: OperationController {
   let notification: Notification.Name
   let center: NotificationCenter
 
-  public func control(with controls: QueryControls<State>) -> QuerySubscription {
+  public func control(with controls: OperationControls<State>) -> OperationSubscription {
     nonisolated(unsafe) let observer = self.center.addObserver(
       forName: self.notification,
       object: nil,
@@ -23,6 +23,6 @@ public struct _RefetchOnNotificationController<State: QueryStateProtocol>: Query
       let task = controls.yieldRefetchTask()
       Task { try await task?.runIfNeeded() }
     }
-    return QuerySubscription { self.center.removeObserver(observer) }
+    return OperationSubscription { self.center.removeObserver(observer) }
   }
 }

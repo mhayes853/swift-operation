@@ -16,7 +16,7 @@ struct CanIClimbAPITests {
     let api = CanIClimbAPI(
       transport: MockHTTPDataTransport { _ in (200, .json(resp)) },
       tokens: CanIClimbAPI.Tokens(
-        client: QueryClient(),
+        client: OperationClient(),
         secureStorage: self.storage,
         refreshTokenKey: key
       )
@@ -430,7 +430,7 @@ struct CanIClimbAPITests {
   }
 
   private func tokens() -> CanIClimbAPI.Tokens {
-    CanIClimbAPI.Tokens(client: QueryClient(), secureStorage: self.storage)
+    CanIClimbAPI.Tokens(client: OperationClient(), secureStorage: self.storage)
   }
 }
 

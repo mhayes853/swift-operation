@@ -1,28 +1,28 @@
 import Foundation
 
-// MARK: - OpaqueQueryState
+// MARK: - OpaqueOperationState
 
-/// An untyped state type that type erases any ``QueryStateProtocol`` conformance.
+/// An untyped state type that type erases any ``OperationState`` conformance.
 ///
-/// Generally, you only access this type from an ``OpaqueQueryStore``, which is typically accessed
-/// via pattern matching on a ``QueryClient``. See <doc:PatternMatchingAndStateManagement> for more.
-public struct OpaqueQueryState {
+/// Generally, you only access this type from an ``OpaqueOperationStore``, which is typically accessed
+/// via pattern matching on a ``OperationClient``. See <doc:PatternMatchingAndStateManagement> for more.
+public struct OpaqueOperationState {
   /// The underlying base state.
-  public private(set) var base: any QueryStateProtocol
+  public private(set) var base: any OperationState
 
   /// Creates an opaque state.
   ///
   /// - Parameter base: The base state to erase.
-  public init(_ base: any QueryStateProtocol) {
+  public init(_ base: any OperationState) {
     self.base = base
   }
 }
 
-// MARK: - QueryStateProtocol
+// MARK: - OperationState
 
-extension OpaqueQueryState: QueryStateProtocol {
-  public typealias StateValue = (any Sendable)?
-  public typealias QueryValue = any Sendable
+extension OpaqueOperationState: OperationState {
+  public typealias StateValue = any Sendable
+  public typealias OperationValue = any Sendable
   public typealias StatusValue = any Sendable
 
   public var currentValue: StateValue { self.base.currentValue }
@@ -35,18 +35,18 @@ extension OpaqueQueryState: QueryStateProtocol {
   public var errorLastUpdatedAt: Date? { self.base.errorLastUpdatedAt }
 
   public mutating func scheduleFetchTask(
-    _ task: inout QueryTask<any Sendable>
+    _ task: inout OperationTask<any Sendable>
   ) {
-    func open<State: QueryStateProtocol>(state: inout State) {
-      var inner = task.map { $0 as! State.QueryValue }
+    func open<State: OperationState>(state: inout State) {
+      var inner = task.map { $0 as! State.OperationValue }
       state.scheduleFetchTask(&inner)
       task = inner.map { $0 as any Sendable }
     }
     open(state: &self.base)
   }
 
-  public mutating func reset(using context: QueryContext) -> ResetEffect {
-    func open<State: QueryStateProtocol>(state: inout State) -> ResetEffect {
+  public mutating func reset(using context: OperationContext) -> ResetEffect {
+    func open<State: OperationState>(state: inout State) -> ResetEffect {
       ResetEffect(tasksCancellable: state.reset(using: context).tasksCancellable)
     }
     return open(state: &self.base)
@@ -54,30 +54,30 @@ extension OpaqueQueryState: QueryStateProtocol {
 
   public mutating func update(
     with result: Result<any Sendable, any Error>,
-    for task: QueryTask<any Sendable>
+    for task: OperationTask<any Sendable>
   ) {
-    func open<State: QueryStateProtocol>(state: inout State) {
+    func open<State: OperationState>(state: inout State) {
       state.update(
-        with: result.map { $0 as! State.QueryValue },
-        for: task.map { $0 as! State.QueryValue }
+        with: result.map { $0 as! State.OperationValue },
+        for: task.map { $0 as! State.OperationValue }
       )
     }
     open(state: &self.base)
   }
 
   public mutating func update(
-    with result: Result<(any Sendable)?, any Error>,
-    using context: QueryContext
+    with result: Result<any Sendable, any Error>,
+    using context: OperationContext
   ) {
-    func open<State: QueryStateProtocol>(state: inout State) {
+    func open<State: OperationState>(state: inout State) {
       state.update(with: result.map { $0 as! State.StateValue }, using: context)
     }
     open(state: &self.base)
   }
 
-  public mutating func finishFetchTask(_ task: QueryTask<any Sendable>) {
-    func open<State: QueryStateProtocol>(state: inout State) {
-      state.finishFetchTask(task.map { $0 as! State.QueryValue })
+  public mutating func finishFetchTask(_ task: OperationTask<any Sendable>) {
+    func open<State: OperationState>(state: inout State) {
+      state.finishFetchTask(task.map { $0 as! State.OperationValue })
     }
     open(state: &self.base)
   }

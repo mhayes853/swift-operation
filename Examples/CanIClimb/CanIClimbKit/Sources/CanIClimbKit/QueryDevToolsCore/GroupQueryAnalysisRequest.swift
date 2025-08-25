@@ -3,7 +3,7 @@ import OrderedCollections
 import SharingGRDB
 import Tagged
 
-public struct GroupQueryAnalysisRequest: FetchKeyRequest {
+public struct GroupOperationAnalysisRequest: FetchKeyRequest {
   private let launchId: ApplicationLaunch.ID
 
   public init(launchId: ApplicationLaunch.ID) {
@@ -11,11 +11,11 @@ public struct GroupQueryAnalysisRequest: FetchKeyRequest {
   }
 
   public typealias Value = OrderedDictionary<
-    QueryAnalysis.QueryName, IdentifiedArrayOf<QueryAnalysis>
+    OperationAnalysis.OperationName, IdentifiedArrayOf<OperationAnalysis>
   >
 
   public func fetch(_ db: Database) throws -> Value {
-    try QueryAnalysisRecord.all
+    try OperationAnalysisRecord.all
       .where { $0.launchId.eq(#bind(self.launchId)) }
       .order(by: \.id)
       .fetchAll(db)

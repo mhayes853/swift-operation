@@ -5,7 +5,7 @@ import Testing
 
 @Suite("DependencyQuery tests")
 struct DependencyQueryTests {
-  private let client = QueryClient()
+  private let client = OperationClient()
 
   @Test("Propogates Dependency To Query")
   func propogatesDependencyToQuery() async throws {
@@ -22,13 +22,13 @@ struct DependencyQueryTests {
 private struct DependencyQuery: QueryRequest {
   @Dependency(NumberKey.self) var number
 
-  var path: QueryPath {
+  var path: OperationPath {
     ["dependency", self.number]
   }
 
   func fetch(
-    in context: QueryContext,
-    with continuation: QueryContinuation<Int>
+    in context: OperationContext,
+    with continuation: OperationContinuation<Int>
   ) async throws -> Int {
     self.number
   }

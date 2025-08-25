@@ -6,7 +6,7 @@
     /// Logs the runtime duration of each fetch for this query in seconds.
     ///
     /// - Parameters:
-    ///   - logger: A `Logger` to use (defaults to the logger in ``QueryContext``.
+    ///   - logger: A `Logger` to use (defaults to the logger in ``OperationContext``.
     ///   - level: The level to log the duration message at.
     /// - Returns: A ``ModifiedQuery``.
     public func logDuration(
@@ -22,18 +22,22 @@
     let level: Logger.Level
 
     public func fetch(
-      in context: QueryContext,
+      in context: OperationContext,
       using query: Query,
-      with continuation: QueryContinuation<Query.Value>
+      with continuation: OperationContinuation<Query.Value>
     ) async throws -> Query.Value {
-      let logger = self.logger ?? context.queryLogger
-      let start = context.queryClock.now()
+      let logger = self.logger ?? context.operationLogger
+      let start = context.operationClock.now()
       defer {
-        let end = context.queryClock.now()
+        let end = context.operationClock.now()
         let duration = end.timeIntervalSince1970 - start.timeIntervalSince1970
         logger.log(
           level: self.level,
-          "\(query._debugTypeName) took \(duration.durationFormatted()) to run."
+          "An operation finished running.",
+          metadata: [
+            "operation.type": "\(query._debugTypeName)",
+            "operation.duration": "\(duration.durationFormatted())"
+          ]
         )
       }
       return try await query.fetch(in: context, with: continuation)

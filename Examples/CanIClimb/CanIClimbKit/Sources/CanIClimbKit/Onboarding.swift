@@ -25,7 +25,8 @@ public final class OnboardingModel: HashableObject, Identifiable {
   @Dependency(\.defaultDatabase) private var database
 
   @ObservationIgnored
-  @SharedQuery(LocationReading.requestUserPermissionMutation) private var requestLocationPermission
+  @SharedOperation(LocationReading.requestUserPermissionMutation) private
+    var requestLocationPermission
 
   @ObservationIgnored
   @SingleRow(SettingsRecord.self) private var _settings
@@ -754,7 +755,7 @@ private struct OnboardingOptionView: View {
 #Preview {
   let _ = prepareDependencies {
     $0.defaultDatabase = try! canIClimbDatabase()
-    $0.defaultQueryClient = QueryClient(storeCreator: .canIClimb)
+    $0.defaultOperationClient = OperationClient(storeCreator: .canIClimb)
 
     let authenticator = User.MockAuthenticator()
     authenticator.requiredCredentials = .mock1
@@ -773,6 +774,6 @@ private struct OnboardingOptionView: View {
   let model = OnboardingModel()
   // let _ = model.path = [.selectGender]
   OnboardingView(model: model)
-    .observeQueryAlerts()
+    .observeOperationAlerts()
     .environment(\.signInButtonMockCredentials, .mock1)
 }

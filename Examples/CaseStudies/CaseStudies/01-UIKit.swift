@@ -8,7 +8,7 @@ import SwiftUI
 struct BasicUIKitCaseStudy: CaseStudy {
   let title: LocalizedStringKey = "Basic UIKit"
   let description: LocalizedStringKey = """
-    Basic usage of the library using `QueryStore` to observe the state of a query and \
+    Basic usage of the library using `OperationStore` to observe the state of a query and \
     update the state of a view controller based on a random quote from the Dummy JSON API.
     """
 
@@ -21,8 +21,8 @@ struct BasicUIKitCaseStudy: CaseStudy {
 // MARK: - BasicUIKitViewController
 
 final class BasicUIKitViewController: UIViewController {
-  private var store: QueryStore<Quote.RandomQuery.State>!
-  private var subscription: QuerySubscription?
+  private var store: OperationStore<Quote.RandomQuery.State>!
+  private var subscription: OperationSubscription?
 
   private lazy var reloadButton = UIButton(
     type: .system,
@@ -33,7 +33,7 @@ final class BasicUIKitViewController: UIViewController {
 
   private let statusView = BasicUIKitQuoteStatusView()
 
-  init(client: QueryClient) {
+  init(client: OperationClient) {
     super.init(nibName: nil, bundle: nil)
     self.update(with: client)
   }
@@ -67,7 +67,7 @@ final class BasicUIKitViewController: UIViewController {
 }
 
 extension BasicUIKitViewController {
-  func update(with client: QueryClient) {
+  func update(with client: OperationClient) {
     let store = client.store(for: Quote.randomQuery)
     guard self.store !== store else { return }
     self.store = store
@@ -87,11 +87,11 @@ extension BasicUIKitViewController {
 extension BasicUIKitViewController {
   struct Representable: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> BasicUIKitViewController {
-      BasicUIKitViewController(client: context.environment.queryClient)
+      BasicUIKitViewController(client: context.environment.OperationClient)
     }
 
     func updateUIViewController(_ vc: BasicUIKitViewController, context: Context) {
-      vc.update(with: context.environment.queryClient)
+      vc.update(with: context.environment.OperationClient)
     }
   }
 }

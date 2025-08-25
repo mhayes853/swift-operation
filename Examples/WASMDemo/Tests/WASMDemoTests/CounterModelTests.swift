@@ -13,7 +13,7 @@ final class CounterModelTests: XCTestCase {
 
     try await withDependencies {
       $0[NumberFact.LoaderKey.self] = self.loader
-      $0.defaultQueryClient = .testInstance()
+      $0.defaultOperationClient = .testInstance()
     } operation: {
       let model = CounterModel(startingAt: 100)
 
@@ -32,7 +32,7 @@ final class CounterModelTests: XCTestCase {
 
     try await withDependencies {
       $0[NumberFact.LoaderKey.self] = self.loader
-      $0.defaultQueryClient = .testInstance()
+      $0.defaultOperationClient = .testInstance()
     } operation: {
       let model = CounterModel(startingAt: 99)
 
@@ -58,7 +58,7 @@ final class CounterModelTests: XCTestCase {
 
     try await withDependencies {
       $0[NumberFact.LoaderKey.self] = self.loader
-      $0.defaultQueryClient = .testInstance()
+      $0.defaultOperationClient = .testInstance()
     } operation: {
       let model = CounterModel(startingAt: 101)
 
@@ -84,7 +84,7 @@ final class CounterModelTests: XCTestCase {
 
     try await withDependencies {
       $0[NumberFact.LoaderKey.self] = self.loader
-      $0.defaultQueryClient = .testInstance()
+      $0.defaultOperationClient = .testInstance()
     } operation: {
       let model = CounterModel(startingAt: 0)
 

@@ -23,8 +23,8 @@ extension WeatherAttribution {
 
   public struct CurrentQuery: QueryRequest, Hashable {
     public func fetch(
-      in context: QueryContext,
-      with continuation: QueryContinuation<WeatherAttribution>
+      in context: OperationContext,
+      with continuation: OperationContinuation<WeatherAttribution>
     ) async throws -> WeatherAttribution {
       @Dependency(WeatherAttribution.LoaderKey.self) var loader
       return try await loader.attribution

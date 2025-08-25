@@ -5,7 +5,7 @@ import Testing
 
 @Suite(
   .dependencies {
-    $0.defaultQueryClient = QueryClient()
+    $0.defaultOperationClient = OperationClient()
     $0.defaultDatabase = try! canIClimbDatabase()
     $0.defaultNetworkObserver = MockNetworkObserver()
     $0[ScheduleableAlarm.SyncEngine.self] = ScheduleableAlarm.SyncEngine(

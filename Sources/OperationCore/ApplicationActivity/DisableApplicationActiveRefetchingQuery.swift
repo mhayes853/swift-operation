@@ -17,17 +17,17 @@ public struct _DisableApplicationActiveRefetchingModifier<
 >: _ContextUpdatingQueryModifier {
   let isDisabled: Bool
 
-  public func setup(context: inout QueryContext) {
+  public func setup(context: inout OperationContext) {
     context.isApplicationActiveRefetchingEnabled = !self.isDisabled
   }
 }
 
-// MARK: - QueryContext
+// MARK: - OperationContext
 
-extension QueryContext {
+extension OperationContext {
   /// Whether or not a query will refetch its data when the app re-enters from the background.
   ///
-  /// > Note: Setting this property through a ``QueryStore``'s ``QueryStore/context`` property has
+  /// > Note: Setting this property through a ``OperationStore``'s ``OperationStore/context`` property has
   /// > no effect, rather use the ``QueryRequest/disableApplicationActiveRefetching(_:)`` modifier on your
   /// > query.
   ///

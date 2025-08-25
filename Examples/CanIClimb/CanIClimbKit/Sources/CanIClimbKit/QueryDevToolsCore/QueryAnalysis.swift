@@ -2,18 +2,18 @@ import CasePaths
 import Tagged
 import UUIDV7
 
-// MARK: - QueryAnalysis
+// MARK: - OperationAnalysis
 
-public typealias QueryAnalysis = QueryAnalysisRecord
+public typealias OperationAnalysis = OperationAnalysisRecord
 
-extension QueryAnalysis {
+extension OperationAnalysis {
   public typealias ID = Tagged<Self, UUIDV7>
-  public typealias QueryName = Tagged<Self, String>
+  public typealias OperationName = Tagged<Self, String>
 }
 
 // MARK: - DataResult
 
-extension QueryAnalysis {
+extension OperationAnalysis {
   public struct DataResult: Hashable, Sendable, Codable {
     public let didSucceed: Bool
     public let dataDescription: String
@@ -37,15 +37,15 @@ extension QueryAnalysis {
 
 // MARK: - Mock Data
 
-extension QueryAnalysis {
+extension OperationAnalysis {
   public static let mock1 = Self(
     id: ID(),
     launchId: ApplicationLaunch.ID(),
     queryRetryAttempt: 0,
     queryRuntimeDuration: 1,
     queryName: "Mock1",
-    queryPathDescription: "QueryPath([\"mock1\"])",
-    yieldedQueryDataResults: [],
+    operationPathDescription: "OperationPath([\"mock1\"])",
+    yieldedOperationDataResults: [],
     queryDataResult: DataResult(didSucceed: true, dataDescription: "Something(count: 10)")
   )
 
@@ -55,8 +55,8 @@ extension QueryAnalysis {
     queryRetryAttempt: 0,
     queryRuntimeDuration: 1,
     queryName: "Mock2",
-    queryPathDescription: "QueryPath([\"mock2\"])",
-    yieldedQueryDataResults: [],
+    operationPathDescription: "OperationPath([\"mock2\"])",
+    yieldedOperationDataResults: [],
     queryDataResult: DataResult(didSucceed: true, dataDescription: "Something(count: 20)")
   )
 }

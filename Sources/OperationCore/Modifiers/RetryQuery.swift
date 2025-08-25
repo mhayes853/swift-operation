@@ -14,41 +14,41 @@ extension QueryRequest {
 public struct _RetryModifier<Query: QueryRequest>: QueryModifier {
   let limit: Int
 
-  public func setup(context: inout QueryContext, using query: Query) {
-    context.queryMaxRetries = self.limit
+  public func setup(context: inout OperationContext, using query: Query) {
+    context.operationMaxRetries = self.limit
     query.setup(context: &context)
   }
 
   public func fetch(
-    in context: QueryContext,
+    in context: OperationContext,
     using query: Query,
-    with continuation: QueryContinuation<Query.Value>
+    with continuation: OperationContinuation<Query.Value>
   ) async throws -> Query.Value {
     var context = context
-    for index in 0..<context.queryMaxRetries {
+    for index in 0..<context.operationMaxRetries {
       try Task.checkCancellation()
       do {
-        context.queryRetryIndex = index
+        context.operationRetryIndex = index
         return try await query.fetch(in: context, with: continuation)
       } catch {
-        try await context.queryDelayer.delay(for: context.queryBackoffFunction(index + 1))
+        try await context.queryDelayer.delay(for: context.operationBackoffFunction(index + 1))
       }
     }
     try Task.checkCancellation()
-    context.queryRetryIndex = context.queryMaxRetries
+    context.operationRetryIndex = context.operationMaxRetries
     return try await query.fetch(in: context, with: continuation)
   }
 }
 
-// MARK: - QueryContext
+// MARK: - OperationContext
 
-extension QueryContext {
+extension OperationContext {
   /// The current retry attempt for a query.
   ///
   /// This value starts at 0, but increments every time ``QueryRequest/retry(limit:)``
   /// retries a query. An index value of 0 indicates that the query is being fetched for the first
   /// time, and has not yet been retried.
-  public var queryRetryIndex: Int {
+  public var operationRetryIndex: Int {
     get { self[RetryIndexKey.self] }
     set { self[RetryIndexKey.self] = newValue }
   }
@@ -61,7 +61,7 @@ extension QueryContext {
   ///
   /// The default value of this context property is 0. However, using
   /// ``QueryRequest/retry(limit:)`` will set this value to the `limit` parameter.
-  public var queryMaxRetries: Int {
+  public var operationMaxRetries: Int {
     get { self[MaxRetriesKey.self] }
     set { self[MaxRetriesKey.self] = newValue }
   }
@@ -72,12 +72,12 @@ extension QueryContext {
 
   /// Whether or not the query is on its last retry attempt.
   public var isLastRetryAttempt: Bool {
-    self.queryRetryIndex == self.queryMaxRetries
+    self.operationRetryIndex == self.operationMaxRetries
   }
 
   /// Whether or not the query is on its first retry attempt.
   public var isFirstRetryAttempt: Bool {
-    self.queryRetryIndex == 1
+    self.operationRetryIndex == 1
   }
 
   /// Whether or not the query is on its initial fetch attempt.
@@ -86,6 +86,6 @@ extension QueryContext {
   /// retried due to throwing an error. If you want to check if the query is being retried for
   /// the first time, use ``isFirstRetryAttempt``.
   public var isFirstFetchAttempt: Bool {
-    self.queryRetryIndex == 0
+    self.operationRetryIndex == 0
   }
 }

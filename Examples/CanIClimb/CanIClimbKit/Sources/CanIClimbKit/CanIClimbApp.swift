@@ -13,7 +13,7 @@ public final class CanIClimbModel {
   @ObservationIgnored
   @Dependency(\.defaultDatabase) private var database
 
-  public var devTools: QueryDevToolsModel? {
+  public var devTools: OperationDevToolsModel? {
     didSet { self.bind() }
   }
 
@@ -44,7 +44,7 @@ extension CanIClimbModel {
   public func appeared() async throws {
     try await self.alarmSyncEngine?.start()
     self.token = self.center.addObserver(for: DeviceShakeMessage.self) { [weak self] _ in
-      self?.devTools = self?.devTools ?? QueryDevToolsModel()
+      self?.devTools = self?.devTools ?? OperationDevToolsModel()
     }
     let hasFinishedOnboarding = try await self.database.write { [launchId, deviceInfo] db in
       try ApplicationLaunchRecord.insert {
@@ -89,7 +89,7 @@ public struct CanIClimbApp: App {
 
   public init() {
     try! prepareDependencies {
-      $0.defaultQueryClient = .canIClimb
+      $0.defaultOperationClient = .canIClimb
       $0.defaultDatabase = try canIClimbDatabase(
         url: .applicationSupportDirectory.appending(path: "db/can-i-climb.db")
       )
@@ -119,7 +119,7 @@ public struct CanIClimbView: View {
   public var body: some View {
     Group {
       if let devToolsModel = self.model.devTools {
-        QueryDevToolsView(model: devToolsModel)
+        OperationDevToolsView(model: devToolsModel)
           .transition(.opacity)
       } else {
         MountainsListView(model: self.model.mountainsList) { content in
@@ -138,7 +138,7 @@ public struct CanIClimbView: View {
       }
     }
     .animation(.easeInOut, value: self.model.devTools)
-    .observeQueryAlerts()
+    .observeOperationAlerts()
     .task {
       await withErrorReporting { try await self.model.appeared() }
     }

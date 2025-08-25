@@ -9,7 +9,7 @@
     private typealias Handler = @Sendable (NetworkConnectionStatus) -> Void
 
     private let monitor: NWPathMonitor
-    private let subscriptions = QuerySubscriptions<Handler>()
+    private let subscriptions = OperationSubscriptions<Handler>()
 
     private init(monitor: NWPathMonitor) {
       self.monitor = monitor
@@ -71,7 +71,7 @@
 
     public func subscribe(
       with handler: @escaping @Sendable (NetworkConnectionStatus) -> Void
-    ) -> QuerySubscription {
+    ) -> OperationSubscription {
       self.subscriptions.add(handler: handler).subscription
     }
   }

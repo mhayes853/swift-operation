@@ -8,7 +8,7 @@ import Testing
 struct MutationKeyTests {
   @Test("Mutates For Value")
   func mutatesForValue() async throws {
-    @SharedQuery(EmptyMutation()) var value
+    @SharedOperation(EmptyMutation()) var value
 
     expectNoDifference(value, nil)
     let expected = "blob"
@@ -18,7 +18,7 @@ struct MutationKeyTests {
 
   @Test("Mutates For Error")
   func mutatesForError() async throws {
-    @SharedQuery(FailableMutation()) var value
+    @SharedOperation(FailableMutation()) var value
 
     expectNoDifference($value.error as? FailableMutation.MutateError, nil)
     _ = try? await $value.mutate(with: "blob")
@@ -30,13 +30,13 @@ struct MutationKeyTests {
 
   @Test("Equatability Is True When Values From Separate Stores Are Equal")
   func equatability() async throws {
-    @Dependency(\.defaultQueryClient) var client
+    @Dependency(\.defaultOperationClient) var client
 
-    let s1 = QueryStore.detached(mutation: EmptyMutation())
-    let s2 = QueryStore.detached(mutation: EmptyMutation())
+    let s1 = OperationStore.detached(mutation: EmptyMutation())
+    let s2 = OperationStore.detached(mutation: EmptyMutation())
 
-    @SharedQuery(store: s1) var value1
-    @SharedQuery(store: s2) var value2
+    @SharedOperation(store: s1) var value1
+    @SharedOperation(store: s2) var value2
 
     expectNoDifference(value1, value2)
 

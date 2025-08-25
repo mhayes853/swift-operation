@@ -9,18 +9,18 @@ struct ReusableRefetchingCaseStudy: CaseStudy {
   let description: LocalizedStringKey = """
     You may want to refetch queries when some event occurs in your application (eg. a user logging \
     out), but do so on many distinct queries. You can reuse this refetching logic using the \
-    `QueryController` protocol.
+    `OperationController` protocol.
 
     Here, we'll use `NotificationCenter` to observe when you take a screenshot on your device. \
     Every time you take a screenshot, the queries on screen will refetch themselves.
     """
 
-  // NB: Use a separate query client instance to avoid QueryPath clashes with other case studies.
-  @State private var client = QueryClient()
+  // NB: Use a separate query client instance to avoid OperationPath clashes with other case studies.
+  @State private var client = OperationClient()
 
   var content: some View {
     withDependencies {
-      $0.defaultQueryClient = self.client
+      $0.defaultOperationClient = self.client
     } operation: {
       InnerView()
     }
@@ -30,8 +30,8 @@ struct ReusableRefetchingCaseStudy: CaseStudy {
 // MARK: - InnerView
 
 private struct InnerView: View {
-  @SharedQuery(Quote.randomScreenshotQuery) private var quote
-  @SharedQuery(Recipe.randomScreenshotQuery) private var recipe
+  @SharedOperation(Quote.randomScreenshotQuery) private var quote
+  @SharedOperation(Recipe.randomScreenshotQuery) private var recipe
 
   var body: some View {
     Text("Take a screenshot to refetch the queries!").font(.title3.bold())
@@ -71,11 +71,11 @@ extension QueryRequest {
   }
 }
 
-struct RefetchOnNotificationController<State: QueryStateProtocol>: QueryController {
+struct RefetchOnNotificationController<State: OperationState>: OperationController {
   let notification: Notification.Name
   let center: NotificationCenter
 
-  func control(with controls: QueryControls<State>) -> QuerySubscription {
+  func control(with controls: OperationControls<State>) -> OperationSubscription {
     nonisolated(unsafe) let observer = self.center.addObserver(
       forName: self.notification,
       object: nil,
@@ -84,7 +84,7 @@ struct RefetchOnNotificationController<State: QueryStateProtocol>: QueryControll
       let task = controls.yieldRefetchTask()
       Task { try await task?.runIfNeeded() }
     }
-    return QuerySubscription { self.center.removeObserver(observer) }
+    return OperationSubscription { self.center.removeObserver(observer) }
   }
 }
 

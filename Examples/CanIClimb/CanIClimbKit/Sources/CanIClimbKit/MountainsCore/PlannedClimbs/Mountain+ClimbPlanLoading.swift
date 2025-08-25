@@ -52,13 +52,13 @@ extension Mountain {
   public struct PlannedClimbsQuery: QueryRequest {
     let id: Mountain.ID
 
-    public var path: QueryPath {
+    public var path: OperationPath {
       .mountainPlannedClimbs.appending(id)
     }
 
     public func fetch(
-      in context: QueryContext,
-      with continuation: QueryContinuation<IdentifiedArrayOf<PlannedClimb>>
+      in context: OperationContext,
+      with continuation: OperationContinuation<IdentifiedArrayOf<PlannedClimb>>
     ) async throws -> IdentifiedArrayOf<PlannedClimb> {
       @Dependency(Mountain.PlannedClimbsLoaderKey.self) var loader
       continuation.yield(try await loader.localPlannedClimbs(for: self.id))
@@ -67,6 +67,6 @@ extension Mountain {
   }
 }
 
-extension QueryPath {
+extension OperationPath {
   public static let mountainPlannedClimbs = Self("mountain-planned-climbs")
 }

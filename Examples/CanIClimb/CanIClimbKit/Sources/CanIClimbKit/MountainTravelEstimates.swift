@@ -12,7 +12,7 @@ import SwiftUINavigation
 @Observable
 public final class MountainTravelEstimatesModel {
   public let mountain: Mountain
-  public private(set) var estimates = [TravelType: SharedQuery<TravelEstimate.Query.State>]()
+  public private(set) var estimates = [TravelType: SharedOperation<TravelEstimate.Query.State>]()
   public var destination: Destination?
   public private(set) var userLocation: Result<LocationReading, any Error>?
 
@@ -33,7 +33,7 @@ public final class MountainTravelEstimatesModel {
           origin: location.coordinate,
           destination: mountain.location.coordinate
         )
-        self.estimates[type] = SharedQuery(TravelEstimate.query(for: request))
+        self.estimates[type] = SharedOperation(TravelEstimate.query(for: request))
       }
     case .failure:
       self.estimates.removeAll()

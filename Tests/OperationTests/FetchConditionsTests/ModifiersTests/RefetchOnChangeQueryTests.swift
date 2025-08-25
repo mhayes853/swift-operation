@@ -12,7 +12,7 @@ final class RefetchOnChangeQueryTests: XCTestCase {
 
     let automaticCondition = TestCondition()
     automaticCondition.send(false)
-    let store = QueryStore.detached(
+    let store = OperationStore.detached(
       query: TestQuery().enableAutomaticFetching(onlyWhen: automaticCondition)
         .refetchOnChange(of: condition),
       initialValue: nil
@@ -38,7 +38,7 @@ final class RefetchOnChangeQueryTests: XCTestCase {
     let count = Lock(0)
     let automaticCondition = TestCondition()
     automaticCondition.send(false)
-    let store = QueryStore.detached(
+    let store = OperationStore.detached(
       query: CountingQuery {
         let c = count.withLock { count in
           count += 1
@@ -84,7 +84,7 @@ final class RefetchOnChangeQueryTests: XCTestCase {
 
     let automaticCondition = TestCondition()
     automaticCondition.send(false)
-    let store = QueryStore.detached(
+    let store = OperationStore.detached(
       query: TestQuery().enableAutomaticFetching(onlyWhen: automaticCondition)
         .refetchOnChange(of: condition),
       initialValue: nil
@@ -100,7 +100,7 @@ final class RefetchOnChangeQueryTests: XCTestCase {
     subscription.cancel()
   }
 
-  func testDoesNotRefetchWhenNoSubscribersOnQueryStore() async {
+  func testDoesNotRefetchWhenNoSubscribersOnOperationStore() async {
     let expectation = self.expectation(description: "fetches")
     expectation.isInverted = true
 
@@ -108,7 +108,7 @@ final class RefetchOnChangeQueryTests: XCTestCase {
     condition.send(false)
 
     let query = CountingQuery { expectation.fulfill() }
-    let store = QueryStore.detached(
+    let store = OperationStore.detached(
       query: query.enableAutomaticFetching(onlyWhen: .always(true)).refetchOnChange(of: condition),
       initialValue: nil
     )
@@ -128,7 +128,7 @@ final class RefetchOnChangeQueryTests: XCTestCase {
 
     let automaticCondition = TestCondition()
     automaticCondition.send(false)
-    let store = QueryStore.detached(
+    let store = OperationStore.detached(
       query: TestQuery().enableAutomaticFetching(onlyWhen: automaticCondition)
         .refetchOnChange(of: condition)
         .staleWhen { _, _ in false },

@@ -3,23 +3,23 @@
 struct InfiniteQueryContextValues: Sendable {
   var fetchType: FetchType?
   var currentPagesTracker: PagesTracker?
-  var requestSubscriptions = QuerySubscriptions<RequestSubscriber>()
+  var requestSubscriptions = OperationSubscriptions<RequestSubscriber>()
 }
 
 // MARK: - RequestSubscriber
 
 extension InfiniteQueryContextValues {
   struct RequestSubscriber: Sendable {
-    let onPageFetchingStarted: @Sendable (AnyHashableSendable, QueryContext) -> Void
+    let onPageFetchingStarted: @Sendable (AnyHashableSendable, OperationContext) -> Void
     let onPageResultReceived:
-      @Sendable (AnyHashableSendable, Result<any Sendable, any Error>, QueryContext) -> Void
-    let onPageFetchingFinished: @Sendable (AnyHashableSendable, QueryContext) -> Void
+      @Sendable (AnyHashableSendable, Result<any Sendable, any Error>, OperationContext) -> Void
+    let onPageFetchingFinished: @Sendable (AnyHashableSendable, OperationContext) -> Void
   }
 
   func addRequestSubscriber<PageID, PageValue>(
     from handler: InfiniteQueryEventHandler<PageID, PageValue>,
     isTemporary: Bool
-  ) -> QuerySubscription {
+  ) -> OperationSubscription {
     let subscriber = RequestSubscriber(
       onPageFetchingStarted: { id, context in
         guard let id = id.base as? PageID else { return }
@@ -28,9 +28,9 @@ extension InfiniteQueryContextValues {
       onPageResultReceived: { id, result, context in
         guard let id = id.base as? PageID else { return }
         switch result {
-        case let .success(page as InfiniteQueryPage<PageID, PageValue>):
+        case .success(let page as InfiniteQueryPage<PageID, PageValue>):
           handler.onPageResultReceived?(id, .success(page), context)
-        case let .failure(error):
+        case .failure(let error):
           handler.onPageResultReceived?(id, .failure(error), context)
         default: break
         }
@@ -72,13 +72,14 @@ extension InfiniteQueryContextValues {
   }
 }
 
-// MARK: - QueryContext
+// MARK: - OperationContext
 
-extension QueryContext {
+extension OperationContext {
   func paging<Query: InfiniteQueryRequest>(
     for query: Query
   ) -> InfiniteQueryPaging<Query.PageID, Query.PageValue> {
-    guard let store = self.currentFetchingQueryStore?.base as? QueryStore<Query.State> else {
+    guard let store = self.currentFetchingOperationStore?.base as? OperationStore<Query.State>
+    else {
       return InfiniteQueryPaging(pageId: query.initialPageId, pages: [], request: .initialPage)
     }
     let state = store.state

@@ -13,19 +13,25 @@
       let handler = TestHandler()
       let logger = Logger(label: "test.query") { _ in handler }
       let clock = IncrementingClock()
-      let store = QueryStore.detached(
+      let store = OperationStore.detached(
         query: TestQuery().disableApplicationActiveRefetching()
           .logDuration(with: logger, at: .debug),
         initialValue: nil
       )
-      store.context.queryClock = clock
+      store.context.operationClock = clock
 
       try await store.fetch()
 
       handler.messages.inner.withLock { messages in
         expectNoDifference(
           messages,
-          [TestHandler.Message(message: "TestQuery took 1.0 sec to run.", level: .debug)]
+          [
+            TestHandler.Message(
+              message: "An operation finished running.",
+              level: .debug,
+              metadata: ["operation.type": "TestQuery", "operation.duration": "1.0 sec"]
+            )
+          ]
         )
       }
     }
@@ -35,6 +41,7 @@
     struct Message: Equatable, Sendable {
       let message: Logger.Message
       let level: Logger.Level
+      let metadata: Logger.Metadata
     }
 
     let messages = LockedBox(value: [Message]())
@@ -56,7 +63,9 @@
       function: String,
       line: UInt
     ) {
-      self.messages.inner.withLock { $0.append(Message(message: message, level: level)) }
+      self.messages.inner.withLock {
+        $0.append(Message(message: message, level: level, metadata: metadata ?? [:]))
+      }
     }
   }
 #endif

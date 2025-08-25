@@ -59,8 +59,8 @@ extension Int {
     let number: Int
 
     public func fetch(
-      in context: QueryContext,
-      with continuation: QueryContinuation<Int?>
+      in context: OperationContext,
+      with continuation: OperationContinuation<Int?>
     ) async throws -> Int? {
       nthPrime(for: self.number)
     }

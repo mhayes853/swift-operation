@@ -11,7 +11,7 @@ public final class ConnectToHealthKitModel {
   @SingleRow(LocalInternalMetricsRecord.self) private var _localMetrics
 
   @ObservationIgnored
-  @SharedQuery(HealthPermissions.requestMutation) private var request: Void?
+  @SharedOperation(HealthPermissions.requestMutation) private var request: Void?
 
   public init() {}
 

@@ -14,9 +14,9 @@
 ///   let seconds: TimeInterval
 ///
 ///   func fetch(
-///     in context: QueryContext,
+///     in context: OperationContext,
 ///     using query: Query,
-///     with continuation: QueryContinuation<Query.Value>
+///     with continuation: OperationContinuation<Query.Value>
 ///   ) async throws -> Query.Value {
 ///     try await context.queryDelayer.delay(for: seconds)
 ///     return try await query.fetch(in: context, with: continuation)
@@ -44,34 +44,34 @@ public protocol QueryModifier<Query>: Sendable {
   /// The underlying ``QueryRequest`` type.
   associatedtype Query: QueryRequest
 
-  /// Sets up the initial ``QueryContext`` for the specified query.
+  /// Sets up the initial ``OperationContext`` for the specified query.
   ///
-  /// This method is called a single time when a ``QueryStore`` is initialized with your query.
+  /// This method is called a single time when a ``OperationStore`` is initialized with your query.
   ///
   /// Make sure to call ``QueryRequest/setup(context:)-56d43`` on `query` in order to apply the
   /// functionallity required by other modifiers that are attached to this query.
   ///
   /// - Parameters:
-  ///   - context: The ``QueryContext`` to setup.
+  ///   - context: The ``OperationContext`` to setup.
   ///   - query: The underlying query for this modifier.
-  func setup(context: inout QueryContext, using query: Query)
+  func setup(context: inout OperationContext, using query: Query)
 
   /// Fetches the data for the specified query.
   ///
   /// - Parameters:
-  ///   - context: The ``QueryContext`` passed to this modifier.
+  ///   - context: The ``OperationContext`` passed to this modifier.
   ///   - query: The underlying query to fetch data from.
-  ///   - continuation: A ``QueryContinuation`` allowing you to yield multiple values from your modifier. See <doc:MultistageQueries> for more.
+  ///   - continuation: A ``OperationContinuation`` allowing you to yield multiple values from your modifier. See <doc:MultistageQueries> for more.
   /// - Returns: The query value.
   func fetch(
-    in context: QueryContext,
+    in context: OperationContext,
     using query: Query,
-    with continuation: QueryContinuation<Query.Value>
+    with continuation: OperationContinuation<Query.Value>
   ) async throws -> Query.Value
 }
 
 extension QueryModifier {
-  public func setup(context: inout QueryContext, using query: Query) {
+  public func setup(context: inout OperationContext, using query: Query) {
     query.setup(context: &context)
   }
 }
@@ -79,21 +79,21 @@ extension QueryModifier {
 // MARK: - ContextQueryModifier
 
 public protocol _ContextUpdatingQueryModifier: QueryModifier {
-  func setup(context: inout QueryContext)
+  func setup(context: inout OperationContext)
 }
 
 extension _ContextUpdatingQueryModifier {
   @inlinable
-  public func setup(context: inout QueryContext, using query: Query) {
+  public func setup(context: inout OperationContext, using query: Query) {
     self.setup(context: &context)
     query.setup(context: &context)
   }
 
   @inlinable
   public func fetch(
-    in context: QueryContext,
+    in context: OperationContext,
     using query: Query,
-    with continuation: QueryContinuation<Query.Value>
+    with continuation: OperationContinuation<Query.Value>
   ) async throws -> Query.Value {
     try await query.fetch(in: context, with: continuation)
   }
@@ -128,7 +128,7 @@ where Modifier.Query == Query {
   public let modifier: Modifier
 
   @inlinable
-  public var path: QueryPath {
+  public var path: OperationPath {
     self.query.path
   }
 
@@ -138,14 +138,14 @@ where Modifier.Query == Query {
   }
 
   @inlinable
-  public func setup(context: inout QueryContext) {
+  public func setup(context: inout OperationContext) {
     self.modifier.setup(context: &context, using: query)
   }
 
   @inlinable
   public func fetch(
-    in context: QueryContext,
-    with continuation: QueryContinuation<Query.Value>
+    in context: OperationContext,
+    with continuation: OperationContinuation<Query.Value>
   ) async throws -> Query.Value {
     try await self.modifier.fetch(in: context, using: query, with: continuation)
   }

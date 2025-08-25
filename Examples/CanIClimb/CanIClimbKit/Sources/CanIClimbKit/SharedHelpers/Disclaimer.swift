@@ -2,7 +2,7 @@ import Foundation
 
 public let disclaimer: LocalizedStringResource = """
   CanIClimb is a demonstration application intended solely to illustrate the integration of \
-  Swift Query within a moderately complex project that incorporates personalized data, \
+  Swift Operation within a moderately complex project that incorporates personalized data, \
   networking, offline functionality, large language models (Foundation Models), and various \
   Apple frameworks.
 

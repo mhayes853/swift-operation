@@ -1,7 +1,7 @@
 import Operation
 import SwiftUI
 
-struct BasicQueryStateView<State: QueryStateProtocol, Content: View>: View
+struct BasicQueryStateView<State: OperationState, Content: View>: View
 where State.StateValue == State.StatusValue? {
   let state: State
   @ViewBuilder let content: (State.StatusValue) -> Content

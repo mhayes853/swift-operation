@@ -33,8 +33,8 @@ extension User {
     let id: Int
 
     func fetch(
-      in context: QueryContext,
-      with continuation: QueryContinuation<User>
+      in context: OperationContext,
+      with continuation: OperationContinuation<User>
     ) async throws -> User {
       let url = URL(string: "https://api.myapp.com/user/\(self.id)")!
       let (data, _) = try await URLSession.shared.data(from: url)
@@ -63,15 +63,15 @@ extension User {
     let id: Int
 
     func fetch(
-      in context: QueryContext,
-      with continuation: QueryContinuation<User>
+      in context: OperationContext,
+      with continuation: OperationContinuation<User>
     ) async throws -> User {
       try await context.myAppAPI.fetchUser(with: self.id)
     }
   }
 }
 
-extension QueryContext {
+extension OperationContext {
   var myAppAPI: MyAppAPI {
     get { self[MyAppAPIKey.self] }
     set { self[MyAppAPIKey.self] = newValue }
@@ -115,7 +115,7 @@ protocol HTTPDataTransport: Sendable {
 extension URLSession: HTTPDataTransport {}
 ```
 
-The latter example with a dedicated network layer is more robust, and will generally scale better in larger applications. We can instantiate `MyAppAPI` in a manner that allows us to point to different server environments such as staging and production by passing the appropriate `baseURL` into the initializer. We can also create a mock implementation of the `HTTPDataTransport` protocol that allows us to respond with mock data in test environments. Lastly, we can choose to inject a custom instance of `MyAppAPI` into the query via a custom ``QueryContext`` property, and by default we'll choose to use the production instance. However, this is significantly more lines of code than the example without a dedicated network layer due to the added affordances that allow us to customize the behavior of the app's networking logic.
+The latter example with a dedicated network layer is more robust, and will generally scale better in larger applications. We can instantiate `MyAppAPI` in a manner that allows us to point to different server environments such as staging and production by passing the appropriate `baseURL` into the initializer. We can also create a mock implementation of the `HTTPDataTransport` protocol that allows us to respond with mock data in test environments. Lastly, we can choose to inject a custom instance of `MyAppAPI` into the query via a custom ``OperationContext`` property, and by default we'll choose to use the production instance. However, this is significantly more lines of code than the example without a dedicated network layer due to the added affordances that allow us to customize the behavior of the app's networking logic.
 
 On the flipside, the former example without a dedicated network layer does not offer any affordances to customize its behavior. It will always fetch from the hardcoded URL using `URLSession.shared`. As such, it's not possible to change the server environment, or mock certain types of responses for testing. However, it's significantly less lines of code due to not having the indirection present in a dedicated networking layer.
 

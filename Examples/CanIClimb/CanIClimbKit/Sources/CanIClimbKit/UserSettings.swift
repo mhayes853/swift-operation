@@ -15,13 +15,13 @@ public final class UserSettingsModel: HashableObject {
   public var destination: Destination?
 
   @ObservationIgnored
-  @SharedQuery(User.signOutMutation, animation: .bouncy) private var signOut: Void?
+  @SharedOperation(User.signOutMutation, animation: .bouncy) private var signOut: Void?
 
   @ObservationIgnored
-  @SharedQuery(User.deleteMutation, animation: .bouncy) private var deleteAccount: Void?
+  @SharedOperation(User.deleteMutation, animation: .bouncy) private var deleteAccount: Void?
 
   @ObservationIgnored
-  @SharedQuery(User.editMutation, animation: .bouncy) private var editProfile
+  @SharedOperation(User.editMutation, animation: .bouncy) private var editProfile
 
   @ObservationIgnored public var onSignOut: ((SignOutType) -> Void)?
   @ObservationIgnored public var onLoading: ((LoadingType) -> Void)?
@@ -241,7 +241,7 @@ private struct ManageAccountSectionView: View {
 
   let _ = prepareDependencies {
     $0.defaultDatabase = try! canIClimbDatabase()
-    $0.defaultQueryClient = QueryClient(storeCreator: .canIClimb)
+    $0.defaultOperationClient = OperationClient(storeCreator: .canIClimb)
 
     $0[User.AuthenticatorKey.self] = User.MockAuthenticator()
     $0[User.AccountDeleterKey.self] = User.MockAccountDeleter()

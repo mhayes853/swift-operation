@@ -68,8 +68,8 @@ extension Post {
     let id: Int
 
     func fetch(
-      in context: QueryContext,
-      with continuation: QueryContinuation<Post?>
+      in context: OperationContext,
+      with continuation: OperationContinuation<Post?>
     ) async throws -> Post? {
       @Dependency(PostsKey.self) var posts
       return try await posts.post(with: self.id)
@@ -88,8 +88,8 @@ extension Post {
     let text: String
 
     func fetch(
-      in context: QueryContext,
-      with continuation: QueryContinuation<IdentifiedArrayOf<Post>>
+      in context: OperationContext,
+      with continuation: OperationContinuation<IdentifiedArrayOf<Post>>
     ) async throws -> IdentifiedArrayOf<Post> {
       @Dependency(PostSearcherKey.self) var posts
       return try await posts.search(by: self.text)
@@ -112,14 +112,14 @@ extension Post {
 
     let initialPageId = Post.ListPage.ID(limit: 10, skip: 0)
 
-    var path: QueryPath {
+    var path: OperationPath {
       ["posts", self.tag]
     }
 
     func pageId(
       after page: InfiniteQueryPage<PageID, PageValue>,
       using paging: InfiniteQueryPaging<PageID, PageValue>,
-      in context: QueryContext
+      in context: OperationContext
     ) -> PageID? {
       let nextId = PageID(limit: page.id.limit, skip: page.id.skip + page.id.limit)
       return nextId.skip >= page.value.total ? nil : nextId
@@ -127,8 +127,8 @@ extension Post {
 
     func fetchPage(
       using paging: InfiniteQueryPaging<PageID, PageValue>,
-      in context: QueryContext,
-      with continuation: QueryContinuation<PageValue>
+      in context: OperationContext,
+      with continuation: OperationContinuation<PageValue>
     ) async throws -> PageValue {
       @Dependency(PostListByTagLoaderKey.self) var loader
       return try await loader.posts(with: self.tag, for: paging.pageId)

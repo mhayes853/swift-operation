@@ -36,7 +36,7 @@
 
     public func subscribe(
       with handler: @escaping @Sendable (NetworkConnectionStatus) -> Void
-    ) -> QuerySubscription {
+    ) -> OperationSubscription {
       let window = JSObject.global.window.object!
       handler(self.currentStatus)
       let onlineListener = JSClosure { _ in

@@ -7,10 +7,10 @@ extension CanIClimbAPI {
   public final actor Tokens {
     private let secureStorage: any SecureStorage
     private let refreshTokenKey: String
-    private let store: QueryStore<Response.Mutation.State>
+    private let store: OperationStore<Response.Mutation.State>
 
     public init(
-      client: QueryClient,
+      client: OperationClient,
       secureStorage: any SecureStorage,
       refreshTokenKey: String = "canIClimbAPI_RefreshToken"
     ) {
@@ -91,8 +91,8 @@ extension CanIClimbAPI.Tokens.Response {
 
     func mutate(
       with arguments: @Sendable () async throws -> CanIClimbAPI.Tokens.Response,
-      in context: QueryContext,
-      with continuation: QueryContinuation<CanIClimbAPI.Tokens.Response>
+      in context: OperationContext,
+      with continuation: OperationContinuation<CanIClimbAPI.Tokens.Response>
     ) async throws -> CanIClimbAPI.Tokens.Response {
       try await arguments()
     }

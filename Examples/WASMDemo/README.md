@@ -8,7 +8,7 @@ Inspired by [PointFree's](https://www.pointfree.co/) obsession with counters, th
 
 You can see how Swift Query will easily remember the state of previous queries as you increment and decrement each counter. If you switch to another browser tab, then back to the app, the app will automatically refresh the latest data from the number fact API.
 
-The app makes use of the `SharingQuery` integration such that it can use the `@SharedQuery` property wrapper, and uses [swift-dependencies](https://github.com/pointfreeco/swift-dependencies) for dependency injection within queries.
+The app makes use of the `SharingQuery` integration such that it can use the `@SharedOperation` property wrapper, and uses [swift-dependencies](https://github.com/pointfreeco/swift-dependencies) for dependency injection within queries.
 
 Calculating the nth prime number is a blocking computation that takes a while for large numbers, so this project also shows off how one can use `WebWorkerTaskExecutor` from JavaScriptKit to avoid blocking the browser UI thread. The executor is combined with the `taskConfiguration` query modifier, which lets you set the `TaskExecutor` preference of the query. See the [Task Executor Preference](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0417-task-executor-preference.md) for more on how task executors work.
 

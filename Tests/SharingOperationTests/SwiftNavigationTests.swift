@@ -14,7 +14,7 @@
       let query = TestQuery().disableAutomaticFetching()
       var transaction = UITransaction()
       transaction[TestKey.self] = 10
-      @SharedQuery(query, transaction: transaction) var state
+      @SharedOperation(query, transaction: transaction) var state
 
       let token = observe { transaction in
         _ = state

@@ -4,17 +4,17 @@ extension QueryRequest {
   /// Disables automatic fetching for this query based on whether or not `isDisabled` is true.
   ///
   /// Automatic fetching is defined as the process of data being fetched from this query without
-  /// explicitly calling ``QueryStore/fetch(using:handler:)``. This includes, but not limited to:
-  /// 1. Automatically fetching from this query when subscribed to via ``QueryStore/subscribe(with:)-93jyd``.
+  /// explicitly calling ``OperationStore/fetch(using:handler:)``. This includes, but not limited to:
+  /// 1. Automatically fetching from this query when subscribed to via ``OperationStore/subscribe(with:)-93jyd``.
   /// 2. Automatically fetching from this query when the app re-enters from the background.
   /// 3. Automatically fetching from this query when the user's network connection comes back online.
-  /// 4. Automatically fetching from this query via a ``QueryController``.
+  /// 4. Automatically fetching from this query via a ``OperationController``.
   /// 5. Automatically fetching from this query via ``refetchOnChange(of:)``.
   ///
   /// When automatic fetching is disabled, you are responsible for manually calling
-  /// ``QueryStore/fetch(using:handler:)`` to ensure that your query always has the latest data.
+  /// ``OperationStore/fetch(using:handler:)`` to ensure that your query always has the latest data.
   ///
-  /// When you use the default initializer of a ``QueryClient``, automatic fetching is enabled for all
+  /// When you use the default initializer of a ``OperationClient``, automatic fetching is enabled for all
   /// ``QueryRequest`` conformances, and disabled for all ``MutationRequest`` conformances.
   ///
   /// - Parameter isDisabled: Whether or not to disable automatic fetching.
@@ -28,17 +28,17 @@ extension QueryRequest {
   /// Enables automatic fetching for this query based on the specified ``FetchCondition``.
   ///
   /// Automatic fetching is defined as the process of data being fetched from this query without
-  /// explicitly calling ``QueryStore/fetch(using:handler:)``. This includes, but not limited to:
-  /// 1. Automatically fetching from this query when subscribed to via ``QueryStore/subscribe(with:)-93jyd``.
+  /// explicitly calling ``OperationStore/fetch(using:handler:)``. This includes, but not limited to:
+  /// 1. Automatically fetching from this query when subscribed to via ``OperationStore/subscribe(with:)-93jyd``.
   /// 2. Automatically fetching from this query when the app re-enters from the background.
   /// 3. Automatically fetching from this query when the user's network connection comes back online.
-  /// 4. Automatically fetching from this query via a ``QueryController``.
+  /// 4. Automatically fetching from this query via a ``OperationController``.
   /// 5. Automatically fetching from this query via ``refetchOnChange(of:)``.
   ///
   /// When automatic fetching is disabled, you are responsible for manually calling
-  /// ``QueryStore/fetch(using:handler:)`` to ensure that your query always has the latest data.
+  /// ``OperationStore/fetch(using:handler:)`` to ensure that your query always has the latest data.
   ///
-  /// When you use the default initializer of a ``QueryClient``, automatic fetching is enabled for all
+  /// When you use the default initializer of a ``OperationClient``, automatic fetching is enabled for all
   /// ``QueryRequest`` conformances, and disabled for all ``MutationRequest`` conformances.
   ///
   /// - Parameter condition: The ``FetchCondition`` to enable automatic fetching on.
@@ -56,19 +56,19 @@ public struct _EnableAutomaticFetchingModifier<
 >: _ContextUpdatingQueryModifier {
   let condition: any FetchCondition
 
-  public func setup(context: inout QueryContext) {
+  public func setup(context: inout OperationContext) {
     context.enableAutomaticFetchingCondition = self.condition
   }
 }
 
-// MARK: - QueryContext
+// MARK: - OperationContext
 
-extension QueryContext {
+extension OperationContext {
   /// The ``FetchCondition`` that determines whether or not automatic fetching is enabled for a
   /// query.
   ///
   /// The default value of this context property is a condition that always returns false.
-  /// However, if you use the default initializer of a ``QueryClient``, then the condition will have
+  /// However, if you use the default initializer of a ``OperationClient``, then the condition will have
   /// a default value of true for all ``QueryRequest`` conformances and false for all
   /// ``MutationRequest`` conformances.
   public var enableAutomaticFetchingCondition: any FetchCondition {

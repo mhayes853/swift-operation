@@ -4,9 +4,9 @@
 ///
 /// All queries in the library conform to this protocol, including ``InfiniteQueryRequest`` and
 /// ``MutationRequest``. Queries have associated type requirements on the kind of data that they
-/// must fetch, and type of its state that is tracked inside a ``QueryStore``. Additionally, there
+/// must fetch, and type of its state that is tracked inside a ``OperationStore``. Additionally, there
 /// are functional requirements for performing the fetching logic, uniquely identifying the query
-/// though a ``QueryPath``, and setting up its initial ``QueryContext``.
+/// though a ``OperationPath``, and setting up its initial ``OperationContext``.
 ///
 /// Generally, as long as your query conforms to Hashable or Identifiable, the only requirement
 /// you need to implement yourself is ``fetch(in:with:)``.
@@ -27,8 +27,8 @@
 ///     let userId: Int
 ///
 ///     func fetch(
-///       in context: QueryContext,
-///       with continuation: QueryContinuation<User>
+///       in context: OperationContext,
+///       with continuation: OperationContinuation<User>
 ///     ) async throws -> User {
 ///       // Fetch the user...
 ///     }
@@ -37,7 +37,7 @@
 /// ```
 ///
 /// You can also choose to specify a manual ``path-5745r`` implementation that uniquely identifies
-/// your query. This way, you can use the pattern matching features of ``QueryClient`` for global
+/// your query. This way, you can use the pattern matching features of ``OperationClient`` for global
 /// state management in your application.
 ///
 /// ```swift
@@ -45,7 +45,7 @@
 ///   // ...
 ///
 ///   struct Query: QueryRequest, Hashable {
-///     var path: QueryPath { ["user", userId] }
+///     var path: OperationPath { ["user", userId] }
 ///
 ///     // ...
 ///   }
@@ -77,18 +77,18 @@
 /// }
 /// ```
 ///
-/// > Note: The default initializer of ``QueryClient`` will automatically apply the retry modifier
-/// > to your queries when calling ``QueryClient/store(for:)-3sn51``.
+/// > Note: The default initializer of ``OperationClient`` will automatically apply the retry modifier
+/// > to your queries when calling ``OperationClient/store(for:)-3sn51``.
 /// >
 /// > See <doc:QueryDefaults> to learn how to customize query defaults including default modifiers.
 ///
 /// Generally, you do not call ``fetch(in:with:)`` directly. Rather, you interact with your query
-/// through a ``QueryStore``. Stores manage the state (ie. Loading, Error, Success) of your query,
-/// and you can access the store for your query by using a ``QueryClient``.
+/// through a ``OperationStore``. Stores manage the state (ie. Loading, Error, Success) of your query,
+/// and you can access the store for your query by using a ``OperationClient``.
 ///
 /// ```swift
 /// // Share a single instance of the client throughout your entire app.
-/// let client = QueryClient()
+/// let client = OperationClient()
 ///
 /// let store = client.store(for: User.query(for: 1))
 ///
@@ -96,7 +96,7 @@
 /// print("User", user)
 /// ```
 ///
-/// The `QueryClient` holds all `QueryStore`s that your app creates, thus allowing you to access
+/// The `OperationClient` holds all `OperationStore`s that your app creates, thus allowing you to access
 /// them at a later time enabling global state management for your app. You can access the client
 /// from within ``fetch(in:with:)`` like so:
 ///
@@ -108,10 +108,10 @@
 ///     let userId: Int
 ///
 ///     func fetch(
-///       in context: QueryContext,
-///       with continuation: QueryContinuation<User>
+///       in context: OperationContext,
+///       with continuation: OperationContinuation<User>
 ///     ) async throws -> User {
-///       if let client = context.queryClient {
+///       if let client = context.operationClient {
 ///         // ...
 ///       }
 ///       // ...
@@ -124,7 +124,7 @@
 /// > a query.
 ///
 /// You can also yield multiple updates while fetching the primary data from your query through
-/// ``QueryContinuation``. This is particularly useful if you want to yield locally persisted data
+/// ``OperationContinuation``. This is particularly useful if you want to yield locally persisted data
 /// whilst fetching remote data from your query. Your query will remain in a loading state until
 /// you return the final result from ``fetch(in:with:)``.
 ///
@@ -136,8 +136,8 @@
 ///     let userId: Int
 ///
 ///     func fetch(
-///       in context: QueryContext,
-///       with continuation: QueryContinuation<User>
+///       in context: OperationContext,
+///       with continuation: OperationContinuation<User>
 ///     ) async throws -> User {
 ///       continuation.yield(try await Cache.shared.user(with: userId))
 ///       // Fetch remote user...
@@ -147,63 +147,63 @@
 /// ```
 ///
 /// > Note: See <doc:MultistageQueries> for a list of advanced use cases involving
-/// > ``QueryContinuation``.
-public protocol QueryRequest<Value, State>: QueryPathable, Sendable
-where State.QueryValue == Value {
+/// > ``OperationContinuation``.
+public protocol QueryRequest<Value, State>: OperationPathable, Sendable
+where State.OperationValue == Value {
   /// The data type that your query fetches.
   associatedtype Value: Sendable
 
   /// The state type of your query.
-  associatedtype State: QueryStateProtocol = QueryState<Value?, Value>
+  associatedtype State: OperationState = QueryState<Value?, Value>
 
   var _debugTypeName: String { get }
 
-  /// A ``QueryPath`` that uniquely identifies your query.
+  /// A ``OperationPath`` that uniquely identifies your query.
   ///
   /// If your query conforms to Hashable or Identifiable, then this requirement is implemented by
   /// default. However, if you want to take advantage of pattern matching, then you'll want to
   /// implement this requirement manually.
   ///
   /// See <doc:PatternMatchingAndStateManagement> for more.
-  var path: QueryPath { get }
+  var path: OperationPath { get }
 
-  /// Sets up the initial ``QueryContext`` that gets passed to ``fetch(in:with:)``.
+  /// Sets up the initial ``OperationContext`` that gets passed to ``fetch(in:with:)``.
   ///
-  /// This method is called a single time when a ``QueryStore`` is initialized with your query.
+  /// This method is called a single time when a ``OperationStore`` is initialized with your query.
   ///
   /// - Parameter context: The context to setup.
-  func setup(context: inout QueryContext)
+  func setup(context: inout OperationContext)
 
   /// Fetches the data for your query.
   ///
   /// - Parameters:
-  ///   - context: A ``QueryContext`` that is passed to your query from a ``QueryStore``.
-  ///   - continuation: A ``QueryContinuation`` that allows you to yield values while you're fetching data. See <doc:MultistageQueries> for more.
+  ///   - context: A ``OperationContext`` that is passed to your query from a ``OperationStore``.
+  ///   - continuation: A ``OperationContinuation`` that allows you to yield values while you're fetching data. See <doc:MultistageQueries> for more.
   /// - Returns: The fetched value from your query.
   func fetch(
-    in context: QueryContext,
-    with continuation: QueryContinuation<Value>
+    in context: OperationContext,
+    with continuation: OperationContinuation<Value>
   ) async throws -> Value
 }
 
 // MARK: - Setup
 
 extension QueryRequest {
-  public func setup(context: inout QueryContext) {
+  public func setup(context: inout OperationContext) {
   }
 }
 
 // MARK: - Path Defaults
 
 extension QueryRequest where Self: Hashable {
-  public var path: QueryPath {
-    QueryPath(self)
+  public var path: OperationPath {
+    OperationPath(self)
   }
 }
 
 extension QueryRequest where Self: Identifiable, ID: Sendable {
-  public var path: QueryPath {
-    QueryPath(self.id)
+  public var path: OperationPath {
+    OperationPath(self.id)
   }
 }
 

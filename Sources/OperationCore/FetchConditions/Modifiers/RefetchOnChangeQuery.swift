@@ -20,26 +20,26 @@ extension QueryRequest {
 }
 
 public final class _RefetchOnChangeController<
-  State: QueryStateProtocol,
+  State: OperationState,
   Condition: FetchCondition
->: QueryController {
+>: OperationController {
   private let condition: Condition
-  private let subscriptions = QuerySubscriptions<QueryControls<State>>()
+  private let subscriptions = OperationSubscriptions<OperationControls<State>>()
   private let task = Lock<Task<Void, any Error>?>(nil)
 
   init(condition: Condition) {
     self.condition = condition
   }
 
-  public func control(with controls: QueryControls<State>) -> QuerySubscription {
+  public func control(with controls: OperationControls<State>) -> OperationSubscription {
     let (controlsSubscription, _) = self.subscriptions.add(handler: controls)
     let conditionSubscription = self.subscribeToCondition(in: controls.context)
     return .combined(controlsSubscription, conditionSubscription)
   }
 
   private func subscribeToCondition(
-    in context: QueryContext
-  ) -> QuerySubscription {
+    in context: OperationContext
+  ) -> OperationSubscription {
     let currentValue = Lock(self.condition.isSatisfied(in: context))
     return self.condition.subscribe(in: context) { newValue in
       let didValueChange = currentValue.withLock { currentValue in

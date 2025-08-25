@@ -1,33 +1,33 @@
-# Utilizing the QueryContext
+# Utilizing the OperationContext
 
-Learn how to best use the ``QueryContext`` to facilitate dependency injection, customizing query behavior, and much more.
+Learn how to best use the ``OperationContext`` to facilitate dependency injection, customizing query behavior, and much more.
 
 ## Overview
 
-The `QueryContext` is a powerful tool utilized by many types in the library. In fact, every ``QueryRequest`` you create gets access to it.
+The `OperationContext` is a powerful tool utilized by many types in the library. In fact, every ``QueryRequest`` you create gets access to it.
 
 ```swift
 struct PlayerQuery: QueryRequest, Hashable {
   let id: Int
 
   func fetch(
-    in context: QueryContext,
-    using continuation: QueryContinuation<Player>
+    in context: OperationContext,
+    using continuation: OperationContinuation<Player>
   ) async throws -> Player {
     // We can use the context in here...
   }
 }
 ```
 
-Inside a query, the `QueryContext` provides many different properties for the current execution context. For instance, you can access the current retry index allowing you to adjust your fetching behavior based on the number of retries.
+Inside a query, the `OperationContext` provides many different properties for the current execution context. For instance, you can access the current retry index allowing you to adjust your fetching behavior based on the number of retries.
 
 ```swift
 struct PlayerQuery: QueryRequest, Hashable {
   let id: Int
 
   func fetch(
-    in context: QueryContext,
-    using continuation: QueryContinuation<Player>
+    in context: OperationContext,
+    using continuation: OperationContinuation<Player>
   ) async throws -> Player {
     if context.retryIndex > 0 {
       // Fetch considering how many times we've retried...
@@ -38,11 +38,11 @@ struct PlayerQuery: QueryRequest, Hashable {
 }
 ```
 
-Yet the power of `QueryContext` is greater.
+Yet the power of `OperationContext` is greater.
 
-## Adding Custom Properties to QueryContext
+## Adding Custom Properties to OperationContext
 
-`QueryContext` behaves a lot like SwiftUI's `EnvironmentValues`, and you can extend it with custom properties in a very similar manner to `EnvironmentValues`.
+`OperationContext` behaves a lot like SwiftUI's `EnvironmentValues`, and you can extend it with custom properties in a very similar manner to `EnvironmentValues`.
 
 ```swift
 import Operation
@@ -61,9 +61,9 @@ extension EnvironmentValues {
   }
 }
 
-// 🟢 QueryContext
+// 🟢 OperationContext
 
-extension QueryContext {
+extension OperationContext {
   var customProperty: String {
     get { self[CustomPropertyKey.self] }
     set { self[CustomPropertyKey.self] = newValue }
@@ -82,8 +82,8 @@ struct PlayerQuery: QueryRequest, Hashable {
   let id: Int
 
   func fetch(
-    in context: QueryContext,
-    using continuation: QueryContinuation<Player>
+    in context: OperationContext,
+    using continuation: OperationContinuation<Player>
   ) async throws -> Player {
     if context.customProperty == "hello!" {
       // Fetch...
@@ -94,12 +94,12 @@ struct PlayerQuery: QueryRequest, Hashable {
 }
 ```
 
-As can be seen here, we're able to customize the behavior of `PlayerQuery` based on a custom context property. Utilizing this technique allows you to use the `QueryContext` in a variety of ways, some of which we will talk about later.
+As can be seen here, we're able to customize the behavior of `PlayerQuery` based on a custom context property. Utilizing this technique allows you to use the `OperationContext` in a variety of ways, some of which we will talk about later.
 
-The `defaultValue` of a ``QueryContext/Key`` is computed everytime the `QueryContext` instance doesn't have an explicitly overriden value. If you want to lazily run an expensive computation for the default value, or use a shared reference, define your default value with as a `static let` property.
+The `defaultValue` of a ``OperationContext/Key`` is computed everytime the `OperationContext` instance doesn't have an explicitly overriden value. If you want to lazily run an expensive computation for the default value, or use a shared reference, define your default value with as a `static let` property.
 
 ```swift
-extension QueryContext {
+extension OperationContext {
   var myExpensiveProperty: String {
     get { self[MyExpensiveLazyPropertyKey.self] }
     set { self[MyExpensiveLazyPropertyKey.self] = newValue }
@@ -113,11 +113,11 @@ extension QueryContext {
 
 ## Setting Up The Context
 
-The `QueryRequest` protocol has an optional requirement to setup a `QueryContext` in a way that the query likes. This method is ran a single time when a ``QueryStore`` for the query is initialized.
+The `QueryRequest` protocol has an optional requirement to setup a `OperationContext` in a way that the query likes. This method is ran a single time when a ``OperationStore`` for the query is initialized.
 
 ```swift
 struct SomeQuery: QueryRequest, Hashable {
-  func setup(context: inout QueryContext) {
+  func setup(context: inout OperationContext) {
     context.customProperty = "new value"
   }
 
@@ -131,7 +131,7 @@ This strategy is used for many query modifiers. For instance, retries do this to
 
 ```swift
 struct NoRetryQuery: QueryRequest, Hashable {
-  func setup(context: inout QueryContext) {
+  func setup(context: inout OperationContext) {
     context.maxRetries = 0 // Disable retries for this query.
   }
 
@@ -159,8 +159,8 @@ extension Post {
     let id: Int
 
     func fetch(
-      in context: QueryContext,
-      with continuation: QueryContinuation<Post>
+      in context: OperationContext,
+      with continuation: OperationContinuation<Post>
     ) async throws -> Post {
       let url = URL(
         string: "https://jsonplaceholder.typicode.com/posts/\(id)"
@@ -183,7 +183,7 @@ protocol HTTPDataTransport: Sendable {
 
 extension URLSession: HTTPDataTransport {}
 
-extension QueryContext {
+extension OperationContext {
   var dataTransport: any HTTPDataTransport {
     get { self[DataTransportKey.self] }
     set { self[DataTransportKey.self] = newValue }
@@ -202,8 +202,8 @@ struct Query: QueryRequest, Hashable {
   let id: Int
 
   func fetch(
-    in context: QueryContext,
-    with continuation: QueryContinuation<Post>
+    in context: OperationContext,
+    with continuation: OperationContinuation<Post>
   ) async throws -> Post {
     let url = URL(
       string: "https://jsonplaceholder.typicode.com/posts/\(id)"
@@ -220,7 +220,7 @@ If we want to return some mock data for testing purposes, we can now leverage `U
 ```swift
 @Test
 func returnsPost() async throws {
-  let store = QueryStore.detached(
+  let store = OperationStore.detached(
     query: Post.query(for: 1),
     initialValue: nil
   )
@@ -260,15 +260,15 @@ struct MockDataTransport: HTTPDataTransport {
 
 ### Overriding Time
 
-``QueryStateProtocol/valueLastUpdatedAt`` and ``QueryStateProtocol/errorLastUpdatedAt`` properties on ``QueryStateProtocol`` conformances are computed using the ``QueryClock`` protocol. The clock lives on the context, and can be overridden. Therefore, if you want to ensure a deterministic date calculations for various reasons (time freeze, testing, etc.), you can do the following.
+``OperationState/valueLastUpdatedAt`` and ``OperationState/errorLastUpdatedAt`` properties on ``OperationState`` conformances are computed using the ``OperationClock`` protocol. The clock lives on the context, and can be overridden. Therefore, if you want to ensure a deterministic date calculations for various reasons (time freeze, testing, etc.), you can do the following.
 
 ```swift
-let store = QueryStore.detached(
+let store = OperationStore.detached(
   query: Post.query(for: 1),
   initialValue: nil
 )
 let date = Date(timeIntervalSince1970: 1234567890)
-store.context.queryClock = .custom { date }
+store.context.operationClock = .custom { date }
 
 try await store.fetch()
 
@@ -282,7 +282,7 @@ The ``QueryDelayer`` protocol is used to artificially delay queries in the case 
 For testing, this delay may be unacceptable, but thankfully you can override the `QueryDelayer` on the context to remove delays.
 
 ```swift
-let store = QueryStore.detached(
+let store = OperationStore.detached(
   query: Post.query(for: 1),
   initialValue: nil
 )
@@ -293,4 +293,4 @@ try await store.fetch() // Will incur no retry delays.
 
 ## Conclusion
 
-In this article, we explored how to utilize the `QueryContext` to customize query behavior, and even use it as a tool for dependency injection within queries. `QueryContext` can be extended with custom properties like the SwiftUI `EnvironmentValues`, and queries even have the opportunity to setup the context before fetching.
+In this article, we explored how to utilize the `OperationContext` to customize query behavior, and even use it as a tool for dependency injection within queries. `OperationContext` can be extended with custom properties like the SwiftUI `EnvironmentValues`, and queries even have the opportunity to setup the context before fetching.

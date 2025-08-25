@@ -28,8 +28,8 @@ public protocol NetworkObserver: Sendable {
   /// Subscribes to the ``NetworkConnectionStatus`` from this observer.
   ///
   /// - Parameter handler: A closure to yield back the latest network status.
-  /// - Returns: A ``QuerySubscription``.
+  /// - Returns: A ``OperationSubscription``.
   func subscribe(
     with handler: @escaping @Sendable (NetworkConnectionStatus) -> Void
-  ) -> QuerySubscription
+  ) -> OperationSubscription
 }

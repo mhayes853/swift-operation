@@ -49,13 +49,13 @@ extension Mountain {
   public struct Query: QueryRequest {
     let id: Mountain.ID
 
-    public var path: QueryPath {
+    public var path: OperationPath {
       .mountain(with: self.id)
     }
 
     public func fetch(
-      in context: QueryContext,
-      with continuation: QueryContinuation<Mountain?>
+      in context: OperationContext,
+      with continuation: OperationContinuation<Mountain?>
     ) async throws -> Mountain? {
       let loader = Dependency(Mountain.LoaderKey.self).wrappedValue
 
@@ -68,7 +68,7 @@ extension Mountain {
   }
 }
 
-extension QueryPath {
+extension OperationPath {
   public static let mountain = Self("mountain")
 
   public static func mountain(with id: Mountain.ID) -> Self {

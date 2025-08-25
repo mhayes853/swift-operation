@@ -13,15 +13,15 @@ public struct AlwaysCondition: FetchCondition {
   }
 
   @inlinable
-  public func isSatisfied(in context: QueryContext) -> Bool {
+  public func isSatisfied(in context: OperationContext) -> Bool {
     isTrue
   }
 
   @inlinable
   public func subscribe(
-    in context: QueryContext,
+    in context: OperationContext,
     _ observer: @escaping @Sendable (Bool) -> Void
-  ) -> QuerySubscription {
+  ) -> OperationSubscription {
     if self.shouldEmitInitialValue {
       observer(self.isTrue)
     }

@@ -1,0 +1,14 @@
+import Operation
+
+final class TestOperationController<Query: QueryRequest>: OperationController {
+  typealias State = Query.State
+
+  let controls = RecursiveLock<OperationControls<State>?>(nil)
+
+  func control(with controls: OperationControls<State>) -> OperationSubscription {
+    self.controls.withLock { $0 = controls }
+    return OperationSubscription {
+      self.controls.withLock { $0 = nil }
+    }
+  }
+}

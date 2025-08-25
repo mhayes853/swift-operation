@@ -22,7 +22,7 @@ public struct _MaxHistoryLengthModifier<
 >: _ContextUpdatingQueryModifier {
   let length: Int
 
-  public func setup(context: inout QueryContext) {
+  public func setup(context: inout OperationContext) {
     context.mutationValues.maxHistoryLength = self.length
   }
 }

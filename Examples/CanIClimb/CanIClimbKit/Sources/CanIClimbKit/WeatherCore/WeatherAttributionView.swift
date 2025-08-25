@@ -4,7 +4,7 @@ import WeatherKit
 
 public struct WeatherAttributionView: View {
   @Environment(\.colorScheme) private var colorScheme
-  @SharedQuery(WeatherAttribution.currentQuery) private var attribution
+  @SharedOperation(WeatherAttribution.currentQuery) private var attribution
 
   @ScaledMetric private var height = CGFloat(15)
 

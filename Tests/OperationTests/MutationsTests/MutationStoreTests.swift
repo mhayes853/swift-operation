@@ -6,7 +6,7 @@ import Testing
 
 @Suite("MutationStore tests")
 struct MutationStoreTests {
-  private let client = QueryClient()
+  private let client = OperationClient()
 
   @Test("Mutate Returns Mutated Value")
   func mutate() async throws {
@@ -80,7 +80,7 @@ struct MutationStoreTests {
     mutation.state.withLock { $0.willWait = true }
     let store = self.client.store(for: mutation)
 
-    let handle = RecursiveLock<QueryTask<String>?>(nil)
+    let handle = RecursiveLock<OperationTask<String>?>(nil)
     mutation.onLoading(for: "blob") {
       handle.withLock { $0 = store.history[0].task }
     }
@@ -144,7 +144,7 @@ struct MutationStoreTests {
     mutation.state.withLock { $0.willWait = true }
     let updatedAtDate = Date()
     let store = self.client.store(for: mutation)
-    store.context.queryClock = .timeFreeze(updatedAtDate)
+    store.context.operationClock = .timeFreeze(updatedAtDate)
 
     mutation.onLoading(for: "blob") {
       Task { try await store.mutate(with: "blob jr") }
@@ -202,7 +202,7 @@ struct MutationStoreTests {
     mutation.state.withLock { $0.willWait = true }
     let updatedAtDate = Date()
     let store = self.client.store(for: mutation)
-    store.context.queryClock = .custom { updatedAtDate }
+    store.context.operationClock = .custom { updatedAtDate }
 
     mutation.onLoading(for: "blob") {
       Task { try await store.mutate(with: "blob jr") }
@@ -241,14 +241,14 @@ struct MutationStoreTests {
   @Test("Automatic Fetching Disabled By Default On Regular Store")
   func automaticFetchingDisabledByDefault() async throws {
     let mutation = FailableMutation()
-    let store = QueryStore.detached(mutation: mutation)
+    let store = OperationStore.detached(mutation: mutation)
     expectNoDifference(store.isAutomaticFetchingEnabled, false)
   }
 
-  @Test("Reports Issue When Fetching Mutation Through A Base QueryStore With No History")
-  func reportsIssueWhenFetchingMutationThroughABaseQueryStoreWithNoHistory() async throws {
+  @Test("Reports Issue When Fetching Mutation Through A Base OperationStore With No History")
+  func reportsIssueWhenFetchingMutationThroughABaseOperationStoreWithNoHistory() async throws {
     let mutation = FailableMutation()
-    let store = QueryStore.detached(mutation: mutation)
+    let store = OperationStore.detached(mutation: mutation)
     await withKnownIssue {
       _ = try? await store.fetch()
     } matching: {
@@ -257,10 +257,10 @@ struct MutationStoreTests {
     expectNoDifference(store.history.isEmpty, true)
   }
 
-  @Test("Retries Latest History When Calling Fetch On Base QueryStore For Mutation")
-  func retriesLatestHistoryWhenCallingFetchOnBaseQueryStoreForMutation() async throws {
+  @Test("Retries Latest History When Calling Fetch On Base OperationStore For Mutation")
+  func retriesLatestHistoryWhenCallingFetchOnBaseOperationStoreForMutation() async throws {
     let mutation = EmptyMutation()
-    let store = QueryStore.detached(mutation: mutation)
+    let store = OperationStore.detached(mutation: mutation)
     try await store.mutate(with: "blob")
     try await store.fetch()
     expectNoDifference(store.currentValue, "blob")
@@ -271,7 +271,7 @@ struct MutationStoreTests {
   @Test("Retries Latest History When Calling RetryLatest")
   func retriesLatestHistoryWhenCallingRetryLatest() async throws {
     let mutation = EmptyMutation()
-    let store = QueryStore.detached(mutation: mutation)
+    let store = OperationStore.detached(mutation: mutation)
     try await store.mutate(with: "blob")
     let value = try await store.retryLatest()
     expectNoDifference(value, "blob")
@@ -341,7 +341,7 @@ struct MutationStoreTests {
     let task = store.mutateTask(with: "blob")
     expectNoDifference(
       task.configuration.name,
-      "QueryStore<MutationState<String, String>> Mutate Task"
+      "OperationStore<MutationState<String, String>> Mutate Task"
     )
   }
 
@@ -352,16 +352,16 @@ struct MutationStoreTests {
     let task = store.retryLatestTask()
     expectNoDifference(
       task.configuration.name,
-      "QueryStore<MutationState<String, String>> Retry Latest Task"
+      "OperationStore<MutationState<String, String>> Retry Latest Task"
     )
   }
 
   @Test("Uses More Recent State Update Between History And Yielding")
   func mutationStoreUsesMoreRecentStateUpdate() async throws {
-    let controller = TestQueryController<EmptyMutation>()
+    let controller = TestOperationController<EmptyMutation>()
     let store = self.client.store(for: EmptyMutation().controlled(by: controller))
-    let clock = TestQueryClock(date: Date())
-    store.context.queryClock = clock
+    let clock = TestOperationClock(date: Date())
+    store.context.operationClock = clock
 
     try await store.mutate(with: "blob")
     expectNoDifference(store.currentValue, "blob")
@@ -385,11 +385,11 @@ struct MutationStoreTests {
   func mutationStoreUsesMoreRecentErrorUpdate() async throws {
     struct SomeError: Equatable, Error {}
 
-    let controller = TestQueryController<EmptyMutation>()
+    let controller = TestOperationController<EmptyMutation>()
     let mutation = FailableMutation()
     let store = self.client.store(for: mutation.controlled(by: controller))
-    let clock = TestQueryClock(date: Date())
-    store.context.queryClock = clock
+    let clock = TestOperationClock(date: Date())
+    store.context.operationClock = clock
 
     _ = try? await store.mutate(with: "blob")
     expectNoDifference(

@@ -49,10 +49,10 @@ extension LocationReading {
 
     public func mutate(
       with arguments: Void,
-      in context: QueryContext,
-      with continuation: QueryContinuation<Bool>
+      in context: OperationContext,
+      with continuation: OperationContinuation<Bool>
     ) async -> Bool {
-      @Dependency(\.defaultQueryClient) var client
+      @Dependency(\.defaultOperationClient) var client
       @Dependency(UserLocationKey.self) var userLocation
       let isAuthorized = await userLocation.requestAuthorization()
       if isAuthorized {
@@ -71,8 +71,8 @@ extension LocationReading {
 
   public struct UserQuery: QueryRequest, Hashable {
     public func fetch(
-      in context: QueryContext,
-      with continuation: QueryContinuation<LocationReading>
+      in context: OperationContext,
+      with continuation: OperationContinuation<LocationReading>
     ) async throws -> LocationReading {
       @Dependency(UserLocationKey.self) var userLocation
       return try await userLocation.read()

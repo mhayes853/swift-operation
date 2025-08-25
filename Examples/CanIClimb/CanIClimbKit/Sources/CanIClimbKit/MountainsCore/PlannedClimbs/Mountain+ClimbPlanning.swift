@@ -148,11 +148,11 @@ extension Mountain {
 
     public func mutate(
       with arguments: Arguments,
-      in context: QueryContext,
-      with continuation: QueryContinuation<(Mountain, PlannedClimb)>
+      in context: OperationContext,
+      with continuation: OperationContinuation<(Mountain, PlannedClimb)>
     ) async throws -> (Mountain, PlannedClimb) {
       @Dependency(Mountain.PlanClimberKey.self) var planner
-      @Dependency(\.defaultQueryClient) var client
+      @Dependency(\.defaultOperationClient) var client
 
       let plannedClimb = try await planner.plan(create: arguments.create)
 
@@ -190,11 +190,11 @@ extension Mountain {
 
     public func mutate(
       with arguments: Arguments,
-      in context: QueryContext,
-      with continuation: QueryContinuation<Void>
+      in context: OperationContext,
+      with continuation: OperationContinuation<Void>
     ) async throws {
       @Dependency(Mountain.PlanClimberKey.self) var planner
-      @Dependency(\.defaultQueryClient) var client
+      @Dependency(\.defaultOperationClient) var client
 
       let climbsStore = client.store(for: Mountain.plannedClimbsQuery(for: arguments.mountainId))
       var currentPlans: IdentifiedArrayOf<Mountain.PlannedClimb>?

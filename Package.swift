@@ -46,7 +46,8 @@ let package = Package(
     .package(url: "https://github.com/nalexn/ViewInspector", from: "0.10.1"),
     .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.4.3"),
     .package(url: "https://github.com/pointfreeco/swift-navigation", from: "2.3.1"),
-    .package(url: "https://github.com/apple/swift-log", from: "1.6.3")
+    .package(url: "https://github.com/apple/swift-log", from: "1.6.3"),
+    .package(url: "https://github.com/apple/swift-atomics", from: "1.3.0")
   ],
   targets: [
     .target(
@@ -88,7 +89,8 @@ let package = Package(
           name: "Logging",
           package: "swift-log",
           condition: .when(traits: ["SwiftOperationLogging"])
-        )
+        ),
+        .product(name: "Atomics", package: "swift-atomics")
       ],
       swiftSettings: [
         .define(

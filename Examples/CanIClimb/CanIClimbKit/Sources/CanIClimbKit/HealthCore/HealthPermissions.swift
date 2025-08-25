@@ -88,8 +88,8 @@ extension HealthPermissions {
   public struct RequestMutation: MutationRequest, Hashable {
     public func mutate(
       with arguments: Void,
-      in context: QueryContext,
-      with continuation: QueryContinuation<Void>
+      in context: OperationContext,
+      with continuation: OperationContinuation<Void>
     ) async throws {
       @Dependency(HealthPermissions.self) var permissions
       try await permissions.request()

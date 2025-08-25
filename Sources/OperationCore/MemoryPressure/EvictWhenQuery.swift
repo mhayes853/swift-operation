@@ -2,7 +2,7 @@
 
 extension QueryRequest {
   /// Indicates what severities that this query should be evicted from
-  /// ``QueryClient/DefaultStoreCache`` upon receiving a memory pressure notification.
+  /// ``OperationClient/DefaultStoreCache`` upon receiving a memory pressure notification.
   ///
   /// You can use this modifier to ensure that certain queries are never evicted from the store
   /// cache, even if system memory runs low. For instance:
@@ -24,16 +24,16 @@ extension QueryRequest {
 public struct _EvictWhenPressureModifier<Query: QueryRequest>: _ContextUpdatingQueryModifier {
   let pressure: MemoryPressure
 
-  public func setup(context: inout QueryContext) {
+  public func setup(context: inout OperationContext) {
     context.evictableMemoryPressure = self.pressure
   }
 }
 
-// MARK: - QueryContext
+// MARK: - OperationContext
 
-extension QueryContext {
-  /// The required ``MemoryPressure`` severity to evict the ``QueryStore`` from
-  /// ``QueryClient/DefaultStoreCache`` upon receiving a memory pressure notification.
+extension OperationContext {
+  /// The required ``MemoryPressure`` severity to evict the ``OperationStore`` from
+  /// ``OperationClient/DefaultStoreCache`` upon receiving a memory pressure notification.
   ///
   /// The default value is ``MemoryPressure/defaultEvictable``.
   public var evictableMemoryPressure: MemoryPressure {

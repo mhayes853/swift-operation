@@ -9,7 +9,7 @@ extension DependenciesTestSuite {
   @Suite("Mountain+Search tests")
   struct MountainSearchTests {
     @Test("Seeds Query Client With Detail Results After Page Fetch")
-    func seedsQueryClientWithDetailResults() async throws {
+    func seedsOperationClientWithDetailResults() async throws {
       try await withDependencies {
         let searcher = Mountain.MockSearcher()
         searcher.results[.recommended(page: 0)] = .success(
@@ -17,7 +17,7 @@ extension DependenciesTestSuite {
         )
         $0[Mountain.SearcherKey.self] = searcher
       } operation: {
-        @Dependency(\.defaultQueryClient) var client
+        @Dependency(\.defaultOperationClient) var client
         let searchStore = client.store(for: Mountain.searchQuery(.recommended))
 
         try await searchStore.fetchNextPage()
@@ -28,7 +28,7 @@ extension DependenciesTestSuite {
     }
 
     @Test("Seeds Query Client With Prexisting Detail Results After Page Fetch")
-    func seedsQueryClientWithPreExistingDetailResults() async throws {
+    func seedsOperationClientWithPreExistingDetailResults() async throws {
       try await withDependencies {
         let searcher = Mountain.MockSearcher()
         searcher.results[.recommended(page: 0)] = .success(
@@ -36,7 +36,7 @@ extension DependenciesTestSuite {
         )
         $0[Mountain.SearcherKey.self] = searcher
       } operation: {
-        @Dependency(\.defaultQueryClient) var client
+        @Dependency(\.defaultOperationClient) var client
         let searchStore = client.store(for: Mountain.searchQuery(.recommended))
 
         // NB: Ensure the store exists in the client prior to fetching.
@@ -62,13 +62,13 @@ extension DependenciesTestSuite {
         searcher.results[request] = .failure(SomeError())
         $0[Mountain.SearcherKey.self] = searcher
       } operation: {
-        @Dependency(\.defaultQueryClient) var client
+        @Dependency(\.defaultOperationClient) var client
 
         await confirmation { confirm in
           let handler = InfiniteQueryEventHandler<Int, Mountain.SearchResult>(
             onPageResultReceived: { [mountain] _, result, context in
               guard
-                context.queryResultUpdateReason == .yieldedResult && context.isLastRetryAttempt
+                context.operationResultUpdateReason == .yieldedResult && context.isLastRetryAttempt
               else { return }
               expectNoDifference(
                 try? result.get(),
@@ -107,7 +107,7 @@ extension DependenciesTestSuite {
         searcher.results[.recommended(page: 1)] = .failure(SomeError())
         $0[Mountain.SearcherKey.self] = searcher
       } operation: {
-        @Dependency(\.defaultQueryClient) var client
+        @Dependency(\.defaultOperationClient) var client
         let searchStore = client.store(for: Mountain.searchQuery(.recommended))
 
         try await searchStore.fetchNextPage()

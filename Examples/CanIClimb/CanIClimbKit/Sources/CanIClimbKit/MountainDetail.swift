@@ -14,10 +14,10 @@ import SwiftUINavigation
 @Observable
 public final class MountainDetailModel: HashableObject, Identifiable {
   @ObservationIgnored
-  @SharedQuery<Mountain.Query.State> public var mountain: Mountain??
+  @SharedOperation<Mountain.Query.State> public var mountain: Mountain??
 
   @ObservationIgnored
-  @SharedQuery(LocationReading.userQuery) public var userLocation
+  @SharedOperation(LocationReading.userQuery) public var userLocation
 
   public let plannedClimbs: PlannedClimbsListModel
 
@@ -27,7 +27,7 @@ public final class MountainDetailModel: HashableObject, Identifiable {
   public private(set) var travelEstimates: MountainTravelEstimatesModel?
 
   public init(id: Mountain.ID) {
-    self._mountain = SharedQuery(Mountain.query(id: id), animation: .bouncy)
+    self._mountain = SharedOperation(Mountain.query(id: id), animation: .bouncy)
     self.plannedClimbs = PlannedClimbsListModel(mountainId: id)
   }
 
@@ -38,8 +38,8 @@ public final class MountainDetailModel: HashableObject, Identifiable {
   }
 
   public func detailsUpdated(
-    mountainStatus: QueryStatus<Mountain?>,
-    userLocationStatus: QueryStatus<LocationReading>
+    mountainStatus: OperationStatus<Mountain?>,
+    userLocationStatus: OperationStatus<LocationReading>
   ) {
     switch mountainStatus {
     case .result(.success(let mountain?)):
@@ -80,7 +80,7 @@ public struct MountainDetailView: View {
   }
 
   public var body: some View {
-    RemoteQueryStateView(self.model.$mountain) { mountain in
+    RemoteOperationStateView(self.model.$mountain) { mountain in
       if let mountain {
         MountainDetailScrollView(model: self.model, mountain: mountain)
       } else {
@@ -152,7 +152,7 @@ private struct MountainDetailScrollView: View {
 // MARK: - MountainImageView
 
 private struct MountainImageView: View {
-  @SharedQuery<ImageData.Query.State> private var image: ImageData?
+  @SharedOperation<ImageData.Query.State> private var image: ImageData?
 
   let mountain: Mountain
 
@@ -160,7 +160,7 @@ private struct MountainImageView: View {
 
   init(mountain: Mountain) {
     self.mountain = mountain
-    self._image = SharedQuery(ImageData.query(for: mountain.image.url))
+    self._image = SharedOperation(ImageData.query(for: mountain.image.url))
   }
 
   var body: some View {

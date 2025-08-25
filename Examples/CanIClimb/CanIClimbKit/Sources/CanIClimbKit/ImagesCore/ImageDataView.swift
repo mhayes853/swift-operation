@@ -3,11 +3,11 @@ import SharingOperation
 import SwiftUI
 
 public struct ImageDataView<Content: View>: View {
-  @SharedQuery<ImageData.Query.State> private var image: ImageData?
-  private let content: (QueryStatus<Image>) -> Content
+  @SharedOperation<ImageData.Query.State> private var image: ImageData?
+  private let content: (OperationStatus<Image>) -> Content
 
-  public init(url: URL, @ViewBuilder content: @escaping (QueryStatus<Image>) -> Content) {
-    self._image = SharedQuery(ImageData.query(for: url))
+  public init(url: URL, @ViewBuilder content: @escaping (OperationStatus<Image>) -> Content) {
+    self._image = SharedOperation(ImageData.query(for: url))
     self.content = content
   }
 
@@ -19,7 +19,7 @@ public struct ImageDataView<Content: View>: View {
 #Preview {
   let _ = prepareDependencies {
     $0.defaultDatabase = try! canIClimbDatabase()
-    $0.defaultQueryClient = QueryClient(storeCreator: .canIClimb)
+    $0.defaultOperationClient = OperationClient(storeCreator: .canIClimb)
     $0[ImageData.LoaderKey.self] = ImageData.FileSystemCachedLoader(
       directoryURL: .temporaryDirectory.appending(path: "images-\(UUID())"),
       transport: URLSession.shared

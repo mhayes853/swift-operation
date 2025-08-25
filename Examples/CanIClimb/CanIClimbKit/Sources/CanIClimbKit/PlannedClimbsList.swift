@@ -13,7 +13,7 @@ import UUIDV7
 @Observable
 public final class PlannedClimbsListModel {
   @ObservationIgnored
-  @SharedQuery<Mountain.PlannedClimbsQuery.State>
+  @SharedOperation<Mountain.PlannedClimbsQuery.State>
   public var plannedClimbs: IdentifiedArrayOf<Mountain.PlannedClimb>?
 
   public var destination: Destination? {
@@ -24,7 +24,7 @@ public final class PlannedClimbsListModel {
 
   public init(mountainId: Mountain.ID) {
     self.mountainId = mountainId
-    self._plannedClimbs = SharedQuery(
+    self._plannedClimbs = SharedOperation(
       Mountain.plannedClimbsQuery(for: mountainId),
       animation: .bouncy
     )
@@ -70,7 +70,7 @@ public struct PlannedClimbsListView: View {
 
   public var body: some View {
     LazyVStack(spacing: 10) {
-      RemoteQueryStateView(self.model.$plannedClimbs) { climbs in
+      RemoteOperationStateView(self.model.$plannedClimbs) { climbs in
         ListView(model: model, climbs: climbs)
       }
     }

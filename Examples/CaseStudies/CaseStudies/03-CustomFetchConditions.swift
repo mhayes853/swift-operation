@@ -18,11 +18,11 @@ struct CustomFetchConditionsCaseStudy: CaseStudy {
     refetched, which is achieved by using the `refetchOnChange` on change modifier.
     """
 
-  @State private var client = QueryClient()
+  @State private var client = OperationClient()
 
   var content: some View {
     withDependencies {
-      $0.defaultQueryClient = self.client
+      $0.defaultOperationClient = self.client
     } operation: {
       InnerView()
     }
@@ -30,7 +30,7 @@ struct CustomFetchConditionsCaseStudy: CaseStudy {
 }
 
 private struct InnerView: View {
-  @SharedQuery(Recipe.randomRefetchOnLowPowerModeQuery) private var recipe
+  @SharedOperation(Recipe.randomRefetchOnLowPowerModeQuery) private var recipe
 
   var body: some View {
     Text("Toggle on and off low power mode to refetch the query.")
@@ -56,14 +56,14 @@ extension Recipe {
 // MARK: - IsInLowPowerModeCondition
 
 struct IsInLowPowerModeCondition: FetchCondition {
-  func isSatisfied(in context: QueryContext) -> Bool {
+  func isSatisfied(in context: OperationContext) -> Bool {
     ProcessInfo.processInfo.isLowPowerModeEnabled
   }
 
   func subscribe(
-    in context: QueryContext,
+    in context: OperationContext,
     _ observer: @escaping (Bool) -> Void
-  ) -> QuerySubscription {
+  ) -> OperationSubscription {
     nonisolated(unsafe) let observer = NotificationCenter.default.addObserver(
       forName: .NSProcessInfoPowerStateDidChange,
       object: nil,
@@ -71,7 +71,7 @@ struct IsInLowPowerModeCondition: FetchCondition {
     ) { _ in
       observer(ProcessInfo.processInfo.isLowPowerModeEnabled)
     }
-    return QuerySubscription {
+    return OperationSubscription {
       NotificationCenter.default.removeObserver(observer)
     }
   }

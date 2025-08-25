@@ -13,7 +13,7 @@ extension SyncEngine {
       SettingsRecord.self,
       InternalMetricsRecord.self,
       ScheduleableAlarmRecord.self,
-      QueryAnalysisRecord.self,
+      OperationAnalysisRecord.self,
       ApplicationLaunchRecord.self,
       PlannedClimbAlarmRecord.self,
       containerIdentifier: CKContainer.canIClimb.containerIdentifier

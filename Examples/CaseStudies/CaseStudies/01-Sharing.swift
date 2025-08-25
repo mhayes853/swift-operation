@@ -5,10 +5,10 @@ import SwiftUI
 struct BasicSharingCaseStudy: CaseStudy {
   let title: LocalizedStringKey = "Basic swift-sharing"
   let description: LocalizedStringKey = """
-    Basic usage of the library using the `@SharedQuery` property wrapper to fetch a random quote \
+    Basic usage of the library using the `@SharedOperation` property wrapper to fetch a random quote \
     from the Dummy JSON API in SwiftUI.
 
-    `@SharedQuery` is a more flexible version of `@State.Query` that utilizes \
+    `@SharedOperation` is a more flexible version of `@State.Operation` that utilizes \
     [swift-sharing](https://github.com/pointfreeco/swift-sharing) under the hood allowing \
     you to easily observe your queries anywhere in your application such as an `@Observable` model.
     """
@@ -19,7 +19,7 @@ struct BasicSharingCaseStudy: CaseStudy {
 }
 
 private struct InnerView: View {
-  @SharedQuery(Quote.randomQuery) private var quote
+  @SharedOperation(Quote.randomQuery) private var quote
 
   var body: some View {
     VStack(alignment: .leading, spacing: 20) {

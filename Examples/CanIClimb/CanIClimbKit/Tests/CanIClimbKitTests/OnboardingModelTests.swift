@@ -107,7 +107,7 @@ extension DependenciesTestSuite {
         $0[User.AuthenticatorKey.self] = authenticator
         $0[User.CurrentLoaderKey.self] = User.MockCurrentLoader(result: .success(.mock1))
       } operation: {
-        @Dependency(\.defaultQueryClient) var client
+        @Dependency(\.defaultOperationClient) var client
 
         let model = OnboardingModel()
         try await model.runOnboardingFlow(
@@ -163,7 +163,7 @@ extension OnboardingModel {
     expectNoDifference(self.connectToHealthKit.isConnected, connectHealthKit == .connect)
     expectNoDifference(self.path.last, .shareLocation)
 
-    @SharedQuery(LocationReading.requestUserPermissionMutation) var request
+    @SharedOperation(LocationReading.requestUserPermissionMutation) var request
     expectNoDifference($request.valueUpdateCount, 0)
     await self.locationPermissionStepInvoked(action: locationPermissions)
     if locationPermissions == .requestPermission {

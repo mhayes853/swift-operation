@@ -3,21 +3,21 @@
 /// A ``FetchCondition`` that detects whether or not the user is connected to a ``NetworkObserver``.
 ///
 /// This condition checks if the current ``NetworkConnectionStatus`` on the observer is greater then the
-/// ``QueryContext/satisfiedConnectionStatus`` context value. You can change that value to update
+/// ``OperationContext/satisfiedConnectionStatus`` context value. You can change that value to update
 /// the threshold for what is considered "connected" for this fetch condition.
 public struct ConnectedCondition {
   let observer: any NetworkObserver
 }
 
 extension ConnectedCondition: FetchCondition {
-  public func isSatisfied(in context: QueryContext) -> Bool {
+  public func isSatisfied(in context: OperationContext) -> Bool {
     self.observer.currentStatus >= context.satisfiedConnectionStatus
   }
 
   public func subscribe(
-    in context: QueryContext,
+    in context: OperationContext,
     _ observer: @escaping @Sendable (Bool) -> Void
-  ) -> QuerySubscription {
+  ) -> OperationSubscription {
     self.observer.subscribe { observer($0 >= context.satisfiedConnectionStatus) }
   }
 }
@@ -34,7 +34,7 @@ extension FetchCondition where Self == ConnectedCondition {
 
 // MARK: - Satisfied Connection Status
 
-extension QueryContext {
+extension OperationContext {
   /// The minimum satisfiable ``NetworkStatus`` status to satisfy ``ConnectedCondition``.
   ///
   /// The default value is ``NetworkConnectionStatus/connected``.

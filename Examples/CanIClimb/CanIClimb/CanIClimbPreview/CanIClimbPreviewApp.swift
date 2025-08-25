@@ -16,7 +16,7 @@ struct CanIClimbPreviewApp: App {
   init() {
     try! prepareDependencies {
       $0.context = .preview
-      $0.defaultQueryClient = QueryClient(storeCreator: .canIClimb)
+      $0.defaultOperationClient = OperationClient(storeCreator: .canIClimb)
       $0.defaultDatabase = try canIClimbDatabase()
 
       $0[UserLocationKey.self] = CLUserLocation()

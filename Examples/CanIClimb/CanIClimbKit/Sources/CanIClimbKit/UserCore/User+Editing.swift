@@ -75,10 +75,10 @@ extension User {
 
     public func mutate(
       with arguments: Arguments,
-      in context: QueryContext,
-      with continuation: QueryContinuation<User>
+      in context: OperationContext,
+      with continuation: OperationContinuation<User>
     ) async throws -> User {
-      @Dependency(\.defaultQueryClient) var client
+      @Dependency(\.defaultOperationClient) var client
       @Dependency(User.EditorKey.self) var editor
 
       let user = try await editor.edit(with: arguments.edit)

@@ -9,16 +9,16 @@ import SwiftUINavigation
 @Observable
 public final class PlannedClimbDetailModel: HashableObject, Identifiable {
   @ObservationIgnored
-  @SharedQuery<Mountain.Query.State> public var mountain: Mountain??
+  @SharedOperation<Mountain.Query.State> public var mountain: Mountain??
 
   @ObservationIgnored
-  @SharedQuery(Mountain.achieveClimbMutation) public var achieveClimb: Void?
+  @SharedOperation(Mountain.achieveClimbMutation) public var achieveClimb: Void?
 
   @ObservationIgnored
-  @SharedQuery(Mountain.unachieveClimbMutation) public var unachieveClimb: Void?
+  @SharedOperation(Mountain.unachieveClimbMutation) public var unachieveClimb: Void?
 
   @ObservationIgnored
-  @SharedQuery(Mountain.unplanClimbsMutation) public var unplanClimb: Void?
+  @SharedOperation(Mountain.unplanClimbsMutation) public var unplanClimb: Void?
 
   @ObservationIgnored public var onUnplanned: (() -> Void)?
 
@@ -29,7 +29,7 @@ public final class PlannedClimbDetailModel: HashableObject, Identifiable {
 
   public init(plannedClimb: SharedReader<Mountain.PlannedClimb>) {
     self._plannedClimb = plannedClimb
-    self._mountain = SharedQuery(
+    self._mountain = SharedOperation(
       Mountain.query(id: plannedClimb.wrappedValue.mountainId),
       animation: .bouncy
     )
@@ -107,7 +107,7 @@ public struct PlannedClimbDetailView: View {
   }
 
   public var body: some View {
-    RemoteQueryStateView(self.model.$mountain) { mountain in
+    RemoteOperationStateView(self.model.$mountain) { mountain in
       if let mountain {
         DetailView(model: self.model, mountain: mountain)
       } else {

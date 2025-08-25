@@ -37,7 +37,7 @@ extension DependenciesTestSuite {
         loader.results[Mountain.mock1.id] = .success([c2, c1])
         $0[Mountain.PlannedClimbsLoaderKey.self] = loader
       } operation: {
-        @Dependency(\.defaultQueryClient) var client
+        @Dependency(\.defaultOperationClient) var client
 
         let climbsStore = client.store(for: Mountain.plannedClimbsQuery(for: Mountain.mock1.id))
         try await climbsStore.fetch()
@@ -60,7 +60,7 @@ extension DependenciesTestSuite {
         $0[Mountain.PlanClimberKey.self] = Mountain.MockClimbPlanner()
         $0[Mountain.PlannedClimbsLoaderKey.self] = loader
       } operation: {
-        @Dependency(\.defaultQueryClient) var client
+        @Dependency(\.defaultOperationClient) var client
         let climbsStore = client.store(for: Mountain.plannedClimbsQuery(for: Mountain.mock1.id))
         try await climbsStore.fetch()
 
@@ -88,7 +88,7 @@ extension DependenciesTestSuite {
         $0[Mountain.PlanClimberKey.self] = planner
         $0[Mountain.PlannedClimbsLoaderKey.self] = loader
       } operation: {
-        @Dependency(\.defaultQueryClient) var client
+        @Dependency(\.defaultOperationClient) var client
         let climbsStore = client.store(for: Mountain.plannedClimbsQuery(for: Mountain.mock1.id))
         try await climbsStore.fetch()
 

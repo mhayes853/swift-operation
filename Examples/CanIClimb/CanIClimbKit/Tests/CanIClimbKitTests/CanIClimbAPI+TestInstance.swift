@@ -8,7 +8,7 @@ extension CanIClimbAPI {
   ) -> CanIClimbAPI {
     CanIClimbAPI(
       transport: transport,
-      tokens: CanIClimbAPI.Tokens(client: QueryClient(), secureStorage: secureStorage)
+      tokens: CanIClimbAPI.Tokens(client: OperationClient(), secureStorage: secureStorage)
     )
   }
 }

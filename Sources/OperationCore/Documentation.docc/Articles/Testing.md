@@ -6,7 +6,7 @@ Learn how to best use the library in your app's test suite.
 
 Given that testing is only sometimes considered a crucial software development practice, it would be wise to test how your queries interact with your app. In general, reliably testing code that utilizes async await can be challenging due to the challenges of managing the time of a Task's execution. However, depending on your usage, you can utilize the tools in the library to make this process easier.
 
-If your queries rely on the default initializer of ``QueryClient``, then retries, backoff, artificial delays, refetching on network reconnection, and refetching on the app reentering from the background are disabled when running queries in a test environment.
+If your queries rely on the default initializer of ``OperationClient``, then retries, backoff, artificial delays, refetching on network reconnection, and refetching on the app reentering from the background are disabled when running queries in a test environment.
 
 Let's take a look at how we can test queries depending on your usage of the library.
 
@@ -23,7 +23,7 @@ import SharingOperation
 @Observable
 final class SomeModel {
   @ObservationIgnored
-  @SharedQuery(SomeData.query) var value
+  @SharedOperation(SomeData.query) var value
 }
 ```
 
@@ -38,7 +38,7 @@ final class SomeModel: ObservableObject {
   private var cancellables = Set<AnyCancellable>()
 
   init(
-    client: QueryClient,
+    client: OperationClient,
     scheduler: some Scheduler = DispatchQueue.main
   ) {
     let store = client.store(for: SomeData.query)
@@ -63,9 +63,9 @@ import Operation
 final class SomeModel {
   var value: String?
 
-  @ObservationIgnored private var subscriptions = Set<QuerySubscription>()
+  @ObservationIgnored private var subscriptions = Set<OperationSubscription>()
 
-  init(client: QueryClient) {
+  init(client: OperationClient) {
     let store = client.store(for: SomeData.query)
     store.subscribe(
       with: QueryEventHandler { [weak self] state, _ in
@@ -81,13 +81,13 @@ final class SomeModel {
 
 In a test suite, your first instinct may be to assert on `value`. However, `value` will likely be in a loading state once the test begins, and it's difficult to determine when it will have been loaded.
 
-> Note: If you're code follows the Sharing example, you will override `@Dependency(\.queryClient)` instead of passing a `QueryClient` to `SomeModel`'s initializer.
+> Note: If you're code follows the Sharing example, you will override `@Dependency(\.OperationClient)` instead of passing a `OperationClient` to `SomeModel`'s initializer.
 
 ```swift
 @Test
 @MainActor
 func valueLoads() {
-  let model = SomeModel(client: QueryClient())
+  let model = SomeModel(client: OperationClient())
   #expect(model.value == nil)
 
   // Wait for value to load...
@@ -96,13 +96,13 @@ func valueLoads() {
 }
 ```
 
-The main issue here is the "Wait for value to load..." comment as it's not exactly clear when `model.value` will have been loaded. To get around this, you can technically reach into the ``QueryStore`` for `SomeData.query`, and await the first active task in the store.
+The main issue here is the "Wait for value to load..." comment as it's not exactly clear when `model.value` will have been loaded. To get around this, you can technically reach into the ``OperationStore`` for `SomeData.query`, and await the first active task in the store.
 
 ```swift
 @Test
 @MainActor
 func valueLoads() async throws {
-  let client = QueryClient()
+  let client = OperationClient()
 
   let model = SomeModel(client: client)
   #expect(model.value == nil)
@@ -116,13 +116,13 @@ func valueLoads() async throws {
 
 This will work, yet it's a quite annoying syntax.
 
-Another approach is to override the defaults applied to each query in the `QueryClient` such that automatic fetching is disabled. That way, you can manually trigger the query's execution. You can do this by providing a custom value to the `storeCreator` parameter in `QueryClient`'s initializer.
+Another approach is to override the defaults applied to each query in the `OperationClient` such that automatic fetching is disabled. That way, you can manually trigger the query's execution. You can do this by providing a custom value to the `storeCreator` parameter in `OperationClient`'s initializer.
 
 ```swift
 @Test
 @MainActor
 func valueLoads() async throws {
-  let client = QueryClient(
+  let client = OperationClient(
     storeCreator: .default(
       retryLimit: 0,
       backoff: .noBackoff,
@@ -142,13 +142,13 @@ func valueLoads() async throws {
 }
 ```
 
-> Note: If your code follows the Sharing example, you can use the `@SharedQuery` property wrapper directly to fetch the data.
+> Note: If your code follows the Sharing example, you can use the `@SharedOperation` property wrapper directly to fetch the data.
 >
 > ```swift
 > @Test
 > @MainActor
 > func valueLoads() async throws {
->   let client = QueryClient(
+>   let client = OperationClient(
 >     storeCreator: .default(
 >       retryLimit: 0,
 >       backoff: .noBackoff,
@@ -172,4 +172,4 @@ Now you can manually trigger execution of the query, ensuring that we have a det
 
 ## Conclusion
 
-The biggest hurdle in testing how your code interacts with your queries is managing to have control over the query's execution. To clear this hurdle, you can either reach into the `QueryStore` and await the first active ``QueryTask``, or you can override the `QueryClient` to disable automatic fetching.
+The biggest hurdle in testing how your code interacts with your queries is managing to have control over the query's execution. To clear this hurdle, you can either reach into the `OperationStore` and await the first active ``OperationTask``, or you can override the `OperationClient` to disable automatic fetching.

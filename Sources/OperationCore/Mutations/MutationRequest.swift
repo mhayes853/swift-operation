@@ -28,8 +28,8 @@ public struct MutationValue<ReturnValue: Sendable>: Sendable {
 ///
 ///     func mutate(
 ///       with arguments: Post.ID,
-///       in context: QueryContext,
-///       with continuation: QueryContinuation<Void>
+///       in context: OperationContext,
+///       with continuation: OperationContinuation<Void>
 ///     ) async throws {
 ///       // POST to the API to like the post...
 ///     }
@@ -37,9 +37,9 @@ public struct MutationValue<ReturnValue: Sendable>: Sendable {
 /// }
 /// ```
 ///
-/// Mutations are called with arguments directly. For instance, when you have a ``QueryStore``
+/// Mutations are called with arguments directly. For instance, when you have a ``OperationStore``
 /// that uses a mutation, you can invoke your mutation's logic via
-/// ``QueryStore/mutate(with:using:handler:)``.
+/// ``OperationStore/mutate(with:using:handler:)``.
 ///
 /// ```swift
 /// let store = client.store(for: Post.likeMutation)
@@ -48,7 +48,7 @@ public struct MutationValue<ReturnValue: Sendable>: Sendable {
 /// ```
 ///
 /// You can also retry the mutation with most recently used set of arguments via
-/// ``QueryStore/retryLatest(using:handler:)``.
+/// ``OperationStore/retryLatest(using:handler:)``.
 ///
 /// ```swift
 /// try await store.retryLatest()
@@ -69,13 +69,13 @@ where Value == MutationValue<ReturnValue>, State == MutationState<Arguments, Ret
   ///
   /// - Parameters:
   ///   - arguments: An instance of ``Arguments``.
-  ///   - context: The ``QueryContext`` passed to this mutation.
-  ///   - continuation: A ``QueryContinuation`` that allows you to yield values during the mutation. See <doc:MultistageQueries> for more.
+  ///   - context: The ``OperationContext`` passed to this mutation.
+  ///   - continuation: A ``OperationContinuation`` that allows you to yield values during the mutation. See <doc:MultistageQueries> for more.
   /// - Returns: The mutation value.
   func mutate(
     with arguments: Arguments,
-    in context: QueryContext,
-    with continuation: QueryContinuation<ReturnValue>
+    in context: OperationContext,
+    with continuation: OperationContinuation<ReturnValue>
   ) async throws -> ReturnValue
 }
 
@@ -83,8 +83,8 @@ where Value == MutationValue<ReturnValue>, State == MutationState<Arguments, Ret
 
 extension MutationRequest {
   public func fetch(
-    in context: QueryContext,
-    with continuation: QueryContinuation<Value>
+    in context: OperationContext,
+    with continuation: OperationContinuation<Value>
   ) async throws -> Value {
     guard let args = context.mutationArgs(as: Arguments.self) else {
       throw MutationNoArgumentsError()
@@ -92,7 +92,7 @@ extension MutationRequest {
     let value = try await self.mutate(
       with: args,
       in: context,
-      with: QueryContinuation { result, context in
+      with: OperationContinuation { result, context in
         continuation.yield(with: result.map { MutationValue(returnValue: $0) }, using: context)
       }
     )
@@ -108,12 +108,12 @@ extension MutationRequest where Arguments == Void {
   /// Mutates with no arguments.
   ///
   /// - Parameters:
-  ///   - context: The ``QueryContext`` passed to this mutation.
-  ///   - continuation: A ``QueryContinuation`` that allows you to yield values during the mutation. See <doc:MultistageQueries> for more.
+  ///   - context: The ``OperationContext`` passed to this mutation.
+  ///   - continuation: A ``OperationContinuation`` that allows you to yield values during the mutation. See <doc:MultistageQueries> for more.
   /// - Returns: The mutation value.
   public func mutate(
-    in context: QueryContext,
-    with continuation: QueryContinuation<ReturnValue>
+    in context: OperationContext,
+    with continuation: OperationContinuation<ReturnValue>
   ) async throws -> ReturnValue {
     try await self.mutate(with: (), in: context, with: continuation)
   }

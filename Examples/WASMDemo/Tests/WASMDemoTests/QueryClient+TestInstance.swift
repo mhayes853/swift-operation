@@ -1,7 +1,7 @@
 import Operation
 
-extension QueryClient {
-  static func testInstance() -> QueryClient {
-    QueryClient(storeCreator: .defaultTesting)
+extension OperationClient {
+  static func testInstance() -> OperationClient {
+    OperationClient(storeCreator: .defaultTesting)
   }
 }

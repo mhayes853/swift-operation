@@ -6,10 +6,10 @@ import Operation
 final class TestApplicationActivityObserver: ApplicationActivityObserver {
   private typealias Handler = @Sendable (Bool) -> Void
 
-  private let subscriptions = QuerySubscriptions<Handler>()
+  private let subscriptions = OperationSubscriptions<Handler>()
   private let isActive = Lock(false)
 
-  func subscribe(_ handler: @escaping @Sendable (Bool) -> Void) -> QuerySubscription {
+  func subscribe(_ handler: @escaping @Sendable (Bool) -> Void) -> OperationSubscription {
     self.isActive.withLock {
       handler($0)
       return self.subscriptions.add(handler: handler).subscription

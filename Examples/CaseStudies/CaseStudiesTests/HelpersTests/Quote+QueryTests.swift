@@ -22,7 +22,7 @@ struct CaseStudiesTests {
     try await withDependencies {
       $0[QuoteRandomLoaderKey.self] = DummyJSONAPI(transport: transport)
     } operation: {
-      @SharedQuery(Quote.randomQuery) var quote
+      @SharedOperation(Quote.randomQuery) var quote
       try await $quote.load()
       let expectedQuote = Quote(
         author: "Oprah Winfrey",

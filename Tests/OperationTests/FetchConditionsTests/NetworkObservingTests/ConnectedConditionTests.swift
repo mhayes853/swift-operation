@@ -16,7 +16,7 @@ struct ConnectedConditionTests {
     let observer = MockNetworkObserver()
     let c: some FetchCondition = .connected(to: observer)
     observer.send(status: status)
-    expectNoDifference(c.isSatisfied(in: QueryContext()), isSatisfied)
+    expectNoDifference(c.isSatisfied(in: OperationContext()), isSatisfied)
   }
 
   @Test(
@@ -28,7 +28,7 @@ struct ConnectedConditionTests {
     ]
   )
   func satisfiedWhenStatusForContextValue(status: NetworkConnectionStatus, isSatisfied: Bool) {
-    var context = QueryContext()
+    var context = OperationContext()
     context.satisfiedConnectionStatus = .requiresConnection
     let observer = MockNetworkObserver()
     let c: some FetchCondition = .connected(to: observer)
@@ -48,7 +48,7 @@ struct ConnectedConditionTests {
     let satisfactions = RecursiveLock([Bool]())
     let observer = MockNetworkObserver()
     let c: some FetchCondition = .connected(to: observer)
-    let subscription = c.subscribe(in: QueryContext()) { satisfied in
+    let subscription = c.subscribe(in: OperationContext()) { satisfied in
       satisfactions.withLock { $0.append(satisfied) }
     }
     observer.send(status: status)
@@ -65,7 +65,7 @@ struct ConnectedConditionTests {
     ]
   )
   func observesWhenStatusForContextValue(status: NetworkConnectionStatus, isSatisfied: Bool) {
-    var context = QueryContext()
+    var context = OperationContext()
     context.satisfiedConnectionStatus = .requiresConnection
 
     let satisfactions = RecursiveLock([Bool]())

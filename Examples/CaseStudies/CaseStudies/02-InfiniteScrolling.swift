@@ -12,12 +12,12 @@ struct InfiniteScrollingCaseStudy: CaseStudy {
     the list.
 
     You can also pull to refresh the list, which is done through the `refreshable` view modifier. \
-    Inside the closure for the modifier, we'll call `load` on the `@SharedQuery` property to \
+    Inside the closure for the modifier, we'll call `load` on the `@SharedOperation` property to \
     reload the initial page of the query. This will reset the query state to just the initial page.
 
     Additionally, the like button will update the post in the list by writing directly to the \
-    `@SharedQuery` property that observes the state of the query. This will update the state of \
-    the query in the underyling `QueryStore` backing `@SharedQuery`, and so other parts of the app \
+    `@SharedOperation` property that observes the state of the query. This will update the state of \
+    the query in the underyling `OperationStore` backing `@SharedOperation`, and so other parts of the app \
     will be able to see the update.
     """
 
@@ -42,7 +42,7 @@ struct InfiniteScrollingCaseStudy: CaseStudy {
 // MARK: - PostsListView
 
 private struct PostsListView: View {
-  @SharedQuery<Post.ListByTagQuery.State>
+  @SharedOperation<Post.ListByTagQuery.State>
   private var list: InfiniteQueryPagesFor<Post.ListByTagQuery>
 
   let tag: String
@@ -56,7 +56,7 @@ private struct PostsListView: View {
 
   init(tag: String) {
     self.tag = tag
-    self._list = SharedQuery(Post.listByTagQuery(tag: tag), animation: .bouncy)
+    self._list = SharedOperation(Post.listByTagQuery(tag: tag), animation: .bouncy)
   }
 
   var body: some View {

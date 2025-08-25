@@ -1,7 +1,7 @@
 import Foundation
 import Operation
 
-final class TestDelayer: Sendable, QueryDelayer {
+final class TestDelayer: Sendable, OperationDelayer {
   private let _delays = RecursiveLock([TimeInterval]())
 
   var delays: [TimeInterval] {

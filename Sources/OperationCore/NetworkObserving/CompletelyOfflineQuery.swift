@@ -12,9 +12,9 @@ extension QueryRequest {
   /// SQLite database, or streaming data from a locally running LLM.
   ///
   /// Attaching this modifier to your query guarantees.
-  /// - That ``QueryContext/satisfiedConnectionStatus`` is set to ``NetworkConnectionStatus/disconnected``.
-  /// - That ``QueryContext/queryMaxRetries`` is set to 0.
-  /// - That ``QueryContext/queryBackoffFunction`` is set to ``QueryBackoffFunction/noBackoff``.
+  /// - That ``OperationContext/satisfiedConnectionStatus`` is set to ``NetworkConnectionStatus/disconnected``.
+  /// - That ``OperationContext/operationMaxRetries`` is set to 0.
+  /// - That ``OperationContext/operationBackoffFunction`` is set to ``OperationBackoffFunction/noBackoff``.
   ///
   /// - Parameter isOffline: Whether the query is completely offline. Defaults to `true`. If false, no modifications are made to the query.
   /// - Returns: A ``ModifiedQuery``.
@@ -28,10 +28,10 @@ extension QueryRequest {
 public struct _CompletelyOfflineModifier<Query: QueryRequest>: _ContextUpdatingQueryModifier {
   let isOffline: Bool
 
-  public func setup(context: inout QueryContext) {
+  public func setup(context: inout OperationContext) {
     guard self.isOffline else { return }
     context.satisfiedConnectionStatus = .disconnected
-    context.queryMaxRetries = 0
-    context.queryBackoffFunction = .noBackoff
+    context.operationMaxRetries = 0
+    context.operationBackoffFunction = .noBackoff
   }
 }

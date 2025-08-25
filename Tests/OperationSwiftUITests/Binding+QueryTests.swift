@@ -8,7 +8,7 @@
 
   @MainActor
   final class BindingQueryTests: XCTestCase {
-    private let client = QueryClient()
+    private let client = OperationClient()
 
     override func tearDown() {
       ViewHosting.expel()
@@ -16,7 +16,7 @@
 
     func testIncrement() async throws {
       let view = TestBindingView()
-      ViewHosting.host(view: view.queryClient(QueryClient()))
+      ViewHosting.host(view: view.OperationClient(OperationClient()))
 
       try await view.inspection.inspect { v in
         try v.find(button: "Increment").tap()
@@ -40,7 +40,7 @@
   }
 
   private struct TestBindingView: View {
-    @State.Query(TestQuery().disableAutomaticFetching().defaultValue(0))
+    @State.Operation(TestQuery().disableAutomaticFetching().defaultValue(0))
     var state
 
     let inspection = Inspection<Self>()

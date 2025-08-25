@@ -3,22 +3,22 @@ import Foundation
 import IssueReporting
 @_spi(Warnings) import Operation
 
-// MARK: - QueryClient
+// MARK: - OperationClient
 
 extension DependencyValues {
-  /// The default `QueryClient` to use with ``SharedQuery``.
-  public var defaultQueryClient: QueryClient {
-    get { self[QueryClientKey.self] }
-    set { self[QueryClientKey.self] = newValue }
+  /// The default `OperationClient` to use with ``SharedOperation``.
+  public var defaultOperationClient: OperationClient {
+    get { self[OperationClientKey.self] }
+    set { self[OperationClientKey.self] = newValue }
   }
 
-  private enum QueryClientKey: DependencyKey {
-    static var liveValue: QueryClient {
-      QueryClient()
+  private enum OperationClientKey: DependencyKey {
+    static var liveValue: OperationClient {
+      OperationClient()
     }
 
-    static var testValue: QueryClient {
-      QueryClient()
+    static var testValue: OperationClient {
+      OperationClient()
     }
   }
 }
@@ -34,7 +34,7 @@ extension DependencyValues {
 
   private enum NetworkObserverKey: DependencyKey {
     static var liveValue: NetworkObserver {
-      if let observer = QueryClient.defaultNetworkObserver {
+      if let observer = OperationClient.defaultNetworkObserver {
         return observer
       }
       if Self.shouldReportUnimplemented {
@@ -45,7 +45,7 @@ extension DependencyValues {
   }
 }
 
-extension QueryWarning {
+extension OperationWarning {
   public static var noDefaultNetworkObserver: Self {
     """
     Your current platform does not have a default NetworkObserver, a MockNetworkObserver instance \
@@ -75,8 +75,8 @@ extension QueryWarning {
 
 // MARK: - DateDependencyClock
 
-/// A `QueryClock` that uses `@Depenendency(\.date)` to compute the current date.
-public struct DateDependencyClock: QueryClock {
+/// A `OperationClock` that uses `@Depenendency(\.date)` to compute the current date.
+public struct DateDependencyClock: OperationClock {
   @Dependency(\.date) private var date
 
   public func now() -> Date {
@@ -84,8 +84,8 @@ public struct DateDependencyClock: QueryClock {
   }
 }
 
-extension QueryClock where Self == DateDependencyClock {
-  /// A `QueryClock` that uses `@Depenendency(\.date)` to compute the current date.
+extension OperationClock where Self == DateDependencyClock {
+  /// A `OperationClock` that uses `@Depenendency(\.date)` to compute the current date.
   public static var dateDependency: Self {
     DateDependencyClock()
   }

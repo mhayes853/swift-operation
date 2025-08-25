@@ -9,14 +9,14 @@
       let window = TestWindow(visibility: .visible)
 
       let condition: some FetchCondition = .applicationIsActive(observer: window.observer)
-      XCTAssertTrue(condition.isSatisfied(in: QueryContext()))
+      XCTAssertTrue(condition.isSatisfied(in: OperationContext()))
     }
 
     func testIsNotSatisfiedWhenVisibilityStateIsHidden() {
       let window = TestWindow(visibility: .hidden)
 
       let condition: some FetchCondition = .applicationIsActive(observer: window.observer)
-      XCTAssertFalse(condition.isSatisfied(in: QueryContext()))
+      XCTAssertFalse(condition.isSatisfied(in: OperationContext()))
     }
 
     func testSubscribesToVisibilityStateChanges() {
@@ -25,7 +25,7 @@
       let condition: some FetchCondition = .applicationIsActive(observer: window.observer)
 
       let values = Lock([Bool]())
-      let subscription = condition.subscribe(in: QueryContext()) { value in
+      let subscription = condition.subscribe(in: OperationContext()) { value in
         values.withLock { $0.append(value) }
       }
 

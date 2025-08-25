@@ -3,7 +3,7 @@ struct MutationContextValues: Sendable {
   var maxHistoryLength = Int.max
 }
 
-extension QueryContext {
+extension OperationContext {
   var mutationValues: MutationContextValues {
     get { self[MutationContextValuesKey.self] }
     set { self[MutationContextValuesKey.self] = newValue }

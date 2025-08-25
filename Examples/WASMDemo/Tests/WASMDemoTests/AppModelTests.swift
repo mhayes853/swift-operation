@@ -20,7 +20,7 @@ final class AppModelTests: XCTestCase, @unchecked Sendable {
 
     try await withDependencies {
       $0[NumberFact.LoaderKey.self] = self.loader
-      $0.defaultQueryClient = .testInstance()
+      $0.defaultOperationClient = .testInstance()
     } operation: {
       let model = AppModel()
       model.counterAdded()
@@ -38,7 +38,7 @@ final class AppModelTests: XCTestCase, @unchecked Sendable {
   func test_RemovesCounter() {
     withDependencies {
       $0[NumberFact.LoaderKey.self] = self.loader
-      $0.defaultQueryClient = .testInstance()
+      $0.defaultOperationClient = .testInstance()
     } operation: {
       let model = AppModel()
 
@@ -64,7 +64,7 @@ final class AppModelTests: XCTestCase, @unchecked Sendable {
 
     try await withDependencies {
       $0[NumberFact.LoaderKey.self] = self.loader
-      $0.defaultQueryClient = .testInstance()
+      $0.defaultOperationClient = .testInstance()
     } operation: {
       let model = AppModel()
 
@@ -96,7 +96,7 @@ final class AppModelTests: XCTestCase, @unchecked Sendable {
   func test_ClearsAll() async throws {
     try await withDependencies {
       $0[NumberFact.LoaderKey.self] = self.loader
-      $0.defaultQueryClient = .testInstance()
+      $0.defaultOperationClient = .testInstance()
     } operation: {
       let model = AppModel()
 

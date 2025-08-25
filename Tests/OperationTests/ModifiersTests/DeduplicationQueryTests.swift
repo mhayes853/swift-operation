@@ -6,7 +6,7 @@ import XCTest
 final class DeduplicationQueryTests: XCTestCase {
   func testDeduplicatesFetchesSameStore() async throws {
     let query = DeduplicationQuery()
-    let store = QueryStore.detached(query: query.deduplicated(), initialValue: nil)
+    let store = OperationStore.detached(query: query.deduplicated(), initialValue: nil)
     async let f1 = store.fetch()
     async let f2 = store.fetch()
     _ = try await (f1, f2)
@@ -16,7 +16,7 @@ final class DeduplicationQueryTests: XCTestCase {
 
   func testDeduplicationSupportsCancellation() async throws {
     let query = EndlessQuery()
-    let store = QueryStore.detached(query: query.deduplicated(), initialValue: nil)
+    let store = OperationStore.detached(query: query.deduplicated(), initialValue: nil)
     let task = Task {
       withUnsafeCurrentTask { $0?.cancel() }
       try await store.fetch()
@@ -26,7 +26,7 @@ final class DeduplicationQueryTests: XCTestCase {
 
   func testFetchInitialPageConcurrentlyPerformsOneFetch() async throws {
     let query = DeduplicationInfiniteQuery()
-    let store = QueryStore.detached(query: query.deduplicated())
+    let store = OperationStore.detached(query: query.deduplicated())
     async let p1 = store.fetchPreviousPage()
     async let p2 = store.fetchPreviousPage()
     _ = try await (p1, p2)
@@ -37,7 +37,7 @@ final class DeduplicationQueryTests: XCTestCase {
 
   func testFetchAllPagesConcurrentlyFetchesAllPagesOnceEach() async throws {
     let query = DeduplicationInfiniteQuery()
-    let store = QueryStore.detached(query: query.deduplicated())
+    let store = OperationStore.detached(query: query.deduplicated())
     try await store.fetchNextPage()
     try await store.fetchNextPage()
     await query.resetCount()
@@ -55,7 +55,7 @@ final class DeduplicationQueryTests: XCTestCase {
 
   func testFetchPreviousPageConcurrentlyPerformsOneFetch() async throws {
     let query = DeduplicationInfiniteQuery()
-    let store = QueryStore.detached(query: query.deduplicated())
+    let store = OperationStore.detached(query: query.deduplicated())
     try await store.fetchPreviousPage()
     await query.resetCount()
     async let p1 = store.fetchPreviousPage()
@@ -68,7 +68,7 @@ final class DeduplicationQueryTests: XCTestCase {
 
   func testFetchNextPageConcurrentlyPerformsOneFetch() async throws {
     let query = DeduplicationInfiniteQuery()
-    let store = QueryStore.detached(query: query.deduplicated())
+    let store = OperationStore.detached(query: query.deduplicated())
     try await store.fetchNextPage()
     await query.resetCount()
     async let p1 = store.fetchNextPage()
@@ -88,8 +88,8 @@ private final actor DeduplicationQuery: QueryRequest, Identifiable {
   }
 
   func fetch(
-    in context: QueryContext,
-    with continuation: QueryContinuation<String>
+    in context: OperationContext,
+    with continuation: OperationContinuation<String>
   ) async throws -> String {
     // NB: Give enough time for deduplication.
     try await TaskSleepDelayer.taskSleep.delay(for: 0.1)
@@ -110,7 +110,7 @@ private final actor DeduplicationInfiniteQuery: InfiniteQueryRequest, Identifiab
   nonisolated func pageId(
     after page: InfiniteQueryPage<Int, String>,
     using paging: InfiniteQueryPaging<Int, String>,
-    in context: QueryContext
+    in context: OperationContext
   ) -> Int? {
     page.id + 1
   }
@@ -118,15 +118,15 @@ private final actor DeduplicationInfiniteQuery: InfiniteQueryRequest, Identifiab
   nonisolated func pageId(
     before page: InfiniteQueryPage<Int, String>,
     using paging: InfiniteQueryPaging<Int, String>,
-    in context: QueryContext
+    in context: OperationContext
   ) -> Int? {
     page.id - 1
   }
 
   func fetchPage(
     using paging: InfiniteQueryPaging<Int, String>,
-    in context: QueryContext,
-    with continuation: QueryContinuation<String>
+    in context: OperationContext,
+    with continuation: OperationContinuation<String>
   ) async throws -> String {
     // NB: Give enough time for deduplication.
     try await TaskSleepDelayer.taskSleep.delay(for: 0.1)
