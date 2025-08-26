@@ -177,7 +177,7 @@ struct OperationClientTests {
   }
 
   @Test("Adds Current OperationClient Instance To The OperationContext")
-  func OperationClientInContext() async throws {
+  func operationClientInContext() async throws {
     let client = OperationClient()
     let query = ContextReadingQuery()
     let store = client.store(for: query)

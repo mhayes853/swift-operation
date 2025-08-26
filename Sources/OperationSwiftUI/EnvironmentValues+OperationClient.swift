@@ -8,7 +8,7 @@
     ///
     /// - Parameter client: The client to use for this view.
     /// - Returns: Some view
-    public func OperationClient(_ client: OperationClient) -> some View {
+    public func operationClient(_ client: OperationClient) -> some View {
       self.environment(\.operationClient, client)
     }
   }
