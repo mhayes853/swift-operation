@@ -11,11 +11,11 @@ struct UnbackedOperation<State: OperationState>: OperationRequest, Sendable {
     with continuation: OperationContinuation<State.OperationValue>
   ) async throws -> State.OperationValue {
     reportWarning(.unbackedOperationFetch(type: State.self))
-    throw UnbackedQueryError()
+    throw UnbackedOperationError()
   }
 }
 
-private struct UnbackedQueryError: Error {}
+private struct UnbackedOperationError: Error {}
 
 // MARK: - Warning
 
