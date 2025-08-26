@@ -84,12 +84,11 @@ extension OperationStore {
   ///     does not add an active subscriber to the store.)
   /// - Returns: The fetched data.
   @discardableResult
-  @_disfavoredOverload
   public func fetch(
     using context: OperationContext? = nil,
     handler: QueryEventHandler<State> = QueryEventHandler()
   ) async throws -> State.OperationValue {
-    try await self.fetch(using: context, handler: self.operationEventHandler(for: handler))
+    try await self.run(using: context, handler: self.operationEventHandler(for: handler))
   }
 }
 

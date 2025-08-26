@@ -321,33 +321,33 @@ extension OperationStore {
 // MARK: - Fetch
 
 extension OperationStore {
-  /// Fetches the operation's data.
+  /// Runs the operation.
   ///
   /// - Parameters:
   ///   - context: The ``OperationContext`` to use for the underlying ``OperationTask``.
   ///   - handler: A ``OperationEventHandler`` to subscribe to events from fetching the data.
   ///     (This does not add an active subscriber to the store.)
-  /// - Returns: The fetched data.
+  /// - Returns: The data returned from the operation.
   @discardableResult
-  public func fetch(
+  public func run(
     using context: OperationContext? = nil,
     handler: OperationEventHandler<State> = OperationEventHandler()
   ) async throws -> State.OperationValue {
     let (subscription, _) = self.subscriptions.add(handler: handler, isTemporary: true)
     defer { subscription.cancel() }
-    let task = self.fetchTask(using: context)
+    let task = self.runTask(using: context)
     return try await task.runIfNeeded()
   }
 
-  /// Creates a ``OperationTask`` to fetch the query's data.
+  /// Creates a ``OperationTask`` to run the operation.
   ///
-  /// The returned task does not begin fetching immediately. Rather you must call
-  /// ``OperationTask/runIfNeeded()`` to fetch the data.
+  /// The returned task does not begin running immediately. Rather you must call
+  /// ``OperationTask/runIfNeeded()`` to run the operation.
   ///
   /// - Parameter context: The ``OperationContext`` for the task.
-  /// - Returns: A task to fetch the query's data.
+  /// - Returns: A task to run the operation.
   @discardableResult
-  public func fetchTask(
+  public func runTask(
     using context: OperationContext? = nil
   ) -> OperationTask<State.OperationValue> {
     self.editValuesWithStateChangeEvent(in: context) { values in
@@ -382,7 +382,7 @@ extension OperationStore {
         task.inner.withLock { $0 = .finished }
       }
       do {
-        let value = try await self.operation.fetch(
+        let value = try await self.operation.run(
           isolation: nil,
           in: context,
           with: self.operationContinuation(
@@ -485,7 +485,7 @@ extension OperationStore {
       handler.onStateChanged?(self.state, self.context)
       let (subscription, isFirst) = self.subscriptions.add(handler: handler)
       if isFirst && self.isAutomaticFetchingEnabled && self.isStale {
-        let task = self.fetchTask()
+        let task = self.runTask()
         values.subscribeTask = Task(configuration: task.configuration) {
           try await task.runIfNeeded()
         }

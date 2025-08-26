@@ -5,7 +5,7 @@
 struct UnbackedOperation<State: OperationState>: OperationRequest, Sendable {
   let path = OperationPath("__sharing_operation_unbacked_operation_\(typeName(State.self))__")
 
-  func fetch(
+  func run(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
     with continuation: OperationContinuation<State.OperationValue>

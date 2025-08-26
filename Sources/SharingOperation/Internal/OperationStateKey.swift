@@ -28,7 +28,7 @@ struct OperationStateKey<
     case .userInitiated:
       Task<Void, Never> {
         do {
-          try await self.store.fetch()
+          try await self.store.run()
           self.scheduler.schedule { continuation.resume(returning: Value(store: self.store)) }
         } catch {
           self.scheduler.schedule { continuation.resume(throwing: error) }

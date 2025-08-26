@@ -49,9 +49,9 @@ public struct _OperationControllerModifier<
 // MARK: - OperationContext
 
 extension OperationContext {
-  /// The ``OperationController``s attached to a ``QueryRequest``.
+  /// The ``OperationController``s attached to a ``OperationRequest``.
   ///
-  /// You generally add controllers via the ``QueryRequest/controlled(by:)`` modifier.
+  /// You generally add controllers via the ``OperationRequest/controlled(by:)`` modifier.
   public var operationControllers: [any OperationController] {
     get { self[OperationControllersKey.self] }
     set { self[OperationControllersKey.self] = newValue }

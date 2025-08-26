@@ -47,16 +47,16 @@ public struct _DeduplicationModifier<
     operation.setup(context: &context)
   }
 
-  public func fetch(
+  public func run(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
     using operation: Operation,
     with continuation: OperationContinuation<Operation.Value>
   ) async throws -> Operation.Value {
     guard let storage = context.deduplicationStorage as? DeduplicationStorage<Operation> else {
-      return try await operation.fetch(isolation: isolation, in: context, with: continuation)
+      return try await operation.run(isolation: isolation, in: context, with: continuation)
     }
-    return try await storage.fetch(operation: operation, in: context, with: continuation)
+    return try await storage.run(operation: operation, in: context, with: continuation)
   }
 }
 
@@ -74,7 +74,7 @@ private final actor DeduplicationStorage<Operation: OperationRequest & Sendable>
     self.removeDuplicates = removeDuplicates
   }
 
-  func fetch(
+  func run(
     operation: Operation,
     in context: OperationContext,
     with continuation: OperationContinuation<Operation.Value>
@@ -86,7 +86,7 @@ private final actor DeduplicationStorage<Operation: OperationRequest & Sendable>
     let id = self.idCounter
     let task = Task {
       defer { self.entries.removeAll { $0.id == id } }
-      return try await operation.fetch(isolation: self, in: context, with: continuation)
+      return try await operation.run(isolation: self, in: context, with: continuation)
     }
     self.entries.append((id, context, task))
     return try await task.cancellableValue

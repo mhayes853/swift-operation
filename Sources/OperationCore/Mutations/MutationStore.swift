@@ -88,7 +88,7 @@ extension OperationStore where State: _MutationStateProtocol {
     using context: OperationContext? = nil,
     handler: MutationEventHandler<State.Arguments, State.Value> = MutationEventHandler()
   ) async throws -> State.Value {
-    try await self.fetch(
+    try await self.run(
       using: self.taskConfiguration(with: arguments, using: context),
       handler: self.operationEventHandler(for: handler)
     )
@@ -108,7 +108,7 @@ extension OperationStore where State: _MutationStateProtocol {
     with arguments: State.Arguments,
     using context: OperationContext? = nil
   ) -> OperationTask<State.Value> {
-    self.fetchTask(using: self.taskConfiguration(with: arguments, using: context))
+    self.runTask(using: self.taskConfiguration(with: arguments, using: context))
       .map(\.returnValue)
   }
 
@@ -174,7 +174,7 @@ extension OperationStore where State: _MutationStateProtocol {
     using context: OperationContext? = nil,
     handler: MutationEventHandler<State.Arguments, State.Value> = MutationEventHandler()
   ) async throws -> State.Value {
-    try await self.fetch(
+    try await self.run(
       using: self.retryTaskConfiguration(using: context),
       handler: self.operationEventHandler(for: handler)
     )
@@ -197,7 +197,7 @@ extension OperationStore where State: _MutationStateProtocol {
   public func retryLatestTask(
     using context: OperationContext? = nil
   ) -> OperationTask<State.Value> {
-    self.fetchTask(using: self.retryTaskConfiguration(using: context)).map(\.returnValue)
+    self.runTask(using: self.retryTaskConfiguration(using: context)).map(\.returnValue)
   }
 
   private func retryTaskConfiguration(

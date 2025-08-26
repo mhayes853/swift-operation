@@ -79,7 +79,7 @@ struct OperationClientTests {
     expectNoDifference(stores[q1.path]?.currentValue as? Int, nil)
     expectNoDifference(stores[q3.path]?.currentValue as? Int, 3)
 
-    try await stores[q1.path]?.fetch()
+    try await stores[q1.path]?.run()
     expectNoDifference(stores[q1.path]?.currentValue as? Int, 1)
   }
 

@@ -318,14 +318,14 @@ struct OperationStoreTests {
   func overrideOperationStoreTaskName() async throws {
     let store = self.client.store(for: TestQuery())
     store.context.operationTaskConfiguration.name = "Blob"
-    let taskName = store.fetchTask().configuration.name
+    let taskName = store.runTask().configuration.name
     expectNoDifference(taskName, "Blob")
   }
 
   @Test("Default Query Store Task Name")
   func defaultOperationStoreTaskName() async throws {
     let store = self.client.store(for: TestQuery())
-    let taskName = store.fetchTask().configuration.name
+    let taskName = store.runTask().configuration.name
     expectNoDifference(taskName, "OperationStore<QueryState<Int?, Int>> Task")
   }
 
@@ -485,8 +485,8 @@ struct OperationStoreTests {
   @Test("Reset State, Cancels All Active Tasks")
   func resetStateCancelsAllActiveTasks() async throws {
     let store = self.client.store(for: TestQuery())
-    let task = store.fetchTask()
-    let task2 = store.fetchTask()
+    let task = store.runTask()
+    let task2 = store.runTask()
     store.resetState()
     expectNoDifference(store.activeTasks, [])
     await #expect(throws: CancellationError.self) {
@@ -512,8 +512,8 @@ struct OperationStoreTests {
   @Test("Reset State, Cancels Tasks")
   func resetStateCancelsTasks() async throws {
     let store = self.client.store(for: TestQuery())
-    let task = store.fetchTask()
-    let task2 = store.fetchTask()
+    let task = store.runTask()
+    let task2 = store.runTask()
     store.resetState()
     await #expect(throws: CancellationError.self) {
       try await task.runIfNeeded()
@@ -526,7 +526,7 @@ struct OperationStoreTests {
   @Test("Reset State, Does Not Update With Finished Task State")
   func resetStateDoesNotUpdateWithFinishedTaskState() async throws {
     let store = self.client.store(for: TestQuery())
-    let task = store.fetchTask()
+    let task = store.runTask()
     store.resetState()
     _ = try? await task.runIfNeeded()
     expectNoDifference(store.error == nil, true)

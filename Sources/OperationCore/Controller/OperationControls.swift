@@ -134,7 +134,7 @@ extension OperationControls {
     with context: OperationContext? = nil
   ) -> OperationTask<State.OperationValue>? {
     guard self.canYieldRefetch else { return nil }
-    return self.store?.fetchTask(using: context)
+    return self.store?.runTask(using: context)
   }
 }
 

@@ -23,17 +23,17 @@ public struct _SuspendModifier<
 >: OperationModifier, Sendable {
   let condition: Condition
 
-  public func fetch(
+  public func run(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
     using operation: Operation,
     with continuation: OperationContinuation<Operation.Value>
   ) async throws -> Operation.Value {
     guard !self.condition.isSatisfied(in: context) else {
-      return try await operation.fetch(isolation: isolation, in: context, with: continuation)
+      return try await operation.run(isolation: isolation, in: context, with: continuation)
     }
     try await self.waitForTrue(in: context)
-    return try await operation.fetch(isolation: isolation, in: context, with: continuation)
+    return try await operation.run(isolation: isolation, in: context, with: continuation)
   }
 
   private func waitForTrue(in context: OperationContext) async throws {

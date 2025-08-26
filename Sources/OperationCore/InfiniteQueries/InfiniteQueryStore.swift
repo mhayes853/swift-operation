@@ -90,7 +90,7 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
   public func refetchAllPagesTask(
     using context: OperationContext? = nil
   ) -> OperationTask<InfiniteQueryPages<State.PageID, State.PageValue>> {
-    self.fetchTask(using: self.fetchAllPagesTaskConfiguration(using: context))
+    self.runTask(using: self.fetchAllPagesTaskConfiguration(using: context))
       .map(self.allPages(from:))
   }
 
@@ -164,7 +164,7 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
         nil
       }
     }
-    return self.fetchTask(using: self.fetchNextPageTaskConfiguration(using: context))
+    return self.runTask(using: self.fetchNextPageTaskConfiguration(using: context))
       .map(self.nextPage(from:))
   }
 
@@ -242,7 +242,7 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
         nil
       }
     }
-    return self.fetchTask(using: self.fetchPreviousPageTaskConfiguration(using: context))
+    return self.runTask(using: self.fetchPreviousPageTaskConfiguration(using: context))
       .map(self.previousPage(from:))
   }
 
@@ -281,7 +281,7 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
     let subscription = context.infiniteValues?
       .addRequestSubscriber(from: handler, isTemporary: true)
     defer { subscription?.cancel() }
-    return try await self.fetch(using: context, handler: self.operationEventHandler(for: handler))
+    return try await self.run(using: context, handler: self.operationEventHandler(for: handler))
   }
 }
 

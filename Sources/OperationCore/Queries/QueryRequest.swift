@@ -171,7 +171,7 @@ where Self.ReturnValue == Value {
 // MARK: - Fetch
 
 extension QueryRequest {
-  public func fetch(
+  public func run(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
     with continuation: OperationContinuation<Value>

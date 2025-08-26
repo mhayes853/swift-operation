@@ -19,7 +19,7 @@ public struct _RetryModifier<Operation: OperationRequest>: OperationModifier, Se
     operation.setup(context: &context)
   }
 
-  public func fetch(
+  public func run(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
     using operation: Operation,
@@ -30,14 +30,14 @@ public struct _RetryModifier<Operation: OperationRequest>: OperationModifier, Se
       try Task.checkCancellation()
       do {
         context.operationRetryIndex = index
-        return try await operation.fetch(isolation: isolation, in: context, with: continuation)
+        return try await operation.run(isolation: isolation, in: context, with: continuation)
       } catch {
         try await context.operationDelayer.delay(for: context.operationBackoffFunction(index + 1))
       }
     }
     try Task.checkCancellation()
     context.operationRetryIndex = context.operationMaxRetries
-    return try await operation.fetch(isolation: isolation, in: context, with: continuation)
+    return try await operation.run(isolation: isolation, in: context, with: continuation)
   }
 }
 

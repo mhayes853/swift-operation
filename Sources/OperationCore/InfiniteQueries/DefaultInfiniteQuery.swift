@@ -38,12 +38,12 @@ public struct DefaultInfiniteQuery<Query: InfiniteQueryRequest>: OperationReques
     self.query.setup(context: &context)
   }
 
-  public func fetch(
+  public func run(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
     with continuation: OperationContinuation<Query.Value>
   ) async throws -> Query.Value {
-    try await self.query.fetch(isolation: isolation, in: context, with: continuation)
+    try await self.query.run(isolation: isolation, in: context, with: continuation)
   }
 }
 

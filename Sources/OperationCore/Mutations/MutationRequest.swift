@@ -82,7 +82,7 @@ where Value == MutationValue<ReturnValue>, State == MutationState<Arguments, Ret
 // MARK: - Fetch
 
 extension MutationRequest {
-  public func fetch(
+  public func run(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
     with continuation: OperationContinuation<Value>

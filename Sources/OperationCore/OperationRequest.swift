@@ -33,7 +33,7 @@ where State.OperationValue == Value {
   ///   - continuation: An ``OperationContinuation`` that allows you to yield values while you're
   ///     fetching data. See <doc:MultistageQueries> for more.
   /// - Returns: The fetched value from your operation.
-  func fetch(
+  func run(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
     with continuation: OperationContinuation<Value>

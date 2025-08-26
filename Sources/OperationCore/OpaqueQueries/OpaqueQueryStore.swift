@@ -196,29 +196,29 @@ extension OpaqueOperationStore {
 // MARK: - Fetch
 
 extension OpaqueOperationStore {
-  /// Fetches the query's data.
+  /// Runs the operation.
   ///
   /// - Parameters:
   ///   - context: The ``OperationContext`` to use for the underlying ``OperationTask``.
   ///   - handler: An ``OpaqueOperationEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
-  /// - Returns: The fetched data.
+  /// - Returns: The operation's returned data.
   @discardableResult
-  public func fetch(
+  public func run(
     using context: OperationContext? = nil,
     handler: OpaqueOperationEventHandler = OpaqueOperationEventHandler()
   ) async throws -> any Sendable {
     try await self._base.opaqueFetch(using: context, handler: handler)
   }
 
-  /// Creates a ``OperationTask`` to fetch the query's data.
+  /// Creates a ``OperationTask`` to run the operation.
   ///
   /// The returned task does not begin fetching immediately. Rather you must call
   /// ``OperationTask/runIfNeeded()`` to fetch the data.
   ///
   /// - Parameter context: The ``OperationContext`` for the task.
-  /// - Returns: A task to fetch the query's data.
+  /// - Returns: A task to run the operation.
   @discardableResult
-  public func fetchTask(using context: OperationContext? = nil) -> OperationTask<any Sendable> {
+  public func runTask(using context: OperationContext? = nil) -> OperationTask<any Sendable> {
     self._base.opaqueFetchTask(using: context)
   }
 }
@@ -287,7 +287,7 @@ extension OperationStore: OpaqueableOperationStore {
   }
 
   func opaqueFetchTask(using context: OperationContext?) -> OperationTask<any Sendable> {
-    self.fetchTask(using: context).map { $0 }
+    self.runTask(using: context).map { $0 }
   }
 
   func opaqueSubscribe(with handler: OpaqueOperationEventHandler) -> OperationSubscription {

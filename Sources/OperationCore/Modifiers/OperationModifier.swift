@@ -64,7 +64,7 @@ public protocol OperationModifier<Operation> {
   ///   - continuation: A ``OperationContinuation`` allowing you to yield multiple values from your
   ///     modifier. See <doc:MultistageQueries> for more.
   /// - Returns: The operation value.
-  func fetch(
+  func run(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
     using operation: Operation,
@@ -92,13 +92,13 @@ extension _ContextUpdatingOperationModifier {
   }
 
   @inlinable
-  public func fetch(
+  public func run(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
     using operation: Operation,
     with continuation: OperationContinuation<Operation.Value>
   ) async throws -> Operation.Value {
-    try await operation.fetch(isolation: isolation, in: context, with: continuation)
+    try await operation.run(isolation: isolation, in: context, with: continuation)
   }
 }
 
@@ -148,12 +148,12 @@ public struct ModifiedOperation<
   }
 
   @inlinable
-  public func fetch(
+  public func run(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
     with continuation: OperationContinuation<Operation.Value>
   ) async throws -> Operation.Value {
-    try await self.modifier.fetch(
+    try await self.modifier.run(
       isolation: isolation,
       in: context,
       using: self.operation,

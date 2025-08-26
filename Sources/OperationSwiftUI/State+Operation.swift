@@ -321,11 +321,11 @@
     ///   (This does not add an active subscriber to the store.)
     /// - Returns: The fetched data.
     @discardableResult
-    public func fetch(
+    public func run(
       using context: OperationContext? = nil,
       handler: OperationEventHandler<State> = OperationEventHandler()
     ) async throws -> State.OperationValue {
-      try await self.store.fetch(using: context, handler: handler)
+      try await self.store.run(using: context, handler: handler)
     }
 
     /// Fetches the query's data.
@@ -336,7 +336,6 @@
     ///   (This does not add an active subscriber to the store.)
     /// - Returns: The fetched data.
     @discardableResult
-    @_disfavoredOverload
     public func fetch(
       using context: OperationContext? = nil,
       handler: QueryEventHandler<State> = QueryEventHandler()
@@ -351,10 +350,10 @@
     ///
     /// - Parameter context: The `OperationContext` for the task.
     /// - Returns: A task to fetch the query's data.
-    public func fetchTask(
+    public func runTask(
       using context: OperationContext? = nil
     ) -> OperationTask<State.OperationValue> {
-      self.store.fetchTask(using: context)
+      self.store.runTask(using: context)
     }
   }
 

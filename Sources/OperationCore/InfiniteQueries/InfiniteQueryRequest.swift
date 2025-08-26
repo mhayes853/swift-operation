@@ -293,7 +293,7 @@ extension InfiniteQueryRequest {
     nil
   }
 
-  public func fetch(
+  public func run(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
     with continuation: OperationContinuation<Value>

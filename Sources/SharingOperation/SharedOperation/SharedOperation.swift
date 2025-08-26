@@ -190,7 +190,7 @@ extension SharedOperation {
 extension SharedOperation {
   /// Loads the data from this query.
   public func load() async throws {
-    try await self.fetch()
+    try await self.run()
   }
 
   /// Perform an operation on shared state with isolated access to the underlying value.
@@ -303,19 +303,19 @@ extension SharedOperation {
 // MARK: - Fetch
 
 extension SharedOperation {
-  /// Fetches the operation's data.
+  /// Runs the operation.
   ///
   /// - Parameters:
   ///   - context: The `OperationContext` to use for the underlying `OperationTask`.
   ///   - handler: A `OperationEventHandler` to subscribe to events from fetching the data.
   ///   (This does not add an active subscriber to the store.)
-  /// - Returns: The fetched data.
+  /// - Returns: The data returned from the operation.
   @discardableResult
-  public func fetch(
+  public func run(
     using context: OperationContext? = nil,
     handler: OperationEventHandler<State> = OperationEventHandler()
   ) async throws -> State.OperationValue {
-    try await self.store.fetch(using: context, handler: handler)
+    try await self.store.run(using: context, handler: handler)
   }
 
   /// Fetches the query's data.
@@ -326,7 +326,6 @@ extension SharedOperation {
   ///   (This does not add an active subscriber to the store.)
   /// - Returns: The fetched data.
   @discardableResult
-  @_disfavoredOverload
   public func fetch(
     using context: OperationContext? = nil,
     handler: QueryEventHandler<State> = QueryEventHandler()
@@ -334,18 +333,18 @@ extension SharedOperation {
     try await self.value.store.fetch(using: context, handler: handler)
   }
 
-  /// Creates a `OperationTask` to fetch the query's data.
+  /// Creates a `OperationTask` to run the operation.
   ///
   /// The returned task does not begin fetching immediately. Rather you must call
   /// `OperationTask.runIfNeeded` to fetch the data.
   ///
   /// - Parameter context: The `OperationContext` for the task.
-  /// - Returns: A task to fetch the query's data.
+  /// - Returns: A task to run the operation.
   @discardableResult
-  public func fetchTask(
+  public func runTask(
     using context: OperationContext? = nil
   ) -> OperationTask<State.OperationValue> {
-    self.value.store.fetchTask(using: context)
+    self.value.store.runTask(using: context)
   }
 }
 
