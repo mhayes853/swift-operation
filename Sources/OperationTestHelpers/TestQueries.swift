@@ -491,13 +491,14 @@ package struct EmptyIntInfiniteQuery: InfiniteQueryRequest {
 
 // MARK: - FakeInfiniteQuery
 
-package struct FakeInfiniteQuery: QueryRequest, Hashable {
+package struct FakeInfiniteQuery: OperationRequest, Hashable {
   package typealias State = InfiniteQueryState<Int, String>
   package typealias Value = InfiniteQueryValue<Int, String>
 
   package init() {}
 
-  package func fetch(
+  package func run(
+    isolation: isolated (any Actor)?,
     in context: OperationContext,
     with continuation: OperationContinuation<Value>
   ) async throws -> Value {
