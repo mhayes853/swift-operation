@@ -21,7 +21,7 @@
     let logger: Logger?
     let level: Logger.Level
 
-    public func fetch(
+    public func run(
       isolation: isolated (any Actor)?,
       in context: OperationContext,
       using operation: Operation,
@@ -41,7 +41,7 @@
           ]
         )
       }
-      return try await operation.fetch(isolation: isolation, in: context, with: continuation)
+      return try await operation.run(isolation: isolation, in: context, with: continuation)
     }
   }
 #endif
