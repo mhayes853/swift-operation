@@ -148,7 +148,7 @@
 ///
 /// > Note: See <doc:MultistageQueries> for a list of advanced use cases involving
 /// > ``OperationContinuation``.
-public protocol QueryRequest<ReturnValue>: OperationRequest, Sendable
+public protocol QueryRequest<ReturnValue, State>: OperationRequest, Sendable
 where Self.ReturnValue == Value {
   typealias Default = _DefaultQuery<Self>
 
@@ -179,4 +179,29 @@ extension QueryRequest {
   ) async throws -> Value {
     try await self.fetch(in: context, with: continuation)
   }
+}
+
+private struct User {
+  let id: Int
+}
+
+extension User {
+  static func query(id: Int) -> some QueryRequest<User, Query.Default.State> {
+    Query(id: id).defaultValue(User(id: id)).deduplicated()
+  }
+
+  struct Query: QueryRequest, Hashable {
+    let id: Int
+
+    func fetch(
+      in context: OperationContext,
+      with continuation: OperationContinuation<User>
+    ) async throws -> User {
+      User(id: self.id)
+    }
+  }
+}
+
+func foo(client: OperationClient) {
+  let store = client.store(for: User.query(id: 1))
 }
