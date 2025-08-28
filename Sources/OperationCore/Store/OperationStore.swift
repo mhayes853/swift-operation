@@ -383,7 +383,7 @@ extension OperationStore {
       }
       do {
         let value = try await self.operation.run(
-          isolation: nil,
+          isolation: #isolation,
           in: context,
           with: self.operationContinuation(
             task: task,
