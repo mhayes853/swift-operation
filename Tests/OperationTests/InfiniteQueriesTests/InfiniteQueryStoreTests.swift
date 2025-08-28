@@ -505,7 +505,7 @@ struct InfiniteOperationStoreTests {
       self.client.store(with: query.path)!.base as! OperationStore<TestInfiniteQuery.State>
 
     query.state.withLock { $0 = [0: "a", 1: "c", -1: "d"] }
-    try await store.fetch()
+    try await store.run()
 
     expectNoDifference(store.currentValue, [InfiniteQueryPage(id: 0, value: "a")])
     expectNoDifference(store.status.isSuccessful, true)
@@ -648,7 +648,7 @@ struct InfiniteOperationStoreTests {
     try await store.fetchNextPage()
 
     let subscription = store.subscribe(with: collector.eventHandler())
-    try await store.fetch()
+    try await store.run()
 
     collector.expectEventsMatch([
       .stateChanged,

@@ -322,11 +322,11 @@ struct OperationStoreTests {
     expectNoDifference(taskName, "Blob")
   }
 
-  @Test("Default Query Store Task Name")
+  @Test("Query Store Default Task Name")
   func defaultOperationStoreTaskName() async throws {
     let store = self.client.store(for: TestQuery())
     let taskName = store.runTask().configuration.name
-    expectNoDifference(taskName, "OperationStore<QueryState<Int?, Int>> Task")
+    expectNoDifference(taskName, "OperationStore<QueryState<Int>> Task")
   }
 
   @Test("Yields Multiple Values During Query")

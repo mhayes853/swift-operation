@@ -19,7 +19,7 @@
 
     func testIdleByDefault() throws {
       let view = QueryView()
-      ViewHosting.host(view: view.OperationClient(OperationClient()))
+      ViewHosting.host(view: view.operationClient(OperationClient()))
 
       XCTAssertNoThrow(try view.inspect().find(viewWithId: TestOperationStatusID.idle))
     }
@@ -27,7 +27,7 @@
     func testIsLoading() async throws {
       TestStateQuery.action.withLock { $0 = .suspend }
       let view = QueryView()
-      ViewHosting.host(view: view.OperationClient(OperationClient()))
+      ViewHosting.host(view: view.operationClient(OperationClient()))
 
       try await view.inspection.inspect { try $0.find(button: "Fetch").tap() }
       let expectation = view.inspection.inspect(after: 0.3) { view in
@@ -38,7 +38,7 @@
 
     func testSuccess() async throws {
       let view = QueryView()
-      ViewHosting.host(view: view.OperationClient(OperationClient()))
+      ViewHosting.host(view: view.operationClient(OperationClient()))
 
       try await view.inspection.inspect { try $0.find(button: "Fetch").tap() }
       let expectation = view.inspection.inspect(after: 0.3) { view in
@@ -52,7 +52,7 @@
     func testFailure() async throws {
       TestStateQuery.action.withLock { $0 = .fail }
       let view = QueryView()
-      ViewHosting.host(view: view.OperationClient(OperationClient()))
+      ViewHosting.host(view: view.operationClient(OperationClient()))
 
       try await view.inspection.inspect { try $0.find(button: "Fetch").tap() }
       let expectation = view.inspection.inspect(after: 0.3) { view in

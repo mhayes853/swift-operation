@@ -16,7 +16,7 @@
 
     func testIncrement() async throws {
       let view = TestBindingView()
-      ViewHosting.host(view: view.OperationClient(OperationClient()))
+      ViewHosting.host(view: view.operationClient(OperationClient()))
 
       try await view.inspection.inspect { v in
         try v.find(button: "Increment").tap()

@@ -10,7 +10,7 @@ struct UnbackedOperation<State: OperationState>: OperationRequest, Sendable {
     in context: OperationContext,
     with continuation: OperationContinuation<State.OperationValue>
   ) async throws -> State.OperationValue {
-    reportWarning(.unbackedOperationFetch(type: State.self))
+    reportWarning(.unbackedOperationRun(type: State.self))
     throw UnbackedOperationError()
   }
 }
@@ -20,7 +20,7 @@ private struct UnbackedOperationError: Error {}
 // MARK: - Warning
 
 extension OperationWarning {
-  public static func unbackedOperationFetch(type: Any.Type) -> Self {
+  public static func unbackedOperationRun(type: Any.Type) -> Self {
     """
     An unbacked shared operation attempted to fetch its data. Doing so has no effect on the value of \
     the operation.

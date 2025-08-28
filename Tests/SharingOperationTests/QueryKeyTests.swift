@@ -6,28 +6,40 @@ import Testing
 
 @Suite("QueryKey tests")
 struct QueryKeyTests {
+  @Test("Nil Value Initially")
+  func nilValueInitially() async throws {
+    @Dependency(\.defaultOperationClient) var client
+    @SharedOperation(EndlessQuery()) var value
+
+    expectNoDifference(value, nil)
+  }
+
   @Test("Fetches Value")
   func fetchesValue() async throws {
     @Dependency(\.defaultOperationClient) var client
 
-    let query = TestQuery().withTaskMegaYield()
-
+    let query = TestQuery()
     @SharedOperation(query) var value
 
-    expectNoDifference(value, nil)
     _ = try await client.store(for: query).activeTasks.first?.runIfNeeded()
     expectNoDifference(value, TestQuery.value)
+  }
+
+  @Test("Nil Error Initially")
+  func nilErrorInitially() async throws {
+    @Dependency(\.defaultOperationClient) var client
+    @SharedOperation(EndlessQuery()) var value
+
+    expectNoDifference($value.error == nil, true)
   }
 
   @Test("Fetches Error")
   func fetchesError() async throws {
     @Dependency(\.defaultOperationClient) var client
 
-    let query = FailingQuery().withTaskMegaYield()
-
+    let query = FailingQuery()
     @SharedOperation(query) var value
 
-    expectNoDifference($value.error as? FailingQuery.SomeError, nil)
     _ = try? await client.store(for: query).activeTasks.first?.runIfNeeded()
     expectNoDifference($value.error as? FailingQuery.SomeError, FailingQuery.SomeError())
   }
@@ -109,7 +121,7 @@ struct QueryKeyTests {
       try await withKnownIssue {
         try await $value.fetch()
       } matching: { issue in
-        issue.comments.contains(.warning(.unbackedQueryFetch(type: TestQuery.State.self)))
+        issue.comments.contains(.warning(.unbackedOperationRun(type: TestQuery.State.self)))
       }
     }
   }

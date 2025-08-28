@@ -250,7 +250,7 @@ struct MutationStoreTests {
     let mutation = FailableMutation()
     let store = OperationStore.detached(mutation: mutation)
     await withKnownIssue {
-      _ = try? await store.fetch()
+      _ = try? await store.run()
     } matching: {
       $0.comments.contains(.warning(.mutationWithNoArgumentsOrHistory))
     }
@@ -262,7 +262,7 @@ struct MutationStoreTests {
     let mutation = EmptyMutation()
     let store = OperationStore.detached(mutation: mutation)
     try await store.mutate(with: "blob")
-    try await store.fetch()
+    try await store.run()
     expectNoDifference(store.currentValue, "blob")
     expectNoDifference(store.history.count, 2)
     expectNoDifference(store.history.map(\.arguments), ["blob", "blob"])

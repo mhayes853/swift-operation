@@ -35,7 +35,7 @@ struct OperationClientTests {
     } matching: {
       $0.comments.contains(
         .warning(
-          .duplicatePath(expectedType: TestQuery.self, foundType: DefaultQuery<TestQuery>.self)
+          .duplicatePath(expectedType: TestQuery.self, foundType: TestQuery.Default.self)
         )
       )
     }
@@ -284,7 +284,7 @@ struct OperationClientTests {
 
     client.withStores(
       matching: [1],
-      of: DefaultQuery<TaggedPathableQuery<Int>>.State.self
+      of: TaggedPathableQuery<Int>.Default.State.self
     ) { entries, createStore in
       expectNoDifference(entries.count, 2)
       entries[q1.path]?.currentValue = 50
