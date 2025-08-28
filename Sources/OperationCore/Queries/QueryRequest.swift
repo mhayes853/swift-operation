@@ -148,12 +148,13 @@
 ///
 /// > Note: See <doc:MultistageQueries> for a list of advanced use cases involving
 /// > ``OperationContinuation``.
-public protocol QueryRequest<ReturnValue, State>: OperationRequest, Sendable
+public protocol QueryRequest<ReturnValue>: OperationRequest, Sendable
 where Self.ReturnValue == Value {
+  typealias Default = _DefaultQuery<Self>
+
   associatedtype ReturnValue: Sendable
 
-  /// The state type of your query.
-  associatedtype State: OperationState = QueryState<ReturnValue?, ReturnValue>
+  associatedtype State: _QueryStateProtocol<ReturnValue> = QueryState<ReturnValue>
 
   /// Fetches the data for your query.
   ///

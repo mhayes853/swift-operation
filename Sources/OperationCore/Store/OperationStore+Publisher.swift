@@ -18,7 +18,7 @@
       public func receive(subscriber: some Subscriber<Output, Failure>) {
         let conduit = Conduit(subscriber: subscriber)
         let subscription = self.store.subscribe(
-          with: QueryEventHandler { state, context in
+          with: OperationEventHandler { state, context in
             conduit.send(Output(state: state, context: context))
           }
         )

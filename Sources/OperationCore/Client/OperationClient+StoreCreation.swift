@@ -121,8 +121,7 @@ extension OperationClient.CreateStore {
   public func callAsFunction<Query: QueryRequest>(
     for query: Query,
     initialValue: Query.Value? = nil
-  ) -> OperationStore<Query.State>
-  where Query.State == QueryState<Query.Value?, Query.Value> {
+  ) -> OperationStore<Query.State> where Query.State == QueryState<Query.Value> {
     self(for: query, initialState: Query.State(initialValue: initialValue))
   }
 
@@ -132,10 +131,15 @@ extension OperationClient.CreateStore {
   ///   - query: The query.
   /// - Returns: A ``OperationStore``.
   public func callAsFunction<Query: QueryRequest>(
-    for query: DefaultQuery<Query>
-  ) -> OperationStore<DefaultQuery<Query>.State>
-  where DefaultQuery<Query>.State == QueryState<Query.Value, Query.Value> {
-    self(for: query, initialState: DefaultQuery<Query>.State(initialValue: query.defaultValue))
+    for query: Query.Default
+  ) -> OperationStore<Query.Default.State> {
+    self(
+      for: query,
+      initialState: Query.Default.State(
+        QueryState(initialValue: nil),
+        defaultValue: query.defaultValue
+      )
+    )
   }
 
   /// Creates a ``OperationStore`` for an ``InfiniteQueryRequest``.

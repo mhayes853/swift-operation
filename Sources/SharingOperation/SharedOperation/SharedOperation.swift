@@ -106,17 +106,8 @@ extension SharedOperation {
   ///
   /// - Parameter wrappedValue: The initial value of the query.
   public init<Value: Sendable>(
-    wrappedValue: State.StateValue = nil
-  ) where State == QueryState<Value?, Value> {
-    self.init(initialState: QueryState(initialValue: wrappedValue))
-  }
-
-  /// Creates an unbacked shared query.
-  ///
-  /// - Parameter wrappedValue: The initial value of the query.
-  public init<Value: Sendable>(
-    wrappedValue: State.StateValue
-  ) where State == QueryState<Value, Value> {
+    wrappedValue: Value? = nil
+  ) where State == QueryState<Value> {
     self.init(initialState: QueryState(initialValue: wrappedValue))
   }
 
@@ -160,28 +151,6 @@ extension SharedOperation {
       wrappedValue: OperationStateKeyValue(store: store),
       OperationStateKey(store: store, scheduler: scheduler)
     )
-  }
-}
-
-// MARK: - QueryState Initializer
-
-extension SharedOperation {
-
-  /// Creates a shared query.
-  ///
-  /// - Parameters:
-  ///   - query: The `QueryRequest`.
-  ///   - initialState: The initial state.
-  ///   - client: A `OperationClient` to obtain the `OperationStore` from.
-  ///   - scheduler: The ``SharedOperationStateScheduler`` to schedule state updates on.
-  @_disfavoredOverload
-  public init<Query: QueryRequest>(
-    _ query: Query,
-    initialState: Query.State,
-    client: OperationClient? = nil,
-    scheduler: some SharedOperationStateScheduler = .synchronous
-  ) where State == Query.State {
-    self.init(query, initialState: initialState, client: client, scheduler: scheduler)
   }
 }
 
@@ -318,6 +287,24 @@ extension SharedOperation {
     try await self.store.run(using: context, handler: handler)
   }
 
+  /// Creates a `OperationTask` to run the operation.
+  ///
+  /// The returned task does not begin fetching immediately. Rather you must call
+  /// `OperationTask.runIfNeeded` to fetch the data.
+  ///
+  /// - Parameter context: The `OperationContext` for the task.
+  /// - Returns: A task to run the operation.
+  @discardableResult
+  public func runTask(
+    using context: OperationContext? = nil
+  ) -> OperationTask<State.OperationValue> {
+    self.value.store.runTask(using: context)
+  }
+}
+
+// MARK: - Fetch
+
+extension SharedOperation where State: _QueryStateProtocol {
   /// Fetches the query's data.
   ///
   /// - Parameters:
@@ -331,20 +318,6 @@ extension SharedOperation {
     handler: QueryEventHandler<State> = QueryEventHandler()
   ) async throws -> State.OperationValue {
     try await self.value.store.fetch(using: context, handler: handler)
-  }
-
-  /// Creates a `OperationTask` to run the operation.
-  ///
-  /// The returned task does not begin fetching immediately. Rather you must call
-  /// `OperationTask.runIfNeeded` to fetch the data.
-  ///
-  /// - Parameter context: The `OperationContext` for the task.
-  /// - Returns: A task to run the operation.
-  @discardableResult
-  public func runTask(
-    using context: OperationContext? = nil
-  ) -> OperationTask<State.OperationValue> {
-    self.value.store.runTask(using: context)
   }
 }
 
@@ -396,12 +369,12 @@ extension SharedOperation {
   ///   - query: The `QueryRequest`.
   ///   - client: A `OperationClient` to obtain the `OperationStore` from.
   ///   - scheduler: The ``SharedOperationStateScheduler`` to schedule state updates on.
-  public init<Value: Sendable, Query: QueryRequest<Value, QueryState<Value?, Value>>>(
-    wrappedValue: Query.State.StateValue = nil,
+  public init<Query: QueryRequest>(
+    wrappedValue: Query.Value? = nil,
     _ query: Query,
     client: OperationClient? = nil,
     scheduler: some SharedOperationStateScheduler = .synchronous
-  ) where State == Query.State {
+  ) where State == QueryState<Query.Value>, Query.State == QueryState<Query.Value> {
     self.init(
       query,
       initialState: QueryState(initialValue: wrappedValue),
@@ -417,13 +390,16 @@ extension SharedOperation {
   ///   - client: A `OperationClient` to obtain the `OperationStore` from.
   ///   - scheduler: The ``SharedOperationStateScheduler`` to schedule state updates on.
   public init<Query: QueryRequest>(
-    _ query: DefaultQuery<Query>,
+    _ query: Query.Default,
     client: OperationClient? = nil,
     scheduler: some SharedOperationStateScheduler = .synchronous
-  ) where State == DefaultQuery<Query>.State {
+  ) where State == DefaultQueryState<Query.Value> {
     self.init(
       query,
-      initialState: QueryState(initialValue: query.defaultValue),
+      initialState: State(
+        QueryState(initialValue: nil),
+        defaultValue: query.defaultValue
+      ),
       client: client,
       scheduler: scheduler
     )
@@ -705,8 +681,9 @@ extension SharedOperation where State: _MutationStateProtocol {
   /// - Parameters:
   ///   - context: The `OperationContext` for the task.
   /// - Returns: A task to retry the most recently used arguments on the mutation.
-  public func retryLatestTask(using context: OperationContext? = nil) -> OperationTask<State.Value>
-  {
+  public func retryLatestTask(
+    using context: OperationContext? = nil
+  ) -> OperationTask<State.Value> {
     self.value.store.retryLatestTask(using: context)
   }
 }

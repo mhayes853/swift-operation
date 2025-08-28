@@ -42,7 +42,7 @@ extension OperationStore {
     public func makeAsyncIterator() -> AsyncIterator {
       let stream = AsyncStream<Element> { continuation in
         let subscription = self.store.subscribe(
-          with: QueryEventHandler { state, context in
+          with: OperationEventHandler { state, context in
             continuation.yield(Element(state: state, context: context))
           }
         )

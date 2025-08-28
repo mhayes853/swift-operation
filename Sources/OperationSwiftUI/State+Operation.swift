@@ -134,12 +134,12 @@
     ///   - query: The query to observe.
     ///   - client: An optional `OperationClient` to override ``SwiftUICore/EnvironmentValues/OperationClient``.
     ///   - transaction: The transaction to apply to state updates.
-    public init<V: Sendable, Query: QueryRequest<V, QueryState<V?, V>>>(
-      wrappedValue: Value = nil,
+    public init<Query: QueryRequest>(
+      wrappedValue: Query.Value? = nil,
       _ query: Query,
       client: OperationClient? = nil,
       transaction: Transaction? = nil
-    ) where State == Query.State {
+    ) where State == QueryState<Query.Value>, Query.State == QueryState<Query.Value> {
       self.init(
         query,
         initialState: QueryState(initialValue: wrappedValue),
@@ -155,12 +155,12 @@
     ///   - query: The query to observe.
     ///   - client: An optional `OperationClient` to override ``SwiftUICore/EnvironmentValues/OperationClient``.
     ///   - animation: The animation to apply to state updates.
-    public init<V: Sendable, Query: QueryRequest<V, QueryState<V?, V>>>(
-      wrappedValue: Value = nil,
+    public init<Query: QueryRequest>(
+      wrappedValue: Query.Value? = nil,
       _ query: Query,
       client: OperationClient? = nil,
       animation: Animation
-    ) where State == Query.State {
+    ) where State == QueryState<Query.Value>, Query.State == QueryState<Query.Value> {
       self.init(
         wrappedValue: wrappedValue,
         query,
@@ -176,13 +176,16 @@
     ///   - client: An optional `OperationClient` to override ``SwiftUICore/EnvironmentValues/OperationClient``.
     ///   - transaction: The transaction to apply to state updates.
     public init<Query: QueryRequest>(
-      _ query: DefaultQuery<Query>,
+      _ query: Query.Default,
       client: OperationClient? = nil,
       transaction: Transaction? = nil
-    ) where State == DefaultQuery<Query>.State {
+    ) where State == DefaultQueryState<Query.Value> {
       self.init(
         query,
-        initialState: QueryState(initialValue: query.defaultValue),
+        initialState: State(
+          QueryState(initialValue: query.defaultValue),
+          defaultValue: query.defaultValue
+        ),
         client: client,
         transaction: transaction
       )
@@ -195,13 +198,16 @@
     ///   - client: An optional `OperationClient` to override ``SwiftUICore/EnvironmentValues/OperationClient``.
     ///   - animation: The animation to apply to state updates.
     public init<Query: QueryRequest>(
-      _ query: DefaultQuery<Query>,
+      _ query: Query.Default,
       client: OperationClient? = nil,
       animation: Animation
-    ) where State == DefaultQuery<Query>.State {
+    ) where State == DefaultQueryState<Query.Value> {
       self.init(
         query,
-        initialState: QueryState(initialValue: query.defaultValue),
+        initialState: State(
+          QueryState(initialValue: query.defaultValue),
+          defaultValue: query.defaultValue
+        ),
         client: client,
         transaction: Transaction(animation: animation)
       )
@@ -256,7 +262,7 @@
       let stateValue = self._state
       let transaction = self.transaction
       self.subscription = self.store.subscribe(
-        with: QueryEventHandler { state, _ in
+        with: OperationEventHandler { state, _ in
           Task { @MainActor in
             withTransaction(transaction) { stateValue.wrappedValue = state }
           }
@@ -328,6 +334,23 @@
       try await self.store.run(using: context, handler: handler)
     }
 
+    /// Creates a `OperationTask` to fetch the query's data.
+    ///
+    /// The returned task does not begin fetching immediately. Rather you must call
+    /// `OperationTask.runIfNeeded` to fetch the data.
+    ///
+    /// - Parameter context: The `OperationContext` for the task.
+    /// - Returns: A task to fetch the query's data.
+    public func runTask(
+      using context: OperationContext? = nil
+    ) -> OperationTask<State.OperationValue> {
+      self.store.runTask(using: context)
+    }
+  }
+
+  // MARK: - Fetch
+
+  extension State.Operation where State: _QueryStateProtocol {
     /// Fetches the query's data.
     ///
     /// - Parameters:
@@ -341,19 +364,6 @@
       handler: QueryEventHandler<State> = QueryEventHandler()
     ) async throws -> State.OperationValue {
       try await self.store.fetch(using: context, handler: handler)
-    }
-
-    /// Creates a `OperationTask` to fetch the query's data.
-    ///
-    /// The returned task does not begin fetching immediately. Rather you must call
-    /// `OperationTask.runIfNeeded` to fetch the data.
-    ///
-    /// - Parameter context: The `OperationContext` for the task.
-    /// - Returns: A task to fetch the query's data.
-    public func runTask(
-      using context: OperationContext? = nil
-    ) -> OperationTask<State.OperationValue> {
-      self.store.runTask(using: context)
     }
   }
 

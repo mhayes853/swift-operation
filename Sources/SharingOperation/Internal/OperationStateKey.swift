@@ -47,7 +47,7 @@ struct OperationStateKey<
     subscriber: SharedSubscriber<Value>
   ) -> SharedSubscription {
     let subscription = self.store.subscribe(
-      with: QueryEventHandler { state, _ in
+      with: OperationEventHandler { state, _ in
         self.scheduler.schedule {
           let value = Value(store: self.store)
           subscriber.yield(value)

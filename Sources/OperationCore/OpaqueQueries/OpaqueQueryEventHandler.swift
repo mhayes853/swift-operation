@@ -38,8 +38,10 @@ public struct OpaqueOperationEventHandler: Sendable {
 // MARK: - Casting
 
 extension OpaqueOperationEventHandler {
-  func casted<State: OperationState>(to stateType: State.Type) -> QueryEventHandler<State> {
-    QueryEventHandler<State>(
+  func casted<State: OperationState>(
+    to stateType: State.Type
+  ) -> OperationEventHandler<State> {
+    OperationEventHandler<State>(
       onStateChanged: { state, context in
         self.onStateChanged?(OpaqueOperationState(state), context)
       },

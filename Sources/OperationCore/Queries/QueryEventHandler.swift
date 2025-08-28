@@ -1,7 +1,7 @@
 // MARK: - QueryEventHandler
 
 /// An event handler that is passed to ``OperationStore/subscribe(with:)-93jyd``.
-public struct QueryEventHandler<State: OperationState>: Sendable {
+public struct QueryEventHandler<State: _QueryStateProtocol>: Sendable {
   /// A callback that is invoked when the query state changes.
   public var onStateChanged: (@Sendable (State, OperationContext) -> Void)?
 

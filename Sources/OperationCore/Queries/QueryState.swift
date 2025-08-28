@@ -1,6 +1,15 @@
 import Foundation
 import IdentifiedCollections
 
+// MARK: - QueryStateProtocol
+
+public protocol _QueryStateProtocol<Value>: OperationState
+where OperationValue == Value, StatusValue == Value {
+  associatedtype Value: Sendable
+
+  var activeTasks: IdentifiedArrayOf<OperationTask<Value>> { get }
+}
+
 // MARK: - QueryState
 
 /// A state type used for ``QueryRequest``.
@@ -19,9 +28,9 @@ import IdentifiedCollections
 ///
 /// > Warning: You should not call any of the `mutating` methods directly on this type, rather a
 /// > ``OperationStore`` will call them at the appropriate time for you.
-public struct QueryState<StateValue: Sendable, QueryValue: Sendable> {
-  public private(set) var currentValue: StateValue
-  public let initialValue: StateValue
+public struct QueryState<Value: Sendable> {
+  public private(set) var currentValue: Value?
+  public let initialValue: Value?
   public private(set) var valueUpdateCount = 0
   public private(set) var valueLastUpdatedAt: Date?
   public private(set) var error: (any Error)?
@@ -29,19 +38,12 @@ public struct QueryState<StateValue: Sendable, QueryValue: Sendable> {
   public private(set) var errorLastUpdatedAt: Date?
 
   /// The active ``OperationTask`` instances held by this state.
-  public private(set) var activeTasks = IdentifiedArrayOf<OperationTask<QueryValue>>()
+  public private(set) var activeTasks = IdentifiedArrayOf<OperationTask<Value>>()
 
   /// Creates a query state.
   ///
   /// - Parameter initialValue: The initial value of the state.
-  public init(initialValue: StateValue) where StateValue == QueryValue? {
-    self.init(_initialValue: initialValue)
-  }
-
-  /// Creates a query state.
-  ///
-  /// - Parameter initialValue: The initial value of the state.
-  public init(initialValue: StateValue) where StateValue == QueryValue {
+  public init(initialValue: Value?) {
     self.init(_initialValue: initialValue)
   }
 
@@ -53,14 +55,14 @@ public struct QueryState<StateValue: Sendable, QueryValue: Sendable> {
 
 // MARK: - Fetch Task
 
-extension QueryState: OperationState {
-  public typealias StatusValue = QueryValue
+extension QueryState: _QueryStateProtocol {
+  public typealias StatusValue = Value
 
   public var isLoading: Bool {
     !self.activeTasks.isEmpty
   }
 
-  public mutating func scheduleFetchTask(_ task: inout OperationTask<QueryValue>) {
+  public mutating func scheduleFetchTask(_ task: inout OperationTask<Value>) {
     self.activeTasks.append(task)
   }
 
@@ -71,7 +73,7 @@ extension QueryState: OperationState {
   }
 
   public mutating func update(
-    with result: Result<StateValue, any Error>,
+    with result: Result<Value?, any Error>,
     using context: OperationContext
   ) {
     switch result {
@@ -88,13 +90,13 @@ extension QueryState: OperationState {
   }
 
   public mutating func update(
-    with result: Result<QueryValue, any Error>,
-    for task: OperationTask<QueryValue>
+    with result: Result<Value, any Error>,
+    for task: OperationTask<Value>
   ) {
-    self.update(with: result.map { $0 as! StateValue }, using: task.context)
+    self.update(with: result.map { $0 as Value? }, using: task.context)
   }
 
-  public mutating func finishFetchTask(_ task: OperationTask<QueryValue>) {
+  public mutating func finishFetchTask(_ task: OperationTask<Value>) {
     self.activeTasks.remove(id: task.id)
   }
 }

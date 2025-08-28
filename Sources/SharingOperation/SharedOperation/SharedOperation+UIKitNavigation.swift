@@ -40,31 +40,6 @@
     }
   }
 
-  // MARK: - Query State Initializer
-
-  extension SharedOperation {
-    /// Creates a shared query.
-    ///
-    /// - Parameters:
-    ///   - query: The `MutationRequest`.
-    ///   - initialState: The initial state.
-    ///   - client: A `OperationClient` to obtain the `OperationStore` from.
-    ///   - animation: The `UIKitAnimation` to use for state updates.
-    public init<Query: QueryRequest>(
-      _ query: Query,
-      initialState: Query.State,
-      client: OperationClient? = nil,
-      animation: UIKitAnimation
-    ) where State == Query.State {
-      self.init(
-        query,
-        initialState: initialState,
-        client: client,
-        scheduler: .transaction(UITransaction(animation: animation))
-      )
-    }
-  }
-
   // MARK: - Query Initializers
 
   extension SharedOperation {
@@ -75,12 +50,12 @@
     ///   - wrappedValue: The initial value.
     ///   - client: A `OperationClient` to obtain the `OperationStore` from.
     ///   - animation: The `UIKitAnimation` to use for state updates.
-    public init<Value: Sendable, Query: QueryRequest<Value, QueryState<Value?, Value>>>(
-      wrappedValue: Query.State.StateValue = nil,
+    public init<Query: QueryRequest>(
+      wrappedValue: Query.Value? = nil,
       _ query: Query,
       client: OperationClient? = nil,
       animation: UIKitAnimation
-    ) where State == Query.State {
+    ) where State == Query.State, Query.State == QueryState<Query.Value> {
       self.init(
         wrappedValue: wrappedValue,
         query,
@@ -96,10 +71,10 @@
     ///   - client: A `OperationClient` to obtain the `OperationStore` from.
     ///   - animation: The `UIKitAnimation` to use for state updates.
     public init<Query: QueryRequest>(
-      _ query: DefaultQuery<Query>,
+      _ query: Query.Default,
       client: OperationClient? = nil,
       animation: UIKitAnimation
-    ) where State == DefaultQuery<Query>.State {
+    ) where State == DefaultQueryState<Query.Value> {
       self.init(query, client: client, scheduler: .transaction(UITransaction(animation: animation)))
     }
   }

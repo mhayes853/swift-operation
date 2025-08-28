@@ -36,13 +36,10 @@ extension OperationStore {
     initialValue: Query.State.StateValue,
     initialContext: OperationContext = OperationContext()
   ) -> OperationStore<Query.State>
-  where
-    Query.State == QueryState<Query.Value?, Query.Value>,
-    State == QueryState<Query.Value?, Query.Value>
-  {
+  where Query.State == QueryState<Query.Value>, State == QueryState<Query.Value> {
     .detached(
       operation: query,
-      initialState: Query.State(initialValue: initialValue),
+      initialState: QueryState(initialValue: initialValue),
       initialContext: initialContext
     )
   }
@@ -58,16 +55,16 @@ extension OperationStore {
   ///   - initialContext: The default ``OperationContext``.
   /// - Returns: A store.
   public static func detached<Query: QueryRequest>(
-    query: DefaultQuery<Query>,
+    query: Query.Default,
     initialContext: OperationContext = OperationContext()
-  ) -> OperationStore<DefaultQuery<Query>.State>
-  where
-    DefaultQuery<Query>.State == QueryState<Query.Value, Query.Value>,
-    State == DefaultQuery<Query>.State
-  {
+  ) -> OperationStore<DefaultQueryState<Query.Value>>
+  where State == DefaultQueryState<Query.Value> {
     .detached(
       operation: query,
-      initialState: DefaultQuery<Query>.State(initialValue: query.defaultValue),
+      initialState: Query.Default.State(
+        QueryState(initialValue: nil),
+        defaultValue: query.defaultValue
+      ),
       initialContext: initialContext
     )
   }
@@ -75,7 +72,7 @@ extension OperationStore {
 
 // MARK: - Fetching
 
-extension OperationStore {
+extension OperationStore where State: _QueryStateProtocol {
   /// Fetches the query's data.
   ///
   /// - Parameters:
@@ -94,7 +91,7 @@ extension OperationStore {
 
 // MARK: - Subscribing
 
-extension OperationStore {
+extension OperationStore where State: _QueryStateProtocol {
   /// Subscribes to events from this store using a ``QueryEventHandler``.
   ///
   /// If the subscription is the first active subscription on this store, this method will begin
@@ -104,7 +101,6 @@ extension OperationStore {
   ///
   /// - Parameter handler: The event handler.
   /// - Returns: A ``OperationSubscription``.
-  @_disfavoredOverload
   public func subscribe(with handler: QueryEventHandler<State>) -> OperationSubscription {
     self.subscribe(with: self.operationEventHandler(for: handler))
   }
@@ -112,7 +108,7 @@ extension OperationStore {
 
 // MARK: - Helper
 
-extension OperationStore {
+extension OperationStore where State: _QueryStateProtocol {
   private func operationEventHandler(
     for handler: QueryEventHandler<State>
   ) -> OperationEventHandler<State> {

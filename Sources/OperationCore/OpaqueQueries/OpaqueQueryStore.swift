@@ -207,7 +207,7 @@ extension OpaqueOperationStore {
     using context: OperationContext? = nil,
     handler: OpaqueOperationEventHandler = OpaqueOperationEventHandler()
   ) async throws -> any Sendable {
-    try await self._base.opaqueFetch(using: context, handler: handler)
+    try await self._base.opaqueRun(using: context, handler: handler)
   }
 
   /// Creates a ``OperationTask`` to run the operation.
@@ -219,7 +219,7 @@ extension OpaqueOperationStore {
   /// - Returns: A task to run the operation.
   @discardableResult
   public func runTask(using context: OperationContext? = nil) -> OperationTask<any Sendable> {
-    self._base.opaqueFetchTask(using: context)
+    self._base.opaqueRunTask(using: context)
   }
 }
 
@@ -260,12 +260,12 @@ private protocol OpaqueableOperationStore: Sendable {
     to result: Result<any Sendable, any Error>,
     using context: OperationContext?
   )
-  func opaqueFetch(
+  func opaqueRun(
     using context: OperationContext?,
     handler: OpaqueOperationEventHandler
   ) async throws -> any Sendable
   func resetState(using context: OperationContext?)
-  func opaqueFetchTask(using context: OperationContext?) -> OperationTask<any Sendable>
+  func opaqueRunTask(using context: OperationContext?) -> OperationTask<any Sendable>
   func opaqueSubscribe(with handler: OpaqueOperationEventHandler) -> OperationSubscription
 }
 
@@ -279,14 +279,14 @@ extension OperationStore: OpaqueableOperationStore {
     self.setResult(to: result.map { $0 as! State.StateValue }, using: context)
   }
 
-  func opaqueFetch(
+  func opaqueRun(
     using context: OperationContext?,
     handler: OpaqueOperationEventHandler
   ) async throws -> any Sendable {
-    try await self.fetch(using: context, handler: handler.casted(to: State.self))
+    try await self.run(using: context, handler: handler.casted(to: State.self))
   }
 
-  func opaqueFetchTask(using context: OperationContext?) -> OperationTask<any Sendable> {
+  func opaqueRunTask(using context: OperationContext?) -> OperationTask<any Sendable> {
     self.runTask(using: context).map { $0 }
   }
 
