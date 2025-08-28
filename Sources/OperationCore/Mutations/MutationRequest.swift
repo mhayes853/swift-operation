@@ -3,7 +3,7 @@
 /// The data type returned from a ``MutationRequest``.
 ///
 /// You do not construct this type, ``MutationRequest`` constructs  for you.
-public struct MutationValue<ReturnValue: Sendable>: Sendable {
+public struct MutationOperationValue<ReturnValue: Sendable>: Sendable {
   /// The value returned from ``MutationRequest/mutate(with:in:with:)``.
   public let returnValue: ReturnValue
 }
@@ -58,7 +58,7 @@ public struct MutationValue<ReturnValue: Sendable>: Sendable {
 /// > `retryLatest` without ever having called `mutate` first. Additionally, your mutation will
 /// > throw an error.
 public protocol MutationRequest<Arguments, ReturnValue>: OperationRequest, Sendable
-where Value == MutationValue<ReturnValue>, State == MutationState<Arguments, ReturnValue> {
+where Value == MutationOperationValue<ReturnValue>, State == MutationState<Arguments, ReturnValue> {
   /// The data type of the arguments to submit to the mutation.
   associatedtype Arguments: Sendable
 
@@ -73,6 +73,7 @@ where Value == MutationValue<ReturnValue>, State == MutationState<Arguments, Ret
   ///   - continuation: A ``OperationContinuation`` that allows you to yield values during the mutation. See <doc:MultistageQueries> for more.
   /// - Returns: The mutation value.
   func mutate(
+    isolation: isolated (any Actor)?,
     with arguments: Arguments,
     in context: OperationContext,
     with continuation: OperationContinuation<ReturnValue>
@@ -91,13 +92,17 @@ extension MutationRequest {
       throw MutationNoArgumentsError()
     }
     let value = try await self.mutate(
+      isolation: isolation,
       with: args,
       in: context,
       with: OperationContinuation { result, context in
-        continuation.yield(with: result.map { MutationValue(returnValue: $0) }, using: context)
+        continuation.yield(
+          with: result.map { MutationOperationValue(returnValue: $0) },
+          using: context
+        )
       }
     )
-    return MutationValue(returnValue: value)
+    return MutationOperationValue(returnValue: value)
   }
 }
 
@@ -113,9 +118,10 @@ extension MutationRequest where Arguments == Void {
   ///   - continuation: A ``OperationContinuation`` that allows you to yield values during the mutation. See <doc:MultistageQueries> for more.
   /// - Returns: The mutation value.
   public func mutate(
+    isolation: isolated (any Actor)?,
     in context: OperationContext,
     with continuation: OperationContinuation<ReturnValue>
   ) async throws -> ReturnValue {
-    try await self.mutate(with: (), in: context, with: continuation)
+    try await self.mutate(isolation: isolation, with: (), in: context, with: continuation)
   }
 }

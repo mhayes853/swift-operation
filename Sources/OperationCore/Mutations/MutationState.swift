@@ -4,7 +4,7 @@ import IdentifiedCollections
 // MARK: - _MutationStateProtocol
 
 public protocol _MutationStateProtocol<Arguments, Value>: OperationState
-where StateValue == Value?, StatusValue == Value, OperationValue == MutationValue<Value> {
+where StateValue == Value?, StatusValue == Value, OperationValue == MutationOperationValue<Value> {
   associatedtype Arguments: Sendable
   associatedtype Value: Sendable
 }
@@ -51,7 +51,7 @@ public struct MutationState<Arguments: Sendable, Value: Sendable> {
 extension MutationState: _MutationStateProtocol {
   public typealias StateValue = Value?
   public typealias StatusValue = Value
-  public typealias OperationValue = MutationValue<Value>
+  public typealias OperationValue = MutationOperationValue<Value>
 
   public var currentValue: StateValue {
     switch (self.history.last?.status, self.yielded) {

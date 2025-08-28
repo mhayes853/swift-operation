@@ -44,10 +44,11 @@ public struct _DefaultQuery<Query: QueryRequest>: QueryRequest {
   }
 
   public func fetch(
+    isolation: isolated (any Actor)?,
     in context: OperationContext,
     with continuation: OperationContinuation<Query.Value>
   ) async throws -> Query.Value {
-    try await self.query.fetch(in: context, with: continuation)
+    try await self.query.fetch(isolation: isolation, in: context, with: continuation)
   }
 }
 

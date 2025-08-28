@@ -27,6 +27,7 @@ private struct DependencyQuery: QueryRequest {
   }
 
   func fetch(
+    isolation: isolated (any Actor)?,
     in context: OperationContext,
     with continuation: OperationContinuation<Int>
   ) async throws -> Int {

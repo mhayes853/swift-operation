@@ -6,7 +6,7 @@ import IdentifiedCollections
 public protocol _InfiniteQueryStateProtocol<PageID, PageValue>: OperationState
 where
   StateValue == InfiniteQueryPages<PageID, PageValue>,
-  OperationValue == InfiniteQueryValue<PageID, PageValue>,
+  OperationValue == InfiniteQueryOperationValue<PageID, PageValue>,
   StatusValue == StateValue
 {
   associatedtype PageID: Hashable & Sendable
@@ -126,7 +126,7 @@ extension InfiniteQueryState: _InfiniteQueryStateProtocol {
   }
 
   public mutating func scheduleFetchTask(
-    _ task: inout OperationTask<InfiniteQueryValue<PageID, PageValue>>
+    _ task: inout OperationTask<InfiniteQueryOperationValue<PageID, PageValue>>
   ) {
     switch self.request(in: task.context) {
     case .allPages:
@@ -175,8 +175,8 @@ extension InfiniteQueryState: _InfiniteQueryStateProtocol {
   }
 
   public mutating func update(
-    with result: Result<InfiniteQueryValue<PageID, PageValue>, any Error>,
-    for task: OperationTask<InfiniteQueryValue<PageID, PageValue>>
+    with result: Result<InfiniteQueryOperationValue<PageID, PageValue>, any Error>,
+    for task: OperationTask<InfiniteQueryOperationValue<PageID, PageValue>>
   ) {
     switch result {
     case .success(let value):
@@ -213,7 +213,7 @@ extension InfiniteQueryState: _InfiniteQueryStateProtocol {
   }
 
   public mutating func finishFetchTask(
-    _ task: OperationTask<InfiniteQueryValue<PageID, PageValue>>
+    _ task: OperationTask<InfiniteQueryOperationValue<PageID, PageValue>>
   ) {
     self.allPagesActiveTasks.remove(id: task.id)
     self.initialPageActiveTasks.remove(id: task.id)

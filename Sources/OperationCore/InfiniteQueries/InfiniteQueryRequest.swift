@@ -77,7 +77,10 @@ public enum InfiniteQueryPagingRequest<PageID: Hashable & Sendable>: Hashable, S
 /// The data type returned from an ``InfiniteQueryRequest``.
 ///
 /// You do not construct this type, ``InfiniteQueryRequest`` constructs it for you.
-public struct InfiniteQueryValue<PageID: Hashable & Sendable, PageValue: Sendable>: Sendable {
+public struct InfiniteQueryOperationValue<
+  PageID: Hashable & Sendable,
+  PageValue: Sendable
+>: Sendable {
   /// The value returned from fetching an ``InfiniteQueryRequest``.
   public let fetchValue: FetchValue
 
@@ -85,7 +88,7 @@ public struct InfiniteQueryValue<PageID: Hashable & Sendable, PageValue: Sendabl
   let previousPageId: PageID?
 }
 
-extension InfiniteQueryValue {
+extension InfiniteQueryOperationValue {
   /// A value returned from fetching an ``InfiniteQueryRequest``.
   public enum FetchValue: Sendable {
     /// All pages were refetched.
@@ -102,7 +105,7 @@ extension InfiniteQueryValue {
   }
 }
 
-extension InfiniteQueryValue.FetchValue {
+extension InfiniteQueryOperationValue.FetchValue {
   /// Details regarding the next fetched page.
   public struct NextPage: Sendable {
     /// The page that was fetched.
@@ -122,17 +125,18 @@ extension InfiniteQueryValue.FetchValue {
   }
 }
 
-extension InfiniteQueryValue: Equatable where PageValue: Equatable {}
-extension InfiniteQueryValue: Hashable where PageValue: Hashable {}
+extension InfiniteQueryOperationValue: Equatable where PageValue: Equatable {}
+extension InfiniteQueryOperationValue: Hashable where PageValue: Hashable {}
 
-extension InfiniteQueryValue.FetchValue: Equatable where PageValue: Equatable {}
-extension InfiniteQueryValue.FetchValue: Hashable where PageValue: Hashable {}
+extension InfiniteQueryOperationValue.FetchValue: Equatable where PageValue: Equatable {}
+extension InfiniteQueryOperationValue.FetchValue: Hashable where PageValue: Hashable {}
 
-extension InfiniteQueryValue.FetchValue.NextPage: Hashable where PageValue: Hashable {}
-extension InfiniteQueryValue.FetchValue.NextPage: Equatable where PageValue: Equatable {}
+extension InfiniteQueryOperationValue.FetchValue.NextPage: Hashable where PageValue: Hashable {}
+extension InfiniteQueryOperationValue.FetchValue.NextPage: Equatable where PageValue: Equatable {}
 
-extension InfiniteQueryValue.FetchValue.PreviousPage: Hashable where PageValue: Hashable {}
-extension InfiniteQueryValue.FetchValue.PreviousPage: Equatable where PageValue: Equatable {}
+extension InfiniteQueryOperationValue.FetchValue.PreviousPage: Hashable where PageValue: Hashable {}
+extension InfiniteQueryOperationValue.FetchValue.PreviousPage: Equatable
+where PageValue: Equatable {}
 
 // MARK: - InfiniteQueryRequest
 
@@ -223,7 +227,7 @@ extension InfiniteQueryValue.FetchValue.PreviousPage: Equatable where PageValue:
 ///  ``InfiniteQueryState/hasNextPage`` or ``InfiniteQueryState/hasPreviousPage``.
 public protocol InfiniteQueryRequest<PageID, PageValue>: OperationRequest, Sendable
 where
-  Value == InfiniteQueryValue<PageID, PageValue>,
+  Value == InfiniteQueryOperationValue<PageID, PageValue>,
   State == InfiniteQueryState<PageID, PageValue>
 {
   /// The data type of each page that you're fetching.
@@ -278,6 +282,7 @@ where
   ///   - continuation: A ``OperationContinuation`` allowing you to yield multiple values from your query. See <doc:MultistageQueries> for more.
   /// - Returns: The page value for the page.
   func fetchPage(
+    isolation: isolated (any Actor)?,
     using paging: InfiniteQueryPaging<PageID, PageValue>,
     in context: OperationContext,
     with continuation: OperationContinuation<PageValue>
@@ -301,13 +306,30 @@ extension InfiniteQueryRequest {
     let paging = context.paging(for: self)
     switch paging.request {
     case .allPages:
-      return try await self.fetchAllPages(using: paging, in: context, with: continuation)
+      return try await self.fetchAllPages(
+        isolation: isolation,
+        using: paging,
+        in: context,
+        with: continuation
+      )
     case .initialPage:
-      return try await self.fetchInitialPage(using: paging, in: context, with: continuation)
+      return try await self.fetchInitialPage(
+        isolation: isolation,
+        using: paging,
+        in: context,
+        with: continuation
+      )
     case .nextPage(let id):
-      return try await self.fetchNextPage(with: id, using: paging, in: context, with: continuation)
+      return try await self.fetchNextPage(
+        isolation: isolation,
+        with: id,
+        using: paging,
+        in: context,
+        with: continuation
+      )
     case .previousPage(let id):
       return try await self.fetchPreviousPage(
+        isolation: isolation,
         with: id,
         using: paging,
         in: context,
@@ -317,10 +339,11 @@ extension InfiniteQueryRequest {
   }
 
   private func fetchAllPages(
+    isolation: isolated (any Actor)?,
     using paging: InfiniteQueryPaging<PageID, PageValue>,
     in context: OperationContext,
     with continuation: OperationContinuation<Value>
-  ) async throws -> InfiniteQueryValue<PageID, PageValue> {
+  ) async throws -> InfiniteQueryOperationValue<PageID, PageValue> {
     var newPages = context.infiniteValues?.currentPagesTracker?.pages(for: self) ?? []
     for _ in 0..<paging.pages.count {
       let pageId =
@@ -337,6 +360,7 @@ extension InfiniteQueryRequest {
         return self.allPagesValue(pages: newPages, paging: paging, in: context)
       }
       let pageValue = try await self.fetchPageWithPublishedEvents(
+        isolation: isolation,
         using: InfiniteQueryPaging(pageId: pageId, pages: newPages, request: .allPages),
         in: context,
         with: OperationContinuation { [newPages] result, yieldedContext in
@@ -361,7 +385,7 @@ extension InfiniteQueryRequest {
     paging: InfiniteQueryPaging<PageID, PageValue>,
     in context: OperationContext
   ) -> Value {
-    InfiniteQueryValue(
+    InfiniteQueryOperationValue(
       fetchValue: .allPages(pages),
       nextPageId: pages.last.flatMap { self.pageId(after: $0, using: paging, in: context) },
       previousPageId: pages.first.flatMap { self.pageId(before: $0, using: paging, in: context) }
@@ -369,11 +393,13 @@ extension InfiniteQueryRequest {
   }
 
   private func fetchInitialPage(
+    isolation: isolated (any Actor)?,
     using paging: InfiniteQueryPaging<PageID, PageValue>,
     in context: OperationContext,
     with continuation: OperationContinuation<Value>
-  ) async throws -> InfiniteQueryValue<PageID, PageValue> {
+  ) async throws -> InfiniteQueryOperationValue<PageID, PageValue> {
     let pageValue = try await self.fetchPageWithPublishedEvents(
+      isolation: isolation,
       using: paging,
       in: context,
       with: OperationContinuation { result, yieldedContext in
@@ -394,7 +420,7 @@ extension InfiniteQueryRequest {
     in context: OperationContext
   ) -> Value {
     let page = InfiniteQueryPage(id: self.initialPageId, value: pageValue)
-    return InfiniteQueryValue(
+    return InfiniteQueryOperationValue(
       fetchValue: .initialPage(page),
       nextPageId: self.pageId(after: page, using: paging, in: context),
       previousPageId: self.pageId(before: page, using: paging, in: context)
@@ -402,12 +428,14 @@ extension InfiniteQueryRequest {
   }
 
   private func fetchNextPage(
+    isolation: isolated (any Actor)?,
     with pageId: PageID,
     using paging: InfiniteQueryPaging<PageID, PageValue>,
     in context: OperationContext,
     with continuation: OperationContinuation<Value>
-  ) async throws -> InfiniteQueryValue<PageID, PageValue> {
+  ) async throws -> InfiniteQueryOperationValue<PageID, PageValue> {
     let pageValue = try await self.fetchPageWithPublishedEvents(
+      isolation: isolation,
       using: InfiniteQueryPaging(pageId: pageId, pages: paging.pages, request: paging.request),
       in: context,
       with: OperationContinuation { result, yieldedContext in
@@ -434,9 +462,12 @@ extension InfiniteQueryRequest {
     in context: OperationContext
   ) -> Value {
     let page = InfiniteQueryPage(id: pageId, value: pageValue)
-    return InfiniteQueryValue(
+    return InfiniteQueryOperationValue(
       fetchValue: .nextPage(
-        InfiniteQueryValue.FetchValue.NextPage(page: page, lastPageId: paging.pages.last!.id)
+        InfiniteQueryOperationValue.FetchValue.NextPage(
+          page: page,
+          lastPageId: paging.pages.last!.id
+        )
       ),
       nextPageId: self.pageId(after: page, using: paging, in: context),
       previousPageId: paging.pages.first.flatMap {
@@ -446,12 +477,14 @@ extension InfiniteQueryRequest {
   }
 
   private func fetchPreviousPage(
+    isolation: isolated (any Actor)?,
     with pageId: PageID,
     using paging: InfiniteQueryPaging<PageID, PageValue>,
     in context: OperationContext,
     with continuation: OperationContinuation<Value>
-  ) async throws -> InfiniteQueryValue<PageID, PageValue> {
+  ) async throws -> InfiniteQueryOperationValue<PageID, PageValue> {
     let pageValue = try await self.fetchPageWithPublishedEvents(
+      isolation: isolation,
       using: InfiniteQueryPaging(pageId: pageId, pages: paging.pages, request: paging.request),
       in: context,
       with: OperationContinuation { result, yieldedContext in
@@ -478,9 +511,12 @@ extension InfiniteQueryRequest {
     in context: OperationContext
   ) -> Value {
     let page = InfiniteQueryPage(id: pageId, value: pageValue)
-    return InfiniteQueryValue(
+    return InfiniteQueryOperationValue(
       fetchValue: .previousPage(
-        InfiniteQueryValue.FetchValue.PreviousPage(page: page, firstPageId: paging.pages.first!.id)
+        InfiniteQueryOperationValue.FetchValue.PreviousPage(
+          page: page,
+          firstPageId: paging.pages.first!.id
+        )
       ),
       nextPageId: paging.pages.last.flatMap { self.pageId(after: $0, using: paging, in: context) },
       previousPageId: self.pageId(before: page, using: paging, in: context)
@@ -488,6 +524,7 @@ extension InfiniteQueryRequest {
   }
 
   private func fetchPageWithPublishedEvents(
+    isolation: isolated (any Actor)?,
     using paging: InfiniteQueryPaging<PageID, PageValue>,
     in context: OperationContext,
     with continuation: OperationContinuation<PageValue>
@@ -506,8 +543,8 @@ extension InfiniteQueryRequest {
         }
       continuation.yield(with: result)
     }
-    let result = await Result {
-      try await self.fetchPage(using: paging, in: context, with: continuation)
+    let result = await Result { @Sendable in
+      try await self.fetchPage(isolation: isolation, using: paging, in: context, with: continuation)
     }
 
     context.infiniteValues?.requestSubscriptions

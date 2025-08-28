@@ -88,12 +88,13 @@ private final actor DeduplicationQuery: QueryRequest, Identifiable {
   }
 
   func fetch(
+    isolation: isolated (any Actor)?,
     in context: OperationContext,
     with continuation: OperationContinuation<String>
   ) async throws -> String {
     // NB: Give enough time for deduplication.
     try await TaskSleepDelayer.taskSleep.delay(for: 0.1)
-    self.fetchCount += 1
+    await isolate(self) { @Sendable in $0.fetchCount += 1 }
     return "blob"
   }
 }
@@ -124,13 +125,14 @@ private final actor DeduplicationInfiniteQuery: InfiniteQueryRequest, Identifiab
   }
 
   func fetchPage(
+    isolation: isolated (any Actor)?,
     using paging: InfiniteQueryPaging<Int, String>,
     in context: OperationContext,
     with continuation: OperationContinuation<String>
   ) async throws -> String {
     // NB: Give enough time for deduplication.
     try await TaskSleepDelayer.taskSleep.delay(for: 0.1)
-    self.fetchCount += 1
+    await isolate(self) { @Sendable in $0.fetchCount += 1 }
     return "blob"
   }
 }

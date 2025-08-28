@@ -59,6 +59,7 @@ private struct UserFriendsQuery: InfiniteQueryRequest {
   }
 
   func fetchPage(
+    isolation: isolated (any Actor)?,
     using paging: InfiniteQueryPaging<Int, [User]>,
     in context: OperationContext,
     with continuation: OperationContinuation<[User]>
@@ -73,6 +74,7 @@ private struct SendFriendRequestMutation: MutationRequest, Hashable {
   }
 
   func mutate(
+    isolation: isolated (any Actor)?,
     with arguments: Arguments,
     in context: OperationContext,
     with continuation: OperationContinuation<Void>

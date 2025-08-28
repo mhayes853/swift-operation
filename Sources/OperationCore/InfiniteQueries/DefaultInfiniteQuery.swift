@@ -73,10 +73,16 @@ extension DefaultInfiniteQuery: InfiniteQueryRequest {
   }
 
   public func fetchPage(
+    isolation: isolated (any Actor)?,
     using paging: InfiniteQueryPaging<PageID, PageValue>,
     in context: OperationContext,
     with continuation: OperationContinuation<PageValue>
   ) async throws -> PageValue {
-    try await self.query.fetchPage(using: paging, in: context, with: continuation)
+    try await self.query.fetchPage(
+      isolation: isolation,
+      using: paging,
+      in: context,
+      with: continuation
+    )
   }
 }

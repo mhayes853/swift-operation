@@ -95,7 +95,7 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
   }
 
   private func allPages(
-    from value: InfiniteQueryValue<State.PageID, State.PageValue>
+    from value: InfiniteQueryOperationValue<State.PageID, State.PageValue>
   ) -> InfiniteQueryPages<State.PageID, State.PageValue> {
     switch value.fetchValue {
     case .allPages(let pages): pages
@@ -169,7 +169,7 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
   }
 
   private func nextPage(
-    from value: InfiniteQueryValue<State.PageID, State.PageValue>
+    from value: InfiniteQueryOperationValue<State.PageID, State.PageValue>
   ) -> InfiniteQueryPage<State.PageID, State.PageValue>? {
     switch value.fetchValue {
     case .nextPage(let next): next.page
@@ -247,7 +247,7 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
   }
 
   private func previousPage(
-    from value: InfiniteQueryValue<State.PageID, State.PageValue>
+    from value: InfiniteQueryOperationValue<State.PageID, State.PageValue>
   ) -> InfiniteQueryPage<State.PageID, State.PageValue>? {
     switch value.fetchValue {
     case .previousPage(let previous): previous.page
@@ -277,7 +277,7 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
   private func fetch(
     using context: OperationContext,
     handler: InfiniteQueryEventHandler<State.PageID, State.PageValue>
-  ) async throws -> InfiniteQueryValue<State.PageID, State.PageValue> {
+  ) async throws -> InfiniteQueryOperationValue<State.PageID, State.PageValue> {
     let subscription = context.infiniteValues?
       .addRequestSubscriber(from: handler, isTemporary: true)
     defer { subscription?.cancel() }

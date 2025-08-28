@@ -164,6 +164,7 @@ where Self.ReturnValue == Value {
   ///   fetching data. See <doc:MultistageQueries> for more.
   /// - Returns: The fetched value from your query.
   func fetch(
+    isolation: isolated (any Actor)?,
     in context: OperationContext,
     with continuation: OperationContinuation<ReturnValue>
   ) async throws -> ReturnValue
@@ -177,6 +178,6 @@ extension QueryRequest {
     in context: OperationContext,
     with continuation: OperationContinuation<Value>
   ) async throws -> Value {
-    try await self.fetch(in: context, with: continuation)
+    try await self.fetch(isolation: isolation, in: context, with: continuation)
   }
 }
