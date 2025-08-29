@@ -16,8 +16,8 @@ struct OperationTaskTests {
   func runsDependentTasks() async throws {
     let runCount = RecursiveLock(0)
 
-    let task1 = OperationTask<Int>(context: OperationContext()) { _, _ in 40 }
-    let task2 = OperationTask<Int>(context: OperationContext()) { _, _ in
+    let task1 = OperationTask<Int, any Error>(context: OperationContext()) { _, _ in 40 }
+    let task2 = OperationTask<Int, any Error>(context: OperationContext()) { _, _ in
       runCount.withLock { $0 += 1 }
       return 32
     }
@@ -30,8 +30,10 @@ struct OperationTaskTests {
   func ignoresErrorsFromDependentTasks() async throws {
     struct SomeError: Error {}
 
-    let task1 = OperationTask<Int>(context: OperationContext()) { _, _ in 40 }
-    let task2 = OperationTask<Int>(context: OperationContext()) { _, _ in throw SomeError() }
+    let task1 = OperationTask<Int, any Error>(context: OperationContext()) { _, _ in 40 }
+    let task2 = OperationTask<Int, any Error>(context: OperationContext()) { _, _ in
+      throw SomeError()
+    }
     task1.schedule(after: task2)
     await #expect(throws: Never.self) {
       _ = try await task1.runIfNeeded()
@@ -40,13 +42,13 @@ struct OperationTaskTests {
 
   @Test("Task Has Not Been Started By Default")
   func taskHasNotBeenStartedByDefault() async throws {
-    let task = OperationTask<Int>(context: OperationContext()) { _, _ in 40 }
+    let task = OperationTask<Int, any Error>(context: OperationContext()) { _, _ in 40 }
     expectNoDifference(task.hasStarted, false)
   }
 
   @Test("Task Has Been Started When Run Called")
   func taskHasBeenStartedWhenRunCalled() async throws {
-    let task = OperationTask<Int>(context: OperationContext()) { _, _ in 40 }
+    let task = OperationTask<Int, any Error>(context: OperationContext()) { _, _ in 40 }
     _ = try await task.runIfNeeded()
     expectNoDifference(task.hasStarted, true)
   }
@@ -56,7 +58,7 @@ struct OperationTaskTests {
     let (startStream, startContinuation) = AsyncStream<Void>.makeStream()
     var startIter = startStream.makeAsyncIterator()
 
-    let task = OperationTask<Int>(context: OperationContext()) { _, _ in
+    let task = OperationTask<Int, any Error>(context: OperationContext()) { _, _ in
       startContinuation.yield()
       try await Task.never()
       return 40
@@ -68,7 +70,7 @@ struct OperationTaskTests {
 
   @Test("Cancel Query Task While Running, Throws Cancellation Error")
   func cancelOperationTaskThrowsCancellationError() async throws {
-    let task = OperationTask<Void>(context: OperationContext()) { _, _ in
+    let task = OperationTask<Void, any Error>(context: OperationContext()) { _, _ in
       withUnsafeCurrentTask { $0?.cancel() }
       try await Task.never()
     }
@@ -86,7 +88,9 @@ struct OperationTaskTests {
 
   @Test("Cancel Query Task From Task, Throws Cancellation Error")
   func cancelOperationTaskFromTaskThrowsCancellationError() async throws {
-    let task = OperationTask<Void>(context: OperationContext()) { _, _ in try await Task.never() }
+    let task = OperationTask<Void, any Error>(context: OperationContext()) { _, _ in
+      try await Task.never()
+    }
     let base = Task {
       do {
         try await task.runIfNeeded()
@@ -102,7 +106,9 @@ struct OperationTaskTests {
 
   @Test("Cancel Query Task Before Running, Throws Cancellation Error Immediately")
   func cancelOperationTaskBeforeRunningThrowsCancellationErrorImmediately() async throws {
-    let task = OperationTask<Void>(context: OperationContext()) { _, _ in try await Task.never() }
+    let task = OperationTask<Void, any Error>(context: OperationContext()) { _, _ in
+      try await Task.never()
+    }
     task.cancel()
     await #expect(throws: CancellationError.self) {
       try await task.runIfNeeded()
@@ -111,20 +117,26 @@ struct OperationTaskTests {
 
   @Test("Is Cancelled Is False By Default")
   func isCancelledIsFalseByDefault() {
-    let task = OperationTask<Void>(context: OperationContext()) { _, _ in try await Task.never() }
+    let task = OperationTask<Void, any Error>(context: OperationContext()) { _, _ in
+      try await Task.never()
+    }
     expectNoDifference(task.isCancelled, false)
   }
 
   @Test("Cancel, Is Cancelled")
   func cancelIsCancelled() {
-    let task = OperationTask<Void>(context: OperationContext()) { _, _ in try await Task.never() }
+    let task = OperationTask<Void, any Error>(context: OperationContext()) { _, _ in
+      try await Task.never()
+    }
     task.cancel()
     expectNoDifference(task.isCancelled, true)
   }
 
   @Test("Cancel From Regular Task, Is Cancelled")
   func cancelFromRegularTaskIsCancelled() async throws {
-    let task = OperationTask<Void>(context: OperationContext()) { _, _ in try await Task.never() }
+    let task = OperationTask<Void, any Error>(context: OperationContext()) { _, _ in
+      try await Task.never()
+    }
     let base = Task { try await task.runIfNeeded() }
     base.cancel()
     await #expect(throws: CancellationError.self) {
@@ -135,18 +147,35 @@ struct OperationTaskTests {
 
   @Test("Cancel From Regular Task When Not Respecting Cancellation Error, Is Cancelled")
   func cancelFromRegularTaskWhenNotRespectingCancellationError() async throws {
-    let task = OperationTask<Void>(context: OperationContext()) { _, _ in try? await Task.never() }
-    let base = Task { try await task.runIfNeeded() }
-    base.cancel()
-    await #expect(throws: CancellationError.self) {
-      try await base.value
+    let task = OperationTask(context: OperationContext()) { _, _ in
+      try? await Task.never()
     }
+    let base = Task { await task.runIfNeeded() }
+    base.cancel()
+    await base.value
     expectNoDifference(task.isCancelled, true)
+  }
+
+  @Test("Finished Result Is Success When Non-Throwing Task Is Cancelled")
+  func finishedResultIsSuccessWhenNonThrowingTaskIsCancelled() async throws {
+    let task = OperationTask(context: OperationContext()) { _, _ in 10 }
+    let base = Task { await task.runIfNeeded() }
+    base.cancel()
+    let value = await base.value
+    expectNoDifference(task.finishedResult, .success(value))
+  }
+
+  @Test("Pre-Cancel Non-Cancellable Task, Finishes Successfully")
+  func preCancelNonCancellableTaskFinishesSuccessfully() async throws {
+    let task = OperationTask(context: OperationContext()) { _, _ in 10 }
+    task.cancel()
+    let value = await task.runIfNeeded()
+    expectNoDifference(value, 10)
   }
 
   @Test("Cannot Be Cancelled After Finishing")
   func cannotBeCancelledAfterFinishing() async throws {
-    let task = OperationTask<Int>(context: OperationContext()) { _, _ in 42 }
+    let task = OperationTask<Int, any Error>(context: OperationContext()) { _, _ in 42 }
     _ = try await task.runIfNeeded()
     task.cancel()
     expectNoDifference(task.isCancelled, false)
@@ -154,7 +183,7 @@ struct OperationTaskTests {
 
   @Test("Map Task Value")
   func mapTaskValue() async throws {
-    let task = OperationTask<Int>(context: OperationContext()) { _, _ in 42 }
+    let task = OperationTask<Int, any Error>(context: OperationContext()) { _, _ in 42 }
     let task2 = task.map { $0 * 2 }
     _ = try await task.runIfNeeded()
     let value = try await task2.runIfNeeded()
@@ -163,7 +192,7 @@ struct OperationTaskTests {
 
   @Test("Map Task Value With Different Types")
   func mapTaskValueWithDifferentTypes() async throws {
-    let task = OperationTask<Int>(context: OperationContext()) { _, _ in 42 }
+    let task = OperationTask<Int, any Error>(context: OperationContext()) { _, _ in 42 }
     let task2 = task.map { String($0) }
     _ = try await task.runIfNeeded()
     let value = try await task2.runIfNeeded()
@@ -171,17 +200,17 @@ struct OperationTaskTests {
   }
 
   @Test("OperationTask Is Not Finished By Default")
-  func OperationTaskIsNotFinishedByDefault() async throws {
-    let task = OperationTask<Int>(context: OperationContext()) { _, _ in 42 }
+  func operationTaskIsNotFinishedByDefault() async throws {
+    let task = OperationTask<Int, any Error>(context: OperationContext()) { _, _ in 42 }
     expectNoDifference(task.isFinished, false)
   }
 
   @Test("OperationTask Is Not Finished When Loading")
-  func OperationTaskIsNotFinishedWhenLoading() async throws {
+  func operationTaskIsNotFinishedWhenLoading() async throws {
     let (startStream, startContinuation) = AsyncStream<Void>.makeStream()
     var startIter = startStream.makeAsyncIterator()
 
-    let task = OperationTask<Int>(context: OperationContext()) { _, _ in
+    let task = OperationTask<Int, any Error>(context: OperationContext()) { _, _ in
       startContinuation.yield()
       return try await Task.never()
     }
@@ -191,64 +220,54 @@ struct OperationTaskTests {
   }
 
   @Test("OperationTask Is Finished After Running")
-  func OperationTaskIsFinishedAfterRunning() async throws {
-    let task = OperationTask<Int>(context: OperationContext()) { _, _ in 42 }
+  func operationTaskIsFinishedAfterRunning() async throws {
+    let task = OperationTask<Int, any Error>(context: OperationContext()) { _, _ in 42 }
     _ = try await task.runIfNeeded()
     expectNoDifference(task.isFinished, true)
   }
 
-  @Test("OperationTask Is Finished When Cancelled")
-  func OperationTaskIsFinishedWhenCancelled() async throws {
-    let task = OperationTask<Int>(context: OperationContext()) { _, _ in 42 }
+  @Test("OperationTask Is Not Finished When Cancelled")
+  func operationTaskIsNotFinishedWhenCancelled() async throws {
+    let task = OperationTask<Int, any Error>(context: OperationContext()) { _, _ in 42 }
     task.cancel()
-    expectNoDifference(task.isFinished, true)
+    expectNoDifference(task.isFinished, false)
   }
 
   @Test("OperationTask No Finished Result Before Running")
-  func OperationTaskNoFinishedResultBeforeRunning() async throws {
-    let task = OperationTask<Int>(context: OperationContext()) { _, _ in 42 }
+  func operationTaskNoFinishedResultBeforeRunning() async throws {
+    let task = OperationTask<Int, any Error>(context: OperationContext()) { _, _ in 42 }
     expectNoDifference(try task.finishedResult?.get(), nil)
   }
 
   @Test("OperationTask Has Finished Result After Running")
-  func OperationTaskHasFinishedResultAfterRunning() async throws {
-    let task = OperationTask<Int>(context: OperationContext()) { _, _ in 42 }
+  func operationTaskHasFinishedResultAfterRunning() async throws {
+    let task = OperationTask<Int, any Error>(context: OperationContext()) { _, _ in 42 }
     _ = try await task.runIfNeeded()
     expectNoDifference(try task.finishedResult?.get(), 42)
   }
 
-  @Test("OperationTask Has Error Finished Result After Running When Map Throws")
-  func OperationTaskHasErrorFinishedResultAfterRunningWhenMapThrows() async throws {
-    struct SomeError: Error {}
-
-    let task = OperationTask<Int>(context: OperationContext()) { _, _ in 42 }
-      .map { _ in throw SomeError() }
-    _ = try? await task.runIfNeeded()
-    #expect(throws: SomeError.self) { try task.finishedResult?.get() }
-  }
-
   @Test("OperationTask Is Not Running By Default")
-  func OperationTaskIsNotRunningByDefault() {
+  func operationTaskIsNotRunningByDefault() {
     let task = OperationTask(context: OperationContext()) { _, _ in 42 }
     expectNoDifference(task.isRunning, false)
   }
 
   @Test("OperationTask Is Not Running When Cancelled")
-  func OperationTaskIsNotRunningWhenCancelled() {
+  func operationTaskIsNotRunningWhenCancelled() {
     let task = OperationTask(context: OperationContext()) { _, _ in 42 }
     task.cancel()
     expectNoDifference(task.isRunning, false)
   }
 
   @Test("OperationTask Is Not Running When Finished")
-  func OperationTaskIsNotRunningByDefault() async throws {
+  func operationTaskIsNotRunningWhenFinished() async throws {
     let task = OperationTask(context: OperationContext()) { _, _ in 42 }
-    _ = try await task.runIfNeeded()
+    _ = await task.runIfNeeded()
     expectNoDifference(task.isRunning, false)
   }
 
   @Test("OperationTask Is Running When Loading")
-  func OperationTaskIsRunningWhenLoading() async {
+  func operationTaskIsRunningWhenLoading() async {
     let (startStream, startContinuation) = AsyncStream<Void>.makeStream()
     var startIter = startStream.makeAsyncIterator()
 
@@ -267,8 +286,43 @@ struct OperationTaskTests {
       expectNoDifference(context.operationRunningTaskIdentifier, id)
     }
     expectNoDifference(task.context.operationRunningTaskIdentifier, nil)
-    try await task.runIfNeeded()
+    await task.runIfNeeded()
     expectNoDifference(task.context.operationRunningTaskIdentifier, nil)
+  }
+
+  @Test("Maps Task Error")
+  func mapsTaskError() async throws {
+    struct SomeError: Equatable, Error {}
+    struct SomeOtherError: Error {
+      let id: Int
+    }
+
+    let task = OperationTask<Void, any Error>(context: OperationContext()) { _, _ in
+      throw SomeError()
+    }
+    .mapError { $0 is SomeError ? SomeOtherError(id: 0) : SomeOtherError(id: 1) }
+
+    await #expect(throws: SomeOtherError.self) {
+      try await task.runIfNeeded()
+    }
+  }
+
+  @Test("Maps Task Error When Cancelled")
+  func mapsTaskErrorWhenCancelled() async throws {
+    struct SomeError: Equatable, Error {
+      let id: Int
+    }
+
+    let task = OperationTask(context: OperationContext()) { _, _ in
+      try await Task.never()
+    }
+    .mapError { $0 is CancellationError ? SomeError(id: 0) : SomeError(id: 1) }
+
+    task.cancel()
+
+    await #expect(throws: SomeError(id: 0)) {
+      try await task.runIfNeeded()
+    }
   }
 
   #if compiler(>=6.2)
@@ -289,7 +343,7 @@ struct OperationTaskTests {
       }
 
       let executor = ImmediateExecutor()
-      var task = OperationTask<Bool>(context: OperationContext()) { _, _ in
+      var task = OperationTask<Bool, any Error>(context: OperationContext()) { _, _ in
         Task.currentExecutor === executor
       }
       task.configuration.executorPreference = executor
@@ -303,10 +357,10 @@ struct OperationTaskTests {
     func reportsIssueWhenCircularScheduling2Tasks() async throws {
       var context = OperationContext()
       context.operationTaskConfiguration = OperationTaskConfiguration(name: "Test task 1")
-      let task1 = OperationTask<Int>(context: context) { _, _ in 40 }
+      let task1 = OperationTask<Int, any Error>(context: context) { _, _ in 40 }
 
       context.operationTaskConfiguration = OperationTaskConfiguration(name: "Test task 2")
-      let task2 = OperationTask<Int>(context: context) { _, _ in 32 }
+      let task2 = OperationTask<Int, any Error>(context: context) { _, _ in 32 }
       task1.schedule(after: task2)
       withKnownIssue {
         task2.schedule(after: task1)
@@ -325,16 +379,16 @@ struct OperationTaskTests {
     func reportsIssueWhenCircularScheduling3Tasks() async throws {
       var context = OperationContext()
       context.operationTaskConfiguration = OperationTaskConfiguration(name: "Test task 1")
-      let task1 = OperationTask<Int>(context: context) { _, _ in 40 }
+      let task1 = OperationTask<Int, any Error>(context: context) { _, _ in 40 }
 
       context.operationTaskConfiguration = OperationTaskConfiguration(name: "Test task 2")
-      let task2 = OperationTask<Int>(context: context) { _, _ in 32 }
+      let task2 = OperationTask<Int, any Error>(context: context) { _, _ in 32 }
 
       context.operationTaskConfiguration = OperationTaskConfiguration(name: "Test task 3")
-      let task3 = OperationTask<Int>(context: context) { _, _ in 24 }
+      let task3 = OperationTask<Int, any Error>(context: context) { _, _ in 24 }
 
       context.operationTaskConfiguration = OperationTaskConfiguration(name: "Test task 4")
-      let task4 = OperationTask<Int>(context: context) { _, _ in 16 }
+      let task4 = OperationTask<Int, any Error>(context: context) { _, _ in 16 }
       task1.schedule(after: task2)
       task2.schedule(after: task3)
       task3.schedule(after: task4)

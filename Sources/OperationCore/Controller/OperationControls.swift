@@ -132,7 +132,7 @@ extension OperationControls {
   /// - Returns: A ``OperationTask`` to refetch the query, or nil if refetching is unavailable.
   public func yieldRefetchTask(
     with context: OperationContext? = nil
-  ) -> OperationTask<State.OperationValue>? {
+  ) -> OperationTask<State.OperationValue, any Error>? {
     guard self.canYieldRefetch else { return nil }
     return self.store?.runTask(using: context)
   }

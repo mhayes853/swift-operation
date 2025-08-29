@@ -43,8 +43,8 @@ private protocol _OperationTask: Sendable, Identifiable {
 /// `Identifiable`. This identifier is also used to implement `Hashable` and `Equatable` just like
 /// the way it works for traditional Swift `Task` values. Copied tasks, including those from
 /// helpers such as `map` will retain the same id, and therefore are equal.
-public struct OperationTask<Value: Sendable>: _OperationTask {
-  private typealias State = (task: TaskState?, dependencies: [any _OperationTask])
+public struct OperationTask<Value: Sendable, Failure: Error>: _OperationTask {
+  private typealias State = (task: TaskState, dependencies: [any _OperationTask])
 
   public let id: OperationTaskIdentifier
 
@@ -56,7 +56,8 @@ public struct OperationTask<Value: Sendable>: _OperationTask {
 
   private let work:
     @Sendable (OperationTaskIdentifier, OperationContext) async throws -> any Sendable
-  private let transforms: @Sendable (any Sendable) throws -> Value
+  private let transforms: @Sendable (any Sendable) -> Value
+  private let errorTransforms: @Sendable (any Error) -> Failure
   private let box: LockedBox<State>
 }
 
@@ -68,13 +69,37 @@ extension OperationTask {
   ///   - work: The task's actual work.
   public init(
     context: OperationContext,
-    work: @escaping @Sendable (OperationTaskIdentifier, OperationContext) async throws -> Value
-  ) {
+    work: @escaping @Sendable (
+      OperationTaskIdentifier,
+      OperationContext
+    ) async throws(Failure) -> Value
+  ) where Failure == any Error {
     self.id = .next()
     self.context = context
     self.work = work
     self.transforms = { $0 as! Value }
-    self.box = LockedBox(value: (nil, []))
+    self.errorTransforms = { $0 }
+    self.box = LockedBox(value: (TaskState(), []))
+  }
+
+  /// Creates a task.
+  ///
+  /// - Parameters:
+  ///   - context: The ``OperationContext`` for the task.
+  ///   - work: The task's actual work.
+  public init(
+    context: OperationContext,
+    work: @escaping @Sendable (
+      OperationTaskIdentifier,
+      OperationContext
+    ) async -> Value
+  ) where Failure == Never {
+    self.id = .next()
+    self.context = context
+    self.work = work
+    self.transforms = { $0 as! Value }
+    self.errorTransforms = { _ in fatalError("Unreachable") }
+    self.box = LockedBox(value: (TaskState(), []))
   }
 }
 
@@ -115,7 +140,7 @@ extension OperationTask {
   /// > Note: Calling this method after calling ``runIfNeeded()`` has no effect.
   ///
   /// - Parameter task: The task to schedule this task's execution after.
-  public func schedule<V: Sendable>(after task: OperationTask<V>) {
+  public func schedule<V: Sendable, E: Error>(after task: OperationTask<V, E>) {
     self.withDependencies {
       $0.removeAll { $0.id == task.id }
       $0.append(task)
@@ -127,7 +152,7 @@ extension OperationTask {
   /// > Note: Calling this method after calling ``runIfNeeded()`` has no effect.
   ///
   /// - Parameter tasks: The sequence of tasks to schedule this task's execution after.
-  public func schedule<V: Sendable>(after tasks: some Sequence<OperationTask<V>>) {
+  public func schedule<V: Sendable, E: Error>(after tasks: some Sequence<OperationTask<V, E>>) {
     self.withDependencies {
       let ids = Set(tasks.map(\.id))
       $0.removeAll { ids.contains($0.info.id) }
@@ -173,7 +198,12 @@ extension OperationTask {
   /// The difference between this property, and ``isRunning`` is that this property will remain
   /// true after a task has finished.
   public var hasStarted: Bool {
-    self.box.inner.withLock { $0.task != nil }
+    self.box.inner.withLock {
+      switch $0.task.runState {
+      case .idle: false
+      default: true
+      }
+    }
   }
 
   /// Whether or not the task is actively running.
@@ -182,7 +212,7 @@ extension OperationTask {
   /// false after a task has finished.
   public var isRunning: Bool {
     self.box.inner.withLock {
-      switch $0.task {
+      switch $0.task.runState {
       case .running: true
       default: false
       }
@@ -203,13 +233,20 @@ extension OperationTask {
   /// > effect on the task's active work.
   ///
   /// - Returns: The return value of the active work.
-  public func runIfNeeded() async throws -> Value {
-    try await self.transforms(self._runIfNeeded())
+  public func runIfNeeded() async throws(Failure) -> Value {
+    do {
+      return self.transforms(try await self._runIfNeeded())
+    } catch {
+      throw self.errorTransforms(error)
+    }
   }
 
   fileprivate func _runIfNeeded() async throws -> any Sendable {
     switch try self.runTaskAction() {
-    case .awaitTask(let task):
+    case .awaitTask(let task, let shouldCancelImmediately):
+      if shouldCancelImmediately {
+        task.cancel()
+      }
       return try await withTaskCancellationHandler {
         try await task.value
       } onCancel: {
@@ -222,15 +259,15 @@ extension OperationTask {
 
   private func runTaskAction() throws -> RunAction {
     try self.box.inner.withLock { state in
-      switch state.task {
+      switch state.task.runState {
       case .running(let task):
-        return RunAction.awaitTask(task)
+        return RunAction.awaitTask(task, shouldCancelImmediately: state.task.isCancelled)
       case .finished(let result):
         return try .returnValue(result.get())
-      case .none:
+      case .idle:
         let task = self.newTask()
-        state.task = .running(task)
-        return .awaitTask(task)
+        state.task.runState = .running(task)
+        return .awaitTask(task, shouldCancelImmediately: state.task.isCancelled)
       }
     }
   }
@@ -249,17 +286,16 @@ extension OperationTask {
         group.addTask { _ = try? await dependency._runIfNeeded() }
       }
     }
-    let result = await Result {
-      let value = try await self.work(self.id, context) as any Sendable
-      try Task.checkCancellation()
-      return value
+    let result = await Result { try await self.work(self.id, context) as any Sendable }
+    self.box.inner.withLock {
+      $0.task.isCancelled = Task.isCancelled
+      $0.task.runState = .finished(result)
     }
-    self.box.inner.withLock { $0.task = .finished(result) }
     return try result.get()
   }
 
   private enum RunAction {
-    case awaitTask(Task<any Sendable, any Error>)
+    case awaitTask(Task<any Sendable, any Error>, shouldCancelImmediately: Bool)
     case returnValue(any Sendable)
   }
 }
@@ -269,12 +305,7 @@ extension OperationTask {
 extension OperationTask {
   /// Whether or not this task has been finished with a `CancellationError`.
   public var isCancelled: Bool {
-    self.box.inner.withLock {
-      switch $0.task {
-      case .finished(.failure(let error)): error is CancellationError
-      default: false
-      }
-    }
+    self.box.inner.withLock { $0.task.isCancelled }
   }
 
   /// Cancels this task.
@@ -291,12 +322,12 @@ extension OperationTask {
   /// effect.
   public func cancel() {
     self.box.inner.withLock {
-      switch $0.task {
+      switch $0.task.runState {
       case .running(let task): task.cancel()
       case .finished: return
       default: break
       }
-      $0.task = .finished(.failure(CancellationError()))
+      $0.task.isCancelled = true
     }
   }
 }
@@ -307,7 +338,7 @@ extension OperationTask {
   /// Whether or not this task has finished running.
   public var isFinished: Bool {
     self.box.inner.withLock {
-      switch $0.task {
+      switch $0.task.runState {
       case .finished: true
       default: false
       }
@@ -315,11 +346,11 @@ extension OperationTask {
   }
 
   /// The result of this task, if it has finished running.
-  public var finishedResult: Result<Value, any Error>? {
+  public var finishedResult: Result<Value, Failure>? {
     self.box.inner.withLock {
-      switch $0.task {
+      switch $0.task.runState {
       case .finished(let result):
-        result.flatMap { value in Result { try self.transforms(value) } }
+        result.map(self.transforms).mapError(self.errorTransforms)
       default:
         nil
       }
@@ -329,9 +360,15 @@ extension OperationTask {
 
 // MARK: - TaskState
 
-private enum TaskState {
-  case finished(Result<any Sendable, any Error>)
-  case running(Task<any Sendable, any Error>)
+private struct TaskState {
+  enum RunState {
+    case finished(Result<any Sendable, any Error>)
+    case running(Task<any Sendable, any Error>)
+    case idle
+  }
+
+  var isCancelled = false
+  var runState = RunState.idle
 }
 
 // MARK: - Map
@@ -348,13 +385,27 @@ extension OperationTask {
   /// - Parameter transform: A closure to transform the work's return value from this task.
   /// - Returns: A new `OperationTask` with the new work return value that has the same underlying reference an identifier as this task.
   public func map<T: Sendable>(
-    _ transform: @escaping @Sendable (Value) throws -> T
-  ) -> OperationTask<T> {
-    OperationTask<T>(
+    _ transform: @escaping @Sendable (Value) -> T
+  ) -> OperationTask<T, Failure> {
+    OperationTask<T, Failure>(
       id: self.id,
       context: self.context,
       work: self.work,
-      transforms: { try transform(self.transforms($0)) },
+      transforms: { transform(self.transforms($0)) },
+      errorTransforms: self.errorTransforms,
+      box: self.box
+    )
+  }
+
+  public func mapError<E: Error>(
+    _ transform: @escaping @Sendable (Failure) -> E
+  ) -> OperationTask<Value, E> {
+    OperationTask<Value, E>(
+      id: self.id,
+      context: self.context,
+      work: self.work,
+      transforms: { self.transforms($0) },
+      errorTransforms: { transform(self.errorTransforms($0)) },
       box: self.box
     )
   }

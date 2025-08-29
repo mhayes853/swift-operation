@@ -74,7 +74,7 @@ public protocol OperationState<StateValue, OperationValue>: Sendable {
   /// created by a ``OperationStore``. The store calls this method when a new task is created.
   ///
   /// - Parameter task: The ``OperationTask`` to schedule on this state.
-  mutating func scheduleFetchTask(_ task: inout OperationTask<OperationValue>)
+  mutating func scheduleFetchTask(_ task: inout OperationTask<OperationValue, any Error>)
 
   /// Resets this state using the provided ``OperationContext``.
   ///
@@ -115,7 +115,7 @@ public protocol OperationState<StateValue, OperationValue>: Sendable {
   ///   - task: The ``OperationTask`` that the update came from.
   mutating func update(
     with result: Result<OperationValue, any Error>,
-    for task: OperationTask<OperationValue>
+    for task: OperationTask<OperationValue, any Error>
   )
 
   /// Indicates to this state that a ``OperationTask`` is about to finish running.
@@ -128,7 +128,7 @@ public protocol OperationState<StateValue, OperationValue>: Sendable {
   /// your collection, and remove the task based on that index.
   ///
   /// - Parameter task: The ``OperationTask`` that is about to finish running.
-  mutating func finishFetchTask(_ task: OperationTask<OperationValue>)
+  mutating func finishFetchTask(_ task: OperationTask<OperationValue, any Error>)
 }
 
 // MARK: - _QueryStateResetEffect
@@ -152,7 +152,7 @@ extension _OperationStateResetEffect {
   /// Creates a reset effect that cancels the specified ``OperationTask`` instances.
   ///
   /// - Parameter tasksToCancel: The tasks to cancel.
-  public init(tasksToCancel: some Sequence<OperationTask<State.OperationValue>>) {
+  public init(tasksToCancel: some Sequence<OperationTask<State.OperationValue, any Error>>) {
     self.tasksCancellable = .combined(
       tasksToCancel.map { task in OperationSubscription { task.cancel() } }
     )

@@ -106,7 +106,7 @@ extension OperationStore where State: _MutationStateProtocol {
   public func mutateTask(
     with arguments: State.Arguments,
     using context: OperationContext? = nil
-  ) -> OperationTask<State.Value> {
+  ) -> OperationTask<State.Value, any Error> {
     self.runTask(using: self.taskConfiguration(with: arguments, using: context))
       .map(\.returnValue)
   }
@@ -150,7 +150,9 @@ extension OperationStore where State: _MutationStateProtocol, State.Arguments ==
   /// - Parameters:
   ///   - context: The ``OperationContext`` for the task.
   /// - Returns: A task to perform the mutation.
-  public func mutateTask(using context: OperationContext? = nil) -> OperationTask<State.Value> {
+  public func mutateTask(using context: OperationContext? = nil) -> OperationTask<
+    State.Value, any Error
+  > {
     self.mutateTask(with: (), using: context)
   }
 }
@@ -195,7 +197,7 @@ extension OperationStore where State: _MutationStateProtocol {
   /// - Returns: A task to retry the most recently used arguments on the mutation.
   public func retryLatestTask(
     using context: OperationContext? = nil
-  ) -> OperationTask<State.Value> {
+  ) -> OperationTask<State.Value, any Error> {
     self.runTask(using: self.retryTaskConfiguration(using: context)).map(\.returnValue)
   }
 

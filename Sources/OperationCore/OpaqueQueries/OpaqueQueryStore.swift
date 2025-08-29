@@ -218,7 +218,9 @@ extension OpaqueOperationStore {
   /// - Parameter context: The ``OperationContext`` for the task.
   /// - Returns: A task to run the operation.
   @discardableResult
-  public func runTask(using context: OperationContext? = nil) -> OperationTask<any Sendable> {
+  public func runTask(using context: OperationContext? = nil) -> OperationTask<
+    any Sendable, any Error
+  > {
     self._base.opaqueRunTask(using: context)
   }
 }
@@ -265,7 +267,7 @@ private protocol OpaqueableOperationStore: Sendable {
     handler: OpaqueOperationEventHandler
   ) async throws -> any Sendable
   func resetState(using context: OperationContext?)
-  func opaqueRunTask(using context: OperationContext?) -> OperationTask<any Sendable>
+  func opaqueRunTask(using context: OperationContext?) -> OperationTask<any Sendable, any Error>
   func opaqueSubscribe(with handler: OpaqueOperationEventHandler) -> OperationSubscription
 }
 
@@ -286,7 +288,7 @@ extension OperationStore: OpaqueableOperationStore {
     try await self.run(using: context, handler: handler.casted(to: State.self))
   }
 
-  func opaqueRunTask(using context: OperationContext?) -> OperationTask<any Sendable> {
+  func opaqueRunTask(using context: OperationContext?) -> OperationTask<any Sendable, any Error> {
     self.runTask(using: context).map { $0 }
   }
 

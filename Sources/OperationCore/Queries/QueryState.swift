@@ -7,7 +7,7 @@ public protocol _QueryStateProtocol<Value>: OperationState
 where OperationValue == Value, StatusValue == Value {
   associatedtype Value: Sendable
 
-  var activeTasks: IdentifiedArrayOf<OperationTask<Value>> { get }
+  var activeTasks: IdentifiedArrayOf<OperationTask<Value, any Error>> { get }
 }
 
 // MARK: - QueryState
@@ -38,7 +38,7 @@ public struct QueryState<Value: Sendable> {
   public private(set) var errorLastUpdatedAt: Date?
 
   /// The active ``OperationTask`` instances held by this state.
-  public private(set) var activeTasks = IdentifiedArrayOf<OperationTask<Value>>()
+  public private(set) var activeTasks = IdentifiedArrayOf<OperationTask<Value, any Error>>()
 
   /// Creates a query state.
   ///
@@ -62,7 +62,7 @@ extension QueryState: _QueryStateProtocol {
     !self.activeTasks.isEmpty
   }
 
-  public mutating func scheduleFetchTask(_ task: inout OperationTask<Value>) {
+  public mutating func scheduleFetchTask(_ task: inout OperationTask<Value, any Error>) {
     self.activeTasks.append(task)
   }
 
@@ -91,12 +91,12 @@ extension QueryState: _QueryStateProtocol {
 
   public mutating func update(
     with result: Result<Value, any Error>,
-    for task: OperationTask<Value>
+    for task: OperationTask<Value, any Error>
   ) {
     self.update(with: result.map { $0 as Value? }, using: task.context)
   }
 
-  public mutating func finishFetchTask(_ task: OperationTask<Value>) {
+  public mutating func finishFetchTask(_ task: OperationTask<Value, any Error>) {
     self.activeTasks.remove(id: task.id)
   }
 }
@@ -118,7 +118,7 @@ extension QueryState: DefaultableOperationState {
 // MARK: - DefaultOperationState
 
 extension DefaultOperationState: _QueryStateProtocol where Base: _QueryStateProtocol {
-  public var activeTasks: IdentifiedArrayOf<OperationTask<Base.Value>> {
+  public var activeTasks: IdentifiedArrayOf<OperationTask<Base.Value, any Error>> {
     self.base.activeTasks
   }
 }

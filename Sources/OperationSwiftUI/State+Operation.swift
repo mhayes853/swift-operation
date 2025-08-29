@@ -332,7 +332,7 @@
     /// - Returns: A task to fetch the query's data.
     public func runTask(
       using context: OperationContext? = nil
-    ) -> OperationTask<State.OperationValue> {
+    ) -> OperationTask<State.OperationValue, any Error> {
       self.store.runTask(using: context)
     }
   }
@@ -477,7 +477,7 @@
     /// - Returns: A task to refetch all pages.
     public func refetchAllPagesTask(
       using context: OperationContext? = nil
-    ) -> OperationTask<InfiniteQueryPages<State.PageID, State.PageValue>> {
+    ) -> OperationTask<InfiniteQueryPages<State.PageID, State.PageValue>, any Error> {
       self.store.refetchAllPagesTask(using: context)
     }
 
@@ -515,7 +515,7 @@
     /// - Returns: The fetched page.
     public func fetchNextPageTask(
       using context: OperationContext? = nil
-    ) -> OperationTask<InfiniteQueryPage<State.PageID, State.PageValue>?> {
+    ) -> OperationTask<InfiniteQueryPage<State.PageID, State.PageValue>?, any Error> {
       self.store.fetchNextPageTask(using: context)
     }
 
@@ -553,7 +553,7 @@
     /// - Returns: The fetched page.
     public func fetchPreviousPageTask(
       using context: OperationContext? = nil
-    ) -> OperationTask<InfiniteQueryPage<State.PageID, State.PageValue>?> {
+    ) -> OperationTask<InfiniteQueryPage<State.PageID, State.PageValue>?, any Error> {
       self.store.fetchPreviousPageTask(using: context)
     }
   }
@@ -671,7 +671,7 @@
     public func mutateTask(
       with arguments: State.Arguments,
       using context: OperationContext? = nil
-    ) -> OperationTask<State.Value> {
+    ) -> OperationTask<State.Value, any Error> {
       self.store.mutateTask(with: arguments, using: context)
     }
 
@@ -708,7 +708,7 @@
     /// - Returns: A task to retry the most recently used arguments on the mutation.
     public func retryLatestTask(
       using context: OperationContext? = nil
-    ) -> OperationTask<State.Value> {
+    ) -> OperationTask<State.Value, any Error> {
       self.store.retryLatestTask(using: context)
     }
   }
@@ -736,7 +736,9 @@
     /// - Parameters:
     ///   - context: The `OperationContext` for the task.
     /// - Returns: A task to perform the mutation.
-    public func mutateTask(using context: OperationContext? = nil) -> OperationTask<State.Value> {
+    public func mutateTask(using context: OperationContext? = nil) -> OperationTask<
+      State.Value, any Error
+    > {
       self.store.mutateTask(using: context)
     }
   }

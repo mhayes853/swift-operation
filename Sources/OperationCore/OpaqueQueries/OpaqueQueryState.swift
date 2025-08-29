@@ -35,7 +35,7 @@ extension OpaqueOperationState: OperationState {
   public var errorLastUpdatedAt: Date? { self.base.errorLastUpdatedAt }
 
   public mutating func scheduleFetchTask(
-    _ task: inout OperationTask<any Sendable>
+    _ task: inout OperationTask<any Sendable, any Error>
   ) {
     func open<State: OperationState>(state: inout State) {
       var inner = task.map { $0 as! State.OperationValue }
@@ -54,7 +54,7 @@ extension OpaqueOperationState: OperationState {
 
   public mutating func update(
     with result: Result<any Sendable, any Error>,
-    for task: OperationTask<any Sendable>
+    for task: OperationTask<any Sendable, any Error>
   ) {
     func open<State: OperationState>(state: inout State) {
       state.update(
@@ -75,7 +75,7 @@ extension OpaqueOperationState: OperationState {
     open(state: &self.base)
   }
 
-  public mutating func finishFetchTask(_ task: OperationTask<any Sendable>) {
+  public mutating func finishFetchTask(_ task: OperationTask<any Sendable, any Error>) {
     func open<State: OperationState>(state: inout State) {
       state.finishFetchTask(task.map { $0 as! State.OperationValue })
     }

@@ -349,7 +349,7 @@ extension OperationStore {
   @discardableResult
   public func runTask(
     using context: OperationContext? = nil
-  ) -> OperationTask<State.OperationValue> {
+  ) -> OperationTask<State.OperationValue, any Error> {
     self.editValuesWithStateChangeEvent(in: context) { values in
       var context = context ?? self.context
       context.currentFetchingOperationStore = OpaqueOperationStore(erasing: self)
@@ -374,8 +374,8 @@ extension OperationStore {
     context: OperationContext,
     initialHerdId: Int,
     using task: LockedBox<TaskState>
-  ) -> OperationTask<State.OperationValue> {
-    OperationTask<State.OperationValue>(context: context) { _, context in
+  ) -> OperationTask<State.OperationValue, any Error> {
+    OperationTask<State.OperationValue, any Error>(context: context) { _, context in
       self.subscriptions.forEach { $0.onFetchingStarted?(context) }
       defer {
         self.subscriptions.forEach { $0.onFetchingEnded?(context) }
@@ -458,7 +458,7 @@ extension OperationStore {
 
   private enum TaskState {
     case initial
-    case running(OperationTask<State.OperationValue>)
+    case running(OperationTask<State.OperationValue, any Error>)
     case finished
   }
 }

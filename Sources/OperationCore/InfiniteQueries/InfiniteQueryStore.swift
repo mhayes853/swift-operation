@@ -93,7 +93,7 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
   /// - Returns: A task to refetch all pages.
   public func refetchAllPagesTask(
     using context: OperationContext? = nil
-  ) -> OperationTask<InfiniteQueryPages<State.PageID, State.PageValue>> {
+  ) -> OperationTask<InfiniteQueryPages<State.PageID, State.PageValue>, any Error> {
     self.runTask(using: self.fetchAllPagesTaskConfiguration(using: context))
       .map(self.allPages(from:))
   }
@@ -162,7 +162,7 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
   /// - Returns: The fetched page.
   public func fetchNextPageTask(
     using context: OperationContext? = nil
-  ) -> OperationTask<InfiniteQueryPage<State.PageID, State.PageValue>?> {
+  ) -> OperationTask<InfiniteQueryPage<State.PageID, State.PageValue>?, any Error> {
     guard self.hasNextPage else {
       return OperationTask(context: self.fetchNextPageTaskConfiguration(using: context)) { _, _ in
         nil
@@ -238,7 +238,7 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
   /// - Returns: The fetched page.
   public func fetchPreviousPageTask(
     using context: OperationContext? = nil
-  ) -> OperationTask<InfiniteQueryPage<State.PageID, State.PageValue>?> {
+  ) -> OperationTask<InfiniteQueryPage<State.PageID, State.PageValue>?, any Error> {
     guard self.hasPreviousPage else {
       return OperationTask(context: self.fetchPreviousPageTaskConfiguration(using: context)) {
         _,

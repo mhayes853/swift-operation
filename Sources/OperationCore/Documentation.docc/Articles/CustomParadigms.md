@@ -102,7 +102,7 @@ struct RecursiveQueryState<Value: RecursiveValue>: OperationState {
   private(set) var error: (any Error)?
   private(set) var errorUpdateCount = 0
   private(set) var errorLastUpdatedAt: Date?
-  private(set) var activeTasks = IdentifiedArrayOf<OperationTask<Value>>()
+  private(set) var activeTasks = IdentifiedArrayOf<OperationTask<Value, any Error>>()
 
   init(initialValue: Value) {
     self.currentValue = initialValue
@@ -236,7 +236,7 @@ struct RecursiveQueryState<Value: RecursiveValue>: OperationState {
     !self.activeTasks.isEmpty
   }
 
-  mutating func scheduleFetchTask(_ task: inout OperationTask<Value>) {
+  mutating func scheduleFetchTask(_ task: inout OperationTask<Value, any Error>) {
     activeTasks.append(task)
   }
 
@@ -284,7 +284,7 @@ struct RecursiveQueryState<Value: RecursiveValue>: OperationState {
 
   mutating func update(
     with result: Result<QueryValue, any Error>,
-    for task: OperationTask<QueryValue>
+    for task: OperationTask<QueryValue, any Error>
   ) {
     let context = task.configuration.context
     switch result {
@@ -312,7 +312,7 @@ Once the query itself stops running, the `OperationStore` will indicate to the s
 struct RecursiveQueryState<Value: RecursiveValue>: OperationState {
   // ...
 
-  mutating func finishFetchTask(_ task: OperationTask<QueryValue>) {
+  mutating func finishFetchTask(_ task: OperationTask<QueryValue, any Error>) {
     activeTasks.remove(id: task.id)
   }
 
@@ -359,7 +359,7 @@ struct RecursiveQueryState<Value: RecursiveValue>: OperationState {
 
   mutating func update(
     with result: Result<QueryValue, any Error>,
-    for task: OperationTask<QueryValue>
+    for task: OperationTask<QueryValue, any Errore>
   ) {
 -  switch result {
 -   case let .success(value):
@@ -473,7 +473,7 @@ struct RecursiveQueryState<
   private(set) var error: (any Error)?
   private(set) var errorUpdateCount = 0
   private(set) var errorLastUpdatedAt: Date?
-  private(set) var activeTasks = IdentifiedArrayOf<OperationTask<Value>>()
+  private(set) var activeTasks = IdentifiedArrayOf<OperationTask<Value, any Error>>()
 
   init(initialValue: Value) {
     self.currentValue = initialValue
@@ -484,7 +484,7 @@ struct RecursiveQueryState<
     !self.activeTasks.isEmpty
   }
 
-  mutating func scheduleFetchTask(_ task: inout OperationTask<Value>) {
+  mutating func scheduleFetchTask(_ task: inout OperationTask<Value, any Error>) {
     activeTasks.append(task)
   }
 
@@ -507,12 +507,12 @@ struct RecursiveQueryState<
 
   mutating func update(
     with result: Result<QueryValue, any Error>,
-    for task: OperationTask<QueryValue>
+    for task: OperationTask<QueryValue, any Error>
   ) {
     update(with: result, using: task.configuration.context)
   }
 
-  mutating func finishFetchTask(_ task: OperationTask<QueryValue>) {
+  mutating func finishFetchTask(_ task: OperationTask<QueryValue, any Error>) {
     activeTasks.remove(id: task.id)
   }
 

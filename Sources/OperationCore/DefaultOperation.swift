@@ -95,7 +95,9 @@ public struct DefaultOperationState<Base: DefaultableOperationState>: OperationS
   public var errorUpdateCount: Int { self.base.errorUpdateCount }
   public var errorLastUpdatedAt: Date? { self.base.errorLastUpdatedAt }
 
-  public mutating func scheduleFetchTask(_ task: inout OperationTask<Base.OperationValue>) {
+  public mutating func scheduleFetchTask(
+    _ task: inout OperationTask<Base.OperationValue, any Error>
+  ) {
     self.base.scheduleFetchTask(&task)
   }
 
@@ -112,12 +114,12 @@ public struct DefaultOperationState<Base: DefaultableOperationState>: OperationS
 
   public mutating func update(
     with result: Result<Base.OperationValue, any Error>,
-    for task: OperationTask<Base.OperationValue>
+    for task: OperationTask<Base.OperationValue, any Error>
   ) {
     self.base.update(with: result, for: task)
   }
 
-  public mutating func finishFetchTask(_ task: OperationTask<Base.OperationValue>) {
+  public mutating func finishFetchTask(_ task: OperationTask<Base.OperationValue, any Error>) {
     self.base.finishFetchTask(task)
   }
 }

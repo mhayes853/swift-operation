@@ -15,10 +15,10 @@ where
   var initialPageId: PageID { get }
   var nextPageId: PageID? { get }
   var previousPageId: PageID? { get }
-  var allPagesActiveTasks: IdentifiedArrayOf<OperationTask<OperationValue>> { get }
-  var initialPageActiveTasks: IdentifiedArrayOf<OperationTask<OperationValue>> { get }
-  var nextPageActiveTasks: IdentifiedArrayOf<OperationTask<OperationValue>> { get }
-  var previousPageActiveTasks: IdentifiedArrayOf<OperationTask<OperationValue>> { get }
+  var allPagesActiveTasks: IdentifiedArrayOf<OperationTask<OperationValue, any Error>> { get }
+  var initialPageActiveTasks: IdentifiedArrayOf<OperationTask<OperationValue, any Error>> { get }
+  var nextPageActiveTasks: IdentifiedArrayOf<OperationTask<OperationValue, any Error>> { get }
+  var previousPageActiveTasks: IdentifiedArrayOf<OperationTask<OperationValue, any Error>> { get }
 }
 
 // MARK: - Has Page
@@ -37,7 +37,7 @@ extension _InfiniteQueryStateProtocol {
 
 // MARK: - Is Loading
 
-extension InfiniteQueryState {
+extension _InfiniteQueryStateProtocol {
   /// Whether or not the next page is loading.
   public var isLoadingNextPage: Bool {
     !self.nextPageActiveTasks.isEmpty
@@ -100,23 +100,23 @@ public struct InfiniteQueryState<PageID: Hashable & Sendable, PageValue: Sendabl
 
   /// The active ``OperationTask``s for refetching all pages of data.
   public private(set) var allPagesActiveTasks = IdentifiedArrayOf<
-    OperationTask<InfiniteQueryOperationValue<PageID, PageValue>>
+    OperationTask<InfiniteQueryOperationValue<PageID, PageValue>, any Error>
   >()
 
   /// The active ``OperationTask``s for fetching the initial page of data.
   public private(set) var initialPageActiveTasks = IdentifiedArrayOf<
-    OperationTask<InfiniteQueryOperationValue<PageID, PageValue>>
+    OperationTask<InfiniteQueryOperationValue<PageID, PageValue>, any Error>
   >()
 
   /// The active ``OperationTask``s for fetching the next page of data.
   public private(set) var nextPageActiveTasks = IdentifiedArrayOf<
-    OperationTask<InfiniteQueryOperationValue<PageID, PageValue>>
+    OperationTask<InfiniteQueryOperationValue<PageID, PageValue>, any Error>
   >()
 
   /// The active ``OperationTask``s for fetching the page of data that will be presented at the
   /// beginning of ``currentValue``.
   public private(set) var previousPageActiveTasks = IdentifiedArrayOf<
-    OperationTask<InfiniteQueryOperationValue<PageID, PageValue>>
+    OperationTask<InfiniteQueryOperationValue<PageID, PageValue>, any Error>
   >()
 
   public init(initialValue: StateValue, initialPageId: PageID) {
@@ -135,7 +135,7 @@ extension InfiniteQueryState: _InfiniteQueryStateProtocol {
   }
 
   public mutating func scheduleFetchTask(
-    _ task: inout OperationTask<InfiniteQueryOperationValue<PageID, PageValue>>
+    _ task: inout OperationTask<InfiniteQueryOperationValue<PageID, PageValue>, any Error>
   ) {
     switch self.request(in: task.context) {
     case .allPages:
@@ -185,7 +185,7 @@ extension InfiniteQueryState: _InfiniteQueryStateProtocol {
 
   public mutating func update(
     with result: Result<InfiniteQueryOperationValue<PageID, PageValue>, any Error>,
-    for task: OperationTask<InfiniteQueryOperationValue<PageID, PageValue>>
+    for task: OperationTask<InfiniteQueryOperationValue<PageID, PageValue>, any Error>
   ) {
     switch result {
     case .success(let value):
@@ -222,7 +222,7 @@ extension InfiniteQueryState: _InfiniteQueryStateProtocol {
   }
 
   public mutating func finishFetchTask(
-    _ task: OperationTask<InfiniteQueryOperationValue<PageID, PageValue>>
+    _ task: OperationTask<InfiniteQueryOperationValue<PageID, PageValue>, any Error>
   ) {
     self.allPagesActiveTasks.remove(id: task.id)
     self.initialPageActiveTasks.remove(id: task.id)
@@ -273,19 +273,23 @@ where Base: _InfiniteQueryStateProtocol, Base.DefaultStateValue == Base.StateVal
   public var nextPageId: PageID? { self.base.nextPageId }
   public var previousPageId: PageID? { self.base.previousPageId }
 
-  public var allPagesActiveTasks: IdentifiedArrayOf<OperationTask<OperationValue>> {
+  public var allPagesActiveTasks: IdentifiedArrayOf<OperationTask<Base.OperationValue, any Error>> {
     self.base.allPagesActiveTasks
   }
 
-  public var initialPageActiveTasks: IdentifiedArrayOf<OperationTask<OperationValue>> {
+  public var initialPageActiveTasks:
+    IdentifiedArrayOf<OperationTask<Base.OperationValue, any Error>>
+  {
     self.base.initialPageActiveTasks
   }
 
-  public var nextPageActiveTasks: IdentifiedArrayOf<OperationTask<OperationValue>> {
+  public var nextPageActiveTasks: IdentifiedArrayOf<OperationTask<Base.OperationValue, any Error>> {
     self.base.nextPageActiveTasks
   }
 
-  public var previousPageActiveTasks: IdentifiedArrayOf<OperationTask<OperationValue>> {
+  public var previousPageActiveTasks:
+    IdentifiedArrayOf<OperationTask<Base.OperationValue, any Error>>
+  {
     self.base.previousPageActiveTasks
   }
 }
