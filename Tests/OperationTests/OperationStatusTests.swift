@@ -93,56 +93,57 @@ struct OperationStatusTests {
 
   @Test("Success, Map Status, Returns New Mapped Success Value")
   func successMapStatus() async throws {
-    let status = OperationStatus.result(.success(TestQuery.value))
+    let status = OperationStatus<TestQuery.Value, any Error>.result(.success(TestQuery.value))
     let newStatus = status.mapSuccess { $0.description }
     expectNoDifference(newStatus.resultValue, TestQuery.value.description)
   }
 
   @Test("Failure, Map Status, Returns Error")
   func failureMapStatus() async throws {
-    let status = OperationStatus<Int>.result(.failure(FailingQuery.SomeError()))
+    let status = OperationStatus<Int, FailingQuery.SomeError>
+      .result(.failure(FailingQuery.SomeError()))
     let newStatus = status.mapSuccess { $0.description }
     expectNoDifference(newStatus.isFailure, true)
   }
 
   @Test("Idle, Map Status, Returns Idle")
   func idleMapStatus() async throws {
-    let status = OperationStatus<Int>.idle
+    let status = OperationStatus<Int, any Error>.idle
     let newStatus = status.mapSuccess { $0.description }
     expectNoDifference(newStatus.isIdle, true)
   }
 
   @Test("Loading, Map Status, Returns Loading")
   func loadingMapStatus() async throws {
-    let status = OperationStatus<Int>.loading
+    let status = OperationStatus<Int, any Error>.loading
     let newStatus = status.mapSuccess { $0.description }
     newStatus.expectLoading()
   }
 
   @Test("Success, FlatMap Status, Returns New Mapped Success Value")
   func successFlatMapStatus() async throws {
-    let status = OperationStatus.result(.success(TestQuery.value))
-    let newStatus: OperationStatus<String> = status.flatMapSuccess { _ in .idle }
+    let status = OperationStatus<Int, any Error>.result(.success(TestQuery.value))
+    let newStatus: OperationStatus<String, any Error> = status.flatMapSuccess { _ in .idle }
     expectNoDifference(newStatus.isIdle, true)
   }
 
   @Test("Failure, FlatMap Status, Returns Error")
   func failureFlatMapStatus() async throws {
-    let status = OperationStatus<Int>.result(.failure(FailingQuery.SomeError()))
+    let status = OperationStatus<Int, any Error>.result(.failure(FailingQuery.SomeError()))
     let newStatus = status.flatMapSuccess { .result(.success($0.description)) }
     expectNoDifference(newStatus.isFailure, true)
   }
 
   @Test("Idle, FlatMap Status, Returns Idle")
   func idleFlatMapStatus() async throws {
-    let status = OperationStatus<Int>.idle
+    let status = OperationStatus<Int, any Error>.idle
     let newStatus = status.flatMapSuccess { .result(.success($0.description)) }
     expectNoDifference(newStatus.isIdle, true)
   }
 
   @Test("Loading, FlatMap Status, Returns Loading")
   func loadingFlatMapStatus() async throws {
-    let status = OperationStatus<Int>.loading
+    let status = OperationStatus<Int, any Error>.loading
     let newStatus = status.flatMapSuccess { .result(.success($0.description)) }
     newStatus.expectLoading()
   }
@@ -150,14 +151,14 @@ struct OperationStatusTests {
   @Test(
     "Is Cancelled",
     arguments: [
-      (OperationStatus<Int>.idle, false),
-      (OperationStatus<Int>.loading, false),
-      (OperationStatus<Int>.result(.success(1)), false),
-      (OperationStatus<Int>.result(.failure(FailingQuery.SomeError())), false),
-      (OperationStatus<Int>.result(.failure(CancellationError())), true)
+      (OperationStatus<Int, any Error>.idle, false),
+      (OperationStatus<Int, any Error>.loading, false),
+      (OperationStatus<Int, any Error>.result(.success(1)), false),
+      (OperationStatus<Int, any Error>.result(.failure(FailingQuery.SomeError())), false),
+      (OperationStatus<Int, any Error>.result(.failure(CancellationError())), true)
     ]
   )
-  func isCancelled(status: OperationStatus<Int>, isCanceled: Bool) {
+  func isCancelled(status: OperationStatus<Int, any Error>, isCanceled: Bool) {
     expectNoDifference(status.isCancelled, isCanceled)
   }
 }

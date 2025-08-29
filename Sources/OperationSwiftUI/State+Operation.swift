@@ -288,7 +288,7 @@
     ///   - result: The `Result`.
     ///   - context: The `OperationContext` to set the result in.
     public func setResult(
-      to result: Result<Value, any Error>,
+      to result: Result<Value, State.Failure>,
       using context: OperationContext? = nil
     ) {
       self.store.setResult(to: result, using: context)
@@ -319,7 +319,7 @@
     public func run(
       using context: OperationContext? = nil,
       handler: OperationEventHandler<State> = OperationEventHandler()
-    ) async throws -> State.OperationValue {
+    ) async throws(State.Failure) -> State.OperationValue {
       try await self.store.run(using: context, handler: handler)
     }
 
@@ -332,7 +332,7 @@
     /// - Returns: A task to fetch the query's data.
     public func runTask(
       using context: OperationContext? = nil
-    ) -> OperationTask<State.OperationValue, any Error> {
+    ) -> OperationTask<State.OperationValue, State.Failure> {
       self.store.runTask(using: context)
     }
   }
@@ -351,8 +351,21 @@
     public func fetch(
       using context: OperationContext? = nil,
       handler: QueryEventHandler<State> = QueryEventHandler()
-    ) async throws -> State.OperationValue {
+    ) async throws(State.Failure) -> State.OperationValue {
       try await self.store.fetch(using: context, handler: handler)
+    }
+
+    /// Creates a `OperationTask` to fetch the query's data.
+    ///
+    /// The returned task does not begin fetching immediately. Rather you must call
+    /// `OperationTask.runIfNeeded` to fetch the data.
+    ///
+    /// - Parameter context: The `OperationContext` for the task.
+    /// - Returns: A task to fetch the query's data.
+    public func fetchTask(
+      using context: OperationContext? = nil
+    ) -> OperationTask<State.OperationValue, State.Failure> {
+      self.store.fetchTask(using: context)
     }
   }
 
@@ -458,7 +471,7 @@
       using context: OperationContext? = nil,
       handler: InfiniteQueryEventHandler<State.PageID, State.PageValue> =
         InfiniteQueryEventHandler()
-    ) async throws -> InfiniteQueryPages<State.PageID, State.PageValue> {
+    ) async throws(State.Failure) -> InfiniteQueryPages<State.PageID, State.PageValue> {
       try await self.store.refetchAllPages(using: context, handler: handler)
     }
 
@@ -477,7 +490,7 @@
     /// - Returns: A task to refetch all pages.
     public func refetchAllPagesTask(
       using context: OperationContext? = nil
-    ) -> OperationTask<InfiniteQueryPages<State.PageID, State.PageValue>, any Error> {
+    ) -> OperationTask<InfiniteQueryPages<State.PageID, State.PageValue>, State.Failure> {
       self.store.refetchAllPagesTask(using: context)
     }
 
@@ -496,7 +509,7 @@
       using context: OperationContext? = nil,
       handler: InfiniteQueryEventHandler<State.PageID, State.PageValue> =
         InfiniteQueryEventHandler()
-    ) async throws -> InfiniteQueryPage<State.PageID, State.PageValue>? {
+    ) async throws(State.Failure) -> InfiniteQueryPage<State.PageID, State.PageValue>? {
       try await self.store.fetchNextPage(using: context, handler: handler)
     }
 
@@ -515,7 +528,7 @@
     /// - Returns: The fetched page.
     public func fetchNextPageTask(
       using context: OperationContext? = nil
-    ) -> OperationTask<InfiniteQueryPage<State.PageID, State.PageValue>?, any Error> {
+    ) -> OperationTask<InfiniteQueryPage<State.PageID, State.PageValue>?, State.Failure> {
       self.store.fetchNextPageTask(using: context)
     }
 
@@ -534,7 +547,7 @@
       using context: OperationContext? = nil,
       handler: InfiniteQueryEventHandler<State.PageID, State.PageValue> =
         InfiniteQueryEventHandler()
-    ) async throws -> InfiniteQueryPage<State.PageID, State.PageValue>? {
+    ) async throws(State.Failure) -> InfiniteQueryPage<State.PageID, State.PageValue>? {
       try await self.store.fetchPreviousPage(using: context, handler: handler)
     }
 
@@ -553,7 +566,7 @@
     /// - Returns: The fetched page.
     public func fetchPreviousPageTask(
       using context: OperationContext? = nil
-    ) -> OperationTask<InfiniteQueryPage<State.PageID, State.PageValue>?, any Error> {
+    ) -> OperationTask<InfiniteQueryPage<State.PageID, State.PageValue>?, State.Failure> {
       self.store.fetchPreviousPageTask(using: context)
     }
   }
@@ -655,7 +668,7 @@
       with arguments: State.Arguments,
       using context: OperationContext? = nil,
       handler: MutationEventHandler<State.Arguments, State.Value> = MutationEventHandler()
-    ) async throws -> State.Value {
+    ) async throws(State.Failure) -> State.Value {
       try await self.store.mutate(with: arguments, using: context, handler: handler)
     }
 
@@ -671,7 +684,7 @@
     public func mutateTask(
       with arguments: State.Arguments,
       using context: OperationContext? = nil
-    ) -> OperationTask<State.Value, any Error> {
+    ) -> OperationTask<State.Value, State.Failure> {
       self.store.mutateTask(with: arguments, using: context)
     }
 
@@ -689,7 +702,7 @@
     public func retryLatest(
       using context: OperationContext? = nil,
       handler: MutationEventHandler<State.Arguments, State.Value> = MutationEventHandler()
-    ) async throws -> State.Value {
+    ) async throws(State.Failure) -> State.Value {
       try await self.store.retryLatest(using: context, handler: handler)
     }
 
@@ -708,7 +721,7 @@
     /// - Returns: A task to retry the most recently used arguments on the mutation.
     public func retryLatestTask(
       using context: OperationContext? = nil
-    ) -> OperationTask<State.Value, any Error> {
+    ) -> OperationTask<State.Value, State.Failure> {
       self.store.retryLatestTask(using: context)
     }
   }
@@ -724,7 +737,7 @@
     public func mutate(
       using context: OperationContext? = nil,
       handler: MutationEventHandler<State.Arguments, State.Value> = MutationEventHandler()
-    ) async throws -> State.Value {
+    ) async throws(State.Failure) -> State.Value {
       try await self.store.mutate(using: context, handler: handler)
     }
 
@@ -736,9 +749,9 @@
     /// - Parameters:
     ///   - context: The `OperationContext` for the task.
     /// - Returns: A task to perform the mutation.
-    public func mutateTask(using context: OperationContext? = nil) -> OperationTask<
-      State.Value, any Error
-    > {
+    public func mutateTask(
+      using context: OperationContext? = nil
+    ) -> OperationTask<State.Value, State.Failure> {
       self.store.mutateTask(using: context)
     }
   }

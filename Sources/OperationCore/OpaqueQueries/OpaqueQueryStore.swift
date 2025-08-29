@@ -278,7 +278,10 @@ extension OperationStore: OpaqueableOperationStore {
     to result: Result<any Sendable, any Error>,
     using context: OperationContext?
   ) {
-    self.setResult(to: result.map { $0 as! State.StateValue }, using: context)
+    self.setResult(
+      to: result.map { $0 as! State.StateValue }.mapError { $0 as! State.Failure },
+      using: context
+    )
   }
 
   func opaqueRun(
@@ -289,7 +292,7 @@ extension OperationStore: OpaqueableOperationStore {
   }
 
   func opaqueRunTask(using context: OperationContext?) -> OperationTask<any Sendable, any Error> {
-    self.runTask(using: context).map { $0 }
+    self.runTask(using: context).map { $0 }.mapError { $0 }
   }
 
   func opaqueSubscribe(with handler: OpaqueOperationEventHandler) -> OperationSubscription {

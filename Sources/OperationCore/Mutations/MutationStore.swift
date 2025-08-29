@@ -86,7 +86,7 @@ extension OperationStore where State: _MutationStateProtocol {
     with arguments: State.Arguments,
     using context: OperationContext? = nil,
     handler: MutationEventHandler<State.Arguments, State.Value> = MutationEventHandler()
-  ) async throws -> State.Value {
+  ) async throws(State.Failure) -> State.Value {
     try await self.run(
       using: self.taskConfiguration(with: arguments, using: context),
       handler: self.operationEventHandler(for: handler)
@@ -106,7 +106,7 @@ extension OperationStore where State: _MutationStateProtocol {
   public func mutateTask(
     with arguments: State.Arguments,
     using context: OperationContext? = nil
-  ) -> OperationTask<State.Value, any Error> {
+  ) -> OperationTask<State.Value, State.Failure> {
     self.runTask(using: self.taskConfiguration(with: arguments, using: context))
       .map(\.returnValue)
   }
@@ -138,7 +138,7 @@ extension OperationStore where State: _MutationStateProtocol, State.Arguments ==
   public func mutate(
     using context: OperationContext? = nil,
     handler: MutationEventHandler<State.Arguments, State.Value> = MutationEventHandler()
-  ) async throws -> State.Value {
+  ) async throws(State.Failure) -> State.Value {
     try await self.mutate(with: (), using: context, handler: handler)
   }
 
@@ -150,9 +150,9 @@ extension OperationStore where State: _MutationStateProtocol, State.Arguments ==
   /// - Parameters:
   ///   - context: The ``OperationContext`` for the task.
   /// - Returns: A task to perform the mutation.
-  public func mutateTask(using context: OperationContext? = nil) -> OperationTask<
-    State.Value, any Error
-  > {
+  public func mutateTask(
+    using context: OperationContext? = nil
+  ) -> OperationTask<State.Value, State.Failure> {
     self.mutateTask(with: (), using: context)
   }
 }
@@ -174,7 +174,7 @@ extension OperationStore where State: _MutationStateProtocol {
   public func retryLatest(
     using context: OperationContext? = nil,
     handler: MutationEventHandler<State.Arguments, State.Value> = MutationEventHandler()
-  ) async throws -> State.Value {
+  ) async throws(State.Failure) -> State.Value {
     try await self.run(
       using: self.retryTaskConfiguration(using: context),
       handler: self.operationEventHandler(for: handler)
@@ -197,7 +197,7 @@ extension OperationStore where State: _MutationStateProtocol {
   /// - Returns: A task to retry the most recently used arguments on the mutation.
   public func retryLatestTask(
     using context: OperationContext? = nil
-  ) -> OperationTask<State.Value, any Error> {
+  ) -> OperationTask<State.Value, State.Failure> {
     self.runTask(using: self.retryTaskConfiguration(using: context)).map(\.returnValue)
   }
 
@@ -224,7 +224,7 @@ extension OperationStore where State: _MutationStateProtocol {
   /// - Returns: A ``OperationSubscription``.
   public func subscribe(
     with handler: MutationEventHandler<State.Arguments, State.Value>
-  ) async throws -> OperationSubscription {
+  ) -> OperationSubscription {
     self.subscribe(with: self.operationEventHandler(for: handler))
   }
 }

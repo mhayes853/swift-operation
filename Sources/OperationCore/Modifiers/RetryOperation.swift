@@ -1,3 +1,9 @@
+// MARK: - OperationRetryableError
+
+public protocol OperationRetryableError: Error {
+  init(cancellationError: CancellationError)
+}
+
 // MARK: - RetryModifier
 
 extension OperationRequest {

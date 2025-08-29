@@ -38,9 +38,9 @@ extension OpaqueOperationState: OperationState {
     _ task: inout OperationTask<any Sendable, any Error>
   ) {
     func open<State: OperationState>(state: inout State) {
-      var inner = task.map { $0 as! State.OperationValue }
+      var inner = task.map { $0 as! State.OperationValue }.mapError { $0 as! State.Failure }
       state.scheduleFetchTask(&inner)
-      task = inner.map { $0 as any Sendable }
+      task = inner.map { $0 as any Sendable }.mapError { $0 as any Error }
     }
     open(state: &self.base)
   }
@@ -58,8 +58,8 @@ extension OpaqueOperationState: OperationState {
   ) {
     func open<State: OperationState>(state: inout State) {
       state.update(
-        with: result.map { $0 as! State.OperationValue },
-        for: task.map { $0 as! State.OperationValue }
+        with: result.map { $0 as! State.OperationValue }.mapError { $0 as! State.Failure },
+        for: task.map { $0 as! State.OperationValue }.mapError { $0 as! State.Failure }
       )
     }
     open(state: &self.base)
@@ -70,14 +70,19 @@ extension OpaqueOperationState: OperationState {
     using context: OperationContext
   ) {
     func open<State: OperationState>(state: inout State) {
-      state.update(with: result.map { $0 as! State.StateValue }, using: context)
+      state.update(
+        with: result.map { $0 as! State.StateValue }.mapError { $0 as! State.Failure },
+        using: context
+      )
     }
     open(state: &self.base)
   }
 
   public mutating func finishFetchTask(_ task: OperationTask<any Sendable, any Error>) {
     func open<State: OperationState>(state: inout State) {
-      state.finishFetchTask(task.map { $0 as! State.OperationValue })
+      state.finishFetchTask(
+        task.map { $0 as! State.OperationValue }.mapError { $0 as! State.Failure }
+      )
     }
     open(state: &self.base)
   }

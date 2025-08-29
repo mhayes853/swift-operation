@@ -75,8 +75,21 @@ extension OperationStore where State: _QueryStateProtocol {
   public func fetch(
     using context: OperationContext? = nil,
     handler: QueryEventHandler<State> = QueryEventHandler()
-  ) async throws -> State.OperationValue {
+  ) async throws(State.Failure) -> State.OperationValue {
     try await self.run(using: context, handler: self.operationEventHandler(for: handler))
+  }
+
+  /// Creates a ``OperationTask`` to run the query.
+  ///
+  /// The returned task does not begin running immediately. Rather you must call
+  /// ``OperationTask/runIfNeeded()`` to run the operation.
+  ///
+  /// - Parameter context: The ``OperationContext`` for the task.
+  /// - Returns: A task to run the operation.
+  public func fetchTask(
+    using context: OperationContext? = nil
+  ) -> OperationTask<State.OperationValue, State.Failure> {
+    self.runTask(using: context)
   }
 }
 

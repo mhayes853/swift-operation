@@ -91,12 +91,12 @@ public struct DefaultOperationState<Base: DefaultableOperationState>: OperationS
   public var valueUpdateCount: Int { self.base.valueUpdateCount }
   public var valueLastUpdatedAt: Date? { self.base.valueLastUpdatedAt }
   public var isLoading: Bool { self.base.isLoading }
-  public var error: (any Error)? { self.base.error }
+  public var error: Base.Failure? { self.base.error }
   public var errorUpdateCount: Int { self.base.errorUpdateCount }
   public var errorLastUpdatedAt: Date? { self.base.errorLastUpdatedAt }
 
   public mutating func scheduleFetchTask(
-    _ task: inout OperationTask<Base.OperationValue, any Error>
+    _ task: inout OperationTask<Base.OperationValue, Base.Failure>
   ) {
     self.base.scheduleFetchTask(&task)
   }
@@ -106,20 +106,24 @@ public struct DefaultOperationState<Base: DefaultableOperationState>: OperationS
   }
 
   public mutating func update(
-    with result: Result<Base.DefaultStateValue, any Error>,
+    with result: Result<Base.DefaultStateValue, Base.Failure>,
     using context: OperationContext
   ) {
     self.base.update(with: result.map { self.base.stateValue(for: $0) }, using: context)
   }
 
   public mutating func update(
-    with result: Result<Base.OperationValue, any Error>,
-    for task: OperationTask<Base.OperationValue, any Error>
+    with result: Result<Base.OperationValue, Base.Failure>,
+    for task: OperationTask<Base.OperationValue, Base.Failure>
   ) {
     self.base.update(with: result, for: task)
   }
 
-  public mutating func finishFetchTask(_ task: OperationTask<Base.OperationValue, any Error>) {
+  public mutating func finishFetchTask(_ task: OperationTask<Base.OperationValue, Base.Failure>) {
     self.base.finishFetchTask(task)
   }
 }
+
+extension DefaultOperationState: Hashable where Base: Hashable, Base.DefaultStateValue: Hashable {}
+extension DefaultOperationState: Equatable
+where Base: Equatable, Base.DefaultStateValue: Equatable {}

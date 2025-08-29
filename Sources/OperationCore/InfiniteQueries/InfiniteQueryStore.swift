@@ -70,7 +70,7 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
   public func refetchAllPages(
     using context: OperationContext? = nil,
     handler: InfiniteQueryEventHandler<State.PageID, State.PageValue> = InfiniteQueryEventHandler()
-  ) async throws -> InfiniteQueryPages<State.PageID, State.PageValue> {
+  ) async throws(State.Failure) -> InfiniteQueryPages<State.PageID, State.PageValue> {
     let value = try await self.fetch(
       using: self.fetchAllPagesTaskConfiguration(using: context),
       handler: handler
@@ -93,7 +93,7 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
   /// - Returns: A task to refetch all pages.
   public func refetchAllPagesTask(
     using context: OperationContext? = nil
-  ) -> OperationTask<InfiniteQueryPages<State.PageID, State.PageValue>, any Error> {
+  ) -> OperationTask<InfiniteQueryPages<State.PageID, State.PageValue>, State.Failure> {
     self.runTask(using: self.fetchAllPagesTaskConfiguration(using: context))
       .map(self.allPages(from:))
   }
@@ -138,7 +138,7 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
   public func fetchNextPage(
     using context: OperationContext? = nil,
     handler: InfiniteQueryEventHandler<State.PageID, State.PageValue> = InfiniteQueryEventHandler()
-  ) async throws -> InfiniteQueryPage<State.PageID, State.PageValue>? {
+  ) async throws(State.Failure) -> InfiniteQueryPage<State.PageID, State.PageValue>? {
     guard self.hasNextPage else { return nil }
     let value = try await self.fetch(
       using: self.fetchNextPageTaskConfiguration(using: context),
@@ -162,11 +162,13 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
   /// - Returns: The fetched page.
   public func fetchNextPageTask(
     using context: OperationContext? = nil
-  ) -> OperationTask<InfiniteQueryPage<State.PageID, State.PageValue>?, any Error> {
+  ) -> OperationTask<InfiniteQueryPage<State.PageID, State.PageValue>?, State.Failure> {
     guard self.hasNextPage else {
-      return OperationTask(context: self.fetchNextPageTaskConfiguration(using: context)) { _, _ in
-        nil
+      return OperationTask(
+        context: self.fetchNextPageTaskConfiguration(using: context)
+      ) { _, _ in nil
       }
+      .mapError { _ in fatalError() }
     }
     return self.runTask(using: self.fetchNextPageTaskConfiguration(using: context))
       .map(self.nextPage(from:))
@@ -214,7 +216,7 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
   public func fetchPreviousPage(
     using context: OperationContext? = nil,
     handler: InfiniteQueryEventHandler<State.PageID, State.PageValue> = InfiniteQueryEventHandler()
-  ) async throws -> InfiniteQueryPage<State.PageID, State.PageValue>? {
+  ) async throws(State.Failure) -> InfiniteQueryPage<State.PageID, State.PageValue>? {
     guard self.hasPreviousPage else { return nil }
     let value = try await self.fetch(
       using: self.fetchPreviousPageTaskConfiguration(using: context),
@@ -238,13 +240,13 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
   /// - Returns: The fetched page.
   public func fetchPreviousPageTask(
     using context: OperationContext? = nil
-  ) -> OperationTask<InfiniteQueryPage<State.PageID, State.PageValue>?, any Error> {
+  ) -> OperationTask<InfiniteQueryPage<State.PageID, State.PageValue>?, State.Failure> {
     guard self.hasPreviousPage else {
-      return OperationTask(context: self.fetchPreviousPageTaskConfiguration(using: context)) {
-        _,
-        _ in
-        nil
+      return OperationTask(
+        context: self.fetchPreviousPageTaskConfiguration(using: context)
+      ) { _, _ in nil
       }
+      .mapError { _ in fatalError() }
     }
     return self.runTask(using: self.fetchPreviousPageTaskConfiguration(using: context))
       .map(self.previousPage(from:))
@@ -281,7 +283,7 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
   private func fetch(
     using context: OperationContext,
     handler: InfiniteQueryEventHandler<State.PageID, State.PageValue>
-  ) async throws -> InfiniteQueryOperationValue<State.PageID, State.PageValue> {
+  ) async throws(State.Failure) -> InfiniteQueryOperationValue<State.PageID, State.PageValue> {
     let subscription = context.infiniteValues?
       .addRequestSubscriber(from: handler, isTemporary: true)
     defer { subscription?.cancel() }

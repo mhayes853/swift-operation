@@ -187,7 +187,7 @@ extension MutationState {
     public private(set) var lastUpdatedAt: Date?
 
     /// The current ``OperationStatus`` of the mutation attempt represented by this entry.
-    public private(set) var status: OperationStatus<StatusValue>
+    public private(set) var status: OperationStatus<StatusValue, any Error>
 
     /// The ``OperationTask`` for this entry.
     public var task: OperationTask<Value, any Error> {

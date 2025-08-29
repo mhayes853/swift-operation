@@ -6,7 +6,7 @@ import IdentifiedCollections
 ///
 /// You generally don't create instances of this enum directly, and instead you can access it via
 /// ``OperationState/status-5oj8d`` on your query's state.
-public enum OperationStatus<Value: Sendable>: Sendable {
+public enum OperationStatus<Value: Sendable, Failure: Error>: Sendable {
   /// The query has never been fetched.
   case idle
 
@@ -14,7 +14,7 @@ public enum OperationStatus<Value: Sendable>: Sendable {
   case loading
 
   /// The query has completed with a result.
-  case result(Result<Value, any Error>)
+  case result(Result<Value, Failure>)
 }
 
 // MARK: - Case Checking
@@ -53,7 +53,7 @@ extension OperationStatus {
   }
 
   /// The result, if the status indicates that the query finished.
-  public var result: Result<Value, Error>? {
+  public var result: Result<Value, Failure>? {
     switch self {
     case .result(let result): result
     default: nil
@@ -97,7 +97,7 @@ extension OperationStatus {
   /// - Returns: A status with the newly transformed value.
   public func mapSuccess<NewValue: Sendable, E: Error>(
     _ transform: (Value) throws(E) -> NewValue
-  ) throws(E) -> OperationStatus<NewValue> {
+  ) throws(E) -> OperationStatus<NewValue, Failure> {
     switch self {
     case .result(.success(let value)): try .result(.success(transform(value)))
     case .result(.failure(let error)): .result(.failure(error))
@@ -121,8 +121,8 @@ extension OperationStatus {
   /// - Parameter transform: A function to transform the value into a new status.
   /// - Returns: The status returned from `transform`, or the current status if it isn't successful.
   public func flatMapSuccess<NewValue: Sendable, E: Error>(
-    _ transform: (Value) throws(E) -> OperationStatus<NewValue>
-  ) throws(E) -> OperationStatus<NewValue> {
+    _ transform: (Value) throws(E) -> OperationStatus<NewValue, Failure>
+  ) throws(E) -> OperationStatus<NewValue, Failure> {
     switch self {
     case .result(.success(let value)): try transform(value)
     case .result(.failure(let error)): .result(.failure(error))
@@ -132,18 +132,23 @@ extension OperationStatus {
   }
 }
 
+// MARK: - Protocols
+
+extension OperationStatus: Hashable where Value: Hashable, Failure: Hashable {}
+extension OperationStatus: Equatable where Value: Equatable, Failure: Equatable {}
+
 // MARK: - OperationState
 
 extension OperationState where StateValue == StatusValue {
   /// The current ``OperationStatus`` of this query.
-  public var status: OperationStatus<StatusValue> {
+  public var status: OperationStatus<StatusValue, Failure> {
     self.stateStatus
   }
 }
 
 extension OperationState where StateValue == StatusValue? {
   /// The current ``OperationStatus`` of this query.
-  public var status: OperationStatus<StatusValue> {
+  public var status: OperationStatus<StatusValue, Failure> {
     self.stateStatus.flatMapSuccess { value in
       if let value {
         return .result(.success(value))
@@ -155,7 +160,7 @@ extension OperationState where StateValue == StatusValue? {
 }
 
 extension OperationState {
-  private var stateStatus: OperationStatus<StateValue> {
+  private var stateStatus: OperationStatus<StateValue, Failure> {
     if self.isLoading {
       return .loading
     } else if self.valueUpdateCount == 0 && self.errorUpdateCount == 0 {

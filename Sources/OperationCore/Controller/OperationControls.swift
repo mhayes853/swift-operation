@@ -79,7 +79,7 @@ extension OperationControls {
   ///   - result: The `Result` to yield.
   ///   - context: The ``OperationContext`` to use when yielding.
   public func yield(
-    with result: Result<State.StateValue, any Error>,
+    with result: Result<State.StateValue, State.Failure>,
     using context: OperationContext? = nil
   ) {
     self.store?.setResult(to: result, using: context ?? self.context)
@@ -90,7 +90,7 @@ extension OperationControls {
   /// - Parameters:
   ///   - error: The `Error` to yield.
   ///   - context: The ``OperationContext`` to use when yielding.
-  public func yield(throwing error: Error, using context: OperationContext? = nil) {
+  public func yield(throwing error: State.Failure, using context: OperationContext? = nil) {
     self.yield(with: .failure(error), using: context)
   }
 
@@ -122,7 +122,7 @@ extension OperationControls {
   @discardableResult
   public func yieldRefetch(
     with context: OperationContext? = nil
-  ) async throws -> State.OperationValue? {
+  ) async throws(State.Failure) -> State.OperationValue? {
     try await self.yieldRefetchTask(with: context)?.runIfNeeded()
   }
 
@@ -132,7 +132,7 @@ extension OperationControls {
   /// - Returns: A ``OperationTask`` to refetch the query, or nil if refetching is unavailable.
   public func yieldRefetchTask(
     with context: OperationContext? = nil
-  ) -> OperationTask<State.OperationValue, any Error>? {
+  ) -> OperationTask<State.OperationValue, State.Failure>? {
     guard self.canYieldRefetch else { return nil }
     return self.store?.runTask(using: context)
   }

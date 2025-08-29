@@ -18,7 +18,7 @@ import IdentifiedCollections
 ///
 /// > Warning: You should not call any of the `mutating` methods directly on this type, rather a
 /// > ``OperationStore`` will call them at the appropriate time for you.
-public protocol OperationState<StateValue, OperationValue>: Sendable {
+public protocol OperationState<StateValue, OperationValue, Failure>: Sendable {
   /// A data type returned from ``reset(using:)`` that determines the action that the
   /// ``OperationStore`` should take when ``OperationStore/resetState(using:)`` is called.
   typealias ResetEffect = _OperationStateResetEffect<Self>
@@ -36,6 +36,8 @@ public protocol OperationState<StateValue, OperationValue>: Sendable {
 
   /// The type of value that is accessed from the <doc:/documentation/QueryCore/OperationState/status-34hpq> property.
   associatedtype StatusValue: Sendable
+
+  associatedtype Failure: Error
 
   /// The current value of this state.
   var currentValue: StateValue { get }
@@ -58,7 +60,7 @@ public protocol OperationState<StateValue, OperationValue>: Sendable {
   /// The most recent error thrown by the query driving this state.
   ///
   /// When a query finishes a successful fetch, this property is set to nil.
-  var error: (any Error)? { get }
+  var error: Failure? { get }
 
   /// The number of times ``error`` was updated. (Not counting setting it to nil on a successful
   /// query fetch).
@@ -74,7 +76,7 @@ public protocol OperationState<StateValue, OperationValue>: Sendable {
   /// created by a ``OperationStore``. The store calls this method when a new task is created.
   ///
   /// - Parameter task: The ``OperationTask`` to schedule on this state.
-  mutating func scheduleFetchTask(_ task: inout OperationTask<OperationValue, any Error>)
+  mutating func scheduleFetchTask(_ task: inout OperationTask<OperationValue, Failure>)
 
   /// Resets this state using the provided ``OperationContext``.
   ///
@@ -99,7 +101,7 @@ public protocol OperationState<StateValue, OperationValue>: Sendable {
   ///   - result: The new value to ingest into this state.
   ///   - context: The ``OperationContext`` of this update.
   mutating func update(
-    with result: Result<StateValue, any Error>,
+    with result: Result<StateValue, Failure>,
     using context: OperationContext
   )
 
@@ -114,8 +116,8 @@ public protocol OperationState<StateValue, OperationValue>: Sendable {
   ///   - result: The query result to ingest into this state.
   ///   - task: The ``OperationTask`` that the update came from.
   mutating func update(
-    with result: Result<OperationValue, any Error>,
-    for task: OperationTask<OperationValue, any Error>
+    with result: Result<OperationValue, Failure>,
+    for task: OperationTask<OperationValue, Failure>
   )
 
   /// Indicates to this state that a ``OperationTask`` is about to finish running.
@@ -128,7 +130,7 @@ public protocol OperationState<StateValue, OperationValue>: Sendable {
   /// your collection, and remove the task based on that index.
   ///
   /// - Parameter task: The ``OperationTask`` that is about to finish running.
-  mutating func finishFetchTask(_ task: OperationTask<OperationValue, any Error>)
+  mutating func finishFetchTask(_ task: OperationTask<OperationValue, Failure>)
 }
 
 // MARK: - _QueryStateResetEffect
@@ -152,7 +154,7 @@ extension _OperationStateResetEffect {
   /// Creates a reset effect that cancels the specified ``OperationTask`` instances.
   ///
   /// - Parameter tasksToCancel: The tasks to cancel.
-  public init(tasksToCancel: some Sequence<OperationTask<State.OperationValue, any Error>>) {
+  public init(tasksToCancel: some Sequence<OperationTask<State.OperationValue, State.Failure>>) {
     self.tasksCancellable = .combined(
       tasksToCancel.map { task in OperationSubscription { task.cancel() } }
     )

@@ -283,7 +283,7 @@ extension SharedOperation {
   public func run(
     using context: OperationContext? = nil,
     handler: OperationEventHandler<State> = OperationEventHandler()
-  ) async throws -> State.OperationValue {
+  ) async throws(State.Failure) -> State.OperationValue {
     try await self.store.run(using: context, handler: handler)
   }
 
@@ -297,7 +297,7 @@ extension SharedOperation {
   @discardableResult
   public func runTask(
     using context: OperationContext? = nil
-  ) -> OperationTask<State.OperationValue, any Error> {
+  ) -> OperationTask<State.OperationValue, State.Failure> {
     self.value.store.runTask(using: context)
   }
 }
@@ -316,8 +316,21 @@ extension SharedOperation where State: _QueryStateProtocol {
   public func fetch(
     using context: OperationContext? = nil,
     handler: QueryEventHandler<State> = QueryEventHandler()
-  ) async throws -> State.OperationValue {
+  ) async throws(State.Failure) -> State.OperationValue {
     try await self.value.store.fetch(using: context, handler: handler)
+  }
+
+  /// Creates a `OperationTask` to fetch the query's data.
+  ///
+  /// The returned task does not begin fetching immediately. Rather you must call
+  /// `OperationTask.runIfNeeded` to fetch the data.
+  ///
+  /// - Parameter context: The `OperationContext` for the task.
+  /// - Returns: A task to fetch the query's data.
+  public func fetchTask(
+    using context: OperationContext? = nil
+  ) -> OperationTask<State.OperationValue, State.Failure> {
+    self.value.store.fetchTask(using: context)
   }
 }
 
@@ -344,7 +357,7 @@ extension SharedOperation {
   ///   - result: The `Result`.
   ///   - context: The `OperationContext` to set the result in.
   public func setResult(
-    to result: Result<State.StateValue, any Error>,
+    to result: Result<State.StateValue, State.Failure>,
     using context: OperationContext? = nil
   ) {
     self.value.store.setResult(to: result, using: context)
@@ -456,7 +469,7 @@ extension SharedOperation where State: _InfiniteQueryStateProtocol {
   public func refetchAllPages(
     using context: OperationContext? = nil,
     handler: InfiniteQueryEventHandler<State.PageID, State.PageValue> = InfiniteQueryEventHandler()
-  ) async throws -> InfiniteQueryPages<State.PageID, State.PageValue> {
+  ) async throws(State.Failure) -> InfiniteQueryPages<State.PageID, State.PageValue> {
     try await self.value.store.refetchAllPages(using: context, handler: handler)
   }
 
@@ -475,7 +488,7 @@ extension SharedOperation where State: _InfiniteQueryStateProtocol {
   /// - Returns: A task to refetch all pages.
   public func refetchAllPagesTask(
     using context: OperationContext? = nil
-  ) -> OperationTask<InfiniteQueryPages<State.PageID, State.PageValue>, any Error> {
+  ) -> OperationTask<InfiniteQueryPages<State.PageID, State.PageValue>, State.Failure> {
     self.value.store.refetchAllPagesTask(using: context)
   }
 
@@ -493,7 +506,7 @@ extension SharedOperation where State: _InfiniteQueryStateProtocol {
   public func fetchNextPage(
     using context: OperationContext? = nil,
     handler: InfiniteQueryEventHandler<State.PageID, State.PageValue> = InfiniteQueryEventHandler()
-  ) async throws -> InfiniteQueryPage<State.PageID, State.PageValue>? {
+  ) async throws(State.Failure) -> InfiniteQueryPage<State.PageID, State.PageValue>? {
     try await self.value.store.fetchNextPage(using: context, handler: handler)
   }
 
@@ -512,7 +525,7 @@ extension SharedOperation where State: _InfiniteQueryStateProtocol {
   /// - Returns: The fetched page.
   public func fetchNextPageTask(
     using context: OperationContext? = nil
-  ) -> OperationTask<InfiniteQueryPage<State.PageID, State.PageValue>?, any Error> {
+  ) -> OperationTask<InfiniteQueryPage<State.PageID, State.PageValue>?, State.Failure> {
     self.value.store.fetchNextPageTask(using: context)
   }
 
@@ -530,7 +543,7 @@ extension SharedOperation where State: _InfiniteQueryStateProtocol {
   public func fetchPreviousPage(
     using context: OperationContext? = nil,
     handler: InfiniteQueryEventHandler<State.PageID, State.PageValue> = InfiniteQueryEventHandler()
-  ) async throws -> InfiniteQueryPage<State.PageID, State.PageValue>? {
+  ) async throws(State.Failure) -> InfiniteQueryPage<State.PageID, State.PageValue>? {
     try await self.value.store.fetchPreviousPage(using: context, handler: handler)
   }
 
@@ -549,7 +562,7 @@ extension SharedOperation where State: _InfiniteQueryStateProtocol {
   /// - Returns: The fetched page.
   public func fetchPreviousPageTask(
     using context: OperationContext? = nil
-  ) -> OperationTask<InfiniteQueryPage<State.PageID, State.PageValue>?, any Error> {
+  ) -> OperationTask<InfiniteQueryPage<State.PageID, State.PageValue>?, State.Failure> {
     self.value.store.fetchPreviousPageTask(using: context)
   }
 }
@@ -606,7 +619,7 @@ extension SharedOperation where State: _MutationStateProtocol {
     with arguments: State.Arguments,
     using context: OperationContext? = nil,
     handler: MutationEventHandler<State.Arguments, State.Value> = MutationEventHandler()
-  ) async throws -> State.Value {
+  ) async throws(State.Failure) -> State.Value {
     try await self.value.store.mutate(with: arguments, using: context, handler: handler)
   }
 
@@ -622,7 +635,7 @@ extension SharedOperation where State: _MutationStateProtocol {
   public func mutateTask(
     with arguments: State.Arguments,
     using context: OperationContext? = nil
-  ) -> OperationTask<State.Value, any Error> {
+  ) -> OperationTask<State.Value, State.Failure> {
     self.value.store.mutateTask(with: arguments, using: context)
   }
 
@@ -640,7 +653,7 @@ extension SharedOperation where State: _MutationStateProtocol {
   public func retryLatest(
     using context: OperationContext? = nil,
     handler: MutationEventHandler<State.Arguments, State.Value> = MutationEventHandler()
-  ) async throws -> State.Value {
+  ) async throws(State.Failure) -> State.Value {
     try await self.value.store.retryLatest(using: context, handler: handler)
   }
 
@@ -659,7 +672,7 @@ extension SharedOperation where State: _MutationStateProtocol {
   /// - Returns: A task to retry the most recently used arguments on the mutation.
   public func retryLatestTask(
     using context: OperationContext? = nil
-  ) -> OperationTask<State.Value, any Error> {
+  ) -> OperationTask<State.Value, State.Failure> {
     self.value.store.retryLatestTask(using: context)
   }
 }
@@ -675,7 +688,7 @@ extension SharedOperation where State: _MutationStateProtocol, State.Arguments =
   public func mutate(
     using context: OperationContext? = nil,
     handler: MutationEventHandler<State.Arguments, State.Value> = MutationEventHandler()
-  ) async throws -> State.Value {
+  ) async throws(State.Failure) -> State.Value {
     try await self.mutate(with: (), using: context, handler: handler)
   }
 
@@ -687,9 +700,9 @@ extension SharedOperation where State: _MutationStateProtocol, State.Arguments =
   /// - Parameters:
   ///   - context: The `OperationContext` for the task.
   /// - Returns: A task to perform the mutation.
-  public func mutateTask(using context: OperationContext? = nil) -> OperationTask<
-    State.Value, any Error
-  > {
+  public func mutateTask(
+    using context: OperationContext? = nil
+  ) -> OperationTask<State.Value, State.Failure> {
     self.mutateTask(with: (), using: context)
   }
 }

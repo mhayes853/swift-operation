@@ -273,7 +273,7 @@ extension OperationStore {
   ///   - result: The `Result`.
   ///   - context: The ``OperationContext`` to set the result in.
   public func setResult(
-    to result: Result<State.StateValue, any Error>,
+    to result: Result<State.StateValue, State.Failure>,
     using context: OperationContext? = nil
   ) {
     self.editValuesWithStateChangeEvent {
@@ -332,7 +332,7 @@ extension OperationStore {
   public func run(
     using context: OperationContext? = nil,
     handler: OperationEventHandler<State> = OperationEventHandler()
-  ) async throws -> State.OperationValue {
+  ) async throws(State.Failure) -> State.OperationValue {
     let (subscription, _) = self.subscriptions.add(handler: handler, isTemporary: true)
     defer { subscription.cancel() }
     let task = self.runTask(using: context)
@@ -346,10 +346,9 @@ extension OperationStore {
   ///
   /// - Parameter context: The ``OperationContext`` for the task.
   /// - Returns: A task to run the operation.
-  @discardableResult
   public func runTask(
     using context: OperationContext? = nil
-  ) -> OperationTask<State.OperationValue, any Error> {
+  ) -> OperationTask<State.OperationValue, State.Failure> {
     self.editValuesWithStateChangeEvent(in: context) { values in
       var context = context ?? self.context
       context.currentFetchingOperationStore = OpaqueOperationStore(erasing: self)
@@ -374,8 +373,8 @@ extension OperationStore {
     context: OperationContext,
     initialHerdId: Int,
     using task: LockedBox<TaskState>
-  ) -> OperationTask<State.OperationValue, any Error> {
-    OperationTask<State.OperationValue, any Error>(context: context) { _, context in
+  ) -> OperationTask<State.OperationValue, State.Failure> {
+    OperationTask(context: context) { _, context in
       self.subscriptions.forEach { $0.onFetchingStarted?(context) }
       defer {
         self.subscriptions.forEach { $0.onFetchingEnded?(context) }
@@ -400,7 +399,7 @@ extension OperationStore {
         return value
       } catch {
         self.finishTask(
-          with: .failure(error),
+          with: .failure(error as! State.Failure),
           task: task,
           initialHerdId: initialHerdId,
           context: context
@@ -408,10 +407,11 @@ extension OperationStore {
         throw error
       }
     }
+    .mapError { $0 as! State.Failure }
   }
 
   private func finishTask(
-    with result: Result<State.OperationValue, Error>,
+    with result: Result<State.OperationValue, State.Failure>,
     task: LockedBox<TaskState>,
     initialHerdId: Int,
     context: OperationContext
@@ -427,7 +427,7 @@ extension OperationStore {
         values.state.finishFetchTask(task)
       }
       self.subscriptions.forEach {
-        $0.onResultReceived?(result, context)
+        $0.onResultReceived?(result.mapError { $0 as any Error }, context)
       }
     }
   }
@@ -446,7 +446,7 @@ extension OperationStore {
           case .finished:
             reportWarning(.queryYieldedAfterReturning(result))
           case .running(let task) where values.taskHerdId == initialHerdId:
-            values.state.update(with: result, for: task)
+            values.state.update(with: result.mapError { $0 as! State.Failure }, for: task)
             self.subscriptions.forEach { $0.onResultReceived?(result, context) }
           default:
             break
@@ -458,7 +458,7 @@ extension OperationStore {
 
   private enum TaskState {
     case initial
-    case running(OperationTask<State.OperationValue, any Error>)
+    case running(OperationTask<State.OperationValue, State.Failure>)
     case finished
   }
 }
