@@ -57,14 +57,7 @@ extension OperationStore {
     query: Query.Default,
     initialContext: OperationContext = OperationContext()
   ) -> OperationStore<Query.Default.State> {
-    .detached(
-      operation: query,
-      initialState: Query.Default.State(
-        QueryState(initialValue: nil),
-        defaultValue: query.defaultValue
-      ),
-      initialContext: initialContext
-    )
+    .detached(operation: query, initialState: query.initialState, initialContext: initialContext)
   }
 }
 

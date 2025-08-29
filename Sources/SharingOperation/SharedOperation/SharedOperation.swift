@@ -374,7 +374,7 @@ extension SharedOperation {
     _ query: Query,
     client: OperationClient? = nil,
     scheduler: some SharedOperationStateScheduler = .synchronous
-  ) where State == QueryState<Query.Value>, Query.State == QueryState<Query.Value> {
+  ) where State == QueryState<Query.Value> {
     self.init(
       query,
       initialState: QueryState(initialValue: wrappedValue),
@@ -393,16 +393,8 @@ extension SharedOperation {
     _ query: Query.Default,
     client: OperationClient? = nil,
     scheduler: some SharedOperationStateScheduler = .synchronous
-  ) where State == DefaultQueryState<Query.Value> {
-    self.init(
-      query,
-      initialState: State(
-        QueryState(initialValue: nil),
-        defaultValue: query.defaultValue
-      ),
-      client: client,
-      scheduler: scheduler
-    )
+  ) where State == DefaultOperation<Query>.State {
+    self.init(query, initialState: query.initialState, client: client, scheduler: scheduler)
   }
 }
 
@@ -440,19 +432,11 @@ extension SharedOperation {
   ///   - client: A `OperationClient` to obtain the `OperationStore` from.
   ///   - scheduler: The ``SharedOperationStateScheduler`` to schedule state updates on.
   public init<Query: InfiniteQueryRequest>(
-    _ query: DefaultInfiniteQuery<Query>,
+    _ query: Query.Default,
     client: OperationClient? = nil,
     scheduler: some SharedOperationStateScheduler = .synchronous
-  ) where State == InfiniteQueryState<Query.PageID, Query.PageValue> {
-    self.init(
-      query,
-      initialState: InfiniteQueryState(
-        initialValue: query.defaultValue,
-        initialPageId: query.initialPageId
-      ),
-      client: client,
-      scheduler: scheduler
-    )
+  ) where State == DefaultOperationState<InfiniteQueryState<Query.PageID, Query.PageValue>> {
+    self.init(query, initialState: query.initialState, client: client, scheduler: scheduler)
   }
 }
 
@@ -580,16 +564,12 @@ extension SharedOperation {
   ///   - mutation: The `MutationRequest`.
   ///   - client: A `OperationClient` to obtain the `OperationStore` from.
   ///   - scheduler: The ``SharedOperationStateScheduler`` to schedule state updates on.
-  public init<
-    Arguments: Sendable,
-    Value: Sendable,
-    Mutation: MutationRequest<Arguments, Value>
-  >(
-    wrappedValue: Value?,
+  public init<Mutation: MutationRequest>(
+    wrappedValue: Mutation.ReturnValue?,
     _ mutation: Mutation,
     client: OperationClient? = nil,
     scheduler: some SharedOperationStateScheduler = .synchronous
-  ) where State == MutationState<Arguments, Value> {
+  ) where State == MutationState<Mutation.Arguments, Mutation.ReturnValue> {
     self.init(
       mutation,
       initialState: MutationState(initialValue: wrappedValue),
@@ -604,16 +584,12 @@ extension SharedOperation {
   ///   - mutation: The `MutationRequest`.
   ///   - client: A `OperationClient` to obtain the `OperationStore` from.
   ///   - scheduler: The ``SharedOperationStateScheduler`` to schedule state updates on.
-  public init<
-    Arguments: Sendable,
-    Value: Sendable,
-    Mutation: MutationRequest<Arguments, Value>
-  >(
-    _ mutation: Mutation,
+  public init<Mutation: MutationRequest>(
+    _ mutation: Mutation.Default,
     client: OperationClient? = nil,
     scheduler: some SharedOperationStateScheduler = .synchronous
-  ) where State == MutationState<Arguments, Value> {
-    self.init(mutation, initialState: MutationState(), client: client, scheduler: scheduler)
+  ) where State == DefaultOperation<Mutation>.State {
+    self.init(mutation, initialState: mutation.initialState, client: client, scheduler: scheduler)
   }
 }
 

@@ -289,3 +289,12 @@ where Base: _InfiniteQueryStateProtocol, Base.DefaultStateValue == Base.StateVal
     self.base.previousPageActiveTasks
   }
 }
+
+extension DefaultOperation where Operation: InfiniteQueryRequest {
+  package var initialState: State {
+    State(
+      Operation.State(initialValue: [], initialPageId: self.operation.initialPageId),
+      defaultValue: self.defaultValue
+    )
+  }
+}

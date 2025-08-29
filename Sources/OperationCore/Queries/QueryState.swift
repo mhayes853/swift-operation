@@ -122,3 +122,11 @@ extension DefaultOperationState: _QueryStateProtocol where Base: _QueryStateProt
     self.base.activeTasks
   }
 }
+
+// MARK: - Initial State
+
+extension DefaultOperation where Operation: QueryRequest {
+  package var initialState: State {
+    State(QueryState(initialValue: nil), defaultValue: self.defaultValue)
+  }
+}

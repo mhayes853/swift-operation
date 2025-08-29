@@ -46,10 +46,7 @@ extension OperationStore {
   ) -> OperationStore<Query.Default.State> {
     .detached(
       operation: query,
-      initialState: Query.Default.State(
-        InfiniteQueryState(initialValue: [], initialPageId: query.operation.initialPageId),
-        defaultValue: query.defaultValue
-      ),
+      initialState: query.initialState,
       initialContext: initialContext
     )
   }

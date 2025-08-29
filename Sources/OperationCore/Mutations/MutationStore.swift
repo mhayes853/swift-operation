@@ -17,7 +17,7 @@ extension OperationStore {
   ) -> OperationStore<Mutation.Default.State> {
     .detached(
       operation: mutation,
-      initialState: Mutation.Default.State(Mutation.State(), defaultValue: mutation.defaultValue),
+      initialState: mutation.initialState,
       initialContext: initialContext
     )
   }

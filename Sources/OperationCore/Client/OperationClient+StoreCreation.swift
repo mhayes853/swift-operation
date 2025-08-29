@@ -133,13 +133,7 @@ extension OperationClient.CreateStore {
   public func callAsFunction<Query: QueryRequest>(
     for query: Query.Default
   ) -> OperationStore<Query.Default.State> {
-    self(
-      for: query,
-      initialState: Query.Default.State(
-        QueryState(initialValue: nil),
-        defaultValue: query.defaultValue
-      )
-    )
+    self(for: query, initialState: query.initialState)
   }
 
   /// Creates a ``OperationStore`` for an ``InfiniteQueryRequest``.
@@ -169,16 +163,7 @@ extension OperationClient.CreateStore {
   public func callAsFunction<Query: InfiniteQueryRequest>(
     for query: Query.Default
   ) -> OperationStore<Query.Default.State> {
-    self(
-      for: query,
-      initialState: Query.Default.State(
-        InfiniteQueryState(
-          initialValue: [],
-          initialPageId: query.operation.initialPageId
-        ),
-        defaultValue: query.defaultValue
-      )
-    )
+    self(for: query, initialState: query.initialState)
   }
 
   /// Creates a ``OperationStore`` for a ``MutationRequest``.
@@ -202,9 +187,6 @@ extension OperationClient.CreateStore {
   public func callAsFunction<Mutation: MutationRequest>(
     for mutation: Mutation.Default,
   ) -> OperationStore<Mutation.Default.State> {
-    self(
-      for: mutation,
-      initialState: Mutation.Default.State(Mutation.State(), defaultValue: mutation.defaultValue)
-    )
+    self(for: mutation, initialState: mutation.initialState)
   }
 }

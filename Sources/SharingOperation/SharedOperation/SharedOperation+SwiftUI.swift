@@ -55,7 +55,7 @@
       _ query: Query,
       client: OperationClient? = nil,
       animation: Animation
-    ) where State == QueryState<Query.Value>, Query.State == QueryState<Query.Value> {
+    ) where State == QueryState<Query.Value> {
       self.init(
         wrappedValue: wrappedValue,
         query,
@@ -74,8 +74,13 @@
       _ query: Query.Default,
       client: OperationClient? = nil,
       animation: Animation
-    ) where State == DefaultQueryState<Query.Value> {
-      self.init(query, client: client, scheduler: .animation(animation))
+    ) where State == DefaultOperation<Query>.State {
+      self.init(
+        query,
+        initialState: query.initialState,
+        client: client,
+        scheduler: .animation(animation)
+      )
     }
   }
 
@@ -110,11 +115,16 @@
     ///   - client: A `OperationClient` to obtain the `OperationStore` from.
     ///   - animation: The `Animation` to use for state updates.
     public init<Query: InfiniteQueryRequest>(
-      _ query: DefaultInfiniteQuery<Query>,
+      _ query: Query.Default,
       client: OperationClient? = nil,
       animation: Animation
-    ) where State == InfiniteQueryState<Query.PageID, Query.PageValue> {
-      self.init(query, client: client, scheduler: .animation(animation))
+    ) where State == DefaultOperationState<InfiniteQueryState<Query.PageID, Query.PageValue>> {
+      self.init(
+        query,
+        initialState: query.initialState,
+        client: client,
+        scheduler: .animation(animation)
+      )
     }
   }
 
@@ -128,16 +138,12 @@
     ///   - wrappedValue: The initial value.
     ///   - client: A `OperationClient` to obtain the `OperationStore` from.
     ///   - animation: The `Animation` to use for state updates.
-    public init<
-      Arguments: Sendable,
-      Value: Sendable,
-      Mutation: MutationRequest<Arguments, Value>
-    >(
-      wrappedValue: Value?,
+    public init<Mutation: MutationRequest>(
+      wrappedValue: Mutation.ReturnValue?,
       _ mutation: Mutation,
       client: OperationClient? = nil,
       animation: Animation
-    ) where State == MutationState<Arguments, Value> {
+    ) where State == MutationState<Mutation.Arguments, Mutation.ReturnValue> {
       self.init(
         mutation,
         initialState: MutationState(initialValue: wrappedValue),
@@ -152,16 +158,17 @@
     ///   - mutation: The `MutationRequest`.
     ///   - client: A `OperationClient` to obtain the `OperationStore` from.
     ///   - animation: The `Animation` to use for state updates.
-    public init<
-      Arguments: Sendable,
-      Value: Sendable,
-      Mutation: MutationRequest<Arguments, Value>
-    >(
-      _ mutation: Mutation,
+    public init<Mutation: MutationRequest>(
+      _ mutation: Mutation.Default,
       client: OperationClient? = nil,
       animation: Animation
-    ) where State == MutationState<Arguments, Value> {
-      self.init(mutation, client: client, scheduler: .animation(animation))
+    ) where State == DefaultOperation<Mutation>.State {
+      self.init(
+        mutation,
+        initialState: mutation.initialState,
+        client: client,
+        scheduler: .animation(animation)
+      )
     }
   }
 

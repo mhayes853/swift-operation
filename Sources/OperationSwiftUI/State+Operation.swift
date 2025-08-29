@@ -139,7 +139,7 @@
       _ query: Query,
       client: OperationClient? = nil,
       transaction: Transaction? = nil
-    ) where State == QueryState<Query.Value>, Query.State == QueryState<Query.Value> {
+    ) where State == QueryState<Query.Value> {
       self.init(
         query,
         initialState: QueryState(initialValue: wrappedValue),
@@ -160,7 +160,7 @@
       _ query: Query,
       client: OperationClient? = nil,
       animation: Animation
-    ) where State == QueryState<Query.Value>, Query.State == QueryState<Query.Value> {
+    ) where State == QueryState<Query.Value> {
       self.init(
         wrappedValue: wrappedValue,
         query,
@@ -179,16 +179,8 @@
       _ query: Query.Default,
       client: OperationClient? = nil,
       transaction: Transaction? = nil
-    ) where State == DefaultQueryState<Query.Value> {
-      self.init(
-        query,
-        initialState: State(
-          QueryState(initialValue: query.defaultValue),
-          defaultValue: query.defaultValue
-        ),
-        client: client,
-        transaction: transaction
-      )
+    ) where State == DefaultOperation<Query>.State {
+      self.init(query, initialState: query.initialState, client: client, transaction: transaction)
     }
 
     /// Creates a state property for the specified `QueryRequest`.
@@ -201,13 +193,10 @@
       _ query: Query.Default,
       client: OperationClient? = nil,
       animation: Animation
-    ) where State == DefaultQueryState<Query.Value> {
+    ) where State == DefaultOperation<Query>.State {
       self.init(
         query,
-        initialState: State(
-          QueryState(initialValue: query.defaultValue),
-          defaultValue: query.defaultValue
-        ),
+        initialState: query.initialState,
         client: client,
         transaction: Transaction(animation: animation)
       )
@@ -425,19 +414,11 @@
     ///   - client: An optional `OperationClient` to override ``SwiftUICore/EnvironmentValues/OperationClient``.
     ///   - transaction: The transaction to apply to state updates.
     public init<Query: InfiniteQueryRequest>(
-      _ query: DefaultInfiniteQuery<Query>,
+      _ query: Query.Default,
       client: OperationClient? = nil,
       transaction: Transaction? = nil
-    ) where State == InfiniteQueryState<Query.PageID, Query.PageValue> {
-      self.init(
-        query,
-        initialState: InfiniteQueryState(
-          initialValue: query.defaultValue,
-          initialPageId: query.initialPageId
-        ),
-        client: client,
-        transaction: transaction
-      )
+    ) where State == DefaultOperationState<InfiniteQueryState<Query.PageID, Query.PageValue>> {
+      self.init(query, initialState: query.initialState, client: client, transaction: transaction)
     }
 
     /// Creates a state property for an `InfiniteQueryRequest`
@@ -447,16 +428,13 @@
     ///   - client: An optional `OperationClient` to override ``SwiftUICore/EnvironmentValues/OperationClient``.
     ///   - animation: The animation to apply to state updates.
     public init<Query: InfiniteQueryRequest>(
-      _ query: DefaultInfiniteQuery<Query>,
+      _ query: Query.Default,
       client: OperationClient? = nil,
       animation: Animation
-    ) where State == InfiniteQueryState<Query.PageID, Query.PageValue> {
+    ) where State == DefaultOperationState<InfiniteQueryState<Query.PageID, Query.PageValue>> {
       self.init(
         query,
-        initialState: InfiniteQueryState(
-          initialValue: query.defaultValue,
-          initialPageId: query.initialPageId
-        ),
+        initialState: query.initialState,
         client: client,
         transaction: Transaction(animation: animation)
       )
@@ -590,16 +568,12 @@
     ///   - mutation: The mutation to observe.
     ///   - client: An optional `OperationClient` to override ``SwiftUICore/EnvironmentValues/OperationClient``.
     ///   - transaction: The transaction to apply to state updates.
-    public init<
-      Arguments: Sendable,
-      V: Sendable,
-      Mutation: MutationRequest<Arguments, V>
-    >(
-      wrappedValue: V?,
+    public init<Mutation: MutationRequest>(
+      wrappedValue: Mutation.ReturnValue? = nil,
       _ mutation: Mutation,
       client: OperationClient? = nil,
       transaction: Transaction? = nil
-    ) where State == MutationState<Arguments, V> {
+    ) where State == MutationState<Mutation.Arguments, Mutation.ReturnValue> {
       self.init(
         mutation,
         initialState: MutationState(initialValue: wrappedValue),
@@ -615,16 +589,12 @@
     ///   - mutation: The mutation to observe.
     ///   - client: An optional `OperationClient` to override ``SwiftUICore/EnvironmentValues/OperationClient``.
     ///   - animation: The animation to apply to state updates.
-    public init<
-      Arguments: Sendable,
-      V: Sendable,
-      Mutation: MutationRequest<Arguments, V>
-    >(
-      wrappedValue: V?,
+    public init<Mutation: MutationRequest>(
+      wrappedValue: Mutation.ReturnValue? = nil,
       _ mutation: Mutation,
       client: OperationClient? = nil,
       animation: Animation
-    ) where State == MutationState<Arguments, V> {
+    ) where State == MutationState<Mutation.Arguments, Mutation.ReturnValue> {
       self.init(
         mutation,
         initialState: MutationState(initialValue: wrappedValue),
@@ -639,18 +609,14 @@
     ///   - mutation: The mutation to observe.
     ///   - client: An optional `OperationClient` to override ``SwiftUICore/EnvironmentValues/OperationClient``.
     ///   - transaction: The transaction to apply to state updates.
-    public init<
-      Arguments: Sendable,
-      V: Sendable,
-      Mutation: MutationRequest<Arguments, V>
-    >(
-      _ mutation: Mutation,
+    public init<Mutation: MutationRequest>(
+      _ mutation: Mutation.Default,
       client: OperationClient? = nil,
       transaction: Transaction? = nil
-    ) where State == MutationState<Arguments, V> {
+    ) where State == DefaultOperation<Mutation>.State {
       self.init(
         mutation,
-        initialState: MutationState(),
+        initialState: mutation.initialState,
         client: client,
         transaction: transaction
       )
@@ -662,18 +628,14 @@
     ///   - mutation: The mutation to observe.
     ///   - client: An optional `OperationClient` to override ``SwiftUICore/EnvironmentValues/OperationClient``.
     ///   - animation: The animation to apply to state updates.
-    public init<
-      Arguments: Sendable,
-      V: Sendable,
-      Mutation: MutationRequest<Arguments, V>
-    >(
-      _ mutation: Mutation,
+    public init<Mutation: MutationRequest>(
+      _ mutation: Mutation.Default,
       client: OperationClient? = nil,
       animation: Animation
-    ) where State == MutationState<Arguments, V> {
+    ) where State == DefaultOperation<Mutation>.State {
       self.init(
         mutation,
-        initialState: MutationState(),
+        initialState: mutation.initialState,
         client: client,
         transaction: Transaction(animation: animation)
       )
