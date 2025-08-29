@@ -1,3 +1,5 @@
+import Atomics
+
 // MARK: - OperationTaskIdentifier
 
 /// An opaque identifier for a ``OperationTask``.
@@ -5,13 +7,10 @@
 /// Each new `OperationTask` is assigned a unique identifier when it is initialized, you do not create
 /// instances of this identifier.
 public struct OperationTaskIdentifier: Hashable, Sendable {
-  private static let counter = Lock(0)
+  private static let counter = ManagedAtomic(0)
 
   static func next() -> Self {
-    counter.withLock { counter in
-      defer { counter += 1 }
-      return Self(number: counter)
-    }
+    Self(number: Self.counter.wrappingIncrementThenLoad(by: 1, ordering: .relaxed))
   }
 
   private let number: Int
