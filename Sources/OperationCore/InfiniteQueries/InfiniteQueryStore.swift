@@ -15,11 +15,11 @@ extension OperationStore {
   ///   - initialValue: The initial value.
   ///   - initialContext: The default ``OperationContext``.
   /// - Returns: A store.
-  public static func detached<Query: InfiniteQueryRequest<State.PageID, State.PageValue>>(
+  public static func detached<Query: InfiniteQueryRequest>(
     query: Query,
     initialValue: Query.State.StateValue = [],
     initialContext: OperationContext = OperationContext()
-  ) -> OperationStore<State> where State == InfiniteQueryState<State.PageID, State.PageValue> {
+  ) -> OperationStore<State> where State == InfiniteQueryState<Query.PageID, Query.PageValue> {
     .detached(
       operation: query,
       initialState: InfiniteQueryState(
@@ -43,7 +43,7 @@ extension OperationStore {
   public static func detached<Query: InfiniteQueryRequest>(
     query: Query.Default,
     initialContext: OperationContext = OperationContext()
-  ) -> OperationStore<Query.Default.State> {
+  ) -> OperationStore<Query.Default.State> where State == DefaultOperation<Query>.State {
     .detached(
       operation: query,
       initialState: query.initialState,

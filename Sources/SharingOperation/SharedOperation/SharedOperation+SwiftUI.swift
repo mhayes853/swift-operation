@@ -51,7 +51,7 @@
     ///   - client: A `OperationClient` to obtain the `OperationStore` from.
     ///   - animation: The `Animation` to use for state updates.
     public init<Query: QueryRequest>(
-      wrappedValue: Query.Value? = nil,
+      wrappedValue: Query.State.StateValue = nil,
       _ query: Query,
       client: OperationClient? = nil,
       animation: Animation
@@ -139,7 +139,7 @@
     ///   - client: A `OperationClient` to obtain the `OperationStore` from.
     ///   - animation: The `Animation` to use for state updates.
     public init<Mutation: MutationRequest>(
-      wrappedValue: Mutation.ReturnValue?,
+      wrappedValue: Mutation.State.StateValue = nil,
       _ mutation: Mutation,
       client: OperationClient? = nil,
       animation: Animation

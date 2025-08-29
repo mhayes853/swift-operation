@@ -135,7 +135,7 @@
     ///   - client: An optional `OperationClient` to override ``SwiftUICore/EnvironmentValues/OperationClient``.
     ///   - transaction: The transaction to apply to state updates.
     public init<Query: QueryRequest>(
-      wrappedValue: Query.Value? = nil,
+      wrappedValue: Query.State.StateValue = nil,
       _ query: Query,
       client: OperationClient? = nil,
       transaction: Transaction? = nil
@@ -156,7 +156,7 @@
     ///   - client: An optional `OperationClient` to override ``SwiftUICore/EnvironmentValues/OperationClient``.
     ///   - animation: The animation to apply to state updates.
     public init<Query: QueryRequest>(
-      wrappedValue: Query.Value? = nil,
+      wrappedValue: Query.State.StateValue = nil,
       _ query: Query,
       client: OperationClient? = nil,
       animation: Animation
@@ -569,7 +569,7 @@
     ///   - client: An optional `OperationClient` to override ``SwiftUICore/EnvironmentValues/OperationClient``.
     ///   - transaction: The transaction to apply to state updates.
     public init<Mutation: MutationRequest>(
-      wrappedValue: Mutation.ReturnValue? = nil,
+      wrappedValue: Mutation.State.StateValue = nil,
       _ mutation: Mutation,
       client: OperationClient? = nil,
       transaction: Transaction? = nil
@@ -590,7 +590,7 @@
     ///   - client: An optional `OperationClient` to override ``SwiftUICore/EnvironmentValues/OperationClient``.
     ///   - animation: The animation to apply to state updates.
     public init<Mutation: MutationRequest>(
-      wrappedValue: Mutation.ReturnValue? = nil,
+      wrappedValue: Mutation.State.StateValue = nil,
       _ mutation: Mutation,
       client: OperationClient? = nil,
       animation: Animation

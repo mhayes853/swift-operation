@@ -14,7 +14,7 @@ extension OperationStore {
   public static func detached<Mutation: MutationRequest>(
     mutation: Mutation.Default,
     initialContext: OperationContext = OperationContext()
-  ) -> OperationStore<Mutation.Default.State> {
+  ) -> OperationStore<Mutation.Default.State> where State == DefaultOperation<Mutation>.State {
     .detached(
       operation: mutation,
       initialState: mutation.initialState,
@@ -37,7 +37,8 @@ extension OperationStore {
     mutation: Mutation,
     initialValue: Mutation.ReturnValue? = nil,
     initialContext: OperationContext = OperationContext()
-  ) -> OperationStore<Mutation.State> {
+  ) -> OperationStore<Mutation.State>
+  where State == MutationState<Mutation.Arguments, Mutation.ReturnValue> {
     .detached(
       operation: mutation,
       initialState: Mutation.State(initialValue: initialValue),
@@ -60,7 +61,8 @@ extension OperationStore {
     mutation: Mutation,
     initialState: Mutation.State,
     initialContext: OperationContext = OperationContext()
-  ) -> OperationStore<Mutation.State> {
+  ) -> OperationStore<Mutation.State>
+  where State == MutationState<Mutation.Arguments, Mutation.ReturnValue> {
     .detached(
       operation: mutation,
       initialState: initialState,

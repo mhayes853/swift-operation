@@ -16,7 +16,7 @@ extension OperationStore {
     query: Query,
     initialState: Query.State,
     initialContext: OperationContext = OperationContext()
-  ) -> OperationStore<Query.State> {
+  ) -> OperationStore<Query.State> where State == QueryState<Query.Value> {
     .detached(operation: query, initialState: initialState, initialContext: initialContext)
   }
 
@@ -35,7 +35,7 @@ extension OperationStore {
     query: Query,
     initialValue: Query.State.StateValue,
     initialContext: OperationContext = OperationContext()
-  ) -> OperationStore<Query.State> {
+  ) -> OperationStore<Query.State> where State == QueryState<Query.Value> {
     .detached(
       operation: query,
       initialState: QueryState(initialValue: initialValue),
@@ -56,7 +56,7 @@ extension OperationStore {
   public static func detached<Query: QueryRequest>(
     query: Query.Default,
     initialContext: OperationContext = OperationContext()
-  ) -> OperationStore<Query.Default.State> {
+  ) -> OperationStore<Query.Default.State> where State == DefaultOperation<Query>.State {
     .detached(operation: query, initialState: query.initialState, initialContext: initialContext)
   }
 }
