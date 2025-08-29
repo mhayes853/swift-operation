@@ -36,7 +36,7 @@ where Operation.State: DefaultableOperationState {
   }
 
   public var _debugTypeName: String {
-    self.operation._debugTypeName  // TODO: Change this
+    "\(self.operation._debugTypeName).Default"
   }
 
   public func setup(context: inout OperationContext) {
