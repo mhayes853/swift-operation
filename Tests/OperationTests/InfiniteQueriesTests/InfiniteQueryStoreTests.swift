@@ -1046,4 +1046,17 @@ struct InfiniteOperationStoreTests {
       }
     }
   }
+
+  @Test("Uses Default Value When Value Never Been Set")
+  func usesDefaultValueWhenValueNeverBeenSet() {
+    let page = InfiniteQueryPage(id: 0, value: "blob")
+    let page2 = InfiniteQueryPage(id: 0, value: "blob 2")
+    let store = self.client.store(for: FailableInfiniteQuery().defaultValue([page]))
+
+    expectNoDifference(store.currentValue, [page])
+    store.currentValue = [page2]
+    expectNoDifference(store.currentValue, [page2])
+    store.currentValue = []
+    expectNoDifference(store.currentValue, [])
+  }
 }

@@ -11,14 +11,13 @@ extension OperationStore {
   ///   - mutation: The ``MutationRequest``.
   ///   - initialContext: The default ``OperationContext``.
   /// - Returns: A store.
-  public static func detached<Arguments, Value, Mutation: MutationRequest<Arguments, Value>>(
-    mutation: Mutation,
+  public static func detached<Mutation: MutationRequest>(
+    mutation: Mutation.Default,
     initialContext: OperationContext = OperationContext()
-  ) -> OperationStore<MutationState<Arguments, Value>>
-  where State == MutationState<Arguments, Value> {
+  ) -> OperationStore<Mutation.Default.State> {
     .detached(
       operation: mutation,
-      initialState: MutationState(),
+      initialState: Mutation.Default.State(Mutation.State(), defaultValue: mutation.defaultValue),
       initialContext: initialContext
     )
   }
@@ -34,15 +33,14 @@ extension OperationStore {
   ///   - initialValue: The initial value.
   ///   - initialContext: The default ``OperationContext``.
   /// - Returns: A store.
-  public static func detached<Arguments, Value, Mutation: MutationRequest<Arguments, Value>>(
+  public static func detached<Mutation: MutationRequest>(
     mutation: Mutation,
-    initialValue: Value?,
+    initialValue: Mutation.ReturnValue? = nil,
     initialContext: OperationContext = OperationContext()
-  ) -> OperationStore<MutationState<Arguments, Value>>
-  where State == MutationState<Arguments, Value> {
+  ) -> OperationStore<Mutation.State> {
     .detached(
       operation: mutation,
-      initialState: MutationState(initialValue: initialValue),
+      initialState: Mutation.State(initialValue: initialValue),
       initialContext: initialContext
     )
   }
@@ -58,12 +56,11 @@ extension OperationStore {
   ///   - initialState: The initial state.
   ///   - initialContext: The default ``OperationContext``.
   /// - Returns: A store.
-  public static func detached<Arguments, Value, Mutation: MutationRequest<Arguments, Value>>(
+  public static func detached<Mutation: MutationRequest>(
     mutation: Mutation,
-    initialState: State,
+    initialState: Mutation.State,
     initialContext: OperationContext = OperationContext()
-  ) -> OperationStore<MutationState<Arguments, Value>>
-  where State == MutationState<Arguments, Value> {
+  ) -> OperationStore<Mutation.State> {
     .detached(
       operation: mutation,
       initialState: initialState,

@@ -100,3 +100,25 @@ extension QueryState: _QueryStateProtocol {
     self.activeTasks.remove(id: task.id)
   }
 }
+
+// MARK: - DefaultableOperationState
+
+extension QueryState: DefaultableOperationState {
+  public typealias DefaultStateValue = Value
+
+  public func defaultValue(for value: Value?, using defaultValue: Value) -> Value {
+    value ?? defaultValue
+  }
+
+  public func stateValue(for defaultStateValue: Value) -> Value? {
+    defaultStateValue
+  }
+}
+
+// MARK: - DefaultOperationState
+
+extension DefaultOperationState: _QueryStateProtocol where Base: _QueryStateProtocol {
+  public var activeTasks: IdentifiedArrayOf<OperationTask<Base.Value>> {
+    self.base.activeTasks
+  }
+}

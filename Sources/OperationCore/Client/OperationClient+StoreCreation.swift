@@ -167,13 +167,16 @@ extension OperationClient.CreateStore {
   ///   - query: The query.
   /// - Returns: A ``OperationStore``.
   public func callAsFunction<Query: InfiniteQueryRequest>(
-    for query: DefaultInfiniteQuery<Query>
-  ) -> OperationStore<DefaultInfiniteQuery<Query>.State> {
+    for query: Query.Default
+  ) -> OperationStore<Query.Default.State> {
     self(
       for: query,
-      initialState: InfiniteQueryState(
-        initialValue: query.defaultValue,
-        initialPageId: query.initialPageId
+      initialState: Query.Default.State(
+        InfiniteQueryState(
+          initialValue: [],
+          initialPageId: query.operation.initialPageId
+        ),
+        defaultValue: query.defaultValue
       )
     )
   }
@@ -186,8 +189,22 @@ extension OperationClient.CreateStore {
   /// - Returns: A ``OperationStore``.
   public func callAsFunction<Mutation: MutationRequest>(
     for mutation: Mutation,
-    initialValue: Mutation.State.StateValue = nil
+    initialValue: Mutation.ReturnValue? = nil
   ) -> OperationStore<Mutation.State> {
-    self(for: mutation, initialState: MutationState(initialValue: initialValue))
+    self(for: mutation, initialState: Mutation.State(initialValue: initialValue))
+  }
+
+  /// Creates a ``OperationStore`` for a ``MutationRequest``.
+  ///
+  /// - Parameters:
+  ///   - query: The mutation.
+  /// - Returns: A ``OperationStore``.
+  public func callAsFunction<Mutation: MutationRequest>(
+    for mutation: Mutation.Default,
+  ) -> OperationStore<Mutation.Default.State> {
+    self(
+      for: mutation,
+      initialState: Mutation.Default.State(Mutation.State(), defaultValue: mutation.defaultValue)
+    )
   }
 }

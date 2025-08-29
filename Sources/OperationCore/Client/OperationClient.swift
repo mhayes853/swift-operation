@@ -176,8 +176,8 @@ extension OperationClient {
   ///   - query: The query.
   /// - Returns: A ``OperationStore``.
   public func store<Query: InfiniteQueryRequest>(
-    for query: DefaultInfiniteQuery<Query>
-  ) -> OperationStore<DefaultInfiniteQuery<Query>.State> {
+    for query: Query.Default
+  ) -> OperationStore<Query.Default.State> {
     self.withStoreCreation(for: query) { $0(for: query) }
   }
 
@@ -189,9 +189,20 @@ extension OperationClient {
   /// - Returns: A ``OperationStore``.
   public func store<Mutation: MutationRequest>(
     for mutation: Mutation,
-    initialValue: Mutation.State.StateValue = nil
+    initialValue: Mutation.ReturnValue? = nil
   ) -> OperationStore<Mutation.State> {
     self.withStoreCreation(for: mutation) { $0(for: mutation, initialValue: initialValue) }
+  }
+
+  /// Retrieves the ``OperationStore`` for a ``MutationRequest``.
+  ///
+  /// - Parameters:
+  ///   - query: The mutation.
+  /// - Returns: A ``OperationStore``.
+  public func store<Mutation: MutationRequest>(
+    for mutation: Mutation.Default
+  ) -> OperationStore<Mutation.Default.State> {
+    self.withStoreCreation(for: mutation) { $0(for: mutation) }
   }
 
   private func withStoreCreation<Operation: OperationRequest & Sendable>(

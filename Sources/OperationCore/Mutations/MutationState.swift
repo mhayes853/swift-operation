@@ -4,9 +4,11 @@ import IdentifiedCollections
 // MARK: - _MutationStateProtocol
 
 public protocol _MutationStateProtocol<Arguments, Value>: OperationState
-where StateValue == Value?, StatusValue == Value, OperationValue == MutationOperationValue<Value> {
+where StatusValue == Value, OperationValue == MutationOperationValue<Value> {
   associatedtype Arguments: Sendable
   associatedtype Value: Sendable
+
+  var history: IdentifiedArrayOf<MutationState<Arguments, Value>.HistoryEntry> { get }
 }
 
 // MARK: - MutationState
@@ -187,6 +189,11 @@ extension MutationState {
     /// The current ``OperationStatus`` of the mutation attempt represented by this entry.
     public private(set) var status: OperationStatus<StatusValue>
 
+    /// The ``OperationTask`` for this entry.
+    public var task: OperationTask<Value> {
+      self.baseTask.map(\.returnValue)
+    }
+
     fileprivate let baseTask: OperationTask<OperationValue>
 
     fileprivate init(task: OperationTask<OperationValue>, args: Arguments) {
@@ -196,13 +203,17 @@ extension MutationState {
       self.lastUpdatedAt = nil
       self.status = .loading
     }
-  }
-}
 
-extension MutationState.HistoryEntry {
-  /// The ``OperationTask`` for this entry.
-  public var task: OperationTask<Value> {
-    self.baseTask.map(\.returnValue)
+    fileprivate mutating func update(with result: Result<Value, any Error>) {
+      self.currentResult = result
+      self.lastUpdatedAt = self.task.context.operationClock.now()
+    }
+
+    fileprivate mutating func finish() {
+      if let currentResult {
+        self.status = .result(currentResult)
+      }
+    }
   }
 }
 
@@ -212,16 +223,32 @@ extension MutationState.HistoryEntry: Identifiable {
   }
 }
 
-extension MutationState.HistoryEntry {
-  fileprivate mutating func update(with result: Result<Value, any Error>) {
-    self.currentResult = result
-    self.lastUpdatedAt = self.task.context.operationClock.now()
+// MARK: - DefaultableOperationState
+
+extension MutationState: DefaultableOperationState {
+  public typealias DefaultStateValue = Value
+
+  public func defaultValue(
+    for value: StateValue,
+    using defaultValue: DefaultStateValue
+  ) -> DefaultStateValue {
+    value ?? defaultValue
   }
 
-  fileprivate mutating func finish() {
-    if let currentResult {
-      self.status = .result(currentResult)
-    }
+  public func stateValue(for defaultStateValue: DefaultStateValue) -> StateValue {
+    defaultStateValue
+  }
+}
+
+// MARK: - DefaultOperationState
+
+extension DefaultOperationState: _MutationStateProtocol
+where Base: _MutationStateProtocol {
+  public typealias Arguments = Base.Arguments
+  public typealias Value = Base.Value
+
+  public var history: IdentifiedArrayOf<MutationState<Arguments, Value>.HistoryEntry> {
+    self.base.history
   }
 }
 

@@ -12,8 +12,51 @@ where
   associatedtype PageID: Hashable & Sendable
   associatedtype PageValue: Sendable
 
-  var hasPreviousPage: Bool { get }
-  var hasNextPage: Bool { get }
+  var initialPageId: PageID { get }
+  var nextPageId: PageID? { get }
+  var previousPageId: PageID? { get }
+  var allPagesActiveTasks: IdentifiedArrayOf<OperationTask<OperationValue>> { get }
+  var initialPageActiveTasks: IdentifiedArrayOf<OperationTask<OperationValue>> { get }
+  var nextPageActiveTasks: IdentifiedArrayOf<OperationTask<OperationValue>> { get }
+  var previousPageActiveTasks: IdentifiedArrayOf<OperationTask<OperationValue>> { get }
+}
+
+// MARK: - Has Page
+
+extension _InfiniteQueryStateProtocol {
+  /// Whether or not a next page can be fetched.
+  public var hasNextPage: Bool {
+    self.currentValue.isEmpty || self.nextPageId != nil
+  }
+
+  /// Whether or not a page before the first page in ``currentValue`` list can be fetched.
+  public var hasPreviousPage: Bool {
+    self.currentValue.isEmpty || self.previousPageId != nil
+  }
+}
+
+// MARK: - Is Loading
+
+extension InfiniteQueryState {
+  /// Whether or not the next page is loading.
+  public var isLoadingNextPage: Bool {
+    !self.nextPageActiveTasks.isEmpty
+  }
+
+  /// Whether or not the next page that will be presented at the beginning of ``currentValue`` is loading.
+  public var isLoadingPreviousPage: Bool {
+    !self.previousPageActiveTasks.isEmpty
+  }
+
+  /// Whether or not all pages are being refetched.
+  public var isLoadingAllPages: Bool {
+    !self.allPagesActiveTasks.isEmpty
+  }
+
+  /// Whether or not the initial page is loading.
+  public var isLoadingInitialPage: Bool {
+    !self.initialPageActiveTasks.isEmpty
+  }
 }
 
 // MARK: - InfiniteQueryState
@@ -56,64 +99,30 @@ public struct InfiniteQueryState<PageID: Hashable & Sendable, PageValue: Sendabl
   public private(set) var previousPageId: PageID?
 
   /// The active ``OperationTask``s for refetching all pages of data.
-  public private(set) var allPagesActiveTasks = IdentifiedArrayOf<OperationTask<OperationValue>>()
+  public private(set) var allPagesActiveTasks = IdentifiedArrayOf<
+    OperationTask<InfiniteQueryOperationValue<PageID, PageValue>>
+  >()
 
   /// The active ``OperationTask``s for fetching the initial page of data.
   public private(set) var initialPageActiveTasks = IdentifiedArrayOf<
-    OperationTask<OperationValue>
+    OperationTask<InfiniteQueryOperationValue<PageID, PageValue>>
   >()
 
   /// The active ``OperationTask``s for fetching the next page of data.
-  public private(set) var nextPageActiveTasks = IdentifiedArrayOf<OperationTask<OperationValue>>()
+  public private(set) var nextPageActiveTasks = IdentifiedArrayOf<
+    OperationTask<InfiniteQueryOperationValue<PageID, PageValue>>
+  >()
 
   /// The active ``OperationTask``s for fetching the page of data that will be presented at the
   /// beginning of ``currentValue``.
   public private(set) var previousPageActiveTasks = IdentifiedArrayOf<
-    OperationTask<OperationValue>
+    OperationTask<InfiniteQueryOperationValue<PageID, PageValue>>
   >()
 
   public init(initialValue: StateValue, initialPageId: PageID) {
     self.currentValue = initialValue
     self.initialValue = initialValue
     self.initialPageId = initialPageId
-  }
-}
-
-// MARK: - Is Loading
-
-extension InfiniteQueryState {
-  /// Whether or not the next page is loading.
-  public var isLoadingNextPage: Bool {
-    !self.nextPageActiveTasks.isEmpty
-  }
-
-  /// Whether or not the next page that will be presented at the beginning of ``currentValue`` is loading.
-  public var isLoadingPreviousPage: Bool {
-    !self.previousPageActiveTasks.isEmpty
-  }
-
-  /// Whether or not all pages are being refetched.
-  public var isLoadingAllPages: Bool {
-    !self.allPagesActiveTasks.isEmpty
-  }
-
-  /// Whether or not the initial page is loading.
-  public var isLoadingInitialPage: Bool {
-    !self.initialPageActiveTasks.isEmpty
-  }
-}
-
-// MARK: - Has Page
-
-extension InfiniteQueryState {
-  /// Whether or not a next page can be fetched.
-  public var hasNextPage: Bool {
-    self.currentValue.isEmpty || self.nextPageId != nil
-  }
-
-  /// Whether or not a page before the first page in ``currentValue`` list can be fetched.
-  public var hasPreviousPage: Bool {
-    self.currentValue.isEmpty || self.previousPageId != nil
   }
 }
 
@@ -235,5 +244,48 @@ extension InfiniteQueryState: _InfiniteQueryStateProtocol {
     default:
       return .initialPage
     }
+  }
+}
+
+// MARK: - DefaultableOperationState
+
+extension InfiniteQueryState: DefaultableOperationState {
+  public typealias DefaultStateValue = StateValue
+
+  public func defaultValue(
+    for value: StateValue,
+    using defaultValue: DefaultStateValue
+  ) -> DefaultStateValue {
+    self.valueUpdateCount == 0 ? defaultValue : value
+  }
+
+  public func stateValue(for defaultStateValue: DefaultStateValue) -> StateValue {
+    defaultStateValue
+  }
+}
+
+extension DefaultOperationState: _InfiniteQueryStateProtocol
+where Base: _InfiniteQueryStateProtocol, Base.DefaultStateValue == Base.StateValue {
+  public typealias PageID = Base.PageID
+  public typealias PageValue = Base.PageValue
+
+  public var initialPageId: PageID { self.base.initialPageId }
+  public var nextPageId: PageID? { self.base.nextPageId }
+  public var previousPageId: PageID? { self.base.previousPageId }
+
+  public var allPagesActiveTasks: IdentifiedArrayOf<OperationTask<OperationValue>> {
+    self.base.allPagesActiveTasks
+  }
+
+  public var initialPageActiveTasks: IdentifiedArrayOf<OperationTask<OperationValue>> {
+    self.base.initialPageActiveTasks
+  }
+
+  public var nextPageActiveTasks: IdentifiedArrayOf<OperationTask<OperationValue>> {
+    self.base.nextPageActiveTasks
+  }
+
+  public var previousPageActiveTasks: IdentifiedArrayOf<OperationTask<OperationValue>> {
+    self.base.previousPageActiveTasks
   }
 }
