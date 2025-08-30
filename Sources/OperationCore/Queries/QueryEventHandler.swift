@@ -27,9 +27,11 @@ public struct QueryEventHandler<State: _QueryStateProtocol>: Sendable {
     onFetchingStarted: (@Sendable (OperationContext) -> Void)? = nil,
     onFetchingEnded: (@Sendable (OperationContext) -> Void)? = nil,
     onResultReceived: (
-      @Sendable (Result<State.OperationValue, State.Failure>, OperationContext) -> Void
-    )? =
-      nil
+      @Sendable (
+        Result<State.OperationValue, State.Failure>,
+        OperationContext
+      ) -> Void
+    )? = nil
   ) {
     self.onFetchingStarted = onFetchingStarted
     self.onResultReceived = onResultReceived

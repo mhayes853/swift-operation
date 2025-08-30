@@ -475,8 +475,7 @@
     @discardableResult
     public func refetchAllPages(
       using context: OperationContext? = nil,
-      handler: InfiniteQueryEventHandler<State.PageID, State.PageValue> =
-        InfiniteQueryEventHandler()
+      handler: InfiniteQueryEventHandler<State> = InfiniteQueryEventHandler()
     ) async throws(State.Failure) -> InfiniteQueryPages<State.PageID, State.PageValue> {
       try await self.store.refetchAllPages(using: context, handler: handler)
     }
@@ -513,8 +512,7 @@
     @discardableResult
     public func fetchNextPage(
       using context: OperationContext? = nil,
-      handler: InfiniteQueryEventHandler<State.PageID, State.PageValue> =
-        InfiniteQueryEventHandler()
+      handler: InfiniteQueryEventHandler<State> = InfiniteQueryEventHandler()
     ) async throws(State.Failure) -> InfiniteQueryPage<State.PageID, State.PageValue>? {
       try await self.store.fetchNextPage(using: context, handler: handler)
     }
@@ -551,8 +549,7 @@
     @discardableResult
     public func fetchPreviousPage(
       using context: OperationContext? = nil,
-      handler: InfiniteQueryEventHandler<State.PageID, State.PageValue> =
-        InfiniteQueryEventHandler()
+      handler: InfiniteQueryEventHandler<State> = InfiniteQueryEventHandler()
     ) async throws(State.Failure) -> InfiniteQueryPage<State.PageID, State.PageValue>? {
       try await self.store.fetchPreviousPage(using: context, handler: handler)
     }
@@ -673,7 +670,7 @@
     public func mutate(
       with arguments: State.Arguments,
       using context: OperationContext? = nil,
-      handler: MutationEventHandler<State.Arguments, State.Value> = MutationEventHandler()
+      handler: MutationEventHandler<State> = MutationEventHandler()
     ) async throws(State.Failure) -> State.Value {
       try await self.store.mutate(with: arguments, using: context, handler: handler)
     }
@@ -707,7 +704,7 @@
     @discardableResult
     public func retryLatest(
       using context: OperationContext? = nil,
-      handler: MutationEventHandler<State.Arguments, State.Value> = MutationEventHandler()
+      handler: MutationEventHandler<State> = MutationEventHandler()
     ) async throws(State.Failure) -> State.Value {
       try await self.store.retryLatest(using: context, handler: handler)
     }
@@ -742,7 +739,7 @@
     @discardableResult
     public func mutate(
       using context: OperationContext? = nil,
-      handler: MutationEventHandler<State.Arguments, State.Value> = MutationEventHandler()
+      handler: MutationEventHandler<State> = MutationEventHandler()
     ) async throws(State.Failure) -> State.Value {
       try await self.store.mutate(using: context, handler: handler)
     }

@@ -85,7 +85,7 @@ extension OperationStore where State: _MutationStateProtocol {
   public func mutate(
     with arguments: State.Arguments,
     using context: OperationContext? = nil,
-    handler: MutationEventHandler<State.Arguments, State.Value> = MutationEventHandler()
+    handler: MutationEventHandler<State> = MutationEventHandler()
   ) async throws(State.Failure) -> State.Value {
     try await self.run(
       using: self.taskConfiguration(with: arguments, using: context),
@@ -137,7 +137,7 @@ extension OperationStore where State: _MutationStateProtocol, State.Arguments ==
   @discardableResult
   public func mutate(
     using context: OperationContext? = nil,
-    handler: MutationEventHandler<State.Arguments, State.Value> = MutationEventHandler()
+    handler: MutationEventHandler<State> = MutationEventHandler()
   ) async throws(State.Failure) -> State.Value {
     try await self.mutate(with: (), using: context, handler: handler)
   }
@@ -173,7 +173,7 @@ extension OperationStore where State: _MutationStateProtocol {
   @discardableResult
   public func retryLatest(
     using context: OperationContext? = nil,
-    handler: MutationEventHandler<State.Arguments, State.Value> = MutationEventHandler()
+    handler: MutationEventHandler<State> = MutationEventHandler()
   ) async throws(State.Failure) -> State.Value {
     try await self.run(
       using: self.retryTaskConfiguration(using: context),
@@ -223,7 +223,7 @@ extension OperationStore where State: _MutationStateProtocol {
   /// - Parameter handler: The event handler.
   /// - Returns: A ``OperationSubscription``.
   public func subscribe(
-    with handler: MutationEventHandler<State.Arguments, State.Value>
+    with handler: MutationEventHandler<State>
   ) -> OperationSubscription {
     self.subscribe(with: self.operationEventHandler(for: handler))
   }
@@ -233,12 +233,10 @@ extension OperationStore where State: _MutationStateProtocol {
 
 extension OperationStore where State: _MutationStateProtocol {
   private func operationEventHandler(
-    for handler: MutationEventHandler<State.Arguments, State.Value>
+    for handler: MutationEventHandler<State>
   ) -> OperationEventHandler<State> {
     OperationEventHandler(
-      onStateChanged: {
-        handler.onStateChanged?($0 as! MutationState<State.Arguments, State.Value, any Error>, $1)
-      },
+      onStateChanged: handler.onStateChanged,
       onFetchingStarted: {
         guard let args = $0.mutationArgs(as: State.Arguments.self) else { return }
         handler.onMutatingStarted?(args, $0)
@@ -249,11 +247,7 @@ extension OperationStore where State: _MutationStateProtocol {
       },
       onResultReceived: {
         guard let args = $1.mutationArgs(as: State.Arguments.self) else { return }
-        handler.onMutationResultReceived?(
-          args,
-          $0.map(\.returnValue).mapError { $0 as any Error },
-          $1
-        )
+        handler.onMutationResultReceived?(args, $0.map(\.returnValue), $1)
       }
     )
   }

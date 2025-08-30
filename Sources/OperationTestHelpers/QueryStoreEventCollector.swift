@@ -35,12 +35,11 @@ package final class _OperationStoreEventsCollector<Event: OperationStoreEventPro
 
 // MARK: - MutationStoreEvent
 
-package enum MutationStoreEvent<Arguments: Equatable & Sendable, Value: Equatable & Sendable>:
-  Sendable
-{
-  case mutatingStarted(Arguments)
-  case mutatingEnded(Arguments)
-  case mutationResultReceived(Arguments, Result<Value, any Error>)
+package enum MutationStoreEvent<State: _MutationStateProtocol>: Sendable
+where State.Arguments: Equatable, State.StatusValue: Equatable {
+  case mutatingStarted(State.Arguments)
+  case mutatingEnded(State.Arguments)
+  case mutationResultReceived(State.Arguments, Result<State.Value, State.Failure>)
   case stateChanged
 }
 
@@ -68,14 +67,14 @@ extension MutationStoreEvent: OperationStoreEventProtocol {
 }
 
 package typealias MutationStoreEventsCollector<
-  Arguments: Equatable & Sendable,
-  Value: Equatable & Sendable
-> = _OperationStoreEventsCollector<MutationStoreEvent<Arguments, Value>>
+  State: _MutationStateProtocol
+> = _OperationStoreEventsCollector<MutationStoreEvent<State>>
+where State.Arguments: Equatable, State.StatusValue: Equatable
 
 extension MutationStoreEventsCollector {
-  package func eventHandler<Arguments: Equatable & Sendable, Value: Equatable & Sendable>()
-    -> MutationEventHandler<Arguments, Value>
-  where Event == MutationStoreEvent<Arguments, Value> {
+  package func eventHandler<State: _MutationStateProtocol>()
+    -> MutationEventHandler<State>
+  where Event == MutationStoreEvent<State> {
     MutationEventHandler(
       onStateChanged: { _, _ in self.events.withLock { $0.append(.stateChanged) } },
       onMutatingStarted: { args, _ in self.events.withLock { $0.append(.mutatingStarted(args)) } },
@@ -89,16 +88,17 @@ extension MutationStoreEventsCollector {
 
 // MARK: - InfiniteOperationStoreEvent
 
-package enum InfiniteOperationStoreEvent<
-  PageID: Hashable & Sendable,
-  PageValue: Equatable & Sendable
->: Sendable {
+package enum InfiniteOperationStoreEvent<State: _InfiniteQueryStateProtocol>: Sendable
+where State.PageID: Equatable, State.PageValue: Equatable {
   case fetchingStarted
   case fetchingEnded
-  case pageFetchingStarted(PageID)
-  case pageFetchingEnded(PageID)
-  case pageResultReceived(PageID, Result<InfiniteQueryPage<PageID, PageValue>, any Error>)
-  case resultReceived(Result<InfiniteQueryPages<PageID, PageValue>, any Error>)
+  case pageFetchingStarted(State.PageID)
+  case pageFetchingEnded(State.PageID)
+  case pageResultReceived(
+    State.PageID,
+    Result<InfiniteQueryPage<State.PageID, State.PageValue>, State.Failure>
+  )
+  case resultReceived(Result<InfiniteQueryPages<State.PageID, State.PageValue>, State.Failure>)
   case stateChanged
 }
 
@@ -139,14 +139,14 @@ extension InfiniteOperationStoreEvent: OperationStoreEventProtocol {
 }
 
 package typealias InfiniteOperationStoreEventsCollector<
-  PageID: Hashable & Sendable,
-  PageValue: Sendable & Equatable
-> = _OperationStoreEventsCollector<InfiniteOperationStoreEvent<PageID, PageValue>>
+  State: _InfiniteQueryStateProtocol
+> = _OperationStoreEventsCollector<InfiniteOperationStoreEvent<State>>
+where State.PageID: Equatable, State.PageValue: Equatable
 
 extension InfiniteOperationStoreEventsCollector {
-  package func eventHandler<PageID: Hashable & Sendable, PageValue: Sendable & Equatable>()
-    -> InfiniteQueryEventHandler<PageID, PageValue>
-  where Event == InfiniteOperationStoreEvent<PageID, PageValue> {
+  package func eventHandler<State: _InfiniteQueryStateProtocol>()
+    -> InfiniteQueryEventHandler<State>
+  where Event == InfiniteOperationStoreEvent<State> {
     InfiniteQueryEventHandler(
       onStateChanged: { _, _ in self.events.withLock { $0.append(.stateChanged) } },
       onFetchingStarted: { _ in self.events.withLock { $0.append(.fetchingStarted) } },

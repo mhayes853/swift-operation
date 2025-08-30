@@ -282,9 +282,7 @@ struct MutationStoreTests {
   @Test("Successful Mutation Events")
   func successfulMutationEvents() async throws {
     let store = self.client.store(for: EmptyMutation())
-    let collector = MutationStoreEventsCollector<
-      EmptyMutation.Arguments, EmptyMutation.ReturnValue
-    >()
+    let collector = MutationStoreEventsCollector<EmptyMutation.State>()
     try await store.mutate(with: "blob", handler: collector.eventHandler())
 
     collector.expectEventsMatch([
@@ -300,9 +298,7 @@ struct MutationStoreTests {
   func failingMutationEvents() async throws {
     let mutation = FailableMutation()
     let store = self.client.store(for: mutation)
-    let collector = MutationStoreEventsCollector<
-      FailableMutation.Arguments, FailableMutation.ReturnValue
-    >()
+    let collector = MutationStoreEventsCollector<FailableMutation.State>()
     _ = try? await store.mutate(with: "blob", handler: collector.eventHandler())
 
     collector.expectEventsMatch([
@@ -318,10 +314,8 @@ struct MutationStoreTests {
   func subscribeToMutationEvents() async throws {
     let mutation = EmptyMutation()
     let store = self.client.store(for: mutation)
-    let collector = MutationStoreEventsCollector<
-      EmptyMutation.Arguments, EmptyMutation.ReturnValue
-    >()
-    let subscription = try await store.subscribe(with: collector.eventHandler())
+    let collector = MutationStoreEventsCollector<EmptyMutation.State>()
+    let subscription = store.subscribe(with: collector.eventHandler())
     try await store.mutate(with: "blob")
 
     collector.expectEventsMatch([
@@ -341,7 +335,7 @@ struct MutationStoreTests {
     let task = store.mutateTask(with: "blob")
     expectNoDifference(
       task.configuration.name,
-      "OperationStore<MutationState<String, String>> Mutate Task"
+      "OperationStore<MutationState<String, String, Error>> Mutate Task"
     )
   }
 
@@ -352,7 +346,7 @@ struct MutationStoreTests {
     let task = store.retryLatestTask()
     expectNoDifference(
       task.configuration.name,
-      "OperationStore<MutationState<String, String>> Retry Latest Task"
+      "OperationStore<MutationState<String, String, Error>> Retry Latest Task"
     )
   }
 
@@ -419,9 +413,7 @@ struct MutationStoreTests {
   func yieldsMultipleValuesDuringMutation() async throws {
     let mutation = ContinuingMutation()
     let store = self.client.store(for: mutation)
-    let collector = MutationStoreEventsCollector<
-      ContinuingMutation.Arguments, ContinuingMutation.ReturnValue
-    >()
+    let collector = MutationStoreEventsCollector<ContinuingMutation.State>()
     let value = try await store.mutate(with: "foo", handler: collector.eventHandler())
 
     collector.expectEventsMatch([
@@ -444,9 +436,7 @@ struct MutationStoreTests {
   func yieldsErrorThenSuccessDuringMutation() async throws {
     let mutation = ContinuingErrorMutation()
     let store = self.client.store(for: mutation)
-    let collector = MutationStoreEventsCollector<
-      ContinuingErrorMutation.Arguments, ContinuingErrorMutation.ReturnValue
-    >()
+    let collector = MutationStoreEventsCollector<ContinuingErrorMutation.State>()
     let value = try await store.mutate(with: "foo", handler: collector.eventHandler())
 
     collector.expectEventsMatch([
@@ -467,9 +457,7 @@ struct MutationStoreTests {
   func yieldsValueThenErrorDuringMutation() async throws {
     let mutation = ContinuingValueThenErrorMutation()
     let store = self.client.store(for: mutation)
-    let collector = MutationStoreEventsCollector<
-      ContinuingValueThenErrorMutation.Arguments, ContinuingValueThenErrorMutation.ReturnValue
-    >()
+    let collector = MutationStoreEventsCollector<ContinuingValueThenErrorMutation.State>()
     let value = try? await store.mutate(with: "foo", handler: collector.eventHandler())
 
     collector.expectEventsMatch([

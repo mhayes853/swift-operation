@@ -1,26 +1,22 @@
 import IdentifiedCollections
 
 /// An event handler that is passed to ``OperationStore/subscribe(with:)-7a55v``.
-public struct InfiniteQueryEventHandler<
-  PageID: Hashable & Sendable,
-  PageValue: Sendable
->: Sendable {
+public struct InfiniteQueryEventHandler<State: _InfiniteQueryStateProtocol>: Sendable {
   /// A callback that is invoked when the query state changes.
-  public var onStateChanged:
-    (@Sendable (InfiniteQueryState<PageID, PageValue, any Error>, OperationContext) -> Void)?
+  public var onStateChanged: (@Sendable (State, OperationContext) -> Void)?
 
   /// A callback that is invoked when fetching starts.
   public var onFetchingStarted: (@Sendable (OperationContext) -> Void)?
 
   /// A callback that is invoked when fetching for a specified page starts.
-  public var onPageFetchingStarted: (@Sendable (PageID, OperationContext) -> Void)?
+  public var onPageFetchingStarted: (@Sendable (State.PageID, OperationContext) -> Void)?
 
   /// A callback that is invoked when the result for fetching a page is received.
   public var onPageResultReceived:
     (
       @Sendable (
-        PageID,
-        Result<InfiniteQueryPage<PageID, PageValue>, any Error>,
+        State.PageID,
+        Result<InfiniteQueryPage<State.PageID, State.PageValue>, State.Failure>,
         OperationContext
       ) -> Void
     )?
@@ -28,11 +24,14 @@ public struct InfiniteQueryEventHandler<
   /// A callback that is invoked when a result is received from fetching on a ``OperationStore``.
   public var onResultReceived:
     (
-      @Sendable (Result<InfiniteQueryPages<PageID, PageValue>, any Error>, OperationContext) -> Void
+      @Sendable (
+        Result<InfiniteQueryPages<State.PageID, State.PageValue>, State.Failure>,
+        OperationContext
+      ) -> Void
     )?
 
   /// A callback that is invoked when fetching for a specified page ends.
-  public var onPageFetchingEnded: (@Sendable (PageID, OperationContext) -> Void)?
+  public var onPageFetchingEnded: (@Sendable (State.PageID, OperationContext) -> Void)?
 
   /// A callback that is invoked when fetching ends.
   public var onFetchingEnded: (@Sendable (OperationContext) -> Void)?
@@ -48,21 +47,23 @@ public struct InfiniteQueryEventHandler<
   ///   - onPageFetchingEnded: A callback that is invoked when fetching for a specified page ends.
   ///   - onFetchingEnded: A callback that is invoked when fetching ends.
   public init(
-    onStateChanged: (
-      @Sendable (InfiniteQueryState<PageID, PageValue, any Error>, OperationContext) -> Void
-    )? =
-      nil,
+    onStateChanged: (@Sendable (State, OperationContext) -> Void)? = nil,
     onFetchingStarted: (@Sendable (OperationContext) -> Void)? = nil,
-    onPageFetchingStarted: (@Sendable (PageID, OperationContext) -> Void)? = nil,
+    onPageFetchingStarted: (@Sendable (State.PageID, OperationContext) -> Void)? = nil,
     onPageResultReceived: (
-      @Sendable (PageID, Result<InfiniteQueryPage<PageID, PageValue>, any Error>, OperationContext)
-        ->
-        Void
+      @Sendable (
+        State.PageID,
+        Result<InfiniteQueryPage<State.PageID, State.PageValue>, State.Failure>,
+        OperationContext
+      ) -> Void
     )? = nil,
     onResultReceived: (
-      @Sendable (Result<InfiniteQueryPages<PageID, PageValue>, any Error>, OperationContext) -> Void
+      @Sendable (
+        Result<InfiniteQueryPages<State.PageID, State.PageValue>, State.Failure>,
+        OperationContext
+      ) -> Void
     )? = nil,
-    onPageFetchingEnded: (@Sendable (PageID, OperationContext) -> Void)? = nil,
+    onPageFetchingEnded: (@Sendable (State.PageID, OperationContext) -> Void)? = nil,
     onFetchingEnded: (@Sendable (OperationContext) -> Void)? = nil
   ) {
     self.onFetchingStarted = onFetchingStarted

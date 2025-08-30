@@ -470,7 +470,7 @@ extension SharedOperation where State: _InfiniteQueryStateProtocol {
   @discardableResult
   public func refetchAllPages(
     using context: OperationContext? = nil,
-    handler: InfiniteQueryEventHandler<State.PageID, State.PageValue> = InfiniteQueryEventHandler()
+    handler: InfiniteQueryEventHandler<State> = InfiniteQueryEventHandler()
   ) async throws(State.Failure) -> InfiniteQueryPages<State.PageID, State.PageValue> {
     try await self.value.store.refetchAllPages(using: context, handler: handler)
   }
@@ -507,7 +507,7 @@ extension SharedOperation where State: _InfiniteQueryStateProtocol {
   @discardableResult
   public func fetchNextPage(
     using context: OperationContext? = nil,
-    handler: InfiniteQueryEventHandler<State.PageID, State.PageValue> = InfiniteQueryEventHandler()
+    handler: InfiniteQueryEventHandler<State> = InfiniteQueryEventHandler()
   ) async throws(State.Failure) -> InfiniteQueryPage<State.PageID, State.PageValue>? {
     try await self.value.store.fetchNextPage(using: context, handler: handler)
   }
@@ -544,7 +544,7 @@ extension SharedOperation where State: _InfiniteQueryStateProtocol {
   @discardableResult
   public func fetchPreviousPage(
     using context: OperationContext? = nil,
-    handler: InfiniteQueryEventHandler<State.PageID, State.PageValue> = InfiniteQueryEventHandler()
+    handler: InfiniteQueryEventHandler<State> = InfiniteQueryEventHandler()
   ) async throws(State.Failure) -> InfiniteQueryPage<State.PageID, State.PageValue>? {
     try await self.value.store.fetchPreviousPage(using: context, handler: handler)
   }
@@ -620,7 +620,7 @@ extension SharedOperation where State: _MutationStateProtocol {
   public func mutate(
     with arguments: State.Arguments,
     using context: OperationContext? = nil,
-    handler: MutationEventHandler<State.Arguments, State.Value> = MutationEventHandler()
+    handler: MutationEventHandler<State> = MutationEventHandler()
   ) async throws(State.Failure) -> State.Value {
     try await self.value.store.mutate(with: arguments, using: context, handler: handler)
   }
@@ -654,7 +654,7 @@ extension SharedOperation where State: _MutationStateProtocol {
   @discardableResult
   public func retryLatest(
     using context: OperationContext? = nil,
-    handler: MutationEventHandler<State.Arguments, State.Value> = MutationEventHandler()
+    handler: MutationEventHandler<State> = MutationEventHandler()
   ) async throws(State.Failure) -> State.Value {
     try await self.value.store.retryLatest(using: context, handler: handler)
   }
@@ -689,7 +689,7 @@ extension SharedOperation where State: _MutationStateProtocol, State.Arguments =
   @discardableResult
   public func mutate(
     using context: OperationContext? = nil,
-    handler: MutationEventHandler<State.Arguments, State.Value> = MutationEventHandler()
+    handler: MutationEventHandler<State> = MutationEventHandler()
   ) async throws(State.Failure) -> State.Value {
     try await self.mutate(with: (), using: context, handler: handler)
   }

@@ -513,7 +513,7 @@ struct InfiniteOperationStoreTests {
 
   @Test("Fetch Next Page Events")
   func fetchNextPageEvents() async throws {
-    let collector = InfiniteOperationStoreEventsCollector<Int, String>()
+    let collector = InfiniteOperationStoreEventsCollector<TestInfiniteQuery.State>()
     let query = TestInfiniteQuery()
     let store = self.client.store(for: query)
     query.state.withLock { $0 = [0: "a"] }
@@ -533,7 +533,7 @@ struct InfiniteOperationStoreTests {
 
   @Test("Fetch Next Page Failing Events")
   func fetchNextPageFailingEvents() async throws {
-    let collector = InfiniteOperationStoreEventsCollector<Int, String>()
+    let collector = InfiniteOperationStoreEventsCollector<FailableInfiniteQuery.State>()
     let store = self.client.store(for: FailableInfiniteQuery())
     _ = try? await store.fetchNextPage(handler: collector.eventHandler())
 
@@ -551,7 +551,7 @@ struct InfiniteOperationStoreTests {
 
   @Test("Fetch Previous Page Events")
   func fetchPreviousPageEvents() async throws {
-    let collector = InfiniteOperationStoreEventsCollector<Int, String>()
+    let collector = InfiniteOperationStoreEventsCollector<TestInfiniteQuery.State>()
     let query = TestInfiniteQuery()
     let store = self.client.store(for: query)
     query.state.withLock { $0 = [0: "a"] }
@@ -571,7 +571,7 @@ struct InfiniteOperationStoreTests {
 
   @Test("Fetch Previous Page Failing Events")
   func fetchPreviousPageFailingEvents() async throws {
-    let collector = InfiniteOperationStoreEventsCollector<Int, String>()
+    let collector = InfiniteOperationStoreEventsCollector<FailableInfiniteQuery.State>()
     let store = self.client.store(for: FailableInfiniteQuery())
     _ = try? await store.fetchPreviousPage(handler: collector.eventHandler())
 
@@ -589,7 +589,7 @@ struct InfiniteOperationStoreTests {
 
   @Test("Fetch All Pages Events")
   func fetchAllPagesEvents() async throws {
-    let collector = InfiniteOperationStoreEventsCollector<Int, String>()
+    let collector = InfiniteOperationStoreEventsCollector<TestInfiniteQuery.State>()
     let query = TestInfiniteQuery()
     let store = self.client.store(for: query)
     query.state.withLock { $0 = [0: "a", 1: "b"] }
@@ -616,7 +616,7 @@ struct InfiniteOperationStoreTests {
 
   @Test("Fetch All Pages Failing Events")
   func fetchAllPagesFailingEvents() async throws {
-    let collector = InfiniteOperationStoreEventsCollector<Int, String>()
+    let collector = InfiniteOperationStoreEventsCollector<FailableInfiniteQuery.State>()
     let query = FailableInfiniteQuery()
     let store = self.client.store(for: query)
     query.state.withLock { $0 = "test" }
@@ -640,7 +640,7 @@ struct InfiniteOperationStoreTests {
 
   @Test("Fetch Through Normal Query Store Events")
   func fetchThroughNormalOperationStoreEvents() async throws {
-    let collector = InfiniteOperationStoreEventsCollector<Int, String>()
+    let collector = InfiniteOperationStoreEventsCollector<TestInfiniteQuery.State>()
     let query = TestInfiniteQuery()
     let store = self.client.store(for: query.disableAutomaticFetching())
     query.state.withLock { $0 = [0: "a", 1: "b"] }
@@ -666,7 +666,7 @@ struct InfiniteOperationStoreTests {
 
   @Test("Subscribe To Infinite Query")
   func subscribeToInfiniteQuery() async throws {
-    let collector = InfiniteOperationStoreEventsCollector<Int, String>()
+    let collector = InfiniteOperationStoreEventsCollector<TestInfiniteQuery.State>()
     let query = TestInfiniteQuery()
     let store = self.client.store(for: query)
     query.state.withLock { $0 = [0: "a"] }
@@ -693,7 +693,7 @@ struct InfiniteOperationStoreTests {
     let task = store.refetchAllPagesTask()
     expectNoDifference(
       task.configuration.name,
-      "OperationStore<InfiniteQueryState<Int, String>> Fetch All Pages Task"
+      "OperationStore<InfiniteQueryState<Int, String, Error>> Fetch All Pages Task"
     )
   }
 
@@ -703,7 +703,7 @@ struct InfiniteOperationStoreTests {
     let task = store.fetchNextPageTask()
     expectNoDifference(
       task.configuration.name,
-      "OperationStore<InfiniteQueryState<Int, String>> Fetch Next Page Task"
+      "OperationStore<InfiniteQueryState<Int, String, Error>> Fetch Next Page Task"
     )
   }
 
@@ -713,7 +713,7 @@ struct InfiniteOperationStoreTests {
     let task = store.fetchPreviousPageTask()
     expectNoDifference(
       task.configuration.name,
-      "OperationStore<InfiniteQueryState<Int, String>> Fetch Previous Page Task"
+      "OperationStore<InfiniteQueryState<Int, String, Error>> Fetch Previous Page Task"
     )
   }
 
@@ -808,9 +808,7 @@ struct InfiniteOperationStoreTests {
     let query = TestYieldableInfiniteQuery()
     query.state.withLock { $0[0] = [.success("blob"), .success("blob jr")] }
     let store = self.client.store(for: query)
-    let collector = InfiniteOperationStoreEventsCollector<
-      TestYieldableInfiniteQuery.PageID, TestYieldableInfiniteQuery.PageValue
-    >()
+    let collector = InfiniteOperationStoreEventsCollector<TestYieldableInfiniteQuery.State>()
     let value = try await store.fetchNextPage(handler: collector.eventHandler())
     let finalPage = InfiniteQueryPage(id: 0, value: TestYieldableInfiniteQuery.finalValue(for: 0))
 
@@ -837,9 +835,7 @@ struct InfiniteOperationStoreTests {
     let query = TestYieldableInfiniteQuery()
     query.state.withLock { $0[1] = [.success("blob"), .success("blob jr")] }
     let store = self.client.store(for: query)
-    let collector = InfiniteOperationStoreEventsCollector<
-      TestYieldableInfiniteQuery.PageID, TestYieldableInfiniteQuery.PageValue
-    >()
+    let collector = InfiniteOperationStoreEventsCollector<TestYieldableInfiniteQuery.State>()
     try await store.fetchNextPage()
     let value = try await store.fetchNextPage(handler: collector.eventHandler())
     let finalPage = TestYieldableInfiniteQuery.finalPage(for: 1)
@@ -868,9 +864,7 @@ struct InfiniteOperationStoreTests {
     let query = TestYieldableInfiniteQuery()
     query.state.withLock { $0[-1] = [.success("blob"), .success("blob jr")] }
     let store = self.client.store(for: query)
-    let collector = InfiniteOperationStoreEventsCollector<
-      TestYieldableInfiniteQuery.PageID, TestYieldableInfiniteQuery.PageValue
-    >()
+    let collector = InfiniteOperationStoreEventsCollector<TestYieldableInfiniteQuery.State>()
     try await store.fetchPreviousPage()
     let value = try await store.fetchPreviousPage(handler: collector.eventHandler())
     let finalPage = TestYieldableInfiniteQuery.finalPage(for: -1)
@@ -904,9 +898,7 @@ struct InfiniteOperationStoreTests {
       $0[1] = [.success("trob"), .failure(SomeError())]
     }
     let store = self.client.store(for: query)
-    let collector = InfiniteOperationStoreEventsCollector<
-      TestYieldableInfiniteQuery.PageID, TestYieldableInfiniteQuery.PageValue
-    >()
+    let collector = InfiniteOperationStoreEventsCollector<TestYieldableInfiniteQuery.State>()
     try await store.fetchNextPage()
     try await store.fetchNextPage()
     let value = try await store.refetchAllPages(handler: collector.eventHandler())
@@ -945,9 +937,7 @@ struct InfiniteOperationStoreTests {
     let query = TestYieldableInfiniteQuery(shouldThrow: true)
     query.state.withLock { $0[0] = [.success("blob")] }
     let store = self.client.store(for: query)
-    let collector = InfiniteOperationStoreEventsCollector<
-      TestYieldableInfiniteQuery.PageID, TestYieldableInfiniteQuery.PageValue
-    >()
+    let collector = InfiniteOperationStoreEventsCollector<TestYieldableInfiniteQuery.State>()
     let value = try? await store.fetchPreviousPage(handler: collector.eventHandler())
 
     collector.expectEventsMatch([

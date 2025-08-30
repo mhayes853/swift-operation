@@ -16,27 +16,27 @@ extension InfiniteQueryContextValues {
     let onPageFetchingFinished: @Sendable (AnyHashableSendable, OperationContext) -> Void
   }
 
-  func addRequestSubscriber<PageID, PageValue>(
-    from handler: InfiniteQueryEventHandler<PageID, PageValue>,
+  func addRequestSubscriber<State: _InfiniteQueryStateProtocol>(
+    from handler: InfiniteQueryEventHandler<State>,
     isTemporary: Bool
   ) -> OperationSubscription {
     let subscriber = RequestSubscriber(
       onPageFetchingStarted: { id, context in
-        guard let id = id.base as? PageID else { return }
+        guard let id = id.base as? State.PageID else { return }
         handler.onPageFetchingStarted?(id, context)
       },
       onPageResultReceived: { id, result, context in
-        guard let id = id.base as? PageID else { return }
+        guard let id = id.base as? State.PageID else { return }
         switch result {
-        case .success(let page as InfiniteQueryPage<PageID, PageValue>):
+        case .success(let page as InfiniteQueryPage<State.PageID, State.PageValue>):
           handler.onPageResultReceived?(id, .success(page), context)
         case .failure(let error):
-          handler.onPageResultReceived?(id, .failure(error), context)
+          handler.onPageResultReceived?(id, .failure(error as! State.Failure), context)
         default: break
         }
       },
       onPageFetchingFinished: { id, context in
-        guard let id = id.base as? PageID else { return }
+        guard let id = id.base as? State.PageID else { return }
         handler.onPageFetchingEnded?(id, context)
       }
     )

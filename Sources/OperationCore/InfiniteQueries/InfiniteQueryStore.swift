@@ -70,7 +70,7 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
   @discardableResult
   public func refetchAllPages(
     using context: OperationContext? = nil,
-    handler: InfiniteQueryEventHandler<State.PageID, State.PageValue> = InfiniteQueryEventHandler()
+    handler: InfiniteQueryEventHandler<State> = InfiniteQueryEventHandler()
   ) async throws(State.Failure) -> InfiniteQueryPages<State.PageID, State.PageValue> {
     let value = try await self.fetch(
       using: self.fetchAllPagesTaskConfiguration(using: context),
@@ -138,7 +138,7 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
   @discardableResult
   public func fetchNextPage(
     using context: OperationContext? = nil,
-    handler: InfiniteQueryEventHandler<State.PageID, State.PageValue> = InfiniteQueryEventHandler()
+    handler: InfiniteQueryEventHandler<State> = InfiniteQueryEventHandler()
   ) async throws(State.Failure) -> InfiniteQueryPage<State.PageID, State.PageValue>? {
     guard self.hasNextPage else { return nil }
     let value = try await self.fetch(
@@ -216,7 +216,7 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
   @discardableResult
   public func fetchPreviousPage(
     using context: OperationContext? = nil,
-    handler: InfiniteQueryEventHandler<State.PageID, State.PageValue> = InfiniteQueryEventHandler()
+    handler: InfiniteQueryEventHandler<State> = InfiniteQueryEventHandler()
   ) async throws(State.Failure) -> InfiniteQueryPage<State.PageID, State.PageValue>? {
     guard self.hasPreviousPage else { return nil }
     let value = try await self.fetch(
@@ -283,7 +283,7 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
 extension OperationStore where State: _InfiniteQueryStateProtocol {
   private func fetch(
     using context: OperationContext,
-    handler: InfiniteQueryEventHandler<State.PageID, State.PageValue>
+    handler: InfiniteQueryEventHandler<State>
   ) async throws(State.Failure) -> InfiniteQueryOperationValue<State.PageID, State.PageValue> {
     let subscription = context.infiniteValues?
       .addRequestSubscriber(from: handler, isTemporary: true)
@@ -304,7 +304,7 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
   ///
   /// - Parameter handler: The event handler.
   public func subscribe(
-    with handler: InfiniteQueryEventHandler<State.PageID, State.PageValue>
+    with handler: InfiniteQueryEventHandler<State>
   ) -> OperationSubscription {
     let context = self.ensuredContext(from: nil)
     let contextSubscription = context.infiniteValues?
@@ -318,21 +318,16 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
 
 extension OperationStore where State: _InfiniteQueryStateProtocol {
   private func operationEventHandler(
-    for handler: InfiniteQueryEventHandler<State.PageID, State.PageValue>
+    for handler: InfiniteQueryEventHandler<State>
   ) -> OperationEventHandler<State> {
     OperationEventHandler(
-      onStateChanged: {
-        handler.onStateChanged?(
-          $0 as! InfiniteQueryState<State.PageID, State.PageValue, any Error>,
-          $1
-        )
-      },
+      onStateChanged: handler.onStateChanged,
       onFetchingStarted: handler.onFetchingStarted,
       onFetchingEnded: handler.onFetchingEnded,
       onResultReceived: { result, context in
         guard context.operationResultUpdateReason == .returnedFinalResult else { return }
         handler.onResultReceived?(
-          result.map { [weak self] _ in self?.currentValue ?? [] }.mapError { $0 as any Error },
+          result.map { [weak self] _ in self?.currentValue ?? [] },
           context
         )
       }
