@@ -142,7 +142,7 @@ extension OperationClient {
   public func store<Query: QueryRequest>(
     for query: Query,
     initialValue: Query.Value? = nil
-  ) -> OperationStore<Query.State> where Query.State == QueryState<Query.Value> {
+  ) -> OperationStore<Query.State> where Query.State == QueryState<Query.Value, any Error> {
     self.withStoreCreation(for: query) { $0(for: query, initialValue: initialValue) }
   }
 

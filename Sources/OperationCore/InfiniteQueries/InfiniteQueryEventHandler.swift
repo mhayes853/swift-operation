@@ -7,7 +7,7 @@ public struct InfiniteQueryEventHandler<
 >: Sendable {
   /// A callback that is invoked when the query state changes.
   public var onStateChanged:
-    (@Sendable (InfiniteQueryState<PageID, PageValue>, OperationContext) -> Void)?
+    (@Sendable (InfiniteQueryState<PageID, PageValue, any Error>, OperationContext) -> Void)?
 
   /// A callback that is invoked when fetching starts.
   public var onFetchingStarted: (@Sendable (OperationContext) -> Void)?
@@ -48,7 +48,9 @@ public struct InfiniteQueryEventHandler<
   ///   - onPageFetchingEnded: A callback that is invoked when fetching for a specified page ends.
   ///   - onFetchingEnded: A callback that is invoked when fetching ends.
   public init(
-    onStateChanged: (@Sendable (InfiniteQueryState<PageID, PageValue>, OperationContext) -> Void)? =
+    onStateChanged: (
+      @Sendable (InfiniteQueryState<PageID, PageValue, any Error>, OperationContext) -> Void
+    )? =
       nil,
     onFetchingStarted: (@Sendable (OperationContext) -> Void)? = nil,
     onPageFetchingStarted: (@Sendable (PageID, OperationContext) -> Void)? = nil,

@@ -107,7 +107,7 @@ extension SharedOperation {
   /// - Parameter wrappedValue: The initial value of the query.
   public init<Value: Sendable>(
     wrappedValue: Value? = nil
-  ) where State == QueryState<Value> {
+  ) where State == QueryState<Value, any Error> {
     self.init(initialState: QueryState(initialValue: wrappedValue))
   }
 
@@ -119,7 +119,7 @@ extension SharedOperation {
   public init<PageID, PageValue>(
     wrappedValue: State.StateValue,
     initialPageId: PageID
-  ) where State == InfiniteQueryState<PageID, PageValue> {
+  ) where State == InfiniteQueryState<PageID, PageValue, any Error> {
     self.init(
       initialState: InfiniteQueryState(initialValue: wrappedValue, initialPageId: initialPageId)
     )
@@ -130,7 +130,7 @@ extension SharedOperation {
   /// - Parameter wrappedValue: The initial value of the query.
   public init<Arguments, ReturnValue>(
     wrappedValue: State.StateValue
-  ) where State == MutationState<Arguments, ReturnValue> {
+  ) where State == MutationState<Arguments, ReturnValue, any Error> {
     self.init(initialState: MutationState(initialValue: wrappedValue))
   }
 }
@@ -387,7 +387,7 @@ extension SharedOperation {
     _ query: Query,
     client: OperationClient? = nil,
     scheduler: some SharedOperationStateScheduler = .synchronous
-  ) where State == QueryState<Query.Value> {
+  ) where State == QueryState<Query.Value, any Error> {
     self.init(
       query,
       initialState: QueryState(initialValue: wrappedValue),
@@ -426,7 +426,7 @@ extension SharedOperation {
     _ query: Query,
     client: OperationClient? = nil,
     scheduler: some SharedOperationStateScheduler = .synchronous
-  ) where State == InfiniteQueryState<Query.PageID, Query.PageValue> {
+  ) where State == InfiniteQueryState<Query.PageID, Query.PageValue, any Error> {
     self.init(
       query,
       initialState: InfiniteQueryState(
@@ -448,7 +448,9 @@ extension SharedOperation {
     _ query: Query.Default,
     client: OperationClient? = nil,
     scheduler: some SharedOperationStateScheduler = .synchronous
-  ) where State == DefaultOperationState<InfiniteQueryState<Query.PageID, Query.PageValue>> {
+  )
+  where State == DefaultOperationState<InfiniteQueryState<Query.PageID, Query.PageValue, any Error>>
+  {
     self.init(query, initialState: query.initialState, client: client, scheduler: scheduler)
   }
 }
@@ -582,7 +584,7 @@ extension SharedOperation {
     _ mutation: Mutation,
     client: OperationClient? = nil,
     scheduler: some SharedOperationStateScheduler = .synchronous
-  ) where State == MutationState<Mutation.Arguments, Mutation.ReturnValue> {
+  ) where State == MutationState<Mutation.Arguments, Mutation.ReturnValue, any Error> {
     self.init(
       mutation,
       initialState: MutationState(initialValue: wrappedValue),

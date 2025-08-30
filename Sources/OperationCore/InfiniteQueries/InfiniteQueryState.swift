@@ -15,10 +15,10 @@ where
   var initialPageId: PageID { get }
   var nextPageId: PageID? { get }
   var previousPageId: PageID? { get }
-  var allPagesActiveTasks: IdentifiedArrayOf<OperationTask<OperationValue, any Error>> { get }
-  var initialPageActiveTasks: IdentifiedArrayOf<OperationTask<OperationValue, any Error>> { get }
-  var nextPageActiveTasks: IdentifiedArrayOf<OperationTask<OperationValue, any Error>> { get }
-  var previousPageActiveTasks: IdentifiedArrayOf<OperationTask<OperationValue, any Error>> { get }
+  var allPagesActiveTasks: IdentifiedArrayOf<OperationTask<OperationValue, Failure>> { get }
+  var initialPageActiveTasks: IdentifiedArrayOf<OperationTask<OperationValue, Failure>> { get }
+  var nextPageActiveTasks: IdentifiedArrayOf<OperationTask<OperationValue, Failure>> { get }
+  var previousPageActiveTasks: IdentifiedArrayOf<OperationTask<OperationValue, Failure>> { get }
 }
 
 // MARK: - Has Page
@@ -79,14 +79,14 @@ extension _InfiniteQueryStateProtocol {
 ///
 /// > Warning: You should not call any of the `mutating` methods directly on this type, rather a
 /// > ``OperationStore`` will call them at the appropriate time for you.
-public struct InfiniteQueryState<PageID: Hashable & Sendable, PageValue: Sendable> {
+public struct InfiniteQueryState<PageID: Hashable & Sendable, PageValue: Sendable, Failure: Error> {
   public let initialPageId: PageID
   public private(set) var currentValue: StateValue
   public let initialValue: StateValue
   public private(set) var valueUpdateCount = 0
   public private(set) var valueLastUpdatedAt: Date?
 
-  public private(set) var error: (any Error)?
+  public private(set) var error: Failure?
   public private(set) var errorUpdateCount = 0
   public private(set) var errorLastUpdatedAt: Date?
 
@@ -100,23 +100,23 @@ public struct InfiniteQueryState<PageID: Hashable & Sendable, PageValue: Sendabl
 
   /// The active ``OperationTask``s for refetching all pages of data.
   public private(set) var allPagesActiveTasks = IdentifiedArrayOf<
-    OperationTask<InfiniteQueryOperationValue<PageID, PageValue>, any Error>
+    OperationTask<InfiniteQueryOperationValue<PageID, PageValue>, Failure>
   >()
 
   /// The active ``OperationTask``s for fetching the initial page of data.
   public private(set) var initialPageActiveTasks = IdentifiedArrayOf<
-    OperationTask<InfiniteQueryOperationValue<PageID, PageValue>, any Error>
+    OperationTask<InfiniteQueryOperationValue<PageID, PageValue>, Failure>
   >()
 
   /// The active ``OperationTask``s for fetching the next page of data.
   public private(set) var nextPageActiveTasks = IdentifiedArrayOf<
-    OperationTask<InfiniteQueryOperationValue<PageID, PageValue>, any Error>
+    OperationTask<InfiniteQueryOperationValue<PageID, PageValue>, Failure>
   >()
 
   /// The active ``OperationTask``s for fetching the page of data that will be presented at the
   /// beginning of ``currentValue``.
   public private(set) var previousPageActiveTasks = IdentifiedArrayOf<
-    OperationTask<InfiniteQueryOperationValue<PageID, PageValue>, any Error>
+    OperationTask<InfiniteQueryOperationValue<PageID, PageValue>, Failure>
   >()
 
   public init(initialValue: StateValue, initialPageId: PageID) {
@@ -135,7 +135,7 @@ extension InfiniteQueryState: _InfiniteQueryStateProtocol {
   }
 
   public mutating func scheduleFetchTask(
-    _ task: inout OperationTask<InfiniteQueryOperationValue<PageID, PageValue>, any Error>
+    _ task: inout OperationTask<InfiniteQueryOperationValue<PageID, PageValue>, Failure>
   ) {
     switch self.request(in: task.context) {
     case .allPages:
@@ -167,7 +167,7 @@ extension InfiniteQueryState: _InfiniteQueryStateProtocol {
   }
 
   public mutating func update(
-    with result: Result<InfiniteQueryPages<PageID, PageValue>, any Error>,
+    with result: Result<InfiniteQueryPages<PageID, PageValue>, Failure>,
     using context: OperationContext
   ) {
     switch result {
@@ -184,8 +184,8 @@ extension InfiniteQueryState: _InfiniteQueryStateProtocol {
   }
 
   public mutating func update(
-    with result: Result<InfiniteQueryOperationValue<PageID, PageValue>, any Error>,
-    for task: OperationTask<InfiniteQueryOperationValue<PageID, PageValue>, any Error>
+    with result: Result<InfiniteQueryOperationValue<PageID, PageValue>, Failure>,
+    for task: OperationTask<InfiniteQueryOperationValue<PageID, PageValue>, Failure>
   ) {
     switch result {
     case .success(let value):
@@ -222,7 +222,7 @@ extension InfiniteQueryState: _InfiniteQueryStateProtocol {
   }
 
   public mutating func finishFetchTask(
-    _ task: OperationTask<InfiniteQueryOperationValue<PageID, PageValue>, any Error>
+    _ task: OperationTask<InfiniteQueryOperationValue<PageID, PageValue>, Failure>
   ) {
     self.allPagesActiveTasks.remove(id: task.id)
     self.initialPageActiveTasks.remove(id: task.id)
@@ -273,22 +273,26 @@ where Base: _InfiniteQueryStateProtocol, Base.DefaultStateValue == Base.StateVal
   public var nextPageId: PageID? { self.base.nextPageId }
   public var previousPageId: PageID? { self.base.previousPageId }
 
-  public var allPagesActiveTasks: IdentifiedArrayOf<OperationTask<Base.OperationValue, any Error>> {
+  public var allPagesActiveTasks:
+    IdentifiedArrayOf<OperationTask<Base.OperationValue, Base.Failure>>
+  {
     self.base.allPagesActiveTasks
   }
 
   public var initialPageActiveTasks:
-    IdentifiedArrayOf<OperationTask<Base.OperationValue, any Error>>
+    IdentifiedArrayOf<OperationTask<Base.OperationValue, Base.Failure>>
   {
     self.base.initialPageActiveTasks
   }
 
-  public var nextPageActiveTasks: IdentifiedArrayOf<OperationTask<Base.OperationValue, any Error>> {
+  public var nextPageActiveTasks:
+    IdentifiedArrayOf<OperationTask<Base.OperationValue, Base.Failure>>
+  {
     self.base.nextPageActiveTasks
   }
 
   public var previousPageActiveTasks:
-    IdentifiedArrayOf<OperationTask<Base.OperationValue, any Error>>
+    IdentifiedArrayOf<OperationTask<Base.OperationValue, Base.Failure>>
   {
     self.base.previousPageActiveTasks
   }

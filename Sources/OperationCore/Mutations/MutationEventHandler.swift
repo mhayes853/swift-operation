@@ -2,7 +2,7 @@
 public struct MutationEventHandler<Arguments: Sendable, Value: Sendable>: Sendable {
   /// A callback that is invoked when the mutation state changes.
   public var onStateChanged:
-    (@Sendable (MutationState<Arguments, Value>, OperationContext) -> Void)?
+    (@Sendable (MutationState<Arguments, Value, any Error>, OperationContext) -> Void)?
 
   /// A callback that is invoked when a mutation is started on the ``OperationStore``.
   public var onMutatingStarted: (@Sendable (Arguments, OperationContext) -> Void)?
@@ -22,7 +22,9 @@ public struct MutationEventHandler<Arguments: Sendable, Value: Sendable>: Sendab
   ///   - onMutationResultReceived: A callback that is invoked when a mutation emits a result.
   ///   - onMutatingEnded: A callback that is invoked when a mutation ends on the ``OperationStore``.
   public init(
-    onStateChanged: (@Sendable (MutationState<Arguments, Value>, OperationContext) -> Void)? = nil,
+    onStateChanged: (
+      @Sendable (MutationState<Arguments, Value, any Error>, OperationContext) -> Void
+    )? = nil,
     onMutatingStarted: (@Sendable (Arguments, OperationContext) -> Void)? = nil,
     onMutationResultReceived: (
       @Sendable (Arguments, Result<Value, any Error>, OperationContext) -> Void

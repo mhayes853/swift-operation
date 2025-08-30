@@ -8,7 +8,7 @@ where StatusValue == Value, OperationValue == MutationOperationValue<Value> {
   associatedtype Arguments: Sendable
   associatedtype Value: Sendable
 
-  var history: IdentifiedArrayOf<MutationState<Arguments, Value>.HistoryEntry> { get }
+  var history: IdentifiedArrayOf<MutationState<Arguments, Value, Failure>.HistoryEntry> { get }
 }
 
 // MARK: - MutationState
@@ -22,7 +22,7 @@ where StatusValue == Value, OperationValue == MutationOperationValue<Value> {
 ///
 /// > Warning: You should not call any of the `mutating` methods directly on this type, rather a
 /// > ``OperationStore`` will call them at the appropriate time for you.
-public struct MutationState<Arguments: Sendable, Value: Sendable> {
+public struct MutationState<Arguments: Sendable, Value: Sendable, Failure: Error> {
   public private(set) var valueUpdateCount = 0
   private var historyValueLastUpdatedAt: Date?
   public private(set) var errorUpdateCount = 0
@@ -84,7 +84,7 @@ extension MutationState: _MutationStateProtocol {
     }
   }
 
-  public var error: (any Error)? {
+  public var error: Failure? {
     switch (self.history.last?.status.resultError, self.yielded) {
     case (let historyError?, nil):
       return historyError
@@ -115,7 +115,7 @@ extension MutationState: _MutationStateProtocol {
     self.history.last?.status.isLoading ?? false
   }
 
-  public mutating func scheduleFetchTask(_ task: inout OperationTask<OperationValue, any Error>) {
+  public mutating func scheduleFetchTask(_ task: inout OperationTask<OperationValue, Failure>) {
     let args = task.context.mutationArgs(as: Arguments.self) ?? self.history.last?.arguments
     guard let args else {
       reportWarning(.mutationWithNoArgumentsOrHistory)
@@ -135,7 +135,7 @@ extension MutationState: _MutationStateProtocol {
   }
 
   public mutating func update(
-    with result: Result<Value?, any Error>,
+    with result: Result<Value?, Failure>,
     using context: OperationContext
   ) {
     switch result {
@@ -149,8 +149,8 @@ extension MutationState: _MutationStateProtocol {
   }
 
   public mutating func update(
-    with result: Result<OperationValue, any Error>,
-    for task: OperationTask<OperationValue, any Error>
+    with result: Result<OperationValue, Failure>,
+    for task: OperationTask<OperationValue, Failure>
   ) {
     self.history[id: task.id]?.update(with: result.map(\.returnValue))
     guard let last = self.history.last, last.task.id == task.id else { return }
@@ -164,7 +164,7 @@ extension MutationState: _MutationStateProtocol {
     }
   }
 
-  public mutating func finishFetchTask(_ task: OperationTask<OperationValue, any Error>) {
+  public mutating func finishFetchTask(_ task: OperationTask<OperationValue, Failure>) {
     self.history[id: task.id]?.finish()
   }
 }
@@ -181,22 +181,22 @@ extension MutationState {
     public let startDate: Date
 
     /// The current and ongoing result of the mutation attempt represented by this entry.
-    public private(set) var currentResult: Result<Value, any Error>?
+    public private(set) var currentResult: Result<Value, Failure>?
 
     /// The date this entry was last modified.
     public private(set) var lastUpdatedAt: Date?
 
     /// The current ``OperationStatus`` of the mutation attempt represented by this entry.
-    public private(set) var status: OperationStatus<StatusValue, any Error>
+    public private(set) var status: OperationStatus<StatusValue, Failure>
 
     /// The ``OperationTask`` for this entry.
-    public var task: OperationTask<Value, any Error> {
+    public var task: OperationTask<Value, Failure> {
       self.baseTask.map(\.returnValue)
     }
 
-    fileprivate let baseTask: OperationTask<OperationValue, any Error>
+    fileprivate let baseTask: OperationTask<OperationValue, Failure>
 
-    fileprivate init(task: OperationTask<OperationValue, any Error>, args: Arguments) {
+    fileprivate init(task: OperationTask<OperationValue, Failure>, args: Arguments) {
       self.baseTask = task
       self.arguments = args
       self.startDate = task.context.operationClock.now()
@@ -204,7 +204,7 @@ extension MutationState {
       self.status = .loading
     }
 
-    fileprivate mutating func update(with result: Result<Value, any Error>) {
+    fileprivate mutating func update(with result: Result<Value, Failure>) {
       self.currentResult = result
       self.lastUpdatedAt = self.task.context.operationClock.now()
     }
@@ -247,7 +247,8 @@ where Base: _MutationStateProtocol {
   public typealias Arguments = Base.Arguments
   public typealias Value = Base.Value
 
-  public var history: IdentifiedArrayOf<MutationState<Arguments, Value>.HistoryEntry> {
+  public var history: IdentifiedArrayOf<MutationState<Arguments, Value, Base.Failure>.HistoryEntry>
+  {
     self.base.history
   }
 }
@@ -265,7 +266,7 @@ extension DefaultOperation where Operation: MutationRequest {
 extension MutationState {
   private enum Yielded {
     case success(StateValue, Date)
-    case failure(any Error, Date)
+    case failure(Failure, Date)
   }
 }
 

@@ -228,7 +228,7 @@ where PageValue: Equatable {}
 public protocol InfiniteQueryRequest<PageID, PageValue>: OperationRequest, Sendable
 where
   Value == InfiniteQueryOperationValue<PageID, PageValue>,
-  State == InfiniteQueryState<PageID, PageValue>
+  State == InfiniteQueryState<PageID, PageValue, any Error>
 {
   /// The data type of each page that you're fetching.
   associatedtype PageValue: Sendable

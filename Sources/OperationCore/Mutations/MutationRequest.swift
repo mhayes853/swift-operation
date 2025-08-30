@@ -58,7 +58,10 @@ public struct MutationOperationValue<ReturnValue: Sendable>: Sendable {
 /// > `retryLatest` without ever having called `mutate` first. Additionally, your mutation will
 /// > throw an error.
 public protocol MutationRequest<Arguments, ReturnValue>: OperationRequest, Sendable
-where Value == MutationOperationValue<ReturnValue>, State == MutationState<Arguments, ReturnValue> {
+where
+  Value == MutationOperationValue<ReturnValue>,
+  State == MutationState<Arguments, ReturnValue, any Error>
+{
   /// The data type of the arguments to submit to the mutation.
   associatedtype Arguments: Sendable
 

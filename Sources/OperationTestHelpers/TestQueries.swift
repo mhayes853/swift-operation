@@ -516,7 +516,7 @@ package struct EmptyIntInfiniteQuery: InfiniteQueryRequest {
 // MARK: - FakeInfiniteQuery
 
 package struct FakeInfiniteQuery: OperationRequest, Hashable {
-  package typealias State = InfiniteQueryState<Int, String>
+  package typealias State = InfiniteQueryState<Int, String, any Error>
   package typealias Value = InfiniteQueryOperationValue<Int, String>
 
   package init() {}

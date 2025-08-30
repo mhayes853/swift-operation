@@ -13,7 +13,7 @@ public struct QueryEventHandler<State: _QueryStateProtocol>: Sendable {
 
   /// A callback that is invoked when a result is received from fetching on a ``OperationStore``.
   public var onResultReceived:
-    (@Sendable (Result<State.OperationValue, any Error>, OperationContext) -> Void)?
+    (@Sendable (Result<State.OperationValue, State.Failure>, OperationContext) -> Void)?
 
   /// Creates an event handler.
   ///
@@ -27,7 +27,7 @@ public struct QueryEventHandler<State: _QueryStateProtocol>: Sendable {
     onFetchingStarted: (@Sendable (OperationContext) -> Void)? = nil,
     onFetchingEnded: (@Sendable (OperationContext) -> Void)? = nil,
     onResultReceived: (
-      @Sendable (Result<State.OperationValue, any Error>, OperationContext) -> Void
+      @Sendable (Result<State.OperationValue, State.Failure>, OperationContext) -> Void
     )? =
       nil
   ) {

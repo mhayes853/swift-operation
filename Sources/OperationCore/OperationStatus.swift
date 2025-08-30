@@ -45,7 +45,7 @@ extension OperationStatus {
   }
 
   /// The result error, if the status indicates that the query finished unsuccessfully.
-  public var resultError: Error? {
+  public var resultError: Failure? {
     switch self {
     case .result(.failure(let error)): error
     default: nil

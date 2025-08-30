@@ -3,11 +3,11 @@ import IdentifiedCollections
 
 // MARK: - QueryStateProtocol
 
-public protocol _QueryStateProtocol<Value>: OperationState
+public protocol _QueryStateProtocol<Value, Failure>: OperationState
 where OperationValue == Value, StatusValue == Value {
   associatedtype Value: Sendable
 
-  var activeTasks: IdentifiedArrayOf<OperationTask<Value, any Error>> { get }
+  var activeTasks: IdentifiedArrayOf<OperationTask<Value, Failure>> { get }
 }
 
 // MARK: - QueryState
@@ -28,17 +28,17 @@ where OperationValue == Value, StatusValue == Value {
 ///
 /// > Warning: You should not call any of the `mutating` methods directly on this type, rather a
 /// > ``OperationStore`` will call them at the appropriate time for you.
-public struct QueryState<Value: Sendable> {
+public struct QueryState<Value: Sendable, Failure: Error> {
   public private(set) var currentValue: Value?
   public let initialValue: Value?
   public private(set) var valueUpdateCount = 0
   public private(set) var valueLastUpdatedAt: Date?
-  public private(set) var error: (any Error)?
+  public private(set) var error: Failure?
   public private(set) var errorUpdateCount = 0
   public private(set) var errorLastUpdatedAt: Date?
 
   /// The active ``OperationTask`` instances held by this state.
-  public private(set) var activeTasks = IdentifiedArrayOf<OperationTask<Value, any Error>>()
+  public private(set) var activeTasks = IdentifiedArrayOf<OperationTask<Value, Failure>>()
 
   /// Creates a query state.
   ///
@@ -62,7 +62,7 @@ extension QueryState: _QueryStateProtocol {
     !self.activeTasks.isEmpty
   }
 
-  public mutating func scheduleFetchTask(_ task: inout OperationTask<Value, any Error>) {
+  public mutating func scheduleFetchTask(_ task: inout OperationTask<Value, Failure>) {
     self.activeTasks.append(task)
   }
 
@@ -73,7 +73,7 @@ extension QueryState: _QueryStateProtocol {
   }
 
   public mutating func update(
-    with result: Result<Value?, any Error>,
+    with result: Result<Value?, Failure>,
     using context: OperationContext
   ) {
     switch result {
@@ -90,13 +90,13 @@ extension QueryState: _QueryStateProtocol {
   }
 
   public mutating func update(
-    with result: Result<Value, any Error>,
-    for task: OperationTask<Value, any Error>
+    with result: Result<Value, Failure>,
+    for task: OperationTask<Value, Failure>
   ) {
     self.update(with: result.map { $0 as Value? }, using: task.context)
   }
 
-  public mutating func finishFetchTask(_ task: OperationTask<Value, any Error>) {
+  public mutating func finishFetchTask(_ task: OperationTask<Value, Failure>) {
     self.activeTasks.remove(id: task.id)
   }
 }
@@ -118,7 +118,7 @@ extension QueryState: DefaultableOperationState {
 // MARK: - DefaultOperationState
 
 extension DefaultOperationState: _QueryStateProtocol where Base: _QueryStateProtocol {
-  public var activeTasks: IdentifiedArrayOf<OperationTask<Base.Value, any Error>> {
+  public var activeTasks: IdentifiedArrayOf<OperationTask<Base.Value, Base.Failure>> {
     self.base.activeTasks
   }
 }

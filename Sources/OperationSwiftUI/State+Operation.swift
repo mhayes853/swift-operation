@@ -139,7 +139,7 @@
       _ query: Query,
       client: OperationClient? = nil,
       transaction: Transaction? = nil
-    ) where State == QueryState<Query.Value> {
+    ) where State == QueryState<Query.Value, any Error> {
       self.init(
         query,
         initialState: QueryState(initialValue: wrappedValue),
@@ -160,7 +160,7 @@
       _ query: Query,
       client: OperationClient? = nil,
       animation: Animation
-    ) where State == QueryState<Query.Value> {
+    ) where State == QueryState<Query.Value, any Error> {
       self.init(
         wrappedValue: wrappedValue,
         query,
@@ -384,7 +384,7 @@
       _ query: Query,
       client: OperationClient? = nil,
       transaction: Transaction?
-    ) where State == InfiniteQueryState<Query.PageID, Query.PageValue> {
+    ) where State == InfiniteQueryState<Query.PageID, Query.PageValue, any Error> {
       self.init(
         query,
         initialState: InfiniteQueryState(
@@ -408,7 +408,7 @@
       _ query: Query,
       client: OperationClient? = nil,
       animation: Animation
-    ) where State == InfiniteQueryState<Query.PageID, Query.PageValue> {
+    ) where State == InfiniteQueryState<Query.PageID, Query.PageValue, any Error> {
       self.init(
         query,
         initialState: InfiniteQueryState(
@@ -430,7 +430,10 @@
       _ query: Query.Default,
       client: OperationClient? = nil,
       transaction: Transaction? = nil
-    ) where State == DefaultOperationState<InfiniteQueryState<Query.PageID, Query.PageValue>> {
+    )
+    where
+      State == DefaultOperationState<InfiniteQueryState<Query.PageID, Query.PageValue, any Error>>
+    {
       self.init(query, initialState: query.initialState, client: client, transaction: transaction)
     }
 
@@ -444,7 +447,10 @@
       _ query: Query.Default,
       client: OperationClient? = nil,
       animation: Animation
-    ) where State == DefaultOperationState<InfiniteQueryState<Query.PageID, Query.PageValue>> {
+    )
+    where
+      State == DefaultOperationState<InfiniteQueryState<Query.PageID, Query.PageValue, any Error>>
+    {
       self.init(
         query,
         initialState: query.initialState,
@@ -586,7 +592,7 @@
       _ mutation: Mutation,
       client: OperationClient? = nil,
       transaction: Transaction? = nil
-    ) where State == MutationState<Mutation.Arguments, Mutation.ReturnValue> {
+    ) where State == MutationState<Mutation.Arguments, Mutation.ReturnValue, any Error> {
       self.init(
         mutation,
         initialState: MutationState(initialValue: wrappedValue),
@@ -607,7 +613,7 @@
       _ mutation: Mutation,
       client: OperationClient? = nil,
       animation: Animation
-    ) where State == MutationState<Mutation.Arguments, Mutation.ReturnValue> {
+    ) where State == MutationState<Mutation.Arguments, Mutation.ReturnValue, any Error> {
       self.init(
         mutation,
         initialState: MutationState(initialValue: wrappedValue),

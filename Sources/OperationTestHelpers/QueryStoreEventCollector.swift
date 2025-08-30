@@ -209,7 +209,9 @@ extension OperationStoreEventsCollector {
       onStateChanged: { _, _ in self.events.withLock { $0.append(.stateChanged) } },
       onFetchingStarted: { _ in self.events.withLock { $0.append(.fetchingStarted) } },
       onFetchingEnded: { _ in self.events.withLock { $0.append(.fetchingEnded) } },
-      onResultReceived: { result, _ in self.events.withLock { $0.append(.resultReceived(result)) } }
+      onResultReceived: { result, _ in
+        self.events.withLock { $0.append(.resultReceived(result.mapError { $0 })) }
+      }
     )
   }
 }

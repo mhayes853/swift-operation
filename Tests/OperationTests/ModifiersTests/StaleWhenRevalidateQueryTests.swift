@@ -12,7 +12,10 @@ struct StaleWhenRevalidateQueryTests {
     func trueWhenEmpty() {
       let condition = StaleWhenRevalidateCondition()
       expectNoDifference(
-        condition.evaluate(state: QueryState<Int>(initialValue: nil), in: OperationContext()),
+        condition.evaluate(
+          state: QueryState<Int, any Error>(initialValue: nil),
+          in: OperationContext()
+        ),
         true
       )
     }
@@ -22,7 +25,10 @@ struct StaleWhenRevalidateQueryTests {
       var condition = StaleWhenRevalidateCondition()
       condition.add { state, _ in state.error == nil }
       expectNoDifference(
-        condition.evaluate(state: QueryState<Int>(initialValue: nil), in: OperationContext()),
+        condition.evaluate(
+          state: QueryState<Int, any Error>(initialValue: nil),
+          in: OperationContext()
+        ),
         true
       )
     }
@@ -32,7 +38,10 @@ struct StaleWhenRevalidateQueryTests {
       var condition = StaleWhenRevalidateCondition()
       condition.add { state, _ in state.valueUpdateCount > 0 }
       expectNoDifference(
-        condition.evaluate(state: QueryState<Int>(initialValue: nil), in: OperationContext()),
+        condition.evaluate(
+          state: QueryState<Int, any Error>(initialValue: nil),
+          in: OperationContext()
+        ),
         false
       )
     }
@@ -43,7 +52,10 @@ struct StaleWhenRevalidateQueryTests {
       condition.add { state, _ in state.valueUpdateCount > 0 }
       condition.add { state, _ in state.isLoading }
       expectNoDifference(
-        condition.evaluate(state: QueryState<Int>(initialValue: nil), in: OperationContext()),
+        condition.evaluate(
+          state: QueryState<Int, any Error>(initialValue: nil),
+          in: OperationContext()
+        ),
         false
       )
     }
@@ -55,7 +67,7 @@ struct StaleWhenRevalidateQueryTests {
       condition.add { _, c in c.testCount > 0 }
       condition.add { _, c in c.testCount == 0 }
       condition.add { _, c in c.testCount < 0 }
-      let state = QueryState<Int>(initialValue: nil)
+      let state = QueryState<Int, any Error>(initialValue: nil)
       expectNoDifference(condition.evaluate(state: state, in: context), true)
     }
   }
@@ -136,7 +148,7 @@ struct StaleWhenRevalidateQueryTests {
   func conditionFalseWhenIncorrectStateTypeEvaluated() async throws {
     let query = TestQuery().staleWhen { state, _ in state.valueUpdateCount == 0 }
     let store = OperationStore.detached(query: query, initialValue: nil)
-    let state = MutationState<Int, String>()
+    let state = MutationState<Int, String, any Error>()
     expectNoDifference(
       store.context.staleWhenRevalidateCondition.evaluate(state: state, in: OperationContext()),
       false

@@ -55,7 +55,7 @@
       _ query: Query,
       client: OperationClient? = nil,
       animation: UIKitAnimation
-    ) where State == QueryState<Query.Value> {
+    ) where State == QueryState<Query.Value, any Error> {
       self.init(
         wrappedValue: wrappedValue,
         query,
@@ -99,7 +99,7 @@
       _ query: Query,
       client: OperationClient? = nil,
       animation: UIKitAnimation
-    ) where State == InfiniteQueryState<Query.PageID, Query.PageValue> {
+    ) where State == InfiniteQueryState<Query.PageID, Query.PageValue, any Error> {
       self.init(
         wrappedValue: wrappedValue,
         query,
@@ -118,7 +118,10 @@
       _ query: Query.Default,
       client: OperationClient? = nil,
       animation: UIKitAnimation
-    ) where State == DefaultOperationState<InfiniteQueryState<Query.PageID, Query.PageValue>> {
+    )
+    where
+      State == DefaultOperationState<InfiniteQueryState<Query.PageID, Query.PageValue, any Error>>
+    {
       self.init(
         query,
         initialState: query.initialState,
@@ -143,7 +146,7 @@
       _ mutation: Mutation,
       client: OperationClient? = nil,
       animation: UIKitAnimation
-    ) where State == MutationState<Arguments, Value> {
+    ) where State == MutationState<Mutation.Arguments, Mutation.Value, any Error> {
       self.init(
         mutation,
         initialState: MutationState(initialValue: wrappedValue),

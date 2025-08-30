@@ -121,7 +121,7 @@ extension OperationClient.CreateStore {
   public func callAsFunction<Query: QueryRequest>(
     for query: Query,
     initialValue: Query.Value? = nil
-  ) -> OperationStore<Query.State> where Query.State == QueryState<Query.Value> {
+  ) -> OperationStore<Query.State> where Query.State == QueryState<Query.Value, any Error> {
     self(for: query, initialState: Query.State(initialValue: initialValue))
   }
 

@@ -427,7 +427,7 @@ extension OperationStore {
         values.state.finishFetchTask(task)
       }
       self.subscriptions.forEach {
-        $0.onResultReceived?(result.mapError { $0 as any Error }, context)
+        $0.onResultReceived?(result, context)
       }
     }
   }
@@ -447,7 +447,9 @@ extension OperationStore {
             reportWarning(.queryYieldedAfterReturning(result))
           case .running(let task) where values.taskHerdId == initialHerdId:
             values.state.update(with: result.mapError { $0 as! State.Failure }, for: task)
-            self.subscriptions.forEach { $0.onResultReceived?(result, context) }
+            self.subscriptions.forEach {
+              $0.onResultReceived?(result.mapError { $0 as! State.Failure }, context)
+            }
           default:
             break
           }

@@ -38,7 +38,7 @@ extension OperationStore {
     initialValue: Mutation.ReturnValue? = nil,
     initialContext: OperationContext = OperationContext()
   ) -> OperationStore<Mutation.State>
-  where State == MutationState<Mutation.Arguments, Mutation.ReturnValue> {
+  where State == MutationState<Mutation.Arguments, Mutation.ReturnValue, any Error> {
     .detached(
       operation: mutation,
       initialState: Mutation.State(initialValue: initialValue),
@@ -62,7 +62,7 @@ extension OperationStore {
     initialState: Mutation.State,
     initialContext: OperationContext = OperationContext()
   ) -> OperationStore<Mutation.State>
-  where State == MutationState<Mutation.Arguments, Mutation.ReturnValue> {
+  where State == MutationState<Mutation.Arguments, Mutation.ReturnValue, any Error> {
     .detached(
       operation: mutation,
       initialState: initialState,
@@ -237,7 +237,7 @@ extension OperationStore where State: _MutationStateProtocol {
   ) -> OperationEventHandler<State> {
     OperationEventHandler(
       onStateChanged: {
-        handler.onStateChanged?($0 as! MutationState<State.Arguments, State.Value>, $1)
+        handler.onStateChanged?($0 as! MutationState<State.Arguments, State.Value, any Error>, $1)
       },
       onFetchingStarted: {
         guard let args = $0.mutationArgs(as: State.Arguments.self) else { return }
@@ -249,7 +249,11 @@ extension OperationStore where State: _MutationStateProtocol {
       },
       onResultReceived: {
         guard let args = $1.mutationArgs(as: State.Arguments.self) else { return }
-        handler.onMutationResultReceived?(args, $0.map(\.returnValue), $1)
+        handler.onMutationResultReceived?(
+          args,
+          $0.map(\.returnValue).mapError { $0 as any Error },
+          $1
+        )
       }
     )
   }

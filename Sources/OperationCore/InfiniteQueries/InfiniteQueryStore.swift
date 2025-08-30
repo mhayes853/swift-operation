@@ -19,7 +19,8 @@ extension OperationStore {
     query: Query,
     initialValue: Query.State.StateValue = [],
     initialContext: OperationContext = OperationContext()
-  ) -> OperationStore<State> where State == InfiniteQueryState<Query.PageID, Query.PageValue> {
+  ) -> OperationStore<State>
+  where State == InfiniteQueryState<Query.PageID, Query.PageValue, any Error> {
     .detached(
       operation: query,
       initialState: InfiniteQueryState(
@@ -321,13 +322,19 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
   ) -> OperationEventHandler<State> {
     OperationEventHandler(
       onStateChanged: {
-        handler.onStateChanged?($0 as! InfiniteQueryState<State.PageID, State.PageValue>, $1)
+        handler.onStateChanged?(
+          $0 as! InfiniteQueryState<State.PageID, State.PageValue, any Error>,
+          $1
+        )
       },
       onFetchingStarted: handler.onFetchingStarted,
       onFetchingEnded: handler.onFetchingEnded,
       onResultReceived: { result, context in
         guard context.operationResultUpdateReason == .returnedFinalResult else { return }
-        handler.onResultReceived?(result.map { [weak self] _ in self?.currentValue ?? [] }, context)
+        handler.onResultReceived?(
+          result.map { [weak self] _ in self?.currentValue ?? [] }.mapError { $0 as any Error },
+          context
+        )
       }
     )
   }
