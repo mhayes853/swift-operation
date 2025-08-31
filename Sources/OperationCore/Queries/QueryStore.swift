@@ -16,7 +16,7 @@ extension OperationStore {
     query: Query,
     initialState: Query.State,
     initialContext: OperationContext = OperationContext()
-  ) -> OperationStore<Query.State> where State == QueryState<Query.Value, any Error> {
+  ) -> OperationStore<Query.State> where State == QueryState<Query.Value, Query.Failure> {
     .detached(operation: query, initialState: initialState, initialContext: initialContext)
   }
 
@@ -35,7 +35,7 @@ extension OperationStore {
     query: Query,
     initialValue: Query.State.StateValue,
     initialContext: OperationContext = OperationContext()
-  ) -> OperationStore<Query.State> where State == QueryState<Query.Value, any Error> {
+  ) -> OperationStore<Query.State> where State == QueryState<Query.Value, Query.Failure> {
     .detached(
       operation: query,
       initialState: QueryState(initialValue: initialValue),

@@ -487,7 +487,7 @@ package struct EmptyInfiniteQuery: InfiniteQueryRequest {
 
   package func fetchPage(
     isolation: isolated (any Actor)?,
-    using paging: InfiniteQueryPaging<PageID, PageValue>,
+    using paging: InfiniteQueryPaging<Int, String>,
     in context: OperationContext,
     with continuation: OperationContinuation<String>
   ) async throws -> String {

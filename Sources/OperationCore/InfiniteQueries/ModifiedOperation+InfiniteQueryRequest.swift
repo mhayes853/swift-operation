@@ -1,6 +1,7 @@
 extension ModifiedOperation: InfiniteQueryRequest where Operation: InfiniteQueryRequest {
   public typealias PageValue = Operation.PageValue
   public typealias PageID = Operation.PageID
+  public typealias PageFailure = Operation.PageFailure
 
   public var initialPageId: PageID {
     self.operation.initialPageId
@@ -27,7 +28,7 @@ extension ModifiedOperation: InfiniteQueryRequest where Operation: InfiniteQuery
     using paging: InfiniteQueryPaging<PageID, PageValue>,
     in context: OperationContext,
     with continuation: OperationContinuation<PageValue>
-  ) async throws -> PageValue {
+  ) async throws(PageFailure) -> PageValue {
     try await self.operation.fetchPage(
       isolation: isolation,
       using: paging,

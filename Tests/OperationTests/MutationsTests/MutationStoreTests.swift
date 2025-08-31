@@ -245,17 +245,16 @@ struct MutationStoreTests {
     expectNoDifference(store.isAutomaticFetchingEnabled, false)
   }
 
-  @Test("Reports Issue When Fetching Mutation Through A Base OperationStore With No History")
-  func reportsIssueWhenFetchingMutationThroughABaseOperationStoreWithNoHistory() async throws {
-    let mutation = FailableMutation()
-    let store = OperationStore.detached(mutation: mutation)
-    await withKnownIssue {
-      _ = try? await store.run()
-    } matching: {
-      $0.comments.contains(.warning(.mutationWithNoArgumentsOrHistory))
+  #if swift(>=6.2) && SWIFT_OPERATION_EXIT_TESTABLE_PLATFORM
+    @Test("Exits When Fetching Mutation Through A Base OperationStore With No History")
+    func exitsWhenFetchingMutationThroughABaseOperationStoreWithNoHistory() async throws {
+      await #expect(processExitsWith: .failure) {
+        let mutation = FailableMutation()
+        let store = OperationStore.detached(mutation: mutation)
+        _ = try await store.run()
+      }
     }
-    expectNoDifference(store.history.isEmpty, true)
-  }
+  #endif
 
   @Test("Retries Latest History When Calling Fetch On Base OperationStore For Mutation")
   func retriesLatestHistoryWhenCallingFetchOnBaseOperationStoreForMutation() async throws {

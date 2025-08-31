@@ -142,7 +142,7 @@ extension OperationClient {
   public func store<Query: QueryRequest>(
     for query: Query,
     initialValue: Query.Value? = nil
-  ) -> OperationStore<Query.State> where Query.State == QueryState<Query.Value, any Error> {
+  ) -> OperationStore<Query.State> where Query.State == QueryState<Query.Value, Query.Failure> {
     self.withStoreCreation(for: query) { $0(for: query, initialValue: initialValue) }
   }
 
@@ -189,7 +189,7 @@ extension OperationClient {
   /// - Returns: A ``OperationStore``.
   public func store<Mutation: MutationRequest>(
     for mutation: Mutation,
-    initialValue: Mutation.ReturnValue? = nil
+    initialValue: Mutation.MutateValue? = nil
   ) -> OperationStore<Mutation.State> {
     self.withStoreCreation(for: mutation) { $0(for: mutation, initialValue: initialValue) }
   }

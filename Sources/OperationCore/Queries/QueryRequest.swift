@@ -148,9 +148,14 @@
 ///
 /// > Note: See <doc:MultistageQueries> for a list of advanced use cases involving
 /// > ``OperationContinuation``.
-public protocol QueryRequest<ReturnValue>: OperationRequest, Sendable
-where Self.ReturnValue == Value, State == QueryState<ReturnValue, any Error>, Failure == any Error {
-  associatedtype ReturnValue: Sendable
+public protocol QueryRequest<FetchValue, FetchFailure>: OperationRequest, Sendable
+where
+  Self.FetchValue == Value,
+  Self.FetchFailure == Failure,
+  State == QueryState<FetchValue, FetchFailure>
+{
+  associatedtype FetchValue: Sendable
+  associatedtype FetchFailure: Error
 
   /// Fetches the data for your query.
   ///
@@ -162,8 +167,8 @@ where Self.ReturnValue == Value, State == QueryState<ReturnValue, any Error>, Fa
   func fetch(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<ReturnValue>
-  ) async throws -> ReturnValue
+    with continuation: OperationContinuation<FetchValue>
+  ) async throws(FetchFailure) -> FetchValue
 }
 
 // MARK: - Fetch
@@ -172,8 +177,8 @@ extension QueryRequest {
   public func run(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<Value>
-  ) async throws -> Value {
+    with continuation: OperationContinuation<FetchValue>
+  ) async throws(FetchFailure) -> FetchValue {
     try await self.fetch(isolation: isolation, in: context, with: continuation)
   }
 }

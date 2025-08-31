@@ -225,11 +225,11 @@ where PageValue: Equatable {}
 ///  ``OperationStore/fetchPreviousPage(using:handler:)`` respectively. If you just want to check
 ///  whether or not fetching additional pages is possible, you can check the boolean properties
 ///  ``InfiniteQueryState/hasNextPage`` or ``InfiniteQueryState/hasPreviousPage``.
-public protocol InfiniteQueryRequest<PageID, PageValue>: OperationRequest, Sendable
+public protocol InfiniteQueryRequest<PageID, PageValue, PageFailure>: OperationRequest, Sendable
 where
   Value == InfiniteQueryOperationValue<PageID, PageValue>,
-  State == InfiniteQueryState<PageID, PageValue, any Error>,
-  Failure == any Error
+  State == InfiniteQueryState<PageID, PageValue, PageFailure>,
+  Failure == PageFailure
 {
   /// The data type of each page that you're fetching.
   associatedtype PageValue: Sendable
@@ -239,6 +239,8 @@ where
   /// This is typically the `nextPageToken`/`previousPageToken` from your API, an integer
   /// describing the page index or offset, or a custom cursor type from your API.
   associatedtype PageID: Hashable & Sendable
+
+  associatedtype PageFailure: Error
 
   /// The id of the initial page to fetch.
   var initialPageId: PageID { get }
@@ -287,7 +289,7 @@ where
     using paging: InfiniteQueryPaging<PageID, PageValue>,
     in context: OperationContext,
     with continuation: OperationContinuation<PageValue>
-  ) async throws -> PageValue
+  ) async throws(PageFailure) -> PageValue
 }
 
 extension InfiniteQueryRequest {
@@ -303,7 +305,7 @@ extension InfiniteQueryRequest {
     isolation: isolated (any Actor)?,
     in context: OperationContext,
     with continuation: OperationContinuation<Value>
-  ) async throws -> Value {
+  ) async throws(PageFailure) -> Value {
     let paging = context.paging(for: self)
     switch paging.request {
     case .allPages:
@@ -344,7 +346,7 @@ extension InfiniteQueryRequest {
     using paging: InfiniteQueryPaging<PageID, PageValue>,
     in context: OperationContext,
     with continuation: OperationContinuation<Value>
-  ) async throws -> InfiniteQueryOperationValue<PageID, PageValue> {
+  ) async throws(PageFailure) -> InfiniteQueryOperationValue<PageID, PageValue> {
     var newPages = context.infiniteValues?.currentPagesTracker?.pages(for: self) ?? []
     for _ in 0..<paging.pages.count {
       let pageId =
@@ -398,7 +400,7 @@ extension InfiniteQueryRequest {
     using paging: InfiniteQueryPaging<PageID, PageValue>,
     in context: OperationContext,
     with continuation: OperationContinuation<Value>
-  ) async throws -> InfiniteQueryOperationValue<PageID, PageValue> {
+  ) async throws(PageFailure) -> InfiniteQueryOperationValue<PageID, PageValue> {
     let pageValue = try await self.fetchPageWithPublishedEvents(
       isolation: isolation,
       using: paging,
@@ -434,7 +436,7 @@ extension InfiniteQueryRequest {
     using paging: InfiniteQueryPaging<PageID, PageValue>,
     in context: OperationContext,
     with continuation: OperationContinuation<Value>
-  ) async throws -> InfiniteQueryOperationValue<PageID, PageValue> {
+  ) async throws(PageFailure) -> InfiniteQueryOperationValue<PageID, PageValue> {
     let pageValue = try await self.fetchPageWithPublishedEvents(
       isolation: isolation,
       using: InfiniteQueryPaging(pageId: pageId, pages: paging.pages, request: paging.request),
@@ -483,7 +485,7 @@ extension InfiniteQueryRequest {
     using paging: InfiniteQueryPaging<PageID, PageValue>,
     in context: OperationContext,
     with continuation: OperationContinuation<Value>
-  ) async throws -> InfiniteQueryOperationValue<PageID, PageValue> {
+  ) async throws(PageFailure) -> InfiniteQueryOperationValue<PageID, PageValue> {
     let pageValue = try await self.fetchPageWithPublishedEvents(
       isolation: isolation,
       using: InfiniteQueryPaging(pageId: pageId, pages: paging.pages, request: paging.request),
@@ -529,7 +531,7 @@ extension InfiniteQueryRequest {
     using paging: InfiniteQueryPaging<PageID, PageValue>,
     in context: OperationContext,
     with continuation: OperationContinuation<PageValue>
-  ) async throws -> PageValue {
+  ) async throws(PageFailure) -> PageValue {
     let id = AnyHashableSendable(paging.pageId)
     context.infiniteValues?.requestSubscriptions.forEach { $0.onPageFetchingStarted(id, context) }
     let continuation = OperationContinuation<PageValue> { result, yieldedContext in
@@ -544,7 +546,7 @@ extension InfiniteQueryRequest {
         }
       continuation.yield(with: result)
     }
-    let result = await Result { @Sendable in
+    let result = await Result { @Sendable () async throws(PageFailure) in
       try await self.fetchPage(isolation: isolation, using: paging, in: context, with: continuation)
     }
 
@@ -554,7 +556,7 @@ extension InfiniteQueryRequest {
 
         var resultContext = context
         resultContext.operationResultUpdateReason = .returnedFinalResult
-        sub.onPageResultReceived(id, result, resultContext)
+        sub.onPageResultReceived(id, result.mapError { $0 }, resultContext)
 
         sub.onPageFetchingFinished(id, context)
       }

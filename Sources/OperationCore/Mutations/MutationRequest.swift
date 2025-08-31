@@ -57,17 +57,19 @@ public struct MutationOperationValue<ReturnValue: Sendable>: Sendable {
 /// > Notice: A purple runtime warning and test failure will be issued in Xcode if you call
 /// > `retryLatest` without ever having called `mutate` first. Additionally, your mutation will
 /// > throw an error.
-public protocol MutationRequest<Arguments, ReturnValue>: OperationRequest, Sendable
+public protocol MutationRequest<Arguments, MutateValue, MutateFailure>: OperationRequest, Sendable
 where
-  Value == MutationOperationValue<ReturnValue>,
-  State == MutationState<Arguments, ReturnValue, any Error>,
-  Failure == any Error
+  Value == MutationOperationValue<MutateValue>,
+  State == MutationState<Arguments, MutateValue, MutateFailure>,
+  Failure == MutateFailure
 {
   /// The data type of the arguments to submit to the mutation.
   associatedtype Arguments: Sendable
 
   /// The data type of the returned from the mutation.
-  associatedtype ReturnValue: Sendable
+  associatedtype MutateValue: Sendable
+
+  associatedtype MutateFailure: Error
 
   /// Mutates with the specified arguments.
   ///
@@ -80,8 +82,8 @@ where
     isolation: isolated (any Actor)?,
     with arguments: Arguments,
     in context: OperationContext,
-    with continuation: OperationContinuation<ReturnValue>
-  ) async throws -> ReturnValue
+    with continuation: OperationContinuation<MutateValue>
+  ) async throws(MutateFailure) -> MutateValue
 }
 
 // MARK: - Fetch
@@ -91,10 +93,8 @@ extension MutationRequest {
     isolation: isolated (any Actor)?,
     in context: OperationContext,
     with continuation: OperationContinuation<Value>
-  ) async throws -> Value {
-    guard let args = context.mutationArgs(as: Arguments.self) else {
-      throw MutationNoArgumentsError()
-    }
+  ) async throws(MutateFailure) -> Value {
+    let args = context.mutationArgs(as: Arguments.self)!
     let value = try await self.mutate(
       isolation: isolation,
       with: args,
@@ -110,8 +110,6 @@ extension MutationRequest {
   }
 }
 
-private struct MutationNoArgumentsError: Error {}
-
 // MARK: - Void Mutate
 
 extension MutationRequest where Arguments == Void {
@@ -124,8 +122,8 @@ extension MutationRequest where Arguments == Void {
   public func mutate(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<ReturnValue>
-  ) async throws -> ReturnValue {
+    with continuation: OperationContinuation<MutateValue>
+  ) async throws(MutateFailure) -> MutateValue {
     try await self.mutate(isolation: isolation, with: (), in: context, with: continuation)
   }
 }
