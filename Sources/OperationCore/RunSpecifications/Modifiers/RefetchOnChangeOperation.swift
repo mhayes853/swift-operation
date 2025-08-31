@@ -12,23 +12,23 @@ extension OperationRequest {
   ///
   /// - Parameter condition: The ``FetchCondition`` to observe for operation refetching.
   /// - Returns: A ``ModifiedOperation``.
-  public func reRunOnChange<Spec: OperationRunSpecification>(
-    of spec: Spec
-  ) -> ControlledOperation<Self, _ReRunOnChangeController<State, Spec>> {
-    self.controlled(by: _ReRunOnChangeController(spec: spec))
+  public func reRunOnChange<Specification>(
+    of specification: Specification
+  ) -> ControlledOperation<Self, _ReRunOnChangeController<State, Specification>> {
+    self.controlled(by: _ReRunOnChangeController(specification: specification))
   }
 }
 
 public final class _ReRunOnChangeController<
   State: OperationState,
-  Spec: OperationRunSpecification
+  Specification: OperationRunSpecification & Sendable
 >: OperationController {
-  private let spec: Spec
+  private let specification: Specification
   private let subscriptions = OperationSubscriptions<OperationControls<State>>()
   private let task = Lock<Task<Void, any Error>?>(nil)
 
-  init(spec: Spec) {
-    self.spec = spec
+  init(specification: Specification) {
+    self.specification = specification
   }
 
   public func control(with controls: OperationControls<State>) -> OperationSubscription {
@@ -40,8 +40,8 @@ public final class _ReRunOnChangeController<
   private func subscribeToSpec(
     in context: OperationContext
   ) -> OperationSubscription {
-    let currentValue = Lock(self.spec.isSatisfied(in: context))
-    return self.spec.subscribe(in: context) { newValue in
+    let currentValue = Lock(self.specification.isSatisfied(in: context))
+    return self.specification.subscribe(in: context) { newValue in
       let didValueChange = currentValue.withLock { currentValue in
         defer { currentValue = newValue }
         return newValue != currentValue

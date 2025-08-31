@@ -5,10 +5,12 @@
 /// This condition checks if the current ``NetworkConnectionStatus`` on the observer is greater then the
 /// ``OperationContext/satisfiedConnectionStatus`` context value. You can change that value to update
 /// the threshold for what is considered "connected" for this fetch condition.
-public struct NetworkConnectionRunSpecification: OperationRunSpecification, Sendable {
-  private let observer: any NetworkObserver
+public struct NetworkConnectionRunSpecification<
+  Observer: NetworkObserver
+>: OperationRunSpecification {
+  private let observer: Observer
 
-  public init(observer: any NetworkObserver) {
+  public init(observer: Observer) {
     self.observer = observer
   }
 
@@ -24,12 +26,15 @@ public struct NetworkConnectionRunSpecification: OperationRunSpecification, Send
   }
 }
 
-extension OperationRunSpecification where Self == NetworkConnectionRunSpecification {
+extension NetworkConnectionRunSpecification: Sendable where Observer: Sendable {}
+
+extension OperationRunSpecification {
   /// A ``FetchCondition`` that detects whether or not the user is connected to a ``NetworkObserver``.
   ///
   /// - Parameter observer: A ``NetworkObserver``.
   /// - Returns: A ``ConnectedCondition``.
-  public static func connected(to observer: some NetworkObserver) -> Self {
+  public static func connected<Observer>(to observer: Observer) -> Self
+  where Self == NetworkConnectionRunSpecification<Observer> {
     NetworkConnectionRunSpecification(observer: observer)
   }
 }

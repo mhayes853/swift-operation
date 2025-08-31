@@ -12,7 +12,9 @@
   /// When initialized, this condition will immediately subscribe to your publisher, and will
   /// manually store the latest output. Only 1 subscription is made to your publisher, and changes
   /// from the single subscription are propagated to all subscribers of this condition.
-  public final class PublisherRunSpecification<P: Publisher & Sendable>: OperationRunSpecification
+  public final class PublisherRunSpecification<
+    P: Publisher & Sendable
+  >: OperationRunSpecification, Sendable
   where P.Output == Bool, P.Failure == Never {
     private typealias State = (cancellable: AnyCancellable?, currentValue: Bool)
 

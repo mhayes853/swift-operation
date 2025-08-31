@@ -21,7 +21,7 @@ extension OperationRequest {
   /// - Returns: A ``ModifiedOperation``.
   public func disableAutomaticRunning(
     _ isDisabled: Bool = true
-  ) -> ModifiedOperation<Self, _enableAutomaticRunningModifier<Self, AlwaysRunSpecification>> {
+  ) -> ModifiedOperation<Self, _EnableAutomaticFetchingModifier<Self, AlwaysRunSpecification>> {
     self.enableAutomaticRunning(onlyWhen: .always(!isDisabled))
   }
 
@@ -43,16 +43,16 @@ extension OperationRequest {
   ///
   /// - Parameter condition: The ``FetchCondition`` to enable automatic fetching on.
   /// - Returns: A ``ModifiedOperation``.
-  public func enableAutomaticRunning<Spec: OperationRunSpecification>(
+  public func enableAutomaticRunning<Spec>(
     onlyWhen spec: Spec
-  ) -> ModifiedOperation<Self, _enableAutomaticRunningModifier<Self, Spec>> {
-    self.modifier(_enableAutomaticRunningModifier(spec: spec))
+  ) -> ModifiedOperation<Self, _EnableAutomaticFetchingModifier<Self, Spec>> {
+    self.modifier(_EnableAutomaticFetchingModifier(spec: spec))
   }
 }
 
-public struct _enableAutomaticRunningModifier<
+public struct _EnableAutomaticFetchingModifier<
   Operation: OperationRequest,
-  Spec: OperationRunSpecification
+  Spec: OperationRunSpecification & Sendable
 >: _ContextUpdatingOperationModifier {
   let spec: Spec
 
@@ -71,12 +71,14 @@ extension OperationContext {
   /// However, if you use the default initializer of a ``OperationClient``, then the condition will have
   /// a default value of true for all ``QueryRequest`` conformances and false for all
   /// ``MutationRequest`` conformances.
-  public var automaticRunningSpecification: any OperationRunSpecification {
+  public var automaticRunningSpecification: any OperationRunSpecification & Sendable {
     get { self[AutomaticRunningSpecificiationKey.self] }
     set { self[AutomaticRunningSpecificiationKey.self] = newValue }
   }
 
   private enum AutomaticRunningSpecificiationKey: Key {
-    static var defaultValue: any OperationRunSpecification { .always(false) }
+    static var defaultValue: any OperationRunSpecification & Sendable {
+      AlwaysRunSpecification(isTrue: false, shouldEmitInitialValue: false)
+    }
   }
 }

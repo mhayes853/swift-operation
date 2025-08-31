@@ -2,9 +2,9 @@
 
 /// A ``FetchCondition`` that applies a binary boolean operator between 2 conditions.
 public struct BinaryOperatorRunSpecification<
-  Left: OperationRunSpecification,
-  Right: OperationRunSpecification,
-  Operator: _BinaryRunSpecificationOperator
+  Left: OperationRunSpecification & Sendable,
+  Right: OperationRunSpecification & Sendable,
+  Operator: _BinaryRunSpecificationOperator & Sendable
 >: OperationRunSpecification {
   fileprivate let left: Left
   fileprivate let right: Right
@@ -38,6 +38,9 @@ public struct BinaryOperatorRunSpecification<
   }
 }
 
+extension BinaryOperatorRunSpecification: Sendable
+where Left: Sendable, Right: Sendable, Operator: Sendable {}
+
 // MARK: - Operators
 
 /// Applies a boolean AND operation between the 2 specified ``FetchCondition``s.
@@ -68,18 +71,18 @@ public func || <Left: OperationRunSpecification, Right: OperationRunSpecificatio
 
 // MARK: - Operator
 
-public protocol _BinaryRunSpecificationOperator: Sendable {
+public protocol _BinaryRunSpecificationOperator {
   func evaluate(_ left: Bool, _ right: Bool) -> Bool
 }
 
-public struct _AndRunSpecificationOperator: _BinaryRunSpecificationOperator {
+public struct _AndRunSpecificationOperator: _BinaryRunSpecificationOperator, Sendable {
   @inlinable
   public func evaluate(_ left: Bool, _ right: Bool) -> Bool {
     left && right
   }
 }
 
-public struct _OrRunSpecificationOperator: _BinaryRunSpecificationOperator {
+public struct _OrRunSpecificationOperator: _BinaryRunSpecificationOperator, Sendable {
   @inlinable
   public func evaluate(_ left: Bool, _ right: Bool) -> Bool {
     left || right

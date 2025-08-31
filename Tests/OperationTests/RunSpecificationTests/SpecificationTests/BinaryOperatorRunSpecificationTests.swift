@@ -6,29 +6,29 @@ import Testing
 struct BinaryOperatorRunSpecificationTests {
   @Test("|| Is True When Both Conditions Are True")
   func orTrueWhenBothTrue() {
-    let c1: some OperationRunSpecification = .always(true)
-    let c2: some OperationRunSpecification = .always(true)
+    let c1: some OperationRunSpecification & Sendable = .always(true)
+    let c2: some OperationRunSpecification & Sendable = .always(true)
     expectNoDifference((c1 || c2).isSatisfied(in: OperationContext()), true)
   }
 
   @Test("|| Is True When Right Condition Is False")
   func orTrueWhenRightFalse() {
-    let c1: some OperationRunSpecification = .always(true)
-    let c2: some OperationRunSpecification = .always(false)
+    let c1: some OperationRunSpecification & Sendable = .always(true)
+    let c2: some OperationRunSpecification & Sendable = .always(false)
     expectNoDifference((c1 || c2).isSatisfied(in: OperationContext()), true)
   }
 
   @Test("|| Is True When Left Condition Is False")
   func orTrueWhenLeftFalse() {
-    let c1: some OperationRunSpecification = .always(false)
-    let c2: some OperationRunSpecification = .always(true)
+    let c1: some OperationRunSpecification & Sendable = .always(false)
+    let c2: some OperationRunSpecification & Sendable = .always(true)
     expectNoDifference((c1 || c2).isSatisfied(in: OperationContext()), true)
   }
 
   @Test("|| Is False When Both Conditions Are False")
   func orFalseWhenBothFalse() {
-    let c1: some OperationRunSpecification = .always(false)
-    let c2: some OperationRunSpecification = .always(false)
+    let c1: some OperationRunSpecification & Sendable = .always(false)
+    let c2: some OperationRunSpecification & Sendable = .always(false)
     expectNoDifference((c1 || c2).isSatisfied(in: OperationContext()), false)
   }
 
@@ -86,29 +86,29 @@ struct BinaryOperatorRunSpecificationTests {
 
   @Test("&& Is True When Both Conditions Are True")
   func andTrueWhenBothTrue() {
-    let c1: some OperationRunSpecification = .always(true)
-    let c2: some OperationRunSpecification = .always(true)
+    let c1: some OperationRunSpecification & Sendable = .always(true)
+    let c2: some OperationRunSpecification & Sendable = .always(true)
     expectNoDifference((c1 && c2).isSatisfied(in: OperationContext()), true)
   }
 
   @Test("&& Is False When Right Condition Is False")
   func andFalseWhenRightFalse() {
-    let c1: some OperationRunSpecification = .always(true)
-    let c2: some OperationRunSpecification = .always(false)
+    let c1: some OperationRunSpecification & Sendable = .always(true)
+    let c2: some OperationRunSpecification & Sendable = .always(false)
     expectNoDifference((c1 && c2).isSatisfied(in: OperationContext()), false)
   }
 
   @Test("&& Is False When Left Condition Is False")
   func andFalseWhenLeftFalse() {
-    let c1: some OperationRunSpecification = .always(false)
-    let c2: some OperationRunSpecification = .always(true)
+    let c1: some OperationRunSpecification & Sendable = .always(false)
+    let c2: some OperationRunSpecification & Sendable = .always(true)
     expectNoDifference((c1 && c2).isSatisfied(in: OperationContext()), false)
   }
 
   @Test("&& Is False When Both Conditions Are False")
   func andFalseWhenBothFalse() {
-    let c1: some OperationRunSpecification = .always(false)
-    let c2: some OperationRunSpecification = .always(false)
+    let c1: some OperationRunSpecification & Sendable = .always(false)
+    let c2: some OperationRunSpecification & Sendable = .always(false)
     expectNoDifference((c1 && c2).isSatisfied(in: OperationContext()), false)
   }
 

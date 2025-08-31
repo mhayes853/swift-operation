@@ -1,13 +1,13 @@
 /// A ``FetchCondition`` that returns a static value.
-public struct AlwaysRunSpecification: OperationRunSpecification {
+public struct AlwaysRunSpecification: OperationRunSpecification, Sendable {
   @usableFromInline
   let isTrue: Bool
 
   @usableFromInline
   let shouldEmitInitialValue: Bool
 
-  @usableFromInline
-  init(isTrue: Bool, shouldEmitInitialValue: Bool) {
+  @inlinable
+  public init(isTrue: Bool, shouldEmitInitialValue: Bool) {
     self.isTrue = isTrue
     self.shouldEmitInitialValue = shouldEmitInitialValue
   }

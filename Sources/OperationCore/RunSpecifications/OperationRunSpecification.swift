@@ -8,7 +8,7 @@
 /// When conforming to the `FetchCondition` protocol, make sure your conformance always has the
 /// most up to date value on whether or not it has been satisfied regardless of whether or not
 /// there are subscribers attached to your condition.
-public protocol OperationRunSpecification: Sendable {
+public protocol OperationRunSpecification {
   /// Returns whether or not this condition is satisfied in the specified ``OperationContext``.
   ///
   /// - Parameter context: The context in which to evaluate this condition.

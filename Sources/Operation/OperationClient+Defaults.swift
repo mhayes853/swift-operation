@@ -46,7 +46,7 @@ extension OperationClient {
     let retryLimit: Int
     let backoff: OperationBackoffFunction?
     let delayer: (any OperationDelayer)?
-    let automaticRunningSpecification: any OperationRunSpecification
+    let automaticRunningSpecification: any OperationRunSpecification & Sendable
     let networkObserver: (any NetworkObserver)?
     let activityObserver: (any ApplicationActivityObserver)?
 
@@ -73,7 +73,7 @@ extension OperationClient {
           .backoff(backoff)
           .delayer(delayer)
           .enableAutomaticRunning(
-            onlyWhen: AnyRunSpecificiation(self.automaticRunningSpecification)
+            onlyWhen: AnySendableRunSpecification(self.automaticRunningSpecification)
           )
           .reRunOnChange(of: self.refetchOnChangeCondition)
           .deduplicated(),
@@ -82,18 +82,25 @@ extension OperationClient {
       )
     }
 
-    private var refetchOnChangeCondition: AnyRunSpecificiation {
+    private var refetchOnChangeCondition: AnySendableRunSpecification {
       switch (self.networkObserver, self.activityObserver) {
       case (let networkObserver?, let activityObserver?):
-        return AnyRunSpecificiation(
-          .connected(to: networkObserver) && .applicationIsActive(observer: activityObserver)
+        return AnySendableRunSpecification(
+          NetworkConnectionRunSpecification(observer: AnyNetworkObserver(networkObserver))
+            && ApplicationIsActiveRunSpecification(observer: activityObserver)
         )
       case (let networkObserver?, _):
-        return AnyRunSpecificiation(.connected(to: networkObserver))
+        return AnySendableRunSpecification(
+          NetworkConnectionRunSpecification(observer: AnyNetworkObserver(networkObserver))
+        )
       case (_, let activityObserver?):
-        return AnyRunSpecificiation(.applicationIsActive(observer: activityObserver))
+        return AnySendableRunSpecification(
+          ApplicationIsActiveRunSpecification(observer: activityObserver)
+        )
       default:
-        return AnyRunSpecificiation(.always(false))
+        return AnySendableRunSpecification(
+          AlwaysRunSpecification(isTrue: false, shouldEmitInitialValue: false)
+        )
       }
     }
   }
@@ -109,7 +116,10 @@ extension OperationClient.StoreCreator where Self == OperationClient.DefaultStor
       retryLimit: 0,
       backoff: .noBackoff,
       delayer: .noDelay,
-      automaticRunningSpecification: .always(true),
+      automaticRunningSpecification: AlwaysRunSpecification(
+        isTrue: true,
+        shouldEmitInitialValue: false
+      ),
       networkObserver: nil,
       activityObserver: nil
     )
@@ -134,7 +144,7 @@ extension OperationClient.StoreCreator where Self == OperationClient.DefaultStor
   ///   - retryLimit: The maximum number of retries for queries and mutations.
   ///   - backoff: The backoff function to use for retries.
   ///   - delayer: The `QueryDelayer` to use for delaying the execution of a retry.
-  ///   - queryenableAutomaticRunningCondition: The default `FetchCondition` that determines
+  ///   - queryEnableAutomaticFetchingCondition: The default `FetchCondition` that determines
   ///   whether or not automatic fetching is enabled for queries (and not mutations).
   ///   - networkObserver: The default `NetworkObserver` to use.
   ///   - activityObserver: The default `ApplicationActivityObserver` to use.
@@ -143,7 +153,8 @@ extension OperationClient.StoreCreator where Self == OperationClient.DefaultStor
     retryLimit: Int = 3,
     backoff: OperationBackoffFunction? = nil,
     delayer: (any OperationDelayer)? = nil,
-    automaticRunningSpecification: any OperationRunSpecification = .always(true),
+    automaticRunningSpecification: any OperationRunSpecification & Sendable =
+      AlwaysRunSpecification(isTrue: true, shouldEmitInitialValue: false),
     networkObserver: (any NetworkObserver)? = OperationClient.defaultNetworkObserver,
     activityObserver: (any ApplicationActivityObserver)? = OperationClient
       .defaultApplicationActivityObserver

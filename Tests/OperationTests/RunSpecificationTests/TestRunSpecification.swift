@@ -1,6 +1,6 @@
 import Operation
 
-final class TestRunSpecification: OperationRunSpecification {
+final class TestRunSpecification: OperationRunSpecification, Sendable {
   private typealias Handler = @Sendable (Bool) -> Void
 
   private let value = RecursiveLock(false)

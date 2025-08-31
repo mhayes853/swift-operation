@@ -25,6 +25,8 @@ public struct NotRunSpecification<Base: OperationRunSpecification>: OperationRun
   }
 }
 
+extension NotRunSpecification: Sendable where Base: Sendable {}
+
 // MARK: - Not Operator
 
 /// Applies a boolean NOT operation on the specified ``FetchCondition``.
