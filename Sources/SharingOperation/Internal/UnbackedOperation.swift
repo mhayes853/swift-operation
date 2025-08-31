@@ -14,8 +14,8 @@ struct UnbackedOperation<State: OperationState>: OperationRequest, Sendable {
 
 package func _unbackedOperationRunError(stateType: Any.Type) -> String {
   """
-  An unbacked shared operation attempted to fetch its data. Doing so has no effect on the value of \
-  the operation.
+  An unbacked shared operation attempted to fetch its data. This is not allowed because no \
+  `OperationRequest` was provided to `@SharedOperation`.
 
       State Type: \(typeName(stateType))
   """
