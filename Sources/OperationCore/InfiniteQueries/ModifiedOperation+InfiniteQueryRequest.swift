@@ -27,7 +27,7 @@ extension ModifiedOperation: InfiniteQueryRequest where Operation: InfiniteQuery
     isolation: isolated (any Actor)?,
     using paging: InfiniteQueryPaging<PageID, PageValue>,
     in context: OperationContext,
-    with continuation: OperationContinuation<PageValue>
+    with continuation: OperationContinuation<PageValue, PageFailure>
   ) async throws(PageFailure) -> PageValue {
     try await self.operation.fetchPage(
       isolation: isolation,

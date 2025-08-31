@@ -38,7 +38,7 @@ where State.OperationValue == Value, State.Failure == Failure {
   func run(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<Value>
+    with continuation: OperationContinuation<Value, Failure>
   ) async throws(Failure) -> Value
 }
 

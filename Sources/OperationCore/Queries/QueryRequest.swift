@@ -167,7 +167,7 @@ where
   func fetch(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<FetchValue>
+    with continuation: OperationContinuation<FetchValue, FetchFailure>
   ) async throws(FetchFailure) -> FetchValue
 }
 
@@ -177,7 +177,7 @@ extension QueryRequest {
   public func run(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<FetchValue>
+    with continuation: OperationContinuation<FetchValue, FetchFailure>
   ) async throws(FetchFailure) -> FetchValue {
     try await self.fetch(isolation: isolation, in: context, with: continuation)
   }

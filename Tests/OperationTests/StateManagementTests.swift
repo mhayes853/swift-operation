@@ -62,7 +62,7 @@ private struct UserFriendsQuery: InfiniteQueryRequest {
     isolation: isolated (any Actor)?,
     using paging: InfiniteQueryPaging<Int, [User]>,
     in context: OperationContext,
-    with continuation: OperationContinuation<[User]>
+    with continuation: OperationContinuation<[User], any Error>
   ) async throws -> [User] {
     [User(id: 10, relationship: .notFriends)]
   }
@@ -77,7 +77,7 @@ private struct SendFriendRequestMutation: MutationRequest, Hashable {
     isolation: isolated (any Actor)?,
     with arguments: Arguments,
     in context: OperationContext,
-    with continuation: OperationContinuation<Void>
+    with continuation: OperationContinuation<Void, any Error>
   ) async throws {
     guard let client = context.operationClient else { return }
     for store in client.stores(matching: ["user-friends"], of: UserFriendsQuery.State.self) {

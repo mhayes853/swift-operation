@@ -23,7 +23,7 @@ public struct _RetryModifier<Operation: OperationRequest>: OperationModifier, Se
     isolation: isolated (any Actor)?,
     in context: OperationContext,
     using operation: Operation,
-    with continuation: OperationContinuation<Operation.Value>
+    with continuation: OperationContinuation<Operation.Value, Operation.Failure>
   ) async throws(Operation.Failure) -> Operation.Value {
     var context = context
     for index in 0..<context.operationMaxRetries {

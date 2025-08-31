@@ -3,7 +3,7 @@ extension ModifiedOperation: MutationRequest where Operation: MutationRequest {
     isolation: isolated (any Actor)?,
     with arguments: Operation.Arguments,
     in context: OperationContext,
-    with continuation: OperationContinuation<Operation.MutateValue>
+    with continuation: OperationContinuation<Operation.MutateValue, Operation.MutateFailure>
   ) async throws(Operation.MutateFailure) -> Operation.MutateValue {
     try await self.operation.mutate(
       isolation: isolation,

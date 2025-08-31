@@ -51,7 +51,7 @@ public struct _DeduplicationModifier<
     isolation: isolated (any Actor)?,
     in context: OperationContext,
     using operation: Operation,
-    with continuation: OperationContinuation<Operation.Value>
+    with continuation: OperationContinuation<Operation.Value, Operation.Failure>
   ) async throws(Operation.Failure) -> Operation.Value {
     guard let storage = context.deduplicationStorage as? DeduplicationStorage<Operation> else {
       return try await operation.run(isolation: isolation, in: context, with: continuation)
@@ -77,7 +77,7 @@ private final actor DeduplicationStorage<Operation: OperationRequest & Sendable>
   func run(
     operation: Operation,
     in context: OperationContext,
-    with continuation: OperationContinuation<Operation.Value>
+    with continuation: OperationContinuation<Operation.Value, Operation.Failure>
   ) async throws(Operation.Failure) -> Operation.Value {
     if let task = self.task(for: context) {
       return try await self.waitForTask(task)

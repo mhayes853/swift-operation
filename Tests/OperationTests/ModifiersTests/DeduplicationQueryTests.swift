@@ -90,7 +90,7 @@ private final actor DeduplicationQuery: QueryRequest, Identifiable {
   func fetch(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<String>
+    with continuation: OperationContinuation<String, any Error>
   ) async throws -> String {
     // NB: Give enough time for deduplication.
     try await TaskSleepDelayer.taskSleep.delay(for: 0.1)
@@ -128,7 +128,7 @@ private final actor DeduplicationInfiniteQuery: InfiniteQueryRequest, Identifiab
     isolation: isolated (any Actor)?,
     using paging: InfiniteQueryPaging<Int, String>,
     in context: OperationContext,
-    with continuation: OperationContinuation<String>
+    with continuation: OperationContinuation<String, any Error>
   ) async throws -> String {
     // NB: Give enough time for deduplication.
     try await TaskSleepDelayer.taskSleep.delay(for: 0.1)

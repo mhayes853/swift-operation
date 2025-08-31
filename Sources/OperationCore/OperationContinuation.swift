@@ -31,14 +31,14 @@
 ///
 /// > Note: Read the <doc:MultistageQueries> article to learn the use cases for yielding data and
 /// > how most effectively yield data from your queries.
-public struct OperationContinuation<Value: Sendable>: Sendable {
-  private let onQueryResult: @Sendable (Result<Value, any Error>, OperationContext?) -> Void
+public struct OperationContinuation<Value: Sendable, Failure: Error>: Sendable {
+  private let onQueryResult: @Sendable (Result<Value, Failure>, OperationContext?) -> Void
 
   /// Creates a continuation.
   ///
   /// - Parameter onQueryResult: A function to handle yielded query results.
   public init(
-    onQueryResult: @escaping @Sendable (Result<Value, any Error>, OperationContext?) -> Void
+    onQueryResult: @escaping @Sendable (Result<Value, Failure>, OperationContext?) -> Void
   ) {
     self.onQueryResult = onQueryResult
   }
@@ -61,7 +61,7 @@ extension OperationContinuation {
   /// - Parameters:
   ///   - error: The error to yield.
   ///   - context: The ``OperationContext`` to yield with.
-  public func yield(error: any Error, using context: OperationContext? = nil) {
+  public func yield(error: Failure, using context: OperationContext? = nil) {
     self.yield(with: .failure(error), using: context)
   }
 
@@ -70,7 +70,7 @@ extension OperationContinuation {
   /// - Parameters:
   ///   - result: The result to yield.
   ///   - context: The ``OperationContext`` to yield with.
-  public func yield(with result: Result<Value, any Error>, using context: OperationContext? = nil) {
+  public func yield(with result: Result<Value, Failure>, using context: OperationContext? = nil) {
     self.onQueryResult(result, context)
   }
 }

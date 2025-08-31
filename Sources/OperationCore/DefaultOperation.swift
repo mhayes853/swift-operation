@@ -46,7 +46,7 @@ where Operation.State: DefaultableOperationState {
   public func run(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<Value>
+    with continuation: OperationContinuation<Value, Failure>
   ) async throws(Operation.Failure) -> Value {
     try await self.operation.run(isolation: isolation, in: context, with: continuation)
   }

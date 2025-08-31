@@ -25,7 +25,7 @@
       isolation: isolated (any Actor)?,
       in context: OperationContext,
       using operation: Operation,
-      with continuation: OperationContinuation<Operation.Value>
+      with continuation: OperationContinuation<Operation.Value, Operation.Failure>
     ) async throws -> Operation.Value {
       let logger = self.logger ?? context.operationLogger
       let start = context.operationClock.now()

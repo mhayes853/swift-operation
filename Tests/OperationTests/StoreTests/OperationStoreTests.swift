@@ -557,7 +557,11 @@ struct OperationStoreTests {
       await query.yield()
     } matching: { issue in
       issue.comments.contains(
-        .warning(.queryYieldedAfterReturning(.success(EscapingContinuationQuery.yieldedValue)))
+        .warning(
+          .queryYieldedAfterReturning(
+            Result<String, any Error>.success(EscapingContinuationQuery.yieldedValue)
+          )
+        )
       )
     }
     expectNoDifference(store.currentValue, EscapingContinuationQuery.value)

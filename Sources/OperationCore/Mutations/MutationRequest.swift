@@ -82,7 +82,7 @@ where
     isolation: isolated (any Actor)?,
     with arguments: Arguments,
     in context: OperationContext,
-    with continuation: OperationContinuation<MutateValue>
+    with continuation: OperationContinuation<MutateValue, MutateFailure>
   ) async throws(MutateFailure) -> MutateValue
 }
 
@@ -92,7 +92,7 @@ extension MutationRequest {
   public func run(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<Value>
+    with continuation: OperationContinuation<Value, MutateFailure>
   ) async throws(MutateFailure) -> Value {
     let args = context.mutationArgs(as: Arguments.self)!
     let value = try await self.mutate(
@@ -122,7 +122,7 @@ extension MutationRequest where Arguments == Void {
   public func mutate(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<MutateValue>
+    with continuation: OperationContinuation<MutateValue, MutateFailure>
   ) async throws(MutateFailure) -> MutateValue {
     try await self.mutate(isolation: isolation, with: (), in: context, with: continuation)
   }

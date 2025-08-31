@@ -288,7 +288,7 @@ where
     isolation: isolated (any Actor)?,
     using paging: InfiniteQueryPaging<PageID, PageValue>,
     in context: OperationContext,
-    with continuation: OperationContinuation<PageValue>
+    with continuation: OperationContinuation<PageValue, PageFailure>
   ) async throws(PageFailure) -> PageValue
 }
 
@@ -304,7 +304,7 @@ extension InfiniteQueryRequest {
   public func run(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<Value>
+    with continuation: OperationContinuation<Value, PageFailure>
   ) async throws(PageFailure) -> Value {
     let paging = context.paging(for: self)
     switch paging.request {
@@ -345,7 +345,7 @@ extension InfiniteQueryRequest {
     isolation: isolated (any Actor)?,
     using paging: InfiniteQueryPaging<PageID, PageValue>,
     in context: OperationContext,
-    with continuation: OperationContinuation<Value>
+    with continuation: OperationContinuation<Value, PageFailure>
   ) async throws(PageFailure) -> InfiniteQueryOperationValue<PageID, PageValue> {
     var newPages = context.infiniteValues?.currentPagesTracker?.pages(for: self) ?? []
     for _ in 0..<paging.pages.count {
@@ -399,7 +399,7 @@ extension InfiniteQueryRequest {
     isolation: isolated (any Actor)?,
     using paging: InfiniteQueryPaging<PageID, PageValue>,
     in context: OperationContext,
-    with continuation: OperationContinuation<Value>
+    with continuation: OperationContinuation<Value, PageFailure>
   ) async throws(PageFailure) -> InfiniteQueryOperationValue<PageID, PageValue> {
     let pageValue = try await self.fetchPageWithPublishedEvents(
       isolation: isolation,
@@ -435,7 +435,7 @@ extension InfiniteQueryRequest {
     with pageId: PageID,
     using paging: InfiniteQueryPaging<PageID, PageValue>,
     in context: OperationContext,
-    with continuation: OperationContinuation<Value>
+    with continuation: OperationContinuation<Value, PageFailure>
   ) async throws(PageFailure) -> InfiniteQueryOperationValue<PageID, PageValue> {
     let pageValue = try await self.fetchPageWithPublishedEvents(
       isolation: isolation,
@@ -484,7 +484,7 @@ extension InfiniteQueryRequest {
     with pageId: PageID,
     using paging: InfiniteQueryPaging<PageID, PageValue>,
     in context: OperationContext,
-    with continuation: OperationContinuation<Value>
+    with continuation: OperationContinuation<Value, PageFailure>
   ) async throws(PageFailure) -> InfiniteQueryOperationValue<PageID, PageValue> {
     let pageValue = try await self.fetchPageWithPublishedEvents(
       isolation: isolation,
@@ -530,11 +530,11 @@ extension InfiniteQueryRequest {
     isolation: isolated (any Actor)?,
     using paging: InfiniteQueryPaging<PageID, PageValue>,
     in context: OperationContext,
-    with continuation: OperationContinuation<PageValue>
+    with continuation: OperationContinuation<PageValue, PageFailure>
   ) async throws(PageFailure) -> PageValue {
     let id = AnyHashableSendable(paging.pageId)
     context.infiniteValues?.requestSubscriptions.forEach { $0.onPageFetchingStarted(id, context) }
-    let continuation = OperationContinuation<PageValue> { result, yieldedContext in
+    let continuation = OperationContinuation<PageValue, PageFailure> { result, yieldedContext in
       var context = yieldedContext ?? context
       context.operationResultUpdateReason = .yieldedResult
       context.infiniteValues?.requestSubscriptions
@@ -542,7 +542,7 @@ extension InfiniteQueryRequest {
           let result = result.map {
             InfiniteQueryPage(id: paging.pageId, value: $0) as any Sendable
           }
-          sub.onPageResultReceived(id, result, context)
+          sub.onPageResultReceived(id, result.mapError { $0 }, context)
         }
       continuation.yield(with: result)
     }

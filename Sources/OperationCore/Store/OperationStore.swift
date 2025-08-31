@@ -436,7 +436,7 @@ extension OperationStore {
     task: LockedBox<TaskState>,
     initialHerdId: Int,
     context: OperationContext
-  ) -> OperationContinuation<State.OperationValue> {
+  ) -> OperationContinuation<State.OperationValue, State.Failure> {
     OperationContinuation { result, yieldedContext in
       var context = yieldedContext ?? context
       context.operationResultUpdateReason = .yieldedResult
@@ -446,9 +446,9 @@ extension OperationStore {
           case .finished:
             reportWarning(.queryYieldedAfterReturning(result))
           case .running(let task) where values.taskHerdId == initialHerdId:
-            values.state.update(with: result.mapError { $0 as! State.Failure }, for: task)
+            values.state.update(with: result, for: task)
             self.subscriptions.forEach {
-              $0.onResultReceived?(result.mapError { $0 as! State.Failure }, context)
+              $0.onResultReceived?(result, context)
             }
           default:
             break
@@ -560,7 +560,7 @@ extension OperationContext {
 // MARK: - Warnings
 
 extension OperationWarning {
-  public static func queryYieldedAfterReturning<T>(_ result: Result<T, any Error>) -> Self {
+  public static func queryYieldedAfterReturning<T, E>(_ result: Result<T, E>) -> Self {
     """
     A query yielded a result to its continuation after returning.
 

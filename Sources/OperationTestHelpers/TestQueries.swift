@@ -10,7 +10,7 @@ package struct TestQuery: QueryRequest, Hashable {
   package func fetch(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<Int>
+    with continuation: OperationContinuation<Int, any Error>
   ) async throws -> Int {
     Self.value
   }
@@ -26,7 +26,7 @@ package struct TestCancellingQuery: QueryRequest, Hashable {
   package func fetch(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<Int>
+    with continuation: OperationContinuation<Int, any Error>
   ) async throws -> Int {
     try Task.checkCancellation()
     return Self.value
@@ -43,7 +43,7 @@ package struct TestStringQuery: QueryRequest, Hashable {
   package func fetch(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<String>
+    with continuation: OperationContinuation<String, any Error>
   ) async throws -> String {
     Self.value
   }
@@ -75,7 +75,7 @@ package struct TestStateQuery: QueryRequest, Hashable {
   package func fetch(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<Value>
+    with continuation: OperationContinuation<Value, any Error>
   ) async throws -> Value {
     let task = Self.action.withLock { action in
       switch action {
@@ -116,7 +116,7 @@ package final class SleepingQuery: QueryRequest, @unchecked Sendable {
   package func fetch(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<String>
+    with continuation: OperationContinuation<String, any Error>
   ) async throws -> String {
     try await withTaskCancellationHandler {
       try await withUnsafeThrowingContinuation { continuation in
@@ -142,7 +142,7 @@ package struct FailingQuery: QueryRequest, Hashable {
   package func fetch(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<String>
+    with continuation: OperationContinuation<String, any Error>
   ) async throws -> String {
     throw SomeError()
   }
@@ -170,7 +170,7 @@ package final actor CountingQuery: QueryRequest {
   package func fetch(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<Int>
+    with continuation: OperationContinuation<Int, any Error>
   ) async throws -> Int {
     try await self.sleep()
     return try await self.increment()
@@ -197,7 +197,7 @@ package struct EndlessQuery: QueryRequest, Hashable {
   package func fetch(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<String>
+    with continuation: OperationContinuation<String, any Error>
   ) async throws -> String {
     try await Task.never()
     return ""
@@ -220,7 +220,7 @@ package struct NonCancellingEndlessQuery: QueryRequest {
   package func fetch(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<String>
+    with continuation: OperationContinuation<String, any Error>
   ) async throws -> String {
     self.onLoading()
     try? await Task.never()
@@ -251,7 +251,7 @@ package final actor FlakeyQuery: QueryRequest {
   package func fetch(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<String>
+    with continuation: OperationContinuation<String, any Error>
   ) async throws -> String {
     guard let result = await self.result else { throw SomeError() }
     return result
@@ -276,7 +276,7 @@ package struct PathableQuery: QueryRequest {
   package func fetch(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<Int>
+    with continuation: OperationContinuation<Int, any Error>
   ) async throws -> Int {
     self.value
   }
@@ -296,7 +296,7 @@ package struct TaggedPathableQuery<Value: Sendable>: QueryRequest {
   package func fetch(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<Value>
+    with continuation: OperationContinuation<Value, any Error>
   ) async throws -> Value {
     self.value
   }
@@ -316,7 +316,7 @@ package struct SucceedOnNthRefetchQuery: QueryRequest, Hashable {
   package func fetch(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<String>
+    with continuation: OperationContinuation<String, any Error>
   ) async throws -> String {
     if context.operationRetryIndex < self.index {
       throw SomeError()
@@ -339,7 +339,7 @@ package final actor ContextReadingQuery: QueryRequest, Identifiable {
   package func fetch(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<String>
+    with continuation: OperationContinuation<String, any Error>
   ) async throws -> String {
     await isolate(self) { @Sendable in $0.latestContext = context }
     return ""
@@ -356,7 +356,7 @@ package struct TaskLocalQuery: QueryRequest, Hashable {
   package func fetch(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<Int>
+    with continuation: OperationContinuation<Int, any Error>
   ) async throws -> Int {
     Self.value
   }
@@ -379,7 +379,7 @@ package final class ContinuingQuery: QueryRequest, @unchecked Sendable {
   package func fetch(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<String>
+    with continuation: OperationContinuation<String, any Error>
   ) async throws -> String {
     for value in Self.values {
       continuation.yield(value)
@@ -398,7 +398,7 @@ package struct ContinuingErrorQuery: QueryRequest, Hashable {
   package func fetch(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<String>
+    with continuation: OperationContinuation<String, any Error>
   ) async throws -> String {
     continuation.yield(error: SomeError())
     return Self.finalValue
@@ -419,7 +419,7 @@ package struct ContinuingValueThenErrorQuery: QueryRequest, Hashable {
   package func fetch(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<String>
+    with continuation: OperationContinuation<String, any Error>
   ) async throws -> String {
     continuation.yield(Self.value)
     throw SomeError()
@@ -436,7 +436,7 @@ package final actor EscapingContinuationQuery: QueryRequest {
   package static let value = "the end"
   package static let yieldedValue = "the beginning"
 
-  private var continuation: OperationContinuation<String>?
+  private var continuation: OperationContinuation<String, any Error>?
 
   package init() {}
 
@@ -447,7 +447,7 @@ package final actor EscapingContinuationQuery: QueryRequest {
   package func fetch(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<String>
+    with continuation: OperationContinuation<String, any Error>
   ) async throws -> String {
     await isolate(self) { @Sendable in $0.continuation = continuation }
     return Self.value
@@ -489,7 +489,7 @@ package struct EmptyInfiniteQuery: InfiniteQueryRequest {
     isolation: isolated (any Actor)?,
     using paging: InfiniteQueryPaging<Int, String>,
     in context: OperationContext,
-    with continuation: OperationContinuation<String>
+    with continuation: OperationContinuation<String, any Error>
   ) async throws -> String {
     ""
   }
@@ -524,7 +524,7 @@ package struct EmptyIntInfiniteQuery: InfiniteQueryRequest {
     isolation: isolated (any Actor)?,
     using paging: InfiniteQueryPaging<Int, Int>,
     in context: OperationContext,
-    with continuation: OperationContinuation<Int>
+    with continuation: OperationContinuation<Int, any Error>
   ) async throws -> Int {
     0
   }
@@ -541,7 +541,7 @@ package struct FakeInfiniteQuery: OperationRequest, Hashable {
   package func run(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<Value>
+    with continuation: OperationContinuation<Value, any Error>
   ) async throws -> Value {
     fatalError()
   }
@@ -580,7 +580,7 @@ package final class TestInfiniteQuery: InfiniteQueryRequest {
     isolation: isolated (any Actor)?,
     using paging: InfiniteQueryPaging<Int, String>,
     in context: OperationContext,
-    with continuation: OperationContinuation<String>
+    with continuation: OperationContinuation<String, any Error>
   ) async throws -> String {
     try self.state.withLock {
       if let value = $0[paging.pageId] {
@@ -628,7 +628,7 @@ package final class TestCancellableInfiniteQuery: InfiniteQueryRequest {
     isolation: isolated (any Actor)?,
     using paging: InfiniteQueryPaging<Int, String>,
     in context: OperationContext,
-    with continuation: OperationContinuation<String>
+    with continuation: OperationContinuation<String, any Error>
   ) async throws -> String {
     try Task.checkCancellation()
     return try self.state.withLock {
@@ -681,7 +681,7 @@ package final actor CountingInfiniteQuery: InfiniteQueryRequest {
     isolation: isolated (any Actor)?,
     using paging: InfiniteQueryPaging<Int, String>,
     in context: OperationContext,
-    with continuation: OperationContinuation<String>
+    with continuation: OperationContinuation<String, any Error>
   ) async throws -> String {
     await isolate(self) { @Sendable in $0.fetchCount += 1 }
     return "blob"
@@ -718,7 +718,7 @@ package final class FlakeyInfiniteQuery: InfiniteQueryRequest {
     isolation: isolated (any Actor)?,
     using paging: InfiniteQueryPaging<PageID, PageValue>,
     in context: OperationContext,
-    with continuation: OperationContinuation<PageValue>
+    with continuation: OperationContinuation<PageValue, any Error>
   ) async throws -> PageValue {
     try self.values.withLock { values in
       values.fetchCount += 1
@@ -778,7 +778,7 @@ package final class TestYieldableInfiniteQuery: InfiniteQueryRequest {
     isolation: isolated (any Actor)?,
     using paging: InfiniteQueryPaging<Int, String>,
     in context: OperationContext,
-    with continuation: OperationContinuation<String>
+    with continuation: OperationContinuation<String, any Error>
   ) async throws -> String {
     self.state.withLock {
       for result in $0[paging.pageId] ?? [] {
@@ -859,7 +859,7 @@ package final class WaitableInfiniteQuery: InfiniteQueryRequest {
     isolation: isolated (any Actor)?,
     using paging: InfiniteQueryPaging<Int, String>,
     in context: OperationContext,
-    with continuation: OperationContinuation<String>
+    with continuation: OperationContinuation<String, any Error>
   ) async throws -> String {
     self.state.withLock { $0.onLoading() }
     if self.state.withLock({ $0.willWait }) {
@@ -910,7 +910,7 @@ package final class FailableInfiniteQuery: InfiniteQueryRequest {
     isolation: isolated (any Actor)?,
     using paging: InfiniteQueryPaging<Int, String>,
     in context: OperationContext,
-    with continuation: OperationContinuation<String>
+    with continuation: OperationContinuation<String, any Error>
   ) async throws -> String {
     try self.state.withLock { state in
       if let state {
@@ -940,7 +940,7 @@ package struct EmptyMutation: MutationRequest, Hashable {
     isolation: isolated (any Actor)?,
     with arguments: String,
     in context: OperationContext,
-    with continuation: OperationContinuation<String>
+    with continuation: OperationContinuation<String, any Error>
   ) async throws -> String {
     arguments
   }
@@ -955,7 +955,7 @@ package struct EmptyCancellingMutation: MutationRequest, Hashable {
     isolation: isolated (any Actor)?,
     with arguments: String,
     in context: OperationContext,
-    with continuation: OperationContinuation<String>
+    with continuation: OperationContinuation<String, any Error>
   ) async throws -> String {
     try Task.checkCancellation()
     return arguments
@@ -971,7 +971,7 @@ package struct EmptyIntMutation: MutationRequest, Hashable {
     isolation: isolated (any Actor)?,
     with arguments: Int,
     in context: OperationContext,
-    with continuation: OperationContinuation<Int>
+    with continuation: OperationContinuation<Int, any Error>
   ) async throws -> Int {
     arguments
   }
@@ -992,7 +992,7 @@ package final class SleepingMutation: MutationRequest, @unchecked Sendable {
     isolation: isolated (any Actor)?,
     with arguments: String,
     in context: OperationContext,
-    with continuation: OperationContinuation<String>
+    with continuation: OperationContinuation<String, any Error>
   ) async throws -> String {
     self.didBeginSleeping?()
     return ""
@@ -1014,7 +1014,7 @@ package final class FailableMutation: MutationRequest {
     isolation: isolated (any Actor)?,
     with arguments: String,
     in context: OperationContext,
-    with continuation: OperationContinuation<String>
+    with continuation: OperationContinuation<String, any Error>
   ) async throws -> String {
     try self.state.withLock { state in
       if let state {
@@ -1072,7 +1072,7 @@ package final class WaitableMutation: MutationRequest {
     isolation: isolated (any Actor)?,
     with arguments: String,
     in context: OperationContext,
-    with continuation: OperationContinuation<String>
+    with continuation: OperationContinuation<String, any Error>
   ) async throws -> String {
     self.state.withLock { $0.onLoading[arguments]?() }
     if self.state.withLock({ $0.willWait }) {
@@ -1095,7 +1095,7 @@ package struct ContinuingMutation: MutationRequest, Hashable {
     isolation: isolated (any Actor)?,
     with arguments: String,
     in context: OperationContext,
-    with continuation: OperationContinuation<String>
+    with continuation: OperationContinuation<String, any Error>
   ) async throws -> String {
     for value in Self.values {
       continuation.yield(value)
@@ -1115,7 +1115,7 @@ package struct ContinuingErrorMutation: MutationRequest, Hashable {
     isolation: isolated (any Actor)?,
     with arguments: String,
     in context: OperationContext,
-    with continuation: OperationContinuation<String>
+    with continuation: OperationContinuation<String, any Error>
   ) async throws -> String {
     continuation.yield(error: SomeError())
     return Self.finalValue
@@ -1137,7 +1137,7 @@ package struct ContinuingValueThenErrorMutation: MutationRequest, Hashable {
     isolation: isolated (any Actor)?,
     with arguments: String,
     in context: OperationContext,
-    with continuation: OperationContinuation<String>
+    with continuation: OperationContinuation<String, any Error>
   ) async throws -> String {
     continuation.yield(Self.value)
     throw SomeError()
