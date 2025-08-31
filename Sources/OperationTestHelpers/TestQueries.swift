@@ -16,6 +16,23 @@ package struct TestQuery: QueryRequest, Hashable {
   }
 }
 
+// MARK: - TestCancellingQuery
+
+package struct TestCancellingQuery: QueryRequest, Hashable {
+  package static let value = 1
+
+  package init() {}
+
+  package func fetch(
+    isolation: isolated (any Actor)?,
+    in context: OperationContext,
+    with continuation: OperationContinuation<Int>
+  ) async throws -> Int {
+    try Task.checkCancellation()
+    return Self.value
+  }
+}
+
 // MARK: - TestStringQuery
 
 package struct TestStringQuery: QueryRequest, Hashable {
@@ -578,6 +595,55 @@ package final class TestInfiniteQuery: InfiniteQueryRequest {
   }
 }
 
+// MARK: - TestCancellableInfiniteQuery
+
+package final class TestCancellableInfiniteQuery: InfiniteQueryRequest {
+  package let initialPageId = 0
+
+  package let state = RecursiveLock([Int: String]())
+
+  package init() {}
+
+  package var path: OperationPath {
+    [ObjectIdentifier(self)]
+  }
+
+  package func pageId(
+    after page: InfiniteQueryPage<Int, String>,
+    using paging: InfiniteQueryPaging<Int, String>,
+    in context: OperationContext
+  ) -> Int? {
+    self.state.withLock { $0[page.id + 1] != nil ? page.id + 1 : nil }
+  }
+
+  package func pageId(
+    before page: InfiniteQueryPage<Int, String>,
+    using paging: InfiniteQueryPaging<Int, String>,
+    in context: OperationContext
+  ) -> Int? {
+    self.state.withLock { $0[page.id - 1] != nil ? page.id - 1 : nil }
+  }
+
+  package func fetchPage(
+    isolation: isolated (any Actor)?,
+    using paging: InfiniteQueryPaging<Int, String>,
+    in context: OperationContext,
+    with continuation: OperationContinuation<String>
+  ) async throws -> String {
+    try Task.checkCancellation()
+    return try self.state.withLock {
+      if let value = $0[paging.pageId] {
+        return value
+      }
+      throw PageNotFoundError()
+    }
+  }
+
+  package struct PageNotFoundError: Error {
+    package init() {}
+  }
+}
+
 // MARK: - CountingInfiniteQuery
 
 package final actor CountingInfiniteQuery: InfiniteQueryRequest {
@@ -877,6 +943,22 @@ package struct EmptyMutation: MutationRequest, Hashable {
     with continuation: OperationContinuation<String>
   ) async throws -> String {
     arguments
+  }
+}
+
+// MARK: - EmptyCancellingMutation
+
+package struct EmptyCancellingMutation: MutationRequest, Hashable {
+  package init() {}
+
+  package func mutate(
+    isolation: isolated (any Actor)?,
+    with arguments: String,
+    in context: OperationContext,
+    with continuation: OperationContinuation<String>
+  ) async throws -> String {
+    try Task.checkCancellation()
+    return arguments
   }
 }
 

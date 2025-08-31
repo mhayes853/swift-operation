@@ -113,16 +113,14 @@ struct QueryKeyTests {
     expectNoDifference($value.isBacked, false)
   }
 
-  @Test("Reports Issue When Fetching Unbacked Query")
-  func reportsIssueWhenFetchingUnbackedQuery() async throws {
-    @SharedOperation<TestQuery.State> var value = TestQuery.value
-
-    await #expect(throws: Error.self) {
-      try await withKnownIssue {
+  #if swift(>=6.2) && SWIFT_OPERATION_EXIT_TESTABLE_PLATFORM
+    @Test("Exits When Fetching Unbacked Query")
+    func exitsWhenFetchingUnbackedQuery() async throws {
+      let comment = Comment(rawValue: _unbackedOperationRunError(stateType: TestQuery.State.self))
+      await #expect(processExitsWith: .failure, comment) {
+        @SharedOperation<TestQuery.State> var value = TestQuery.value
         try await $value.fetch()
-      } matching: { issue in
-        issue.comments.contains(.warning(.unbackedOperationRun(type: TestQuery.State.self)))
       }
     }
-  }
+  #endif
 }

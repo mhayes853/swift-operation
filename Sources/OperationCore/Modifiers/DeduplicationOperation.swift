@@ -52,7 +52,7 @@ public struct _DeduplicationModifier<
     in context: OperationContext,
     using operation: Operation,
     with continuation: OperationContinuation<Operation.Value>
-  ) async throws -> Operation.Value {
+  ) async throws(Operation.Failure) -> Operation.Value {
     guard let storage = context.deduplicationStorage as? DeduplicationStorage<Operation> else {
       return try await operation.run(isolation: isolation, in: context, with: continuation)
     }
@@ -78,9 +78,9 @@ private final actor DeduplicationStorage<Operation: OperationRequest & Sendable>
     operation: Operation,
     in context: OperationContext,
     with continuation: OperationContinuation<Operation.Value>
-  ) async throws -> Operation.Value {
+  ) async throws(Operation.Failure) -> Operation.Value {
     if let task = self.task(for: context) {
-      return try await task.cancellableValue
+      return try await self.waitForTask(task)
     }
     defer { self.idCounter += 1 }
     let id = self.idCounter
@@ -89,11 +89,21 @@ private final actor DeduplicationStorage<Operation: OperationRequest & Sendable>
       return try await operation.run(isolation: self, in: context, with: continuation)
     }
     self.entries.append((id, context, task))
-    return try await task.cancellableValue
+    return try await self.waitForTask(task)
   }
 
   private func task(for context: OperationContext) -> Task<Operation.Value, any Error>? {
     self.entries.first(where: { self.removeDuplicates($0.context, context) })?.task
+  }
+
+  private func waitForTask(
+    _ task: Task<Operation.Value, any Error>
+  ) async throws(Operation.Failure) -> Operation.Value {
+    do {
+      return try await task.cancellableValue
+    } catch {
+      throw error as! Operation.Failure
+    }
   }
 }
 

@@ -125,4 +125,19 @@ struct RetryQueryTests {
     _ = try? await store.fetch()
     expectNoDifference(delayer.delays, [1000, 2000, 3000, 4000, 5000])
   }
+
+  @Test("Does Not Cancel If Operation Is Not Cancellable")
+  func doesNotCancelIfOperationIsNotCancellable() async throws {
+    let query = TestQuery()
+      .delayer(.noDelay)
+      .backoff(.linear(1000))
+      .retry(limit: 5)
+    let store = OperationStore.detached(query: query, initialValue: nil)
+    let task = store.fetchTask()
+    task.cancel()
+
+    await #expect(throws: Never.self) {
+      try await task.runIfNeeded()
+    }
+  }
 }

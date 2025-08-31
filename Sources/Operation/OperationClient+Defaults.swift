@@ -59,7 +59,8 @@ extension OperationClient {
       let delayer = AnyDelayer(self.delayer ?? context.operationDelayer)
       if operation is any MutationRequest {
         return .detached(
-          operation: operation.retry(limit: self.retryLimit)
+          operation:
+            operation.retry(limit: self.retryLimit)
             .backoff(backoff)
             .delayer(delayer),
           initialState: initialState,

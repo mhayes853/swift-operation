@@ -28,11 +28,11 @@ public struct _SuspendModifier<
     in context: OperationContext,
     using operation: Operation,
     with continuation: OperationContinuation<Operation.Value>
-  ) async throws -> Operation.Value {
+  ) async throws(Operation.Failure) -> Operation.Value {
     guard !self.condition.isSatisfied(in: context) else {
       return try await operation.run(isolation: isolation, in: context, with: continuation)
     }
-    try await self.waitForTrue(in: context)
+    try? await self.waitForTrue(in: context)
     return try await operation.run(isolation: isolation, in: context, with: continuation)
   }
 

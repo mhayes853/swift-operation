@@ -69,7 +69,7 @@ public protocol OperationModifier<Operation> {
     in context: OperationContext,
     using operation: Operation,
     with continuation: OperationContinuation<Operation.Value>
-  ) async throws -> Operation.Value
+  ) async throws(Operation.Failure) -> Operation.Value
 }
 
 extension OperationModifier {
@@ -97,7 +97,7 @@ extension _ContextUpdatingOperationModifier {
     in context: OperationContext,
     using operation: Operation,
     with continuation: OperationContinuation<Operation.Value>
-  ) async throws -> Operation.Value {
+  ) async throws(Operation.Failure) -> Operation.Value {
     try await operation.run(isolation: isolation, in: context, with: continuation)
   }
 }
@@ -152,7 +152,7 @@ public struct ModifiedOperation<
     isolation: isolated (any Actor)?,
     in context: OperationContext,
     with continuation: OperationContinuation<Operation.Value>
-  ) async throws -> Operation.Value {
+  ) async throws(Operation.Failure) -> Operation.Value {
     try await self.modifier.run(
       isolation: isolation,
       in: context,

@@ -47,7 +47,7 @@ where Operation.State: DefaultableOperationState {
     isolation: isolated (any Actor)?,
     in context: OperationContext,
     with continuation: OperationContinuation<Value>
-  ) async throws -> Value {
+  ) async throws(Operation.Failure) -> Value {
     try await self.operation.run(isolation: isolation, in: context, with: continuation)
   }
 }

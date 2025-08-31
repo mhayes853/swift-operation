@@ -1,9 +1,3 @@
-// MARK: - OperationRetryableError
-
-public protocol OperationRetryableError: Error {
-  init(cancellationError: CancellationError)
-}
-
 // MARK: - RetryModifier
 
 extension OperationRequest {
@@ -30,18 +24,16 @@ public struct _RetryModifier<Operation: OperationRequest>: OperationModifier, Se
     in context: OperationContext,
     using operation: Operation,
     with continuation: OperationContinuation<Operation.Value>
-  ) async throws -> Operation.Value {
+  ) async throws(Operation.Failure) -> Operation.Value {
     var context = context
     for index in 0..<context.operationMaxRetries {
-      try Task.checkCancellation()
       do {
         context.operationRetryIndex = index
         return try await operation.run(isolation: isolation, in: context, with: continuation)
       } catch {
-        try await context.operationDelayer.delay(for: context.operationBackoffFunction(index + 1))
+        try? await context.operationDelayer.delay(for: context.operationBackoffFunction(index + 1))
       }
     }
-    try Task.checkCancellation()
     context.operationRetryIndex = context.operationMaxRetries
     return try await operation.run(isolation: isolation, in: context, with: continuation)
   }

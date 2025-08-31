@@ -486,7 +486,7 @@ struct MutationStoreTests {
 
   @Test("Reset State, Cancels Tasks")
   func cancelAllActiveTasksCancelsTasks() async throws {
-    let store = self.client.store(for: EmptyMutation())
+    let store = self.client.store(for: EmptyCancellingMutation())
     let task = store.mutateTask(with: "blob")
     store.resetState()
     await #expect(throws: CancellationError.self) {

@@ -1,6 +1,4 @@
-@_spi(Warnings) import Operation
-
-// MARK: - UnbackedOperation
+import Operation
 
 struct UnbackedOperation<State: OperationState>: OperationRequest, Sendable {
   let path = OperationPath("__sharing_operation_unbacked_operation_\(typeName(State.self))__")
@@ -9,23 +7,16 @@ struct UnbackedOperation<State: OperationState>: OperationRequest, Sendable {
     isolation: isolated (any Actor)?,
     in context: OperationContext,
     with continuation: OperationContinuation<State.OperationValue>
-  ) async throws -> State.OperationValue {
-    reportWarning(.unbackedOperationRun(type: State.self))
-    throw UnbackedOperationError()
+  ) async throws(State.Failure) -> State.OperationValue {
+    fatalError(_unbackedOperationRunError(stateType: State.self))
   }
 }
 
-private struct UnbackedOperationError: Error {}
+package func _unbackedOperationRunError(stateType: Any.Type) -> String {
+  """
+  An unbacked shared operation attempted to fetch its data. Doing so has no effect on the value of \
+  the operation.
 
-// MARK: - Warning
-
-extension OperationWarning {
-  public static func unbackedOperationRun(type: Any.Type) -> Self {
-    """
-    An unbacked shared operation attempted to fetch its data. Doing so has no effect on the value of \
-    the operation.
-
-        State Type: \(typeName(type))
-    """
-  }
+      State Type: \(typeName(stateType))
+  """
 }

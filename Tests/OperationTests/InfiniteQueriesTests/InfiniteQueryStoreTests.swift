@@ -961,7 +961,7 @@ struct InfiniteOperationStoreTests {
 
   @Test("Reset State, Cancels All Active Tasks")
   func resetStateCancelsAllActiveTasks() async throws {
-    let store = self.client.store(for: TestYieldableInfiniteQuery())
+    let store = self.client.store(for: TestCancellableInfiniteQuery())
     let task = store.fetchNextPageTask()
     store.resetState()
     await #expect(throws: CancellationError.self) {

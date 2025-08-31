@@ -1,12 +1,14 @@
 // MARK: - OperationRequest
 
-public protocol OperationRequest<Value, State>: OperationPathable
-where State.OperationValue == Value {
+public protocol OperationRequest<Value, Failure>: OperationPathable
+where State.OperationValue == Value, State.Failure == Failure {
   /// The data type that your query fetches.
   associatedtype Value: Sendable
 
   /// The state type of your query.
   associatedtype State: OperationState
+
+  associatedtype Failure: Error
 
   var _debugTypeName: String { get }
 
@@ -37,7 +39,7 @@ where State.OperationValue == Value {
     isolation: isolated (any Actor)?,
     in context: OperationContext,
     with continuation: OperationContinuation<Value>
-  ) async throws -> Value
+  ) async throws(Failure) -> Value
 }
 
 // MARK: - Setup

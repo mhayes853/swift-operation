@@ -85,7 +85,7 @@ public final class OperationStore<State: OperationState>: @unchecked Sendable {
 
   // NB: Does not compile when adding '& Sendable' for some reason. We'll make the store
   // @unchecked Sendable because it can only be constructed with a Sendable operation.
-  private let operation: any OperationRequest<State.OperationValue, State>
+  private let operation: any OperationRequest<State.OperationValue, State.Failure>
 
   private let values: RecursiveLock<Values>
   private let subscriptions: OperationSubscriptions<OperationEventHandler<State>>

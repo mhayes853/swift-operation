@@ -96,7 +96,7 @@ struct SuspendQueryTests {
   func cancellationWhileSuspended() async throws {
     let condition = TestCondition()
     condition.send(false)
-    let query = TestQuery().suspend(on: .always(false))
+    let query = TestCancellingQuery().suspend(on: .always(false))
     let store = OperationStore.detached(query: query, initialValue: nil)
 
     let task = Task { try await store.fetch() }
@@ -111,7 +111,7 @@ struct SuspendQueryTests {
   func cancellationWhileSuspendedUnsubscribesFromCondition() async throws {
     let condition = TestCondition()
     condition.send(false)
-    let query = TestQuery().suspend(on: condition)
+    let query = TestCancellingQuery().suspend(on: condition)
     let store = OperationStore.detached(query: query, initialValue: nil)
 
     let task = Task { try await store.fetch() }
@@ -124,7 +124,7 @@ struct SuspendQueryTests {
   func cancellationWhileSuspendedDoesNotCrashWhenSendingTrueAfterCancel() async throws {
     let condition = TestCondition()
     condition.send(false)
-    let query = TestQuery().suspend(on: condition)
+    let query = TestCancellingQuery().suspend(on: condition)
     let store = OperationStore.detached(query: query, initialValue: nil)
 
     let task = Task { try await store.fetch() }
@@ -132,5 +132,20 @@ struct SuspendQueryTests {
     condition.send(true)
     _ = try? await task.value
     expectNoDifference(condition.subscriberCount, 0)
+  }
+
+  @Test("Cancellation While Suspended, Does Not Throw With NonCancellable Operation")
+  func cancellationWhileSuspendedDoesNotThrowWithNonCancellableOperation() async throws {
+    let condition = TestCondition()
+    condition.send(false)
+    let query = TestQuery().suspend(on: condition)
+    let store = OperationStore.detached(query: query, initialValue: nil)
+
+    let task = Task { try await store.fetch() }
+    task.cancel()
+
+    await #expect(throws: Never.self) {
+      try await task.value
+    }
   }
 }

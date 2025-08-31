@@ -60,7 +60,8 @@ public struct MutationOperationValue<ReturnValue: Sendable>: Sendable {
 public protocol MutationRequest<Arguments, ReturnValue>: OperationRequest, Sendable
 where
   Value == MutationOperationValue<ReturnValue>,
-  State == MutationState<Arguments, ReturnValue, any Error>
+  State == MutationState<Arguments, ReturnValue, any Error>,
+  Failure == any Error
 {
   /// The data type of the arguments to submit to the mutation.
   associatedtype Arguments: Sendable

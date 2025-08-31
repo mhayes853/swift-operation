@@ -149,7 +149,7 @@
 /// > Note: See <doc:MultistageQueries> for a list of advanced use cases involving
 /// > ``OperationContinuation``.
 public protocol QueryRequest<ReturnValue>: OperationRequest, Sendable
-where Self.ReturnValue == Value, State == QueryState<ReturnValue, any Error> {
+where Self.ReturnValue == Value, State == QueryState<ReturnValue, any Error>, Failure == any Error {
   associatedtype ReturnValue: Sendable
 
   /// Fetches the data for your query.

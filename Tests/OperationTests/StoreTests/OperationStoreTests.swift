@@ -484,7 +484,7 @@ struct OperationStoreTests {
 
   @Test("Reset State, Cancels All Active Tasks")
   func resetStateCancelsAllActiveTasks() async throws {
-    let store = self.client.store(for: TestQuery())
+    let store = self.client.store(for: TestCancellingQuery())
     let task = store.runTask()
     let task2 = store.runTask()
     store.resetState()
@@ -511,7 +511,7 @@ struct OperationStoreTests {
 
   @Test("Reset State, Cancels Tasks")
   func resetStateCancelsTasks() async throws {
-    let store = self.client.store(for: TestQuery())
+    let store = self.client.store(for: TestCancellingQuery())
     let task = store.runTask()
     let task2 = store.runTask()
     store.resetState()
