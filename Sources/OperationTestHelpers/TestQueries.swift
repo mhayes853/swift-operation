@@ -69,10 +69,7 @@ package struct TestStateQuery: QueryRequest, Hashable {
   }
 
   package func setup(context: inout OperationContext) {
-    context.automaticRunningSpecification = AlwaysRunSpecification(
-      isTrue: false,
-      shouldEmitInitialValue: false
-    )
+    context.automaticRunningSpecification = AlwaysRunSpecification(isTrue: false)
   }
 
   package func fetch(

@@ -19,9 +19,9 @@ public struct NotRunSpecification<Base: OperationRunSpecification>: OperationRun
   @inlinable
   public func subscribe(
     in context: OperationContext,
-    _ observer: @escaping @Sendable (Bool) -> Void
+    onChange: @escaping @Sendable () -> Void
   ) -> OperationSubscription {
-    self.base.subscribe(in: context) { observer(!$0) }
+    self.base.subscribe(in: context, onChange: onChange)
   }
 }
 

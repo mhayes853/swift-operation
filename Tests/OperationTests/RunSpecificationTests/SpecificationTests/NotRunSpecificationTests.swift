@@ -16,10 +16,10 @@ struct NotRunSpecificationTests {
   func emitsOppositeOfBaseConditionObservedValue() {
     let condition = TestRunSpecification()
     let values = RecursiveLock([Bool]())
-    let subscription = (!condition)
-      .subscribe(in: OperationContext()) { value in
-        values.withLock { $0.append(value) }
-      }
+    let spec = !condition
+    let subscription = spec.subscribe(in: OperationContext()) {
+      values.withLock { $0.append(spec.isSatisfied(in: OperationContext())) }
+    }
 
     condition.send(true)
     condition.send(false)

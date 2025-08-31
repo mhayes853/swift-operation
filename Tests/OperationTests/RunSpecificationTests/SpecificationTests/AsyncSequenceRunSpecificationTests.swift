@@ -9,14 +9,14 @@ struct AsyncSequenceRunSpecificationTests {
   func observeSequenceValue() async {
     let (stream, continuation) = AsyncStream<Bool>.makeStream()
     let (substream, subcontinuation) = AsyncStream<Void>.makeStream()
-    let observer: some OperationRunSpecification = .observing(
+    let observer: some OperationRunSpecification & Sendable = .observing(
       sequence: stream,
       initialValue: true
     )
     let values = Lock([Bool]())
-    let subscription = observer.subscribe(in: OperationContext()) { value in
+    let subscription = observer.subscribe(in: OperationContext()) {
       values.withLock {
-        $0.append(value)
+        $0.append(observer.isSatisfied(in: OperationContext()))
         subcontinuation.yield()
       }
     }
@@ -39,11 +39,11 @@ struct AsyncSequenceRunSpecificationTests {
     let context = OperationContext()
     let (stream, continuation) = AsyncStream<Bool>.makeStream()
     let (substream, subcontinuation) = AsyncStream<Void>.makeStream()
-    let observer: some OperationRunSpecification = .observing(
+    let observer: some OperationRunSpecification & Sendable = .observing(
       sequence: stream,
       initialValue: true
     )
-    let subscription = observer.subscribe(in: OperationContext()) { _ in
+    let subscription = observer.subscribe(in: OperationContext()) {
       subcontinuation.yield()
     }
     expectNoDifference(observer.isSatisfied(in: context), true)

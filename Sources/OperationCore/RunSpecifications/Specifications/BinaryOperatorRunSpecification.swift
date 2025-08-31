@@ -2,13 +2,13 @@
 
 /// A ``FetchCondition`` that applies a binary boolean operator between 2 conditions.
 public struct BinaryOperatorRunSpecification<
-  Left: OperationRunSpecification & Sendable,
-  Right: OperationRunSpecification & Sendable,
-  Operator: _BinaryRunSpecificationOperator & Sendable
+  Left: OperationRunSpecification,
+  Right: OperationRunSpecification,
+  Operator: _BinaryRunSpecificationOperator
 >: OperationRunSpecification {
-  fileprivate let left: Left
-  fileprivate let right: Right
-  fileprivate let op: Operator
+  let left: Left
+  let right: Right
+  let op: Operator
 
   public func isSatisfied(in context: OperationContext) -> Bool {
     self.op.evaluate(self.left.isSatisfied(in: context), self.right.isSatisfied(in: context))
@@ -16,24 +16,10 @@ public struct BinaryOperatorRunSpecification<
 
   public func subscribe(
     in context: OperationContext,
-    _ observer: @escaping @Sendable (Bool) -> Void
+    onChange: @escaping @Sendable () -> Void
   ) -> OperationSubscription {
-    // TODO: - Flatten nested BinaryOperatorConditions in the lock to improve performance.
-    let state = Lock(
-      (left: self.left.isSatisfied(in: context), right: self.right.isSatisfied(in: context))
-    )
-    let s1 = self.left.subscribe(in: context) { value in
-      state.withLock {
-        $0.left = value
-        observer(self.op.evaluate($0.left, $0.right))
-      }
-    }
-    let s2 = self.right.subscribe(in: context) { value in
-      state.withLock {
-        $0.right = value
-        observer(self.op.evaluate($0.left, $0.right))
-      }
-    }
+    let s1 = self.left.subscribe(in: context, onChange: onChange)
+    let s2 = self.right.subscribe(in: context, onChange: onChange)
     return .combined(s1, s2)
   }
 }

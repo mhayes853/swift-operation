@@ -29,7 +29,7 @@ struct OperationControllerTests {
       initialValue: nil
     )
 
-    let task = controller.controls.withLock { $0?.yieldRefetchTask() }
+    let task = controller.controls.withLock { $0?.yieldRerunTask() }
     expectNoDifference(task == nil, true)
     _ = store
   }
@@ -43,7 +43,7 @@ struct OperationControllerTests {
       initialValue: nil
     )
 
-    let task = controller.controls.withLock { $0?.yieldRefetchTask() }
+    let task = controller.controls.withLock { $0?.yieldRerunTask() }
     let value = try await task?.runIfNeeded()
     expectNoDifference(value, TestQuery.value)
     expectNoDifference(store.currentValue, TestQuery.value)

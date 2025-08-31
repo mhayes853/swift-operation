@@ -20,9 +20,9 @@ public struct NetworkConnectionRunSpecification<
 
   public func subscribe(
     in context: OperationContext,
-    _ observer: @escaping @Sendable (Bool) -> Void
+    onChange: @escaping @Sendable () -> Void
   ) -> OperationSubscription {
-    self.observer.subscribe { observer($0 >= context.satisfiedConnectionStatus) }
+    self.observer.subscribe { _ in onChange() }
   }
 }
 

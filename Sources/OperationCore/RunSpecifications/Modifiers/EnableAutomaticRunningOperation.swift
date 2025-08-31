@@ -78,7 +78,7 @@ extension OperationContext {
 
   private enum AutomaticRunningSpecificiationKey: Key {
     static var defaultValue: any OperationRunSpecification & Sendable {
-      AlwaysRunSpecification(isTrue: false, shouldEmitInitialValue: false)
+      AlwaysRunSpecification(isTrue: false)
     }
   }
 }

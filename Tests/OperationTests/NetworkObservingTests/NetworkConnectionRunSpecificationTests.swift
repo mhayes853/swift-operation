@@ -47,9 +47,9 @@ struct NetworkConnectionRunSpecificationTests {
   func observesWhenStatus(status: NetworkConnectionStatus, isSatisfied: Bool) {
     let satisfactions = RecursiveLock([Bool]())
     let observer = MockNetworkObserver()
-    let c: some OperationRunSpecification = .connected(to: observer)
-    let subscription = c.subscribe(in: OperationContext()) { satisfied in
-      satisfactions.withLock { $0.append(satisfied) }
+    let c: some OperationRunSpecification & Sendable = .connected(to: observer)
+    let subscription = c.subscribe(in: OperationContext()) {
+      satisfactions.withLock { $0.append(c.isSatisfied(in: OperationContext())) }
     }
     observer.send(status: status)
     satisfactions.withLock { expectNoDifference($0, [true, isSatisfied]) }
@@ -70,9 +70,9 @@ struct NetworkConnectionRunSpecificationTests {
 
     let satisfactions = RecursiveLock([Bool]())
     let observer = MockNetworkObserver()
-    let c: some OperationRunSpecification = .connected(to: observer)
-    let subscription = c.subscribe(in: context) { satisfied in
-      satisfactions.withLock { $0.append(satisfied) }
+    let c: some OperationRunSpecification & Sendable = .connected(to: observer)
+    let subscription = c.subscribe(in: context) { [context] in
+      satisfactions.withLock { $0.append(c.isSatisfied(in: context)) }
     }
     observer.send(status: status)
     satisfactions.withLock { expectNoDifference($0, [true, isSatisfied]) }

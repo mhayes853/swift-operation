@@ -16,19 +16,29 @@
     P: Publisher & Sendable
   >: OperationRunSpecification, Sendable
   where P.Output == Bool, P.Failure == Never {
-    private typealias State = (cancellable: AnyCancellable?, currentValue: Bool)
+    private struct State {
+      var cancellable: AnyCancellable?
+      var currentValue: Bool
+    }
+    private typealias Handler = @Sendable () -> Void
 
     private let publisher: P
     private let state: RecursiveLock<State>
+    private let subscriptions = OperationSubscriptions<Handler>()
 
-    init(publisher: P, initialValue: Bool) {
+    public init(_ publisher: P, initialValue: Bool) {
       self.publisher = publisher
-      self.state = RecursiveLock((nil, initialValue))
+      self.state = RecursiveLock(State(cancellable: nil, currentValue: initialValue))
       self.state.withLock {
         $0.cancellable = publisher.sink { [weak self] value in
           self?.state.withLock { $0.currentValue = value }
+          self?.subscriptions.forEach { $0() }
         }
       }
+    }
+
+    public convenience init(_ subject: P) where P == CurrentValueSubject<Bool, Never> {
+      self.init(subject, initialValue: subject.value)
     }
 
     public func isSatisfied(in context: OperationContext) -> Bool {
@@ -37,10 +47,9 @@
 
     public func subscribe(
       in context: OperationContext,
-      _ observer: @escaping @Sendable (Bool) -> Void
+      onChange: @escaping @Sendable () -> Void
     ) -> OperationSubscription {
-      let cancellable = Lock(self.publisher.sink { observer($0) })
-      return OperationSubscription { cancellable.withLock { $0.cancel() } }
+      self.subscriptions.add(handler: onChange).subscription
     }
   }
 
@@ -57,7 +66,7 @@
       publisher: P,
       initialValue: Bool
     ) -> Self where Self == PublisherRunSpecification<P> {
-      PublisherRunSpecification(publisher: publisher, initialValue: initialValue)
+      PublisherRunSpecification(publisher, initialValue: initialValue)
     }
 
     /// A ``FetchCondition`` that observes the value of a `CurrentValueSubject`.
@@ -67,7 +76,7 @@
     public static func observing(
       subject: CurrentValueSubject<Bool, Never>
     ) -> Self where Self == PublisherRunSpecification<CurrentValueSubject<Bool, Never>> {
-      PublisherRunSpecification(publisher: subject, initialValue: subject.value)
+      PublisherRunSpecification(subject)
     }
   }
 #endif

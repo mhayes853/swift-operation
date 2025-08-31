@@ -37,10 +37,10 @@ struct BinaryOperatorRunSpecificationTests {
     let c1 = TestRunSpecification()
     let c2 = TestRunSpecification()
     let values = RecursiveLock([Bool]())
-    let subscription = (c1 || c2)
-      .subscribe(in: OperationContext()) { value in
-        values.withLock { $0.append(value) }
-      }
+    let spec = (c1 || c2)
+    let subscription = spec.subscribe(in: OperationContext()) {
+      values.withLock { $0.append(spec.isSatisfied(in: OperationContext())) }
+    }
 
     c1.send(true)
     c2.send(true)
@@ -61,10 +61,10 @@ struct BinaryOperatorRunSpecificationTests {
     let c2 = TestRunSpecification()
     let c3 = TestRunSpecification()
     let values = RecursiveLock([Bool]())
-    let subscription = (c1 || c2 || c3)
-      .subscribe(in: OperationContext()) { value in
-        values.withLock { $0.append(value) }
-      }
+    let spec = (c1 || c2 || c3)
+    let subscription = spec.subscribe(in: OperationContext()) {
+      values.withLock { $0.append(spec.isSatisfied(in: OperationContext())) }
+    }
 
     c1.send(true)
     c2.send(true)
@@ -117,10 +117,10 @@ struct BinaryOperatorRunSpecificationTests {
     let c1 = TestRunSpecification()
     let c2 = TestRunSpecification()
     let values = RecursiveLock([Bool]())
-    let subscription = (c1 && c2)
-      .subscribe(in: OperationContext()) { value in
-        values.withLock { $0.append(value) }
-      }
+    let spec = c1 && c2
+    let subscription = spec.subscribe(in: OperationContext()) {
+      values.withLock { $0.append(spec.isSatisfied(in: OperationContext())) }
+    }
 
     c1.send(true)
     c2.send(true)
@@ -140,10 +140,10 @@ struct BinaryOperatorRunSpecificationTests {
     let c2 = TestRunSpecification()
     let c3 = TestRunSpecification()
     let values = RecursiveLock([Bool]())
-    let subscription = (c1 && c2 && c3)
-      .subscribe(in: OperationContext()) { value in
-        values.withLock { $0.append(value) }
-      }
+    let spec = (c1 && c2 && c3)
+    let subscription = spec.subscribe(in: OperationContext()) {
+      values.withLock { $0.append(spec.isSatisfied(in: OperationContext())) }
+    }
 
     c1.send(true)
     c2.send(true)
@@ -167,10 +167,10 @@ struct BinaryOperatorRunSpecificationTests {
     let c2 = TestRunSpecification()
     let c3 = TestRunSpecification()
     let values = RecursiveLock([Bool]())
-    let subscription = ((c1 && c2) || c3)
-      .subscribe(in: OperationContext()) { value in
-        values.withLock { $0.append(value) }
-      }
+    let spec = ((c1 && c2) || c3)
+    let subscription = spec.subscribe(in: OperationContext()) {
+      values.withLock { $0.append(spec.isSatisfied(in: OperationContext())) }
+    }
 
     c1.send(true)
     c2.send(true)
@@ -195,10 +195,10 @@ struct BinaryOperatorRunSpecificationTests {
     let c2 = TestRunSpecification()
     let c3 = TestRunSpecification()
     let values = RecursiveLock([Bool]())
-    let subscription = (c1 && (c2 || c3))
-      .subscribe(in: OperationContext()) { value in
-        values.withLock { $0.append(value) }
-      }
+    let spec = (c1 && (c2 || c3))
+    let subscription = spec.subscribe(in: OperationContext()) {
+      values.withLock { $0.append(spec.isSatisfied(in: OperationContext())) }
+    }
 
     c1.send(true)
     c2.send(true)

@@ -15,7 +15,7 @@ public final class AsyncSequenceRunSpecification<
 >: OperationRunSpecification, Sendable
 where S.Element == Bool, S.Failure == Never {
   private typealias State = (task: Task<Void, Never>?, currentValue: Bool)
-  private typealias Handler = @Sendable (Bool) -> Void
+  private typealias Handler = @Sendable () -> Void
 
   private let subscriptions = OperationSubscriptions<Handler>()
   private let state: RecursiveLock<State>
@@ -25,8 +25,11 @@ where S.Element == Bool, S.Failure == Never {
     self.state.withLock {
       $0.task = Task { [weak self] in
         for await value in sequence {
-          self?.state.withLock { $0.currentValue = value }
-          self?.subscriptions.forEach { $0(value) }
+          self?.state
+            .withLock {
+              $0.currentValue = value
+              self?.subscriptions.forEach { $0() }
+            }
         }
       }
     }
@@ -42,9 +45,9 @@ where S.Element == Bool, S.Failure == Never {
 
   public func subscribe(
     in context: OperationContext,
-    _ observer: @escaping @Sendable (Bool) -> Void
+    onChange: @escaping @Sendable () -> Void
   ) -> OperationSubscription {
-    self.subscriptions.add(handler: observer).0
+    self.subscriptions.add(handler: onChange).0
   }
 }
 

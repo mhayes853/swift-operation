@@ -16,6 +16,14 @@ public struct OperationControls<State: OperationState>: Sendable {
   }
 }
 
+// MARK: - Path
+
+extension OperationControls {
+  public var path: OperationPath {
+    self.store?.path ?? OperationPath()
+  }
+}
+
 // MARK: - Context
 
 extension OperationControls {
@@ -111,7 +119,7 @@ extension OperationControls {
   ///
   /// This property is true when automatic fetching is enabled on the query. See
   /// ``QueryRequest/enableAutomaticRunning(onlyWhen:)`` for more.
-  public var canYieldRefetch: Bool {
+  public var canYieldRerun: Bool {
     self.store?.isAutomaticRunningEnabled == true
   }
 
@@ -120,20 +128,20 @@ extension OperationControls {
   /// - Parameter context: The ``OperationContext`` to use for the underlying ``OperationTask``.
   /// - Returns: The result of the refetch, or nil if refetching is unavailable.
   @discardableResult
-  public func yieldRefetch(
+  public func yieldRerun(
     with context: OperationContext? = nil
   ) async throws(State.Failure) -> State.OperationValue? {
-    try await self.yieldRefetchTask(with: context)?.runIfNeeded()
+    try await self.yieldRerunTask(with: context)?.runIfNeeded()
   }
 
   /// Creates a ``OperationTask`` to refetch the query.
   ///
   /// - Parameter context: The ``OperationContext`` to use for the ``OperationTask``.
   /// - Returns: A ``OperationTask`` to refetch the query, or nil if refetching is unavailable.
-  public func yieldRefetchTask(
+  public func yieldRerunTask(
     with context: OperationContext? = nil
   ) -> OperationTask<State.OperationValue, State.Failure>? {
-    guard self.canYieldRefetch else { return nil }
+    guard self.canYieldRerun else { return nil }
     return self.store?.runTask(using: context)
   }
 }

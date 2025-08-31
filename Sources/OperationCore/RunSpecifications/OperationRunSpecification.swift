@@ -19,10 +19,10 @@ public protocol OperationRunSpecification {
   ///
   /// - Parameters:
   ///   - context: The context in which to subscribe to this condition in.
-  ///   - observer: A callback to invoke whenever your condition's value changes.
+  ///   - onChange: A callback to invoke whenever your condition's value changes.
   /// - Returns: A ``OperationSubscription``.
   func subscribe(
     in context: OperationContext,
-    _ observer: @escaping @Sendable (Bool) -> Void
+    onChange: @escaping @Sendable () -> Void
   ) -> OperationSubscription
 }

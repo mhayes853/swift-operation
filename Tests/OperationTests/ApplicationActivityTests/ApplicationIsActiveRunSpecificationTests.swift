@@ -31,62 +31,48 @@
       expectNoDifference(condition.isSatisfied(in: context), false)
     }
 
-    @Test("Emits False With Empty Subscription When Subscription Context Disables Focus Fetching")
-    func emitsFalseWithEmptySubscripitionWhenFocusFetchingDisabled() {
-      let observer = TestDarwinApplicationActivityObserver(
-        isInitiallyActive: true,
-        notificationCenter: self.center
-      )
-      let condition: some OperationRunSpecification = .applicationIsActive(observer: observer)
-      let satisfactions = Lock([Bool]())
-      var context = OperationContext()
-      context.isApplicationActiveReRunningEnabled = false
-      let subscription = condition.subscribe(in: context) { value in
-        satisfactions.withLock { $0.append(value) }
-      }
-      expectNoDifference(subscription, .empty)
-      satisfactions.withLock { expectNoDifference($0, [false]) }
-      subscription.cancel()
-    }
-
     @Test("Emits True When Becomes Active")
     func emitsTrueWhenBecomesActive() {
       let observer = TestDarwinApplicationActivityObserver(
         isInitiallyActive: false,
         notificationCenter: self.center
       )
-      let condition: some OperationRunSpecification = .applicationIsActive(observer: observer)
+      let condition: some OperationRunSpecification & Sendable = .applicationIsActive(
+        observer: observer
+      )
       let satisfactions = Lock([Bool]())
-      let subscription = condition.subscribe(in: OperationContext()) { value in
-        satisfactions.withLock { $0.append(value) }
+      let subscription = condition.subscribe(in: OperationContext()) {
+        satisfactions.withLock { $0.append(condition.isSatisfied(in: OperationContext())) }
       }
       self.center.post(name: .fakeDidBecomeActive, object: nil)
-      satisfactions.withLock { expectNoDifference($0, [false, true]) }
+      satisfactions.withLock { expectNoDifference($0, [true]) }
       subscription.cancel()
     }
 
     @Test("Deduplicates Emissions")
     func deduplicatesEmissions() {
       let observer = TestDarwinApplicationActivityObserver(
-        isInitiallyActive: true,
+        isInitiallyActive: false,
         notificationCenter: self.center
       )
-      let condition: some OperationRunSpecification = .applicationIsActive(observer: observer)
+      let condition: some OperationRunSpecification & Sendable = .applicationIsActive(
+        observer: observer
+      )
       let satisfactions = Lock([Bool]())
-      let subscription = condition.subscribe(in: OperationContext()) { value in
-        satisfactions.withLock { $0.append(value) }
+      let subscription = condition.subscribe(in: OperationContext()) {
+        satisfactions.withLock { $0.append(condition.isSatisfied(in: OperationContext())) }
       }
+      satisfactions.withLock { expectNoDifference($0, []) }
+
+      self.center.post(name: .fakeDidBecomeActive, object: nil)
       satisfactions.withLock { expectNoDifference($0, [true]) }
       self.center.post(name: .fakeDidBecomeActive, object: nil)
-      satisfactions.withLock {
-        expectNoDifference($0, [true])
-        $0 = []
-      }
+      satisfactions.withLock { expectNoDifference($0, [true]) }
 
       self.center.post(name: .fakeWillResignActive, object: nil)
-      satisfactions.withLock { expectNoDifference($0, [false]) }
+      satisfactions.withLock { expectNoDifference($0, [true, false]) }
       self.center.post(name: .fakeWillResignActive, object: nil)
-      satisfactions.withLock { expectNoDifference($0, [false]) }
+      satisfactions.withLock { expectNoDifference($0, [true, false]) }
 
       subscription.cancel()
     }
@@ -97,13 +83,15 @@
         isInitiallyActive: true,
         notificationCenter: self.center
       )
-      let condition: some OperationRunSpecification = .applicationIsActive(observer: observer)
+      let condition: some OperationRunSpecification & Sendable = .applicationIsActive(
+        observer: observer
+      )
       let satisfactions = RecursiveLock([Bool]())
-      let subscription = condition.subscribe(in: OperationContext()) { value in
-        satisfactions.withLock { $0.append(value) }
+      let subscription = condition.subscribe(in: OperationContext()) {
+        satisfactions.withLock { $0.append(condition.isSatisfied(in: OperationContext())) }
       }
       self.center.post(name: .fakeWillResignActive, object: nil)
-      satisfactions.withLock { expectNoDifference($0, [true, false]) }
+      satisfactions.withLock { expectNoDifference($0, [false]) }
       subscription.cancel()
     }
   }

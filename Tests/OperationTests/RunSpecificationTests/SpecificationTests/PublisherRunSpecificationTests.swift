@@ -9,13 +9,13 @@
     @Test("Observes Publisher Value")
     func observePublisherValue() {
       let subject = PassthroughSubject<Bool, Never>()
-      let observer: some OperationRunSpecification = .observing(
+      let observer: some OperationRunSpecification & Sendable = .observing(
         publisher: subject,
         initialValue: true
       )
       let values = RecursiveLock([Bool]())
-      let subscription = observer.subscribe(in: OperationContext()) { value in
-        values.withLock { $0.append(value) }
+      let subscription = observer.subscribe(in: OperationContext()) {
+        values.withLock { $0.append(observer.isSatisfied(in: OperationContext())) }
       }
 
       subject.send(false)
@@ -52,6 +52,5 @@
       subject.send(false)
       expectNoDifference(observer.isSatisfied(in: context), false)
     }
-
   }
 #endif

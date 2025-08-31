@@ -98,9 +98,7 @@ extension OperationClient {
           ApplicationIsActiveRunSpecification(observer: activityObserver)
         )
       default:
-        return AnySendableRunSpecification(
-          AlwaysRunSpecification(isTrue: false, shouldEmitInitialValue: false)
-        )
+        return AnySendableRunSpecification(AlwaysRunSpecification(isTrue: false))
       }
     }
   }
@@ -116,10 +114,7 @@ extension OperationClient.StoreCreator where Self == OperationClient.DefaultStor
       retryLimit: 0,
       backoff: .noBackoff,
       delayer: .noDelay,
-      automaticRunningSpecification: AlwaysRunSpecification(
-        isTrue: true,
-        shouldEmitInitialValue: false
-      ),
+      automaticRunningSpecification: AlwaysRunSpecification(isTrue: true),
       networkObserver: nil,
       activityObserver: nil
     )
@@ -154,7 +149,7 @@ extension OperationClient.StoreCreator where Self == OperationClient.DefaultStor
     backoff: OperationBackoffFunction? = nil,
     delayer: (any OperationDelayer)? = nil,
     automaticRunningSpecification: any OperationRunSpecification & Sendable =
-      AlwaysRunSpecification(isTrue: true, shouldEmitInitialValue: false),
+      AlwaysRunSpecification(isTrue: true),
     networkObserver: (any NetworkObserver)? = OperationClient.defaultNetworkObserver,
     activityObserver: (any ApplicationActivityObserver)? = OperationClient
       .defaultApplicationActivityObserver

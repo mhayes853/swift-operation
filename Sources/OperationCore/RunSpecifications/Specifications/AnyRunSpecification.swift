@@ -21,9 +21,9 @@ public struct AnyRunSpecification: OperationRunSpecification {
 
   public func subscribe(
     in context: OperationContext,
-    _ observer: @escaping @Sendable (Bool) -> Void
+    onChange: @escaping @Sendable () -> Void
   ) -> OperationSubscription {
-    self.base.subscribe(in: context, observer)
+    self.base.subscribe(in: context, onChange: onChange)
   }
 }
 
@@ -50,8 +50,8 @@ public struct AnySendableRunSpecification: OperationRunSpecification, Sendable {
 
   public func subscribe(
     in context: OperationContext,
-    _ observer: @escaping @Sendable (Bool) -> Void
+    onChange: @escaping @Sendable () -> Void
   ) -> OperationSubscription {
-    self.base.subscribe(in: context, observer)
+    self.base.subscribe(in: context, onChange: onChange)
   }
 }

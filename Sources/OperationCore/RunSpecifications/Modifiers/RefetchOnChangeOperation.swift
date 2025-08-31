@@ -24,44 +24,55 @@ public final class _ReRunOnChangeController<
   Specification: OperationRunSpecification & Sendable
 >: OperationController {
   private let specification: Specification
-  private let subscriptions = OperationSubscriptions<OperationControls<State>>()
   private let task = Lock<Task<Void, any Error>?>(nil)
+  private let state = Lock([OperationPath: ControlsState]())
 
   init(specification: Specification) {
     self.specification = specification
   }
 
   public func control(with controls: OperationControls<State>) -> OperationSubscription {
-    let (controlsSubscription, _) = self.subscriptions.add(handler: controls)
-    let conditionSubscription = self.subscribeToSpec(in: controls.context)
-    return .combined(controlsSubscription, conditionSubscription)
-  }
-
-  private func subscribeToSpec(
-    in context: OperationContext
-  ) -> OperationSubscription {
-    let currentValue = Lock(self.specification.isSatisfied(in: context))
-    return self.specification.subscribe(in: context) { newValue in
-      let didValueChange = currentValue.withLock { currentValue in
-        defer { currentValue = newValue }
-        return newValue != currentValue
-      }
-      guard didValueChange else { return }
-      if newValue {
-        self.task.withLock { $0 = Task { try await self.refetchIfAble() } }
-      } else {
-        self.task.withLock { $0?.cancel() }
-      }
+    let path = controls.path
+    self.state.withLock {
+      $0[path] = ControlsState(
+        controls: controls,
+        currentValue: self.specification.isSatisfied(in: controls.context)
+      )
+    }
+    let specSubscription = self.subscribeToSpec(with: path, in: controls.context)
+    return OperationSubscription {
+      _ = self.state.withLock { $0.removeValue(forKey: path) }
+      specSubscription.cancel()
     }
   }
 
-  private func refetchIfAble() async throws {
-    await withTaskGroup(of: Void.self) { group in
-      self.subscriptions.forEach { controls in
-        controls.withExclusiveAccess { controls in
-          guard controls.subscriberCount > 0 && controls.isStale else { return }
-          group.addTask { _ = try? await controls.yieldRefetch() }
-        }
+  private func subscribeToSpec(
+    with path: OperationPath,
+    in context: OperationContext
+  ) -> OperationSubscription {
+    self.specification.subscribe(in: context) { [weak self] in
+      guard let self else { return }
+      self.state.withLock { $0[path]?.onChange(of: self.specification) }
+    }
+  }
+}
+
+extension _ReRunOnChangeController {
+  private struct ControlsState: Sendable {
+    let controls: OperationControls<State>
+    var currentValue: Bool
+    var task: Task<Void, any Error>?
+
+    mutating func onChange(of specification: Specification) {
+      let oldValue = self.currentValue
+      self.currentValue = specification.isSatisfied(in: self.controls.context)
+      let shouldRun = self.controls.withExclusiveAccess {
+        $0.subscriberCount > 0 && $0.isStale && self.currentValue != oldValue
+      }
+      if shouldRun && self.currentValue {
+        self.task = Task { [controls = self.controls] in try await controls.yieldRerun() }
+      } else {
+        self.task?.cancel()
       }
     }
   }
