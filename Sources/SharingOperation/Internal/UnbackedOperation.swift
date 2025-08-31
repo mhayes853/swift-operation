@@ -6,7 +6,7 @@ struct UnbackedOperation<State: OperationState>: OperationRequest, Sendable {
   func run(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<State.OperationValue>
+    with continuation: OperationContinuation<State.OperationValue, State.Failure>
   ) async throws(State.Failure) -> State.OperationValue {
     fatalError(_unbackedOperationRunError(stateType: State.self))
   }
