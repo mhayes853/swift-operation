@@ -9,9 +9,12 @@
 ///
 /// When this condition is deallocated, iteration stops on your sequence provided that you opt into
 /// cooperative cancellation.
-public final class AsyncSequenceCondition<S: AsyncSequence & Sendable>: Sendable
-where S.Element == Bool {
-  private typealias State = (task: Task<Void, any Error>?, currentValue: Bool)
+@available(iOS 18.0, macOS 15.0, tvOS 18.0, watchOS 18.0, visionOS 2.0, *)
+public final class AsyncSequenceRunSpecification<
+  S: AsyncSequence & Sendable
+>: OperationRunSpecification, Sendable
+where S.Element == Bool, S.Failure == Never {
+  private typealias State = (task: Task<Void, Never>?, currentValue: Bool)
   private typealias Handler = @Sendable (Bool) -> Void
 
   private let subscriptions = OperationSubscriptions<Handler>()
@@ -21,7 +24,7 @@ where S.Element == Bool {
     self.state = RecursiveLock((nil, initialValue))
     self.state.withLock {
       $0.task = Task { [weak self] in
-        for try await value in sequence {
+        for await value in sequence {
           self?.state.withLock { $0.currentValue = value }
           self?.subscriptions.forEach { $0(value) }
         }
@@ -32,9 +35,7 @@ where S.Element == Bool {
   deinit {
     self.state.withLock { $0.task?.cancel() }
   }
-}
 
-extension AsyncSequenceCondition: FetchCondition {
   public func isSatisfied(in context: OperationContext) -> Bool {
     self.state.withLock { $0.currentValue }
   }
@@ -47,17 +48,18 @@ extension AsyncSequenceCondition: FetchCondition {
   }
 }
 
-extension FetchCondition {
+@available(iOS 18.0, macOS 15.0, tvOS 18.0, watchOS 18.0, visionOS 2.0, *)
+extension OperationRunSpecification {
   /// A ``FetchCondition`` that observes an `AsyncSequence`.
   ///
   /// - Parameters:
   ///   - sequence: The sequence to observe.
   ///   - initialValue: The intial boolean value that is used while your sequence hasn't emitted anything.
   /// - Returns: A ``AsyncSequenceCondition``.
-  public static func observing<S: AsyncSequence>(
+  public static func observing<S>(
     sequence: S,
     initialValue: Bool
-  ) -> Self where Self == AsyncSequenceCondition<S> {
+  ) -> Self where Self == AsyncSequenceRunSpecification<S> {
     Self(sequence: sequence, initialValue: initialValue)
   }
 }

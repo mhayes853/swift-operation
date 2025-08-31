@@ -117,9 +117,9 @@ struct StaleWhenRevalidateQueryTests {
 
   @Test("Stale When Fetch Condition")
   func staleWhenFetchCondition() {
-    let condition = TestCondition()
+    let condition = TestRunSpecification()
     condition.send(true)
-    let query = TestQuery().staleWhen(condition: condition)
+    let query = TestQuery().staleWhen(satisfying: condition)
     let store = OperationStore.detached(query: query, initialValue: nil)
 
     expectNoDifference(store.isStale, true)
@@ -157,8 +157,8 @@ struct StaleWhenRevalidateQueryTests {
 
   @Test("Fetches On Subscription When Stale")
   func fetchesOnSubscriptionWhenStale() async throws {
-    let query = TestQuery().enableAutomaticFetching(onlyWhen: .always(true))
-      .staleWhen(condition: .always(true))
+    let query = TestQuery().enableAutomaticRunning(onlyWhen: .always(true))
+      .staleWhen(satisfying: .always(true))
     let store = OperationStore.detached(query: query, initialValue: nil)
 
     let subscription = store.subscribe(with: QueryEventHandler())
@@ -169,7 +169,7 @@ struct StaleWhenRevalidateQueryTests {
 
   @Test("Does Not Fetch On Subscription When Not Stale")
   func doesNotFetchOnSubscriptionWhenNotStale() async throws {
-    let query = TestQuery().staleWhen(condition: .always(false))
+    let query = TestQuery().staleWhen(satisfying: .always(false))
     let store = OperationStore.detached(query: query, initialValue: nil)
 
     let subscription = store.subscribe(with: QueryEventHandler())

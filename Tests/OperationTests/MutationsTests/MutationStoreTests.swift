@@ -242,7 +242,7 @@ struct MutationStoreTests {
   func automaticFetchingDisabledByDefault() async throws {
     let mutation = FailableMutation()
     let store = OperationStore.detached(mutation: mutation)
-    expectNoDifference(store.isAutomaticFetchingEnabled, false)
+    expectNoDifference(store.isAutomaticRunningEnabled, false)
   }
 
   #if swift(>=6.2) && SWIFT_OPERATION_EXIT_TESTABLE_PLATFORM

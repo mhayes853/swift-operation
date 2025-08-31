@@ -2,11 +2,11 @@ import CustomDump
 import Operation
 import Testing
 
-@Suite("NotCondition tests")
-struct NotConditionTests {
+@Suite("NotRunSpecification tests")
+struct NotRunSpecificationTests {
   @Test("Returns Opposite Of Base Condition When Satisfied")
   func returnsOppositeOfBaseConditionWhenSatisfied() {
-    let condition: some FetchCondition = .always(true)
+    let condition: some OperationRunSpecification = .always(true)
     let newCondition = !condition
     expectNoDifference(newCondition.isSatisfied(in: OperationContext()), false)
     expectNoDifference(!newCondition.isSatisfied(in: OperationContext()), true)
@@ -14,7 +14,7 @@ struct NotConditionTests {
 
   @Test("Emits Opposite Of Base Condition Observed Value")
   func emitsOppositeOfBaseConditionObservedValue() {
-    let condition = TestCondition()
+    let condition = TestRunSpecification()
     let values = RecursiveLock([Bool]())
     let subscription = (!condition)
       .subscribe(in: OperationContext()) { value in

@@ -2,40 +2,40 @@ import CustomDump
 import Operation
 import Testing
 
-@Suite("BinaryOperatorCondition tests")
-struct BinaryOperatorConditionTests {
+@Suite("BinaryOperatorRunSpecification tests")
+struct BinaryOperatorRunSpecificationTests {
   @Test("|| Is True When Both Conditions Are True")
   func orTrueWhenBothTrue() {
-    let c1: some FetchCondition = .always(true)
-    let c2: some FetchCondition = .always(true)
+    let c1: some OperationRunSpecification = .always(true)
+    let c2: some OperationRunSpecification = .always(true)
     expectNoDifference((c1 || c2).isSatisfied(in: OperationContext()), true)
   }
 
   @Test("|| Is True When Right Condition Is False")
   func orTrueWhenRightFalse() {
-    let c1: some FetchCondition = .always(true)
-    let c2: some FetchCondition = .always(false)
+    let c1: some OperationRunSpecification = .always(true)
+    let c2: some OperationRunSpecification = .always(false)
     expectNoDifference((c1 || c2).isSatisfied(in: OperationContext()), true)
   }
 
   @Test("|| Is True When Left Condition Is False")
   func orTrueWhenLeftFalse() {
-    let c1: some FetchCondition = .always(false)
-    let c2: some FetchCondition = .always(true)
+    let c1: some OperationRunSpecification = .always(false)
+    let c2: some OperationRunSpecification = .always(true)
     expectNoDifference((c1 || c2).isSatisfied(in: OperationContext()), true)
   }
 
   @Test("|| Is False When Both Conditions Are False")
   func orFalseWhenBothFalse() {
-    let c1: some FetchCondition = .always(false)
-    let c2: some FetchCondition = .always(false)
+    let c1: some OperationRunSpecification = .always(false)
+    let c2: some OperationRunSpecification = .always(false)
     expectNoDifference((c1 || c2).isSatisfied(in: OperationContext()), false)
   }
 
   @Test("||s Subscribed Values")
   func orsSubscribedValues() {
-    let c1 = TestCondition()
-    let c2 = TestCondition()
+    let c1 = TestRunSpecification()
+    let c2 = TestRunSpecification()
     let values = RecursiveLock([Bool]())
     let subscription = (c1 || c2)
       .subscribe(in: OperationContext()) { value in
@@ -57,9 +57,9 @@ struct BinaryOperatorConditionTests {
 
   @Test("||s Subscribed Values With 3 Conditions")
   func orsSubscribedValuesWith3Conditions() {
-    let c1 = TestCondition()
-    let c2 = TestCondition()
-    let c3 = TestCondition()
+    let c1 = TestRunSpecification()
+    let c2 = TestRunSpecification()
+    let c3 = TestRunSpecification()
     let values = RecursiveLock([Bool]())
     let subscription = (c1 || c2 || c3)
       .subscribe(in: OperationContext()) { value in
@@ -86,36 +86,36 @@ struct BinaryOperatorConditionTests {
 
   @Test("&& Is True When Both Conditions Are True")
   func andTrueWhenBothTrue() {
-    let c1: some FetchCondition = .always(true)
-    let c2: some FetchCondition = .always(true)
+    let c1: some OperationRunSpecification = .always(true)
+    let c2: some OperationRunSpecification = .always(true)
     expectNoDifference((c1 && c2).isSatisfied(in: OperationContext()), true)
   }
 
   @Test("&& Is False When Right Condition Is False")
   func andFalseWhenRightFalse() {
-    let c1: some FetchCondition = .always(true)
-    let c2: some FetchCondition = .always(false)
+    let c1: some OperationRunSpecification = .always(true)
+    let c2: some OperationRunSpecification = .always(false)
     expectNoDifference((c1 && c2).isSatisfied(in: OperationContext()), false)
   }
 
   @Test("&& Is False When Left Condition Is False")
   func andFalseWhenLeftFalse() {
-    let c1: some FetchCondition = .always(false)
-    let c2: some FetchCondition = .always(true)
+    let c1: some OperationRunSpecification = .always(false)
+    let c2: some OperationRunSpecification = .always(true)
     expectNoDifference((c1 && c2).isSatisfied(in: OperationContext()), false)
   }
 
   @Test("&& Is False When Both Conditions Are False")
   func andFalseWhenBothFalse() {
-    let c1: some FetchCondition = .always(false)
-    let c2: some FetchCondition = .always(false)
+    let c1: some OperationRunSpecification = .always(false)
+    let c2: some OperationRunSpecification = .always(false)
     expectNoDifference((c1 && c2).isSatisfied(in: OperationContext()), false)
   }
 
   @Test("&&s Subscribed Values")
   func andsSubscribedValues() {
-    let c1 = TestCondition()
-    let c2 = TestCondition()
+    let c1 = TestRunSpecification()
+    let c2 = TestRunSpecification()
     let values = RecursiveLock([Bool]())
     let subscription = (c1 && c2)
       .subscribe(in: OperationContext()) { value in
@@ -136,9 +136,9 @@ struct BinaryOperatorConditionTests {
 
   @Test("&&s Subscribed Values With 3 Conditions")
   func andsSubscribedValuesWith3Conditions() {
-    let c1 = TestCondition()
-    let c2 = TestCondition()
-    let c3 = TestCondition()
+    let c1 = TestRunSpecification()
+    let c2 = TestRunSpecification()
+    let c3 = TestRunSpecification()
     let values = RecursiveLock([Bool]())
     let subscription = (c1 && c2 && c3)
       .subscribe(in: OperationContext()) { value in
@@ -163,9 +163,9 @@ struct BinaryOperatorConditionTests {
 
   @Test("&& ||s Subscribed Values With 3 Conditions")
   func andOrsSubscribedValuesWith3Conditions() {
-    let c1 = TestCondition()
-    let c2 = TestCondition()
-    let c3 = TestCondition()
+    let c1 = TestRunSpecification()
+    let c2 = TestRunSpecification()
+    let c3 = TestRunSpecification()
     let values = RecursiveLock([Bool]())
     let subscription = ((c1 && c2) || c3)
       .subscribe(in: OperationContext()) { value in
@@ -191,9 +191,9 @@ struct BinaryOperatorConditionTests {
 
   @Test("&& (||)s Subscribed Values With 3 Conditions")
   func andParenOrsSubscribedValuesWith3Conditions() {
-    let c1 = TestCondition()
-    let c2 = TestCondition()
-    let c3 = TestCondition()
+    let c1 = TestRunSpecification()
+    let c2 = TestRunSpecification()
+    let c3 = TestRunSpecification()
     let values = RecursiveLock([Bool]())
     let subscription = (c1 && (c2 || c3))
       .subscribe(in: OperationContext()) { value in

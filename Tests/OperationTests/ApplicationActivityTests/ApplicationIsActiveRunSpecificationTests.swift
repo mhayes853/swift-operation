@@ -15,7 +15,7 @@
         isInitiallyActive: isActive,
         notificationCenter: self.center
       )
-      let condition: some FetchCondition = .applicationIsActive(observer: observer)
+      let condition: some OperationRunSpecification = .applicationIsActive(observer: observer)
       expectNoDifference(condition.isSatisfied(in: OperationContext()), isActive)
     }
 
@@ -25,9 +25,9 @@
         isInitiallyActive: isActive,
         notificationCenter: self.center
       )
-      let condition: some FetchCondition = .applicationIsActive(observer: observer)
+      let condition: some OperationRunSpecification = .applicationIsActive(observer: observer)
       var context = OperationContext()
-      context.isApplicationActiveRefetchingEnabled = false
+      context.isApplicationActiveReRunningEnabled = false
       expectNoDifference(condition.isSatisfied(in: context), false)
     }
 
@@ -37,10 +37,10 @@
         isInitiallyActive: true,
         notificationCenter: self.center
       )
-      let condition: some FetchCondition = .applicationIsActive(observer: observer)
+      let condition: some OperationRunSpecification = .applicationIsActive(observer: observer)
       let satisfactions = Lock([Bool]())
       var context = OperationContext()
-      context.isApplicationActiveRefetchingEnabled = false
+      context.isApplicationActiveReRunningEnabled = false
       let subscription = condition.subscribe(in: context) { value in
         satisfactions.withLock { $0.append(value) }
       }
@@ -55,7 +55,7 @@
         isInitiallyActive: false,
         notificationCenter: self.center
       )
-      let condition: some FetchCondition = .applicationIsActive(observer: observer)
+      let condition: some OperationRunSpecification = .applicationIsActive(observer: observer)
       let satisfactions = Lock([Bool]())
       let subscription = condition.subscribe(in: OperationContext()) { value in
         satisfactions.withLock { $0.append(value) }
@@ -71,7 +71,7 @@
         isInitiallyActive: true,
         notificationCenter: self.center
       )
-      let condition: some FetchCondition = .applicationIsActive(observer: observer)
+      let condition: some OperationRunSpecification = .applicationIsActive(observer: observer)
       let satisfactions = Lock([Bool]())
       let subscription = condition.subscribe(in: OperationContext()) { value in
         satisfactions.withLock { $0.append(value) }
@@ -97,7 +97,7 @@
         isInitiallyActive: true,
         notificationCenter: self.center
       )
-      let condition: some FetchCondition = .applicationIsActive(observer: observer)
+      let condition: some OperationRunSpecification = .applicationIsActive(observer: observer)
       let satisfactions = RecursiveLock([Bool]())
       let subscription = condition.subscribe(in: OperationContext()) { value in
         satisfactions.withLock { $0.append(value) }

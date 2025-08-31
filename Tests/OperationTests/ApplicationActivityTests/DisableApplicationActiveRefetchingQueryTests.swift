@@ -13,11 +13,11 @@ final class DisableApplicationActiveRefetchingQueryTests: XCTestCase, @unchecked
     let expectation = self.expectation(description: "starts fetching")
     expectation.isInverted = true
 
-    let automaticCondition = TestCondition()
+    let automaticCondition = TestRunSpecification()
     automaticCondition.send(false)
-    let query = TestQuery().disableApplicationActiveRefetching()
-      .enableAutomaticFetching(onlyWhen: automaticCondition)
-      .refetchOnChange(of: .applicationIsActive(observer: observer))
+    let query = TestQuery().disableApplicationActiveReRunning()
+      .enableAutomaticRunning(onlyWhen: automaticCondition)
+      .reRunOnChange(of: .applicationIsActive(observer: observer))
     let store = OperationStore.detached(query: query, initialValue: nil)
     let subscription = store.subscribe(
       with: QueryEventHandler(onFetchingStarted: { _ in expectation.fulfill() })

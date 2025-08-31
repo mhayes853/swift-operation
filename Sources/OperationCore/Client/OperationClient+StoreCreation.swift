@@ -23,7 +23,7 @@ extension OperationClient {
   ///      // Modifiers applied only to operations and infinite operations
   ///      return .detached(
   ///        operation: operation.retry(limit: 3)
-  ///          .enableAutomaticFetching(onlyWhen: .always(true))
+  ///          .enableAutomaticRunning(onlyWhen: .always(true))
   ///          .customModifier()
   ///          .deduplicated(),
   ///        initialState: initialState,

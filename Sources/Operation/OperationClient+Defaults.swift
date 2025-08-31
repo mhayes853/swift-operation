@@ -46,7 +46,7 @@ extension OperationClient {
     let retryLimit: Int
     let backoff: OperationBackoffFunction?
     let delayer: (any OperationDelayer)?
-    let queryEnableAutomaticFetchingCondition: any FetchCondition
+    let automaticRunningSpecification: any OperationRunSpecification
     let networkObserver: (any NetworkObserver)?
     let activityObserver: (any ApplicationActivityObserver)?
 
@@ -72,28 +72,28 @@ extension OperationClient {
           operation.retry(limit: self.retryLimit)
           .backoff(backoff)
           .delayer(delayer)
-          .enableAutomaticFetching(
-            onlyWhen: AnyFetchCondition(self.queryEnableAutomaticFetchingCondition)
+          .enableAutomaticRunning(
+            onlyWhen: AnyRunSpecificiation(self.automaticRunningSpecification)
           )
-          .refetchOnChange(of: self.refetchOnChangeCondition)
+          .reRunOnChange(of: self.refetchOnChangeCondition)
           .deduplicated(),
         initialState: initialState,
         initialContext: context
       )
     }
 
-    private var refetchOnChangeCondition: AnyFetchCondition {
+    private var refetchOnChangeCondition: AnyRunSpecificiation {
       switch (self.networkObserver, self.activityObserver) {
       case (let networkObserver?, let activityObserver?):
-        return AnyFetchCondition(
+        return AnyRunSpecificiation(
           .connected(to: networkObserver) && .applicationIsActive(observer: activityObserver)
         )
       case (let networkObserver?, _):
-        return AnyFetchCondition(.connected(to: networkObserver))
+        return AnyRunSpecificiation(.connected(to: networkObserver))
       case (_, let activityObserver?):
-        return AnyFetchCondition(.applicationIsActive(observer: activityObserver))
+        return AnyRunSpecificiation(.applicationIsActive(observer: activityObserver))
       default:
-        return AnyFetchCondition(.always(false))
+        return AnyRunSpecificiation(.always(false))
       }
     }
   }
@@ -109,7 +109,7 @@ extension OperationClient.StoreCreator where Self == OperationClient.DefaultStor
       retryLimit: 0,
       backoff: .noBackoff,
       delayer: .noDelay,
-      queryEnableAutomaticFetchingCondition: .always(true),
+      automaticRunningSpecification: .always(true),
       networkObserver: nil,
       activityObserver: nil
     )
@@ -134,7 +134,7 @@ extension OperationClient.StoreCreator where Self == OperationClient.DefaultStor
   ///   - retryLimit: The maximum number of retries for queries and mutations.
   ///   - backoff: The backoff function to use for retries.
   ///   - delayer: The `QueryDelayer` to use for delaying the execution of a retry.
-  ///   - queryEnableAutomaticFetchingCondition: The default `FetchCondition` that determines
+  ///   - queryenableAutomaticRunningCondition: The default `FetchCondition` that determines
   ///   whether or not automatic fetching is enabled for queries (and not mutations).
   ///   - networkObserver: The default `NetworkObserver` to use.
   ///   - activityObserver: The default `ApplicationActivityObserver` to use.
@@ -143,7 +143,7 @@ extension OperationClient.StoreCreator where Self == OperationClient.DefaultStor
     retryLimit: Int = 3,
     backoff: OperationBackoffFunction? = nil,
     delayer: (any OperationDelayer)? = nil,
-    queryEnableAutomaticFetchingCondition: any FetchCondition = .always(true),
+    automaticRunningSpecification: any OperationRunSpecification = .always(true),
     networkObserver: (any NetworkObserver)? = OperationClient.defaultNetworkObserver,
     activityObserver: (any ApplicationActivityObserver)? = OperationClient
       .defaultApplicationActivityObserver
@@ -152,7 +152,7 @@ extension OperationClient.StoreCreator where Self == OperationClient.DefaultStor
       retryLimit: retryLimit,
       backoff: backoff,
       delayer: delayer,
-      queryEnableAutomaticFetchingCondition: queryEnableAutomaticFetchingCondition,
+      automaticRunningSpecification: automaticRunningSpecification,
       networkObserver: networkObserver,
       activityObserver: activityObserver
     )

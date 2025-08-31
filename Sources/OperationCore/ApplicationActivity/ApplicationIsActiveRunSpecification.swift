@@ -4,9 +4,9 @@ import Foundation
 
 /// A ``FetchCondition`` that is satisfied whenever the app is active in the foreground using an
 /// ``ApplicationActivityObserver``.
-public final class ApplicationIsActiveCondition: Sendable {
+public final class ApplicationIsActiveRunSpecification: OperationRunSpecification, Sendable {
   private typealias Handler = @Sendable (Bool) -> Void
-  private struct State: @unchecked Sendable {
+  private struct State: Sendable {
     var isActive: Bool
   }
 
@@ -14,7 +14,7 @@ public final class ApplicationIsActiveCondition: Sendable {
   private let subscriptions: OperationSubscriptions<Handler>
   private let observerSubscription: OperationSubscription
 
-  fileprivate init(observer: some ApplicationActivityObserver) {
+  public init(observer: some ApplicationActivityObserver) {
     let state = LockedBox(value: State(isActive: true))
     let subscriptions = OperationSubscriptions<Handler>()
     self.observerSubscription = observer.subscribe { isActive in
@@ -27,14 +27,10 @@ public final class ApplicationIsActiveCondition: Sendable {
     self.state = state
     self.subscriptions = subscriptions
   }
-}
 
-// MARK: - FetchConditionObserver Conformance
-
-extension ApplicationIsActiveCondition: FetchCondition {
   public func isSatisfied(in context: OperationContext) -> Bool {
     self.state.inner.withLock { state in
-      context.isApplicationActiveRefetchingEnabled && state.isActive
+      context.isApplicationActiveReRunningEnabled && state.isActive
     }
   }
 
@@ -42,7 +38,7 @@ extension ApplicationIsActiveCondition: FetchCondition {
     in context: OperationContext,
     _ observer: @escaping @Sendable (Bool) -> Void
   ) -> OperationSubscription {
-    guard context.isApplicationActiveRefetchingEnabled else {
+    guard context.isApplicationActiveReRunningEnabled else {
       observer(false)
       return .empty
     }
@@ -53,13 +49,13 @@ extension ApplicationIsActiveCondition: FetchCondition {
   }
 }
 
-extension FetchCondition where Self == ApplicationIsActiveCondition {
+extension OperationRunSpecification where Self == ApplicationIsActiveRunSpecification {
   /// A ``FetchCondition`` that is satisfied whenever the app is active in the foreground using an
   /// ``ApplicationActivityObserver``.
   ///
   /// - Parameter observer: The observer to use to determine the app's active state.
   /// - Returns: A ``FetchCondition`` that is satisfied whenever the app is active in the foreground.
   public static func applicationIsActive(observer: some ApplicationActivityObserver) -> Self {
-    ApplicationIsActiveCondition(observer: observer)
+    ApplicationIsActiveRunSpecification(observer: observer)
   }
 }

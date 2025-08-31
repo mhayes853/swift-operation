@@ -127,7 +127,7 @@ func valueLoads() async throws {
       retryLimit: 0,
       backoff: .noBackoff,
       delayer: .noDelay,
-      queryEnableAutomaticFetchingCondition: .always(false),
+      queryenableAutomaticRunningCondition: .always(false),
       networkObserver: nil,
       focusCondition: nil
     )
@@ -153,7 +153,7 @@ func valueLoads() async throws {
 >       retryLimit: 0,
 >       backoff: .noBackoff,
 >       delayer: .noDelay,
->       queryEnableAutomaticFetchingCondition: .always(false),
+>       queryenableAutomaticRunningCondition: .always(false),
 >       networkObserver: nil,
 >       focusCondition: nil
 >     )

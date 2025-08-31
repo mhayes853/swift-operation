@@ -1,19 +1,15 @@
 // MARK: - BinaryOperatorConditions
 
 /// A ``FetchCondition`` that applies a binary boolean operator between 2 conditions.
-public struct BinaryOperatorCondition<
-  Left: FetchCondition,
-  Right: FetchCondition,
-  Operator: _BinaryFetchConditionOperator
-> {
+public struct BinaryOperatorRunSpecification<
+  Left: OperationRunSpecification,
+  Right: OperationRunSpecification,
+  Operator: _BinaryRunSpecificationOperator
+>: OperationRunSpecification {
   fileprivate let left: Left
   fileprivate let right: Right
   fileprivate let op: Operator
-}
 
-// MARK: - FetchCondition Conformance
-
-extension BinaryOperatorCondition: FetchCondition {
   public func isSatisfied(in context: OperationContext) -> Bool {
     self.op.evaluate(self.left.isSatisfied(in: context), self.right.isSatisfied(in: context))
   }
@@ -50,11 +46,11 @@ extension BinaryOperatorCondition: FetchCondition {
 ///   - left: The left hand side condition.
 ///   - right: The right hand side condition.
 /// - Returns: A ``BinaryOperatorCondition`` that applies a boolean AND.
-public func && <Left: FetchCondition, Right: FetchCondition>(
+public func && <Left: OperationRunSpecification, Right: OperationRunSpecification>(
   _ left: Left,
   _ right: Right
-) -> BinaryOperatorCondition<Left, Right, _AndOperator> {
-  BinaryOperatorCondition(left: left, right: right, op: _AndOperator())
+) -> BinaryOperatorRunSpecification<Left, Right, _AndRunSpecificationOperator> {
+  BinaryOperatorRunSpecification(left: left, right: right, op: _AndRunSpecificationOperator())
 }
 
 /// Applies a boolean OR operation between the 2 specified ``FetchCondition``s.
@@ -63,27 +59,27 @@ public func && <Left: FetchCondition, Right: FetchCondition>(
 ///   - left: The left hand side condition.
 ///   - right: The right hand side condition.
 /// - Returns: A ``BinaryOperatorCondition`` that applies a boolean OR.
-public func || <Left: FetchCondition, Right: FetchCondition>(
+public func || <Left: OperationRunSpecification, Right: OperationRunSpecification>(
   _ left: Left,
   _ right: Right
-) -> BinaryOperatorCondition<Left, Right, _OrOperator> {
-  BinaryOperatorCondition(left: left, right: right, op: _OrOperator())
+) -> BinaryOperatorRunSpecification<Left, Right, _OrRunSpecificationOperator> {
+  BinaryOperatorRunSpecification(left: left, right: right, op: _OrRunSpecificationOperator())
 }
 
 // MARK: - Operator
 
-public protocol _BinaryFetchConditionOperator: Sendable {
+public protocol _BinaryRunSpecificationOperator: Sendable {
   func evaluate(_ left: Bool, _ right: Bool) -> Bool
 }
 
-public struct _AndOperator: _BinaryFetchConditionOperator {
+public struct _AndRunSpecificationOperator: _BinaryRunSpecificationOperator {
   @inlinable
   public func evaluate(_ left: Bool, _ right: Bool) -> Bool {
     left && right
   }
 }
 
-public struct _OrOperator: _BinaryFetchConditionOperator {
+public struct _OrRunSpecificationOperator: _BinaryRunSpecificationOperator {
   @inlinable
   public func evaluate(_ left: Bool, _ right: Bool) -> Bool {
     left || right

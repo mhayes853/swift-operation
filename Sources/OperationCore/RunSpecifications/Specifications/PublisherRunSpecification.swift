@@ -12,7 +12,7 @@
   /// When initialized, this condition will immediately subscribe to your publisher, and will
   /// manually store the latest output. Only 1 subscription is made to your publisher, and changes
   /// from the single subscription are propagated to all subscribers of this condition.
-  public final class PublisherCondition<P: Publisher & Sendable>
+  public final class PublisherRunSpecification<P: Publisher & Sendable>: OperationRunSpecification
   where P.Output == Bool, P.Failure == Never {
     private typealias State = (cancellable: AnyCancellable?, currentValue: Bool)
 
@@ -28,11 +28,7 @@
         }
       }
     }
-  }
 
-  // MARK: - FetchConditionObserver Conformance
-
-  extension PublisherCondition: FetchCondition {
     public func isSatisfied(in context: OperationContext) -> Bool {
       self.state.withLock { $0.currentValue }
     }
@@ -48,7 +44,7 @@
 
   // MARK: - FetchConditionObserver Extensions
 
-  extension FetchCondition {
+  extension OperationRunSpecification {
     /// A ``FetchCondition`` that observes the value of a Combine `Publisher`.
     ///
     /// - Parameters:
@@ -58,8 +54,8 @@
     public static func observing<P: Publisher>(
       publisher: P,
       initialValue: Bool
-    ) -> Self where Self == PublisherCondition<P> {
-      PublisherCondition(publisher: publisher, initialValue: initialValue)
+    ) -> Self where Self == PublisherRunSpecification<P> {
+      PublisherRunSpecification(publisher: publisher, initialValue: initialValue)
     }
 
     /// A ``FetchCondition`` that observes the value of a `CurrentValueSubject`.
@@ -68,8 +64,8 @@
     /// - Returns: A ``PublisherCondition``.
     public static func observing(
       subject: CurrentValueSubject<Bool, Never>
-    ) -> Self where Self == PublisherCondition<CurrentValueSubject<Bool, Never>> {
-      PublisherCondition(publisher: subject, initialValue: subject.value)
+    ) -> Self where Self == PublisherRunSpecification<CurrentValueSubject<Bool, Never>> {
+      PublisherRunSpecification(publisher: subject, initialValue: subject.value)
     }
   }
 #endif

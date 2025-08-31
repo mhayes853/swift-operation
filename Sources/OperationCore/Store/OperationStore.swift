@@ -202,9 +202,9 @@ extension OperationStore {
   /// ``QueryRequest`` conformances, and disabled for all ``MutationRequest`` conformances.
   ///
   /// Queries can individually enable or disable automatic fetching through the
-  /// ``QueryRequest/enableAutomaticFetching(onlyWhen:)`` modifier.
-  public var isAutomaticFetchingEnabled: Bool {
-    self.context.enableAutomaticFetchingCondition.isSatisfied(in: self.context)
+  /// ``QueryRequest/enableAutomaticRunning(onlyWhen:)`` modifier.
+  public var isAutomaticRunningEnabled: Bool {
+    self.context.automaticRunningSpecification.isSatisfied(in: self.context)
   }
 }
 
@@ -486,7 +486,7 @@ extension OperationStore {
     let subscription = self.values.withLock { values in
       handler.onStateChanged?(self.state, self.context)
       let (subscription, isFirst) = self.subscriptions.add(handler: handler)
-      if isFirst && self.isAutomaticFetchingEnabled && self.isStale {
+      if isFirst && self.isAutomaticRunningEnabled && self.isStale {
         let task = self.runTask()
         values.subscribeTask = Task(configuration: task.configuration) {
           try await task.runIfNeeded()

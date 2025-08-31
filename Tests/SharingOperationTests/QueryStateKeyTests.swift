@@ -10,7 +10,7 @@ struct OperationStateKeyTests {
 
   @Test("Uses Current Store State")
   func usesCurrentStoreState() async throws {
-    let query = TestQuery().disableAutomaticFetching()
+    let query = TestQuery().disableAutomaticRunning()
     let store = self.client.store(for: query)
     try await store.fetch()
 
@@ -34,7 +34,7 @@ struct OperationStateKeyTests {
     @Test("Fetches Value With Animation, Completes Synchronously For Testing")
     func fetchesValuesWithAnimationCompletesSynchronouslyForTesting() async throws {
       @SharedOperation(
-        TestQuery().disableAutomaticFetching(),
+        TestQuery().disableAutomaticRunning(),
         client: self.client,
         animation: .bouncy()
       ) var state
@@ -94,7 +94,7 @@ struct OperationStateKeyTests {
 
   @Test("Does Not Start Fetch Task When Automatic Fetching Is Disabled")
   func doesNotStartFetchTaskWhenAutomaticFetchingIsDisabled() async throws {
-    let query = TestQuery().disableAutomaticFetching()
+    let query = TestQuery().disableAutomaticRunning()
     let store = self.client.store(for: query)
 
     @SharedOperation(store: store) var state
@@ -104,7 +104,7 @@ struct OperationStateKeyTests {
 
   @Test("Restarts Loading State When Triggering Fetch On Store")
   func restartsLoadingStateWhenTriggeringFetchOnStore() async throws {
-    let query = TestQuery().disableAutomaticFetching()
+    let query = TestQuery().disableAutomaticRunning()
     let store = self.client.store(for: query)
 
     @SharedOperation(store: store) var state
@@ -126,7 +126,7 @@ struct OperationStateKeyTests {
 
   @Test("Is Not In Initial Loading State When Automatic Fetching Is Disabled")
   func notInInitialLoadingStateWhenAutomaticFetchingIsDisabled() async throws {
-    let query = TestQuery().disableAutomaticFetching()
+    let query = TestQuery().disableAutomaticRunning()
     let store = self.client.store(for: query)
 
     @SharedOperation(store: store) var state
@@ -136,7 +136,7 @@ struct OperationStateKeyTests {
 
   @Test("Is In Initial Loading State When Automatic Fetching Enabled On Query")
   func isInInitialLoadingStateWhenAutomaticFetchingEnabledOnQuery() async throws {
-    let query = EndlessQuery().enableAutomaticFetching(onlyWhen: .always(true))
+    let query = EndlessQuery().enableAutomaticRunning(onlyWhen: .always(true))
     let store = self.client.store(for: query)
 
     @SharedOperation(store: store) var state
@@ -147,7 +147,7 @@ struct OperationStateKeyTests {
   @Test("Yields Multiple Values To Query Whilst Remaining In A Loading State")
   func yieldsMultipleValuesToQueryWhilstRemainingInALoadingState() async throws {
     let query = ContinuingQuery()
-    let store = self.client.store(for: query.enableAutomaticFetching(onlyWhen: .always(true)))
+    let store = self.client.store(for: query.enableAutomaticRunning(onlyWhen: .always(true)))
 
     @SharedOperation(store: store) var state
     query.onYield = { _ in
@@ -166,7 +166,7 @@ struct OperationStateKeyTests {
 
   @Test("Makes Separate Subscribers When Using OperationStateKeys With The Same Query")
   func makesSeparateSubscribersWhenUsingOperationStateKeysWithTheSameQuery() async throws {
-    let query = TestQuery().disableAutomaticFetching()
+    let query = TestQuery().disableAutomaticRunning()
     @SharedOperation(query, client: self.client) var value
     @SharedOperation(query, client: self.client) var state
 

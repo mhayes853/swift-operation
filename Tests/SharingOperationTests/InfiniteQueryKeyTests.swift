@@ -10,7 +10,7 @@ struct InfiniteQueryKeyTests {
   func fetchesForValue() async throws {
     let query = TestInfiniteQuery()
     query.state.withLock { $0 = [0: "hello", 1: "world"] }
-    @SharedOperation(query.disableAutomaticFetching()) var value = []
+    @SharedOperation(query.disableAutomaticRunning()) var value = []
 
     expectNoDifference(value, [])
 
@@ -26,7 +26,7 @@ struct InfiniteQueryKeyTests {
 
   @Test("Fetches For Error")
   func fetchesForError() async throws {
-    @SharedOperation(FailableInfiniteQuery().disableAutomaticFetching())
+    @SharedOperation(FailableInfiniteQuery().disableAutomaticRunning())
     var value
 
     expectNoDifference($value.error as? FailableInfiniteQuery.SomeError, nil)

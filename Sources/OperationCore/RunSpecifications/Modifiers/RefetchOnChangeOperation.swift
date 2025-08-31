@@ -12,36 +12,36 @@ extension OperationRequest {
   ///
   /// - Parameter condition: The ``FetchCondition`` to observe for operation refetching.
   /// - Returns: A ``ModifiedOperation``.
-  public func refetchOnChange<Condition: FetchCondition>(
-    of condition: Condition
-  ) -> ControlledOperation<Self, _RefetchOnChangeController<State, Condition>> {
-    self.controlled(by: _RefetchOnChangeController(condition: condition))
+  public func reRunOnChange<Spec: OperationRunSpecification>(
+    of spec: Spec
+  ) -> ControlledOperation<Self, _ReRunOnChangeController<State, Spec>> {
+    self.controlled(by: _ReRunOnChangeController(spec: spec))
   }
 }
 
-public final class _RefetchOnChangeController<
+public final class _ReRunOnChangeController<
   State: OperationState,
-  Condition: FetchCondition
+  Spec: OperationRunSpecification
 >: OperationController {
-  private let condition: Condition
+  private let spec: Spec
   private let subscriptions = OperationSubscriptions<OperationControls<State>>()
   private let task = Lock<Task<Void, any Error>?>(nil)
 
-  init(condition: Condition) {
-    self.condition = condition
+  init(spec: Spec) {
+    self.spec = spec
   }
 
   public func control(with controls: OperationControls<State>) -> OperationSubscription {
     let (controlsSubscription, _) = self.subscriptions.add(handler: controls)
-    let conditionSubscription = self.subscribeToCondition(in: controls.context)
+    let conditionSubscription = self.subscribeToSpec(in: controls.context)
     return .combined(controlsSubscription, conditionSubscription)
   }
 
-  private func subscribeToCondition(
+  private func subscribeToSpec(
     in context: OperationContext
   ) -> OperationSubscription {
-    let currentValue = Lock(self.condition.isSatisfied(in: context))
-    return self.condition.subscribe(in: context) { newValue in
+    let currentValue = Lock(self.spec.isSatisfied(in: context))
+    return self.spec.subscribe(in: context) { newValue in
       let didValueChange = currentValue.withLock { currentValue in
         defer { currentValue = newValue }
         return newValue != currentValue

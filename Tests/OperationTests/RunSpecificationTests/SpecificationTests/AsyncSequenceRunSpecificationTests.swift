@@ -2,13 +2,14 @@ import CustomDump
 import Operation
 import Testing
 
-@Suite("AsyncSequenceCondition tests")
-struct AsyncSequenceConditionTests {
+@Suite("AsyncSequenceRunSpecification tests")
+struct AsyncSequenceRunSpecificationTests {
   @Test("Observes Publisher Value")
+  @available(iOS 18.0, macOS 15.0, tvOS 18.0, watchOS 18.0, visionOS 2.0, *)
   func observeSequenceValue() async {
     let (stream, continuation) = AsyncStream<Bool>.makeStream()
     let (substream, subcontinuation) = AsyncStream<Void>.makeStream()
-    let observer: some FetchCondition = .observing(
+    let observer: some OperationRunSpecification = .observing(
       sequence: stream,
       initialValue: true
     )
@@ -33,11 +34,12 @@ struct AsyncSequenceConditionTests {
   }
 
   @Test("Is Sequence Value In Context")
+  @available(iOS 18.0, macOS 15.0, tvOS 18.0, watchOS 18.0, visionOS 2.0, *)
   func isSequenceValueInContext() async {
     let context = OperationContext()
     let (stream, continuation) = AsyncStream<Bool>.makeStream()
     let (substream, subcontinuation) = AsyncStream<Void>.makeStream()
-    let observer: some FetchCondition = .observing(
+    let observer: some OperationRunSpecification = .observing(
       sequence: stream,
       initialValue: true
     )

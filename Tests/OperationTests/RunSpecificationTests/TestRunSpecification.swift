@@ -1,6 +1,6 @@
 import Operation
 
-final class TestCondition: FetchCondition {
+final class TestRunSpecification: OperationRunSpecification {
   private typealias Handler = @Sendable (Bool) -> Void
 
   private let value = RecursiveLock(false)

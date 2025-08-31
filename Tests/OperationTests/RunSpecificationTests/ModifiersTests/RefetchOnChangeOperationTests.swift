@@ -3,18 +3,18 @@ import Operation
 import OperationTestHelpers
 import XCTest
 
-final class RefetchOnChangeQueryTests: XCTestCase {
+final class RefetchOnChangeOperationTests: XCTestCase {
   func testRefetchesWhenConditionChangesToTrue() async {
     let fetchesExpectation = self.expectation(description: "begins fetching")
 
-    let condition = TestCondition()
+    let condition = TestRunSpecification()
     condition.send(false)
 
-    let automaticCondition = TestCondition()
+    let automaticCondition = TestRunSpecification()
     automaticCondition.send(false)
     let store = OperationStore.detached(
-      query: TestQuery().enableAutomaticFetching(onlyWhen: automaticCondition)
-        .refetchOnChange(of: condition),
+      query: TestQuery().enableAutomaticRunning(onlyWhen: automaticCondition)
+        .reRunOnChange(of: condition),
       initialValue: nil
     )
     let subscription = store.subscribe(
@@ -32,11 +32,11 @@ final class RefetchOnChangeQueryTests: XCTestCase {
     let fetchesExpectation = self.expectation(description: "begins fetching")
     let cancelsExpectation = self.expectation(description: "cancels")
 
-    let condition = TestCondition()
+    let condition = TestRunSpecification()
     condition.send(false)
 
     let count = Lock(0)
-    let automaticCondition = TestCondition()
+    let automaticCondition = TestRunSpecification()
     automaticCondition.send(false)
     let store = OperationStore.detached(
       query: CountingQuery {
@@ -48,8 +48,8 @@ final class RefetchOnChangeQueryTests: XCTestCase {
           try await Task.never()
         }
       }
-      .enableAutomaticFetching(onlyWhen: automaticCondition)
-      .refetchOnChange(of: condition),
+      .enableAutomaticRunning(onlyWhen: automaticCondition)
+      .reRunOnChange(of: condition),
       initialValue: nil
     )
     let subscription = store.subscribe(
@@ -79,14 +79,14 @@ final class RefetchOnChangeQueryTests: XCTestCase {
     let expectation = self.expectation(description: "fetches")
     expectation.isInverted = true
 
-    let condition = TestCondition()
+    let condition = TestRunSpecification()
     condition.send(true)
 
-    let automaticCondition = TestCondition()
+    let automaticCondition = TestRunSpecification()
     automaticCondition.send(false)
     let store = OperationStore.detached(
-      query: TestQuery().enableAutomaticFetching(onlyWhen: automaticCondition)
-        .refetchOnChange(of: condition),
+      query: TestQuery().enableAutomaticRunning(onlyWhen: automaticCondition)
+        .reRunOnChange(of: condition),
       initialValue: nil
     )
     let subscription = store.subscribe(
@@ -104,12 +104,12 @@ final class RefetchOnChangeQueryTests: XCTestCase {
     let expectation = self.expectation(description: "fetches")
     expectation.isInverted = true
 
-    let condition = TestCondition()
+    let condition = TestRunSpecification()
     condition.send(false)
 
     let query = CountingQuery { expectation.fulfill() }
     let store = OperationStore.detached(
-      query: query.enableAutomaticFetching(onlyWhen: .always(true)).refetchOnChange(of: condition),
+      query: query.enableAutomaticRunning(onlyWhen: .always(true)).reRunOnChange(of: condition),
       initialValue: nil
     )
 
@@ -123,14 +123,14 @@ final class RefetchOnChangeQueryTests: XCTestCase {
     let expectation = self.expectation(description: "fetches")
     expectation.isInverted = true
 
-    let condition = TestCondition()
+    let condition = TestRunSpecification()
     condition.send(false)
 
-    let automaticCondition = TestCondition()
+    let automaticCondition = TestRunSpecification()
     automaticCondition.send(false)
     let store = OperationStore.detached(
-      query: TestQuery().enableAutomaticFetching(onlyWhen: automaticCondition)
-        .refetchOnChange(of: condition)
+      query: TestQuery().enableAutomaticRunning(onlyWhen: automaticCondition)
+        .reRunOnChange(of: condition)
         .staleWhen { _, _ in false },
       initialValue: nil
     )

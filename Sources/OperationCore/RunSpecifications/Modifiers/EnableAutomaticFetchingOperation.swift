@@ -19,10 +19,10 @@ extension OperationRequest {
   ///
   /// - Parameter isDisabled: Whether or not to disable automatic fetching.
   /// - Returns: A ``ModifiedOperation``.
-  public func disableAutomaticFetching(
+  public func disableAutomaticRunning(
     _ isDisabled: Bool = true
-  ) -> ModifiedOperation<Self, _EnableAutomaticFetchingModifier<Self, AlwaysCondition>> {
-    self.enableAutomaticFetching(onlyWhen: .always(!isDisabled))
+  ) -> ModifiedOperation<Self, _enableAutomaticRunningModifier<Self, AlwaysRunSpecification>> {
+    self.enableAutomaticRunning(onlyWhen: .always(!isDisabled))
   }
 
   /// Enables automatic fetching for this query based on the specified ``FetchCondition``.
@@ -43,21 +43,21 @@ extension OperationRequest {
   ///
   /// - Parameter condition: The ``FetchCondition`` to enable automatic fetching on.
   /// - Returns: A ``ModifiedOperation``.
-  public func enableAutomaticFetching<Condition: FetchCondition>(
-    onlyWhen condition: Condition
-  ) -> ModifiedOperation<Self, _EnableAutomaticFetchingModifier<Self, Condition>> {
-    self.modifier(_EnableAutomaticFetchingModifier(condition: condition))
+  public func enableAutomaticRunning<Spec: OperationRunSpecification>(
+    onlyWhen spec: Spec
+  ) -> ModifiedOperation<Self, _enableAutomaticRunningModifier<Self, Spec>> {
+    self.modifier(_enableAutomaticRunningModifier(spec: spec))
   }
 }
 
-public struct _EnableAutomaticFetchingModifier<
+public struct _enableAutomaticRunningModifier<
   Operation: OperationRequest,
-  Condition: FetchCondition
+  Spec: OperationRunSpecification
 >: _ContextUpdatingOperationModifier {
-  let condition: any FetchCondition
+  let spec: Spec
 
   public func setup(context: inout OperationContext) {
-    context.enableAutomaticFetchingCondition = self.condition
+    context.automaticRunningSpecification = self.spec
   }
 }
 
@@ -71,12 +71,12 @@ extension OperationContext {
   /// However, if you use the default initializer of a ``OperationClient``, then the condition will have
   /// a default value of true for all ``QueryRequest`` conformances and false for all
   /// ``MutationRequest`` conformances.
-  public var enableAutomaticFetchingCondition: any FetchCondition {
-    get { self[EnableAutomaticFetchingKey.self] }
-    set { self[EnableAutomaticFetchingKey.self] = newValue }
+  public var automaticRunningSpecification: any OperationRunSpecification {
+    get { self[AutomaticRunningSpecificiationKey.self] }
+    set { self[AutomaticRunningSpecificiationKey.self] = newValue }
   }
 
-  private enum EnableAutomaticFetchingKey: Key {
-    static var defaultValue: any FetchCondition { .always(false) }
+  private enum AutomaticRunningSpecificiationKey: Key {
+    static var defaultValue: any OperationRunSpecification { .always(false) }
   }
 }

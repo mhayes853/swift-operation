@@ -48,7 +48,7 @@ struct QueryKeyTests {
   func setValueUpdatesValueInStore() async throws {
     @Dependency(\.defaultOperationClient) var client
 
-    let query = TestQuery().disableAutomaticFetching()
+    let query = TestQuery().disableAutomaticRunning()
     @SharedOperation(query) var value
 
     $value.withLock { $0 = TestQuery.value + 1 }
@@ -60,7 +60,7 @@ struct QueryKeyTests {
   func sharesStateWithSharedQueries() async throws {
     @Dependency(\.defaultOperationClient) var client
 
-    let query = TestQuery().disableAutomaticFetching()
+    let query = TestQuery().disableAutomaticRunning()
     @SharedOperation(query) var value
     @SharedOperation(query) var state
 
@@ -73,7 +73,7 @@ struct QueryKeyTests {
   func makesSeparateSubscribersWhenUsingQueryKeyAndOperationStateKeyInConjunction() async throws {
     @Dependency(\.defaultOperationClient) var client
 
-    let query = TestQuery().disableAutomaticFetching()
+    let query = TestQuery().disableAutomaticRunning()
     @SharedOperation(query) var value
     @SharedOperation(query) var state
 
@@ -85,7 +85,7 @@ struct QueryKeyTests {
   func makesSeparateSubscribersWhenUsingQueryKeysWithTheSameQuery() async throws {
     @Dependency(\.defaultOperationClient) var client
 
-    let query = TestQuery().disableAutomaticFetching()
+    let query = TestQuery().disableAutomaticRunning()
     @SharedOperation(query) var value
     @SharedOperation(query) var state
 
@@ -95,7 +95,7 @@ struct QueryKeyTests {
 
   @Test("Backed Query Is Not Unbacked")
   func backedQueryIsBacked() async throws {
-    @SharedOperation(TestQuery().disableAutomaticFetching()) var value
+    @SharedOperation(TestQuery().disableAutomaticRunning()) var value
     expectNoDifference($value.isBacked, true)
   }
 

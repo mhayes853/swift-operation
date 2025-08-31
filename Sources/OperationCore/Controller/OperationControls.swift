@@ -110,9 +110,9 @@ extension OperationControls {
   /// Whether or not you can refetch the query through these controls.
   ///
   /// This property is true when automatic fetching is enabled on the query. See
-  /// ``QueryRequest/enableAutomaticFetching(onlyWhen:)`` for more.
+  /// ``QueryRequest/enableAutomaticRunning(onlyWhen:)`` for more.
   public var canYieldRefetch: Bool {
-    self.store?.isAutomaticFetchingEnabled == true
+    self.store?.isAutomaticRunningEnabled == true
   }
 
   /// Yields a refetch to the query.

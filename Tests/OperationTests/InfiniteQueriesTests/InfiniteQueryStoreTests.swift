@@ -642,7 +642,7 @@ struct InfiniteOperationStoreTests {
   func fetchThroughNormalOperationStoreEvents() async throws {
     let collector = InfiniteOperationStoreEventsCollector<TestInfiniteQuery.State>()
     let query = TestInfiniteQuery()
-    let store = self.client.store(for: query.disableAutomaticFetching())
+    let store = self.client.store(for: query.disableAutomaticRunning())
     query.state.withLock { $0 = [0: "a", 1: "b"] }
     try await store.fetchNextPage()
     try await store.fetchNextPage()

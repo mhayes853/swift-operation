@@ -42,10 +42,10 @@ extension OperationRequest {
   /// - Parameter condition: A ``FetchCondition`` to indicate whether or not ``OperationStore/isStale`` is true.
   /// - Returns: A ``ModifiedOperation``.
   public func staleWhen(
-    condition: some FetchCondition
+    satisfying specification: some OperationRunSpecification
   ) -> ModifiedOperation<Self, _StaleWhenModifier<Self>> {
     self.modifier(
-      _StaleWhenModifier { _, context in condition.isSatisfied(in: context) }
+      _StaleWhenModifier { _, context in specification.isSatisfied(in: context) }
     )
   }
 

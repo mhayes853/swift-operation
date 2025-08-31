@@ -25,7 +25,7 @@ struct OperationControllerTests {
     let controller = TestOperationController<TestQuery>()
     let store = OperationStore.detached(
       query: TestQuery().controlled(by: controller)
-        .disableAutomaticFetching(),
+        .disableAutomaticRunning(),
       initialValue: nil
     )
 
@@ -39,7 +39,7 @@ struct OperationControllerTests {
     let controller = TestOperationController<TestQuery>()
     let store = OperationStore.detached(
       query: TestQuery().controlled(by: controller)
-        .enableAutomaticFetching(onlyWhen: .always(true)),
+        .enableAutomaticRunning(onlyWhen: .always(true)),
       initialValue: nil
     )
 
@@ -54,7 +54,7 @@ struct OperationControllerTests {
     let controller = TestOperationController<TestQuery>()
     let store = OperationStore.detached(
       query: TestQuery().controlled(by: controller)
-        .enableAutomaticFetching(onlyWhen: .always(true)),
+        .enableAutomaticRunning(onlyWhen: .always(true)),
       initialValue: nil
     )
 
@@ -78,7 +78,7 @@ struct OperationControllerTests {
     let controller = TestOperationController<TestQuery>()
     let store = OperationStore.detached(
       query: TestQuery().controlled(by: controller)
-        .enableAutomaticFetching(onlyWhen: .always(true)),
+        .enableAutomaticRunning(onlyWhen: .always(true)),
       initialValue: nil
     )
 
@@ -102,7 +102,7 @@ struct OperationControllerTests {
     let controller = TestOperationController<TestQuery>()
     let store = OperationStore.detached(
       query: TestQuery().controlled(by: controller)
-        .disableAutomaticFetching(),
+        .disableAutomaticRunning(),
       initialValue: nil
     )
     let collector = OperationStoreEventsCollector<TestQuery.State>()

@@ -2,7 +2,7 @@
 
 /// A ``FetchCondition`` that negates the value of a base condition by applying a boolean NOT
 /// operator to the base condition.
-public struct NotCondition<Base: FetchCondition>: FetchCondition {
+public struct NotRunSpecification<Base: OperationRunSpecification>: OperationRunSpecification {
   @usableFromInline
   let base: Base
 
@@ -32,8 +32,8 @@ public struct NotCondition<Base: FetchCondition>: FetchCondition {
 /// - Parameter base: The condition to negate.
 /// - Returns: A ``NotCondition``.
 @inlinable
-public prefix func ! <Base: FetchCondition>(
+public prefix func ! <Base: OperationRunSpecification>(
   _ base: Base
-) -> NotCondition<Base> {
-  NotCondition(base: base)
+) -> NotRunSpecification<Base> {
+  NotRunSpecification(base: base)
 }

@@ -2,11 +2,11 @@ import CustomDump
 import Operation
 import Testing
 
-@Suite("AlwaysCondition tests")
-struct AlwaysConditionTests {
+@Suite("AlwaysRunSpecification tests")
+struct AlwaysRunSpecificationTests {
   @Test("Emits Initial When Specified")
   func emitsInitial() {
-    let c: some FetchCondition = .always(true, shouldEmitInitialValue: true)
+    let c: some OperationRunSpecification = .always(true, shouldEmitInitialValue: true)
     let value = RecursiveLock<Bool?>(nil)
     let subscription = c.subscribe(in: OperationContext()) { v in
       value.withLock { $0 = v }
@@ -19,7 +19,7 @@ struct AlwaysConditionTests {
 
   @Test("Does Not Emit Initial By Default")
   func doesNotEmitInitialByDefault() {
-    let c: some FetchCondition = .always(true)
+    let c: some OperationRunSpecification = .always(true)
     let value = RecursiveLock<Bool?>(nil)
     let subscription = c.subscribe(in: OperationContext()) { v in
       value.withLock { $0 = v }

@@ -4,12 +4,12 @@
   import Testing
   @preconcurrency import Combine
 
-  @Suite("PublisherCondition tests")
-  struct PublisherConditionTests {
+  @Suite("PublisherRunSpecification tests")
+  struct PublisherRunSpecificationTests {
     @Test("Observes Publisher Value")
     func observePublisherValue() {
       let subject = PassthroughSubject<Bool, Never>()
-      let observer: some FetchCondition = .observing(
+      let observer: some OperationRunSpecification = .observing(
         publisher: subject,
         initialValue: true
       )
@@ -29,7 +29,7 @@
     func isPublisherValueInContext() {
       let context = OperationContext()
       let subject = PassthroughSubject<Bool, Never>()
-      let observer: some FetchCondition = .observing(
+      let observer: some OperationRunSpecification = .observing(
         publisher: subject,
         initialValue: true
       )
@@ -46,7 +46,7 @@
     func usesInitialValueFromCurrentValueSubject() {
       let context = OperationContext()
       let subject = CurrentValueSubject<Bool, Never>(true)
-      let observer: some FetchCondition = .observing(subject: subject)
+      let observer: some OperationRunSpecification = .observing(subject: subject)
       expectNoDifference(observer.isSatisfied(in: context), true)
 
       subject.send(false)

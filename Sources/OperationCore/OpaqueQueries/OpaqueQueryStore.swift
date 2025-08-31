@@ -67,9 +67,9 @@ extension OpaqueOperationStore {
   /// ``QueryRequest`` conformances, and disabled for all ``MutationRequest`` conformances.
   ///
   /// Queries can individually enable or disable automatic fetching through the
-  /// ``QueryRequest/enableAutomaticFetching(onlyWhen:)`` modifier.
-  public var isAutomaticFetchingEnabled: Bool {
-    self._base.isAutomaticFetchingEnabled
+  /// ``QueryRequest/enableAutomaticRunning(onlyWhen:)`` modifier.
+  public var isAutomaticRunningEnabled: Bool {
+    self._base.isAutomaticRunningEnabled
   }
 }
 
@@ -251,7 +251,7 @@ extension OpaqueOperationStore {
 
 private protocol OpaqueableOperationStore: Sendable {
   var opaqueState: OpaqueOperationState { get }
-  var isAutomaticFetchingEnabled: Bool { get }
+  var isAutomaticRunningEnabled: Bool { get }
   var path: OperationPath { get }
   var context: OperationContext { get nonmutating set }
   var subscriberCount: Int { get }

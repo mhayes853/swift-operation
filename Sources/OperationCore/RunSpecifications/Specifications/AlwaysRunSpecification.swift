@@ -1,5 +1,5 @@
 /// A ``FetchCondition`` that returns a static value.
-public struct AlwaysCondition: FetchCondition {
+public struct AlwaysRunSpecification: OperationRunSpecification {
   @usableFromInline
   let isTrue: Bool
 
@@ -29,7 +29,7 @@ public struct AlwaysCondition: FetchCondition {
   }
 }
 
-extension FetchCondition where Self == AlwaysCondition {
+extension OperationRunSpecification where Self == AlwaysRunSpecification {
   /// A ``FetchCondition`` that returns a static value.
   ///
   /// - Parameters:

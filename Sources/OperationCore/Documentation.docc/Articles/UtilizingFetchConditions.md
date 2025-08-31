@@ -17,7 +17,7 @@ Automatic fetching covers the following scenarios:
 - Fetching from within a ``OperationController``.
   - This includes automatically refetching based on changes to `FetchCondition`s.
 
-To control whether or not automatic fetching is enabled, you can utilize the ``QueryRequest/enableAutomaticFetching(onlyWhen:)`` modifier alongside a `FetchCondition`.
+To control whether or not automatic fetching is enabled, you can utilize the ``QueryRequest/enableAutomaticRunning(onlyWhen:)`` modifier alongside a `FetchCondition`.
 
 ```swift
 struct MyQuery: QueryRequest {
@@ -31,7 +31,7 @@ let query = MyQuery().disableAutomaticFetching()
 However, it's also possible to disable it when the network is down by using `ConnectedCondition`.
 
 ```swift
-let query = MyQuery().enableAutomaticFetching(
+let query = MyQuery().enableAutomaticRunning(
   when: .connected(to: NWPathMonitorObserver.shared)
 )
 ```
