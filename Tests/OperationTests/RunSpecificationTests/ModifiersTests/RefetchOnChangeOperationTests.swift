@@ -14,7 +14,7 @@ final class RefetchOnChangeOperationTests: XCTestCase {
     automaticCondition.send(false)
     let store = OperationStore.detached(
       query: TestQuery().enableAutomaticRunning(onlyWhen: automaticCondition)
-        .reRunOnChange(of: condition),
+        .rerunOnChange(of: condition),
       initialValue: nil
     )
     let subscription = store.subscribe(
@@ -49,7 +49,7 @@ final class RefetchOnChangeOperationTests: XCTestCase {
         }
       }
       .enableAutomaticRunning(onlyWhen: automaticCondition)
-      .reRunOnChange(of: condition),
+      .rerunOnChange(of: condition),
       initialValue: nil
     )
     let subscription = store.subscribe(
@@ -86,7 +86,7 @@ final class RefetchOnChangeOperationTests: XCTestCase {
     automaticCondition.send(false)
     let store = OperationStore.detached(
       query: TestQuery().enableAutomaticRunning(onlyWhen: automaticCondition)
-        .reRunOnChange(of: condition),
+        .rerunOnChange(of: condition),
       initialValue: nil
     )
     let subscription = store.subscribe(
@@ -109,7 +109,7 @@ final class RefetchOnChangeOperationTests: XCTestCase {
 
     let query = CountingQuery { expectation.fulfill() }
     let store = OperationStore.detached(
-      query: query.enableAutomaticRunning(onlyWhen: .always(true)).reRunOnChange(of: condition),
+      query: query.enableAutomaticRunning(onlyWhen: .always(true)).rerunOnChange(of: condition),
       initialValue: nil
     )
 
@@ -130,7 +130,7 @@ final class RefetchOnChangeOperationTests: XCTestCase {
     automaticCondition.send(false)
     let store = OperationStore.detached(
       query: TestQuery().enableAutomaticRunning(onlyWhen: automaticCondition)
-        .reRunOnChange(of: condition)
+        .rerunOnChange(of: condition)
         .staleWhen { _, _ in false },
       initialValue: nil
     )

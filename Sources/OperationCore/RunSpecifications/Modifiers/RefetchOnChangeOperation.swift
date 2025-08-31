@@ -12,14 +12,14 @@ extension OperationRequest {
   ///
   /// - Parameter condition: The ``FetchCondition`` to observe for operation refetching.
   /// - Returns: A ``ModifiedOperation``.
-  public func reRunOnChange<Specification>(
+  public func rerunOnChange<Specification>(
     of specification: Specification
-  ) -> ControlledOperation<Self, _ReRunOnChangeController<State, Specification>> {
-    self.controlled(by: _ReRunOnChangeController(specification: specification))
+  ) -> ControlledOperation<Self, _RerunOnChangeController<State, Specification>> {
+    self.controlled(by: _RerunOnChangeController(specification: specification))
   }
 }
 
-public final class _ReRunOnChangeController<
+public final class _RerunOnChangeController<
   State: OperationState,
   Specification: OperationRunSpecification & Sendable
 >: OperationController {
@@ -57,7 +57,7 @@ public final class _ReRunOnChangeController<
   }
 }
 
-extension _ReRunOnChangeController {
+extension _RerunOnChangeController {
   private struct ControlsState: Sendable {
     let controls: OperationControls<State>
     var currentValue: Bool

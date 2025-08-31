@@ -75,7 +75,7 @@ extension OperationClient {
           .enableAutomaticRunning(
             onlyWhen: AnySendableRunSpecification(self.automaticRunningSpecification)
           )
-          .reRunOnChange(of: self.refetchOnChangeCondition)
+          .rerunOnChange(of: self.refetchOnChangeCondition)
           .deduplicated(),
         initialState: initialState,
         initialContext: context

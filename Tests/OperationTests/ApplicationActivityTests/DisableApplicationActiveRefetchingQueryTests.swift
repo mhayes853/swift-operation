@@ -17,7 +17,7 @@ final class DisableApplicationActiveRefetchingQueryTests: XCTestCase, @unchecked
     automaticCondition.send(false)
     let query = TestQuery().disableApplicationActiveReRunning()
       .enableAutomaticRunning(onlyWhen: automaticCondition)
-      .reRunOnChange(of: .applicationIsActive(observer: observer))
+      .rerunOnChange(of: .applicationIsActive(observer: observer))
     let store = OperationStore.detached(query: query, initialValue: nil)
     let subscription = store.subscribe(
       with: QueryEventHandler(onFetchingStarted: { _ in expectation.fulfill() })
