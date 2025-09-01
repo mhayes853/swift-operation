@@ -6,7 +6,7 @@
     /// A Combine `Publisher` that emits state updates from a ``OperationStore``.
     ///
     /// This publisher will add a new subscription to the underlying store when subscribed to.
-    public struct Publisher: Combine.Publisher, @unchecked Sendable {
+    public struct Publisher: Combine.Publisher, Sendable {
       public struct Output: Sendable {
         public let state: State
         public let context: OperationContext
