@@ -5,8 +5,18 @@
   // MARK: - NavigatorObserver
 
   /// A `NetworkObserver` that uses the window navigator.
-  public struct NavigatorOnlineObserver {
+  public struct NavigatorOnlineObserver: NetworkObserver, Sendable {
+    /// The shared navigator observer.
+    public static let shared = NavigatorOnlineObserver()
+
     private let navigatorProperty: String
+
+    public var currentStatus: NetworkConnectionStatus {
+      let window = JSObject.global.window.object!
+      return window[dynamicMember: self.navigatorProperty].onLine == .boolean(true)
+        ? .connected
+        : .disconnected
+    }
 
     public init() {
       self.init(navigatorProperty: "navigator")
@@ -14,24 +24,6 @@
 
     package init(navigatorProperty: String) {
       self.navigatorProperty = navigatorProperty
-    }
-  }
-
-  // MARK: - Shared
-
-  extension NavigatorOnlineObserver {
-    /// The shared navigator observer.
-    public static let shared = NavigatorOnlineObserver()
-  }
-
-  // MARK: - NetworkObserver Conformance
-
-  extension NavigatorOnlineObserver: NetworkObserver {
-    public var currentStatus: NetworkConnectionStatus {
-      let window = JSObject.global.window.object!
-      return window[dynamicMember: self.navigatorProperty].onLine == .boolean(true)
-        ? .connected
-        : .disconnected
     }
 
     public func subscribe(

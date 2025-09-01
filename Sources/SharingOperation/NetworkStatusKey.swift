@@ -15,26 +15,22 @@ extension SharedReaderKey where Self == NetworkStatusKey {
   ///
   /// - Parameter observer: The `NetworkObserver` to use.
   /// - Returns: A ``NetworkStatusKey``.
-  public static func networkStatus(observer: some NetworkObserver) -> NetworkStatusKey {
+  public static func networkStatus(observer: some NetworkObserver & Sendable) -> NetworkStatusKey {
     NetworkStatusKey(observer: observer)
   }
 }
 
 /// A `SharedReaderKey` that observes the current user's network connection status.
-public struct NetworkStatusKey {
-  private let observer: any NetworkObserver
+public struct NetworkStatusKey: SharedReaderKey {
+  private let observer: any NetworkObserver & Sendable
 
-  init(observer: (any NetworkObserver)?) {
-    @Dependency(\.defaultNetworkObserver) var networkObserver
-    self.observer = observer ?? networkObserver
-  }
-}
-
-// MARK: - SharedReaderKey Conformance
-
-extension NetworkStatusKey: SharedReaderKey {
   public var id: ID {
     ID(observer: self.observer)
+  }
+
+  init(observer: (any NetworkObserver & Sendable)?) {
+    @Dependency(\.defaultNetworkObserver) var networkObserver
+    self.observer = observer ?? networkObserver
   }
 
   public func load(

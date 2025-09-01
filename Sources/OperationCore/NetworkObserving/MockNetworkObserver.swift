@@ -1,11 +1,18 @@
-// MARK: - MockNetworkObserver
-
 /// A ``NetworkObserver`` useful for faking network conditions in your queries.
-public final class MockNetworkObserver {
+public final class MockNetworkObserver: NetworkObserver, Sendable {
   private typealias Handler = @Sendable (NetworkConnectionStatus) -> Void
 
   private let subscriptions = OperationSubscriptions<Handler>()
   private let status: Lock<NetworkConnectionStatus>
+
+  /// The number of subscribers currently subscribed to this observer.
+  public var subscriberCount: Int {
+    self.subscriptions.count
+  }
+
+  public var currentStatus: NetworkConnectionStatus {
+    self.status.withLock { $0 }
+  }
 
   /// Creates a mock observer.
   ///
@@ -13,34 +20,13 @@ public final class MockNetworkObserver {
   public init(initialStatus: NetworkConnectionStatus = .connected) {
     self.status = Lock(initialStatus)
   }
-}
 
-// MARK: - Send Status
-
-extension MockNetworkObserver {
   /// Sends a new ``NetworkConnectionStatus`` to all subscribers of this observer.
   ///
   /// - Parameter status: The status to send.
   public func send(status: NetworkConnectionStatus) {
     self.status.withLock { $0 = status }
     self.subscriptions.forEach { $0(status) }
-  }
-}
-
-// MARK: - Subscriber Count
-
-extension MockNetworkObserver {
-  /// The number of subscribers currently subscribed to this observer.
-  public var subscriberCount: Int {
-    self.subscriptions.count
-  }
-}
-
-// MARK: - NetworkObserver Conformance
-
-extension MockNetworkObserver: NetworkObserver {
-  public var currentStatus: NetworkConnectionStatus {
-    self.status.withLock { $0 }
   }
 
   public func subscribe(

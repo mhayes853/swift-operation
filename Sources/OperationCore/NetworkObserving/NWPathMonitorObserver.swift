@@ -5,7 +5,7 @@
 
   /// A ``NetworkObserver`` that utilizes `NWPathMonitor` to observe an interface's connection
   /// status.
-  public final class NWPathMonitorObserver {
+  public final class NWPathMonitorObserver: Sendable {
     private typealias Handler = @Sendable (NetworkConnectionStatus) -> Void
 
     private let monitor: NWPathMonitor

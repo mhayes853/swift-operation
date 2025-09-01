@@ -47,7 +47,7 @@ extension OperationClient {
     let backoff: OperationBackoffFunction?
     let delayer: (any OperationDelayer)?
     let automaticRunningSpecification: any OperationRunSpecification & Sendable
-    let networkObserver: (any NetworkObserver)?
+    let networkObserver: (any NetworkObserver & Sendable)?
     let activityObserver: (any ApplicationActivityObserver)?
 
     public func store<Operation: OperationRequest & Sendable>(
@@ -86,12 +86,12 @@ extension OperationClient {
       switch (self.networkObserver, self.activityObserver) {
       case (let networkObserver?, let activityObserver?):
         return AnySendableRunSpecification(
-          NetworkConnectionRunSpecification(observer: AnyNetworkObserver(networkObserver))
+          NetworkConnectionRunSpecification(observer: AnySendableNetworkObserver(networkObserver))
             && ApplicationIsActiveRunSpecification(observer: activityObserver)
         )
       case (let networkObserver?, _):
         return AnySendableRunSpecification(
-          NetworkConnectionRunSpecification(observer: AnyNetworkObserver(networkObserver))
+          NetworkConnectionRunSpecification(observer: AnySendableNetworkObserver(networkObserver))
         )
       case (_, let activityObserver?):
         return AnySendableRunSpecification(
@@ -150,7 +150,7 @@ extension OperationClient.StoreCreator where Self == OperationClient.DefaultStor
     delayer: (any OperationDelayer)? = nil,
     automaticRunningSpecification: any OperationRunSpecification & Sendable =
       AlwaysRunSpecification(isTrue: true),
-    networkObserver: (any NetworkObserver)? = OperationClient.defaultNetworkObserver,
+    networkObserver: (any NetworkObserver & Sendable)? = OperationClient.defaultNetworkObserver,
     activityObserver: (any ApplicationActivityObserver)? = OperationClient
       .defaultApplicationActivityObserver
   ) -> Self {
@@ -173,7 +173,7 @@ extension OperationClient {
   /// - On Darwin platforms, `NWPathMonitorObserver` is used.
   /// - On Broswer platforms (WASI), `NavigatorOnlineObserver` is used.
   /// - On other platforms, the value is nil.
-  public static var defaultNetworkObserver: (any NetworkObserver)? {
+  public static var defaultNetworkObserver: (any NetworkObserver & Sendable)? {
     #if canImport(Network)
       NWPathMonitorObserver.startingShared()
     #elseif SwiftQueryWebBrowser && canImport(JavaScriptKit)

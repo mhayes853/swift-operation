@@ -27,13 +27,13 @@ extension DependencyValues {
 
 extension DependencyValues {
   /// The default `NetworkObserver` to use with ``Sharing/SharedReaderKey/networkStatus``.
-  public var defaultNetworkObserver: NetworkObserver {
+  public var defaultNetworkObserver: any NetworkObserver & Sendable {
     get { self[NetworkObserverKey.self] }
     set { self[NetworkObserverKey.self] = newValue }
   }
 
   private enum NetworkObserverKey: DependencyKey {
-    static var liveValue: NetworkObserver {
+    static var liveValue: any NetworkObserver & Sendable {
       if let observer = OperationClient.defaultNetworkObserver {
         return observer
       }

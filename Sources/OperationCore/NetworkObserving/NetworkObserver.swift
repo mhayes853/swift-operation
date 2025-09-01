@@ -1,5 +1,5 @@
 /// A protocol for observing the current network connection status.
-public protocol NetworkObserver: Sendable {
+public protocol NetworkObserver {
   /// The current ``NetworkConnectionStatus`` from this observer.
   var currentStatus: NetworkConnectionStatus { get }
 
