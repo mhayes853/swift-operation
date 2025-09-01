@@ -11,8 +11,18 @@
     private let monitor: NWPathMonitor
     private let subscriptions = OperationSubscriptions<Handler>()
 
-    private init(monitor: NWPathMonitor) {
+    public var isRunning: Bool {
+      self.monitor.queue != nil
+    }
+
+    public init(_ monitor: NWPathMonitor = NWPathMonitor()) {
       self.monitor = monitor
+
+      let previousHandler = monitor.pathUpdateHandler
+      monitor.pathUpdateHandler = { [weak self] path in
+        previousHandler?(path)
+        self?.subscriptions.forEach { $0(NetworkConnectionStatus(path.status)) }
+      }
     }
 
     /// Creates a path monitor observer, and begins observing path updates.
@@ -30,35 +40,47 @@
       monitor: NWPathMonitor = NWPathMonitor(),
       queue: DispatchQueue = .global()
     ) -> NWPathMonitorObserver {
-      let observer = NWPathMonitorObserver(monitor: monitor)
-      let previousHandler = monitor.pathUpdateHandler
-      monitor.pathUpdateHandler = { [weak observer] path in
-        previousHandler?(path)
-        observer?.subscriptions.forEach { $0(NetworkConnectionStatus(path.status)) }
-      }
-      monitor.start(queue: queue)
+      let observer = NWPathMonitorObserver(monitor)
+      observer.start(on: queue)
       return observer
     }
 
     deinit { self.monitor.cancel() }
+
+    public func start(on queue: DispatchQueue) {
+      self.monitor.cancel()
+      self.monitor.start(queue: queue)
+    }
+
+    public func stop() {
+      self.monitor.cancel()
+    }
   }
 
   // MARK: - Starting Shared
 
   extension NWPathMonitorObserver {
-    private static let shared = Lock<NWPathMonitorObserver?>(nil)
+    private static let _shared = Lock<NWPathMonitorObserver?>(nil)
+
+    public static var shared: NWPathMonitorObserver {
+      Self._shared.withLock { observer in
+        if let observer {
+          return observer
+        }
+        observer = NWPathMonitorObserver()
+        return observer!
+      }
+    }
 
     /// Creates a shared path monitor observer instance that starts monitoring all available network interfaces.
     ///
     /// - Returns: A shared instance of `NWPathMonitorObserver`.
     public static func startingShared() -> NWPathMonitorObserver {
-      Self.shared.withLock { observer in
-        if let observer {
-          return observer
-        }
-        observer = .starting()
-        return observer!
+      let shared = Self.shared
+      if !shared.isRunning {
+        shared.start(on: .global())
       }
+      return shared
     }
   }
 
