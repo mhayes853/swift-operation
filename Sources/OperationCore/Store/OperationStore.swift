@@ -74,7 +74,7 @@ import Foundation
 /// // ...
 /// ```
 @dynamicMemberLookup
-public final class OperationStore<State: OperationState>: @unchecked Sendable {
+public final class OperationStore<State: OperationState>: OperationPathable, Sendable {
   private struct Values {
     var state: State
     var taskHerdId: Int
@@ -85,19 +85,23 @@ public final class OperationStore<State: OperationState>: @unchecked Sendable {
 
   // NB: Does not compile when adding '& Sendable' for some reason. We'll make the store
   // @unchecked Sendable because it can only be constructed with a Sendable operation.
-  private let operation: any OperationRequest<State.OperationValue, State.Failure>
+  private let request: RequestActor
+
+  /// The ``OperationPath`` of the query managed by this store.
+  public let path: OperationPath
 
   private let values: RecursiveLock<Values>
   private let subscriptions: OperationSubscriptions<OperationEventHandler<State>>
 
-  private init<Operation: OperationRequest & Sendable>(
-    operation: Operation,
+  private init<Operation: OperationRequest>(
+    operation: sending Operation,
     initialState: Operation.State,
     initialContext: OperationContext
   ) where State == Operation.State, State.OperationValue == Operation.Value {
     var context = initialContext
     operation.setup(context: &context)
-    self.operation = operation
+    self.path = operation.path
+    self.request = RequestActor(operation)
     self.values = RecursiveLock(
       Values(
         state: initialState,
@@ -149,8 +153,8 @@ extension OperationStore {
   ///   - initialState: The initial state.
   ///   - initialContext: The default ``OperationContext``.
   /// - Returns: A store.
-  public static func detached<Operation: OperationRequest & Sendable>(
-    operation: Operation,
+  public static func detached<Operation: OperationRequest>(
+    operation: sending Operation,
     initialState: Operation.State,
     initialContext: OperationContext = OperationContext()
   ) -> OperationStore<Operation.State> where State == Operation.State {
@@ -159,15 +163,6 @@ extension OperationStore {
       initialState: initialState,
       initialContext: initialContext
     )
-  }
-}
-
-// MARK: - Path
-
-extension OperationStore: OperationPathable {
-  /// The ``OperationPath`` of the query managed by this store.
-  public var path: OperationPath {
-    self.operation.path
   }
 }
 
@@ -381,10 +376,9 @@ extension OperationStore {
         task.inner.withLock { $0 = .finished }
       }
       do {
-        let value = try await self.operation.run(
-          isolation: #isolation,
-          in: context,
-          with: self.operationContinuation(
+        let value = try await self.request.run(
+          context: context,
+          continuation: self.operationContinuation(
             task: task,
             initialHerdId: initialHerdId,
             context: context
@@ -518,6 +512,25 @@ extension OperationStore {
         $0.onStateChanged?(values.state, context ?? values.context)
       }
       return value
+    }
+  }
+}
+
+// MARK: - OperationActor
+
+extension OperationStore {
+  private final actor RequestActor {
+    private let request: any OperationRequest<State.OperationValue, State.Failure>
+
+    init(_ request: sending any OperationRequest<State.OperationValue, State.Failure>) {
+      self.request = request
+    }
+
+    func run(
+      context: OperationContext,
+      continuation: OperationContinuation<State.OperationValue, State.Failure>
+    ) async throws(State.Failure) -> State.OperationValue {
+      try await request.run(isolation: self, in: context, with: continuation)
     }
   }
 }
