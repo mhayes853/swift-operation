@@ -318,7 +318,7 @@ package struct SucceedOnNthRefetchQuery: QueryRequest, Hashable {
     in context: OperationContext,
     with continuation: OperationContinuation<String, any Error>
   ) async throws -> String {
-    if context.operationRetryIndex < self.index {
+    if (context.operationRetryIndex ?? -1) < self.index {
       throw SomeError()
     }
     return Self.value

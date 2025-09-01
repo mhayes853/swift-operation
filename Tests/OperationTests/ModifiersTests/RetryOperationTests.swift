@@ -140,4 +140,26 @@ struct RetryOperationTests {
       try await task.runIfNeeded()
     }
   }
+
+  @Test("Has Nil Retry Index On First Fetch Attempt")
+  func hasNilRetryIndexOnFirstFetchAttempt() async {
+    let query = RetryIndexReadingQuery()
+    let store = OperationStore.detached(query: query.retry(limit: 10), initialValue: nil)
+    _ = await store.fetch()
+    let index = await query.retryIndex
+    expectNoDifference(index, nil)
+  }
+}
+
+private actor RetryIndexReadingQuery: QueryRequest, Identifiable {
+  private(set) var retryIndex: Int?
+
+  func fetch(
+    isolation: isolated (any Actor)?,
+    in context: OperationContext,
+    with continuation: OperationContinuation<Int, Never>
+  ) async -> Int {
+    await isolate(self) { @Sendable in $0.retryIndex = context.operationRetryIndex }
+    return 0
+  }
 }

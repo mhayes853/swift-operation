@@ -28,7 +28,7 @@ public struct _RetryModifier<Operation: OperationRequest>: OperationModifier, Se
     var context = context
     for index in 0..<context.operationMaxRetries {
       do {
-        context.operationRetryIndex = index
+        context.operationRetryIndex = index == 0 ? nil : index - 1
         return try await operation.run(isolation: isolation, in: context, with: continuation)
       } catch {
         try? await context.operationDelayer.delay(for: context.operationBackoffFunction(index + 1))
@@ -45,15 +45,15 @@ extension OperationContext {
   /// The current retry attempt for a query.
   ///
   /// This value starts at 0, but increments every time ``QueryRequest/retry(limit:)``
-  /// retries a query. An index value of 0 indicates that the query is being fetched for the first
+  /// retries a query. An index value of nil indicates that the query is being fetched for the first
   /// time, and has not yet been retried.
-  public var operationRetryIndex: Int {
+  public var operationRetryIndex: Int? {
     get { self[RetryIndexKey.self] }
     set { self[RetryIndexKey.self] = newValue }
   }
 
   private enum RetryIndexKey: Key {
-    static let defaultValue = 0
+    static let defaultValue: Int? = nil
   }
 
   /// The maximum number of retries for a query.
@@ -76,7 +76,7 @@ extension OperationContext {
 
   /// Whether or not the query is on its first retry attempt.
   public var isFirstRetryAttempt: Bool {
-    self.operationRetryIndex == 1
+    self.operationRetryIndex == 0
   }
 
   /// Whether or not the query is on its initial fetch attempt.
@@ -85,6 +85,6 @@ extension OperationContext {
   /// retried due to throwing an error. If you want to check if the query is being retried for
   /// the first time, use ``isFirstRetryAttempt``.
   public var isFirstFetchAttempt: Bool {
-    self.operationRetryIndex == 0
+    self.operationRetryIndex == nil
   }
 }
