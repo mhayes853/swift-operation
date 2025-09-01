@@ -45,7 +45,7 @@ extension OperationClient {
   public struct DefaultStoreCreator: StoreCreator {
     let retryLimit: Int
     let backoff: OperationBackoffFunction?
-    let delayer: (any OperationDelayer)?
+    let delayer: (any OperationDelayer & Sendable)?
     let automaticRunningSpecification: AnySendableRunSpecification
     let networkObserver: AnySendableNetworkObserver?
     let activityObserver: AnySendableApplicationActivityObserver?
@@ -56,7 +56,7 @@ extension OperationClient {
       with initialState: Operation.State
     ) -> OperationStore<Operation.State> {
       let backoff = self.backoff ?? context.operationBackoffFunction
-      let delayer = AnyDelayer(self.delayer ?? context.operationDelayer)
+      let delayer = AnySendableDelayer(self.delayer ?? context.operationDelayer)
       if operation is any MutationRequest {
         return .detached(
           operation:
@@ -111,7 +111,7 @@ extension OperationClient.StoreCreator where Self == OperationClient.DefaultStor
     .default(
       retryLimit: 0,
       backoff: .noBackoff,
-      delayer: .noDelay,
+      delayer: NoDelayer(),
       automaticRunningSpecification: AlwaysRunSpecification(isTrue: true),
       networkObserver: nil,
       activityObserver: nil
@@ -145,7 +145,7 @@ extension OperationClient.StoreCreator where Self == OperationClient.DefaultStor
   public static func `default`(
     retryLimit: Int = 3,
     backoff: OperationBackoffFunction? = nil,
-    delayer: (any OperationDelayer)? = nil,
+    delayer: (any OperationDelayer & Sendable)? = nil,
     automaticRunningSpecification: any OperationRunSpecification & Sendable =
       AlwaysRunSpecification(isTrue: true),
     networkObserver: (any NetworkObserver & Sendable)? = OperationClient.defaultNetworkObserver,
