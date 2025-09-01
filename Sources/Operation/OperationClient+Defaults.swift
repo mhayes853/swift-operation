@@ -46,9 +46,9 @@ extension OperationClient {
     let retryLimit: Int
     let backoff: OperationBackoffFunction?
     let delayer: (any OperationDelayer)?
-    let automaticRunningSpecification: any OperationRunSpecification & Sendable
-    let networkObserver: (any NetworkObserver & Sendable)?
-    let activityObserver: (any ApplicationActivityObserver)?
+    let automaticRunningSpecification: AnySendableRunSpecification
+    let networkObserver: AnySendableNetworkObserver?
+    let activityObserver: AnySendableApplicationActivityObserver?
 
     public func store<Operation: OperationRequest & Sendable>(
       for operation: Operation,
@@ -72,9 +72,7 @@ extension OperationClient {
           operation.retry(limit: self.retryLimit)
           .backoff(backoff)
           .delayer(delayer)
-          .enableAutomaticRunning(
-            onlyWhen: AnySendableRunSpecification(self.automaticRunningSpecification)
-          )
+          .enableAutomaticRunning(onlyWhen: self.automaticRunningSpecification)
           .rerunOnChange(of: self.refetchOnChangeCondition)
           .deduplicated(),
         initialState: initialState,
@@ -86,12 +84,12 @@ extension OperationClient {
       switch (self.networkObserver, self.activityObserver) {
       case (let networkObserver?, let activityObserver?):
         return AnySendableRunSpecification(
-          NetworkConnectionRunSpecification(observer: AnySendableNetworkObserver(networkObserver))
+          NetworkConnectionRunSpecification(observer: networkObserver)
             && ApplicationIsActiveRunSpecification(observer: activityObserver)
         )
       case (let networkObserver?, _):
         return AnySendableRunSpecification(
-          NetworkConnectionRunSpecification(observer: AnySendableNetworkObserver(networkObserver))
+          NetworkConnectionRunSpecification(observer: networkObserver)
         )
       case (_, let activityObserver?):
         return AnySendableRunSpecification(
@@ -151,16 +149,16 @@ extension OperationClient.StoreCreator where Self == OperationClient.DefaultStor
     automaticRunningSpecification: any OperationRunSpecification & Sendable =
       AlwaysRunSpecification(isTrue: true),
     networkObserver: (any NetworkObserver & Sendable)? = OperationClient.defaultNetworkObserver,
-    activityObserver: (any ApplicationActivityObserver)? = OperationClient
+    activityObserver: (any ApplicationActivityObserver & Sendable)? = OperationClient
       .defaultApplicationActivityObserver
   ) -> Self {
     Self(
       retryLimit: retryLimit,
       backoff: backoff,
       delayer: delayer,
-      automaticRunningSpecification: automaticRunningSpecification,
-      networkObserver: networkObserver,
-      activityObserver: activityObserver
+      automaticRunningSpecification: AnySendableRunSpecification(automaticRunningSpecification),
+      networkObserver: networkObserver.map(AnySendableNetworkObserver.init),
+      activityObserver: activityObserver.map(AnySendableApplicationActivityObserver.init)
     )
   }
 }
@@ -188,7 +186,9 @@ extension OperationClient {
   /// - On Darwin platforms, the underlying `XXXApplication` class is used.
   /// - On Broswer platforms (WASI), the `WindowVisibilityObserver` is used.
   /// - On other platforms, the value is nil.
-  public static var defaultApplicationActivityObserver: (any ApplicationActivityObserver)? {
+  public static var defaultApplicationActivityObserver:
+    (any ApplicationActivityObserver & Sendable)?
+  {
     #if os(iOS) || os(tvOS) || os(visionOS)
       UIApplicationActivityObserver.shared
     #elseif os(macOS)

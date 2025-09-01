@@ -3,7 +3,7 @@ import Operation
 
 // MARK: - TestApplicationActivityObserver
 
-final class TestApplicationActivityObserver: ApplicationActivityObserver {
+final class TestApplicationActivityObserver: ApplicationActivityObserver, Sendable {
   private typealias Handler = @Sendable (Bool) -> Void
 
   private let subscriptions = OperationSubscriptions<Handler>()

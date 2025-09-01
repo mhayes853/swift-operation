@@ -4,7 +4,10 @@
   import OperationCore
 
   /// An `ApplicationActivityObserver` that observes whether or not the browser window is visible.
-  public struct WindowVisibilityObserver {
+  public struct WindowVisibilityObserver: ApplicationActivityObserver, Sendable {
+    /// The shared window visibility observer.
+    public static let shared = WindowVisibilityObserver()
+
     private let documentProperty: String
 
     package init(documentProperty: String) {
@@ -14,14 +17,7 @@
     public init() {
       self.init(documentProperty: "document")
     }
-  }
 
-  extension WindowVisibilityObserver {
-    /// The shared window visibility observer.
-    public static let shared = WindowVisibilityObserver()
-  }
-
-  extension WindowVisibilityObserver: ApplicationActivityObserver {
     public func subscribe(_ handler: @escaping @Sendable (Bool) -> Void) -> OperationSubscription {
       let window = JSObject.global.window.object!
       let document = window[dynamicMember: self.documentProperty].object!

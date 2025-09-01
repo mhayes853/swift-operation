@@ -1,10 +1,10 @@
 import Foundation
 
-// MARK: - ApplicationIsActiveCondition
-
 /// A ``FetchCondition`` that is satisfied whenever the app is active in the foreground using an
 /// ``ApplicationActivityObserver``.
-public final class ApplicationIsActiveRunSpecification: OperationRunSpecification, Sendable {
+public final class ApplicationIsActiveRunSpecification<
+  Observer: ApplicationActivityObserver & Sendable
+>: OperationRunSpecification, Sendable {
   private typealias Handler = @Sendable () -> Void
   private struct State: Sendable {
     var isActive: Bool
@@ -14,7 +14,7 @@ public final class ApplicationIsActiveRunSpecification: OperationRunSpecificatio
   private let state: RecursiveLock<State>
   private let subscriptions: OperationSubscriptions<Handler>
 
-  public init(observer: some ApplicationActivityObserver) {
+  public init(observer: Observer) {
     self.state = RecursiveLock(State(isActive: true))
     self.subscriptions = OperationSubscriptions<Handler>()
     self.state.withLock { state in
@@ -43,13 +43,15 @@ public final class ApplicationIsActiveRunSpecification: OperationRunSpecificatio
   }
 }
 
-extension OperationRunSpecification where Self == ApplicationIsActiveRunSpecification {
+extension OperationRunSpecification {
   /// A ``FetchCondition`` that is satisfied whenever the app is active in the foreground using an
   /// ``ApplicationActivityObserver``.
   ///
   /// - Parameter observer: The observer to use to determine the app's active state.
   /// - Returns: A ``FetchCondition`` that is satisfied whenever the app is active in the foreground.
-  public static func applicationIsActive(observer: some ApplicationActivityObserver) -> Self {
+  public static func applicationIsActive<Observer>(
+    observer: Observer
+  ) -> Self where Self == ApplicationIsActiveRunSpecification<Observer> {
     ApplicationIsActiveRunSpecification(observer: observer)
   }
 }

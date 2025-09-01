@@ -14,7 +14,7 @@
   // MARK: - DarwinApplicationActivityObserver
 
   @MainActor
-  package protocol DarwinApplicationActivityObserver: ApplicationActivityObserver {
+  package protocol DarwinApplicationActivityObserver: ApplicationActivityObserver, Sendable {
     static var didBecomeActiveNotification: Notification.Name { get }
     static var willResignActiveNotification: Notification.Name { get }
     var notificationCenter: NotificationCenter { get }

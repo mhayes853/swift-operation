@@ -3,7 +3,7 @@ import Foundation
 // MARK: - ApplicationActivityObserver
 
 /// A protocol for observing when the application becomes active or inactive.
-public protocol ApplicationActivityObserver: Sendable {
+public protocol ApplicationActivityObserver {
   /// Subscribes to the observer for the latest changes in the application's activity state.
   ///
   /// When this method is called, make sure to immediately invoke the handler with the current
