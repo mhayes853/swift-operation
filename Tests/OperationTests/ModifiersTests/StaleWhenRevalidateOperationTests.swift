@@ -4,8 +4,8 @@ import Foundation
 import OperationTestHelpers
 import Testing
 
-@Suite("StaleWhenRevalidateQuery tests")
-struct StaleWhenRevalidateQueryTests {
+@Suite("StaleWhenRevalidateOperation tests")
+struct StaleWhenRevalidateOperationTests {
   @Suite("StaleWhenRevalidateCondition tests")
   struct StaleWhenRevalidateConditionTests {
     @Test("True When Empty")

@@ -6,8 +6,8 @@
   import Logging
   import Foundation
 
-  @Suite("DurationLoggingQuery tests")
-  struct DurationLoggingQueryTests {
+  @Suite("DurationLoggingOperation tests")
+  struct DurationLoggingOperationTests {
     @Test("Logs Duration To Query")
     func logsDurationToQuery() async throws {
       let handler = TestHandler()

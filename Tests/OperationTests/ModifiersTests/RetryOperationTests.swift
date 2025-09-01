@@ -3,8 +3,8 @@ import Operation
 import OperationTestHelpers
 import Testing
 
-@Suite("RetryQuery tests")
-struct RetryQueryTests {
+@Suite("RetryOperation tests")
+struct RetryOperationTests {
   @Test("Zero Retries, Does Not Perform Any Retries")
   func zeroRetriesDoesNotPerformAnyRetries() async {
     let query = FailingQuery()

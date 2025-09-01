@@ -3,7 +3,7 @@ import Operation
 import OperationTestHelpers
 import XCTest
 
-final class DeduplicationQueryTests: XCTestCase {
+final class DeduplicationOperationTests: XCTestCase {
   func testDeduplicatesFetchesSameStore() async throws {
     let query = DeduplicationQuery()
     let store = OperationStore.detached(query: query.deduplicated(), initialValue: nil)
