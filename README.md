@@ -214,7 +214,7 @@ struct LikePostButton: View {
 
 ### Pagination
 
-When you need to paginate remote data, use the `InfiniteQueryRequest` protocol.
+When you need to paginate remote data, use the `PaginatedRequest` protocol.
 
 ```swift
 struct PostsPage: Sendable {
@@ -223,11 +223,11 @@ struct PostsPage: Sendable {
 }
 
 extension PostsPage {
-  static func listQuery(for feedId: Int) -> some InfiniteQueryRequest<String, PostsPage> {
+  static func listQuery(for feedId: Int) -> some PaginatedRequest<String, PostsPage> {
     FeedQuery(feedId: feedId)
   }
 
-  struct FeedQuery: InfiniteQueryRequest, Hashable {
+  struct FeedQuery: PaginatedRequest, Hashable {
     typealias PageID = String
     typealias PageValue = PostsPage
 
@@ -236,15 +236,15 @@ extension PostsPage {
     let initialPageId = "initial"
 
     func pageId(
-      after page: InfiniteQueryPage<String, PostsPage>,
-      using paging: InfiniteQueryPaging<String, PostsPage>,
+      after page: PaginatedPage<String, PostsPage>,
+      using paging: PaginatedPaging<String, PostsPage>,
       in context: OperationContext
     ) -> String? {
       page.value.nextPageToken
     }
 
     func fetchPage(
-      using paging: InfiniteQueryPaging<String, PostsPage>,
+      using paging: PaginatedPaging<String, PostsPage>,
       in context: OperationContext,
       with continuation: OperationContinuation<PostsPage>
     ) async throws -> PostsPage {
@@ -254,7 +254,7 @@ extension PostsPage {
 }
 ```
 
-`InfiniteQueryRequest` inherits from `QueryRequest`, so you can observe it just like you would a normal query. You can use the `fetchNextPage` and `fetchPreviousPage` to fetch the next and previous pages of the list respectively. In SwiftUI, this could look like:
+`PaginatedRequest` inherits from `QueryRequest`, so you can observe it just like you would a normal query. You can use the `fetchNextPage` and `fetchPreviousPage` to fetch the next and previous pages of the list respectively. In SwiftUI, this could look like:
 
 ```swift
 struct FeedView: View {
@@ -304,10 +304,10 @@ So in no particular order, here are the primary design principles of this librar
    2. Another case would be common query modifiers such as retries. Retries are built on top of the generic `OperationModifier` system, and unlike Tanstack Query retries are not baked into the query itself.
    3. Even `OperationModifier` is built on top of `QueryRequest`, as under the hood a `ModifiedOperation` is used to represent a query which has a modifier attached to it.
 4. **The library should adapt to any data fetching paradigmn.**
-   1. The library provides 3 data fetching paradigms, the most basic paradigm (ie. Just fetch the data with no strings attached) represented by `QueryRequest`, infinite/paginated queries represented by `InfiniteQueryRequest`, and mutations (eg. making a POST request to an API, or updating remote data) represented by `MutationRequest`.
+   1. The library provides 3 data fetching paradigms, the most basic paradigm (ie. Just fetch the data with no strings attached) represented by `QueryRequest`, infinite/paginated queries represented by `PaginatedRequest`, and mutations (eg. making a POST request to an API, or updating remote data) represented by `MutationRequest`.
    2. You should be able to create your own data fetching paradigm for your own purposes. For instance, one could theoretically create a query paradigm for fetching recursive data such as nested comment threads, and that could be represented via some `RecursiveQueryRequest` protocol.
 5. **All data fetching paradigms should be derived from the most basic paradigmn.**
-   1. `MutationRequest` and `InfiniteQueryRequest` are built directly on top of `QueryRequest` itself. This allows all 3 query paradigms to share query logic such as retries. By implementing the retry modifier once, we can reuse it with ordinary queries, paginated infinite queries, and mutations.
+   1. `MutationRequest` and `PaginatedRequest` are built directly on top of `QueryRequest` itself. This allows all 3 query paradigms to share query logic such as retries. By implementing the retry modifier once, we can reuse it with ordinary queries, paginated infinite queries, and mutations.
    2. Your custom query paradigm should also be implementable on top of `QueryRequest`. This would allow all existing modifiers to work with your query paradigm, as well as being able to manage the state of your query paradigm though a `OperationStore`.
 6. **The library should support as many platforms, libraries, frameworks, and app architectures (TCA, MVVM, MV, etc.) as possible.**
    1. Just because you don’t like to put all your logic directly in a SwiftUI `View` doesn’t mean that you shouldn’t be able to use the full power of the library (unlike SwiftData).

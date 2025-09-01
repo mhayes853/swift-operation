@@ -26,7 +26,7 @@
       in context: OperationContext,
       using operation: Operation,
       with continuation: OperationContinuation<Operation.Value, Operation.Failure>
-    ) async throws -> Operation.Value {
+    ) async throws(Operation.Failure) -> Operation.Value {
       let logger = self.logger ?? context.operationLogger
       let start = context.operationClock.now()
       defer {

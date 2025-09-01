@@ -104,11 +104,11 @@ extension Mountain {
 // MARK: - Query
 
 extension Mountain {
-  public static func searchQuery(_ search: Search) -> some InfiniteQueryRequest<Int, SearchResult> {
+  public static func searchQuery(_ search: Search) -> some PaginatedRequest<Int, SearchResult> {
     SearchQuery(search: search)
   }
 
-  public struct SearchQuery: InfiniteQueryRequest, Hashable {
+  public struct SearchQuery: PaginatedRequest, Hashable {
     public typealias PageValue = Mountain.SearchResult
     public typealias PageID = Int
 
@@ -117,15 +117,15 @@ extension Mountain {
     public let initialPageId = 0
 
     public func pageId(
-      after page: InfiniteQueryPage<PageID, PageValue>,
-      using paging: InfiniteQueryPaging<PageID, PageValue>,
+      after page: PaginatedPage<PageID, PageValue>,
+      using paging: PaginatedPaging<PageID, PageValue>,
       in context: OperationContext
     ) -> PageID? {
       page.value.hasNextPage ? page.id + 1 : nil
     }
 
     public func fetchPage(
-      using paging: InfiniteQueryPaging<PageID, PageValue>,
+      using paging: PaginatedPaging<PageID, PageValue>,
       in context: OperationContext,
       with continuation: OperationContinuation<PageValue>
     ) async throws -> PageValue {

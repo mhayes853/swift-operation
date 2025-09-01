@@ -201,7 +201,7 @@ struct LikePostButton: View {
 
 ### Pagination
 
-When you need to paginate remote data, use the ``InfiniteQueryRequest`` protocol.
+When you need to paginate remote data, use the ``PaginatedRequest`` protocol.
 
 ```swift
 struct PostsPage: Sendable {
@@ -210,11 +210,11 @@ struct PostsPage: Sendable {
 }
 
 extension PostsPage {
-  static func listQuery(for feedId: Int) -> some InfiniteQueryRequest<String, PostsPage> {
+  static func listQuery(for feedId: Int) -> some PaginatedRequest<String, PostsPage> {
     FeedQuery(feedId: feedId)
   }
 
-  struct FeedQuery: InfiniteQueryRequest, Hashable {
+  struct FeedQuery: PaginatedRequest, Hashable {
     typealias PageID = String
     typealias PageValue = PostsPage
 
@@ -223,15 +223,15 @@ extension PostsPage {
     let initialPageId = "initial"
 
     func pageId(
-      after page: InfiniteQueryPage<String, PostsPage>,
-      using paging: InfiniteQueryPaging<String, PostsPage>,
+      after page: PaginatedPage<String, PostsPage>,
+      using paging: PaginatedPaging<String, PostsPage>,
       in context: OperationContext
     ) -> String? {
       page.value.nextPageToken
     }
 
     func fetchPage(
-      using paging: InfiniteQueryPaging<String, PostsPage>,
+      using paging: PaginatedPaging<String, PostsPage>,
       in context: OperationContext,
       with continuation: OperationContinuation<PostsPage>
     ) async throws -> PostsPage {
@@ -241,7 +241,7 @@ extension PostsPage {
 }
 ```
 
-`InfiniteQueryRequest` inherits from ``QueryRequest``, so you can observe it just like you would a normal query. You can use the `fetchNextPage` and `fetchPreviousPage` to fetch the next and previous pages of the list respectively. In SwiftUI, this could look like:
+`PaginatedRequest` inherits from ``QueryRequest``, so you can observe it just like you would a normal query. You can use the `fetchNextPage` and `fetchPreviousPage` to fetch the next and previous pages of the list respectively. In SwiftUI, this could look like:
 
 ```swift
 struct FeedView: View {

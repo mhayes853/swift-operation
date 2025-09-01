@@ -5,8 +5,8 @@ import IdentifiedCollections
 ///
 /// Each ``QueryRequest`` has an associated type that denotes the structure of its state inside a
 /// ``OperationStore``. By default, ``QueryState`` is the state that is used for a `QueryRequest`.
-/// However, ``MutationRequest`` and ``InfiniteQueryRequest`` use ``MutationState`` and
-/// ``InfiniteQueryState`` respectively as their ``QueryRequest/State`` types.
+/// However, ``MutationRequest`` and ``PaginatedRequest`` use ``MutationState`` and
+/// ``PaginatedState`` respectively as their ``QueryRequest/State`` types.
 ///
 /// You typically do not interact with the `mutating` methods on this protocol directly, rather a
 /// ``OperationStore`` instance will invoke them as needed. Most commonly, you will access the

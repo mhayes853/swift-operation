@@ -64,7 +64,7 @@ struct RetryOperationTests {
 
   @Test("Does Not Retry Every Page Fetch When Fetching All Pages")
   func doesNotRetryEveryPageFetchWhenFetchingAllPages() async throws {
-    let query = FlakeyInfiniteQuery()
+    let query = FlakeyPaginated()
     query.values.withLock { $0.failOnPageId = -1 }
     let store = OperationStore.detached(
       query: query.backoff(.noBackoff)

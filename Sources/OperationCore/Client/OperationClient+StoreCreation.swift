@@ -136,7 +136,7 @@ extension OperationClient.CreateStore {
     self(for: query, initialState: query.initialState)
   }
 
-  /// Creates a ``OperationStore`` for an ``InfiniteQueryRequest``.
+  /// Creates a ``OperationStore`` for an ``PaginatedRequest``.
   ///
   /// - Parameters:
   ///   - query: The query.
@@ -155,7 +155,7 @@ extension OperationClient.CreateStore {
     )
   }
 
-  /// Creates a ``OperationStore`` for an ``InfiniteQueryRequest``.
+  /// Creates a ``OperationStore`` for an ``PaginatedRequest``.
   ///
   /// - Parameters:
   ///   - query: The query.

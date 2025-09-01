@@ -70,7 +70,7 @@ where Value: RecursiveValue<NodeID> {
 }
 ```
 
-That requirement allows us to fetch a tree when given a specific `NodeID`. However, how do we determine what the root id is? It turns out that we'll also need a requirement for that too similar to how `InfiniteQueryRequest` also has an `initialPageId` requirement.
+That requirement allows us to fetch a tree when given a specific `NodeID`. However, how do we determine what the root id is? It turns out that we'll also need a requirement for that too similar to how `PaginatedRequest` also has an `initialPageId` requirement.
 
 ```diff
 protocol RecursiveQueryRequest: QueryRequest
@@ -87,7 +87,7 @@ where Value: RecursiveValue<NodeID> {
 }
 ```
 
-At this point, we've defined how recursive requests work on the data fetching level. Yet we haven't described how managing the state for the query works. All other query paradigms come with a value type that conforms to the ``OperationState`` such as `InfiniteQueryState`. Similarly, we'll need a state type that describes how the state is managed for our recursive query.
+At this point, we've defined how recursive requests work on the data fetching level. Yet we haven't described how managing the state for the query works. All other query paradigms come with a value type that conforms to the ``OperationState`` such as `PaginatedState`. Similarly, we'll need a state type that describes how the state is managed for our recursive query.
 
 ```swift
 struct RecursiveQueryState<Value: RecursiveValue>: OperationState {

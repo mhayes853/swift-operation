@@ -11,7 +11,7 @@
       let expectation = self.expectation(description: "observes value")
       expectation.assertForOverFulfill = false
 
-      let query = TestQuery().disableAutomaticFetching()
+      let query = TestQuery().disableApplicationActiveRerunning()
       var transaction = UITransaction()
       transaction[TestKey.self] = 10
       @SharedOperation(query, transaction: transaction) var state

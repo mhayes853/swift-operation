@@ -11,7 +11,7 @@ extension OperationStore {
   /// Only use a detached store if you want a separate instances of a query runtime for the same query.
   ///
   /// - Parameters:
-  ///   - query: The ``InfiniteQueryRequest``.
+  ///   - query: The ``PaginatedRequest``.
   ///   - initialValue: The initial value.
   ///   - initialContext: The default ``OperationContext``.
   /// - Returns: A store.
@@ -38,7 +38,7 @@ extension OperationStore {
   /// Only use a detached store if you want a separate instances of a query runtime for the same query.
   ///
   /// - Parameters:
-  ///   - query: The ``InfiniteQueryRequest``.
+  ///   - query: The ``PaginatedRequest``.
   ///   - initialContext: The default ``OperationContext``.
   /// - Returns: A store.
   public static func detached<Query: PaginatedRequest>(
@@ -65,7 +65,7 @@ extension OperationStore where State: _PaginatedStateProtocol {
   ///
   /// - Parameters:
   ///   - context: The ``OperationContext`` to use for the underlying ``OperationTask``.
-  ///   - handler: An ``InfiniteQueryEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
+  ///   - handler: An ``PaginatedEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: The fetched data.
   @discardableResult
   public func refetchAllPages(
@@ -133,7 +133,7 @@ extension OperationStore where State: _PaginatedStateProtocol {
   ///
   /// - Parameters:
   ///   - context: The ``OperationContext`` to use for the underlying ``OperationTask``.
-  ///   - handler: An ``InfiniteQueryEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
+  ///   - handler: An ``PaginatedEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: The fetched page.
   @discardableResult
   public func fetchNextPage(
@@ -211,7 +211,7 @@ extension OperationStore where State: _PaginatedStateProtocol {
   ///
   /// - Parameters:
   ///   - context: The ``OperationContext`` to use for the underlying ``OperationTask``.
-  ///   - handler: An ``InfiniteQueryEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
+  ///   - handler: An ``PaginatedEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: The fetched page.
   @discardableResult
   public func fetchPreviousPage(
@@ -295,7 +295,7 @@ extension OperationStore where State: _PaginatedStateProtocol {
 // MARK: - Subscribe
 
 extension OperationStore where State: _PaginatedStateProtocol {
-  /// Subscribes to events from this store using a ``InfiniteQueryEventHandler``.
+  /// Subscribes to events from this store using a ``PaginatedEventHandler``.
   ///
   /// If the subscription is the first active subscription on this store, this method will begin
   /// fetching the query's data if both ``isStale`` and ``isAutomaticFetchingEnabled`` are true. If
@@ -314,7 +314,7 @@ extension OperationStore where State: _PaginatedStateProtocol {
   }
 }
 
-// MARK: - InfiniteQueryEventHandler
+// MARK: - PaginatedEventHandler
 
 extension OperationStore where State: _PaginatedStateProtocol {
   private func operationEventHandler(

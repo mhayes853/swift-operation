@@ -25,7 +25,7 @@ where State.StateValue == State.StatusValue? {
   }
 }
 
-struct BasicInfiniteQueryStateView<State: _InfiniteQueryStateProtocol, Content: View>: View {
+struct BasicPaginatedStateView<State: _PaginatedStateProtocol, Content: View>: View {
   let state: State
   @ViewBuilder let content: (State.StatusValue) -> Content
 

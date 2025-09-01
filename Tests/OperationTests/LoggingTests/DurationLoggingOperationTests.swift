@@ -14,7 +14,7 @@
       let logger = Logger(label: "test.query") { _ in handler }
       let clock = IncrementingClock()
       let store = OperationStore.detached(
-        query: TestQuery().disableApplicationActiveRefetching()
+        query: TestQuery().disableApplicationActiveRerunning()
           .logDuration(with: logger, at: .debug),
         initialValue: nil
       )

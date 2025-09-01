@@ -372,7 +372,7 @@
   // MARK: - Infinite Queries
 
   extension State.Operation {
-    /// Creates a state property for an `InfiniteQueryRequest`
+    /// Creates a state property for an `PaginatedRequest`
     ///
     /// - Parameters:
     ///   - wrappedValue: The initial value.
@@ -396,7 +396,7 @@
       )
     }
 
-    /// Creates a state property for an `InfiniteQueryRequest`
+    /// Creates a state property for an `PaginatedRequest`
     ///
     /// - Parameters:
     ///   - wrappedValue: The initial value.
@@ -420,7 +420,7 @@
       )
     }
 
-    /// Creates a state property for an `InfiniteQueryRequest`
+    /// Creates a state property for an `PaginatedRequest`
     ///
     /// - Parameters:
     ///   - query: The query to observe.
@@ -439,7 +439,7 @@
       self.init(query, initialState: query.initialState, client: client, transaction: transaction)
     }
 
-    /// Creates a state property for an `InfiniteQueryRequest`
+    /// Creates a state property for an `PaginatedRequest`
     ///
     /// - Parameters:
     ///   - query: The query to observe.
@@ -474,7 +474,7 @@
     ///
     /// - Parameters:
     ///   - context: The `OperationContext` to use for the underlying `OperationTask`.
-    ///   - handler: An `InfiniteQueryEventHandler` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
+    ///   - handler: An `PaginatedEventHandler` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
     /// - Returns: The fetched data.
     @discardableResult
     public func refetchAllPages(
@@ -511,7 +511,7 @@
     ///
     /// - Parameters:
     ///   - context: The `OperationContext` to use for the underlying `OperationTask`.
-    ///   - handler: An `InfiniteQueryEventHandler` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
+    ///   - handler: An `PaginatedEventHandler` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
     /// - Returns: The fetched page.
     @discardableResult
     public func fetchNextPage(
@@ -548,7 +548,7 @@
     ///
     /// - Parameters:
     ///   - context: The `OperationContext` to use for the underlying `OperationTask`.
-    ///   - handler: An `InfiniteQueryEventHandler` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
+    ///   - handler: An `PaginatedEventHandler` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
     /// - Returns: The fetched page.
     @discardableResult
     public func fetchPreviousPage(

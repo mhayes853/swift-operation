@@ -14,8 +14,8 @@ where OperationValue == Value, StatusValue == Value {
 
 /// A state type used for ``QueryRequest``.
 ///
-/// This state type is the default state type for your queries, though ``InfiniteQueryRequest``
-/// and ``MutationRequest`` use ``InfiniteQueryState`` and ``MutationState`` respectively as their
+/// This state type is the default state type for your queries, though ``PaginatedRequest``
+/// and ``MutationRequest`` use ``PaginatedState`` and ``MutationState`` respectively as their
 /// state types.
 ///
 /// You can only create instances of this state with an initial value that must have the same base

@@ -458,9 +458,9 @@ package final actor EscapingContinuationQuery: QueryRequest {
   }
 }
 
-// MARK: - TestInfiniteQuery
+// MARK: - TestPaginated
 
-package struct EmptyInfiniteQuery: PaginatedRequest {
+package struct EmptyPaginated: PaginatedRequest {
   package let initialPageId: Int
   package let path: OperationPath
 
@@ -495,7 +495,7 @@ package struct EmptyInfiniteQuery: PaginatedRequest {
   }
 }
 
-package struct EmptyIntInfiniteQuery: PaginatedRequest {
+package struct EmptyIntPaginated: PaginatedRequest {
   package let initialPageId: Int
   package let path: OperationPath
 
@@ -530,9 +530,9 @@ package struct EmptyIntInfiniteQuery: PaginatedRequest {
   }
 }
 
-// MARK: - FakeInfiniteQuery
+// MARK: - FakePaginated
 
-package struct FakeInfiniteQuery: OperationRequest, Hashable {
+package struct FakePaginated: OperationRequest, Hashable {
   package typealias State = PaginatedState<Int, String, any Error>
   package typealias Value = PaginatedOperationValue<Int, String>
 
@@ -547,9 +547,9 @@ package struct FakeInfiniteQuery: OperationRequest, Hashable {
   }
 }
 
-// MARK: - TestInfiniteQuery
+// MARK: - TestPaginated
 
-package final class TestInfiniteQuery: PaginatedRequest, Sendable {
+package final class TestPaginated: PaginatedRequest, Sendable {
   package let initialPageId = 0
 
   package let state = RecursiveLock([Int: String]())
@@ -595,9 +595,9 @@ package final class TestInfiniteQuery: PaginatedRequest, Sendable {
   }
 }
 
-// MARK: - TestCancellableInfiniteQuery
+// MARK: - TestCancellablePaginated
 
-package final class TestCancellableInfiniteQuery: PaginatedRequest {
+package final class TestCancellablePaginated: PaginatedRequest {
   package let initialPageId = 0
 
   package let state = RecursiveLock([Int: String]())
@@ -644,9 +644,9 @@ package final class TestCancellableInfiniteQuery: PaginatedRequest {
   }
 }
 
-// MARK: - CountingInfiniteQuery
+// MARK: - CountingPaginated
 
-package final actor CountingInfiniteQuery: PaginatedRequest {
+package final actor CountingPaginated: PaginatedRequest {
   package let initialPageId = 0
 
   package var fetchCount = 0
@@ -688,9 +688,9 @@ package final actor CountingInfiniteQuery: PaginatedRequest {
   }
 }
 
-// MARK: - FlakeyInfiniteQuery
+// MARK: - FlakeyPaginated
 
-package final class FlakeyInfiniteQuery: PaginatedRequest {
+package final class FlakeyPaginated: PaginatedRequest {
   package typealias PageValue = String
   package typealias PageID = Int
 
@@ -734,9 +734,9 @@ package final class FlakeyInfiniteQuery: PaginatedRequest {
   }
 }
 
-// MARK: - TestYieldableInfiniteQuery
+// MARK: - TestYieldablePaginated
 
-package final class TestYieldableInfiniteQuery: PaginatedRequest {
+package final class TestYieldablePaginated: PaginatedRequest {
   package static func finalValue(for id: PageID) -> String {
     "page final value \(id)"
   }
@@ -786,7 +786,7 @@ package final class TestYieldableInfiniteQuery: PaginatedRequest {
       }
     }
     if self.shouldThrow {
-      throw TestYieldableInfiniteQuery.SomeError()
+      throw TestYieldablePaginated.SomeError()
     }
     return Self.finalValue(for: paging.pageId)
   }
@@ -796,9 +796,9 @@ package final class TestYieldableInfiniteQuery: PaginatedRequest {
   }
 }
 
-// MARK: - WaitableInfiniteQuery
+// MARK: - WaitablePaginated
 
-package final class WaitableInfiniteQuery: PaginatedRequest, Sendable {
+package final class WaitablePaginated: PaginatedRequest, Sendable {
   package let initialPageId = 0
 
   package typealias _Values = (
@@ -881,9 +881,9 @@ package final class WaitableInfiniteQuery: PaginatedRequest, Sendable {
   }
 }
 
-// MARK: - FailingInfiniteQuery
+// MARK: - FailingPaginated
 
-package final class FailableInfiniteQuery: PaginatedRequest {
+package final class FailablePaginated: PaginatedRequest {
   package let initialPageId = 0
 
   package let state = Lock<String?>(nil)

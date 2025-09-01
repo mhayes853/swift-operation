@@ -2,7 +2,7 @@
 
 /// A protocol for describing a query.
 ///
-/// All queries in the library conform to this protocol, including ``InfiniteQueryRequest`` and
+/// All queries in the library conform to this protocol, including ``PaginatedRequest`` and
 /// ``MutationRequest``. Queries have associated type requirements on the kind of data that they
 /// must fetch, and type of its state that is tracked inside a ``OperationStore``. Additionally, there
 /// are functional requirements for performing the fetching logic, uniquely identifying the query

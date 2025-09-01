@@ -84,7 +84,7 @@
     }
   }
 
-  // MARK: - InfiniteQuery Initializers
+  // MARK: - Paginated Initializers
 
   extension SharedOperation {
     /// Creates a shared query.
@@ -94,12 +94,12 @@
     ///   - wrappedValue: The initial value.
     ///   - client: A `OperationClient` to obtain the `OperationStore` from.
     ///   - animation: The `UIKitAnimation` to use for state updates.
-    public init<Query: InfiniteQueryRequest>(
+    public init<Query: PaginatedRequest>(
       wrappedValue: Query.State.StateValue = [],
       _ query: sending Query,
       client: OperationClient? = nil,
       animation: UIKitAnimation
-    ) where State == InfiniteQueryState<Query.PageID, Query.PageValue, Query.PageFailure> {
+    ) where State == PaginatedState<Query.PageID, Query.PageValue, Query.PageFailure> {
       self.init(
         wrappedValue: wrappedValue,
         query,
@@ -111,17 +111,17 @@
     /// Creates a shared query.
     ///
     /// - Parameters:
-    ///   - query: The `InfiniteQueryRequest`.
+    ///   - query: The `PaginatedRequest`.
     ///   - client: A `OperationClient` to obtain the `OperationStore` from.
     ///   - animation: The `UIKitAnimation` to use for state updates.
-    public init<Query: InfiniteQueryRequest>(
+    public init<Query: PaginatedRequest>(
       _ query: sending Query.Default,
       client: OperationClient? = nil,
       animation: UIKitAnimation
     )
     where
       State == DefaultOperationState<
-        InfiniteQueryState<Query.PageID, Query.PageValue, Query.PageFailure>
+        PaginatedState<Query.PageID, Query.PageValue, Query.PageFailure>
       >
     {
       self.init(

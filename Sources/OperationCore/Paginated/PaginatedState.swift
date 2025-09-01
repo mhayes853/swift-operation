@@ -59,9 +59,9 @@ extension _PaginatedStateProtocol {
   }
 }
 
-// MARK: - InfiniteQueryState
+// MARK: - PaginatedState
 
-/// A state type for ``InfiniteQueryRequest``.
+/// A state type for ``PaginatedRequest``.
 ///
 /// Infinite queries can have tasks that either:
 /// 1. Fetch the initial page of data.
@@ -75,7 +75,7 @@ extension _PaginatedStateProtocol {
 /// ``initialPageActiveTasks``, ``nextPageActiveTasks``, and ``previousPageActiveTasks``.
 ///
 /// Additionally, the state keeps track of both ``nextPageId`` and ``previousPageId`` which are
-/// obtained by calling the appropriate methods on ``InfiniteQueryRequest``.
+/// obtained by calling the appropriate methods on ``PaginatedRequest``.
 ///
 /// > Warning: You should not call any of the `mutating` methods directly on this type, rather a
 /// > ``OperationStore`` will call them at the appropriate time for you.

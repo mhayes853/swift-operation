@@ -170,9 +170,9 @@ struct PostQueryTests {
       )
       expectNoDifference(
         list,
-        InfiniteQueryPages(
+        PaginatedPages(
           uniqueElements: [
-            InfiniteQueryPage(
+            PaginatedPage(
               id: Post.ListPage.ID(limit: 10, skip: 0),
               value: Post.ListPage(posts: [expectedPost], total: 38)
             )

@@ -27,11 +27,11 @@ struct User: Sendable {
 extension User {
   static func friendsQuery(
     for id: Int
-  ) -> some InfiniteQueryRequest<Int, [Self]> {
+  ) -> some PaginatedRequest<Int, [Self]> {
     FriendsQuery(userId: id)
   }
 
-  struct FriendsQuery: InfiniteQueryRequest, Hashable {
+  struct FriendsQuery: PaginatedRequest, Hashable {
     typealias PageID = Int
     typealias PageValue = [User]
 
@@ -39,15 +39,15 @@ extension User {
     let initialPageId = 0
 
     func pageId(
-      after page: InfiniteQueryPage<Int, [User]>,
-      using paging: InfiniteQueryPaging<Int, [User]>,
+      after page: PaginatedPage<Int, [User]>,
+      using paging: PaginatedPaging<Int, [User]>,
       in context: OperationContext
     ) -> Int? {
       page.id + 1
     }
 
     func fetchPage(
-      using paging: InfiniteQueryPaging<Int, [User]>,
+      using paging: PaginatedPaging<Int, [User]>,
       in context: OperationContext,
       with continuation: OperationContinuation<[User]>
     ) async throws -> [User] {
@@ -86,7 +86,7 @@ Utilizing both ``OperationClient`` in conjunction with ``OperationPath`` will ma
 To start, we'll want to define a reusable transformation on the value of `User.FriendsQuery` that transforms the appropriate user relationship inside the infinite query pages. When updating the state of the query directly, we'll call this reusable transform method.
 
 ```swift
-extension InfiniteQueryPages<Int, [User]> {
+extension PaginatedPages<Int, [User]> {
   func updateRelationship(
     for userId: Int,
     to relationship: User.Relationship
@@ -141,7 +141,7 @@ This works, however it's considerably likely that we'll have multiple instances 
 
 To get around the aforementioned performance issue, we can utilize a `OperationPath` to pattern match the existing `OperationStore`s inside the `OperationClient`.
 
-``QueryRequest``, and all protocols that inherit from it such as ``InfiniteQueryRequest`` and ``MutationRequest`` have an optional `path` requirement. When your query type conforms to Hashable, this requirement is automatically implemented as follows.
+``QueryRequest``, and all protocols that inherit from it such as ``PaginatedRequest`` and ``MutationRequest`` have an optional `path` requirement. When your query type conforms to Hashable, this requirement is automatically implemented as follows.
 
 ```swift
 extension OperationRequest where Self: Hashable {
@@ -158,7 +158,7 @@ At the very least, you can think of a `OperationPath` as an identifier for a que
 If we remove the conformance to `Hashable` on `User.FriendsQuery`, we'll be forced to fill in a custom `OperationPath`.
 
 ```swift
-struct FriendsQuery: InfiniteQueryRequest {
+struct FriendsQuery: PaginatedRequest {
   typealias PageID = Int
   typealias PageValue = [User]
 

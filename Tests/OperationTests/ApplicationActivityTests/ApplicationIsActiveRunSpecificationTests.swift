@@ -27,7 +27,7 @@
       )
       let condition: some OperationRunSpecification = .applicationIsActive(observer: observer)
       var context = OperationContext()
-      context.isApplicationActiveReRunningEnabled = false
+      context.isApplicationActiveRerunningEnabled = false
       expectNoDifference(condition.isSatisfied(in: context), false)
     }
 

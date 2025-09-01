@@ -84,13 +84,13 @@
     }
   }
 
-  // MARK: - InfiniteQuery Initializers
+  // MARK: - Paginated Initializers
 
   extension SharedOperation {
     /// Creates a shared query.
     ///
     /// - Parameters:
-    ///   - query: The `InfiniteQueryRequest`.
+    ///   - query: The `PaginatedRequest`.
     ///   - wrappedValue: The initial value.
     ///   - client: A `OperationClient` to obtain the `OperationStore` from.
     ///   - animation: The `Animation` to use for state updates.
@@ -111,7 +111,7 @@
     /// Creates a shared query.
     ///
     /// - Parameters:
-    ///   - query: The `InfiniteQueryRequest`.
+    ///   - query: The `PaginatedRequest`.
     ///   - client: A `OperationClient` to obtain the `OperationStore` from.
     ///   - animation: The `Animation` to use for state updates.
     public init<Query: PaginatedRequest>(

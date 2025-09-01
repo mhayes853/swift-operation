@@ -157,7 +157,7 @@ extension OperationClient {
     self.withStoreCreation(for: query) { $0(for: $1) }
   }
 
-  /// Retrieves the ``OperationStore`` for an ``InfiniteQueryRequest``.
+  /// Retrieves the ``OperationStore`` for an ``PaginatedRequest``.
   ///
   /// - Parameters:
   ///   - query: The query.
@@ -170,7 +170,7 @@ extension OperationClient {
     self.withStoreCreation(for: query) { $0(for: $1, initialValue: initialValue) }
   }
 
-  /// Retrieves the ``OperationStore`` for an ``InfiniteQueryRequest``.
+  /// Retrieves the ``OperationStore`` for an ``PaginatedRequest``.
   ///
   /// - Parameters:
   ///   - query: The query.

@@ -31,7 +31,7 @@ public final class ApplicationIsActiveRunSpecification<
 
   public func isSatisfied(in context: OperationContext) -> Bool {
     self.state.withLock { state in
-      context.isApplicationActiveReRunningEnabled && state.isActive
+      context.isApplicationActiveRerunningEnabled && state.isActive
     }
   }
 

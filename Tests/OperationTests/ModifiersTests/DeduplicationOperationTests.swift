@@ -25,7 +25,7 @@ final class DeduplicationOperationTests: XCTestCase {
   }
 
   func testFetchInitialPageConcurrentlyPerformsOneFetch() async throws {
-    let query = DeduplicationInfiniteQuery()
+    let query = DeduplicationPaginated()
     let store = OperationStore.detached(query: query.deduplicated())
     async let p1 = store.fetchPreviousPage()
     async let p2 = store.fetchPreviousPage()
@@ -36,7 +36,7 @@ final class DeduplicationOperationTests: XCTestCase {
   }
 
   func testFetchAllPagesConcurrentlyFetchesAllPagesOnceEach() async throws {
-    let query = DeduplicationInfiniteQuery()
+    let query = DeduplicationPaginated()
     let store = OperationStore.detached(query: query.deduplicated())
     try await store.fetchNextPage()
     try await store.fetchNextPage()
@@ -54,7 +54,7 @@ final class DeduplicationOperationTests: XCTestCase {
   }
 
   func testFetchPreviousPageConcurrentlyPerformsOneFetch() async throws {
-    let query = DeduplicationInfiniteQuery()
+    let query = DeduplicationPaginated()
     let store = OperationStore.detached(query: query.deduplicated())
     try await store.fetchPreviousPage()
     await query.resetCount()
@@ -67,7 +67,7 @@ final class DeduplicationOperationTests: XCTestCase {
   }
 
   func testFetchNextPageConcurrentlyPerformsOneFetch() async throws {
-    let query = DeduplicationInfiniteQuery()
+    let query = DeduplicationPaginated()
     let store = OperationStore.detached(query: query.deduplicated())
     try await store.fetchNextPage()
     await query.resetCount()
@@ -99,7 +99,7 @@ private final actor DeduplicationQuery: QueryRequest, Identifiable {
   }
 }
 
-private final actor DeduplicationInfiniteQuery: PaginatedRequest, Identifiable {
+private final actor DeduplicationPaginated: PaginatedRequest, Identifiable {
   nonisolated let initialPageId = 0
 
   private(set) var fetchCount = 0

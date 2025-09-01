@@ -5,7 +5,7 @@ extension OperationRequest {
   ///
   /// - Parameter isDisabled: Whether or not to disable the refetching.
   /// - Returns: A ``ModifiedOperation``.
-  public func disableApplicationActiveReRunning(
+  public func disableApplicationActiveRerunning(
     _ isDisabled: Bool = true
   ) -> ModifiedOperation<Self, _DisableApplicationActiveReRunningModifier<Self>> {
     self.modifier(_DisableApplicationActiveReRunningModifier(isDisabled: isDisabled))
@@ -18,7 +18,7 @@ public struct _DisableApplicationActiveReRunningModifier<
   let isDisabled: Bool
 
   public func setup(context: inout OperationContext) {
-    context.isApplicationActiveReRunningEnabled = !self.isDisabled
+    context.isApplicationActiveRerunningEnabled = !self.isDisabled
   }
 }
 
@@ -32,7 +32,7 @@ extension OperationContext {
   /// > query.
   ///
   /// The default value is true.
-  public var isApplicationActiveReRunningEnabled: Bool {
+  public var isApplicationActiveRerunningEnabled: Bool {
     get { self[IsFocusRefetchingEnabledKey.self] }
     set { self[IsFocusRefetchingEnabledKey.self] = newValue }
   }

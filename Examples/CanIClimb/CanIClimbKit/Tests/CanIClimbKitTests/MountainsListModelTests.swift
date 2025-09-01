@@ -27,11 +27,11 @@ extension DependenciesTestSuite {
         let model = MountainsListModel()
 
         _ = try await model.$mountains.initialPageActiveTasks.first?.runIfNeeded()
-        expectNoDifference(model.mountains, [InfiniteQueryPage(id: 0, value: recommendedResult)])
+        expectNoDifference(model.mountains, [PaginatedPage(id: 0, value: recommendedResult)])
 
         model.category = .planned
         _ = try await model.$mountains.initialPageActiveTasks.first?.runIfNeeded()
-        expectNoDifference(model.mountains, [InfiniteQueryPage(id: 0, value: plannedResult)])
+        expectNoDifference(model.mountains, [PaginatedPage(id: 0, value: plannedResult)])
       }
     }
 
@@ -52,14 +52,14 @@ extension DependenciesTestSuite {
         let model = MountainsListModel(searchDebounceDuration: debounceDuration)
 
         _ = try await model.$mountains.initialPageActiveTasks.first?.runIfNeeded()
-        expectNoDifference(model.mountains, [InfiniteQueryPage(id: 0, value: noTextResult)])
+        expectNoDifference(model.mountains, [PaginatedPage(id: 0, value: noTextResult)])
 
         model.searchText = "blob"
         expectNoDifference(model.$mountains.initialPageActiveTasks, [])
 
         await clock.advance(by: debounceDuration)
         _ = try await model.$mountains.initialPageActiveTasks.first?.runIfNeeded()
-        expectNoDifference(model.mountains, [InfiniteQueryPage(id: 0, value: textResult)])
+        expectNoDifference(model.mountains, [PaginatedPage(id: 0, value: textResult)])
       }
     }
 
@@ -82,14 +82,14 @@ extension DependenciesTestSuite {
         let model = MountainsListModel(searchDebounceDuration: debounceDuration)
 
         _ = try await model.$mountains.initialPageActiveTasks.first?.runIfNeeded()
-        expectNoDifference(model.mountains, [InfiniteQueryPage(id: 0, value: noTextResult)])
+        expectNoDifference(model.mountains, [PaginatedPage(id: 0, value: noTextResult)])
 
         model.searchText = "blob"
         expectNoDifference(model.$mountains.initialPageActiveTasks, [])
 
         model.category = .planned
         _ = try await model.$mountains.initialPageActiveTasks.first?.runIfNeeded()
-        expectNoDifference(model.mountains, [InfiniteQueryPage(id: 0, value: plannedResult)])
+        expectNoDifference(model.mountains, [PaginatedPage(id: 0, value: plannedResult)])
 
         await clock.advance(by: debounceDuration)
         model.category = .recommended

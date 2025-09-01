@@ -100,11 +100,11 @@ extension Post {
 extension Post {
   static func listByTagQuery(
     tag: String
-  ) -> some InfiniteQueryRequest<ListPage.ID, ListPage> {
+  ) -> some PaginatedRequest<ListPage.ID, ListPage> {
     ListByTagQuery(tag: tag)
   }
 
-  struct ListByTagQuery: InfiniteQueryRequest {
+  struct ListByTagQuery: PaginatedRequest {
     typealias PageID = Post.ListPage.ID
     typealias PageValue = Post.ListPage
 
@@ -117,8 +117,8 @@ extension Post {
     }
 
     func pageId(
-      after page: InfiniteQueryPage<PageID, PageValue>,
-      using paging: InfiniteQueryPaging<PageID, PageValue>,
+      after page: PaginatedPage<PageID, PageValue>,
+      using paging: PaginatedPaging<PageID, PageValue>,
       in context: OperationContext
     ) -> PageID? {
       let nextId = PageID(limit: page.id.limit, skip: page.id.skip + page.id.limit)
@@ -126,7 +126,7 @@ extension Post {
     }
 
     func fetchPage(
-      using paging: InfiniteQueryPaging<PageID, PageValue>,
+      using paging: PaginatedPaging<PageID, PageValue>,
       in context: OperationContext,
       with continuation: OperationContinuation<PageValue>
     ) async throws -> PageValue {

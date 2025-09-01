@@ -1,8 +1,8 @@
 import IdentifiedCollections
 
-// MARK: - InfiniteQueryPage
+// MARK: - PaginatedPage
 
-/// A page of data from an ``InfiniteQueryRequest``.
+/// A page of data from an ``PaginatedRequest``.
 public struct Page<ID: Hashable & Sendable, Value: Sendable>: Sendable, Identifiable {
   /// The unique id of this page.
   public var id: ID
@@ -24,40 +24,40 @@ public struct Page<ID: Hashable & Sendable, Value: Sendable>: Sendable, Identifi
 extension Page: Equatable where Value: Equatable {}
 extension Page: Hashable where Value: Hashable {}
 
-// MARK: - InfiniteQueryPages
+// MARK: - PaginatedPages
 
-/// A helper typealias for ``InfiniteQueryPages`` using a single ``InfiniteQueryRequest`` generic
+/// A helper typealias for ``PaginatedPages`` using a single ``PaginatedRequest`` generic
 /// parameter.
 public typealias PagesFor<Query: PaginatedRequest> =
   Pages<Query.PageID, Query.PageValue>
 
-/// The data type returned from an ``InfiniteQueryRequest``.
+/// The data type returned from an ``PaginatedRequest``.
 public typealias Pages<PageID: Hashable & Sendable, PageValue: Sendable> =
   IdentifiedArrayOf<Page<PageID, PageValue>>
 
-// MARK: - InfiniteQueryPaging
+// MARK: - PaginatedPaging
 
-/// A data type that contains useful info when an ``InfiniteQueryRequest`` is fetching its data.
+/// A data type that contains useful info when an ``PaginatedRequest`` is fetching its data.
 ///
-/// You do not create instances of this type. Rather, your ``InfiniteQueryRequest`` receives
+/// You do not create instances of this type. Rather, your ``PaginatedRequest`` receives
 /// instances of this type in its requirements.
 public struct Paging<PageID: Hashable & Sendable, PageValue: Sendable>: Sendable {
-  /// The page id that you must perform the required action for in ``InfiniteQueryRequest``.
+  /// The page id that you must perform the required action for in ``PaginatedRequest``.
   public let pageId: PageID
 
   /// The current list of pages from the query.
   public let pages: Pages<PageID, PageValue>
 
-  /// The ``InfiniteQueryPagingRequest`` that will be carried out when fetching page data.
+  /// The ``PaginatedPagingRequest`` that will be carried out when fetching page data.
   public let request: PagingRequest<PageID>
 }
 
 extension Paging: Equatable where PageValue: Equatable {}
 extension Paging: Hashable where PageValue: Hashable {}
 
-// MARK: - InfiniteQueryPagingRequest
+// MARK: - PaginatedPagingRequest
 
-/// The kind of request that is being performed by an ``InfiniteQueryRequest``.
+/// The kind of request that is being performed by an ``PaginatedRequest``.
 public enum PagingRequest<PageID: Hashable & Sendable>: Hashable, Sendable {
   /// The query is requesting the next page.
   case nextPage(PageID)
@@ -72,16 +72,16 @@ public enum PagingRequest<PageID: Hashable & Sendable>: Hashable, Sendable {
   case allPages
 }
 
-// MARK: - InfiniteQueryResponse
+// MARK: - PaginatedResponse
 
-/// The data type returned from an ``InfiniteQueryRequest``.
+/// The data type returned from an ``PaginatedRequest``.
 ///
-/// You do not construct this type, ``InfiniteQueryRequest`` constructs it for you.
+/// You do not construct this type, ``PaginatedRequest`` constructs it for you.
 public struct PaginatedOperationValue<
   PageID: Hashable & Sendable,
   PageValue: Sendable
 >: Sendable {
-  /// The value returned from fetching an ``InfiniteQueryRequest``.
+  /// The value returned from fetching an ``PaginatedRequest``.
   public let fetchValue: FetchValue
 
   var nextPageId = PageIDResult.deferred
@@ -96,7 +96,7 @@ extension PaginatedOperationValue {
 }
 
 extension PaginatedOperationValue {
-  /// A value returned from fetching an ``InfiniteQueryRequest``.
+  /// A value returned from fetching an ``PaginatedRequest``.
   public enum FetchValue: Sendable {
     /// All pages were refetched.
     case allPages(Pages<PageID, PageValue>)
@@ -145,14 +145,14 @@ extension PaginatedOperationValue.FetchValue.PreviousPage: Hashable where PageVa
 extension PaginatedOperationValue.FetchValue.PreviousPage: Equatable
 where PageValue: Equatable {}
 
-// MARK: - InfiniteQueryRequest
+// MARK: - PaginatedRequest
 
 /// A protocol for describing an infinite query.
 ///
 /// Infinite queries are used whenever you're fetching paginated data that may be displayed in an
 /// infinitely scrolling list.
 ///
-/// `InfiniteQueryRequest` inherits from ``QueryRequest``, and adds a few additional requirements:
+/// `PaginatedRequest` inherits from ``QueryRequest``, and adds a few additional requirements:
 /// 1. Associated types for the page id (ie. the next page token from your API) and the page value (the data you're fetching for each page).
 /// 2. The initial page id.
 /// 3. Methods to retrieve the next and previous page ids from the first and last pages respectively.
@@ -162,11 +162,11 @@ where PageValue: Equatable {}
 /// extension PostsPage {
 ///   static func listQuery(
 ///     for feedId: Int
-///   ) -> some InfiniteQueryRequest<String, PostsPage> {
+///   ) -> some PaginatedRequest<String, PostsPage> {
 ///     FeedQuery(feedId: feedId)
 ///   }
 ///
-///   struct FeedQuery: InfiniteQueryRequest, Hashable {
+///   struct FeedQuery: PaginatedRequest, Hashable {
 ///     typealias PageID = String
 ///     typealias PageValue = PostsPage
 ///
@@ -175,15 +175,15 @@ where PageValue: Equatable {}
 ///     let initialPageId = "initial"
 ///
 ///     func pageId(
-///       after page: InfiniteQueryPage<String, PostsPage>,
-///       using paging: InfiniteQueryPaging<String, PostsPage>,
+///       after page: PaginatedPage<String, PostsPage>,
+///       using paging: PaginatedPaging<String, PostsPage>,
 ///       in context: OperationContext
 ///     ) -> String? {
 ///       page.value.nextPageToken
 ///     }
 ///
 ///     func fetchPage(
-///       using paging: InfiniteQueryPaging<String, PostsPage>,
+///       using paging: PaginatedPaging<String, PostsPage>,
 ///       in context: OperationContext,
 ///       with continuation: OperationContinuation<PostsPage>
 ///     ) async throws -> PostsPage {
@@ -194,7 +194,7 @@ where PageValue: Equatable {}
 /// ```
 ///
 /// An infinite query can fetch its data in 4 different ways, and you can inspect
-/// ``InfiniteQueryPaging/request`` in your query to find out which way its fetching.
+/// ``PaginatedPaging/request`` in your query to find out which way its fetching.
 /// 1. Fetching the initial page.
 /// 2. Fetching the next page in the list.
 ///   - This can run concurrently alongside fetching the previous page.
@@ -222,16 +222,16 @@ where PageValue: Equatable {}
 ///  let pages = try await store.fetchAllPages()
 ///  ```
 ///
-///  After fetching a page, ``InfiniteQueryRequest/pageId(after:using:in:)`` and
-///  ``InfiniteQueryRequest/pageId(before:using:in:)`` are called to eagerly calculate whether or
+///  After fetching a page, ``PaginatedRequest/pageId(after:using:in:)`` and
+///  ``PaginatedRequest/pageId(before:using:in:)`` are called to eagerly calculate whether or
 ///  not additional pages are available for your query to fetch. You can check
-///  ``InfiniteQueryState/nextPageId`` or ``InfiniteQueryState/previousPageId`` to check what the
+///  ``PaginatedState/nextPageId`` or ``PaginatedState/previousPageId`` to check what the
 ///  ids of the next and previous available pages for your query. A nil value for either of those
 ///  properties indicates that there are no additional pages for your query to fetch through
 ///  ``OperationStore/fetchNextPage(using:handler:)`` and
 ///  ``OperationStore/fetchPreviousPage(using:handler:)`` respectively. If you just want to check
 ///  whether or not fetching additional pages is possible, you can check the boolean properties
-///  ``InfiniteQueryState/hasNextPage`` or ``InfiniteQueryState/hasPreviousPage``.
+///  ``PaginatedState/hasNextPage`` or ``PaginatedState/hasPreviousPage``.
 public protocol PaginatedRequest<PageID, PageValue, PageFailure>: OperationRequest
 where
   Value == PaginatedOperationValue<PageID, PageValue>,
@@ -259,7 +259,7 @@ where
   ///
   /// - Parameters:
   ///   - page: The last page in the list.
-  ///   - paging: ``InfiniteQueryPaging``.
+  ///   - paging: ``PaginatedPaging``.
   ///   - context: The ``OperationContext`` passed to this query.
   /// - Returns: The next page id, or nil if none.
   func pageId(
@@ -275,7 +275,7 @@ where
   ///
   /// - Parameters:
   ///   - page: The first page in the list.
-  ///   - paging: ``InfiniteQueryPaging``.
+  ///   - paging: ``PaginatedPaging``.
   ///   - context: The ``OperationContext`` passed to this query.
   /// - Returns: The previous page id, or nil if none.
   func pageId(
@@ -287,7 +287,7 @@ where
   /// Fetches the data for a specified page.
   ///
   /// - Parameters:
-  ///   - paging: The ``InfiniteQueryPaging`` for this operation. You can access the page id to fetch data for via the ``InfiniteQueryPaging/pageId`` property.
+  ///   - paging: The ``PaginatedPaging`` for this operation. You can access the page id to fetch data for via the ``PaginatedPaging/pageId`` property.
   ///   - context: The ``OperationContext`` passed to this query.
   ///   - continuation: A ``OperationContinuation`` allowing you to yield multiple values from your query. See <doc:MultistageQueries> for more.
   /// - Returns: The page value for the page.

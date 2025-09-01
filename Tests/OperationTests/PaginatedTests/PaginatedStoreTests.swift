@@ -10,7 +10,7 @@ struct PaginatedStoreTests {
 
   @Test("Is Loading All Pages When Fetching All Pages")
   func isLoadingWhenFetchingAllPages() async throws {
-    let query = WaitableInfiniteQuery()
+    let query = WaitablePaginated()
     query.state.withLock { $0.values = [0: "a"] }
 
     let store = self.client.store(for: query)
@@ -32,7 +32,7 @@ struct PaginatedStoreTests {
 
   @Test("Returns Empty Array When No Pages After Fetching All Pages")
   func emptyArrayWhenNoPagesAfterFetchingAllPages() async throws {
-    let store = self.client.store(for: TestInfiniteQuery())
+    let store = self.client.store(for: TestPaginated())
     let pages = try await store.refetchAllPages()
     expectNoDifference(pages, [])
     expectNoDifference(store.state.currentValue, [])
@@ -41,7 +41,7 @@ struct PaginatedStoreTests {
 
   @Test("Has Next And Previous Page After Fetching All Pages When Empty")
   func hasNextAndPreviousPageAfterFetchingAllPagesWhenEmpty() async throws {
-    let store = self.client.store(for: TestInfiniteQuery())
+    let store = self.client.store(for: TestPaginated())
     try await store.refetchAllPages()
     expectNoDifference(store.hasNextPage, true)
     expectNoDifference(store.hasPreviousPage, true)
@@ -49,7 +49,7 @@ struct PaginatedStoreTests {
 
   @Test("Fetch All Pages After Fetching Some, Returns Updated Values For Refetched Pages")
   func fetchAllPagesAfterFetchingSome() async throws {
-    let query = TestInfiniteQuery()
+    let query = TestPaginated()
     let store = self.client.store(for: query)
 
     query.state.withLock { $0 = [0: "a", 1: "b"] }
@@ -69,7 +69,7 @@ struct PaginatedStoreTests {
 
   @Test("Fetch All Pages After Fetching Some, Stops Refetching When No Next Page ID")
   func fetchAllPagesAfterFetchingSomeStopsWhenNoNextPageID() async throws {
-    let query = TestInfiniteQuery()
+    let query = TestPaginated()
     let store = self.client.store(for: query)
     query.state.withLock { $0 = [0: "a", 1: "b"] }
     try await store.fetchNextPage()
@@ -86,7 +86,7 @@ struct PaginatedStoreTests {
 
   @Test("Fetch All Pages After Fetching Some, Starts From Earliest Page")
   func fetchAllPagesAfterFetchingSomeStartsFromEarliestPage() async throws {
-    let query = TestInfiniteQuery()
+    let query = TestPaginated()
     let store = self.client.store(for: query)
 
     query.state.withLock { $0 = [-1: "c", 0: "a", 1: "b"] }
@@ -111,7 +111,7 @@ struct PaginatedStoreTests {
 
   @Test("Fetch All Pages With Task After Fetching Some, Starts From Earliest Page")
   func fetchAllPagesWithTaskAfterFetchingSomeStartsFromEarliestPage() async throws {
-    let query = TestInfiniteQuery()
+    let query = TestPaginated()
     let store = self.client.store(for: query)
 
     query.state.withLock { $0 = [-1: "c", 0: "a", 1: "b"] }
@@ -137,7 +137,7 @@ struct PaginatedStoreTests {
 
   @Test("Fetch Next Page, Returns Page Data First")
   func fetchNextPageReturnsPageDataFirst() async throws {
-    let query = TestInfiniteQuery()
+    let query = TestPaginated()
     query.state.withLock { $0[0] = "blob" }
     let store = self.client.store(for: query)
     let page = try await store.fetchNextPage()
@@ -148,7 +148,7 @@ struct PaginatedStoreTests {
 
   @Test("Is Loading Initial When Fetching Next Page When No Pages")
   func isLoadingInitialWhenFetchingNextPageWhenNoPages() async throws {
-    let query = WaitableInfiniteQuery()
+    let query = WaitablePaginated()
     query.state.withLock {
       $0.values = [0: "a"]
       $0.willWait = true
@@ -170,7 +170,7 @@ struct PaginatedStoreTests {
 
   @Test("Is Loading Next When Fetching Next Page After Fetching Initial Page")
   func isLoadingNextWhenFetchingNextPageAfterFetchingInitialPage() async throws {
-    let query = WaitableInfiniteQuery()
+    let query = WaitablePaginated()
     query.state.withLock { $0.values = [0: "a", 1: "b"] }
     let store = self.client.store(for: query)
     try await store.fetchNextPage()
@@ -192,7 +192,7 @@ struct PaginatedStoreTests {
 
   @Test("Fetch Next Page, Returns Page Data For Next Page After First")
   func fetchNextPageReturnsPageDataForNextPageAfterFirst() async throws {
-    let query = TestInfiniteQuery()
+    let query = TestPaginated()
     query.state.withLock { $0 = [0: "blob", 1: "blob jr"] }
     let store = self.client.store(for: query)
 
@@ -211,7 +211,7 @@ struct PaginatedStoreTests {
 
   @Test("Fetch Next Page With Task, Returns Page Data For Next Page After First")
   func fetchNextPageWithTaskReturnsPageDataForNextPageAfterFirst() async throws {
-    let query = TestInfiniteQuery()
+    let query = TestPaginated()
     query.state.withLock { $0 = [0: "blob", 1: "blob jr"] }
     let store = self.client.store(for: query)
 
@@ -231,7 +231,7 @@ struct PaginatedStoreTests {
 
   @Test("Fetch Previous Page, Returns Page Data First")
   func fetchPreviousPageReturnsPageDataFirst() async throws {
-    let query = TestInfiniteQuery()
+    let query = TestPaginated()
     query.state.withLock { $0 = [0: "blob"] }
     let store = self.client.store(for: query)
     let page = try await store.fetchPreviousPage()
@@ -242,7 +242,7 @@ struct PaginatedStoreTests {
 
   @Test("Is Loading Initial When Fetching Previous Page With No Pages")
   func isLoadingInitialWhenFetchingPreviousPage() async throws {
-    let query = WaitableInfiniteQuery()
+    let query = WaitablePaginated()
     query.state.withLock {
       $0.values = [0: "a"]
       $0.willWait = true
@@ -264,7 +264,7 @@ struct PaginatedStoreTests {
 
   @Test("Is Loading Previous When Fetching Previous Page After Fetching Initial Page")
   func isLoadingPreviousWhenFetchingPreviousPageAfterFetchingInitialPage() async throws {
-    let query = WaitableInfiniteQuery()
+    let query = WaitablePaginated()
     query.state.withLock { $0.values = [0: "a", -1: "b"] }
     let store = self.client.store(for: query)
     try await store.fetchPreviousPage()
@@ -286,7 +286,7 @@ struct PaginatedStoreTests {
 
   @Test("Fetch Next And Previous Page Concurrently When No Pages Fetched, Returns Same Page Data")
   func fetchNextAndPreviousConcurrentlyInitially() async throws {
-    let query = TestInfiniteQuery()
+    let query = TestPaginated()
     query.state.withLock { $0[0] = "blob" }
     let store = self.client.store(for: query)
     async let p1 = store.fetchNextPage()
@@ -300,7 +300,7 @@ struct PaginatedStoreTests {
 
   @Test("Fetch Previous Page, Returns Page Data Before First")
   func fetchPreviousPageReturnsPageDataBeforeFirst() async throws {
-    let query = TestInfiniteQuery()
+    let query = TestPaginated()
     let store = self.client.store(for: query)
 
     query.state.withLock { $0 = [0: "blob", -1: "blob jr"] }
@@ -320,7 +320,7 @@ struct PaginatedStoreTests {
 
   @Test("Fetch Previous Page With Task, Returns Page Data Before First")
   func fetchPreviousPageWithTaskReturnsPageDataBeforeFirst() async throws {
-    let query = TestInfiniteQuery()
+    let query = TestPaginated()
     let store = self.client.store(for: query)
 
     query.state.withLock { $0 = [0: "blob", -1: "blob jr"] }
@@ -341,7 +341,7 @@ struct PaginatedStoreTests {
 
   @Test("Fetch Previous Page, No Previous Page, Returns Nil")
   func fetchPreviousPageReturnsNilWithNoPreviousPage() async throws {
-    let query = TestInfiniteQuery()
+    let query = TestPaginated()
     query.state.withLock { $0 = [0: "blob", 1: "blob jr"] }
     let store = self.client.store(for: query)
     try await store.fetchPreviousPage()
@@ -353,7 +353,7 @@ struct PaginatedStoreTests {
 
   @Test("Fetch Previous Page, Detects When No Previous Page After Fetching Initial Page")
   func fetchPreviousPageReturnsNilWithNoPreviousPageAfterFetchingInitialPage() async throws {
-    let query = TestInfiniteQuery()
+    let query = TestPaginated()
     query.state.withLock { $0 = [0: "blob"] }
     let store = self.client.store(for: query)
     try await store.fetchPreviousPage()
@@ -362,7 +362,7 @@ struct PaginatedStoreTests {
 
   @Test("Fetch Next Page, No Next Page, Returns Nil")
   func fetchNextPageReturnsNilWithNoNextPage() async throws {
-    let query = TestInfiniteQuery()
+    let query = TestPaginated()
     query.state.withLock { $0 = [0: "blob", -1: "blob jr"] }
     let store = self.client.store(for: query)
     try await store.fetchNextPage()
@@ -374,7 +374,7 @@ struct PaginatedStoreTests {
 
   @Test("Fetch Next Page, Detects Whe No Next Page After Fetching Initial Page")
   func fetchNextPageReturnsNilWithNoNextPageAfterFetchingInitialPage() async throws {
-    let query = TestInfiniteQuery()
+    let query = TestPaginated()
     query.state.withLock { $0 = [0: "blob"] }
     let store = self.client.store(for: query)
     try await store.fetchNextPage()
@@ -383,7 +383,7 @@ struct PaginatedStoreTests {
 
   @Test("Fetch Next Page While Fetching All, Always Fetches Next Page After Fetching All")
   func fetchNextPageWhileFetchingAllAlwaysFetchesNextPageAfterFetchingAll() async throws {
-    let query = WaitableInfiniteQuery()
+    let query = WaitablePaginated()
     let store = self.client.store(for: query)
 
     query.state.withLock { $0.values = [0: "blob", 1: "blob jr", 2: "b", 3: "c"] }
@@ -422,7 +422,7 @@ struct PaginatedStoreTests {
 
   @Test("Fetch Previous Page While Fetching All, Always Fetches Previous Page After Fetching All")
   func fetchPreviousPageWhileFetchingAllAlwaysFetchesPreviousPageAfterFetchingAll() async throws {
-    let query = WaitableInfiniteQuery()
+    let query = WaitablePaginated()
     let store = self.client.store(for: query)
 
     query.state.withLock {
@@ -468,7 +468,7 @@ struct PaginatedStoreTests {
 
   @Test("Fetch Next Page While Fetching Previous, Fetches Concurrently")
   func fetchNextPageWhileFetchingPreviousFetchesConcurrently() async throws {
-    let query = TestInfiniteQuery()
+    let query = TestPaginated()
     let store = self.client.store(for: query.deduplicated())
 
     query.state.withLock { $0 = [0: "blob", 1: "b", -1: "c"] }
@@ -493,7 +493,7 @@ struct PaginatedStoreTests {
 
   @Test("Fetch From Regular OperationStore, Refetches Initial Page")
   func fetchFromRegularOperationStoreRefetchesInitialPage() async throws {
-    let query = TestInfiniteQuery()
+    let query = TestPaginated()
     let infiniteStore = self.client.store(for: query)
 
     query.state.withLock { $0 = [0: "blob", 1: "b", -1: "c"] }
@@ -502,7 +502,7 @@ struct PaginatedStoreTests {
     try await infiniteStore.fetchPreviousPage()
 
     let store =
-      self.client.store(with: query.path)!.base as! OperationStore<TestInfiniteQuery.State>
+      self.client.store(with: query.path)!.base as! OperationStore<TestPaginated.State>
 
     query.state.withLock { $0 = [0: "a", 1: "c", -1: "d"] }
     try await store.run()
@@ -513,8 +513,8 @@ struct PaginatedStoreTests {
 
   @Test("Fetch Next Page Events")
   func fetchNextPageEvents() async throws {
-    let collector = InfiniteOperationStoreEventsCollector<TestInfiniteQuery.State>()
-    let query = TestInfiniteQuery()
+    let collector = InfiniteOperationStoreEventsCollector<TestPaginated.State>()
+    let query = TestPaginated()
     let store = self.client.store(for: query)
     query.state.withLock { $0 = [0: "a"] }
     try await store.fetchNextPage(handler: collector.eventHandler())
@@ -533,17 +533,17 @@ struct PaginatedStoreTests {
 
   @Test("Fetch Next Page Failing Events")
   func fetchNextPageFailingEvents() async throws {
-    let collector = InfiniteOperationStoreEventsCollector<FailableInfiniteQuery.State>()
-    let store = self.client.store(for: FailableInfiniteQuery())
+    let collector = InfiniteOperationStoreEventsCollector<FailablePaginated.State>()
+    let store = self.client.store(for: FailablePaginated())
     _ = try? await store.fetchNextPage(handler: collector.eventHandler())
 
     collector.expectEventsMatch([
       .stateChanged,
       .fetchingStarted,
       .pageFetchingStarted(0),
-      .pageResultReceived(0, .failure(FailableInfiniteQuery.SomeError())),
+      .pageResultReceived(0, .failure(FailablePaginated.SomeError())),
       .pageFetchingEnded(0),
-      .resultReceived(.failure(FailableInfiniteQuery.SomeError())),
+      .resultReceived(.failure(FailablePaginated.SomeError())),
       .stateChanged,
       .fetchingEnded
     ])
@@ -551,8 +551,8 @@ struct PaginatedStoreTests {
 
   @Test("Fetch Previous Page Events")
   func fetchPreviousPageEvents() async throws {
-    let collector = InfiniteOperationStoreEventsCollector<TestInfiniteQuery.State>()
-    let query = TestInfiniteQuery()
+    let collector = InfiniteOperationStoreEventsCollector<TestPaginated.State>()
+    let query = TestPaginated()
     let store = self.client.store(for: query)
     query.state.withLock { $0 = [0: "a"] }
     try await store.fetchPreviousPage(handler: collector.eventHandler())
@@ -571,17 +571,17 @@ struct PaginatedStoreTests {
 
   @Test("Fetch Previous Page Failing Events")
   func fetchPreviousPageFailingEvents() async throws {
-    let collector = InfiniteOperationStoreEventsCollector<FailableInfiniteQuery.State>()
-    let store = self.client.store(for: FailableInfiniteQuery())
+    let collector = InfiniteOperationStoreEventsCollector<FailablePaginated.State>()
+    let store = self.client.store(for: FailablePaginated())
     _ = try? await store.fetchPreviousPage(handler: collector.eventHandler())
 
     collector.expectEventsMatch([
       .stateChanged,
       .fetchingStarted,
       .pageFetchingStarted(0),
-      .pageResultReceived(0, .failure(FailableInfiniteQuery.SomeError())),
+      .pageResultReceived(0, .failure(FailablePaginated.SomeError())),
       .pageFetchingEnded(0),
-      .resultReceived(.failure(FailableInfiniteQuery.SomeError())),
+      .resultReceived(.failure(FailablePaginated.SomeError())),
       .stateChanged,
       .fetchingEnded
     ])
@@ -589,8 +589,8 @@ struct PaginatedStoreTests {
 
   @Test("Fetch All Pages Events")
   func fetchAllPagesEvents() async throws {
-    let collector = InfiniteOperationStoreEventsCollector<TestInfiniteQuery.State>()
-    let query = TestInfiniteQuery()
+    let collector = InfiniteOperationStoreEventsCollector<TestPaginated.State>()
+    let query = TestPaginated()
     let store = self.client.store(for: query)
     query.state.withLock { $0 = [0: "a", 1: "b"] }
     try await store.fetchNextPage()
@@ -616,8 +616,8 @@ struct PaginatedStoreTests {
 
   @Test("Fetch All Pages Failing Events")
   func fetchAllPagesFailingEvents() async throws {
-    let collector = InfiniteOperationStoreEventsCollector<FailableInfiniteQuery.State>()
-    let query = FailableInfiniteQuery()
+    let collector = InfiniteOperationStoreEventsCollector<FailablePaginated.State>()
+    let query = FailablePaginated()
     let store = self.client.store(for: query)
     query.state.withLock { $0 = "test" }
     try await store.fetchNextPage()
@@ -630,9 +630,9 @@ struct PaginatedStoreTests {
       .stateChanged,
       .fetchingStarted,
       .pageFetchingStarted(0),
-      .pageResultReceived(0, .failure(FailableInfiniteQuery.SomeError())),
+      .pageResultReceived(0, .failure(FailablePaginated.SomeError())),
       .pageFetchingEnded(0),
-      .resultReceived(.failure(FailableInfiniteQuery.SomeError())),
+      .resultReceived(.failure(FailablePaginated.SomeError())),
       .stateChanged,
       .fetchingEnded
     ])
@@ -640,8 +640,8 @@ struct PaginatedStoreTests {
 
   @Test("Fetch Through Normal Query Store Events")
   func fetchThroughNormalOperationStoreEvents() async throws {
-    let collector = InfiniteOperationStoreEventsCollector<TestInfiniteQuery.State>()
-    let query = TestInfiniteQuery()
+    let collector = InfiniteOperationStoreEventsCollector<TestPaginated.State>()
+    let query = TestPaginated()
     let store = self.client.store(for: query.disableAutomaticRunning())
     query.state.withLock { $0 = [0: "a", 1: "b"] }
     try await store.fetchNextPage()
@@ -665,9 +665,9 @@ struct PaginatedStoreTests {
   }
 
   @Test("Subscribe To Infinite Query")
-  func subscribeToInfiniteQuery() async throws {
-    let collector = InfiniteOperationStoreEventsCollector<TestInfiniteQuery.State>()
-    let query = TestInfiniteQuery()
+  func subscribeToPaginated() async throws {
+    let collector = InfiniteOperationStoreEventsCollector<TestPaginated.State>()
+    let query = TestPaginated()
     let store = self.client.store(for: query)
     query.state.withLock { $0 = [0: "a"] }
     let subscription = store.subscribe(with: collector.eventHandler())
@@ -689,7 +689,7 @@ struct PaginatedStoreTests {
 
   @Test("Default FetchAll InfiniteOperationStore Task Name")
   func defaultInfiniteOperationStoreName() async throws {
-    let store = self.client.store(for: EmptyInfiniteQuery(initialPageId: 0, path: []))
+    let store = self.client.store(for: EmptyPaginated(initialPageId: 0, path: []))
     let task = store.refetchAllPagesTask()
     expectNoDifference(
       task.configuration.name,
@@ -699,7 +699,7 @@ struct PaginatedStoreTests {
 
   @Test("Default FetchNext InfiniteOperationStore Task Name")
   func defaultFetchNextInfiniteOperationStoreName() async throws {
-    let store = self.client.store(for: EmptyInfiniteQuery(initialPageId: 0, path: []))
+    let store = self.client.store(for: EmptyPaginated(initialPageId: 0, path: []))
     let task = store.fetchNextPageTask()
     expectNoDifference(
       task.configuration.name,
@@ -709,7 +709,7 @@ struct PaginatedStoreTests {
 
   @Test("Default FetchPrevious InfiniteOperationStore Task Name")
   func defaultFetchPreviousInfiniteOperationStoreName() async throws {
-    let store = self.client.store(for: EmptyInfiniteQuery(initialPageId: 0, path: []))
+    let store = self.client.store(for: EmptyPaginated(initialPageId: 0, path: []))
     let task = store.fetchPreviousPageTask()
     expectNoDifference(
       task.configuration.name,
@@ -718,10 +718,10 @@ struct PaginatedStoreTests {
   }
 
   @Test("Controller Yields New State Value To Infinite Query")
-  func yieldsNewStateValueToInfiniteQuery() async throws {
-    let controller = TestOperationController<TestInfiniteQuery>()
+  func yieldsNewStateValueToPaginated() async throws {
+    let controller = TestOperationController<TestPaginated>()
     let store =
-      OperationStore.detached(query: TestInfiniteQuery().controlled(by: controller))
+      OperationStore.detached(query: TestPaginated().controlled(by: controller))
 
     let date = RecursiveLock(Date())
     store.context.operationClock = CustomOperationClock { date.withLock { $0 } }
@@ -739,9 +739,9 @@ struct PaginatedStoreTests {
   }
 
   @Test("Controller Yields New State Value To Infinite Query While Fetching Initial Page")
-  func yieldsNewStateValueToInfiniteQueryWhileFetchingInitialPage() async throws {
-    let controller = TestOperationController<TestInfiniteQuery>()
-    let query = WaitableInfiniteQuery()
+  func yieldsNewStateValueToPaginatedWhileFetchingInitialPage() async throws {
+    let controller = TestOperationController<TestPaginated>()
+    let query = WaitablePaginated()
     query.state.withLock {
       $0.values = [0: "vlov"]
       $0.willWait = true
@@ -762,9 +762,9 @@ struct PaginatedStoreTests {
   }
 
   @Test("Controller Yields New State Value To Infinite Query While Fetching Next Page")
-  func yieldsNewStateValueToInfiniteQueryWhileFetchingNextPage() async throws {
-    let controller = TestOperationController<TestInfiniteQuery>()
-    let query = WaitableInfiniteQuery()
+  func yieldsNewStateValueToPaginatedWhileFetchingNextPage() async throws {
+    let controller = TestOperationController<TestPaginated>()
+    let query = WaitablePaginated()
     query.state.withLock {
       $0.values = [0: "vlov", 1: "trov"]
       $0.willWait = false
@@ -787,10 +787,10 @@ struct PaginatedStoreTests {
   }
 
   @Test("ControllerYields New Error Value To Infinite Query")
-  func yieldsNewErrorValueToInfiniteQuery() async throws {
-    let controller = TestOperationController<TestInfiniteQuery>()
+  func yieldsNewErrorValueToPaginated() async throws {
+    let controller = TestOperationController<TestPaginated>()
     let store =
-      OperationStore.detached(query: TestInfiniteQuery().controlled(by: controller))
+      OperationStore.detached(query: TestPaginated().controlled(by: controller))
 
     let date = RecursiveLock(Date())
     store.context.operationClock = CustomOperationClock { date.withLock { $0 } }
@@ -805,12 +805,12 @@ struct PaginatedStoreTests {
 
   @Test("Yields Multiple Values During Query For Initial Page")
   func yieldsMultipleValuesDuringQueryForInitialPage() async throws {
-    let query = TestYieldableInfiniteQuery()
+    let query = TestYieldablePaginated()
     query.state.withLock { $0[0] = [.success("blob"), .success("blob jr")] }
     let store = self.client.store(for: query)
-    let collector = InfiniteOperationStoreEventsCollector<TestYieldableInfiniteQuery.State>()
+    let collector = InfiniteOperationStoreEventsCollector<TestYieldablePaginated.State>()
     let value = try await store.fetchNextPage(handler: collector.eventHandler())
-    let finalPage = Page(id: 0, value: TestYieldableInfiniteQuery.finalValue(for: 0))
+    let finalPage = Page(id: 0, value: TestYieldablePaginated.finalValue(for: 0))
 
     collector.expectEventsMatch([
       .stateChanged,
@@ -832,14 +832,14 @@ struct PaginatedStoreTests {
 
   @Test("Yields Multiple Values During Query For Next Page")
   func yieldsMultipleValuesDuringQueryForNextPage() async throws {
-    let query = TestYieldableInfiniteQuery()
+    let query = TestYieldablePaginated()
     query.state.withLock { $0[1] = [.success("blob"), .success("blob jr")] }
     let store = self.client.store(for: query)
-    let collector = InfiniteOperationStoreEventsCollector<TestYieldableInfiniteQuery.State>()
+    let collector = InfiniteOperationStoreEventsCollector<TestYieldablePaginated.State>()
     try await store.fetchNextPage()
     let value = try await store.fetchNextPage(handler: collector.eventHandler())
-    let finalPage = TestYieldableInfiniteQuery.finalPage(for: 1)
-    let firstPage = TestYieldableInfiniteQuery.finalPage(for: 0)
+    let finalPage = TestYieldablePaginated.finalPage(for: 1)
+    let firstPage = TestYieldablePaginated.finalPage(for: 0)
 
     collector.expectEventsMatch([
       .stateChanged,
@@ -861,14 +861,14 @@ struct PaginatedStoreTests {
 
   @Test("Yields Multiple Values During Query For Previous Page")
   func yieldsMultipleValuesDuringQueryForPreviousPage() async throws {
-    let query = TestYieldableInfiniteQuery()
+    let query = TestYieldablePaginated()
     query.state.withLock { $0[-1] = [.success("blob"), .success("blob jr")] }
     let store = self.client.store(for: query)
-    let collector = InfiniteOperationStoreEventsCollector<TestYieldableInfiniteQuery.State>()
+    let collector = InfiniteOperationStoreEventsCollector<TestYieldablePaginated.State>()
     try await store.fetchPreviousPage()
     let value = try await store.fetchPreviousPage(handler: collector.eventHandler())
-    let finalPage = TestYieldableInfiniteQuery.finalPage(for: -1)
-    let firstPage = TestYieldableInfiniteQuery.finalPage(for: 0)
+    let finalPage = TestYieldablePaginated.finalPage(for: -1)
+    let firstPage = TestYieldablePaginated.finalPage(for: 0)
 
     collector.expectEventsMatch([
       .stateChanged,
@@ -892,13 +892,13 @@ struct PaginatedStoreTests {
   func yieldsMultipleValuesDuringQueryForAllPages() async throws {
     struct SomeError: Error {}
 
-    let query = TestYieldableInfiniteQuery()
+    let query = TestYieldablePaginated()
     query.state.withLock {
       $0[0] = [.success("blob"), .success("blob jr")]
       $0[1] = [.success("trob"), .failure(SomeError())]
     }
     let store = self.client.store(for: query)
-    let collector = InfiniteOperationStoreEventsCollector<TestYieldableInfiniteQuery.State>()
+    let collector = InfiniteOperationStoreEventsCollector<TestYieldablePaginated.State>()
     try await store.fetchNextPage()
     try await store.fetchNextPage()
     let value = try await store.refetchAllPages(handler: collector.eventHandler())
@@ -911,14 +911,14 @@ struct PaginatedStoreTests {
       .stateChanged,
       .pageResultReceived(0, .success(Page(id: 0, value: "blob jr"))),
       .stateChanged,
-      .pageResultReceived(0, .success(TestYieldableInfiniteQuery.finalPage(for: 0))),
+      .pageResultReceived(0, .success(TestYieldablePaginated.finalPage(for: 0))),
       .pageFetchingEnded(0),
       .pageFetchingStarted(1),
       .pageResultReceived(1, .success(Page(id: 1, value: "trob"))),
       .stateChanged,
       .pageResultReceived(1, .failure(SomeError())),
       .stateChanged,
-      .pageResultReceived(1, .success(TestYieldableInfiniteQuery.finalPage(for: 1))),
+      .pageResultReceived(1, .success(TestYieldablePaginated.finalPage(for: 1))),
       .pageFetchingEnded(1),
       .resultReceived(.success(value)),
       .stateChanged,
@@ -926,7 +926,7 @@ struct PaginatedStoreTests {
     ])
     expectNoDifference(
       value,
-      [TestYieldableInfiniteQuery.finalPage(for: 0), TestYieldableInfiniteQuery.finalPage(for: 1)]
+      [TestYieldablePaginated.finalPage(for: 0), TestYieldablePaginated.finalPage(for: 1)]
     )
     expectNoDifference(store.errorLastUpdatedAt != nil, true)
     expectNoDifference(store.currentValue, value)
@@ -934,10 +934,10 @@ struct PaginatedStoreTests {
 
   @Test("Yields Value Then Error During Query")
   func yieldsValueThenErrorDuringQuery() async throws {
-    let query = TestYieldableInfiniteQuery(shouldThrow: true)
+    let query = TestYieldablePaginated(shouldThrow: true)
     query.state.withLock { $0[0] = [.success("blob")] }
     let store = self.client.store(for: query)
-    let collector = InfiniteOperationStoreEventsCollector<TestYieldableInfiniteQuery.State>()
+    let collector = InfiniteOperationStoreEventsCollector<TestYieldablePaginated.State>()
     let value = try? await store.fetchPreviousPage(handler: collector.eventHandler())
 
     collector.expectEventsMatch([
@@ -946,22 +946,22 @@ struct PaginatedStoreTests {
       .pageFetchingStarted(0),
       .pageResultReceived(0, .success(Page(id: 0, value: "blob"))),
       .stateChanged,
-      .pageResultReceived(0, .failure(TestYieldableInfiniteQuery.SomeError())),
+      .pageResultReceived(0, .failure(TestYieldablePaginated.SomeError())),
       .pageFetchingEnded(0),
-      .resultReceived(.failure(TestYieldableInfiniteQuery.SomeError())),
+      .resultReceived(.failure(TestYieldablePaginated.SomeError())),
       .stateChanged,
       .fetchingEnded
     ])
     expectNoDifference(value, nil)
     expectNoDifference(
-      store.error as? TestYieldableInfiniteQuery.SomeError,
-      TestYieldableInfiniteQuery.SomeError()
+      store.error as? TestYieldablePaginated.SomeError,
+      TestYieldablePaginated.SomeError()
     )
   }
 
   @Test("Reset State, Cancels All Active Tasks")
   func resetStateCancelsAllActiveTasks() async throws {
-    let store = self.client.store(for: TestCancellableInfiniteQuery())
+    let store = self.client.store(for: TestCancellablePaginated())
     let task = store.fetchNextPageTask()
     store.resetState()
     await #expect(throws: CancellationError.self) {
@@ -971,7 +971,7 @@ struct PaginatedStoreTests {
 
   @Test("Reset State, Removes All Active Tasks")
   func resetStateRemovesAllActiveTasks() async throws {
-    let store = self.client.store(for: TestYieldableInfiniteQuery())
+    let store = self.client.store(for: TestYieldablePaginated())
     try await store.fetchNextPage()
     let task = store.fetchNextPageTask()
     let task2 = store.fetchPreviousPageTask()
@@ -990,9 +990,9 @@ struct PaginatedStoreTests {
 
   @Test("Reset State, Resets State Values")
   func resetStateResetsStateValues() async throws {
-    let store = self.client.store(for: TestYieldableInfiniteQuery())
+    let store = self.client.store(for: TestYieldablePaginated())
     try await store.fetchNextPage()
-    expectNoDifference(store.currentValue, [TestYieldableInfiniteQuery.finalPage(for: 0)])
+    expectNoDifference(store.currentValue, [TestYieldablePaginated.finalPage(for: 0)])
     expectNoDifference(store.valueUpdateCount, 1)
     expectNoDifference(store.valueLastUpdatedAt != nil, true)
     store.resetState()
@@ -1003,7 +1003,7 @@ struct PaginatedStoreTests {
 
   @Test("Includes Yielded Update Reason In Page Result Events")
   func includesYieldedUpdateReasonInPageResultEvents() async throws {
-    let store = self.client.store(for: FailableInfiniteQuery(shouldYield: true))
+    let store = self.client.store(for: FailablePaginated(shouldYield: true))
 
     _ = await confirmation { confirm in
       await #expect(throws: Error.self) {
@@ -1021,7 +1021,7 @@ struct PaginatedStoreTests {
 
   @Test("Includes Final Result Update Reason In Page Result Events")
   func includesFinalResultUpdateReasonInPageResultEvents() async throws {
-    let store = self.client.store(for: FailableInfiniteQuery())
+    let store = self.client.store(for: FailablePaginated())
 
     _ = await confirmation { confirm in
       await #expect(throws: Error.self) {
@@ -1041,7 +1041,7 @@ struct PaginatedStoreTests {
   func usesDefaultValueWhenValueNeverBeenSet() {
     let page = Page(id: 0, value: "blob")
     let page2 = Page(id: 0, value: "blob 2")
-    let store = self.client.store(for: FailableInfiniteQuery().defaultValue([page]))
+    let store = self.client.store(for: FailablePaginated().defaultValue([page]))
 
     expectNoDifference(store.currentValue, [page])
     store.currentValue = [page2]

@@ -1,4 +1,4 @@
-// MARK: - InfiniteQueryContextValues
+// MARK: - PaginatedContextValues
 
 struct PaginatedContextValues: Sendable {
   var fetchType: FetchType?
@@ -99,11 +99,11 @@ extension OperationContext {
   }
 
   var infiniteValues: PaginatedContextValues? {
-    get { self[InfiniteQueryContextValuesKey.self] }
-    set { self[InfiniteQueryContextValuesKey.self] = newValue }
+    get { self[PaginatedContextValuesKey.self] }
+    set { self[PaginatedContextValuesKey.self] = newValue }
   }
 
-  private enum InfiniteQueryContextValuesKey: Key {
+  private enum PaginatedContextValuesKey: Key {
     static var defaultValue: PaginatedContextValues? { nil }
   }
 }

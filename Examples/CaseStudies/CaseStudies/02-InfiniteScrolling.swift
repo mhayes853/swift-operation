@@ -7,7 +7,7 @@ struct InfiniteScrollingCaseStudy: CaseStudy {
   let title: LocalizedStringKey = "Infinite Scrolling"
   let description: LocalizedStringKey = """
     Infinite scrolling allows users to easily navigate paginated data in your application. We'll \
-    use the `InfiniteQueryRequest` to power the list for each tag. When the user reaches the \
+    use the `PaginatedRequest` to power the list for each tag. When the user reaches the \
     bottom of the list. We'll call `fetchNextPage` on the infinite query to get the next page in \
     the list.
 
@@ -43,7 +43,7 @@ struct InfiniteScrollingCaseStudy: CaseStudy {
 
 private struct PostsListView: View {
   @SharedOperation<Post.ListByTagQuery.State>
-  private var list: InfiniteQueryPagesFor<Post.ListByTagQuery>
+  private var list: PaginatedPagesFor<Post.ListByTagQuery>
 
   let tag: String
 
@@ -61,7 +61,7 @@ private struct PostsListView: View {
 
   var body: some View {
     List {
-      BasicInfiniteQueryStateView(state: self.$list.state) { pages in
+      BasicPaginatedStateView(state: self.$list.state) { pages in
         Text("Tap on any of the posts to view them in full!")
 
         ForEach(pages) { page in
@@ -102,7 +102,7 @@ private struct PostsListView: View {
   }
 }
 
-extension InfiniteQueryPagesFor<Post.ListByTagQuery> {
+extension PaginatedPagesFor<Post.ListByTagQuery> {
   fileprivate mutating func updateLike(for postId: Int, on pageId: Post.ListPage.ID) {
     guard var post = self[id: pageId]?.value.posts[id: postId] else { return }
     post.likeCount += post.isUserLiking ? -1 : 1

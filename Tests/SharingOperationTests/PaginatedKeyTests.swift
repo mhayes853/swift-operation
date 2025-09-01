@@ -8,7 +8,7 @@ import Testing
 struct PaginatedKeyTests {
   @Test("Fetches For Value")
   func fetchesForValue() async throws {
-    let query = TestInfiniteQuery()
+    let query = TestPaginated()
     query.state.withLock { $0 = [0: "hello", 1: "world"] }
     @SharedOperation(query.disableAutomaticRunning()) var value = []
 
@@ -26,14 +26,14 @@ struct PaginatedKeyTests {
 
   @Test("Fetches For Error")
   func fetchesForError() async throws {
-    @SharedOperation(FailableInfiniteQuery().disableAutomaticRunning())
+    @SharedOperation(FailablePaginated().disableAutomaticRunning())
     var value
 
-    expectNoDifference($value.error as? FailableInfiniteQuery.SomeError, nil)
+    expectNoDifference($value.error as? FailablePaginated.SomeError, nil)
     _ = try? await $value.fetchNextPage()
     expectNoDifference(
-      $value.error as? FailableInfiniteQuery.SomeError,
-      FailableInfiniteQuery.SomeError()
+      $value.error as? FailablePaginated.SomeError,
+      FailablePaginated.SomeError()
     )
   }
 }

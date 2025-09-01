@@ -418,7 +418,7 @@ extension SharedOperation {
   ///
   /// - Parameters:
   ///   - wrappedValue: The initial value.
-  ///   - query: The `InfiniteQueryRequest`.
+  ///   - query: The `PaginatedRequest`.
   ///   - client: A `OperationClient` to obtain the `OperationStore` from.
   ///   - scheduler: The ``SharedOperationStateScheduler`` to schedule state updates on.
   public init<Query: PaginatedRequest>(
@@ -441,7 +441,7 @@ extension SharedOperation {
   /// Creates a shared query.
   ///
   /// - Parameters:
-  ///   - query: The `InfiniteQueryRequest`.
+  ///   - query: The `PaginatedRequest`.
   ///   - client: A `OperationClient` to obtain the `OperationStore` from.
   ///   - scheduler: The ``SharedOperationStateScheduler`` to schedule state updates on.
   public init<Query: PaginatedRequest>(
@@ -468,7 +468,7 @@ extension SharedOperation where State: _PaginatedStateProtocol {
   ///
   /// - Parameters:
   ///   - context: The `OperationContext` to use for the underlying `OperationTask`.
-  ///   - handler: An `InfiniteQueryEventHandler` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
+  ///   - handler: An `PaginatedEventHandler` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: The fetched data.
   @discardableResult
   public func refetchAllPages(
@@ -505,7 +505,7 @@ extension SharedOperation where State: _PaginatedStateProtocol {
   ///
   /// - Parameters:
   ///   - context: The `OperationContext` to use for the underlying `OperationTask`.
-  ///   - handler: An `InfiniteQueryEventHandler` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
+  ///   - handler: An `PaginatedEventHandler` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: The fetched page.
   @discardableResult
   public func fetchNextPage(
@@ -542,7 +542,7 @@ extension SharedOperation where State: _PaginatedStateProtocol {
   ///
   /// - Parameters:
   ///   - context: The `OperationContext` to use for the underlying `OperationTask`.
-  ///   - handler: An `InfiniteQueryEventHandler` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
+  ///   - handler: An `PaginatedEventHandler` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
   /// - Returns: The fetched page.
   @discardableResult
   public func fetchPreviousPage(
