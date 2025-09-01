@@ -322,11 +322,10 @@ extension OperationClient {
   /// - Returns: Whatever `fn` returns.
   public func withStores<T>(
     matching path: OperationPath,
-    perform fn:
-      @Sendable (
-        inout OperationPathableCollection<OpaqueOperationStore>,
-        borrowing CreateStore
-      ) throws -> sending T
+    perform fn: @Sendable (
+      inout OperationPathableCollection<OpaqueOperationStore>,
+      borrowing CreateStore
+    ) throws -> sending T
   ) rethrows -> T {
     try self.state.withLock { state in
       let createStore = state.createStore()
@@ -363,11 +362,10 @@ extension OperationClient {
   public func withStores<T, State: OperationState>(
     matching path: OperationPath,
     of stateType: State.Type,
-    perform fn:
-      @Sendable (
-        inout OperationPathableCollection<OperationStore<State>>,
-        borrowing CreateStore
-      ) throws -> sending T
+    perform fn: @Sendable (
+      inout OperationPathableCollection<OperationStore<State>>,
+      borrowing CreateStore
+    ) throws -> sending T
   ) rethrows -> T {
     try self.state.withLock { state in
       let createStore = state.createStore()
