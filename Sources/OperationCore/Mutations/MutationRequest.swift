@@ -57,7 +57,7 @@ public struct MutationOperationValue<ReturnValue: Sendable>: Sendable {
 /// > Notice: A purple runtime warning and test failure will be issued in Xcode if you call
 /// > `retryLatest` without ever having called `mutate` first. Additionally, your mutation will
 /// > throw an error.
-public protocol MutationRequest<Arguments, MutateValue, MutateFailure>: OperationRequest, Sendable
+public protocol MutationRequest<Arguments, MutateValue, MutateFailure>: OperationRequest
 where
   Value == MutationOperationValue<MutateValue>,
   State == MutationState<Arguments, MutateValue, MutateFailure>,

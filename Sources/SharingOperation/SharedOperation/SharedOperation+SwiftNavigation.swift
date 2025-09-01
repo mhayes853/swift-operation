@@ -25,8 +25,8 @@
     ///   - initialState: The initial state.
     ///   - client: A `OperationClient` to obtain the `OperationStore` from.
     ///   - scheduler: The ``SharedOperationStateScheduler`` to schedule state updates on.
-    public init<Operation: OperationRequest & Sendable>(
-      _ operation: Operation,
+    public init<Operation: OperationRequest>(
+      _ operation: sending Operation,
       initialState: Operation.State,
       client: OperationClient? = nil,
       transaction: UITransaction
@@ -52,7 +52,7 @@
     ///   - transaction: The `UITransaction` to use for state updates.
     public init<Query: QueryRequest>(
       wrappedValue: Query.State.StateValue = nil,
-      _ query: Query,
+      _ query: sending Query,
       client: OperationClient? = nil,
       transaction: UITransaction
     ) where State == QueryState<Query.Value, Query.Failure> {
@@ -71,7 +71,7 @@
     ///   - client: A `OperationClient` to obtain the `OperationStore` from.
     ///   - transaction: The `UITransaction` to use for state updates.
     public init<Query: QueryRequest>(
-      _ query: Query.Default,
+      _ query: sending Query.Default,
       client: OperationClient? = nil,
       transaction: UITransaction
     ) where State == DefaultOperation<Query>.State {
@@ -145,7 +145,7 @@
     ///   - transaction: The `UITransaction` to use for state updates.
     public init<Mutation: MutationRequest>(
       wrappedValue: Mutation.State.StateValue = nil,
-      _ mutation: Mutation,
+      _ mutation: sending Mutation,
       client: OperationClient? = nil,
       transaction: UITransaction
     ) where State == MutationState<Mutation.Arguments, Mutation.MutateValue, Mutation.Failure> {
@@ -164,7 +164,7 @@
     ///   - client: A `OperationClient` to obtain the `OperationStore` from.
     ///   - transaction: The `UITransaction` to use for state updates.
     public init<Mutation: MutationRequest>(
-      _ mutation: Mutation.Default,
+      _ mutation: sending Mutation.Default,
       client: OperationClient? = nil,
       transaction: UITransaction
     ) where State == DefaultOperation<Mutation>.State {

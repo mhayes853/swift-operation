@@ -1031,7 +1031,7 @@ package final class FailableMutation: MutationRequest {
 
 // MARK: - WaitableMutation
 
-package final class WaitableMutation: MutationRequest {
+package final class WaitableMutation: MutationRequest, Sendable {
   package typealias _Values = (
     willWait: Bool,
     continuations: [String: UnsafeContinuation<Void, any Error>],

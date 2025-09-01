@@ -41,8 +41,8 @@ extension OperationClient {
     ///   - context: The initial ``OperationContext`` of the store.
     ///   - initialState: The initial state of the operation.
     /// - Returns: A ``OperationStore``.
-    func store<Operation: OperationRequest & Sendable>(
-      for operation: Operation,
+    func store<Operation: OperationRequest>(
+      for operation: sending Operation,
       in context: OperationContext,
       with initialState: Operation.State
     ) -> OperationStore<Operation.State>
@@ -90,8 +90,8 @@ extension OperationClient.CreateStore {
   ///   - operation: The operation,.
   ///   - initialState: The initial state of the operation.
   /// - Returns: An ``OperationStore``.
-  public func callAsFunction<Operation: OperationRequest & Sendable>(
-    for operation: Operation,
+  public func callAsFunction<Operation: OperationRequest>(
+    for operation: sending Operation,
     initialState: Operation.State
   ) -> OperationStore<Operation.State> {
     self.operationTypes.value[operation.path] = Operation.self
@@ -106,7 +106,7 @@ extension OperationClient.CreateStore {
   /// - Returns: A ``OperationStore``.
   @_disfavoredOverload
   public func callAsFunction<Query: QueryRequest>(
-    for query: Query,
+    for query: sending Query,
     initialState: Query.State
   ) -> OperationStore<Query.State> {
     self(for: query, initialState: initialState)
@@ -119,7 +119,7 @@ extension OperationClient.CreateStore {
   ///   - initialValue: The initial value of the query.
   /// - Returns: A ``OperationStore``.
   public func callAsFunction<Query: QueryRequest>(
-    for query: Query,
+    for query: sending Query,
     initialValue: Query.Value? = nil
   ) -> OperationStore<Query.State> where Query.State == QueryState<Query.Value, Query.Failure> {
     self(for: query, initialState: Query.State(initialValue: initialValue))
@@ -131,7 +131,7 @@ extension OperationClient.CreateStore {
   ///   - query: The query.
   /// - Returns: A ``OperationStore``.
   public func callAsFunction<Query: QueryRequest>(
-    for query: Query.Default
+    for query: sending Query.Default
   ) -> OperationStore<Query.Default.State> {
     self(for: query, initialState: query.initialState)
   }
@@ -173,7 +173,7 @@ extension OperationClient.CreateStore {
   ///   - initialValue: The initial value for the state of the mutation.
   /// - Returns: A ``OperationStore``.
   public func callAsFunction<Mutation: MutationRequest>(
-    for mutation: Mutation,
+    for mutation: sending Mutation,
     initialValue: Mutation.MutateValue? = nil
   ) -> OperationStore<Mutation.State> {
     self(for: mutation, initialState: Mutation.State(initialValue: initialValue))
@@ -185,7 +185,7 @@ extension OperationClient.CreateStore {
   ///   - query: The mutation.
   /// - Returns: A ``OperationStore``.
   public func callAsFunction<Mutation: MutationRequest>(
-    for mutation: Mutation.Default,
+    for mutation: sending Mutation.Default,
   ) -> OperationStore<Mutation.Default.State> {
     self(for: mutation, initialState: mutation.initialState)
   }

@@ -11,7 +11,7 @@ extension OperationClient {
     /// - Parameter body: A function that runs with scoped access to the stores.
     /// - Returns: Whatever `body` returns.
     mutating func withStores<T>(
-      _ body: (inout sending OperationPathableCollection<OpaqueOperationStore>) throws -> sending T
+      _ body: (inout OperationPathableCollection<OpaqueOperationStore>) throws -> sending T
     ) rethrows -> sending T
   }
 }
@@ -62,7 +62,7 @@ extension OperationClient {
     }
 
     public func withStores<T>(
-      _ body: (inout sending OperationPathableCollection<OpaqueOperationStore>) throws -> sending T
+      _ body: (inout OperationPathableCollection<OpaqueOperationStore>) throws -> sending T
     ) rethrows -> sending T {
       try self.state.withLock { try body(&$0.stores) }
     }

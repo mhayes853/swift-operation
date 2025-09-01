@@ -113,11 +113,11 @@ extension OperationClient {
   ///   - operation: The operation.
   ///   - initialState: The initial state of the operation.
   /// - Returns: A ``OperationStore``.
-  public func store<Operation: OperationRequest & Sendable>(
-    for operation: Operation,
+  public func store<Operation: OperationRequest>(
+    for operation: sending Operation,
     initialState: Operation.State
   ) -> OperationStore<Operation.State> {
-    self.withStoreCreation(for: operation) { $0(for: operation, initialState: initialState) }
+    self.withStoreCreation(for: operation) { $0(for: $1, initialState: initialState) }
   }
 
   /// Retrieves the ``OperationStore`` for a ``QueryRequest``.
@@ -127,10 +127,10 @@ extension OperationClient {
   ///   - initialState: The initial state of the query.
   /// - Returns: A ``OperationStore``.
   public func store<Query: QueryRequest>(
-    for query: Query,
+    for query: sending Query,
     initialState: Query.State
   ) -> OperationStore<Query.State> {
-    self.withStoreCreation(for: query) { $0(for: query, initialState: initialState) }
+    self.withStoreCreation(for: query) { $0(for: $1, initialState: initialState) }
   }
 
   /// Retrieves the ``OperationStore`` for a ``QueryRequest``.
@@ -140,10 +140,10 @@ extension OperationClient {
   ///   - initialValue: The initial value of the query.
   /// - Returns: A ``OperationStore``.
   public func store<Query: QueryRequest>(
-    for query: Query,
+    for query: sending Query,
     initialValue: Query.Value? = nil
   ) -> OperationStore<Query.State> where Query.State == QueryState<Query.Value, Query.Failure> {
-    self.withStoreCreation(for: query) { $0(for: query, initialValue: initialValue) }
+    self.withStoreCreation(for: query) { $0(for: $1, initialValue: initialValue) }
   }
 
   /// Retrieves the ``OperationStore`` for a ``QueryRequest``.
@@ -152,9 +152,9 @@ extension OperationClient {
   ///   - query: The query.
   /// - Returns: A ``OperationStore``.
   public func store<Query: QueryRequest>(
-    for query: Query.Default
+    for query: sending Query.Default
   ) -> OperationStore<Query.Default.State> {
-    self.withStoreCreation(for: query) { $0(for: query) }
+    self.withStoreCreation(for: query) { $0(for: $1) }
   }
 
   /// Retrieves the ``OperationStore`` for an ``InfiniteQueryRequest``.
@@ -167,7 +167,7 @@ extension OperationClient {
     for query: Query,
     initialValue: Query.State.StateValue = []
   ) -> OperationStore<Query.State> {
-    self.withStoreCreation(for: query) { $0(for: query, initialValue: initialValue) }
+    self.withStoreCreation(for: query) { $0(for: $1, initialValue: initialValue) }
   }
 
   /// Retrieves the ``OperationStore`` for an ``InfiniteQueryRequest``.
@@ -178,7 +178,7 @@ extension OperationClient {
   public func store<Query: InfiniteQueryRequest>(
     for query: Query.Default
   ) -> OperationStore<Query.Default.State> {
-    self.withStoreCreation(for: query) { $0(for: query) }
+    self.withStoreCreation(for: query) { $0(for: $1) }
   }
 
   /// Retrieves the ``OperationStore`` for a ``MutationRequest``.
@@ -188,10 +188,10 @@ extension OperationClient {
   ///   - initialValue: The initial value for the state of the mutation.
   /// - Returns: A ``OperationStore``.
   public func store<Mutation: MutationRequest>(
-    for mutation: Mutation,
+    for mutation: sending Mutation,
     initialValue: Mutation.MutateValue? = nil
   ) -> OperationStore<Mutation.State> {
-    self.withStoreCreation(for: mutation) { $0(for: mutation, initialValue: initialValue) }
+    self.withStoreCreation(for: mutation) { $0(for: $1, initialValue: initialValue) }
   }
 
   /// Retrieves the ``OperationStore`` for a ``MutationRequest``.
@@ -200,29 +200,32 @@ extension OperationClient {
   ///   - query: The mutation.
   /// - Returns: A ``OperationStore``.
   public func store<Mutation: MutationRequest>(
-    for mutation: Mutation.Default
+    for mutation: sending Mutation.Default
   ) -> OperationStore<Mutation.Default.State> {
-    self.withStoreCreation(for: mutation) { $0(for: mutation) }
+    self.withStoreCreation(for: mutation) { $0(for: $1) }
   }
 
-  private func withStoreCreation<Operation: OperationRequest & Sendable>(
-    for operation: Operation,
-    _ create: @Sendable (borrowing CreateStore) -> OperationStore<Operation.State>
+  private func withStoreCreation<Operation: OperationRequest>(
+    for operation: sending Operation,
+    _ create: @Sendable (
+      borrowing CreateStore,
+      sending Operation
+    ) -> OperationStore<Operation.State>
   ) -> OperationStore<Operation.State> {
-    self.state.withLock { state in
+    let transfer = UnsafeTransfer(value: operation)
+    return self.state.withLock { state in
       let createStore = state.createStore()
       defer { state.operationTypes = createStore.operationTypes.value }
+      let type = state.operationTypes[transfer.value.path]
       return state.storeCache.withStores { stores in
-        if let opaqueStore = stores[operation.path] {
-          if let operationType = state.operationTypes[operation.path],
-            operationType != Operation.self
-          {
-            reportWarning(.duplicatePath(expectedType: operationType, foundType: Operation.self))
-            return create(createStore)
+        if let opaqueStore = stores[transfer.value.path] {
+          if let type, type != Operation.self {
+            reportWarning(.duplicatePath(expectedType: type, foundType: Operation.self))
+            return create(createStore, transfer.value)
           }
           return opaqueStore.base as! OperationStore<Operation.State>
         }
-        let store = create(createStore)
+        let store = create(createStore, transfer.value)
         stores.update(OpaqueOperationStore(erasing: store))
         return store
       }

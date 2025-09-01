@@ -65,7 +65,7 @@
 
       @Environment(\.operationClient) private var operationClient
 
-      private let _store: @Sendable (OperationClient) -> OperationStore<State>
+      private let _store: (OperationClient) -> OperationStore<State>
       private let transaction: MainActorTransaction
       private var subscription = OperationSubscription.empty
       private var previousStore: OperationStore<State>?
@@ -98,13 +98,13 @@
       ///   - initialState: The initially supplied state.
       ///   - client: An optional `OperationClient` to override ``SwiftUICore/EnvironmentValues/OperationClient``.
       ///   - transaction: The transaction to apply to state updates.
-      public init<Operation: OperationRequest & Sendable>(
-        _ operation: Operation,
+      public init<Operation: OperationRequest>(
+        _ operation: sending @escaping @autoclosure () -> Operation,
         initialState: Operation.State,
         client: OperationClient? = nil,
         transaction: Transaction? = nil
       ) where State == Operation.State {
-        self._store = { (client ?? $0).store(for: operation, initialState: initialState) }
+        self._store = { (client ?? $0).store(for: operation(), initialState: initialState) }
         self._state = SwiftUI.State(initialValue: initialState)
         self.transaction = MainActorTransaction(transaction: transaction)
       }
@@ -136,7 +136,7 @@
     ///   - transaction: The transaction to apply to state updates.
     public init<Query: QueryRequest>(
       wrappedValue: Query.State.StateValue = nil,
-      _ query: Query,
+      _ query: sending Query,
       client: OperationClient? = nil,
       transaction: Transaction? = nil
     ) where State == QueryState<Query.Value, Query.Failure> {
@@ -157,7 +157,7 @@
     ///   - animation: The animation to apply to state updates.
     public init<Query: QueryRequest>(
       wrappedValue: Query.State.StateValue = nil,
-      _ query: Query,
+      _ query: sending Query,
       client: OperationClient? = nil,
       animation: Animation
     ) where State == QueryState<Query.Value, Query.Failure> {
@@ -176,7 +176,7 @@
     ///   - client: An optional `OperationClient` to override ``SwiftUICore/EnvironmentValues/OperationClient``.
     ///   - transaction: The transaction to apply to state updates.
     public init<Query: QueryRequest>(
-      _ query: Query.Default,
+      _ query: sending Query.Default,
       client: OperationClient? = nil,
       transaction: Transaction? = nil
     ) where State == DefaultOperation<Query>.State {
@@ -190,7 +190,7 @@
     ///   - client: An optional `OperationClient` to override ``SwiftUICore/EnvironmentValues/OperationClient``.
     ///   - animation: The animation to apply to state updates.
     public init<Query: QueryRequest>(
-      _ query: Query.Default,
+      _ query: sending Query.Default,
       client: OperationClient? = nil,
       animation: Animation
     ) where State == DefaultOperation<Query>.State {
@@ -590,7 +590,7 @@
     ///   - transaction: The transaction to apply to state updates.
     public init<Mutation: MutationRequest>(
       wrappedValue: Mutation.State.StateValue = nil,
-      _ mutation: Mutation,
+      _ mutation: sending Mutation,
       client: OperationClient? = nil,
       transaction: Transaction? = nil
     ) where State == MutationState<Mutation.Arguments, Mutation.MutateValue, Mutation.Failure> {
@@ -611,7 +611,7 @@
     ///   - animation: The animation to apply to state updates.
     public init<Mutation: MutationRequest>(
       wrappedValue: Mutation.State.StateValue = nil,
-      _ mutation: Mutation,
+      _ mutation: sending Mutation,
       client: OperationClient? = nil,
       animation: Animation
     ) where State == MutationState<Mutation.Arguments, Mutation.MutateValue, Mutation.Failure> {
@@ -630,7 +630,7 @@
     ///   - client: An optional `OperationClient` to override ``SwiftUICore/EnvironmentValues/OperationClient``.
     ///   - transaction: The transaction to apply to state updates.
     public init<Mutation: MutationRequest>(
-      _ mutation: Mutation.Default,
+      _ mutation: sending Mutation.Default,
       client: OperationClient? = nil,
       transaction: Transaction? = nil
     ) where State == DefaultOperation<Mutation>.State {
