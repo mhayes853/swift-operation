@@ -40,7 +40,7 @@ import Sharing
 /// ```
 @propertyWrapper
 @dynamicMemberLookup
-public struct SharedOperation<State: OperationState>: Sendable {
+public struct SharedOperation<State: OperationState & Sendable>: Sendable {
   @Shared var value: OperationStateKeyValue<State>
 
   /// Whether or not this shared query is backed by a user specified `QueryRequest`.

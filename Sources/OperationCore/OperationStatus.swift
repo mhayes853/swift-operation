@@ -6,7 +6,7 @@ import IdentifiedCollections
 ///
 /// You generally don't create instances of this enum directly, and instead you can access it via
 /// ``OperationState/status-5oj8d`` on your query's state.
-public enum OperationStatus<Value: Sendable, Failure: Error>: Sendable {
+public enum OperationStatus<Value, Failure: Error> {
   /// The query has never been fetched.
   case idle
 
@@ -95,7 +95,7 @@ extension OperationStatus {
   ///
   /// - Parameter transform: A function to transform the value into a new value.
   /// - Returns: A status with the newly transformed value.
-  public func mapSuccess<NewValue: Sendable, E: Error>(
+  public func mapSuccess<NewValue, E: Error>(
     _ transform: (Value) throws(E) -> NewValue
   ) throws(E) -> OperationStatus<NewValue, Failure> {
     switch self {
@@ -120,7 +120,7 @@ extension OperationStatus {
   ///
   /// - Parameter transform: A function to transform the value into a new status.
   /// - Returns: The status returned from `transform`, or the current status if it isn't successful.
-  public func flatMapSuccess<NewValue: Sendable, E: Error>(
+  public func flatMapSuccess<NewValue, E: Error>(
     _ transform: (Value) throws(E) -> OperationStatus<NewValue, Failure>
   ) throws(E) -> OperationStatus<NewValue, Failure> {
     switch self {
@@ -136,6 +136,7 @@ extension OperationStatus {
 
 extension OperationStatus: Hashable where Value: Hashable, Failure: Hashable {}
 extension OperationStatus: Equatable where Value: Equatable, Failure: Equatable {}
+extension OperationStatus: Sendable where Value: Sendable, Failure: Sendable {}
 
 // MARK: - OperationState
 

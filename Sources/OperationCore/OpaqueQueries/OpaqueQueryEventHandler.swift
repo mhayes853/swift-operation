@@ -38,7 +38,7 @@ public struct OpaqueOperationEventHandler: Sendable {
 // MARK: - Casting
 
 extension OpaqueOperationEventHandler {
-  func casted<State: OperationState>(
+  func casted<State: OperationState & Sendable>(
     to stateType: State.Type
   ) -> OperationEventHandler<State> {
     OperationEventHandler<State>(

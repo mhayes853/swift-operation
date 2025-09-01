@@ -310,7 +310,8 @@ struct OperationClientTests {
   }
 }
 
-private final class CountingController<State: OperationState>: OperationController, Sendable {
+private final class CountingController<State: OperationState>: OperationController, Sendable
+where State: Sendable {
   let count = RecursiveLock(0)
 
   func control(with controls: OperationControls<State>) -> OperationSubscription {

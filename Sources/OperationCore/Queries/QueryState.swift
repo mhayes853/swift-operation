@@ -28,7 +28,7 @@ where OperationValue == Value, StatusValue == Value {
 ///
 /// > Warning: You should not call any of the `mutating` methods directly on this type, rather a
 /// > ``OperationStore`` will call them at the appropriate time for you.
-public struct QueryState<Value: Sendable, Failure: Error> {
+public struct QueryState<Value: Sendable, Failure: Error>: Sendable {
   public private(set) var currentValue: Value?
   public let initialValue: Value?
   public private(set) var valueUpdateCount = 0

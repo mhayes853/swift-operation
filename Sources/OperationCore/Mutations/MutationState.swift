@@ -22,7 +22,7 @@ where StatusValue == Value, OperationValue == MutationOperationValue<Value> {
 ///
 /// > Warning: You should not call any of the `mutating` methods directly on this type, rather a
 /// > ``OperationStore`` will call them at the appropriate time for you.
-public struct MutationState<Arguments: Sendable, Value: Sendable, Failure: Error> {
+public struct MutationState<Arguments: Sendable, Value: Sendable, Failure: Error>: Sendable {
   public private(set) var valueUpdateCount = 0
   private var historyValueLastUpdatedAt: Date?
   public private(set) var errorUpdateCount = 0

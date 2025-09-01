@@ -18,7 +18,7 @@ import IdentifiedCollections
 ///
 /// > Warning: You should not call any of the `mutating` methods directly on this type, rather a
 /// > ``OperationStore`` will call them at the appropriate time for you.
-public protocol OperationState<StateValue, OperationValue, Failure>: Sendable {
+public protocol OperationState<StateValue, OperationValue, Failure> {
   /// A data type returned from ``reset(using:)`` that determines the action that the
   /// ``OperationStore`` should take when ``OperationStore/resetState(using:)`` is called.
   typealias ResetEffect = _OperationStateResetEffect<Self>

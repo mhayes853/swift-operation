@@ -7,7 +7,7 @@ import Sharing
 // MARK: - OperationStateKey
 
 struct OperationStateKey<
-  State: OperationState,
+  State: OperationState & Sendable,
   Scheduler: SharedOperationStateScheduler
 >: SharedKey {
   private let store: OperationStore<State>
@@ -81,7 +81,7 @@ extension OperationStateKeyID: Hashable {
 
 // MARK: - OperationStateKeyValue
 
-struct OperationStateKeyValue<State: OperationState> {
+struct OperationStateKeyValue<State: OperationState & Sendable> {
   var currentValue: State.StateValue
   let store: OperationStore<State>
 

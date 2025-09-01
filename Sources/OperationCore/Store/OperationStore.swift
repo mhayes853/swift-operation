@@ -74,7 +74,7 @@ import Foundation
 /// // ...
 /// ```
 @dynamicMemberLookup
-public final class OperationStore<State: OperationState>: OperationPathable, Sendable {
+public final class OperationStore<State: OperationState & Sendable>: OperationPathable, Sendable {
   private struct Values {
     var state: State
     var taskHerdId: Int

@@ -10,7 +10,7 @@
 /// OperationControllers.
 public protocol OperationController<State> {
   /// The state type of the query to control.
-  associatedtype State: OperationState
+  associatedtype State: OperationState & Sendable
 
   /// A method that hands the controls for a query to this controller.
   ///

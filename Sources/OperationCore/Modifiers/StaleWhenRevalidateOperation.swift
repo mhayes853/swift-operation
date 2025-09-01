@@ -127,7 +127,10 @@ public struct StaleWhenRevalidateCondition: Sendable {
     self.predicates.append(predicate)
   }
 
-  public func evaluate(state: some OperationState, in context: OperationContext) -> Bool {
+  public func evaluate(
+    state: some OperationState & Sendable,
+    in context: OperationContext
+  ) -> Bool {
     let opaqueState = OpaqueOperationState(state)
     var current = true
     for predicate in self.predicates {

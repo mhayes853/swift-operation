@@ -127,3 +127,4 @@ public struct DefaultOperationState<Base: DefaultableOperationState>: OperationS
 extension DefaultOperationState: Hashable where Base: Hashable, Base.DefaultStateValue: Hashable {}
 extension DefaultOperationState: Equatable
 where Base: Equatable, Base.DefaultStateValue: Equatable {}
+extension DefaultOperationState: Sendable where Base: Sendable, Base.DefaultStateValue: Sendable {}

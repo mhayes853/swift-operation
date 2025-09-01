@@ -4,7 +4,7 @@
 ///
 /// You do not create instances of this type. Instead, it is passed to your `OperationController`
 /// through ``OperationController/control(with:)``.
-public struct OperationControls<State: OperationState>: Sendable {
+public struct OperationControls<State: OperationState & Sendable>: Sendable {
   private weak var _store: OperationStore<State>?
   private let defaultContext: OperationContext
   private let initialState: State

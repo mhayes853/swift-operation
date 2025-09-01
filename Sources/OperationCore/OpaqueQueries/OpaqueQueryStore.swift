@@ -13,7 +13,7 @@ public final class OpaqueOperationStore: Sendable {
   /// Creates an opaque store by type erasing a ``OperationStore``.
   ///
   /// - Parameter base: The store to type-erase.
-  public init(erasing base: OperationStore<some OperationState>) {
+  public init(erasing base: OperationStore<some OperationState & Sendable>) {
     self._base = base
   }
 }

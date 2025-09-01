@@ -17,7 +17,7 @@
 
   // MARK: - HashableStore
 
-  private final class HashableStore<State: OperationState>: Hashable {
+  private final class HashableStore<State: OperationState & Sendable>: Hashable {
     let inner: OperationStore<State>
 
     init(store: OperationStore<State>) {
@@ -33,7 +33,7 @@
     }
   }
 
-  extension OperationState {
+  extension OperationState where Self: Sendable {
     fileprivate subscript(store: HashableStore<Self>) -> Self.StateValue {
       get { self.currentValue }
       set { store.inner.currentValue = newValue }

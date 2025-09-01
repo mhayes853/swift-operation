@@ -6,14 +6,14 @@ import Foundation
 ///
 /// Generally, you only access this type from an ``OpaqueOperationStore``, which is typically accessed
 /// via pattern matching on a ``OperationClient``. See <doc:PatternMatchingAndStateManagement> for more.
-public struct OpaqueOperationState {
+public struct OpaqueOperationState: Sendable {
   /// The underlying base state.
-  public private(set) var base: any OperationState
+  public private(set) var base: any OperationState & Sendable
 
   /// Creates an opaque state.
   ///
   /// - Parameter base: The base state to erase.
-  public init(_ base: any OperationState) {
+  public init(_ base: any OperationState & Sendable) {
     self.base = base
   }
 }

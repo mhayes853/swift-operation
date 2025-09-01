@@ -20,7 +20,7 @@ extension OperationRequest {
 }
 
 public final class _RerunOnChangeController<
-  State: OperationState,
+  State: OperationState & Sendable,
   Specification: OperationRunSpecification & Sendable
 >: OperationController, Sendable {
   private let specification: Specification

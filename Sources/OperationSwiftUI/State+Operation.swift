@@ -60,7 +60,7 @@
     @MainActor
     @propertyWrapper
     @dynamicMemberLookup
-    public struct Operation<State: OperationState> where Value == State.StateValue {
+    public struct Operation<State: OperationState & Sendable> where Value == State.StateValue {
       @SwiftUI.State var state: State
 
       @Environment(\.operationClient) private var operationClient
