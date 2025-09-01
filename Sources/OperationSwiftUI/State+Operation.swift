@@ -381,7 +381,7 @@
     ///   - transaction: The transaction to apply to state updates.
     public init<Query: InfiniteQueryRequest>(
       wrappedValue: Query.State.StateValue = [],
-      _ query: Query,
+      _ query: sending Query,
       client: OperationClient? = nil,
       transaction: Transaction?
     ) where State == InfiniteQueryState<Query.PageID, Query.PageValue, Query.PageFailure> {
@@ -405,7 +405,7 @@
     ///   - animation: The animation to apply to state updates.
     public init<Query: InfiniteQueryRequest>(
       wrappedValue: Query.State.StateValue = [],
-      _ query: Query,
+      _ query: sending Query,
       client: OperationClient? = nil,
       animation: Animation
     ) where State == InfiniteQueryState<Query.PageID, Query.PageValue, Query.PageFailure> {
@@ -427,7 +427,7 @@
     ///   - client: An optional `OperationClient` to override ``SwiftUICore/EnvironmentValues/OperationClient``.
     ///   - transaction: The transaction to apply to state updates.
     public init<Query: InfiniteQueryRequest>(
-      _ query: Query.Default,
+      _ query: sending Query.Default,
       client: OperationClient? = nil,
       transaction: Transaction? = nil
     )
@@ -446,7 +446,7 @@
     ///   - client: An optional `OperationClient` to override ``SwiftUICore/EnvironmentValues/OperationClient``.
     ///   - animation: The animation to apply to state updates.
     public init<Query: InfiniteQueryRequest>(
-      _ query: Query.Default,
+      _ query: sending Query.Default,
       client: OperationClient? = nil,
       animation: Animation
     )

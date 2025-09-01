@@ -209,8 +209,11 @@ extension InfiniteQueryState: _InfiniteQueryStateProtocol {
           self.currentValue[index] = previous.page
         }
       }
-      self.nextPageId = value.nextPageId
-      self.previousPageId = value.previousPageId
+      self.nextPageId = self.updatedPageId(from: value.nextPageId, currentId: self.nextPageId)
+      self.previousPageId = self.updatedPageId(
+        from: value.previousPageId,
+        currentId: self.previousPageId
+      )
       self.valueUpdateCount += 1
       self.valueLastUpdatedAt = task.context.operationClock.now()
       self.error = nil
@@ -218,6 +221,16 @@ extension InfiniteQueryState: _InfiniteQueryStateProtocol {
       self.error = error
       self.errorUpdateCount += 1
       self.errorLastUpdatedAt = task.context.operationClock.now()
+    }
+  }
+
+  private func updatedPageId(
+    from result: InfiniteQueryOperationValue<PageID, PageValue>.PageIDResult,
+    currentId: PageID?
+  ) -> PageID? {
+    switch result {
+    case .computed(let id): id
+    case .deferred: currentId
     }
   }
 

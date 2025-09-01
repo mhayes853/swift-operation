@@ -423,7 +423,7 @@ extension SharedOperation {
   ///   - scheduler: The ``SharedOperationStateScheduler`` to schedule state updates on.
   public init<Query: InfiniteQueryRequest>(
     wrappedValue: Query.State.StateValue = [],
-    _ query: Query,
+    _ query: sending Query,
     client: OperationClient? = nil,
     scheduler: some SharedOperationStateScheduler = .synchronous
   ) where State == InfiniteQueryState<Query.PageID, Query.PageValue, Query.PageFailure> {
@@ -445,7 +445,7 @@ extension SharedOperation {
   ///   - client: A `OperationClient` to obtain the `OperationStore` from.
   ///   - scheduler: The ``SharedOperationStateScheduler`` to schedule state updates on.
   public init<Query: InfiniteQueryRequest>(
-    _ query: Query.Default,
+    _ query: sending Query.Default,
     client: OperationClient? = nil,
     scheduler: some SharedOperationStateScheduler = .synchronous
   )

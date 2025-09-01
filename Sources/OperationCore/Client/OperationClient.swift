@@ -164,7 +164,7 @@ extension OperationClient {
   ///   - initialValue: The initial value for the state of the query.
   /// - Returns: A ``OperationStore``.
   public func store<Query: InfiniteQueryRequest>(
-    for query: Query,
+    for query: sending Query,
     initialValue: Query.State.StateValue = []
   ) -> OperationStore<Query.State> {
     self.withStoreCreation(for: query) { $0(for: $1, initialValue: initialValue) }
@@ -176,7 +176,7 @@ extension OperationClient {
   ///   - query: The query.
   /// - Returns: A ``OperationStore``.
   public func store<Query: InfiniteQueryRequest>(
-    for query: Query.Default
+    for query: sending Query.Default
   ) -> OperationStore<Query.Default.State> {
     self.withStoreCreation(for: query) { $0(for: $1) }
   }

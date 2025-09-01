@@ -549,7 +549,7 @@ package struct FakeInfiniteQuery: OperationRequest, Hashable {
 
 // MARK: - TestInfiniteQuery
 
-package final class TestInfiniteQuery: InfiniteQueryRequest {
+package final class TestInfiniteQuery: InfiniteQueryRequest, Sendable {
   package let initialPageId = 0
 
   package let state = RecursiveLock([Int: String]())
@@ -798,7 +798,7 @@ package final class TestYieldableInfiniteQuery: InfiniteQueryRequest {
 
 // MARK: - WaitableInfiniteQuery
 
-package final class WaitableInfiniteQuery: InfiniteQueryRequest {
+package final class WaitableInfiniteQuery: InfiniteQueryRequest, Sendable {
   package let initialPageId = 0
 
   package typealias _Values = (

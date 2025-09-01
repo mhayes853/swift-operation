@@ -16,7 +16,7 @@ extension OperationStore {
   ///   - initialContext: The default ``OperationContext``.
   /// - Returns: A store.
   public static func detached<Query: InfiniteQueryRequest>(
-    query: Query,
+    query: sending Query,
     initialValue: Query.State.StateValue = [],
     initialContext: OperationContext = OperationContext()
   ) -> OperationStore<State>
@@ -42,7 +42,7 @@ extension OperationStore {
   ///   - initialContext: The default ``OperationContext``.
   /// - Returns: A store.
   public static func detached<Query: InfiniteQueryRequest>(
-    query: Query.Default,
+    query: sending Query.Default,
     initialContext: OperationContext = OperationContext()
   ) -> OperationStore<Query.Default.State> where State == DefaultOperation<Query>.State {
     .detached(

@@ -96,7 +96,7 @@
     ///   - animation: The `AppKitAnimation` to use for state updates.
     public init<Query: InfiniteQueryRequest>(
       wrappedValue: Query.State.StateValue = [],
-      _ query: Query,
+      _ query: sending Query,
       client: OperationClient? = nil,
       animation: AppKitAnimation
     ) where State == InfiniteQueryState<Query.PageID, Query.PageValue, Query.PageFailure> {
@@ -115,7 +115,7 @@
     ///   - client: A `OperationClient` to obtain the `OperationStore` from.
     ///   - animation: The `AppKitAnimation` to use for state updates.
     public init<Query: InfiniteQueryRequest>(
-      _ query: Query.Default,
+      _ query: sending Query.Default,
       client: OperationClient? = nil,
       animation: AppKitAnimation
     )
