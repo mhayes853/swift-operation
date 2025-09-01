@@ -8,7 +8,7 @@ struct StateManagementTests {
 
   @Test("Updates UserFriendsList From Mutation")
   func updatesUserFriendsListFromMutation() async throws {
-    let store = self.client.store(for: UserFriendsQuery(userId: 1))
+    let store = self.client.store(for: User.friendsQuery(for: 10))
     try await store.fetchNextPage()
 
     expectNoDifference(
@@ -16,8 +16,8 @@ struct StateManagementTests {
       [InfiniteQueryPage(id: 0, value: [User(id: 10, relationship: .notFriends)])]
     )
 
-    let store2 = self.client.store(for: SendFriendRequestMutation())
-    try await store2.mutate(with: SendFriendRequestMutation.Arguments(userId: 10))
+    let store2 = self.client.store(for: User.sendFriendRequestMutation)
+    try await store2.mutate(with: User.SendFriendRequestMutation.Arguments(userId: 10))
 
     expectNoDifference(
       store.currentValue,
@@ -39,60 +39,70 @@ private struct User: Hashable, Sendable {
   var relationship: Relationship
 }
 
-private struct UserFriendsQuery: InfiniteQueryRequest {
-  typealias PageID = Int
-  typealias PageValue = [User]
-
-  let userId: Int
-  let initialPageId = 0
-
-  var path: OperationPath {
-    ["user-friends", self.userId]
+extension User {
+  static func friendsQuery(for id: Int) -> some InfiniteQueryRequest<Int, [User], any Error> {
+    FriendsQuery(userId: id)
   }
 
-  func pageId(
-    after page: InfiniteQueryPage<Int, [User]>,
-    using paging: InfiniteQueryPaging<Int, [User]>,
-    in context: OperationContext
-  ) -> Int? {
-    page.id + 1
-  }
+  struct FriendsQuery: InfiniteQueryRequest {
+    typealias PageID = Int
+    typealias PageValue = [User]
 
-  func fetchPage(
-    isolation: isolated (any Actor)?,
-    using paging: InfiniteQueryPaging<Int, [User]>,
-    in context: OperationContext,
-    with continuation: OperationContinuation<[User], any Error>
-  ) async throws -> [User] {
-    [User(id: 10, relationship: .notFriends)]
+    let userId: Int
+    let initialPageId = 0
+
+    var path: OperationPath {
+      ["user-friends", self.userId]
+    }
+
+    func pageId(
+      after page: InfiniteQueryPage<Int, [User]>,
+      using paging: InfiniteQueryPaging<Int, [User]>,
+      in context: OperationContext
+    ) -> Int? {
+      page.id + 1
+    }
+
+    func fetchPage(
+      isolation: isolated (any Actor)?,
+      using paging: InfiniteQueryPaging<Int, [User]>,
+      in context: OperationContext,
+      with continuation: OperationContinuation<[User], any Error>
+    ) async throws -> [User] {
+      [User(id: 10, relationship: .notFriends)]
+    }
   }
 }
 
-private struct SendFriendRequestMutation: MutationRequest, Hashable {
-  struct Arguments: Sendable {
-    let userId: Int
-  }
+extension User {
+  static let sendFriendRequestMutation = SendFriendRequestMutation()
 
-  func mutate(
-    isolation: isolated (any Actor)?,
-    with arguments: Arguments,
-    in context: OperationContext,
-    with continuation: OperationContinuation<Void, any Error>
-  ) async throws {
-    guard let client = context.operationClient else { return }
-    for store in client.stores(matching: ["user-friends"], of: UserFriendsQuery.State.self) {
-      let pages = store.currentValue.map { page in
-        var page = page
-        page.value = page.value.map { user in
-          var user = user
-          if user.id == arguments.userId {
-            user.relationship = .friendRequestSent
+  struct SendFriendRequestMutation: MutationRequest, Hashable {
+    struct Arguments: Sendable {
+      let userId: Int
+    }
+
+    func mutate(
+      isolation: isolated (any Actor)?,
+      with arguments: Arguments,
+      in context: OperationContext,
+      with continuation: OperationContinuation<Void, any Error>
+    ) async throws {
+      guard let client = context.operationClient else { return }
+      for store in client.stores(matching: ["user-friends"], of: User.FriendsQuery.State.self) {
+        let pages = store.currentValue.map { page in
+          var page = page
+          page.value = page.value.map { user in
+            var user = user
+            if user.id == arguments.userId {
+              user.relationship = .friendRequestSent
+            }
+            return user
           }
-          return user
+          return page
         }
-        return page
+        store.currentValue = InfiniteQueryPages(uniqueElements: pages)
       }
-      store.currentValue = InfiniteQueryPages(uniqueElements: pages)
     }
   }
 }
