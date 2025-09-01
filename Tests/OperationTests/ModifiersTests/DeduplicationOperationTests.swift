@@ -99,7 +99,7 @@ private final actor DeduplicationQuery: QueryRequest, Identifiable {
   }
 }
 
-private final actor DeduplicationInfiniteQuery: InfiniteQueryRequest, Identifiable {
+private final actor DeduplicationInfiniteQuery: PaginatedRequest, Identifiable {
   nonisolated let initialPageId = 0
 
   private(set) var fetchCount = 0
@@ -109,16 +109,16 @@ private final actor DeduplicationInfiniteQuery: InfiniteQueryRequest, Identifiab
   }
 
   nonisolated func pageId(
-    after page: InfiniteQueryPage<Int, String>,
-    using paging: InfiniteQueryPaging<Int, String>,
+    after page: Page<Int, String>,
+    using paging: Paging<Int, String>,
     in context: OperationContext
   ) -> Int? {
     page.id + 1
   }
 
   nonisolated func pageId(
-    before page: InfiniteQueryPage<Int, String>,
-    using paging: InfiniteQueryPaging<Int, String>,
+    before page: Page<Int, String>,
+    using paging: Paging<Int, String>,
     in context: OperationContext
   ) -> Int? {
     page.id - 1
@@ -126,7 +126,7 @@ private final actor DeduplicationInfiniteQuery: InfiniteQueryRequest, Identifiab
 
   func fetchPage(
     isolation: isolated (any Actor)?,
-    using paging: InfiniteQueryPaging<Int, String>,
+    using paging: Paging<Int, String>,
     in context: OperationContext,
     with continuation: OperationContinuation<String, any Error>
   ) async throws -> String {

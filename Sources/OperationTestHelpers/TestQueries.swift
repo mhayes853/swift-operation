@@ -460,7 +460,7 @@ package final actor EscapingContinuationQuery: QueryRequest {
 
 // MARK: - TestInfiniteQuery
 
-package struct EmptyInfiniteQuery: InfiniteQueryRequest {
+package struct EmptyInfiniteQuery: PaginatedRequest {
   package let initialPageId: Int
   package let path: OperationPath
 
@@ -470,16 +470,16 @@ package struct EmptyInfiniteQuery: InfiniteQueryRequest {
   }
 
   package func pageId(
-    after page: InfiniteQueryPage<Int, String>,
-    using paging: InfiniteQueryPaging<Int, String>,
+    after page: Page<Int, String>,
+    using paging: Paging<Int, String>,
     in context: OperationContext
   ) -> Int? {
     nil
   }
 
   package func pageId(
-    before page: InfiniteQueryPage<Int, String>,
-    using paging: InfiniteQueryPaging<Int, String>,
+    before page: Page<Int, String>,
+    using paging: Paging<Int, String>,
     in context: OperationContext
   ) -> Int? {
     nil
@@ -487,7 +487,7 @@ package struct EmptyInfiniteQuery: InfiniteQueryRequest {
 
   package func fetchPage(
     isolation: isolated (any Actor)?,
-    using paging: InfiniteQueryPaging<Int, String>,
+    using paging: Paging<Int, String>,
     in context: OperationContext,
     with continuation: OperationContinuation<String, any Error>
   ) async throws -> String {
@@ -495,7 +495,7 @@ package struct EmptyInfiniteQuery: InfiniteQueryRequest {
   }
 }
 
-package struct EmptyIntInfiniteQuery: InfiniteQueryRequest {
+package struct EmptyIntInfiniteQuery: PaginatedRequest {
   package let initialPageId: Int
   package let path: OperationPath
 
@@ -505,16 +505,16 @@ package struct EmptyIntInfiniteQuery: InfiniteQueryRequest {
   }
 
   package func pageId(
-    after page: InfiniteQueryPage<Int, Int>,
-    using paging: InfiniteQueryPaging<Int, Int>,
+    after page: Page<Int, Int>,
+    using paging: Paging<Int, Int>,
     in context: OperationContext
   ) -> Int? {
     nil
   }
 
   package func pageId(
-    before page: InfiniteQueryPage<Int, Int>,
-    using paging: InfiniteQueryPaging<Int, Int>,
+    before page: Page<Int, Int>,
+    using paging: Paging<Int, Int>,
     in context: OperationContext
   ) -> Int? {
     nil
@@ -522,7 +522,7 @@ package struct EmptyIntInfiniteQuery: InfiniteQueryRequest {
 
   package func fetchPage(
     isolation: isolated (any Actor)?,
-    using paging: InfiniteQueryPaging<Int, Int>,
+    using paging: Paging<Int, Int>,
     in context: OperationContext,
     with continuation: OperationContinuation<Int, any Error>
   ) async throws -> Int {
@@ -533,8 +533,8 @@ package struct EmptyIntInfiniteQuery: InfiniteQueryRequest {
 // MARK: - FakeInfiniteQuery
 
 package struct FakeInfiniteQuery: OperationRequest, Hashable {
-  package typealias State = InfiniteQueryState<Int, String, any Error>
-  package typealias Value = InfiniteQueryOperationValue<Int, String>
+  package typealias State = PaginatedState<Int, String, any Error>
+  package typealias Value = PaginatedOperationValue<Int, String>
 
   package init() {}
 
@@ -549,7 +549,7 @@ package struct FakeInfiniteQuery: OperationRequest, Hashable {
 
 // MARK: - TestInfiniteQuery
 
-package final class TestInfiniteQuery: InfiniteQueryRequest, Sendable {
+package final class TestInfiniteQuery: PaginatedRequest, Sendable {
   package let initialPageId = 0
 
   package let state = RecursiveLock([Int: String]())
@@ -561,16 +561,16 @@ package final class TestInfiniteQuery: InfiniteQueryRequest, Sendable {
   }
 
   package func pageId(
-    after page: InfiniteQueryPage<Int, String>,
-    using paging: InfiniteQueryPaging<Int, String>,
+    after page: Page<Int, String>,
+    using paging: Paging<Int, String>,
     in context: OperationContext
   ) -> Int? {
     self.state.withLock { $0[page.id + 1] != nil ? page.id + 1 : nil }
   }
 
   package func pageId(
-    before page: InfiniteQueryPage<Int, String>,
-    using paging: InfiniteQueryPaging<Int, String>,
+    before page: Page<Int, String>,
+    using paging: Paging<Int, String>,
     in context: OperationContext
   ) -> Int? {
     self.state.withLock { $0[page.id - 1] != nil ? page.id - 1 : nil }
@@ -578,7 +578,7 @@ package final class TestInfiniteQuery: InfiniteQueryRequest, Sendable {
 
   package func fetchPage(
     isolation: isolated (any Actor)?,
-    using paging: InfiniteQueryPaging<Int, String>,
+    using paging: Paging<Int, String>,
     in context: OperationContext,
     with continuation: OperationContinuation<String, any Error>
   ) async throws -> String {
@@ -597,7 +597,7 @@ package final class TestInfiniteQuery: InfiniteQueryRequest, Sendable {
 
 // MARK: - TestCancellableInfiniteQuery
 
-package final class TestCancellableInfiniteQuery: InfiniteQueryRequest {
+package final class TestCancellableInfiniteQuery: PaginatedRequest {
   package let initialPageId = 0
 
   package let state = RecursiveLock([Int: String]())
@@ -609,16 +609,16 @@ package final class TestCancellableInfiniteQuery: InfiniteQueryRequest {
   }
 
   package func pageId(
-    after page: InfiniteQueryPage<Int, String>,
-    using paging: InfiniteQueryPaging<Int, String>,
+    after page: Page<Int, String>,
+    using paging: Paging<Int, String>,
     in context: OperationContext
   ) -> Int? {
     self.state.withLock { $0[page.id + 1] != nil ? page.id + 1 : nil }
   }
 
   package func pageId(
-    before page: InfiniteQueryPage<Int, String>,
-    using paging: InfiniteQueryPaging<Int, String>,
+    before page: Page<Int, String>,
+    using paging: Paging<Int, String>,
     in context: OperationContext
   ) -> Int? {
     self.state.withLock { $0[page.id - 1] != nil ? page.id - 1 : nil }
@@ -626,7 +626,7 @@ package final class TestCancellableInfiniteQuery: InfiniteQueryRequest {
 
   package func fetchPage(
     isolation: isolated (any Actor)?,
-    using paging: InfiniteQueryPaging<Int, String>,
+    using paging: Paging<Int, String>,
     in context: OperationContext,
     with continuation: OperationContinuation<String, any Error>
   ) async throws -> String {
@@ -646,7 +646,7 @@ package final class TestCancellableInfiniteQuery: InfiniteQueryRequest {
 
 // MARK: - CountingInfiniteQuery
 
-package final actor CountingInfiniteQuery: InfiniteQueryRequest {
+package final actor CountingInfiniteQuery: PaginatedRequest {
   package let initialPageId = 0
 
   package var fetchCount = 0
@@ -662,16 +662,16 @@ package final actor CountingInfiniteQuery: InfiniteQueryRequest {
   }
 
   nonisolated package func pageId(
-    after page: InfiniteQueryPage<Int, String>,
-    using paging: InfiniteQueryPaging<Int, String>,
+    after page: Page<Int, String>,
+    using paging: Paging<Int, String>,
     in context: OperationContext
   ) -> Int? {
     page.id + 1
   }
 
   nonisolated package func pageId(
-    before page: InfiniteQueryPage<Int, String>,
-    using paging: InfiniteQueryPaging<Int, String>,
+    before page: Page<Int, String>,
+    using paging: Paging<Int, String>,
     in context: OperationContext
   ) -> Int? {
     page.id - 1
@@ -679,7 +679,7 @@ package final actor CountingInfiniteQuery: InfiniteQueryRequest {
 
   package func fetchPage(
     isolation: isolated (any Actor)?,
-    using paging: InfiniteQueryPaging<Int, String>,
+    using paging: Paging<Int, String>,
     in context: OperationContext,
     with continuation: OperationContinuation<String, any Error>
   ) async throws -> String {
@@ -690,7 +690,7 @@ package final actor CountingInfiniteQuery: InfiniteQueryRequest {
 
 // MARK: - FlakeyInfiniteQuery
 
-package final class FlakeyInfiniteQuery: InfiniteQueryRequest {
+package final class FlakeyInfiniteQuery: PaginatedRequest {
   package typealias PageValue = String
   package typealias PageID = Int
 
@@ -707,8 +707,8 @@ package final class FlakeyInfiniteQuery: InfiniteQueryRequest {
   }
 
   package func pageId(
-    after page: InfiniteQueryPage<PageID, PageValue>,
-    using paging: InfiniteQueryPaging<PageID, PageValue>,
+    after page: Page<PageID, PageValue>,
+    using paging: Paging<PageID, PageValue>,
     in context: OperationContext
   ) -> PageID? {
     page.id + 1
@@ -716,7 +716,7 @@ package final class FlakeyInfiniteQuery: InfiniteQueryRequest {
 
   package func fetchPage(
     isolation: isolated (any Actor)?,
-    using paging: InfiniteQueryPaging<PageID, PageValue>,
+    using paging: Paging<PageID, PageValue>,
     in context: OperationContext,
     with continuation: OperationContinuation<PageValue, any Error>
   ) async throws -> PageValue {
@@ -736,13 +736,13 @@ package final class FlakeyInfiniteQuery: InfiniteQueryRequest {
 
 // MARK: - TestYieldableInfiniteQuery
 
-package final class TestYieldableInfiniteQuery: InfiniteQueryRequest {
+package final class TestYieldableInfiniteQuery: PaginatedRequest {
   package static func finalValue(for id: PageID) -> String {
     "page final value \(id)"
   }
 
-  package static func finalPage(for id: PageID) -> InfiniteQueryPage<Int, String> {
-    InfiniteQueryPage(id: id, value: finalValue(for: id))
+  package static func finalPage(for id: PageID) -> Page<Int, String> {
+    Page(id: id, value: finalValue(for: id))
   }
 
   package let initialPageId = 0
@@ -759,16 +759,16 @@ package final class TestYieldableInfiniteQuery: InfiniteQueryRequest {
   }
 
   package func pageId(
-    after page: InfiniteQueryPage<Int, String>,
-    using paging: InfiniteQueryPaging<Int, String>,
+    after page: Page<Int, String>,
+    using paging: Paging<Int, String>,
     in context: OperationContext
   ) -> Int? {
     page.id + 1
   }
 
   package func pageId(
-    before page: InfiniteQueryPage<Int, String>,
-    using paging: InfiniteQueryPaging<Int, String>,
+    before page: Page<Int, String>,
+    using paging: Paging<Int, String>,
     in context: OperationContext
   ) -> Int? {
     page.id - 1
@@ -776,7 +776,7 @@ package final class TestYieldableInfiniteQuery: InfiniteQueryRequest {
 
   package func fetchPage(
     isolation: isolated (any Actor)?,
-    using paging: InfiniteQueryPaging<Int, String>,
+    using paging: Paging<Int, String>,
     in context: OperationContext,
     with continuation: OperationContinuation<String, any Error>
   ) async throws -> String {
@@ -798,7 +798,7 @@ package final class TestYieldableInfiniteQuery: InfiniteQueryRequest {
 
 // MARK: - WaitableInfiniteQuery
 
-package final class WaitableInfiniteQuery: InfiniteQueryRequest, Sendable {
+package final class WaitableInfiniteQuery: PaginatedRequest, Sendable {
   package let initialPageId = 0
 
   package typealias _Values = (
@@ -834,8 +834,8 @@ package final class WaitableInfiniteQuery: InfiniteQueryRequest, Sendable {
   }
 
   package func pageId(
-    after page: InfiniteQueryPage<Int, String>,
-    using paging: InfiniteQueryPaging<Int, String>,
+    after page: Page<Int, String>,
+    using paging: Paging<Int, String>,
     in context: OperationContext
   ) -> Int? {
     self.state.withLock {
@@ -845,8 +845,8 @@ package final class WaitableInfiniteQuery: InfiniteQueryRequest, Sendable {
   }
 
   package func pageId(
-    before page: InfiniteQueryPage<Int, String>,
-    using paging: InfiniteQueryPaging<Int, String>,
+    before page: Page<Int, String>,
+    using paging: Paging<Int, String>,
     in context: OperationContext
   ) -> Int? {
     self.state.withLock {
@@ -857,7 +857,7 @@ package final class WaitableInfiniteQuery: InfiniteQueryRequest, Sendable {
 
   package func fetchPage(
     isolation: isolated (any Actor)?,
-    using paging: InfiniteQueryPaging<Int, String>,
+    using paging: Paging<Int, String>,
     in context: OperationContext,
     with continuation: OperationContinuation<String, any Error>
   ) async throws -> String {
@@ -883,7 +883,7 @@ package final class WaitableInfiniteQuery: InfiniteQueryRequest, Sendable {
 
 // MARK: - FailingInfiniteQuery
 
-package final class FailableInfiniteQuery: InfiniteQueryRequest {
+package final class FailableInfiniteQuery: PaginatedRequest {
   package let initialPageId = 0
 
   package let state = Lock<String?>(nil)
@@ -899,8 +899,8 @@ package final class FailableInfiniteQuery: InfiniteQueryRequest {
   }
 
   package func pageId(
-    after page: InfiniteQueryPage<Int, String>,
-    using paging: InfiniteQueryPaging<Int, String>,
+    after page: Page<Int, String>,
+    using paging: Paging<Int, String>,
     in context: OperationContext
   ) -> Int? {
     page.id + 1
@@ -908,7 +908,7 @@ package final class FailableInfiniteQuery: InfiniteQueryRequest {
 
   package func fetchPage(
     isolation: isolated (any Actor)?,
-    using paging: InfiniteQueryPaging<Int, String>,
+    using paging: Paging<Int, String>,
     in context: OperationContext,
     with continuation: OperationContinuation<String, any Error>
   ) async throws -> String {

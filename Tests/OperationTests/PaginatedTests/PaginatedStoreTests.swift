@@ -4,8 +4,8 @@ import Operation
 import OperationTestHelpers
 import Testing
 
-@Suite("InfiniteOperationStore tests")
-struct InfiniteOperationStoreTests {
+@Suite("PaginatedOperationStore tests")
+struct PaginatedStoreTests {
   private let client = OperationClient()
 
   @Test("Is Loading All Pages When Fetching All Pages")
@@ -59,8 +59,8 @@ struct InfiniteOperationStoreTests {
     query.state.withLock { $0 = [0: "c", 1: "d", 2: "e"] }
     let pages = try await store.refetchAllPages()
 
-    let expectedPages = InfiniteQueryPages<Int, String>(
-      uniqueElements: [InfiniteQueryPage(id: 0, value: "c"), InfiniteQueryPage(id: 1, value: "d")]
+    let expectedPages = Pages<Int, String>(
+      uniqueElements: [Page(id: 0, value: "c"), Page(id: 1, value: "d")]
     )
     expectNoDifference(pages, expectedPages)
     expectNoDifference(store.state.currentValue, expectedPages)
@@ -76,8 +76,8 @@ struct InfiniteOperationStoreTests {
     try await store.fetchNextPage()
     query.state.withLock { $0 = [0: "c"] }
     let pages = try await store.refetchAllPages()
-    let expectedPages = InfiniteQueryPages<Int, String>(
-      uniqueElements: [InfiniteQueryPage(id: 0, value: "c")]
+    let expectedPages = Pages<Int, String>(
+      uniqueElements: [Page(id: 0, value: "c")]
     )
     expectNoDifference(pages, expectedPages)
     expectNoDifference(store.state.currentValue, expectedPages)
@@ -97,11 +97,11 @@ struct InfiniteOperationStoreTests {
     try await store.fetchPreviousPage()
     let pages = try await store.refetchAllPages()
 
-    let expectedPages = InfiniteQueryPages<Int, String>(
+    let expectedPages = Pages<Int, String>(
       uniqueElements: [
-        InfiniteQueryPage(id: -1, value: "d"),
-        InfiniteQueryPage(id: 0, value: "e"),
-        InfiniteQueryPage(id: 1, value: "f")
+        Page(id: -1, value: "d"),
+        Page(id: 0, value: "e"),
+        Page(id: 1, value: "f")
       ]
     )
     expectNoDifference(pages, expectedPages)
@@ -123,11 +123,11 @@ struct InfiniteOperationStoreTests {
     let task = store.refetchAllPagesTask()
     let pages = try await task.runIfNeeded()
 
-    let expectedPages = InfiniteQueryPages<Int, String>(
+    let expectedPages = Pages<Int, String>(
       uniqueElements: [
-        InfiniteQueryPage(id: -1, value: "d"),
-        InfiniteQueryPage(id: 0, value: "e"),
-        InfiniteQueryPage(id: 1, value: "f")
+        Page(id: -1, value: "d"),
+        Page(id: 0, value: "e"),
+        Page(id: 1, value: "f")
       ]
     )
     expectNoDifference(pages, expectedPages)
@@ -141,8 +141,8 @@ struct InfiniteOperationStoreTests {
     query.state.withLock { $0[0] = "blob" }
     let store = self.client.store(for: query)
     let page = try await store.fetchNextPage()
-    expectNoDifference(page, InfiniteQueryPage(id: 0, value: "blob"))
-    expectNoDifference(store.state.currentValue, [InfiniteQueryPage(id: 0, value: "blob")])
+    expectNoDifference(page, Page(id: 0, value: "blob"))
+    expectNoDifference(store.state.currentValue, [Page(id: 0, value: "blob")])
     expectNoDifference(store.state.status.isSuccessful, true)
   }
 
@@ -201,10 +201,10 @@ struct InfiniteOperationStoreTests {
     expectNoDifference(store.hasPreviousPage, false)
 
     let page = try await store.fetchNextPage()
-    expectNoDifference(page, InfiniteQueryPage(id: 1, value: "blob jr"))
+    expectNoDifference(page, Page(id: 1, value: "blob jr"))
     expectNoDifference(
       store.state.currentValue,
-      [InfiniteQueryPage(id: 0, value: "blob"), InfiniteQueryPage(id: 1, value: "blob jr")]
+      [Page(id: 0, value: "blob"), Page(id: 1, value: "blob jr")]
     )
     expectNoDifference(store.state.status.isSuccessful, true)
   }
@@ -221,10 +221,10 @@ struct InfiniteOperationStoreTests {
 
     let task = store.fetchNextPageTask()
     let page = try await task.runIfNeeded()
-    expectNoDifference(page, InfiniteQueryPage(id: 1, value: "blob jr"))
+    expectNoDifference(page, Page(id: 1, value: "blob jr"))
     expectNoDifference(
       store.state.currentValue,
-      [InfiniteQueryPage(id: 0, value: "blob"), InfiniteQueryPage(id: 1, value: "blob jr")]
+      [Page(id: 0, value: "blob"), Page(id: 1, value: "blob jr")]
     )
     expectNoDifference(store.state.status.isSuccessful, true)
   }
@@ -235,8 +235,8 @@ struct InfiniteOperationStoreTests {
     query.state.withLock { $0 = [0: "blob"] }
     let store = self.client.store(for: query)
     let page = try await store.fetchPreviousPage()
-    expectNoDifference(page, InfiniteQueryPage(id: 0, value: "blob"))
-    expectNoDifference(store.state.currentValue, [InfiniteQueryPage(id: 0, value: "blob")])
+    expectNoDifference(page, Page(id: 0, value: "blob"))
+    expectNoDifference(store.state.currentValue, [Page(id: 0, value: "blob")])
     expectNoDifference(store.state.status.isSuccessful, true)
   }
 
@@ -292,9 +292,9 @@ struct InfiniteOperationStoreTests {
     async let p1 = store.fetchNextPage()
     async let p2 = store.fetchPreviousPage()
     let (page1, page2) = try await (p1, p2)
-    expectNoDifference(page1, InfiniteQueryPage(id: 0, value: "blob"))
+    expectNoDifference(page1, Page(id: 0, value: "blob"))
     expectNoDifference(page2, page1)
-    expectNoDifference(store.state.currentValue, [InfiniteQueryPage(id: 0, value: "blob")])
+    expectNoDifference(store.state.currentValue, [Page(id: 0, value: "blob")])
     expectNoDifference(store.state.status.isSuccessful, true)
   }
 
@@ -310,10 +310,10 @@ struct InfiniteOperationStoreTests {
 
     let page = try await store.fetchPreviousPage()
 
-    expectNoDifference(page, InfiniteQueryPage(id: -1, value: "blob jr"))
+    expectNoDifference(page, Page(id: -1, value: "blob jr"))
     expectNoDifference(
       store.state.currentValue,
-      [InfiniteQueryPage(id: -1, value: "blob jr"), InfiniteQueryPage(id: 0, value: "blob")]
+      [Page(id: -1, value: "blob jr"), Page(id: 0, value: "blob")]
     )
     expectNoDifference(store.state.status.isSuccessful, true)
   }
@@ -331,10 +331,10 @@ struct InfiniteOperationStoreTests {
     let task = store.fetchPreviousPageTask()
     let page = try await task.runIfNeeded()
 
-    expectNoDifference(page, InfiniteQueryPage(id: -1, value: "blob jr"))
+    expectNoDifference(page, Page(id: -1, value: "blob jr"))
     expectNoDifference(
       store.state.currentValue,
-      [InfiniteQueryPage(id: -1, value: "blob jr"), InfiniteQueryPage(id: 0, value: "blob")]
+      [Page(id: -1, value: "blob jr"), Page(id: 0, value: "blob")]
     )
     expectNoDifference(store.state.status.isSuccessful, true)
   }
@@ -347,7 +347,7 @@ struct InfiniteOperationStoreTests {
     try await store.fetchPreviousPage()
     let page = try await store.fetchPreviousPage()
     expectNoDifference(page, nil)
-    expectNoDifference(store.currentValue, [InfiniteQueryPage(id: 0, value: "blob")])
+    expectNoDifference(store.currentValue, [Page(id: 0, value: "blob")])
     expectNoDifference(store.status.isSuccessful, true)
   }
 
@@ -368,7 +368,7 @@ struct InfiniteOperationStoreTests {
     try await store.fetchNextPage()
     let page = try await store.fetchNextPage()
     expectNoDifference(page, nil)
-    expectNoDifference(store.currentValue, [InfiniteQueryPage(id: 0, value: "blob")])
+    expectNoDifference(store.currentValue, [Page(id: 0, value: "blob")])
     expectNoDifference(store.status.isSuccessful, true)
   }
 
@@ -406,15 +406,15 @@ struct InfiniteOperationStoreTests {
 
     expectNoDifference(
       pages,
-      [InfiniteQueryPage(id: 0, value: "a"), InfiniteQueryPage(id: 2, value: "b")]
+      [Page(id: 0, value: "a"), Page(id: 2, value: "b")]
     )
-    expectNoDifference(page, InfiniteQueryPage(id: 3, value: "c"))
+    expectNoDifference(page, Page(id: 3, value: "c"))
     expectNoDifference(
       store.state.currentValue,
       [
-        InfiniteQueryPage(id: 0, value: "a"),
-        InfiniteQueryPage(id: 2, value: "b"),
-        InfiniteQueryPage(id: 3, value: "c")
+        Page(id: 0, value: "a"),
+        Page(id: 2, value: "b"),
+        Page(id: 3, value: "c")
       ]
     )
     expectNoDifference(store.state.status.isSuccessful, true)
@@ -448,19 +448,19 @@ struct InfiniteOperationStoreTests {
     expectNoDifference(
       pages,
       [
-        InfiniteQueryPage(id: -2, value: "a"),
-        InfiniteQueryPage(id: -1, value: "b"),
-        InfiniteQueryPage(id: 2, value: "c")
+        Page(id: -2, value: "a"),
+        Page(id: -1, value: "b"),
+        Page(id: 2, value: "c")
       ]
     )
-    expectNoDifference(page, InfiniteQueryPage(id: -3, value: "d"))
+    expectNoDifference(page, Page(id: -3, value: "d"))
     expectNoDifference(
       store.state.currentValue,
       [
-        InfiniteQueryPage(id: -3, value: "d"),
-        InfiniteQueryPage(id: -2, value: "a"),
-        InfiniteQueryPage(id: -1, value: "b"),
-        InfiniteQueryPage(id: 2, value: "c")
+        Page(id: -3, value: "d"),
+        Page(id: -2, value: "a"),
+        Page(id: -1, value: "b"),
+        Page(id: 2, value: "c")
       ]
     )
     expectNoDifference(store.state.status.isSuccessful, true)
@@ -478,14 +478,14 @@ struct InfiniteOperationStoreTests {
     async let next = store.fetchNextPage()
     let (previousPage, nextPage) = try await (previous, next)
 
-    expectNoDifference(previousPage, InfiniteQueryPage(id: -1, value: "c"))
-    expectNoDifference(nextPage, InfiniteQueryPage(id: 1, value: "b"))
+    expectNoDifference(previousPage, Page(id: -1, value: "c"))
+    expectNoDifference(nextPage, Page(id: 1, value: "b"))
     expectNoDifference(
       store.state.currentValue,
       [
-        InfiniteQueryPage(id: -1, value: "c"),
-        InfiniteQueryPage(id: 0, value: "blob"),
-        InfiniteQueryPage(id: 1, value: "b")
+        Page(id: -1, value: "c"),
+        Page(id: 0, value: "blob"),
+        Page(id: 1, value: "b")
       ]
     )
     expectNoDifference(store.state.status.isSuccessful, true)
@@ -507,7 +507,7 @@ struct InfiniteOperationStoreTests {
     query.state.withLock { $0 = [0: "a", 1: "c", -1: "d"] }
     try await store.run()
 
-    expectNoDifference(store.currentValue, [InfiniteQueryPage(id: 0, value: "a")])
+    expectNoDifference(store.currentValue, [Page(id: 0, value: "a")])
     expectNoDifference(store.status.isSuccessful, true)
   }
 
@@ -523,9 +523,9 @@ struct InfiniteOperationStoreTests {
       .stateChanged,
       .fetchingStarted,
       .pageFetchingStarted(0),
-      .pageResultReceived(0, .success(InfiniteQueryPage(id: 0, value: "a"))),
+      .pageResultReceived(0, .success(Page(id: 0, value: "a"))),
       .pageFetchingEnded(0),
-      .resultReceived(.success([InfiniteQueryPage(id: 0, value: "a")])),
+      .resultReceived(.success([Page(id: 0, value: "a")])),
       .stateChanged,
       .fetchingEnded
     ])
@@ -561,9 +561,9 @@ struct InfiniteOperationStoreTests {
       .stateChanged,
       .fetchingStarted,
       .pageFetchingStarted(0),
-      .pageResultReceived(0, .success(InfiniteQueryPage(id: 0, value: "a"))),
+      .pageResultReceived(0, .success(Page(id: 0, value: "a"))),
       .pageFetchingEnded(0),
-      .resultReceived(.success([InfiniteQueryPage(id: 0, value: "a")])),
+      .resultReceived(.success([Page(id: 0, value: "a")])),
       .stateChanged,
       .fetchingEnded
     ])
@@ -601,13 +601,13 @@ struct InfiniteOperationStoreTests {
       .stateChanged,
       .fetchingStarted,
       .pageFetchingStarted(0),
-      .pageResultReceived(0, .success(InfiniteQueryPage(id: 0, value: "a"))),
+      .pageResultReceived(0, .success(Page(id: 0, value: "a"))),
       .pageFetchingEnded(0),
       .pageFetchingStarted(1),
-      .pageResultReceived(1, .success(InfiniteQueryPage(id: 1, value: "b"))),
+      .pageResultReceived(1, .success(Page(id: 1, value: "b"))),
       .pageFetchingEnded(1),
       .resultReceived(
-        .success([InfiniteQueryPage(id: 0, value: "a"), InfiniteQueryPage(id: 1, value: "b")])
+        .success([Page(id: 0, value: "a"), Page(id: 1, value: "b")])
       ),
       .stateChanged,
       .fetchingEnded
@@ -655,9 +655,9 @@ struct InfiniteOperationStoreTests {
       .stateChanged,
       .fetchingStarted,
       .pageFetchingStarted(0),
-      .pageResultReceived(0, .success(InfiniteQueryPage(id: 0, value: "a"))),
+      .pageResultReceived(0, .success(Page(id: 0, value: "a"))),
       .pageFetchingEnded(0),
-      .resultReceived(.success([InfiniteQueryPage(id: 0, value: "a")])),
+      .resultReceived(.success([Page(id: 0, value: "a")])),
       .stateChanged,
       .fetchingEnded
     ])
@@ -678,9 +678,9 @@ struct InfiniteOperationStoreTests {
       .stateChanged,
       .fetchingStarted,
       .pageFetchingStarted(0),
-      .pageResultReceived(0, .success(InfiniteQueryPage(id: 0, value: "a"))),
+      .pageResultReceived(0, .success(Page(id: 0, value: "a"))),
       .pageFetchingEnded(0),
-      .resultReceived(.success([InfiniteQueryPage(id: 0, value: "a")])),
+      .resultReceived(.success([Page(id: 0, value: "a")])),
       .stateChanged,
       .fetchingEnded
     ])
@@ -693,7 +693,7 @@ struct InfiniteOperationStoreTests {
     let task = store.refetchAllPagesTask()
     expectNoDifference(
       task.configuration.name,
-      "OperationStore<InfiniteQueryState<Int, String, Error>> Fetch All Pages Task"
+      "OperationStore<PaginatedState<Int, String, Error>> Fetch All Pages Task"
     )
   }
 
@@ -703,7 +703,7 @@ struct InfiniteOperationStoreTests {
     let task = store.fetchNextPageTask()
     expectNoDifference(
       task.configuration.name,
-      "OperationStore<InfiniteQueryState<Int, String, Error>> Fetch Next Page Task"
+      "OperationStore<PaginatedState<Int, String, Error>> Fetch Next Page Task"
     )
   }
 
@@ -713,7 +713,7 @@ struct InfiniteOperationStoreTests {
     let task = store.fetchPreviousPageTask()
     expectNoDifference(
       task.configuration.name,
-      "OperationStore<InfiniteQueryState<Int, String, Error>> Fetch Previous Page Task"
+      "OperationStore<PaginatedState<Int, String, Error>> Fetch Previous Page Task"
     )
   }
 
@@ -726,8 +726,8 @@ struct InfiniteOperationStoreTests {
     let date = RecursiveLock(Date())
     store.context.operationClock = CustomOperationClock { date.withLock { $0 } }
 
-    controller.controls.withLock { $0?.yield([InfiniteQueryPage(id: 0, value: "blob")]) }
-    expectNoDifference(store.currentValue, [InfiniteQueryPage(id: 0, value: "blob")])
+    controller.controls.withLock { $0?.yield([Page(id: 0, value: "blob")]) }
+    expectNoDifference(store.currentValue, [Page(id: 0, value: "blob")])
     expectNoDifference(store.valueUpdateCount, 1)
     expectNoDifference(store.valueLastUpdatedAt, date.withLock { $0 })
 
@@ -752,13 +752,13 @@ struct InfiniteOperationStoreTests {
     let task = Task { try await store.fetchNextPage() }
     try await query.waitForLoading()
 
-    controller.controls.withLock { $0?.yield([InfiniteQueryPage(id: 0, value: "blob")]) }
-    expectNoDifference(store.currentValue, [InfiniteQueryPage(id: 0, value: "blob")])
+    controller.controls.withLock { $0?.yield([Page(id: 0, value: "blob")]) }
+    expectNoDifference(store.currentValue, [Page(id: 0, value: "blob")])
 
     await query.advance()
     _ = try await task.value
 
-    expectNoDifference(store.currentValue, [InfiniteQueryPage(id: 0, value: "vlov")])
+    expectNoDifference(store.currentValue, [Page(id: 0, value: "vlov")])
   }
 
   @Test("Controller Yields New State Value To Infinite Query While Fetching Next Page")
@@ -777,13 +777,13 @@ struct InfiniteOperationStoreTests {
     let task = Task { try await store.fetchNextPage() }
     try await query.waitForLoading()
 
-    controller.controls.withLock { $0?.yield([InfiniteQueryPage(id: 10, value: "blob")]) }
-    expectNoDifference(store.currentValue, [InfiniteQueryPage(id: 10, value: "blob")])
+    controller.controls.withLock { $0?.yield([Page(id: 10, value: "blob")]) }
+    expectNoDifference(store.currentValue, [Page(id: 10, value: "blob")])
 
     await query.advance()
     _ = try await task.value
 
-    expectNoDifference(store.currentValue, [InfiniteQueryPage(id: 10, value: "blob")])
+    expectNoDifference(store.currentValue, [Page(id: 10, value: "blob")])
   }
 
   @Test("ControllerYields New Error Value To Infinite Query")
@@ -810,15 +810,15 @@ struct InfiniteOperationStoreTests {
     let store = self.client.store(for: query)
     let collector = InfiniteOperationStoreEventsCollector<TestYieldableInfiniteQuery.State>()
     let value = try await store.fetchNextPage(handler: collector.eventHandler())
-    let finalPage = InfiniteQueryPage(id: 0, value: TestYieldableInfiniteQuery.finalValue(for: 0))
+    let finalPage = Page(id: 0, value: TestYieldableInfiniteQuery.finalValue(for: 0))
 
     collector.expectEventsMatch([
       .stateChanged,
       .fetchingStarted,
       .pageFetchingStarted(0),
-      .pageResultReceived(0, .success(InfiniteQueryPage(id: 0, value: "blob"))),
+      .pageResultReceived(0, .success(Page(id: 0, value: "blob"))),
       .stateChanged,
-      .pageResultReceived(0, .success(InfiniteQueryPage(id: 0, value: "blob jr"))),
+      .pageResultReceived(0, .success(Page(id: 0, value: "blob jr"))),
       .stateChanged,
       .pageResultReceived(0, .success(finalPage)),
       .pageFetchingEnded(0),
@@ -845,9 +845,9 @@ struct InfiniteOperationStoreTests {
       .stateChanged,
       .fetchingStarted,
       .pageFetchingStarted(1),
-      .pageResultReceived(1, .success(InfiniteQueryPage(id: 1, value: "blob"))),
+      .pageResultReceived(1, .success(Page(id: 1, value: "blob"))),
       .stateChanged,
-      .pageResultReceived(1, .success(InfiniteQueryPage(id: 1, value: "blob jr"))),
+      .pageResultReceived(1, .success(Page(id: 1, value: "blob jr"))),
       .stateChanged,
       .pageResultReceived(1, .success(finalPage)),
       .pageFetchingEnded(1),
@@ -874,9 +874,9 @@ struct InfiniteOperationStoreTests {
       .stateChanged,
       .fetchingStarted,
       .pageFetchingStarted(-1),
-      .pageResultReceived(-1, .success(InfiniteQueryPage(id: -1, value: "blob"))),
+      .pageResultReceived(-1, .success(Page(id: -1, value: "blob"))),
       .stateChanged,
-      .pageResultReceived(-1, .success(InfiniteQueryPage(id: -1, value: "blob jr"))),
+      .pageResultReceived(-1, .success(Page(id: -1, value: "blob jr"))),
       .stateChanged,
       .pageResultReceived(-1, .success(finalPage)),
       .pageFetchingEnded(-1),
@@ -907,14 +907,14 @@ struct InfiniteOperationStoreTests {
       .stateChanged,
       .fetchingStarted,
       .pageFetchingStarted(0),
-      .pageResultReceived(0, .success(InfiniteQueryPage(id: 0, value: "blob"))),
+      .pageResultReceived(0, .success(Page(id: 0, value: "blob"))),
       .stateChanged,
-      .pageResultReceived(0, .success(InfiniteQueryPage(id: 0, value: "blob jr"))),
+      .pageResultReceived(0, .success(Page(id: 0, value: "blob jr"))),
       .stateChanged,
       .pageResultReceived(0, .success(TestYieldableInfiniteQuery.finalPage(for: 0))),
       .pageFetchingEnded(0),
       .pageFetchingStarted(1),
-      .pageResultReceived(1, .success(InfiniteQueryPage(id: 1, value: "trob"))),
+      .pageResultReceived(1, .success(Page(id: 1, value: "trob"))),
       .stateChanged,
       .pageResultReceived(1, .failure(SomeError())),
       .stateChanged,
@@ -944,7 +944,7 @@ struct InfiniteOperationStoreTests {
       .stateChanged,
       .fetchingStarted,
       .pageFetchingStarted(0),
-      .pageResultReceived(0, .success(InfiniteQueryPage(id: 0, value: "blob"))),
+      .pageResultReceived(0, .success(Page(id: 0, value: "blob"))),
       .stateChanged,
       .pageResultReceived(0, .failure(TestYieldableInfiniteQuery.SomeError())),
       .pageFetchingEnded(0),
@@ -1008,7 +1008,7 @@ struct InfiniteOperationStoreTests {
     _ = await confirmation { confirm in
       await #expect(throws: Error.self) {
         try await store.fetchNextPage(
-          handler: InfiniteQueryEventHandler(
+          handler: PaginatedEventHandler(
             onPageResultReceived: { _, _, context in
               guard context.operationResultUpdateReason == .yieldedResult else { return }
               confirm()
@@ -1026,7 +1026,7 @@ struct InfiniteOperationStoreTests {
     _ = await confirmation { confirm in
       await #expect(throws: Error.self) {
         try await store.fetchNextPage(
-          handler: InfiniteQueryEventHandler(
+          handler: PaginatedEventHandler(
             onPageResultReceived: { _, _, context in
               guard context.operationResultUpdateReason == .returnedFinalResult else { return }
               confirm()
@@ -1039,8 +1039,8 @@ struct InfiniteOperationStoreTests {
 
   @Test("Uses Default Value When Value Never Been Set")
   func usesDefaultValueWhenValueNeverBeenSet() {
-    let page = InfiniteQueryPage(id: 0, value: "blob")
-    let page2 = InfiniteQueryPage(id: 0, value: "blob 2")
+    let page = Page(id: 0, value: "blob")
+    let page2 = Page(id: 0, value: "blob 2")
     let store = self.client.store(for: FailableInfiniteQuery().defaultValue([page]))
 
     expectNoDifference(store.currentValue, [page])

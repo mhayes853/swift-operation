@@ -13,7 +13,7 @@ struct StateManagementTests {
 
     expectNoDifference(
       store.currentValue,
-      [InfiniteQueryPage(id: 0, value: [User(id: 10, relationship: .notFriends)])]
+      [Page(id: 0, value: [User(id: 10, relationship: .notFriends)])]
     )
 
     let store2 = self.client.store(for: User.sendFriendRequestMutation)
@@ -21,7 +21,7 @@ struct StateManagementTests {
 
     expectNoDifference(
       store.currentValue,
-      [InfiniteQueryPage(id: 0, value: [User(id: 10, relationship: .friendRequestSent)])]
+      [Page(id: 0, value: [User(id: 10, relationship: .friendRequestSent)])]
     )
   }
 }
@@ -40,11 +40,11 @@ private struct User: Hashable, Sendable {
 }
 
 extension User {
-  static func friendsQuery(for id: Int) -> some InfiniteQueryRequest<Int, [User], any Error> {
+  static func friendsQuery(for id: Int) -> some PaginatedRequest<Int, [User], any Error> {
     FriendsQuery(userId: id)
   }
 
-  struct FriendsQuery: InfiniteQueryRequest {
+  struct FriendsQuery: PaginatedRequest {
     typealias PageID = Int
     typealias PageValue = [User]
 
@@ -56,8 +56,8 @@ extension User {
     }
 
     func pageId(
-      after page: InfiniteQueryPage<Int, [User]>,
-      using paging: InfiniteQueryPaging<Int, [User]>,
+      after page: Page<Int, [User]>,
+      using paging: Paging<Int, [User]>,
       in context: OperationContext
     ) -> Int? {
       page.id + 1
@@ -65,7 +65,7 @@ extension User {
 
     func fetchPage(
       isolation: isolated (any Actor)?,
-      using paging: InfiniteQueryPaging<Int, [User]>,
+      using paging: Paging<Int, [User]>,
       in context: OperationContext,
       with continuation: OperationContinuation<[User], any Error>
     ) async throws -> [User] {
@@ -101,7 +101,7 @@ extension User {
           }
           return page
         }
-        store.currentValue = InfiniteQueryPages(uniqueElements: pages)
+        store.currentValue = Pages(uniqueElements: pages)
       }
     }
   }

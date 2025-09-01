@@ -88,7 +88,7 @@ extension MutationStoreEventsCollector {
 
 // MARK: - InfiniteOperationStoreEvent
 
-package enum InfiniteOperationStoreEvent<State: _InfiniteQueryStateProtocol>: Sendable
+package enum InfiniteOperationStoreEvent<State: _PaginatedStateProtocol>: Sendable
 where State.PageID: Equatable, State.PageValue: Equatable {
   case fetchingStarted
   case fetchingEnded
@@ -96,9 +96,9 @@ where State.PageID: Equatable, State.PageValue: Equatable {
   case pageFetchingEnded(State.PageID)
   case pageResultReceived(
     State.PageID,
-    Result<InfiniteQueryPage<State.PageID, State.PageValue>, State.Failure>
+    Result<Page<State.PageID, State.PageValue>, State.Failure>
   )
-  case resultReceived(Result<InfiniteQueryPages<State.PageID, State.PageValue>, State.Failure>)
+  case resultReceived(Result<Pages<State.PageID, State.PageValue>, State.Failure>)
   case stateChanged
 }
 
@@ -139,15 +139,15 @@ extension InfiniteOperationStoreEvent: OperationStoreEventProtocol {
 }
 
 package typealias InfiniteOperationStoreEventsCollector<
-  State: _InfiniteQueryStateProtocol
+  State: _PaginatedStateProtocol
 > = _OperationStoreEventsCollector<InfiniteOperationStoreEvent<State>>
 where State.PageID: Equatable, State.PageValue: Equatable
 
 extension InfiniteOperationStoreEventsCollector {
-  package func eventHandler<State: _InfiniteQueryStateProtocol>()
-    -> InfiniteQueryEventHandler<State>
+  package func eventHandler<State: _PaginatedStateProtocol>()
+    -> PaginatedEventHandler<State>
   where Event == InfiniteOperationStoreEvent<State> {
-    InfiniteQueryEventHandler(
+    PaginatedEventHandler(
       onStateChanged: { _, _ in self.events.withLock { $0.append(.stateChanged) } },
       onFetchingStarted: { _ in self.events.withLock { $0.append(.fetchingStarted) } },
       onPageFetchingStarted: { id, _ in self.events.withLock { $0.append(.pageFetchingStarted(id)) }

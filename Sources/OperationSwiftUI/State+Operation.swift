@@ -379,15 +379,15 @@
     ///   - query: The query to observe.
     ///   - client: An optional `OperationClient` to override ``SwiftUICore/EnvironmentValues/OperationClient``.
     ///   - transaction: The transaction to apply to state updates.
-    public init<Query: InfiniteQueryRequest>(
+    public init<Query: PaginatedRequest>(
       wrappedValue: Query.State.StateValue = [],
       _ query: sending Query,
       client: OperationClient? = nil,
       transaction: Transaction?
-    ) where State == InfiniteQueryState<Query.PageID, Query.PageValue, Query.PageFailure> {
+    ) where State == PaginatedState<Query.PageID, Query.PageValue, Query.PageFailure> {
       self.init(
         query,
-        initialState: InfiniteQueryState(
+        initialState: PaginatedState(
           initialValue: wrappedValue,
           initialPageId: query.initialPageId
         ),
@@ -403,15 +403,15 @@
     ///   - query: The query to observe.
     ///   - client: An optional `OperationClient` to override ``SwiftUICore/EnvironmentValues/OperationClient``.
     ///   - animation: The animation to apply to state updates.
-    public init<Query: InfiniteQueryRequest>(
+    public init<Query: PaginatedRequest>(
       wrappedValue: Query.State.StateValue = [],
       _ query: sending Query,
       client: OperationClient? = nil,
       animation: Animation
-    ) where State == InfiniteQueryState<Query.PageID, Query.PageValue, Query.PageFailure> {
+    ) where State == PaginatedState<Query.PageID, Query.PageValue, Query.PageFailure> {
       self.init(
         query,
-        initialState: InfiniteQueryState(
+        initialState: PaginatedState(
           initialValue: wrappedValue,
           initialPageId: query.initialPageId
         ),
@@ -426,14 +426,14 @@
     ///   - query: The query to observe.
     ///   - client: An optional `OperationClient` to override ``SwiftUICore/EnvironmentValues/OperationClient``.
     ///   - transaction: The transaction to apply to state updates.
-    public init<Query: InfiniteQueryRequest>(
+    public init<Query: PaginatedRequest>(
       _ query: sending Query.Default,
       client: OperationClient? = nil,
       transaction: Transaction? = nil
     )
     where
       State == DefaultOperationState<
-        InfiniteQueryState<Query.PageID, Query.PageValue, Query.PageFailure>
+        PaginatedState<Query.PageID, Query.PageValue, Query.PageFailure>
       >
     {
       self.init(query, initialState: query.initialState, client: client, transaction: transaction)
@@ -445,14 +445,14 @@
     ///   - query: The query to observe.
     ///   - client: An optional `OperationClient` to override ``SwiftUICore/EnvironmentValues/OperationClient``.
     ///   - animation: The animation to apply to state updates.
-    public init<Query: InfiniteQueryRequest>(
+    public init<Query: PaginatedRequest>(
       _ query: sending Query.Default,
       client: OperationClient? = nil,
       animation: Animation
     )
     where
       State == DefaultOperationState<
-        InfiniteQueryState<Query.PageID, Query.PageValue, Query.PageFailure>
+        PaginatedState<Query.PageID, Query.PageValue, Query.PageFailure>
       >
     {
       self.init(
@@ -464,7 +464,7 @@
     }
   }
 
-  extension State.Operation where State: _InfiniteQueryStateProtocol {
+  extension State.Operation where State: _PaginatedStateProtocol {
     /// Refetches all existing pages on the query.
     ///
     /// This method will refetch pages in a waterfall effect, starting from the first page, and then
@@ -479,8 +479,8 @@
     @discardableResult
     public func refetchAllPages(
       using context: OperationContext? = nil,
-      handler: InfiniteQueryEventHandler<State> = InfiniteQueryEventHandler()
-    ) async throws(State.Failure) -> InfiniteQueryPages<State.PageID, State.PageValue> {
+      handler: PaginatedEventHandler<State> = PaginatedEventHandler()
+    ) async throws(State.Failure) -> Pages<State.PageID, State.PageValue> {
       try await self.store.refetchAllPages(using: context, handler: handler)
     }
 
@@ -499,7 +499,7 @@
     /// - Returns: A task to refetch all pages.
     public func refetchAllPagesTask(
       using context: OperationContext? = nil
-    ) -> OperationTask<InfiniteQueryPages<State.PageID, State.PageValue>, State.Failure> {
+    ) -> OperationTask<Pages<State.PageID, State.PageValue>, State.Failure> {
       self.store.refetchAllPagesTask(using: context)
     }
 
@@ -516,8 +516,8 @@
     @discardableResult
     public func fetchNextPage(
       using context: OperationContext? = nil,
-      handler: InfiniteQueryEventHandler<State> = InfiniteQueryEventHandler()
-    ) async throws(State.Failure) -> InfiniteQueryPage<State.PageID, State.PageValue>? {
+      handler: PaginatedEventHandler<State> = PaginatedEventHandler()
+    ) async throws(State.Failure) -> Page<State.PageID, State.PageValue>? {
       try await self.store.fetchNextPage(using: context, handler: handler)
     }
 
@@ -536,7 +536,7 @@
     /// - Returns: The fetched page.
     public func fetchNextPageTask(
       using context: OperationContext? = nil
-    ) -> OperationTask<InfiniteQueryPage<State.PageID, State.PageValue>?, State.Failure> {
+    ) -> OperationTask<Page<State.PageID, State.PageValue>?, State.Failure> {
       self.store.fetchNextPageTask(using: context)
     }
 
@@ -553,8 +553,8 @@
     @discardableResult
     public func fetchPreviousPage(
       using context: OperationContext? = nil,
-      handler: InfiniteQueryEventHandler<State> = InfiniteQueryEventHandler()
-    ) async throws(State.Failure) -> InfiniteQueryPage<State.PageID, State.PageValue>? {
+      handler: PaginatedEventHandler<State> = PaginatedEventHandler()
+    ) async throws(State.Failure) -> Page<State.PageID, State.PageValue>? {
       try await self.store.fetchPreviousPage(using: context, handler: handler)
     }
 
@@ -573,7 +573,7 @@
     /// - Returns: The fetched page.
     public func fetchPreviousPageTask(
       using context: OperationContext? = nil
-    ) -> OperationTask<InfiniteQueryPage<State.PageID, State.PageValue>?, State.Failure> {
+    ) -> OperationTask<Page<State.PageID, State.PageValue>?, State.Failure> {
       self.store.fetchPreviousPageTask(using: context)
     }
   }

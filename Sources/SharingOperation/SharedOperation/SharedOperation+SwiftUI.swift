@@ -94,12 +94,12 @@
     ///   - wrappedValue: The initial value.
     ///   - client: A `OperationClient` to obtain the `OperationStore` from.
     ///   - animation: The `Animation` to use for state updates.
-    public init<Query: InfiniteQueryRequest>(
+    public init<Query: PaginatedRequest>(
       wrappedValue: Query.State.StateValue = [],
       _ query: sending Query,
       client: OperationClient? = nil,
       animation: Animation
-    ) where State == InfiniteQueryState<Query.PageID, Query.PageValue, Query.PageFailure> {
+    ) where State == PaginatedState<Query.PageID, Query.PageValue, Query.PageFailure> {
       self.init(
         wrappedValue: wrappedValue,
         query,
@@ -114,14 +114,14 @@
     ///   - query: The `InfiniteQueryRequest`.
     ///   - client: A `OperationClient` to obtain the `OperationStore` from.
     ///   - animation: The `Animation` to use for state updates.
-    public init<Query: InfiniteQueryRequest>(
+    public init<Query: PaginatedRequest>(
       _ query: sending Query.Default,
       client: OperationClient? = nil,
       animation: Animation
     )
     where
       State == DefaultOperationState<
-        InfiniteQueryState<Query.PageID, Query.PageValue, Query.PageFailure>
+        PaginatedState<Query.PageID, Query.PageValue, Query.PageFailure>
       >
     {
       self.init(

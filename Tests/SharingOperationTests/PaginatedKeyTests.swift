@@ -4,8 +4,8 @@ import OperationTestHelpers
 import SharingOperation
 import Testing
 
-@Suite("InfiniteQueryKey tests")
-struct InfiniteQueryKeyTests {
+@Suite("PaginatedKey tests")
+struct PaginatedKeyTests {
   @Test("Fetches For Value")
   func fetchesForValue() async throws {
     let query = TestInfiniteQuery()
@@ -15,12 +15,12 @@ struct InfiniteQueryKeyTests {
     expectNoDifference(value, [])
 
     try await $value.fetchNextPage()
-    expectNoDifference(value, [InfiniteQueryPage(id: 0, value: "hello")])
+    expectNoDifference(value, [Page(id: 0, value: "hello")])
 
     try await $value.fetchNextPage()
     expectNoDifference(
       value,
-      [InfiniteQueryPage(id: 0, value: "hello"), InfiniteQueryPage(id: 1, value: "world")]
+      [Page(id: 0, value: "hello"), Page(id: 1, value: "world")]
     )
   }
 

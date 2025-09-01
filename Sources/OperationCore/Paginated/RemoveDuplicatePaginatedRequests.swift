@@ -1,4 +1,4 @@
-func removeDuplicateInfiniteQueries<Query: InfiniteQueryRequest>(
+func removeDuplicatePaginatedRequests<Query: PaginatedRequest>(
   _ c1: OperationContext,
   _ c2: OperationContext,
   using query: Query

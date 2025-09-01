@@ -8,8 +8,8 @@ extension OperationRequest where Self: Sendable {
   public func deduplicated() -> ModifiedOperation<Self, _DeduplicationModifier<Self>> {
     self.modifier(
       _DeduplicationModifier { i1, i2 in
-        if let query = self as? any InfiniteQueryRequest {
-          return removeDuplicateInfiniteQueries(i1, i2, using: query)
+        if let query = self as? any PaginatedRequest {
+          return removeDuplicatePaginatedRequests(i1, i2, using: query)
         } else {
           return true
         }

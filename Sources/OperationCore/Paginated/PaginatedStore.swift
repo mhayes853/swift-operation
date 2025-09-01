@@ -15,15 +15,15 @@ extension OperationStore {
   ///   - initialValue: The initial value.
   ///   - initialContext: The default ``OperationContext``.
   /// - Returns: A store.
-  public static func detached<Query: InfiniteQueryRequest>(
+  public static func detached<Query: PaginatedRequest>(
     query: sending Query,
     initialValue: Query.State.StateValue = [],
     initialContext: OperationContext = OperationContext()
   ) -> OperationStore<State>
-  where State == InfiniteQueryState<Query.PageID, Query.PageValue, Query.PageFailure> {
+  where State == PaginatedState<Query.PageID, Query.PageValue, Query.PageFailure> {
     .detached(
       operation: query,
-      initialState: InfiniteQueryState(
+      initialState: PaginatedState(
         initialValue: initialValue,
         initialPageId: query.initialPageId
       ),
@@ -41,7 +41,7 @@ extension OperationStore {
   ///   - query: The ``InfiniteQueryRequest``.
   ///   - initialContext: The default ``OperationContext``.
   /// - Returns: A store.
-  public static func detached<Query: InfiniteQueryRequest>(
+  public static func detached<Query: PaginatedRequest>(
     query: sending Query.Default,
     initialContext: OperationContext = OperationContext()
   ) -> OperationStore<Query.Default.State> where State == DefaultOperation<Query>.State {
@@ -55,7 +55,7 @@ extension OperationStore {
 
 // MARK: - Fetch All Pages
 
-extension OperationStore where State: _InfiniteQueryStateProtocol {
+extension OperationStore where State: _PaginatedStateProtocol {
   /// Refetches all existing pages on the query.
   ///
   /// This method will refetch pages in a waterfall effect, starting from the first page, and then
@@ -70,8 +70,8 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
   @discardableResult
   public func refetchAllPages(
     using context: OperationContext? = nil,
-    handler: InfiniteQueryEventHandler<State> = InfiniteQueryEventHandler()
-  ) async throws(State.Failure) -> InfiniteQueryPages<State.PageID, State.PageValue> {
+    handler: PaginatedEventHandler<State> = PaginatedEventHandler()
+  ) async throws(State.Failure) -> Pages<State.PageID, State.PageValue> {
     let value = try await self.fetch(
       using: self.fetchAllPagesTaskConfiguration(using: context),
       handler: handler
@@ -94,14 +94,14 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
   /// - Returns: A task to refetch all pages.
   public func refetchAllPagesTask(
     using context: OperationContext? = nil
-  ) -> OperationTask<InfiniteQueryPages<State.PageID, State.PageValue>, State.Failure> {
+  ) -> OperationTask<Pages<State.PageID, State.PageValue>, State.Failure> {
     self.runTask(using: self.fetchAllPagesTaskConfiguration(using: context))
       .map(self.allPages(from:))
   }
 
   private func allPages(
-    from value: InfiniteQueryOperationValue<State.PageID, State.PageValue>
-  ) -> InfiniteQueryPages<State.PageID, State.PageValue> {
+    from value: PaginatedOperationValue<State.PageID, State.PageValue>
+  ) -> Pages<State.PageID, State.PageValue> {
     switch value.fetchValue {
     case .allPages(let pages): pages
     default: self.state.currentValue
@@ -124,7 +124,7 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
 
 // MARK: - Fetch Next Page
 
-extension OperationStore where State: _InfiniteQueryStateProtocol {
+extension OperationStore where State: _PaginatedStateProtocol {
   /// Fetches the page that will be placed after the last page in ``currentValue``.
   ///
   /// If no pages have been previously fetched, the initial page is fetched.
@@ -138,8 +138,8 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
   @discardableResult
   public func fetchNextPage(
     using context: OperationContext? = nil,
-    handler: InfiniteQueryEventHandler<State> = InfiniteQueryEventHandler()
-  ) async throws(State.Failure) -> InfiniteQueryPage<State.PageID, State.PageValue>? {
+    handler: PaginatedEventHandler<State> = PaginatedEventHandler()
+  ) async throws(State.Failure) -> Page<State.PageID, State.PageValue>? {
     guard self.hasNextPage else { return nil }
     let value = try await self.fetch(
       using: self.fetchNextPageTaskConfiguration(using: context),
@@ -163,7 +163,7 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
   /// - Returns: The fetched page.
   public func fetchNextPageTask(
     using context: OperationContext? = nil
-  ) -> OperationTask<InfiniteQueryPage<State.PageID, State.PageValue>?, State.Failure> {
+  ) -> OperationTask<Page<State.PageID, State.PageValue>?, State.Failure> {
     guard self.hasNextPage else {
       return OperationTask(
         context: self.fetchNextPageTaskConfiguration(using: context)
@@ -176,8 +176,8 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
   }
 
   private func nextPage(
-    from value: InfiniteQueryOperationValue<State.PageID, State.PageValue>
-  ) -> InfiniteQueryPage<State.PageID, State.PageValue>? {
+    from value: PaginatedOperationValue<State.PageID, State.PageValue>
+  ) -> Page<State.PageID, State.PageValue>? {
     switch value.fetchValue {
     case .nextPage(let next): next.page
     case .initialPage(let page): page
@@ -202,7 +202,7 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
 
 // MARK: - Fetch Previous Page
 
-extension OperationStore where State: _InfiniteQueryStateProtocol {
+extension OperationStore where State: _PaginatedStateProtocol {
   /// Fetches the page that will be placed before the first page in ``currentValue``.
   ///
   /// If no pages have been previously fetched, the initial page is fetched.
@@ -216,8 +216,8 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
   @discardableResult
   public func fetchPreviousPage(
     using context: OperationContext? = nil,
-    handler: InfiniteQueryEventHandler<State> = InfiniteQueryEventHandler()
-  ) async throws(State.Failure) -> InfiniteQueryPage<State.PageID, State.PageValue>? {
+    handler: PaginatedEventHandler<State> = PaginatedEventHandler()
+  ) async throws(State.Failure) -> Page<State.PageID, State.PageValue>? {
     guard self.hasPreviousPage else { return nil }
     let value = try await self.fetch(
       using: self.fetchPreviousPageTaskConfiguration(using: context),
@@ -241,7 +241,7 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
   /// - Returns: The fetched page.
   public func fetchPreviousPageTask(
     using context: OperationContext? = nil
-  ) -> OperationTask<InfiniteQueryPage<State.PageID, State.PageValue>?, State.Failure> {
+  ) -> OperationTask<Page<State.PageID, State.PageValue>?, State.Failure> {
     guard self.hasPreviousPage else {
       return OperationTask(
         context: self.fetchPreviousPageTaskConfiguration(using: context)
@@ -254,8 +254,8 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
   }
 
   private func previousPage(
-    from value: InfiniteQueryOperationValue<State.PageID, State.PageValue>
-  ) -> InfiniteQueryPage<State.PageID, State.PageValue>? {
+    from value: PaginatedOperationValue<State.PageID, State.PageValue>
+  ) -> Page<State.PageID, State.PageValue>? {
     switch value.fetchValue {
     case .previousPage(let previous): previous.page
     case .initialPage(let page): page
@@ -280,11 +280,11 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
 
 // MARK: - Fetch
 
-extension OperationStore where State: _InfiniteQueryStateProtocol {
+extension OperationStore where State: _PaginatedStateProtocol {
   private func fetch(
     using context: OperationContext,
-    handler: InfiniteQueryEventHandler<State>
-  ) async throws(State.Failure) -> InfiniteQueryOperationValue<State.PageID, State.PageValue> {
+    handler: PaginatedEventHandler<State>
+  ) async throws(State.Failure) -> PaginatedOperationValue<State.PageID, State.PageValue> {
     let subscription = context.infiniteValues?
       .addRequestSubscriber(from: handler, isTemporary: true)
     defer { subscription?.cancel() }
@@ -294,7 +294,7 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
 
 // MARK: - Subscribe
 
-extension OperationStore where State: _InfiniteQueryStateProtocol {
+extension OperationStore where State: _PaginatedStateProtocol {
   /// Subscribes to events from this store using a ``InfiniteQueryEventHandler``.
   ///
   /// If the subscription is the first active subscription on this store, this method will begin
@@ -304,7 +304,7 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
   ///
   /// - Parameter handler: The event handler.
   public func subscribe(
-    with handler: InfiniteQueryEventHandler<State>
+    with handler: PaginatedEventHandler<State>
   ) -> OperationSubscription {
     let context = self.ensuredContext(from: nil)
     let contextSubscription = context.infiniteValues?
@@ -316,9 +316,9 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
 
 // MARK: - InfiniteQueryEventHandler
 
-extension OperationStore where State: _InfiniteQueryStateProtocol {
+extension OperationStore where State: _PaginatedStateProtocol {
   private func operationEventHandler(
-    for handler: InfiniteQueryEventHandler<State>
+    for handler: PaginatedEventHandler<State>
   ) -> OperationEventHandler<State> {
     OperationEventHandler(
       onStateChanged: handler.onStateChanged,
@@ -337,7 +337,7 @@ extension OperationStore where State: _InfiniteQueryStateProtocol {
 
 // MARK: - Context
 
-extension OperationStore where State: _InfiniteQueryStateProtocol {
+extension OperationStore where State: _PaginatedStateProtocol {
   private func ensuredContext(from context: OperationContext?) -> OperationContext {
     let values = self.context.ensureInfiniteValues()
     var context = context ?? self.context

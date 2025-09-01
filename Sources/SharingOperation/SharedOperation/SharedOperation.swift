@@ -119,9 +119,9 @@ extension SharedOperation {
   public init<PageID, PageValue, PageFailure>(
     wrappedValue: State.StateValue,
     initialPageId: PageID
-  ) where State == InfiniteQueryState<PageID, PageValue, PageFailure> {
+  ) where State == PaginatedState<PageID, PageValue, PageFailure> {
     self.init(
-      initialState: InfiniteQueryState(initialValue: wrappedValue, initialPageId: initialPageId)
+      initialState: PaginatedState(initialValue: wrappedValue, initialPageId: initialPageId)
     )
   }
 
@@ -421,15 +421,15 @@ extension SharedOperation {
   ///   - query: The `InfiniteQueryRequest`.
   ///   - client: A `OperationClient` to obtain the `OperationStore` from.
   ///   - scheduler: The ``SharedOperationStateScheduler`` to schedule state updates on.
-  public init<Query: InfiniteQueryRequest>(
+  public init<Query: PaginatedRequest>(
     wrappedValue: Query.State.StateValue = [],
     _ query: sending Query,
     client: OperationClient? = nil,
     scheduler: some SharedOperationStateScheduler = .synchronous
-  ) where State == InfiniteQueryState<Query.PageID, Query.PageValue, Query.PageFailure> {
+  ) where State == PaginatedState<Query.PageID, Query.PageValue, Query.PageFailure> {
     self.init(
       query,
-      initialState: InfiniteQueryState(
+      initialState: PaginatedState(
         initialValue: wrappedValue,
         initialPageId: query.initialPageId
       ),
@@ -444,21 +444,21 @@ extension SharedOperation {
   ///   - query: The `InfiniteQueryRequest`.
   ///   - client: A `OperationClient` to obtain the `OperationStore` from.
   ///   - scheduler: The ``SharedOperationStateScheduler`` to schedule state updates on.
-  public init<Query: InfiniteQueryRequest>(
+  public init<Query: PaginatedRequest>(
     _ query: sending Query.Default,
     client: OperationClient? = nil,
     scheduler: some SharedOperationStateScheduler = .synchronous
   )
   where
     State == DefaultOperationState<
-      InfiniteQueryState<Query.PageID, Query.PageValue, Query.PageFailure>
+      PaginatedState<Query.PageID, Query.PageValue, Query.PageFailure>
     >
   {
     self.init(query, initialState: query.initialState, client: client, scheduler: scheduler)
   }
 }
 
-extension SharedOperation where State: _InfiniteQueryStateProtocol {
+extension SharedOperation where State: _PaginatedStateProtocol {
   /// Refetches all existing pages on the query.
   ///
   /// This method will refetch pages in a waterfall effect, starting from the first page, and then
@@ -473,8 +473,8 @@ extension SharedOperation where State: _InfiniteQueryStateProtocol {
   @discardableResult
   public func refetchAllPages(
     using context: OperationContext? = nil,
-    handler: InfiniteQueryEventHandler<State> = InfiniteQueryEventHandler()
-  ) async throws(State.Failure) -> InfiniteQueryPages<State.PageID, State.PageValue> {
+    handler: PaginatedEventHandler<State> = PaginatedEventHandler()
+  ) async throws(State.Failure) -> Pages<State.PageID, State.PageValue> {
     try await self.value.store.refetchAllPages(using: context, handler: handler)
   }
 
@@ -493,7 +493,7 @@ extension SharedOperation where State: _InfiniteQueryStateProtocol {
   /// - Returns: A task to refetch all pages.
   public func refetchAllPagesTask(
     using context: OperationContext? = nil
-  ) -> OperationTask<InfiniteQueryPages<State.PageID, State.PageValue>, State.Failure> {
+  ) -> OperationTask<Pages<State.PageID, State.PageValue>, State.Failure> {
     self.value.store.refetchAllPagesTask(using: context)
   }
 
@@ -510,8 +510,8 @@ extension SharedOperation where State: _InfiniteQueryStateProtocol {
   @discardableResult
   public func fetchNextPage(
     using context: OperationContext? = nil,
-    handler: InfiniteQueryEventHandler<State> = InfiniteQueryEventHandler()
-  ) async throws(State.Failure) -> InfiniteQueryPage<State.PageID, State.PageValue>? {
+    handler: PaginatedEventHandler<State> = PaginatedEventHandler()
+  ) async throws(State.Failure) -> Page<State.PageID, State.PageValue>? {
     try await self.value.store.fetchNextPage(using: context, handler: handler)
   }
 
@@ -530,7 +530,7 @@ extension SharedOperation where State: _InfiniteQueryStateProtocol {
   /// - Returns: The fetched page.
   public func fetchNextPageTask(
     using context: OperationContext? = nil
-  ) -> OperationTask<InfiniteQueryPage<State.PageID, State.PageValue>?, State.Failure> {
+  ) -> OperationTask<Page<State.PageID, State.PageValue>?, State.Failure> {
     self.value.store.fetchNextPageTask(using: context)
   }
 
@@ -547,8 +547,8 @@ extension SharedOperation where State: _InfiniteQueryStateProtocol {
   @discardableResult
   public func fetchPreviousPage(
     using context: OperationContext? = nil,
-    handler: InfiniteQueryEventHandler<State> = InfiniteQueryEventHandler()
-  ) async throws(State.Failure) -> InfiniteQueryPage<State.PageID, State.PageValue>? {
+    handler: PaginatedEventHandler<State> = PaginatedEventHandler()
+  ) async throws(State.Failure) -> Page<State.PageID, State.PageValue>? {
     try await self.value.store.fetchPreviousPage(using: context, handler: handler)
   }
 
@@ -567,7 +567,7 @@ extension SharedOperation where State: _InfiniteQueryStateProtocol {
   /// - Returns: The fetched page.
   public func fetchPreviousPageTask(
     using context: OperationContext? = nil
-  ) -> OperationTask<InfiniteQueryPage<State.PageID, State.PageValue>?, State.Failure> {
+  ) -> OperationTask<Page<State.PageID, State.PageValue>?, State.Failure> {
     self.value.store.fetchPreviousPageTask(using: context)
   }
 }

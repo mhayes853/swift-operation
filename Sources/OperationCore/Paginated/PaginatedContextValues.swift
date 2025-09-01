@@ -1,6 +1,6 @@
 // MARK: - InfiniteQueryContextValues
 
-struct InfiniteQueryContextValues: Sendable {
+struct PaginatedContextValues: Sendable {
   var fetchType: FetchType?
   var currentPagesTracker: PagesTracker?
   var requestSubscriptions = OperationSubscriptions<RequestSubscriber>()
@@ -8,7 +8,7 @@ struct InfiniteQueryContextValues: Sendable {
 
 // MARK: - RequestSubscriber
 
-extension InfiniteQueryContextValues {
+extension PaginatedContextValues {
   struct RequestSubscriber: Sendable {
     let onPageFetchingStarted: @Sendable (AnyHashableSendable, OperationContext) -> Void
     let onPageResultReceived:
@@ -16,8 +16,8 @@ extension InfiniteQueryContextValues {
     let onPageFetchingFinished: @Sendable (AnyHashableSendable, OperationContext) -> Void
   }
 
-  func addRequestSubscriber<State: _InfiniteQueryStateProtocol>(
-    from handler: InfiniteQueryEventHandler<State>,
+  func addRequestSubscriber<State: _PaginatedStateProtocol>(
+    from handler: PaginatedEventHandler<State>,
     isTemporary: Bool
   ) -> OperationSubscription {
     let subscriber = RequestSubscriber(
@@ -28,7 +28,7 @@ extension InfiniteQueryContextValues {
       onPageResultReceived: { id, result, context in
         guard let id = id.base as? State.PageID else { return }
         switch result {
-        case .success(let page as InfiniteQueryPage<State.PageID, State.PageValue>):
+        case .success(let page as Page<State.PageID, State.PageValue>):
           handler.onPageResultReceived?(id, .success(page), context)
         case .failure(let error):
           handler.onPageResultReceived?(id, .failure(error as! State.Failure), context)
@@ -46,14 +46,14 @@ extension InfiniteQueryContextValues {
 
 // MARK: - CurrentPageIdTracker
 
-extension InfiniteQueryContextValues {
+extension PaginatedContextValues {
   final class PagesTracker: Sendable {
     private let pages = RecursiveLock<(any Sendable)?>(nil)
 
-    func pages<Query: InfiniteQueryRequest>(
+    func pages<Query: PaginatedRequest>(
       for query: Query
-    ) -> InfiniteQueryPages<Query.PageID, Query.PageValue> {
-      self.pages.withLock { $0 as? InfiniteQueryPages<Query.PageID, Query.PageValue> } ?? []
+    ) -> Pages<Query.PageID, Query.PageValue> {
+      self.pages.withLock { $0 as? Pages<Query.PageID, Query.PageValue> } ?? []
     }
 
     func savePages(_ pages: any Sendable) {
@@ -64,7 +64,7 @@ extension InfiniteQueryContextValues {
 
 // MARK: - FetchType
 
-extension InfiniteQueryContextValues {
+extension PaginatedContextValues {
   enum FetchType {
     case nextPage
     case previousPage
@@ -75,35 +75,35 @@ extension InfiniteQueryContextValues {
 // MARK: - OperationContext
 
 extension OperationContext {
-  func paging<Query: InfiniteQueryRequest>(
+  func paging<Query: PaginatedRequest>(
     for query: Query
-  ) -> InfiniteQueryPaging<Query.PageID, Query.PageValue> {
+  ) -> Paging<Query.PageID, Query.PageValue> {
     guard let store = self.currentFetchingOperationStore?.base as? OperationStore<Query.State>
     else {
-      return InfiniteQueryPaging(pageId: query.initialPageId, pages: [], request: .initialPage)
+      return Paging(pageId: query.initialPageId, pages: [], request: .initialPage)
     }
     let state = store.state
     let pages = state.currentValue
     let request = state.request(in: self)
     let pageId =
       request == .initialPage ? query.initialPageId : pages.last?.id ?? query.initialPageId
-    return InfiniteQueryPaging(pageId: pageId, pages: pages, request: request)
+    return Paging(pageId: pageId, pages: pages, request: request)
   }
 
-  mutating func ensureInfiniteValues() -> InfiniteQueryContextValues {
+  mutating func ensureInfiniteValues() -> PaginatedContextValues {
     if let infiniteValues {
       return infiniteValues
     }
-    self.infiniteValues = InfiniteQueryContextValues()
+    self.infiniteValues = PaginatedContextValues()
     return self.infiniteValues!
   }
 
-  var infiniteValues: InfiniteQueryContextValues? {
+  var infiniteValues: PaginatedContextValues? {
     get { self[InfiniteQueryContextValuesKey.self] }
     set { self[InfiniteQueryContextValuesKey.self] = newValue }
   }
 
   private enum InfiniteQueryContextValuesKey: Key {
-    static var defaultValue: InfiniteQueryContextValues? { nil }
+    static var defaultValue: PaginatedContextValues? { nil }
   }
 }

@@ -3,10 +3,10 @@ import IdentifiedCollections
 
 // MARK: - InfiniteOperationState
 
-public protocol _InfiniteQueryStateProtocol<PageID, PageValue>: OperationState
+public protocol _PaginatedStateProtocol<PageID, PageValue>: OperationState
 where
-  StateValue == InfiniteQueryPages<PageID, PageValue>,
-  OperationValue == InfiniteQueryOperationValue<PageID, PageValue>,
+  StateValue == Pages<PageID, PageValue>,
+  OperationValue == PaginatedOperationValue<PageID, PageValue>,
   StatusValue == StateValue
 {
   associatedtype PageID: Hashable & Sendable
@@ -23,7 +23,7 @@ where
 
 // MARK: - Has Page
 
-extension _InfiniteQueryStateProtocol {
+extension _PaginatedStateProtocol {
   /// Whether or not a next page can be fetched.
   public var hasNextPage: Bool {
     self.currentValue.isEmpty || self.nextPageId != nil
@@ -37,7 +37,7 @@ extension _InfiniteQueryStateProtocol {
 
 // MARK: - Is Loading
 
-extension _InfiniteQueryStateProtocol {
+extension _PaginatedStateProtocol {
   /// Whether or not the next page is loading.
   public var isLoadingNextPage: Bool {
     !self.nextPageActiveTasks.isEmpty
@@ -79,7 +79,7 @@ extension _InfiniteQueryStateProtocol {
 ///
 /// > Warning: You should not call any of the `mutating` methods directly on this type, rather a
 /// > ``OperationStore`` will call them at the appropriate time for you.
-public struct InfiniteQueryState<
+public struct PaginatedState<
   PageID: Hashable & Sendable,
   PageValue: Sendable,
   Failure: Error
@@ -104,23 +104,23 @@ public struct InfiniteQueryState<
 
   /// The active ``OperationTask``s for refetching all pages of data.
   public private(set) var allPagesActiveTasks = IdentifiedArrayOf<
-    OperationTask<InfiniteQueryOperationValue<PageID, PageValue>, Failure>
+    OperationTask<PaginatedOperationValue<PageID, PageValue>, Failure>
   >()
 
   /// The active ``OperationTask``s for fetching the initial page of data.
   public private(set) var initialPageActiveTasks = IdentifiedArrayOf<
-    OperationTask<InfiniteQueryOperationValue<PageID, PageValue>, Failure>
+    OperationTask<PaginatedOperationValue<PageID, PageValue>, Failure>
   >()
 
   /// The active ``OperationTask``s for fetching the next page of data.
   public private(set) var nextPageActiveTasks = IdentifiedArrayOf<
-    OperationTask<InfiniteQueryOperationValue<PageID, PageValue>, Failure>
+    OperationTask<PaginatedOperationValue<PageID, PageValue>, Failure>
   >()
 
   /// The active ``OperationTask``s for fetching the page of data that will be presented at the
   /// beginning of ``currentValue``.
   public private(set) var previousPageActiveTasks = IdentifiedArrayOf<
-    OperationTask<InfiniteQueryOperationValue<PageID, PageValue>, Failure>
+    OperationTask<PaginatedOperationValue<PageID, PageValue>, Failure>
   >()
 
   public init(initialValue: StateValue, initialPageId: PageID) {
@@ -132,14 +132,14 @@ public struct InfiniteQueryState<
 
 // MARK: - OperationState Conformance
 
-extension InfiniteQueryState: _InfiniteQueryStateProtocol {
+extension PaginatedState: _PaginatedStateProtocol {
   public var isLoading: Bool {
     self.isLoadingAllPages || self.isLoadingNextPage || self.isLoadingPreviousPage
       || self.isLoadingInitialPage
   }
 
   public mutating func scheduleFetchTask(
-    _ task: inout OperationTask<InfiniteQueryOperationValue<PageID, PageValue>, Failure>
+    _ task: inout OperationTask<PaginatedOperationValue<PageID, PageValue>, Failure>
   ) {
     switch self.request(in: task.context) {
     case .allPages:
@@ -147,7 +147,7 @@ extension InfiniteQueryState: _InfiniteQueryStateProtocol {
       task.schedule(after: self.nextPageActiveTasks)
       task.schedule(after: self.previousPageActiveTasks)
       task.context.infiniteValues?.currentPagesTracker =
-        InfiniteQueryContextValues.PagesTracker()
+        PaginatedContextValues.PagesTracker()
       self.allPagesActiveTasks.append(task)
     case .initialPage:
       self.initialPageActiveTasks.append(task)
@@ -171,7 +171,7 @@ extension InfiniteQueryState: _InfiniteQueryStateProtocol {
   }
 
   public mutating func update(
-    with result: Result<InfiniteQueryPages<PageID, PageValue>, Failure>,
+    with result: Result<Pages<PageID, PageValue>, Failure>,
     using context: OperationContext
   ) {
     switch result {
@@ -188,8 +188,8 @@ extension InfiniteQueryState: _InfiniteQueryStateProtocol {
   }
 
   public mutating func update(
-    with result: Result<InfiniteQueryOperationValue<PageID, PageValue>, Failure>,
-    for task: OperationTask<InfiniteQueryOperationValue<PageID, PageValue>, Failure>
+    with result: Result<PaginatedOperationValue<PageID, PageValue>, Failure>,
+    for task: OperationTask<PaginatedOperationValue<PageID, PageValue>, Failure>
   ) {
     switch result {
     case .success(let value):
@@ -229,7 +229,7 @@ extension InfiniteQueryState: _InfiniteQueryStateProtocol {
   }
 
   private func updatedPageId(
-    from result: InfiniteQueryOperationValue<PageID, PageValue>.PageIDResult,
+    from result: PaginatedOperationValue<PageID, PageValue>.PageIDResult,
     currentId: PageID?
   ) -> PageID? {
     switch result {
@@ -239,7 +239,7 @@ extension InfiniteQueryState: _InfiniteQueryStateProtocol {
   }
 
   public mutating func finishFetchTask(
-    _ task: OperationTask<InfiniteQueryOperationValue<PageID, PageValue>, Failure>
+    _ task: OperationTask<PaginatedOperationValue<PageID, PageValue>, Failure>
   ) {
     self.allPagesActiveTasks.remove(id: task.id)
     self.initialPageActiveTasks.remove(id: task.id)
@@ -247,7 +247,7 @@ extension InfiniteQueryState: _InfiniteQueryStateProtocol {
     self.previousPageActiveTasks.remove(id: task.id)
   }
 
-  func request(in context: OperationContext) -> InfiniteQueryPagingRequest<PageID> {
+  func request(in context: OperationContext) -> PagingRequest<PageID> {
     guard let fetchType = context.infiniteValues?.fetchType else {
       return .initialPage
     }
@@ -266,7 +266,7 @@ extension InfiniteQueryState: _InfiniteQueryStateProtocol {
 
 // MARK: - DefaultableOperationState
 
-extension InfiniteQueryState: DefaultableOperationState {
+extension PaginatedState: DefaultableOperationState {
   public typealias DefaultStateValue = StateValue
 
   public func defaultValue(
@@ -281,8 +281,8 @@ extension InfiniteQueryState: DefaultableOperationState {
   }
 }
 
-extension DefaultOperationState: _InfiniteQueryStateProtocol
-where Base: _InfiniteQueryStateProtocol, Base.DefaultStateValue == Base.StateValue {
+extension DefaultOperationState: _PaginatedStateProtocol
+where Base: _PaginatedStateProtocol, Base.DefaultStateValue == Base.StateValue {
   public typealias PageID = Base.PageID
   public typealias PageValue = Base.PageValue
 
@@ -315,7 +315,7 @@ where Base: _InfiniteQueryStateProtocol, Base.DefaultStateValue == Base.StateVal
   }
 }
 
-extension DefaultOperation where Operation: InfiniteQueryRequest {
+extension DefaultOperation where Operation: PaginatedRequest {
   package var initialState: State {
     State(
       Operation.State(initialValue: [], initialPageId: self.operation.initialPageId),
