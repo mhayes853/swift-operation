@@ -59,7 +59,7 @@ struct OperationControllerTests {
     )
 
     let date = RecursiveLock(Date())
-    store.context.operationClock = .custom { date.withLock { $0 } }
+    store.context.operationClock = CustomOperationClock { date.withLock { $0 } }
 
     controller.controls.withLock { $0?.yield(10) }
     expectNoDifference(store.currentValue, 10)
@@ -83,7 +83,7 @@ struct OperationControllerTests {
     )
 
     let date = RecursiveLock(Date())
-    store.context.operationClock = .custom { date.withLock { $0 } }
+    store.context.operationClock = CustomOperationClock { date.withLock { $0 } }
 
     controller.controls.withLock { $0?.yield(throwing: SomeError.a) }
     expectNoDifference(store.error as? SomeError, .a)

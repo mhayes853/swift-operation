@@ -7,7 +7,7 @@ import Foundation
 /// You can override the ``OperationContext/queryClock`` context value to control the values of
 /// ``OperationState/valueLastUpdatedAt`` and ``OperationState/errorLastUpdatedAt``
 /// whenever your query yields a result.
-public protocol OperationClock: Sendable {
+public protocol OperationClock {
   /// Returns the current date according to the clock.
   func now() -> Date
 }
@@ -15,7 +15,9 @@ public protocol OperationClock: Sendable {
 // MARK: - OperationClock
 
 /// A ``OperationClock`` that returns the system's current time.
-public struct SystemTimeClock: OperationClock {
+public struct SystemTimeClock: OperationClock, Sendable {
+  public init() {}
+
   public func now() -> Date {
     Date()
   }
@@ -31,8 +33,12 @@ extension OperationClock where Self == SystemTimeClock {
 // MARK: - CustomOperationClock
 
 /// A ``OperationClock`` that returns the current date based on a specified closure.
-public struct CustomOperationClock: OperationClock {
-  let _now: @Sendable () -> Date
+public struct CustomOperationClock: OperationClock, Sendable {
+  private let _now: @Sendable () -> Date
+
+  public init(_ now: @escaping @Sendable () -> Date) {
+    self._now = now
+  }
 
   public func now() -> Date {
     self._now()
@@ -45,16 +51,20 @@ extension OperationClock where Self == CustomOperationClock {
   /// - Parameter now: A closure to compute the current date.
   /// - Returns: A ``CustomOperationClock``.
   public static func custom(_ now: @escaping @Sendable () -> Date) -> Self {
-    CustomOperationClock(_now: now)
+    CustomOperationClock(now)
   }
 }
 
 // MARK: - TimeFreezeClock
 
 /// A ``OperationClock`` that returns a constant date.
-public struct TimeFreezeClock: OperationClock {
+public struct TimeFreezeClock: OperationClock, Sendable {
   @usableFromInline
   let date: Date
+
+  public init(date: Date) {
+    self.date = date
+  }
 
   @inlinable
   public func now() -> Date {
@@ -100,7 +110,7 @@ extension OperationRequest {
 
 public struct _OperationClockModifier<
   Operation: OperationRequest,
-  C: OperationClock
+  C: OperationClock & Sendable
 >: _ContextUpdatingOperationModifier {
   let clock: C
 
@@ -115,14 +125,14 @@ extension OperationContext {
   /// The current ``OperationClock`` in this context.
   ///
   /// The default value is ``OperationClock/systemTime``.
-  public var operationClock: any OperationClock {
+  public var operationClock: any OperationClock & Sendable {
     get { self[OperationClockKey.self] }
     set { self[OperationClockKey.self] = newValue }
   }
 
   private struct OperationClockKey: Key {
-    static var defaultValue: any OperationClock {
-      .systemTime
+    static var defaultValue: any OperationClock & Sendable {
+      SystemTimeClock()
     }
   }
 }

@@ -724,7 +724,7 @@ struct InfiniteOperationStoreTests {
       OperationStore.detached(query: TestInfiniteQuery().controlled(by: controller))
 
     let date = RecursiveLock(Date())
-    store.context.operationClock = .custom { date.withLock { $0 } }
+    store.context.operationClock = CustomOperationClock { date.withLock { $0 } }
 
     controller.controls.withLock { $0?.yield([InfiniteQueryPage(id: 0, value: "blob")]) }
     expectNoDifference(store.currentValue, [InfiniteQueryPage(id: 0, value: "blob")])
@@ -793,7 +793,7 @@ struct InfiniteOperationStoreTests {
       OperationStore.detached(query: TestInfiniteQuery().controlled(by: controller))
 
     let date = RecursiveLock(Date())
-    store.context.operationClock = .custom { date.withLock { $0 } }
+    store.context.operationClock = CustomOperationClock { date.withLock { $0 } }
 
     struct SomeError: Equatable, Error {}
 

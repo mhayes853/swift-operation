@@ -66,11 +66,11 @@ struct OperationStatusTests {
     let query = FlakeyQuery()
     await query.ensureSuccess(result: "blob")
     let store = OperationStore.detached(query: query.defaultValue("blob"))
-    store.context.operationClock = .custom { .distantPast }
+    store.context.operationClock = CustomOperationClock { .distantPast }
     try await store.fetch()
     expectNoDifference(store.status.isSuccessful, true)
 
-    store.context.operationClock = .custom { .distantFuture }
+    store.context.operationClock = CustomOperationClock { .distantFuture }
     await query.ensureFailure()
     _ = try? await store.fetch()
     expectNoDifference(store.status.isFailure, true)
@@ -81,11 +81,11 @@ struct OperationStatusTests {
     let query = FlakeyQuery()
     await query.ensureFailure()
     let store = OperationStore.detached(query: query.defaultValue("blob"))
-    store.context.operationClock = .custom { .distantPast }
+    store.context.operationClock = CustomOperationClock { .distantPast }
     _ = try? await store.fetch()
     expectNoDifference(store.status.isSuccessful, false)
 
-    store.context.operationClock = .custom { .distantFuture }
+    store.context.operationClock = CustomOperationClock { .distantFuture }
     await query.ensureSuccess(result: "blob")
     try await store.fetch()
     expectNoDifference(store.status.isSuccessful, true)

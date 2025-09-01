@@ -3,7 +3,7 @@ import Operation
 
 // MARK: - TestOperationClock
 
-final class TestOperationClock: OperationClock {
+final class TestOperationClock: OperationClock, Sendable {
   private let _date: RecursiveLock<Date>
 
   var date: Date {
@@ -22,7 +22,7 @@ final class TestOperationClock: OperationClock {
 
 // MARK: - IncrementingClock
 
-final class IncrementingClock: OperationClock {
+final class IncrementingClock: OperationClock, Sendable {
   let count = Lock(0)
 
   func now() -> Date {

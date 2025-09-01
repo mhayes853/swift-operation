@@ -144,7 +144,7 @@ struct MutationStoreTests {
     mutation.state.withLock { $0.willWait = true }
     let updatedAtDate = Date()
     let store = self.client.store(for: mutation)
-    store.context.operationClock = .timeFreeze(updatedAtDate)
+    store.context.operationClock = TimeFreezeClock(date: updatedAtDate)
 
     mutation.onLoading(for: "blob") {
       Task { try await store.mutate(with: "blob jr") }
@@ -202,7 +202,7 @@ struct MutationStoreTests {
     mutation.state.withLock { $0.willWait = true }
     let updatedAtDate = Date()
     let store = self.client.store(for: mutation)
-    store.context.operationClock = .custom { updatedAtDate }
+    store.context.operationClock = CustomOperationClock { updatedAtDate }
 
     mutation.onLoading(for: "blob") {
       Task { try await store.mutate(with: "blob jr") }
