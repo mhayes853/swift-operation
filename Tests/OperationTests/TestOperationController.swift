@@ -1,6 +1,6 @@
 import Operation
 
-final class TestOperationController<Operation: OperationRequest>: OperationController {
+final class TestOperationController<Operation: OperationRequest>: OperationController, Sendable {
   typealias State = Operation.State
 
   let controls = RecursiveLock<OperationControls<State>?>(nil)

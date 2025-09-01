@@ -28,7 +28,7 @@ extension OperationRequest {
   ///
   /// - Parameter controller: The controller to attach.
   /// - Returns: A ``ModifiedOperation``.
-  public func controlled<Controller: OperationController<State>>(
+  public func controlled<Controller: Sendable>(
     by controller: Controller
   ) -> ControlledOperation<Self, Controller> {
     self.modifier(_OperationControllerModifier(controller: controller))
@@ -37,7 +37,7 @@ extension OperationRequest {
 
 public struct _OperationControllerModifier<
   Operation: OperationRequest,
-  Controller: OperationController<Operation.State>
+  Controller: OperationController<Operation.State> & Sendable
 >: _ContextUpdatingOperationModifier {
   let controller: Controller
 
@@ -52,12 +52,12 @@ extension OperationContext {
   /// The ``OperationController``s attached to a ``OperationRequest``.
   ///
   /// You generally add controllers via the ``OperationRequest/controlled(by:)`` modifier.
-  public var operationControllers: [any OperationController] {
+  public var operationControllers: [any OperationController & Sendable] {
     get { self[OperationControllersKey.self] }
     set { self[OperationControllersKey.self] = newValue }
   }
 
   private enum OperationControllersKey: Key {
-    static var defaultValue: [any OperationController] { [] }
+    static var defaultValue: [any OperationController & Sendable] { [] }
   }
 }

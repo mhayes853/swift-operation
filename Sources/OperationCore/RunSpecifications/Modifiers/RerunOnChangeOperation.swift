@@ -22,7 +22,7 @@ extension OperationRequest {
 public final class _RerunOnChangeController<
   State: OperationState,
   Specification: OperationRunSpecification & Sendable
->: OperationController {
+>: OperationController, Sendable {
   private let specification: Specification
   private let task = Lock<Task<Void, any Error>?>(nil)
   private let state = Lock([OperationPath: ControlsState]())

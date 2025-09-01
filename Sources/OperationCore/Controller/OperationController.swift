@@ -8,7 +8,7 @@
 ///
 /// See <doc:UtilizingOperationControllers> to learn more about the best practices and use cases for
 /// OperationControllers.
-public protocol OperationController<State>: Sendable {
+public protocol OperationController<State> {
   /// The state type of the query to control.
   associatedtype State: OperationState
 

@@ -144,7 +144,7 @@ struct OperationControllerTests {
 
   @Test("Reports Issue When Accessing Controls When Controller Is Deallocated")
   func reportsIssueWhenAccessingControlsWhenControllerIsDeallocated() async throws {
-    final class EvilController<State: OperationState>: OperationController {
+    final class EvilController<State: OperationState>: OperationController, Sendable {
       let controls = Lock<OperationControls<State>?>(nil)
 
       func control(with controls: OperationControls<State>) -> OperationSubscription {
