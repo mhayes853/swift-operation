@@ -41,7 +41,7 @@ extension OperationClient {
     ///   - context: The initial ``OperationContext`` of the store.
     ///   - initialState: The initial state of the operation.
     /// - Returns: A ``OperationStore``.
-    func store<Operation: OperationRequest>(
+    func store<Operation: StatefulOperationRequest>(
       for operation: sending Operation,
       in context: OperationContext,
       with initialState: Operation.State
@@ -90,7 +90,7 @@ extension OperationClient.CreateStore {
   ///   - operation: The operation,.
   ///   - initialState: The initial state of the operation.
   /// - Returns: An ``OperationStore``.
-  public func callAsFunction<Operation: OperationRequest>(
+  public func callAsFunction<Operation: StatefulOperationRequest>(
     for operation: sending Operation,
     initialState: Operation.State
   ) -> OperationStore<Operation.State> {

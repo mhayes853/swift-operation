@@ -98,7 +98,7 @@
       ///   - initialState: The initially supplied state.
       ///   - client: An optional `OperationClient` to override ``SwiftUICore/EnvironmentValues/OperationClient``.
       ///   - transaction: The transaction to apply to state updates.
-      public init<Operation: OperationRequest>(
+      public init<Operation: StatefulOperationRequest>(
         _ operation: sending @escaping @autoclosure () -> Operation,
         initialState: Operation.State,
         client: OperationClient? = nil,
@@ -179,7 +179,7 @@
       _ query: sending Query.Default,
       client: OperationClient? = nil,
       transaction: Transaction? = nil
-    ) where State == DefaultOperation<Query>.State {
+    ) where State == DefaultStateOperation<Query>.State {
       self.init(query, initialState: query.initialState, client: client, transaction: transaction)
     }
 
@@ -193,7 +193,7 @@
       _ query: sending Query.Default,
       client: OperationClient? = nil,
       animation: Animation
-    ) where State == DefaultOperation<Query>.State {
+    ) where State == DefaultStateOperation<Query>.State {
       self.init(
         query,
         initialState: query.initialState,
@@ -633,7 +633,7 @@
       _ mutation: sending Mutation.Default,
       client: OperationClient? = nil,
       transaction: Transaction? = nil
-    ) where State == DefaultOperation<Mutation>.State {
+    ) where State == DefaultStateOperation<Mutation>.State {
       self.init(
         mutation,
         initialState: mutation.initialState,
@@ -652,7 +652,7 @@
       _ mutation: Mutation.Default,
       client: OperationClient? = nil,
       animation: Animation
-    ) where State == DefaultOperation<Mutation>.State {
+    ) where State == DefaultStateOperation<Mutation>.State {
       self.init(
         mutation,
         initialState: mutation.initialState,

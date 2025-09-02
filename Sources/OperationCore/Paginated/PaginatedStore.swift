@@ -44,7 +44,7 @@ extension OperationStore {
   public static func detached<Query: PaginatedRequest>(
     query: sending Query.Default,
     initialContext: OperationContext = OperationContext()
-  ) -> OperationStore<Query.Default.State> where State == DefaultOperation<Query>.State {
+  ) -> OperationStore<Query.Default.State> where State == DefaultStateOperation<Query>.State {
     .detached(
       operation: query,
       initialState: query.initialState,

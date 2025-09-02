@@ -255,7 +255,7 @@ where Base: _MutationStateProtocol {
 
 // MARK: - Initial State
 
-extension DefaultOperation where Operation: MutationRequest {
+extension DefaultStateOperation where Operation: MutationRequest {
   package var initialState: State {
     State(MutationState(), defaultValue: self.defaultValue)
   }

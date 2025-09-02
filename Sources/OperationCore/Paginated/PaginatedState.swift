@@ -315,7 +315,7 @@ where Base: _PaginatedStateProtocol, Base.DefaultStateValue == Base.StateValue {
   }
 }
 
-extension DefaultOperation where Operation: PaginatedRequest {
+extension DefaultStateOperation where Operation: PaginatedRequest {
   package var initialState: State {
     State(
       Operation.State(initialValue: [], initialPageId: self.operation.initialPageId),

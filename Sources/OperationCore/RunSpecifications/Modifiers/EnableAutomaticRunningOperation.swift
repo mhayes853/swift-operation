@@ -52,9 +52,9 @@ extension OperationRequest {
 
 public struct _EnableAutomaticFetchingModifier<
   Operation: OperationRequest,
-  Spec: OperationRunSpecification & Sendable
+  Specification: OperationRunSpecification & Sendable
 >: _ContextUpdatingOperationModifier {
-  let spec: Spec
+  let spec: Specification
 
   public func setup(context: inout OperationContext) {
     context.automaticRunningSpecification = self.spec

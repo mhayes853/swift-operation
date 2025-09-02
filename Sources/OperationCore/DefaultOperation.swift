@@ -2,8 +2,8 @@ import Foundation
 
 // MARK: - OperationRequest
 
-extension OperationRequest where State: DefaultableOperationState {
-  public typealias Default = DefaultOperation<Self>
+extension StatefulOperationRequest where State: DefaultableOperationState {
+  public typealias Default = DefaultStateOperation<Self>
 
   /// Adds a default value to this operation.
   ///
@@ -12,13 +12,13 @@ extension OperationRequest where State: DefaultableOperationState {
   public func defaultValue(
     _ value: @autoclosure @escaping @Sendable () -> State.DefaultStateValue
   ) -> Default {
-    DefaultOperation(operation: self, _defaultValue: value)
+    DefaultStateOperation(operation: self, _defaultValue: value)
   }
 }
 
 // MARK: - DefaultOperation
 
-public struct DefaultOperation<Operation: OperationRequest>: OperationRequest
+public struct DefaultStateOperation<Operation: StatefulOperationRequest>: StatefulOperationRequest
 where Operation.State: DefaultableOperationState {
   public typealias Value = Operation.Value
   public typealias State = DefaultOperationState<Operation.State>
@@ -52,7 +52,7 @@ where Operation.State: DefaultableOperationState {
   }
 }
 
-extension DefaultOperation: Sendable where Operation: Sendable {}
+extension DefaultStateOperation: Sendable where Operation: Sendable {}
 
 // MARK: - DefaultableOperationState
 

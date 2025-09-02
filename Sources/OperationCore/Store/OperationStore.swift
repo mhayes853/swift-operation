@@ -93,7 +93,7 @@ public final class OperationStore<State: OperationState & Sendable>: OperationPa
   private let values: RecursiveLock<Values>
   private let subscriptions: OperationSubscriptions<OperationEventHandler<State>>
 
-  private init<Operation: OperationRequest>(
+  private init<Operation: StatefulOperationRequest>(
     operation: sending Operation,
     initialState: Operation.State,
     initialContext: OperationContext
@@ -149,11 +149,11 @@ extension OperationStore {
   /// Only use a detached store if you want a separate instances of a query runtime for the same query.
   ///
   /// - Parameters:
-  ///   - operation: The ``OperationRequest``.
+  ///   - operation: The ``StatefulOperationRequest``.
   ///   - initialState: The initial state.
   ///   - initialContext: The default ``OperationContext``.
   /// - Returns: A store.
-  public static func detached<Operation: OperationRequest>(
+  public static func detached<Operation: StatefulOperationRequest>(
     operation: sending Operation,
     initialState: Operation.State,
     initialContext: OperationContext = OperationContext()

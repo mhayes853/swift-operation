@@ -232,7 +232,7 @@ where PageValue: Equatable {}
 ///  ``OperationStore/fetchPreviousPage(using:handler:)`` respectively. If you just want to check
 ///  whether or not fetching additional pages is possible, you can check the boolean properties
 ///  ``PaginatedState/hasNextPage`` or ``PaginatedState/hasPreviousPage``.
-public protocol PaginatedRequest<PageID, PageValue, PageFailure>: OperationRequest
+public protocol PaginatedRequest<PageID, PageValue, PageFailure>: StatefulOperationRequest
 where
   Value == PaginatedOperationValue<PageID, PageValue>,
   State == PaginatedState<PageID, PageValue, PageFailure>,
@@ -311,8 +311,11 @@ extension PaginatedRequest {
   public func run(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<Value, PageFailure>
-  ) async throws(PageFailure) -> Value {
+    with continuation: OperationContinuation<
+      PaginatedOperationValue<PageID, PageValue>,
+      PageFailure
+    >
+  ) async throws(PageFailure) -> PaginatedOperationValue<PageID, PageValue> {
     let paging = context.paging(for: self)
     switch paging.request {
     case .allPages:

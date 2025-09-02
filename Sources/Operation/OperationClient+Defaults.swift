@@ -50,7 +50,7 @@ extension OperationClient {
     let networkObserver: AnySendableNetworkObserver?
     let activityObserver: AnySendableApplicationActivityObserver?
 
-    public func store<Operation: OperationRequest & Sendable>(
+    public func store<Operation: StatefulOperationRequest & Sendable>(
       for operation: Operation,
       in context: OperationContext,
       with initialState: Operation.State

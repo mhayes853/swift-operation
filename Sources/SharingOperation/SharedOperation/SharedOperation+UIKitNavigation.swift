@@ -25,7 +25,7 @@
     ///   - initialState: The initial state.
     ///   - client: A `OperationClient` to obtain the `OperationStore` from.
     ///   - scheduler: The ``SharedOperationStateScheduler`` to schedule state updates on.
-    public init<Operation: OperationRequest>(
+    public init<Operation: StatefulOperationRequest>(
       _ operation: sending Operation,
       initialState: Operation.State,
       client: OperationClient? = nil,

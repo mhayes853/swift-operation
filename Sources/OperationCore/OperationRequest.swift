@@ -1,25 +1,12 @@
 // MARK: - OperationRequest
 
-public protocol OperationRequest<Value, Failure>: OperationPathable
-where State.OperationValue == Value, State.Failure == Failure {
+public protocol OperationRequest<Value, Failure> {
   /// The data type that your query fetches.
-  associatedtype Value: Sendable
-
-  /// The state type of your query.
-  associatedtype State: OperationState
+  associatedtype Value
 
   associatedtype Failure: Error
 
   var _debugTypeName: String { get }
-
-  /// A ``OperationPath`` that uniquely identifies your operation.
-  ///
-  /// If your operation conforms to Hashable or Identifiable, then this requirement is implemented by
-  /// default. However, if you want to take advantage of pattern matching, then you'll want to
-  /// implement this requirement manually.
-  ///
-  /// See <doc:PatternMatchingAndStateManagement> for more.
-  var path: OperationPath { get }
 
   /// Sets up the initial ``OperationContext`` that gets passed to ``fetch(in:with:)``.
   ///
@@ -42,29 +29,40 @@ where State.OperationValue == Value, State.Failure == Failure {
   ) async throws(Failure) -> Value
 }
 
-// MARK: - Setup
-
 extension OperationRequest {
   public func setup(context: inout OperationContext) {
   }
+
+  public var _debugTypeName: String { typeName(Self.self) }
+}
+
+// MARK: - StatefulOperationRequest
+
+public protocol StatefulOperationRequest<State>: OperationRequest
+where Value: Sendable, State.OperationValue == Value, State.Failure == Failure {
+  /// The state type of your query.
+  associatedtype State: OperationState
+
+  /// A ``OperationPath`` that uniquely identifies your operation.
+  ///
+  /// If your operation conforms to Hashable or Identifiable, then this requirement is implemented by
+  /// default. However, if you want to take advantage of pattern matching, then you'll want to
+  /// implement this requirement manually.
+  ///
+  /// See <doc:PatternMatchingAndStateManagement> for more.
+  var path: OperationPath { get }
 }
 
 // MARK: - Path Defaults
 
-extension OperationRequest where Self: Hashable & Sendable {
+extension StatefulOperationRequest where Self: Hashable & Sendable {
   public var path: OperationPath {
     OperationPath(self)
   }
 }
 
-extension OperationRequest where Self: Identifiable, ID: Sendable {
+extension StatefulOperationRequest where Self: Identifiable, ID: Sendable {
   public var path: OperationPath {
     OperationPath(self.id)
   }
-}
-
-// MARK: - Debug Type Name Default
-
-extension OperationRequest {
-  public var _debugTypeName: String { typeName(Self.self) }
 }

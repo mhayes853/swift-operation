@@ -1,4 +1,4 @@
-extension OperationRequest {
+extension StatefulOperationRequest {
   /// Refetches this operation when the specified ``FetchCondition`` changes to true.
   ///
   /// This modifier is used to power automatic refetching when your app re-enters from the

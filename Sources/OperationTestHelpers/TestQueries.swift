@@ -532,7 +532,7 @@ package struct EmptyIntPaginated: PaginatedRequest {
 
 // MARK: - FakePaginated
 
-package struct FakePaginated: OperationRequest, Hashable {
+package struct FakePaginated: StatefulOperationRequest, Hashable {
   package typealias State = PaginatedState<Int, String, any Error>
   package typealias Value = PaginatedOperationValue<Int, String>
 
@@ -542,7 +542,7 @@ package struct FakePaginated: OperationRequest, Hashable {
     isolation: isolated (any Actor)?,
     in context: OperationContext,
     with continuation: OperationContinuation<Value, any Error>
-  ) async throws -> Value {
+  ) async throws -> sending Value {
     fatalError()
   }
 }

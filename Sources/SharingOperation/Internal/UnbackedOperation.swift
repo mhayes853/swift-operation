@@ -1,13 +1,13 @@
 import Operation
 
-struct UnbackedOperation<State: OperationState>: OperationRequest, Sendable {
+struct UnbackedOperation<State: OperationState>: StatefulOperationRequest, Sendable {
   let path = OperationPath("__sharing_operation_unbacked_operation_\(typeName(State.self))__")
 
   func run(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
     with continuation: OperationContinuation<State.OperationValue, State.Failure>
-  ) async throws(State.Failure) -> State.OperationValue {
+  ) async throws(State.Failure) -> sending State.OperationValue {
     fatalError(_unbackedOperationRunError(stateType: State.self))
   }
 }

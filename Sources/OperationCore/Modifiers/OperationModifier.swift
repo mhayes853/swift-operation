@@ -123,7 +123,6 @@ public struct ModifiedOperation<
   Operation: OperationRequest,
   Modifier: OperationModifier
 >: OperationRequest where Modifier.Operation == Operation {
-  public typealias State = Operation.State
   public typealias Value = Operation.Value
 
   /// The base ``OperationRequest``.
@@ -131,11 +130,6 @@ public struct ModifiedOperation<
 
   /// The ``OperationModifier`` attached to ``operation``.
   public let modifier: Modifier
-
-  @inlinable
-  public var path: OperationPath {
-    self.operation.path
-  }
 
   @inlinable
   public var _debugTypeName: String {
@@ -159,6 +153,16 @@ public struct ModifiedOperation<
       using: self.operation,
       with: continuation
     )
+  }
+}
+
+extension ModifiedOperation: StatefulOperationRequest
+where Modifier.Operation: StatefulOperationRequest {
+  public typealias State = Operation.State
+
+  @inlinable
+  public var path: OperationPath {
+    self.operation.path
   }
 }
 

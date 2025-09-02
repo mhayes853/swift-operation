@@ -1,4 +1,4 @@
-extension OperationRequest where Self: Sendable {
+extension OperationRequest where Self: Sendable, Value: Sendable {
   /// Deduplicates fetches to this query.
   ///
   /// When 2 fetches on this query occur at the same time, the second fetch will not invoke this
@@ -33,7 +33,7 @@ extension OperationRequest where Self: Sendable {
 
 public struct _DeduplicationModifier<
   Operation: OperationRequest & Sendable
->: OperationModifier, Sendable {
+>: OperationModifier, Sendable where Operation.Value: Sendable {
   private let removeDuplicates: @Sendable (OperationContext, OperationContext) -> Bool
 
   init(removeDuplicates: @escaping @Sendable (OperationContext, OperationContext) -> Bool) {
@@ -62,7 +62,8 @@ public struct _DeduplicationModifier<
 
 // MARK: - DeduplicationStorage
 
-private final actor DeduplicationStorage<Operation: OperationRequest & Sendable> {
+private final actor DeduplicationStorage<Operation: OperationRequest & Sendable>
+where Operation.Value: Sendable {
   private let removeDuplicates: @Sendable (OperationContext, OperationContext) -> Bool
 
   private var idCounter = 0

@@ -17,13 +17,13 @@
 /// }
 /// ```
 public typealias ControlledOperation<
-  Operation: OperationRequest,
+  Operation: StatefulOperationRequest,
   Controller: OperationController<Operation.State>
 > = ModifiedOperation<Operation, _OperationControllerModifier<Operation, Controller>>
 
 // MARK: - OperationRequest
 
-extension OperationRequest {
+extension StatefulOperationRequest {
   /// Attaches a ``OperationController`` to this operation.
   ///
   /// - Parameter controller: The controller to attach.
@@ -36,7 +36,7 @@ extension OperationRequest {
 }
 
 public struct _OperationControllerModifier<
-  Operation: OperationRequest,
+  Operation: StatefulOperationRequest,
   Controller: OperationController<Operation.State> & Sendable
 >: _ContextUpdatingOperationModifier {
   let controller: Controller

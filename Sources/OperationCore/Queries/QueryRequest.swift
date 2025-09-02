@@ -148,7 +148,7 @@
 ///
 /// > Note: See <doc:MultistageQueries> for a list of advanced use cases involving
 /// > ``OperationContinuation``.
-public protocol QueryRequest<FetchValue, FetchFailure>: OperationRequest
+public protocol QueryRequest<FetchValue, FetchFailure>: StatefulOperationRequest
 where
   Self.FetchValue == Value,
   Self.FetchFailure == Failure,

@@ -2,7 +2,7 @@ import Foundation
 
 // MARK: - StaleWhenRevalidateQuery
 
-extension OperationRequest {
+extension StatefulOperationRequest {
   /// Marks ``OperationStore/isStale`` as true for this query whenever the specified predicate is true.
   ///
   /// Chaining multiple instances of any modifier that begins with `stale` will result in an OR
@@ -99,7 +99,7 @@ extension OperationRequest {
 }
 
 public struct _StaleWhenModifier<
-  Operation: OperationRequest
+  Operation: StatefulOperationRequest
 >: _ContextUpdatingOperationModifier, Sendable {
   let predicate: @Sendable (Operation.State, OperationContext) -> Bool
 

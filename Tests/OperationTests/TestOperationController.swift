@@ -1,7 +1,7 @@
 import Operation
 
 final class TestOperationController<
-  Operation: OperationRequest
+  Operation: StatefulOperationRequest
 >: OperationController, Sendable where Operation.State: Sendable {
   typealias State = Operation.State
 

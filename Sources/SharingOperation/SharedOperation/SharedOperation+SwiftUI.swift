@@ -25,7 +25,7 @@
     ///   - initialState: The initial state.
     ///   - client: A `OperationClient` to obtain the `OperationStore` from.
     ///   - scheduler: The ``SharedOperationStateScheduler`` to schedule state updates on.
-    public init<Operation: OperationRequest>(
+    public init<Operation: StatefulOperationRequest>(
       _ operation: sending Operation,
       initialState: Operation.State,
       client: OperationClient? = nil,
@@ -74,7 +74,7 @@
       _ query: sending Query.Default,
       client: OperationClient? = nil,
       animation: Animation
-    ) where State == DefaultOperation<Query>.State {
+    ) where State == DefaultStateOperation<Query>.State {
       self.init(
         query,
         initialState: query.initialState,
@@ -167,7 +167,7 @@
       _ mutation: sending Mutation.Default,
       client: OperationClient? = nil,
       animation: Animation
-    ) where State == DefaultOperation<Mutation>.State {
+    ) where State == DefaultStateOperation<Mutation>.State {
       self.init(
         mutation,
         initialState: mutation.initialState,

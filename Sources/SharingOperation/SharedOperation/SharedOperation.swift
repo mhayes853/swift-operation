@@ -73,7 +73,7 @@ public struct SharedOperation<State: OperationState & Sendable>: Sendable {
   ///   - initialState: The initial state.
   ///   - client: A `OperationClient` to obtain the `OperationStore` from.
   ///   - scheduler: The ``SharedOperationStateScheduler`` to schedule state updates on.
-  public init<Operation: OperationRequest>(
+  public init<Operation: StatefulOperationRequest>(
     _ operation: sending Operation,
     initialState: Operation.State,
     client: OperationClient? = nil,
@@ -406,7 +406,7 @@ extension SharedOperation {
     _ query: sending Query.Default,
     client: OperationClient? = nil,
     scheduler: some SharedOperationStateScheduler = .synchronous
-  ) where State == DefaultOperation<Query>.State {
+  ) where State == DefaultStateOperation<Query>.State {
     self.init(query, initialState: query.initialState, client: client, scheduler: scheduler)
   }
 }
@@ -606,7 +606,7 @@ extension SharedOperation {
     _ mutation: sending Mutation.Default,
     client: OperationClient? = nil,
     scheduler: some SharedOperationStateScheduler = .synchronous
-  ) where State == DefaultOperation<Mutation>.State {
+  ) where State == DefaultStateOperation<Mutation>.State {
     self.init(mutation, initialState: mutation.initialState, client: client, scheduler: scheduler)
   }
 }

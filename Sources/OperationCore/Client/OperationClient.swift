@@ -113,7 +113,7 @@ extension OperationClient {
   ///   - operation: The operation.
   ///   - initialState: The initial state of the operation.
   /// - Returns: A ``OperationStore``.
-  public func store<Operation: OperationRequest>(
+  public func store<Operation: StatefulOperationRequest>(
     for operation: sending Operation,
     initialState: Operation.State
   ) -> OperationStore<Operation.State> {
@@ -205,12 +205,13 @@ extension OperationClient {
     self.withStoreCreation(for: mutation) { $0(for: $1) }
   }
 
-  private func withStoreCreation<Operation: OperationRequest>(
+  private func withStoreCreation<Operation: StatefulOperationRequest>(
     for operation: sending Operation,
-    _ create: @Sendable (
-      borrowing CreateStore,
-      sending Operation
-    ) -> OperationStore<Operation.State>
+    _ create:
+      @Sendable (
+        borrowing CreateStore,
+        sending Operation
+      ) -> OperationStore<Operation.State>
   ) -> OperationStore<Operation.State> {
     let transfer = UnsafeTransfer(value: operation)
     return self.state.withLock { state in
@@ -322,10 +323,11 @@ extension OperationClient {
   /// - Returns: Whatever `fn` returns.
   public func withStores<T>(
     matching path: OperationPath,
-    perform fn: @Sendable (
-      inout OperationPathableCollection<OpaqueOperationStore>,
-      borrowing CreateStore
-    ) throws -> sending T
+    perform fn:
+      @Sendable (
+        inout OperationPathableCollection<OpaqueOperationStore>,
+        borrowing CreateStore
+      ) throws -> sending T
   ) rethrows -> T {
     try self.state.withLock { state in
       let createStore = state.createStore()
@@ -362,10 +364,11 @@ extension OperationClient {
   public func withStores<T, State: OperationState>(
     matching path: OperationPath,
     of stateType: State.Type,
-    perform fn: @Sendable (
-      inout OperationPathableCollection<OperationStore<State>>,
-      borrowing CreateStore
-    ) throws -> sending T
+    perform fn:
+      @Sendable (
+        inout OperationPathableCollection<OperationStore<State>>,
+        borrowing CreateStore
+      ) throws -> sending T
   ) rethrows -> T {
     try self.state.withLock { state in
       let createStore = state.createStore()
