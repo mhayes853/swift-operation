@@ -59,12 +59,33 @@ extension DefaultStateOperation: Sendable where Operation: Sendable {}
 public protocol DefaultableOperationState: OperationState {
   associatedtype DefaultStateValue: Sendable
 
-  func defaultValue(
-    for value: StateValue,
-    using defaultValue: DefaultStateValue
-  ) -> DefaultStateValue
+  func currentValue(using defaultValue: DefaultStateValue) -> DefaultStateValue
+  func initialValue(using defaultValue: DefaultStateValue) -> DefaultStateValue
 
   func stateValue(for defaultStateValue: DefaultStateValue) -> StateValue
+}
+
+extension DefaultableOperationState {
+  public func initialValue(using defaultValue: DefaultStateValue) -> DefaultStateValue {
+    defaultValue
+  }
+}
+
+extension DefaultableOperationState where DefaultStateValue == StateValue {
+  public func stateValue(for defaultStateValue: DefaultStateValue) -> StateValue {
+    defaultStateValue
+  }
+}
+
+extension DefaultableOperationState
+where StateValue: _OptionalProtocol, DefaultStateValue == StateValue.Wrapped {
+  public func currentValue(using defaultValue: DefaultStateValue) -> DefaultStateValue {
+    self.currentValue._orElse(unwrapped: defaultValue)
+  }
+
+  public func stateValue(for defaultStateValue: DefaultStateValue) -> StateValue {
+    StateValue._from(wrapped: defaultStateValue)
+  }
 }
 
 // MARK: - DefaultOperationState
@@ -81,11 +102,11 @@ public struct DefaultOperationState<Base: DefaultableOperationState>: OperationS
   }
 
   public var currentValue: Base.DefaultStateValue {
-    self.base.defaultValue(for: self.base.currentValue, using: self.defaultValue)
+    self.base.currentValue(using: self.defaultValue)
   }
 
   public var initialValue: Base.DefaultStateValue {
-    self.base.defaultValue(for: self.base.initialValue, using: self.defaultValue)
+    self.base.initialValue(using: self.defaultValue)
   }
 
   public var valueUpdateCount: Int { self.base.valueUpdateCount }

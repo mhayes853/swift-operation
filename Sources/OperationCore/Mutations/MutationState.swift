@@ -227,17 +227,6 @@ extension MutationState.HistoryEntry: Identifiable {
 
 extension MutationState: DefaultableOperationState {
   public typealias DefaultStateValue = Value
-
-  public func defaultValue(
-    for value: StateValue,
-    using defaultValue: DefaultStateValue
-  ) -> DefaultStateValue {
-    value ?? defaultValue
-  }
-
-  public func stateValue(for defaultStateValue: DefaultStateValue) -> StateValue {
-    defaultStateValue
-  }
 }
 
 // MARK: - DefaultOperationState

@@ -267,17 +267,10 @@ extension PaginatedState: _PaginatedStateProtocol {
 // MARK: - DefaultableOperationState
 
 extension PaginatedState: DefaultableOperationState {
-  public typealias DefaultStateValue = StateValue
+  public typealias DefaultStateValue = Pages<PageID, PageValue>
 
-  public func defaultValue(
-    for value: StateValue,
-    using defaultValue: DefaultStateValue
-  ) -> DefaultStateValue {
-    self.valueUpdateCount == 0 ? defaultValue : value
-  }
-
-  public func stateValue(for defaultStateValue: DefaultStateValue) -> StateValue {
-    defaultStateValue
+  public func currentValue(using defaultValue: DefaultStateValue) -> DefaultStateValue {
+    self.valueUpdateCount == 0 ? defaultValue : self.currentValue
   }
 }
 
