@@ -59,6 +59,24 @@ extension _PaginatedStateProtocol {
   }
 }
 
+extension _PaginatedStateProtocol {
+  func request(in context: OperationContext) -> PagingRequest<PageID> {
+    guard let fetchType = context.infiniteValues?.fetchType else {
+      return .initialPage
+    }
+    switch (fetchType, self.nextPageId, self.previousPageId) {
+    case (.allPages, _, _):
+      return .allPages
+    case (.nextPage, let last?, _):
+      return .nextPage(last)
+    case (.previousPage, _, let first?):
+      return .previousPage(first)
+    default:
+      return .initialPage
+    }
+  }
+}
+
 // MARK: - PaginatedState
 
 /// A state type for ``PaginatedRequest``.
@@ -245,22 +263,6 @@ extension PaginatedState: _PaginatedStateProtocol {
     self.initialPageActiveTasks.remove(id: task.id)
     self.nextPageActiveTasks.remove(id: task.id)
     self.previousPageActiveTasks.remove(id: task.id)
-  }
-
-  func request(in context: OperationContext) -> PagingRequest<PageID> {
-    guard let fetchType = context.infiniteValues?.fetchType else {
-      return .initialPage
-    }
-    switch (fetchType, self.nextPageId, self.previousPageId) {
-    case (.allPages, _, _):
-      return .allPages
-    case (.nextPage, let last?, _):
-      return .nextPage(last)
-    case (.previousPage, _, let first?):
-      return .previousPage(first)
-    default:
-      return .initialPage
-    }
   }
 }
 

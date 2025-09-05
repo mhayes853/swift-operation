@@ -1,7 +1,7 @@
-func removeDuplicatePaginatedRequests<Query: PaginatedRequest>(
+func removeDuplicatePaginatedRequests<State: _PaginatedStateProtocol & Sendable>(
   _ c1: OperationContext,
   _ c2: OperationContext,
-  using query: Query
+  _: State.Type
 ) -> Bool {
-  c1.paging(for: query).request == c2.paging(for: query).request
+  c1.request(State.self) == c2.request(State.self)
 }
