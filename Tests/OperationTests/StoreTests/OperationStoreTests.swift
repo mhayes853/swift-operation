@@ -147,8 +147,8 @@ struct OperationStoreTests {
       .stateChanged,
       .fetchingStarted,
       .resultReceived(.success(TestQuery.value)),
-      .stateChanged,
-      .fetchingEnded
+      .fetchingEnded,
+      .stateChanged
     ])
     subscription.cancel()
   }
@@ -164,8 +164,8 @@ struct OperationStoreTests {
       .stateChanged,
       .fetchingStarted,
       .resultReceived(.failure(FailingQuery.SomeError())),
-      .stateChanged,
-      .fetchingEnded
+      .fetchingEnded,
+      .stateChanged
     ])
     subscription.cancel()
     collector.reset()
@@ -176,8 +176,8 @@ struct OperationStoreTests {
       .stateChanged,
       .fetchingStarted,
       .resultReceived(.failure(FailingQuery.SomeError())),
-      .stateChanged,
-      .fetchingEnded
+      .fetchingEnded,
+      .stateChanged
     ])
     subscription.cancel()
   }
@@ -193,8 +193,8 @@ struct OperationStoreTests {
       .stateChanged,
       .fetchingStarted,
       .resultReceived(.failure(FailingQuery.SomeError())),
-      .stateChanged,
-      .fetchingEnded
+      .fetchingEnded,
+      .stateChanged
     ])
     subscription.cancel()
   }
@@ -211,8 +211,8 @@ struct OperationStoreTests {
       .stateChanged,
       .fetchingStarted,
       .resultReceived(.success(TestQuery.value)),
-      .stateChanged,
-      .fetchingEnded
+      .fetchingEnded,
+      .stateChanged
     ])
     subscription.cancel()
   }
@@ -229,8 +229,8 @@ struct OperationStoreTests {
       .stateChanged,
       .fetchingStarted,
       .resultReceived(.success(TestQuery.value)),
-      .stateChanged,
-      .fetchingEnded
+      .fetchingEnded,
+      .stateChanged
     ])
     subscription.cancel()
   }
@@ -279,8 +279,8 @@ struct OperationStoreTests {
       .stateChanged,
       .fetchingStarted,
       .resultReceived(.success(TestQuery.value)),
-      .stateChanged,
-      .fetchingEnded
+      .fetchingEnded,
+      .stateChanged
     ])
   }
 
@@ -346,8 +346,8 @@ struct OperationStoreTests {
       .resultReceived(.success(ContinuingQuery.values[2])),
       .stateChanged,
       .resultReceived(.success(ContinuingQuery.finalValue)),
-      .stateChanged,
-      .fetchingEnded
+      .fetchingEnded,
+      .stateChanged
     ])
     expectNoDifference(value, ContinuingQuery.finalValue)
   }
@@ -365,8 +365,8 @@ struct OperationStoreTests {
       .resultReceived(.failure(ContinuingErrorQuery.SomeError())),
       .stateChanged,
       .resultReceived(.success(ContinuingErrorQuery.finalValue)),
-      .stateChanged,
-      .fetchingEnded
+      .fetchingEnded,
+      .stateChanged
     ])
     expectNoDifference(value, ContinuingErrorQuery.finalValue)
     expectNoDifference(
@@ -389,8 +389,8 @@ struct OperationStoreTests {
       .resultReceived(.success(ContinuingValueThenErrorQuery.value)),
       .stateChanged,
       .resultReceived(.failure(ContinuingErrorQuery.SomeError())),
-      .stateChanged,
-      .fetchingEnded
+      .fetchingEnded,
+      .stateChanged
     ])
     expectNoDifference(value, nil)
     expectNoDifference(

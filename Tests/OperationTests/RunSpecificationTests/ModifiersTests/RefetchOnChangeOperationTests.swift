@@ -54,13 +54,14 @@ final class RefetchOnChangeOperationTests: XCTestCase {
     )
     let subscription = store.subscribe(
       with: QueryEventHandler(
+        onStateChanged: { state, _ in
+          if state.status.isCancelled {
+            cancelsExpectation.fulfill()
+          }
+        },
         onFetchingStarted: { _ in
           expectNoDifference(store.status.isCancelled, false)
           fetchesExpectation.fulfill()
-        },
-        onFetchingEnded: { _ in
-          expectNoDifference(store.status.isCancelled, true)
-          cancelsExpectation.fulfill()
         }
       )
     )

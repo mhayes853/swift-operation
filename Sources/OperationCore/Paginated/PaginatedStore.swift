@@ -327,7 +327,9 @@ extension OperationStore where State: _PaginatedStateProtocol {
       onResultReceived: { result, context in
         guard context.operationResultUpdateReason == .returnedFinalResult else { return }
         handler.onResultReceived?(
-          result.map { [weak self] _ in self?.currentValue ?? [] },
+          result.map { [weak self] value in
+            self?.state.nextValue(for: value, in: context) ?? []
+          },
           context
         )
       }

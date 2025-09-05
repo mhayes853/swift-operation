@@ -288,8 +288,8 @@ struct MutationStoreTests {
       .stateChanged,
       .mutatingStarted("blob"),
       .mutationResultReceived("blob", .success("blob")),
-      .stateChanged,
-      .mutatingEnded("blob")
+      .mutatingEnded("blob"),
+      .stateChanged
     ])
   }
 
@@ -304,8 +304,8 @@ struct MutationStoreTests {
       .stateChanged,
       .mutatingStarted("blob"),
       .mutationResultReceived("blob", .failure(FailableMutation.MutateError())),
-      .stateChanged,
-      .mutatingEnded("blob")
+      .mutatingEnded("blob"),
+      .stateChanged
     ])
   }
 
@@ -322,8 +322,8 @@ struct MutationStoreTests {
       .stateChanged,
       .mutatingStarted("blob"),
       .mutationResultReceived("blob", .success("blob")),
-      .stateChanged,
-      .mutatingEnded("blob")
+      .mutatingEnded("blob"),
+      .stateChanged
     ])
     subscription.cancel()
   }
@@ -425,8 +425,8 @@ struct MutationStoreTests {
       .mutationResultReceived("foo", .success(ContinuingMutation.values[2])),
       .stateChanged,
       .mutationResultReceived("foo", .success(ContinuingMutation.finalValue)),
-      .stateChanged,
-      .mutatingEnded("foo")
+      .mutatingEnded("foo"),
+      .stateChanged
     ])
     expectNoDifference(value, ContinuingQuery.finalValue)
   }
@@ -444,8 +444,8 @@ struct MutationStoreTests {
       .mutationResultReceived("foo", .failure(ContinuingErrorMutation.SomeError())),
       .stateChanged,
       .mutationResultReceived("foo", .success(ContinuingErrorMutation.finalValue)),
-      .stateChanged,
-      .mutatingEnded("foo")
+      .mutatingEnded("foo"),
+      .stateChanged
     ])
     expectNoDifference(value, ContinuingErrorQuery.finalValue)
     expectNoDifference(store.error as? ContinuingErrorQuery.SomeError, nil)
@@ -465,8 +465,8 @@ struct MutationStoreTests {
       .mutationResultReceived("foo", .success(ContinuingValueThenErrorMutation.value)),
       .stateChanged,
       .mutationResultReceived("foo", .failure(ContinuingValueThenErrorMutation.SomeError())),
-      .stateChanged,
-      .mutatingEnded("foo")
+      .mutatingEnded("foo"),
+      .stateChanged
     ])
     expectNoDifference(value, nil)
     expectNoDifference(

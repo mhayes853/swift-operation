@@ -98,10 +98,13 @@ public final class OperationStore<State: OperationState & Sendable>: OperationPa
     initialState: Operation.State,
     initialContext: OperationContext
   ) where State == Operation.State, State.OperationValue == Operation.Value {
+    let subscriptions = OperationSubscriptions<OperationEventHandler<State>>()
     var context = initialContext
     operation.setup(context: &context)
     self.path = operation.path
-    self.request = RequestActor(operation)
+    self.request = RequestActor(
+      operation.handleEvents(with: OperationEventHandler(subscriptions: subscriptions))
+    )
     self.values = RecursiveLock(
       Values(
         state: initialState,
@@ -111,7 +114,7 @@ public final class OperationStore<State: OperationState & Sendable>: OperationPa
         subscribeTask: nil
       )
     )
-    self.subscriptions = OperationSubscriptions()
+    self.subscriptions = subscriptions
     self.setupOperation(with: context, initialState: initialState)
   }
 
@@ -370,9 +373,9 @@ extension OperationStore {
     using task: LockedBox<TaskState>
   ) -> OperationTask<State.OperationValue, State.Failure> {
     OperationTask(context: context) { _, context in
-      self.subscriptions.forEach { $0.onFetchingStarted?(context) }
+      // self.subscriptions.forEach { $0.onFetchingStarted?(context) }
       defer {
-        self.subscriptions.forEach { $0.onFetchingEnded?(context) }
+        // self.subscriptions.forEach { $0.onFetchingEnded?(context) }
         task.inner.withLock { $0 = .finished }
       }
       do {
@@ -420,9 +423,9 @@ extension OperationStore {
         task.context.operationResultUpdateReason = nil
         values.state.finishFetchTask(task)
       }
-      self.subscriptions.forEach {
-        $0.onResultReceived?(result, context)
-      }
+      // self.subscriptions.forEach {
+      //   $0.onResultReceived?(result, context)
+      // }
     }
   }
 
@@ -439,11 +442,12 @@ extension OperationStore {
           switch $0 {
           case .finished:
             reportWarning(.queryYieldedAfterReturning(result))
-          case .running(let task) where values.taskHerdId == initialHerdId:
+          case .running(var task) where values.taskHerdId == initialHerdId:
+            task.context = context
             values.state.update(with: result, for: task)
-            self.subscriptions.forEach {
-              $0.onResultReceived?(result, context)
-            }
+          // self.subscriptions.forEach {
+          //   $0.onResultReceived?(result, context)
+          // }
           default:
             break
           }
@@ -531,6 +535,22 @@ extension OperationStore {
       continuation: OperationContinuation<State.OperationValue, State.Failure>
     ) async throws(State.Failure) -> State.OperationValue {
       try await request.run(isolation: self, in: context, with: continuation)
+    }
+  }
+}
+
+// MARK: - Event Handler
+
+extension OperationEventHandler {
+  fileprivate init(subscriptions: OperationSubscriptions<Self>) {
+    self.init { state, context in
+      subscriptions.forEach { $0.onStateChanged?(state, context) }
+    } onFetchingStarted: { context in
+      subscriptions.forEach { $0.onFetchingStarted?(context) }
+    } onFetchingEnded: { context in
+      subscriptions.forEach { $0.onFetchingEnded?(context) }
+    } onResultReceived: { result, context in
+      subscriptions.forEach { $0.onResultReceived?(result, context) }
     }
   }
 }

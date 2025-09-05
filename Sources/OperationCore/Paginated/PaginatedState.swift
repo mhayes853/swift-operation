@@ -211,26 +211,7 @@ extension PaginatedState: _PaginatedStateProtocol {
   ) {
     switch result {
     case .success(let value):
-      switch value.fetchValue {
-      case .allPages(let pages):
-        self.currentValue = pages
-      case .initialPage(let page):
-        if task.context.infiniteValues?.fetchType != nil {
-          self.currentValue[id: page.id] = page
-        } else {
-          self.currentValue = [page]
-        }
-      case .nextPage(let next):
-        if let index = self.currentValue.firstIndex(where: { $0.id == next.lastPageId }) {
-          let (_, index) = self.currentValue.insert(next.page, at: index + 1)
-          self.currentValue[index] = next.page
-        }
-      case .previousPage(let previous):
-        if let index = self.currentValue.firstIndex(where: { $0.id == previous.firstPageId }) {
-          let (_, index) = self.currentValue.insert(previous.page, at: index)
-          self.currentValue[index] = previous.page
-        }
-      }
+      self.currentValue = self.nextValue(for: value, in: task.context)
       self.nextPageId = self.updatedPageId(from: value.nextPageId, currentId: self.nextPageId)
       self.previousPageId = self.updatedPageId(
         from: value.previousPageId,
@@ -316,5 +297,37 @@ extension DefaultStateOperation where Operation: PaginatedRequest {
       Operation.State(initialValue: [], initialPageId: self.operation.initialPageId),
       defaultValue: self.defaultValue
     )
+  }
+}
+
+// MARK: - Pages
+
+extension _PaginatedStateProtocol {
+  func nextValue(
+    for value: PaginatedOperationValue<PageID, PageValue>,
+    in context: OperationContext
+  ) -> Pages<PageID, PageValue> {
+    var nextValue = self.currentValue
+    switch value.fetchValue {
+    case .allPages(let pages):
+      nextValue = pages
+    case .initialPage(let page):
+      if context.infiniteValues?.fetchType != nil {
+        nextValue[id: page.id] = page
+      } else {
+        nextValue = [page]
+      }
+    case .nextPage(let next):
+      if let index = nextValue.firstIndex(where: { $0.id == next.lastPageId }) {
+        let (_, index) = nextValue.insert(next.page, at: index + 1)
+        nextValue[index] = next.page
+      }
+    case .previousPage(let previous):
+      if let index = nextValue.firstIndex(where: { $0.id == previous.firstPageId }) {
+        let (_, index) = nextValue.insert(previous.page, at: index)
+        nextValue[index] = previous.page
+      }
+    }
+    return nextValue
   }
 }

@@ -4,7 +4,7 @@ import Operation
 import OperationTestHelpers
 import Testing
 
-@Suite("PaginatedOperationStore tests")
+@Suite("PaginatedStoreTests tests")
 struct PaginatedStoreTests {
   private let client = OperationClient()
 
@@ -526,8 +526,8 @@ struct PaginatedStoreTests {
       .pageResultReceived(0, .success(Page(id: 0, value: "a"))),
       .pageFetchingEnded(0),
       .resultReceived(.success([Page(id: 0, value: "a")])),
-      .stateChanged,
-      .fetchingEnded
+      .fetchingEnded,
+      .stateChanged
     ])
   }
 
@@ -544,8 +544,8 @@ struct PaginatedStoreTests {
       .pageResultReceived(0, .failure(FailablePaginated.SomeError())),
       .pageFetchingEnded(0),
       .resultReceived(.failure(FailablePaginated.SomeError())),
-      .stateChanged,
-      .fetchingEnded
+      .fetchingEnded,
+      .stateChanged
     ])
   }
 
@@ -564,8 +564,8 @@ struct PaginatedStoreTests {
       .pageResultReceived(0, .success(Page(id: 0, value: "a"))),
       .pageFetchingEnded(0),
       .resultReceived(.success([Page(id: 0, value: "a")])),
-      .stateChanged,
-      .fetchingEnded
+      .fetchingEnded,
+      .stateChanged
     ])
   }
 
@@ -582,8 +582,8 @@ struct PaginatedStoreTests {
       .pageResultReceived(0, .failure(FailablePaginated.SomeError())),
       .pageFetchingEnded(0),
       .resultReceived(.failure(FailablePaginated.SomeError())),
-      .stateChanged,
-      .fetchingEnded
+      .fetchingEnded,
+      .stateChanged
     ])
   }
 
@@ -609,8 +609,8 @@ struct PaginatedStoreTests {
       .resultReceived(
         .success([Page(id: 0, value: "a"), Page(id: 1, value: "b")])
       ),
-      .stateChanged,
-      .fetchingEnded
+      .fetchingEnded,
+      .stateChanged
     ])
   }
 
@@ -633,8 +633,8 @@ struct PaginatedStoreTests {
       .pageResultReceived(0, .failure(FailablePaginated.SomeError())),
       .pageFetchingEnded(0),
       .resultReceived(.failure(FailablePaginated.SomeError())),
-      .stateChanged,
-      .fetchingEnded
+      .fetchingEnded,
+      .stateChanged
     ])
   }
 
@@ -658,8 +658,8 @@ struct PaginatedStoreTests {
       .pageResultReceived(0, .success(Page(id: 0, value: "a"))),
       .pageFetchingEnded(0),
       .resultReceived(.success([Page(id: 0, value: "a")])),
-      .stateChanged,
-      .fetchingEnded
+      .fetchingEnded,
+      .stateChanged
     ])
     subscription.cancel()
   }
@@ -681,8 +681,8 @@ struct PaginatedStoreTests {
       .pageResultReceived(0, .success(Page(id: 0, value: "a"))),
       .pageFetchingEnded(0),
       .resultReceived(.success([Page(id: 0, value: "a")])),
-      .stateChanged,
-      .fetchingEnded
+      .fetchingEnded,
+      .stateChanged
     ])
     subscription.cancel()
   }
@@ -823,8 +823,8 @@ struct PaginatedStoreTests {
       .pageResultReceived(0, .success(finalPage)),
       .pageFetchingEnded(0),
       .resultReceived(.success([finalPage])),
-      .stateChanged,
-      .fetchingEnded
+      .fetchingEnded,
+      .stateChanged
     ])
     expectNoDifference(value, finalPage)
     expectNoDifference(store.currentValue, [finalPage])
@@ -852,8 +852,8 @@ struct PaginatedStoreTests {
       .pageResultReceived(1, .success(finalPage)),
       .pageFetchingEnded(1),
       .resultReceived(.success([firstPage, finalPage])),
-      .stateChanged,
-      .fetchingEnded
+      .fetchingEnded,
+      .stateChanged
     ])
     expectNoDifference(value, finalPage)
     expectNoDifference(store.currentValue, [firstPage, finalPage])
@@ -881,8 +881,8 @@ struct PaginatedStoreTests {
       .pageResultReceived(-1, .success(finalPage)),
       .pageFetchingEnded(-1),
       .resultReceived(.success([finalPage, firstPage])),
-      .stateChanged,
-      .fetchingEnded
+      .fetchingEnded,
+      .stateChanged
     ])
     expectNoDifference(value, finalPage)
     expectNoDifference(store.currentValue, [finalPage, firstPage])
@@ -921,8 +921,8 @@ struct PaginatedStoreTests {
       .pageResultReceived(1, .success(TestYieldablePaginated.finalPage(for: 1))),
       .pageFetchingEnded(1),
       .resultReceived(.success(value)),
-      .stateChanged,
-      .fetchingEnded
+      .fetchingEnded,
+      .stateChanged
     ])
     expectNoDifference(
       value,
@@ -949,8 +949,8 @@ struct PaginatedStoreTests {
       .pageResultReceived(0, .failure(TestYieldablePaginated.SomeError())),
       .pageFetchingEnded(0),
       .resultReceived(.failure(TestYieldablePaginated.SomeError())),
-      .stateChanged,
-      .fetchingEnded
+      .fetchingEnded,
+      .stateChanged
     ])
     expectNoDifference(value, nil)
     expectNoDifference(
