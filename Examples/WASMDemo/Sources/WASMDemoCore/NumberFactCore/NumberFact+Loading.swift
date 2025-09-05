@@ -37,7 +37,7 @@ extension NumberFact {
 // MARK: - Query
 
 extension NumberFact {
-  public static func query(for number: Int) -> some QueryRequest<Self, Query.State> {
+  public static func query(for number: Int) -> some QueryRequest<Self, any Error> {
     Query(number: number).taskConfiguration { $0.name = "Fetch number fact for \(number)" }
   }
 
@@ -45,8 +45,9 @@ extension NumberFact {
     let number: Int
 
     public func fetch(
+      isolation: isolated (any Actor)?,
       in context: OperationContext,
-      with continuation: OperationContinuation<NumberFact>
+      with continuation: OperationContinuation<NumberFact, any Error>
     ) async throws -> NumberFact {
       @Dependency(NumberFact.LoaderKey.self) var loader
       return try await loader.fact(for: self.number)

@@ -35,14 +35,12 @@ public func nthPrime(for n: Int) -> Int? {
 // MARK: - Nth Prime Query
 
 extension Int {
-  public static func nthPrimeQuery(
-    for number: Int
-  ) -> some QueryRequest<Int?, NthPrimeQuery.State> {
+  public static func nthPrimeQuery(for number: Int) -> some QueryRequest<Int?, Never> {
     // NB: Calculating the prime number doesn't need the network, but it still takes
     // significant time to complete for larger numbers.
     NthPrimeQuery(number: number)
       .completelyOffline()
-      .disableApplicationActiveRefetching()
+      .disableApplicationActiveRerunning()
       .taskConfiguration {
         @Dependency(WebWorkerTaskExecutorKey.self) var executor
         $0.name = "Nth prime for \(number)"
@@ -59,9 +57,10 @@ extension Int {
     let number: Int
 
     public func fetch(
+      isolation: isolated (any Actor)?,
       in context: OperationContext,
-      with continuation: OperationContinuation<Int?>
-    ) async throws -> Int? {
+      with continuation: OperationContinuation<Int?, Never>
+    ) async -> Int? {
       nthPrime(for: self.number)
     }
   }
