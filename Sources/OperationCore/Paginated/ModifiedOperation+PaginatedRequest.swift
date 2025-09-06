@@ -1,4 +1,9 @@
-extension ModifiedOperation: PaginatedRequest where Operation: PaginatedRequest {
+extension ModifiedOperation: PaginatedRequest
+where
+  Operation: PaginatedRequest,
+  Operation.Value == Modifier.Value,
+  Operation.Failure == Modifier.Failure
+{
   public typealias PageValue = Operation.PageValue
   public typealias PageID = Operation.PageID
   public typealias PageFailure = Operation.PageFailure

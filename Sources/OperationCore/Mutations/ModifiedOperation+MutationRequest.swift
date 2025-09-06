@@ -1,4 +1,9 @@
-extension ModifiedOperation: MutationRequest where Operation: MutationRequest {
+extension ModifiedOperation: MutationRequest
+where
+  Operation: MutationRequest,
+  Operation.Value == Modifier.Value,
+  Operation.Failure == Modifier.Failure
+{
   public func mutate(
     isolation: isolated (any Actor)?,
     with arguments: Operation.Arguments,

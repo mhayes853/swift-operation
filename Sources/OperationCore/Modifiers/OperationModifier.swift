@@ -40,9 +40,12 @@
 /// > type instead of `some QueryRequest<Value, State>`. The former style ensures that infinite
 /// > queries and mutations can use our modifier whilst still being recognized as their respective
 /// > ``PaginatedRequest`` or ``MutationRequest`` conformances by the compiler.
-public protocol OperationModifier<Operation> {
+public protocol OperationModifier<Value, Failure> {
   /// The underlying ``OperationRequest`` type.
   associatedtype Operation: OperationRequest
+
+  associatedtype Value
+  associatedtype Failure: Error
 
   /// Sets up the initial ``OperationContext`` for the specified operation.
   ///
@@ -68,8 +71,8 @@ public protocol OperationModifier<Operation> {
     isolation: isolated (any Actor)?,
     in context: OperationContext,
     using operation: Operation,
-    with continuation: OperationContinuation<Operation.Value, Operation.Failure>
-  ) async throws(Operation.Failure) -> Operation.Value
+    with continuation: OperationContinuation<Value, Failure>
+  ) async throws(Failure) -> Value
 }
 
 extension OperationModifier {
@@ -123,7 +126,7 @@ public struct ModifiedOperation<
   Operation: OperationRequest,
   Modifier: OperationModifier
 >: OperationRequest where Modifier.Operation == Operation {
-  public typealias Value = Operation.Value
+  public typealias Value = Modifier.Value
 
   /// The base ``OperationRequest``.
   public let operation: Operation
@@ -145,8 +148,8 @@ public struct ModifiedOperation<
   public func run(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<Operation.Value, Operation.Failure>
-  ) async throws(Operation.Failure) -> Operation.Value {
+    with continuation: OperationContinuation<Modifier.Value, Modifier.Failure>
+  ) async throws(Modifier.Failure) -> Modifier.Value {
     try await self.modifier.run(
       isolation: isolation,
       in: context,
@@ -157,7 +160,11 @@ public struct ModifiedOperation<
 }
 
 extension ModifiedOperation: StatefulOperationRequest
-where Modifier.Operation: StatefulOperationRequest {
+where
+  Modifier.Operation: StatefulOperationRequest,
+  Operation.Value == Modifier.Value,
+  Operation.Failure == Modifier.Failure
+{
   public typealias State = Operation.State
 
   @inlinable

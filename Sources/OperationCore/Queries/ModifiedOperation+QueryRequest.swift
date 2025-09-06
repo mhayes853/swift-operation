@@ -1,4 +1,9 @@
-extension ModifiedOperation: QueryRequest where Operation: QueryRequest {
+extension ModifiedOperation: QueryRequest
+where
+  Operation: QueryRequest,
+  Operation.Value == Modifier.Value,
+  Operation.Failure == Modifier.Failure
+{
   public func fetch(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
