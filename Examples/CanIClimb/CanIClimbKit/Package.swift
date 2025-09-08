@@ -17,7 +17,7 @@ let package = Package(
     ),
     .package(
       url: "https://github.com/pointfreeco/swift-structured-queries",
-      from: "0.12.1",
+      from: "0.16.0",
       traits: ["StructuredQueriesTagged"]
     ),
     .package(url: "https://github.com/pointfreeco/sharing-grdb", branch: "cloudkit"),
