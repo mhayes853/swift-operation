@@ -68,7 +68,7 @@ extension DependenciesTestSuite {
           let handler = PaginatedEventHandler<Mountain.SearchQuery.State>(
             onPageResultReceived: { [mountain] _, result, context in
               guard
-                context.operationResultUpdateReason == .yieldedResult && context.isLastRetryAttempt
+                context.operationResultUpdateReason == .yieldedResult && context.isLastRunAttempt
               else { return }
               expectNoDifference(
                 try? result.get(),

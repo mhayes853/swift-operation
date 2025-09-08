@@ -141,7 +141,7 @@ extension Mountain {
         client.updateDetailQueries(mountains: searchResult.mountains)
         return searchResult
       } catch {
-        guard paging.pageId == self.initialPageId && context.isLastRetryAttempt else { throw error }
+        guard paging.pageId == self.initialPageId && context.isLastRunAttempt else { throw error }
         let mountains = try await searcher.localSearchMountains(by: self.search)
         let searchResult = Mountain.SearchResult(
           mountains: IdentifiedArray(uniqueElements: mountains),

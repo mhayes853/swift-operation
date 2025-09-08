@@ -53,7 +53,7 @@ extension Mountain {
       @Dependency(\.defaultOperationClient) var client
       @Dependency(\.date) var now
 
-      if context.isFirstFetchAttempt {
+      if context.isFirstRunAttempt {
         let climbsStore = client.store(for: Mountain.plannedClimbsQuery(for: arguments.mountainId))
         climbsStore.currentValue?[id: arguments.id]?.achievedDate = now()
       }
@@ -87,7 +87,7 @@ extension Mountain {
       @Dependency(\.defaultOperationClient) var client
 
       let climbsStore = client.store(for: Mountain.plannedClimbsQuery(for: arguments.mountainId))
-      if context.isFirstFetchAttempt {
+      if context.isFirstRunAttempt {
         climbsStore.currentValue?[id: arguments.id]?.achievedDate = nil
       }
 

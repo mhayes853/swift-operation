@@ -40,8 +40,7 @@ public struct _AlertStateModifier<Operation: OperationRequest>: OperationModifie
       }
       return value
     } catch {
-      let isLastRetryAttempt = context.operationMaxRetries == context.operationRetryIndex ?? 0
-      if isLastRetryAttempt, let failureAlert = self.failureAlert(error) {
+      if context.isLastRunAttempt, let failureAlert = self.failureAlert(error) {
         await center.post(OperationAlertMessage(alert: failureAlert))
       }
       throw error
