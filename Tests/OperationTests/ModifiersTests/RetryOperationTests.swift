@@ -51,7 +51,7 @@ struct RetryOperationTests {
 
   @Test("Succeeds On Final Refetch, Returns Value")
   func succeedsOnFinalRefetchReturnsValue() async throws {
-    let query = SucceedOnNthRefetchQuery(index: 3)
+    let query = SucceedOnNthRefetchQuery(index: 2)
     let store = OperationStore.detached(
       query: query.backoff(.noBackoff)
         .delayer(.noDelay)
@@ -149,6 +149,27 @@ struct RetryOperationTests {
     let index = await query.retryIndex
     expectNoDifference(index, nil)
   }
+
+  @Test("Has Nil Retry Index On First Fetch Attempt When Retry Limit Is 0")
+  func hasNilRetryIndexOnFirstFetchAttemptWhenRetryLimitIs0() async {
+    let query = RetryIndexReadingQuery()
+    let store = OperationStore.detached(query: query.retry(limit: 0), initialValue: nil)
+    _ = await store.fetch()
+    let index = await query.retryIndex
+    expectNoDifference(index, nil)
+  }
+
+  @Test("All Retry Indicies")
+  func allRetryIndicies() async {
+    let query = RetryIndiciesReadingQuery()
+    let store = OperationStore.detached(
+      query: query.retry(limit: 5).backoff(.noBackoff).delayer(.noDelay),
+      initialValue: nil
+    )
+    _ = try? await store.fetch()
+    let indicies = await query.retryIndicies
+    expectNoDifference(indicies, [nil, 0, 1, 2, 3, 4])
+  }
 }
 
 private actor RetryIndexReadingQuery: QueryRequest, Identifiable {
@@ -162,4 +183,19 @@ private actor RetryIndexReadingQuery: QueryRequest, Identifiable {
     await isolate(self) { @Sendable in $0.retryIndex = context.operationRetryIndex }
     return 0
   }
+}
+
+private actor RetryIndiciesReadingQuery: QueryRequest, Identifiable {
+  private(set) var retryIndicies = [Int?]()
+
+  func fetch(
+    isolation: isolated (any Actor)?,
+    in context: OperationContext,
+    with continuation: OperationContinuation<Int, any Error>
+  ) async throws -> Int {
+    await isolate(self) { @Sendable in $0.retryIndicies.append(context.operationRetryIndex) }
+    throw SomeError()
+  }
+
+  private struct SomeError: Error {}
 }

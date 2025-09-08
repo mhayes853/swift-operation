@@ -34,7 +34,8 @@ public struct _RetryModifier<Operation: OperationRequest>: OperationModifier, Se
         try? await context.operationDelayer.delay(for: context.operationBackoffFunction(index + 1))
       }
     }
-    context.operationRetryIndex = context.operationMaxRetries
+    context.operationRetryIndex =
+      context.operationMaxRetries > 0 ? context.operationMaxRetries - 1 : nil
     return try await operation.run(isolation: isolation, in: context, with: continuation)
   }
 }
@@ -71,7 +72,7 @@ extension OperationContext {
 
   /// Whether or not the query is on its last retry attempt.
   public var isLastRetryAttempt: Bool {
-    self.operationRetryIndex == self.operationMaxRetries
+    self.operationRetryIndex == self.operationMaxRetries - 1
   }
 
   /// Whether or not the query is on its first retry attempt.
