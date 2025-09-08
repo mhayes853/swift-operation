@@ -83,9 +83,11 @@ public final class OperationStore<State: OperationState & Sendable>: OperationPa
     var subscribeTask: Task<State.OperationValue, any Error>?
   }
 
-  // NB: Does not compile when adding '& Sendable' for some reason. We'll make the store
-  // @unchecked Sendable because it can only be constructed with a Sendable operation.
-  private let request: RequestActor
+  #if swift(>=6.2)
+    private let request: RequestActor
+  #else
+    private let request: RequestActor<State.OperationValue, State.Failure>
+  #endif
 
   /// The ``OperationPath`` of the query managed by this store.
   public let path: OperationPath
@@ -515,17 +517,51 @@ extension OperationStore {
 
 // MARK: - OperationActor
 
-private final actor RequestActor {
-  // NB: This weird contraption is required because just using an existential OperationRequest in
-  // here causes the compiler (Swift >=6.2) to complain about "sending" a clearly Sendable type...
-  private let request:
-    (isolated RequestActor, OperationContext, OperationContinuation<any Sendable, any Error>)
-      async throws -> any Sendable
+// NB: This weird contraption is required because just using an existential OperationRequest in
+// here causes the compiler (Swift >=6.2) to complain about "sending" the "non-Sendable" Value
+// generic. (That is literally required to be Sendable via constraints???)
 
-  init<Value: Sendable, Failure: Error>(_ operation: sending any OperationRequest<Value, Failure>) {
-    self.request = { isolation, context, continuation in
-      try await operation.run(
-        isolation: isolation,
+#if swift(>=6.2)
+  private final actor RequestActor {
+    private let request:
+      (isolated RequestActor, OperationContext, OperationContinuation<any Sendable, any Error>)
+        async throws -> any Sendable
+
+    init<Value: Sendable, Failure: Error>(
+      _ operation: sending any OperationRequest<Value, Failure>
+    ) {
+      self.request = { isolation, context, continuation in
+        try await operation.run(
+          isolation: isolation,
+          in: context,
+          with: OperationContinuation { result, yieldedContext in
+            continuation.yield(with: result.map { $0 }.mapError { $0 }, using: yieldedContext)
+          }
+        )
+      }
+    }
+
+    func run(
+      context: OperationContext,
+      continuation: OperationContinuation<any Sendable, any Error>
+    ) async throws -> any Sendable {
+      try await self.request(self, context, continuation)
+    }
+  }
+#else
+  private final actor RequestActor<Value: Sendable, Failure: Error> {
+    private let request: any OperationRequest<Value, Failure>
+
+    init(_ operation: sending any OperationRequest<Value, Failure>) {
+      self.request = operation
+    }
+
+    func run(
+      context: OperationContext,
+      continuation: OperationContinuation<any Sendable, any Error>
+    ) async throws -> any Sendable {
+      try await self.request.run(
+        isolation: self,
         in: context,
         with: OperationContinuation { result, yieldedContext in
           continuation.yield(with: result.map { $0 }.mapError { $0 }, using: yieldedContext)
@@ -533,14 +569,7 @@ private final actor RequestActor {
       )
     }
   }
-
-  func run(
-    context: OperationContext,
-    continuation: OperationContinuation<any Sendable, any Error>
-  ) async throws -> any Sendable {
-    try await self.request(self, context, continuation)
-  }
-}
+#endif
 
 // MARK: - Event Handler
 
