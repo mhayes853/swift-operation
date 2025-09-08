@@ -42,11 +42,11 @@ extension Mountain {
 // MARK: - Query
 
 extension Mountain {
-  public static func query(id: Mountain.ID) -> some QueryRequest<Self, Query.State> {
+  public static func query(id: Mountain.ID) -> some QueryRequest<Self?, any Error> {
     Query(id: id).stale(after: TimeInterval(duration: .fiveMinutes))
   }
 
-  public struct Query: QueryRequest {
+  public struct Query: QueryRequest, Sendable {
     let id: Mountain.ID
 
     public var path: OperationPath {
@@ -54,8 +54,9 @@ extension Mountain {
     }
 
     public func fetch(
+      isolation: isolated (any Actor)?,
       in context: OperationContext,
-      with continuation: OperationContinuation<Mountain?>
+      with continuation: OperationContinuation<Mountain?, any Error>
     ) async throws -> Mountain? {
       let loader = Dependency(Mountain.LoaderKey.self).wrappedValue
 

@@ -44,13 +44,14 @@ public final class MockUserLocation: UserLocation {
 extension LocationReading {
   public static let requestUserPermissionMutation = RequestUserPermissionMutation()
 
-  public struct RequestUserPermissionMutation: MutationRequest, Hashable {
+  public struct RequestUserPermissionMutation: MutationRequest, Hashable, Sendable {
     public typealias Arguments = Void
 
     public func mutate(
+      isolation: isolated (any Actor)?,
       with arguments: Void,
       in context: OperationContext,
-      with continuation: OperationContinuation<Bool>
+      with continuation: OperationContinuation<Bool, Never>
     ) async -> Bool {
       @Dependency(\.defaultOperationClient) var client
       @Dependency(UserLocationKey.self) var userLocation
@@ -69,10 +70,11 @@ extension LocationReading {
   public static let userQuery = UserQuery().stale(after: TimeInterval(duration: .fiveMinutes))
     .logDuration()
 
-  public struct UserQuery: QueryRequest, Hashable {
+  public struct UserQuery: QueryRequest, Hashable, Sendable {
     public func fetch(
+      isolation: isolated (any Actor)?,
       in context: OperationContext,
-      with continuation: OperationContinuation<LocationReading>
+      with continuation: OperationContinuation<LocationReading, any Error>
     ) async throws -> LocationReading {
       @Dependency(UserLocationKey.self) var userLocation
       return try await userLocation.read()

@@ -38,8 +38,8 @@ public final class MountainDetailModel: HashableObject, Identifiable {
   }
 
   public func detailsUpdated(
-    mountainStatus: OperationStatus<Mountain?>,
-    userLocationStatus: OperationStatus<LocationReading>
+    mountainStatus: OperationStatus<Mountain?, any Error>,
+    userLocationStatus: OperationStatus<LocationReading, any Error>
   ) {
     switch mountainStatus {
     case .result(.success(let mountain?)):

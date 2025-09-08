@@ -135,7 +135,7 @@ extension Mountain {
       .planClimbFailure
     }
 
-  public struct PlanClimbMutation: MutationRequest, Hashable {
+  public struct PlanClimbMutation: MutationRequest, Hashable, Sendable {
     public struct Arguments: Sendable {
       public let mountain: Mountain
       public let create: ClimbPlanCreate
@@ -147,9 +147,10 @@ extension Mountain {
     }
 
     public func mutate(
+      isolation: isolated (any Actor)?,
       with arguments: Arguments,
       in context: OperationContext,
-      with continuation: OperationContinuation<(Mountain, PlannedClimb)>
+      with continuation: OperationContinuation<(Mountain, PlannedClimb), any Error>
     ) async throws -> (Mountain, PlannedClimb) {
       @Dependency(Mountain.PlanClimberKey.self) var planner
       @Dependency(\.defaultOperationClient) var client
@@ -177,7 +178,7 @@ extension Mountain {
       (error as? UnplanClimbsError).map { .unplanClimbsFailure(count: $0.ids.count) }
     }
 
-  public struct UnplanClimbsMutation: MutationRequest, Hashable {
+  public struct UnplanClimbsMutation: MutationRequest, Hashable, Sendable {
     public struct Arguments: Sendable {
       public let mountainId: Mountain.ID
       public let ids: OrderedSet<PlannedClimb.ID>
@@ -189,9 +190,10 @@ extension Mountain {
     }
 
     public func mutate(
+      isolation: isolated (any Actor)?,
       with arguments: Arguments,
       in context: OperationContext,
-      with continuation: OperationContinuation<Void>
+      with continuation: OperationContinuation<Void, any Error>
     ) async throws {
       @Dependency(Mountain.PlanClimberKey.self) var planner
       @Dependency(\.defaultOperationClient) var client

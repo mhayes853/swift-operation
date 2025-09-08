@@ -109,7 +109,7 @@ extension OnboardingModel {
   public func locationPermissionStepInvoked(action: LocationPermissionStepAction) async {
     switch action {
     case .requestPermission:
-      _ = try? await self.$requestLocationPermission.mutate()
+      _ = await self.$requestLocationPermission.mutate()
     case .skip:
       break
     }

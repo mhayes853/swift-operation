@@ -309,7 +309,7 @@ public struct CachedPlannedClimbRecord: Hashable, Sendable, Codable, Identifiabl
 public struct OperationAnalysisRecord: Hashable, Sendable, Identifiable {
   public let id: OperationAnalysis.ID
   public let launchId: ApplicationLaunch.ID
-  public var operationRetryAttempt: Int
+  public var operationRetryAttempt: Int?
   public var operationRuntimeDuration: TimeInterval
   public var operationName: OperationAnalysis.OperationName
   public var operationPathDescription: String
@@ -323,7 +323,7 @@ public struct OperationAnalysisRecord: Hashable, Sendable, Identifiable {
   public init(
     id: OperationAnalysis.ID,
     launchId: ApplicationLaunch.ID,
-    operationRetryAttempt: Int,
+    operationRetryAttempt: Int?,
     operationRuntimeDuration: TimeInterval,
     operationName: OperationAnalysis.OperationName,
     operationPathDescription: String,
@@ -587,7 +587,7 @@ extension DatabaseMigrator {
         CREATE TABLE IF NOT EXISTS OperationAnalysis (
           id TEXT PRIMARY KEY,
           launchId BLOB NOT NULL,
-          operationRetryAttempt INTEGER NOT NULL,
+          operationRetryAttempt INTEGER,
           operationRuntimeDuration REAL NOT NULL,
           operationName TEXT NOT NULL,
           operationPathDescription TEXT NOT NULL,

@@ -45,7 +45,7 @@ extension WeatherReading {
 extension WeatherReading {
   public static func currentQuery(
     for coordinate: LocationCoordinate2D
-  ) -> some QueryRequest<Self, CurrentQuery.State> {
+  ) -> some QueryRequest<Self, any Error> {
     CurrentQuery(coordinate: coordinate)
   }
 
@@ -53,8 +53,9 @@ extension WeatherReading {
     let coordinate: LocationCoordinate2D
 
     public func fetch(
+      isolation: isolated (any Actor)?,
       in context: OperationContext,
-      with continuation: OperationContinuation<WeatherReading>
+      with continuation: OperationContinuation<WeatherReading, any Error>
     ) async throws -> WeatherReading {
       @Dependency(WeatherReading.CurrentReaderKey.self) var reader
       return try await reader.reading(for: coordinate)

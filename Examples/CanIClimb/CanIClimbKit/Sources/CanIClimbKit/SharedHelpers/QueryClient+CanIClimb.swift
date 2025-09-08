@@ -12,11 +12,11 @@ extension OperationClient {
   public struct CanIClimbStoreCreator: StoreCreator {
     let base: any StoreCreator
 
-    public func store<Query>(
-      for query: Query,
+    public func store<Operation: StatefulOperationRequest & Sendable>(
+      for query: Operation,
       in context: OperationContext,
-      with initialState: Query.State
-    ) -> OperationStore<Query.State> where Query: QueryRequest {
+      with initialState: Operation.State
+    ) -> OperationStore<Operation.State> {
       self.base.store(for: query.analyzed().previewDelay(), in: context, with: initialState)
     }
   }

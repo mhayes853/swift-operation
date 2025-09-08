@@ -33,7 +33,7 @@ extension DependenciesTestSuite {
           _ = try await $userLocation.activeTasks.first?.runIfNeeded()
 
           expectNoDifference($userLocation.valueUpdateCount, 1)
-          _ = try await $request.mutate()
+          _ = await $request.mutate()
           _ = try await $userLocation.activeTasks.first?.runIfNeeded()
           expectNoDifference($userLocation.valueUpdateCount, 1 + expectedRefetchCount)
         }

@@ -85,11 +85,12 @@ extension HealthPermissions {
     .alerts(success: .connectToHealthKitSuccess, failure: .connectToHealthKitFailure)
     .previewDelay(shouldDisable: true)
 
-  public struct RequestMutation: MutationRequest, Hashable {
+  public struct RequestMutation: MutationRequest, Hashable, Sendable {
     public func mutate(
+      isolation: isolated (any Actor)?,
       with arguments: Void,
       in context: OperationContext,
-      with continuation: OperationContinuation<Void>
+      with continuation: OperationContinuation<Void, any Error>
     ) async throws {
       @Dependency(HealthPermissions.self) var permissions
       try await permissions.request()

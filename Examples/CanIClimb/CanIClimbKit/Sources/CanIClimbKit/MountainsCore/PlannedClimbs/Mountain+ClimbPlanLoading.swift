@@ -45,7 +45,7 @@ extension Mountain {
 extension Mountain {
   public static func plannedClimbsQuery(
     for id: Mountain.ID
-  ) -> some QueryRequest<IdentifiedArrayOf<PlannedClimb>, PlannedClimbsQuery.State> {
+  ) -> some QueryRequest<IdentifiedArrayOf<PlannedClimb>, any Error> {
     PlannedClimbsQuery(id: id)
   }
 
@@ -57,8 +57,9 @@ extension Mountain {
     }
 
     public func fetch(
+      isolation: isolated (any Actor)?,
       in context: OperationContext,
-      with continuation: OperationContinuation<IdentifiedArrayOf<PlannedClimb>>
+      with continuation: OperationContinuation<IdentifiedArrayOf<PlannedClimb>, any Error>
     ) async throws -> IdentifiedArrayOf<PlannedClimb> {
       @Dependency(Mountain.PlannedClimbsLoaderKey.self) var loader
       continuation.yield(try await loader.localPlannedClimbs(for: self.id))

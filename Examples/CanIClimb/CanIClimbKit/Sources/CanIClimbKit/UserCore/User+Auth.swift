@@ -97,7 +97,7 @@ extension User {
   public static let signInMutation = SignInMutation()
     .alerts(success: .signInSuccess, failure: .signInFailure)
 
-  public struct SignInMutation: MutationRequest, Hashable {
+  public struct SignInMutation: MutationRequest, Sendable, Hashable {
     public struct Arguments: Sendable {
       let credentials: User.SignInCredentials
 
@@ -107,9 +107,10 @@ extension User {
     }
 
     public func mutate(
+      isolation: isolated (any Actor)?,
       with arguments: Arguments,
       in context: OperationContext,
-      with continuation: OperationContinuation<Void>
+      with continuation: OperationContinuation<Void, any Error>
     ) async throws {
       @Dependency(User.AuthenticatorKey.self) var authenticator
       @Dependency(\.defaultOperationClient) var client
@@ -124,11 +125,12 @@ extension User {
   public static let signOutMutation = SignOutMutation()
     .alerts(success: .signOutSuccess, failure: .signOutFailure)
 
-  public struct SignOutMutation: MutationRequest, Hashable {
+  public struct SignOutMutation: MutationRequest, Hashable, Sendable {
     public func mutate(
+      isolation: isolated (any Actor)?,
       with arguments: Void,
       in context: OperationContext,
-      with continuation: OperationContinuation<Void>
+      with continuation: OperationContinuation<Void, any Error>
     ) async throws {
       @Dependency(User.AuthenticatorKey.self) var authenticator
       @Dependency(\.defaultOperationClient) var client

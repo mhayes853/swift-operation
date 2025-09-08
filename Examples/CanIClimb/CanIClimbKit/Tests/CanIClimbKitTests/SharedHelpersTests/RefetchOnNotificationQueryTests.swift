@@ -25,8 +25,9 @@ extension DependenciesTestSuite {
 
 private struct TestQuery: QueryRequest, Hashable {
   func fetch(
+    isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<Int>
+    with continuation: OperationContinuation<Int, any Error>
   ) async throws -> Int {
     0
   }

@@ -18,7 +18,7 @@ extension DependenciesTestSuite {
     func postsSuccessAlertWhenQuerySucceeds(
       shouldFail: Bool,
       alert: AlertState<Never>
-    ) async throws {
+    ) async {
       @Dependency(\.notificationCenter) var center
 
       let store = OperationStore.detached(
@@ -64,8 +64,9 @@ extension AlertState where Action == Never {
 private struct TestQuery: QueryRequest, Hashable {
   let shouldFail: Bool
   func fetch(
+    isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<Int>
+    with continuation: OperationContinuation<Int, any Error>
   ) async throws -> Int {
     if self.shouldFail {
       struct SomeError: Error {}

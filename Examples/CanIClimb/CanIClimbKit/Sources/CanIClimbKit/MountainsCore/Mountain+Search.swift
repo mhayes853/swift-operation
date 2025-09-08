@@ -104,7 +104,9 @@ extension Mountain {
 // MARK: - Query
 
 extension Mountain {
-  public static func searchQuery(_ search: Search) -> some PaginatedRequest<Int, SearchResult> {
+  public static func searchQuery(
+    _ search: Search
+  ) -> some PaginatedRequest<Int, SearchResult, any Error> {
     SearchQuery(search: search)
   }
 
@@ -117,17 +119,18 @@ extension Mountain {
     public let initialPageId = 0
 
     public func pageId(
-      after page: PaginatedPage<PageID, PageValue>,
-      using paging: PaginatedPaging<PageID, PageValue>,
+      after page: Page<PageID, PageValue>,
+      using paging: Paging<PageID, PageValue>,
       in context: OperationContext
     ) -> PageID? {
       page.value.hasNextPage ? page.id + 1 : nil
     }
 
     public func fetchPage(
-      using paging: PaginatedPaging<PageID, PageValue>,
+      isolation: isolated (any Actor)?,
+      using paging: Paging<PageID, PageValue>,
       in context: OperationContext,
-      with continuation: OperationContinuation<PageValue>
+      with continuation: OperationContinuation<PageValue, any Error>
     ) async throws -> PageValue {
       @Dependency(Mountain.SearcherKey.self) var searcher
       @Dependency(\.defaultOperationClient) var client

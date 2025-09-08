@@ -21,10 +21,11 @@ extension WeatherService: WeatherAttribution.Loader {}
 extension WeatherAttribution {
   public static let currentQuery = CurrentQuery().staleWhenNoValue()
 
-  public struct CurrentQuery: QueryRequest, Hashable {
+  public struct CurrentQuery: QueryRequest, Sendable, Hashable {
     public func fetch(
+      isolation: isolated (any Actor)?,
       in context: OperationContext,
-      with continuation: OperationContinuation<WeatherAttribution>
+      with continuation: OperationContinuation<WeatherAttribution, any Error>
     ) async throws -> WeatherAttribution {
       @Dependency(WeatherAttribution.LoaderKey.self) var loader
       return try await loader.attribution

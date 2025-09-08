@@ -32,7 +32,7 @@ extension Mountain {
 extension Mountain {
   public static let achieveClimbMutation = AchieveClimbMutation()
 
-  public struct AchieveClimbMutation: MutationRequest, Hashable {
+  public struct AchieveClimbMutation: MutationRequest, Hashable, Sendable {
     public struct Arguments: Sendable {
       public let id: PlannedClimb.ID
       public let mountainId: Mountain.ID
@@ -44,15 +44,16 @@ extension Mountain {
     }
 
     public func mutate(
+      isolation: isolated (any Actor)?,
       with arguments: Arguments,
       in context: OperationContext,
-      with continuation: OperationContinuation<Void>
+      with continuation: OperationContinuation<Void, any Error>
     ) async throws {
       @Dependency(Mountain.ClimbAchieverKey.self) var achiever
       @Dependency(\.defaultOperationClient) var client
       @Dependency(\.date) var now
 
-      if context.isFirstFetchAttempt {
+      if context.operationRetryIndex == 0 {
         let climbsStore = client.store(for: Mountain.plannedClimbsQuery(for: arguments.mountainId))
         climbsStore.currentValue?[id: arguments.id]?.achievedDate = now()
       }
@@ -65,7 +66,7 @@ extension Mountain {
 extension Mountain {
   public static let unachieveClimbMutation = UnachieveClimbMutation()
 
-  public struct UnachieveClimbMutation: MutationRequest, Hashable {
+  public struct UnachieveClimbMutation: MutationRequest, Hashable, Sendable {
     public struct Arguments: Sendable {
       public let id: PlannedClimb.ID
       public let mountainId: Mountain.ID
@@ -77,9 +78,10 @@ extension Mountain {
     }
 
     public func mutate(
+      isolation: isolated (any Actor)?,
       with arguments: Arguments,
       in context: OperationContext,
-      with continuation: OperationContinuation<Void>
+      with continuation: OperationContinuation<Void, any Error>
     ) async throws {
       @Dependency(Mountain.ClimbAchieverKey.self) var achiever
       @Dependency(\.defaultOperationClient) var client

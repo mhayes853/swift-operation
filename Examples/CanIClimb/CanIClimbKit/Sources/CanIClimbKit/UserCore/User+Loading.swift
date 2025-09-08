@@ -41,10 +41,11 @@ extension User {
 extension User {
   public static let currentQuery = CurrentQuery()
 
-  public struct CurrentQuery: QueryRequest, Hashable {
+  public struct CurrentQuery: QueryRequest, Hashable, Sendable {
     public func fetch(
+      isolation: isolated (any Actor)?,
       in context: OperationContext,
-      with continuation: OperationContinuation<User>
+      with continuation: OperationContinuation<User, any Error>
     ) async throws -> User {
       let loader = Dependency(User.CurrentLoaderKey.self).wrappedValue
 

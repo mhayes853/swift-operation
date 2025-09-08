@@ -2,7 +2,7 @@ import SharingOperation
 import SwiftUI
 
 public struct RemoteOperationStateView<
-  State: OperationState,
+  State: OperationState & Sendable,
   Content: View
 >: View where State.StateValue == State.StatusValue? {
   private let shared: SharedOperation<State>
@@ -25,7 +25,7 @@ public struct RemoteOperationStateView<
         self.content(value)
       } else {
         RemoteOperationErrorView(error: error) {
-          Task { try await self.shared.fetch() }
+          Task { try await self.shared.run() }
         }
       }
     default:

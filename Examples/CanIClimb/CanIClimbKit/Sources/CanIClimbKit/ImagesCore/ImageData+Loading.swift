@@ -28,7 +28,7 @@ extension ImageData.Loader {
 // MARK: - Query
 
 extension ImageData {
-  public static func query(for url: URL) -> some QueryRequest<Self, Query.State> {
+  public static func query(for url: URL) -> some QueryRequest<Self, any Error> {
     Query(url: url).staleWhenNoValue()
       .taskConfiguration { $0.name = "Fetch image for \(url)" }
   }
@@ -37,8 +37,9 @@ extension ImageData {
     let url: URL
 
     public func fetch(
+      isolation: isolated (any Actor)?,
       in context: OperationContext,
-      with continuation: OperationContinuation<ImageData>
+      with continuation: OperationContinuation<ImageData, any Error>
     ) async throws -> ImageData {
       @Dependency(ImageData.LoaderKey.self) var loader
       return try await loader.image(for: self.url)

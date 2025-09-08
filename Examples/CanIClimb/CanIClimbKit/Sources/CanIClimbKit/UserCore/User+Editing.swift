@@ -64,7 +64,7 @@ extension User {
   public static let editMutation = EditMutation()
     .alerts(success: .editProfileSuccess, failure: .editProfileFailure)
 
-  public struct EditMutation: MutationRequest, Hashable {
+  public struct EditMutation: MutationRequest, Hashable, Sendable {
     public struct Arguments: Sendable {
       let edit: User.Edit
 
@@ -74,9 +74,10 @@ extension User {
     }
 
     public func mutate(
+      isolation: isolated (any Actor)?,
       with arguments: Arguments,
       in context: OperationContext,
-      with continuation: OperationContinuation<User>
+      with continuation: OperationContinuation<User, any Error>
     ) async throws -> User {
       @Dependency(\.defaultOperationClient) var client
       @Dependency(User.EditorKey.self) var editor

@@ -22,25 +22,26 @@ extension OperationRequest {
   }
 }
 
-public struct _AlertStateModifier<Operation: OperationRequest>: OperationModifier {
-  let successAlert: @Sendable (Query.Value) -> AlertState<Never>?
+public struct _AlertStateModifier<Operation: OperationRequest>: OperationModifier, Sendable {
+  let successAlert: @Sendable (Operation.Value) -> AlertState<Never>?
   let failureAlert: @Sendable (any Error) -> AlertState<Never>?
 
-  public func fetch(
+  public func run(
+    isolation: isolated (any Actor)?,
     in context: OperationContext,
-    using query: Query,
-    with continuation: OperationContinuation<Query.Value>
-  ) async throws -> Query.Value {
+    using query: Operation,
+    with continuation: OperationContinuation<Operation.Value, Operation.Failure>
+  ) async throws(Operation.Failure) -> Operation.Value {
     @Dependency(\.notificationCenter) var center
     do {
-      let value = try await query.fetch(in: context, with: continuation)
+      let value = try await query.run(isolation: isolation, in: context, with: continuation)
       if let successAlert = self.successAlert(value) {
         await center.post(OperationAlertMessage(alert: successAlert))
       }
       return value
     } catch {
-      let isLastRetry = context.operationRetryIndex >= context.operationMaxRetries
-      if isLastRetry, let failureAlert = self.failureAlert(error) {
+      let isLastRetryAttempt = context.operationMaxRetries == context.operationRetryIndex ?? 0
+      if isLastRetryAttempt, let failureAlert = self.failureAlert(error) {
         await center.post(OperationAlertMessage(alert: failureAlert))
       }
       throw error

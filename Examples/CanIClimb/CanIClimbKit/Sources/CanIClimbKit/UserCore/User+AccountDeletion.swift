@@ -39,11 +39,12 @@ extension User {
   public static let deleteMutation = DeleteMutation()
     .alerts(success: .deleteAccountSuccess, failure: .deleteAccountFailure)
 
-  public struct DeleteMutation: MutationRequest, Hashable {
+  public struct DeleteMutation: MutationRequest, Hashable, Sendable {
     public func mutate(
+      isolation: isolated (any Actor)?,
       with arguments: Void,
       in context: OperationContext,
-      with continuation: OperationContinuation<Void>
+      with continuation: OperationContinuation<Void, any Error>
     ) async throws {
       @Dependency(\.defaultOperationClient) var client
       @Dependency(User.AccountDeleterKey.self) var deleter

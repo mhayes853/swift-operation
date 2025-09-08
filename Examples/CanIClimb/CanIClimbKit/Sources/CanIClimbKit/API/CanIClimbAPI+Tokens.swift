@@ -86,13 +86,14 @@ extension CanIClimbAPI.Tokens.Response {
     .deduplicated()
     .evictWhen(pressure: [])
 
-  fileprivate struct Mutation: MutationRequest, Hashable {
+  fileprivate struct Mutation: MutationRequest, Hashable, Sendable {
     typealias Arguments = @Sendable () async throws -> CanIClimbAPI.Tokens.Response
 
     func mutate(
+      isolation: isolated (any Actor)?,
       with arguments: @Sendable () async throws -> CanIClimbAPI.Tokens.Response,
       in context: OperationContext,
-      with continuation: OperationContinuation<CanIClimbAPI.Tokens.Response>
+      with continuation: OperationContinuation<CanIClimbAPI.Tokens.Response, any Error>
     ) async throws -> CanIClimbAPI.Tokens.Response {
       try await arguments()
     }

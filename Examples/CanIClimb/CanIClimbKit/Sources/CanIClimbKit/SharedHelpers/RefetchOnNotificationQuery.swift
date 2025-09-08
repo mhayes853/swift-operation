@@ -1,16 +1,18 @@
 import Foundation
 import Operation
 
-extension OperationRequest {
+extension StatefulOperationRequest where State: Sendable {
   public func refetchOnPost(
     of name: Notification.Name,
     center: NotificationCenter = .default
-  ) -> ControlledQuery<Self, _RefetchOnNotificationController<State>> {
-    self.controlled(by: _RefetchOnNotificationController(notification: name, center: center))
+  ) -> ControlledOperation<Self, _RefetchOnPostController<State>> {
+    self.controlled(by: _RefetchOnPostController(notification: name, center: center))
   }
 }
 
-public struct _RefetchOnNotificationController<State: OperationState>: OperationController {
+public struct _RefetchOnPostController<
+  State: OperationState & Sendable
+>: OperationController, Sendable {
   let notification: Notification.Name
   let center: NotificationCenter
 
@@ -20,7 +22,7 @@ public struct _RefetchOnNotificationController<State: OperationState>: Operation
       object: nil,
       queue: nil
     ) { _ in
-      let task = controls.yieldRefetchTask()
+      let task = controls.yieldRerunTask()
       Task { try await task?.runIfNeeded() }
     }
     return OperationSubscription { self.center.removeObserver(observer) }

@@ -4,9 +4,12 @@ import SwiftUI
 
 public struct ImageDataView<Content: View>: View {
   @SharedOperation<ImageData.Query.State> private var image: ImageData?
-  private let content: (OperationStatus<Image>) -> Content
+  private let content: (OperationStatus<Image, any Error>) -> Content
 
-  public init(url: URL, @ViewBuilder content: @escaping (OperationStatus<Image>) -> Content) {
+  public init(
+    url: URL,
+    @ViewBuilder content: @escaping (OperationStatus<Image, any Error>) -> Content
+  ) {
     self._image = SharedOperation(ImageData.query(for: url))
     self.content = content
   }

@@ -65,14 +65,14 @@ extension DependenciesTestSuite {
         @Dependency(\.defaultOperationClient) var client
 
         await confirmation { confirm in
-          let handler = PaginatedEventHandler<Int, Mountain.SearchResult>(
+          let handler = PaginatedEventHandler<Mountain.SearchQuery.State>(
             onPageResultReceived: { [mountain] _, result, context in
               guard
                 context.operationResultUpdateReason == .yieldedResult && context.isLastRetryAttempt
               else { return }
               expectNoDifference(
                 try? result.get(),
-                PaginatedPage(
+                Page(
                   id: 0,
                   value: Mountain.SearchResult(mountains: [mountain], hasNextPage: true)
                 )

@@ -160,7 +160,7 @@
       "location" : "https://github.com/mhayes853/swift-operation",
       "state" : {
         "branch" : "main",
-        "revision" : "de8fcac6ef513c065ee00267fe205af06f9eca35"
+        "revision" : "aa33190605cbc1046a7e299fe830699a7550068b"
       }
     },
     {
@@ -223,7 +223,7 @@
       "location" : "https://github.com/mhayes853/swift-uuidv7",
       "state" : {
         "branch" : "sharing-grdb-icloud",
-        "revision" : "deca62adea3eb4f95b2d580d6ede40390ebb0cd5"
+        "revision" : "15f8eeb36a58d77f9c5966e8c4f422c11875c309"
       }
     },
     {

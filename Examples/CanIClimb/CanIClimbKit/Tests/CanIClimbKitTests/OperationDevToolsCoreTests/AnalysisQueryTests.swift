@@ -30,7 +30,7 @@ extension DependenciesTestSuite {
             id: OperationAnalysis.ID(UUIDV7(timeIntervalSince1970: 0, 0)),
             launchId: launchId,
             operation: query,
-            operationRetryAttempt: 0,
+            operationRetryAttempt: nil,
             operationRuntimeDuration: .testDuration,
             yieldedResults: [],
             finalResult: .success(TestQuery.value)
@@ -53,7 +53,7 @@ extension DependenciesTestSuite {
             id: OperationAnalysis.ID(UUIDV7(timeIntervalSince1970: 0, 0)),
             launchId: launchId,
             operation: query,
-            operationRetryAttempt: 0,
+            operationRetryAttempt: nil,
             operationRuntimeDuration: .testDuration,
             yieldedResults: [],
             finalResult: .failure(SomeError())
@@ -85,7 +85,7 @@ extension DependenciesTestSuite {
             id: OperationAnalysis.ID(UUIDV7(timeIntervalSince1970: 0, 0)),
             launchId: launchId,
             operation: query,
-            operationRetryAttempt: 0,
+            operationRetryAttempt: nil,
             operationRuntimeDuration: .testDuration,
             yieldedResults: [.success(TestQuery.value), .success(TestQuery.value)],
             finalResult: .success(TestQuery.value)
@@ -116,7 +116,7 @@ extension DependenciesTestSuite {
               id: OperationAnalysis.ID(UUIDV7(timeIntervalSince1970: 0, 0)),
               launchId: launchId1,
               operation: query,
-              operationRetryAttempt: 0,
+              operationRetryAttempt: nil,
               operationRuntimeDuration: .testDuration,
               yieldedResults: [.success(TestQuery.value)],
               finalResult: .success(TestQuery.value)
@@ -132,7 +132,7 @@ extension DependenciesTestSuite {
               id: OperationAnalysis.ID(UUIDV7(timeIntervalSince1970: 0, 1)),
               launchId: launchId2,
               operation: query,
-              operationRetryAttempt: 0,
+              operationRetryAttempt: nil,
               operationRuntimeDuration: .testDuration,
               yieldedResults: [.success(TestQuery.value)],
               finalResult: .success(TestQuery.value)
@@ -160,7 +160,7 @@ extension DependenciesTestSuite {
             id: OperationAnalysis.ID(UUIDV7(timeIntervalSince1970: 0, 0)),
             launchId: launchId,
             operation: query,
-            operationRetryAttempt: 0,
+            operationRetryAttempt: nil,
             operationRuntimeDuration: .testDuration,
             yieldedResults: [],
             finalResult: .success(TestQuery.value)
@@ -171,7 +171,7 @@ extension DependenciesTestSuite {
             id: OperationAnalysis.ID(UUIDV7(timeIntervalSince1970: 0, 1)),
             launchId: launchId,
             operation: query2,
-            operationRetryAttempt: 0,
+            operationRetryAttempt: nil,
             operationRuntimeDuration: .testDuration,
             yieldedResults: [],
             finalResult: .success(TestQuery2.value)
@@ -195,15 +195,16 @@ private func expectGroupedAnalyses(
   expectNoDifference(grouped, value)
 }
 
-private struct TestQuery: QueryRequest, Hashable {
+private struct TestQuery: QueryRequest, Hashable, Sendable {
   static let value = 0
 
   var yieldCount = 0
   var shouldFail = false
 
   func fetch(
+    isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<Int>
+    with continuation: OperationContinuation<Int, any Error>
   ) async throws -> Int {
     if self.shouldFail {
       throw SomeError()
@@ -215,12 +216,13 @@ private struct TestQuery: QueryRequest, Hashable {
   }
 }
 
-private struct TestQuery2: QueryRequest, Hashable {
+private struct TestQuery2: QueryRequest, Hashable, Sendable {
   static let value = 400
 
   func fetch(
+    isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<Int>
+    with continuation: OperationContinuation<Int, any Error>
   ) async throws -> Int {
     Self.value
   }

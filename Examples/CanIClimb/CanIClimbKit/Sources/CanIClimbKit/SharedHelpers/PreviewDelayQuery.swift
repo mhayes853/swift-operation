@@ -10,30 +10,31 @@ extension OperationRequest {
   }
 }
 
-public struct _PreviewDelayModifier<Query: QueryRequest>: OperationModifier {
+public struct _PreviewDelayModifier<Operation: OperationRequest>: OperationModifier, Sendable {
   let shouldDisable: Bool
   let delay: Duration?
 
-  public func setup(context: inout OperationContext, using query: Query) {
+  public func setup(context: inout OperationContext, using query: Operation) {
     context[DisablePreviewDelayKey.self] = self.shouldDisable
     query.setup(context: &context)
   }
 
-  public func fetch(
+  public func run(
+    isolation: isolated (any Actor)?,
     in context: OperationContext,
-    using query: Query,
-    with continuation: OperationContinuation<Query.Value>
-  ) async throws -> Query.Value {
+    using query: Operation,
+    with continuation: OperationContinuation<Operation.Value, Operation.Failure>
+  ) async throws(Operation.Failure) -> Operation.Value {
     @Dependency(\.context) var mode
     guard mode == .preview && !context[DisablePreviewDelayKey.self] else {
-      return try await query.fetch(in: context, with: continuation)
+      return try await query.run(isolation: isolation, in: context, with: continuation)
     }
     if let delay {
-      try await Task.sleep(for: delay)
+      try? await Task.sleep(for: delay)
     } else {
-      try await Task.sleep(for: .seconds(Double.random(in: 0.1...3)))
+      try? await Task.sleep(for: .seconds(Double.random(in: 0.1...3)))
     }
-    return try await query.fetch(in: context, with: continuation)
+    return try await query.run(isolation: isolation, in: context, with: continuation)
   }
 }
 
