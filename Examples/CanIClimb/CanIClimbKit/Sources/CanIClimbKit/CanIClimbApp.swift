@@ -1,4 +1,5 @@
 import Dependencies
+import FoundationModels
 import Observation
 import Operation
 import SharingGRDB
@@ -111,6 +112,7 @@ public struct CanIClimbApp: App {
 
 public struct CanIClimbView: View {
   @Bindable private var model: CanIClimbModel
+  private let systemLanguageModel = SystemLanguageModel.default
 
   public init(model: CanIClimbModel) {
     self.model = model
@@ -143,5 +145,6 @@ public struct CanIClimbView: View {
       await withErrorReporting { try await self.model.appeared() }
     }
     .onDisappear { Task { await self.model.disappeared() } }
+    .environment(\.systemLanguageModelAvailability, self.systemLanguageModel.availability)
   }
 }
