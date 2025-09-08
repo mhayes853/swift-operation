@@ -70,22 +70,26 @@ extension OperationContext {
     static let defaultValue = 0
   }
 
-  /// Whether or not the query is on its last retry attempt.
+  /// Whether or not the operation is on its last retry attempt.
   public var isLastRetryAttempt: Bool {
     self.operationRetryIndex == self.operationMaxRetries - 1
   }
 
-  /// Whether or not the query is on its first retry attempt.
+  /// Whether or not the operation is on its first retry attempt.
   public var isFirstRetryAttempt: Bool {
     self.operationRetryIndex == 0
   }
 
-  /// Whether or not the query is on its initial fetch attempt.
+  /// Whether or not the operation is on its initial run attempt.
   ///
-  /// This value is true when the query is being fetched for the first time, and has not been
-  /// retried due to throwing an error. If you want to check if the query is being retried for
+  /// This value is true when the operation is being fetched for the first time, and has not been
+  /// retried due to throwing an error. If you want to check if the operation is being retried for
   /// the first time, use ``isFirstRetryAttempt``.
-  public var isFirstFetchAttempt: Bool {
+  public var isFirstRunAttempt: Bool {
     self.operationRetryIndex == nil
+  }
+
+  public var isLastRunAttempt: Bool {
+    (self.isFirstRunAttempt && self.operationMaxRetries == 0) || self.isLastRetryAttempt
   }
 }

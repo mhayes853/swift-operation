@@ -62,7 +62,7 @@ extension DependenciesTestSuite {
             id: OperationAnalysis.ID(UUIDV7(timeIntervalSince1970: 0, 1)),
             launchId: launchId,
             operation: query,
-            operationRetryAttempt: 1,
+            operationRetryAttempt: 0,
             operationRuntimeDuration: .testDuration,
             yieldedResults: [],
             finalResult: .failure(SomeError())
