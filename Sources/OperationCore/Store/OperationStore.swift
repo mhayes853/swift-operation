@@ -373,11 +373,7 @@ extension OperationStore {
     using task: LockedBox<TaskState>
   ) -> OperationTask<State.OperationValue, State.Failure> {
     OperationTask(context: context) { _, context in
-      // self.subscriptions.forEach { $0.onFetchingStarted?(context) }
-      defer {
-        // self.subscriptions.forEach { $0.onFetchingEnded?(context) }
-        task.inner.withLock { $0 = .finished }
-      }
+      defer { task.inner.withLock { $0 = .finished } }
       do {
         let value = try await self.request.run(
           context: context,
@@ -388,12 +384,12 @@ extension OperationStore {
           )
         )
         self.finishTask(
-          with: .success(value),
+          with: .success(value as! State.OperationValue),
           task: task,
           initialHerdId: initialHerdId,
           context: context
         )
-        return value
+        return value as! State.OperationValue
       } catch {
         self.finishTask(
           with: .failure(error as! State.Failure),
@@ -423,9 +419,6 @@ extension OperationStore {
         task.context.operationResultUpdateReason = nil
         values.state.finishFetchTask(task)
       }
-      // self.subscriptions.forEach {
-      //   $0.onResultReceived?(result, context)
-      // }
     }
   }
 
@@ -433,7 +426,7 @@ extension OperationStore {
     task: LockedBox<TaskState>,
     initialHerdId: Int,
     context: OperationContext
-  ) -> OperationContinuation<State.OperationValue, State.Failure> {
+  ) -> OperationContinuation<any Sendable, any Error> {
     OperationContinuation { result, yieldedContext in
       var context = yieldedContext ?? context
       context.operationResultUpdateReason = .yieldedResult
@@ -444,10 +437,10 @@ extension OperationStore {
             reportWarning(.queryYieldedAfterReturning(result))
           case .running(var task) where values.taskHerdId == initialHerdId:
             task.context = context
-            values.state.update(with: result, for: task)
-          // self.subscriptions.forEach {
-          //   $0.onResultReceived?(result, context)
-          // }
+            values.state.update(
+              with: result.map { $0 as! State.OperationValue }.mapError { $0 as! State.Failure },
+              for: task
+            )
           default:
             break
           }
@@ -522,20 +515,30 @@ extension OperationStore {
 
 // MARK: - OperationActor
 
-extension OperationStore {
-  private final actor RequestActor {
-    private let request: any OperationRequest<State.OperationValue, State.Failure>
+private final actor RequestActor {
+  // NB: This weird contraption is required because just using an existential OperationRequest in
+  // here causes the compiler (Swift >=6.2) to complain about "sending" a clearly Sendable type...
+  private let request:
+    (isolated RequestActor, OperationContext, OperationContinuation<any Sendable, any Error>)
+      async throws -> any Sendable
 
-    init(_ request: sending any OperationRequest<State.OperationValue, State.Failure>) {
-      self.request = request
+  init<Value: Sendable, Failure: Error>(_ operation: sending any OperationRequest<Value, Failure>) {
+    self.request = { isolation, context, continuation in
+      try await operation.run(
+        isolation: isolation,
+        in: context,
+        with: OperationContinuation { result, yieldedContext in
+          continuation.yield(with: result.map { $0 }.mapError { $0 }, using: yieldedContext)
+        }
+      )
     }
+  }
 
-    func run(
-      context: OperationContext,
-      continuation: OperationContinuation<State.OperationValue, State.Failure>
-    ) async throws(State.Failure) -> State.OperationValue {
-      try await request.run(isolation: self, in: context, with: continuation)
-    }
+  func run(
+    context: OperationContext,
+    continuation: OperationContinuation<any Sendable, any Error>
+  ) async throws -> any Sendable {
+    try await self.request(self, context, continuation)
   }
 }
 

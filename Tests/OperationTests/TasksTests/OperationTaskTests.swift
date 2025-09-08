@@ -344,7 +344,9 @@ struct OperationTaskTests {
 
       let executor = ImmediateExecutor()
       var task = OperationTask<Bool, any Error>(context: OperationContext()) { _, _ in
-        Task.currentExecutor === executor
+        withUnsafeCurrentTask { task in
+          task?.unownedTaskExecutor == executor.asUnownedTaskExecutor()
+        }
       }
       task.configuration.executorPreference = executor
       let didRunOnExecutor = try await task.runIfNeeded()

@@ -9,7 +9,7 @@
 ///
 /// When this condition is deallocated, iteration stops on your sequence provided that you opt into
 /// cooperative cancellation.
-@available(iOS 18.0, macOS 15.0, tvOS 18.0, watchOS 18.0, visionOS 2.0, *)
+@available(iOS 18.0, macOS 15.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, *)
 public final class AsyncSequenceRunSpecification<
   S: AsyncSequence & Sendable
 >: OperationRunSpecification, Sendable
@@ -20,7 +20,7 @@ where S.Element == Bool, S.Failure == Never {
   private let subscriptions = OperationSubscriptions<Handler>()
   private let state: RecursiveLock<State>
 
-  init(sequence: S, initialValue: Bool) {
+  public init(sequence: S, initialValue: Bool) {
     self.state = RecursiveLock((nil, initialValue))
     self.state.withLock {
       $0.task = Task { [weak self] in
@@ -51,7 +51,7 @@ where S.Element == Bool, S.Failure == Never {
   }
 }
 
-@available(iOS 18.0, macOS 15.0, tvOS 18.0, watchOS 18.0, visionOS 2.0, *)
+@available(iOS 18.0, macOS 15.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, *)
 extension OperationRunSpecification {
   /// A ``FetchCondition`` that observes an `AsyncSequence`.
   ///
