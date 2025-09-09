@@ -8,7 +8,7 @@ extension DependenciesTestSuite {
   @MainActor
   @Suite("MountainDetailModelTests")
   struct MountainDetailModelTests {
-    @Test("Mountain Loading Sets Travel Estimate And Weather Models")
+    @Test("Mountain Loading Sets Travel Estimate Model, Weather Model, and Readiness Generation")
     func mountainLoadingSetsTravelEstimateAndWeatherModels() async throws {
       try await withModelsDerivationTest { ctx in
         ctx.model.detailsUpdated(
@@ -24,6 +24,9 @@ extension DependenciesTestSuite {
         )
 
         expectNoDifference(ctx.model.travelEstimates?.mountain, .mock1)
+        
+        try await ctx.model.$readiness.load()
+        expectNoDifference(ctx.model.readiness, .full(.mock))
       }
     }
 
@@ -89,8 +92,8 @@ extension DependenciesTestSuite {
       }
     }
 
-    @Test("Resets Weather And Travel Estimates When Mountain Changes")
-    func resetsWeatherAndTravelEstimatesWhenMountainChanges() async throws {
+    @Test("Resets Weather, Travel Estimates, And Readiness When Mountain Changes")
+    func resetsWeatherTravelEstimatesAndReadinessWhenMountainChanges() async throws {
       try await withModelsDerivationTest { ctx in
         ctx.model.detailsUpdated(
           mountainStatus: .result(.success(.mock1)),
@@ -102,6 +105,7 @@ extension DependenciesTestSuite {
         )
         expectNoDifference(ctx.model.weather == nil, true)
         expectNoDifference(ctx.model.travelEstimates == nil, true)
+        expectNoDifference(ctx.model.$readiness.isBacked, false)
       }
     }
 
@@ -132,6 +136,7 @@ extension DependenciesTestSuite {
         )
         expectNoDifference(ctx.model.weather == nil, true)
         expectNoDifference(ctx.model.travelEstimates == nil, true)
+        expectNoDifference(ctx.model.readiness, nil)
       }
     }
 
@@ -148,6 +153,7 @@ extension DependenciesTestSuite {
         )
         expectNoDifference(ctx.model.weather == nil, true)
         expectNoDifference(ctx.model.travelEstimates == nil, true)
+        expectNoDifference(ctx.model.readiness, nil)
       }
     }
   }
@@ -188,6 +194,9 @@ private func withModelsDerivationTest(
     $0[TravelEstimate.LoaderKey.self] = loader
 
     $0[Mountain.PlannedClimbsLoaderKey.self] = Mountain.MockPlannedClimbsLoader()
+    $0[Mountain.ClimbReadiness.GeneratorKey.self] = Mountain.ClimbReadiness.MockGenerator(
+      segments: [.full(.mock)]
+    )
   } operation: {
     let model = MountainDetailModel(id: Mountain.mock1.id)
     let context = ModelsDerivationContext(

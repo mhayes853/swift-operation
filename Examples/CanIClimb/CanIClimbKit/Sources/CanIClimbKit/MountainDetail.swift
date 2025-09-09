@@ -19,6 +19,10 @@ public final class MountainDetailModel: HashableObject, Identifiable {
   @ObservationIgnored
   @SharedOperation(LocationReading.userQuery) public var userLocation
 
+  @ObservationIgnored
+  @SharedOperation<Mountain.ClimbReadiness.GenerationQuery.State>
+  public var readiness: Mountain.ClimbReadiness.GeneratedSegment?
+
   public let plannedClimbs: PlannedClimbsListModel
 
   public var selectedTab = Tab.mountain
@@ -28,6 +32,7 @@ public final class MountainDetailModel: HashableObject, Identifiable {
 
   public init(id: Mountain.ID) {
     self._mountain = SharedOperation(Mountain.query(id: id), animation: .bouncy)
+    self._readiness = SharedOperation()
     self.plannedClimbs = PlannedClimbsListModel(mountainId: id)
   }
 
@@ -49,9 +54,11 @@ public final class MountainDetailModel: HashableObject, Identifiable {
       if self.travelEstimates?.mountain != mountain {
         self.travelEstimates = MountainTravelEstimatesModel(mountain: mountain)
       }
+      self._readiness = SharedOperation(Mountain.ClimbReadiness.generationQuery(for: mountain))
     case .result(.failure), .result(.success(nil)):
       self.weather = nil
       self.travelEstimates = nil
+      self._readiness = SharedOperation()
     default:
       break
     }
