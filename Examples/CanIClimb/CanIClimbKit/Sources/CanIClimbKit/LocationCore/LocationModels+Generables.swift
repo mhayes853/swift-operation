@@ -31,6 +31,7 @@ extension LocationCoordinate2D {
 extension LocationReading {
   @Generable
   public struct Generable: Hashable, Sendable {
+    @Guide(description: "A lat-lng coordinate.")
     public var coordinate: LocationCoordinate2D.Generable
     public var altitudeAboveSeaLevelMeters: Double
 

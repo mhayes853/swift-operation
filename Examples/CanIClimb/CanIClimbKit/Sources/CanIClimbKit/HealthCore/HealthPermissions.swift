@@ -49,13 +49,8 @@ extension HKHealthStore: HealthPermissions.Requester {
     try await self.requestAuthorization(
       toShare: [],
       read: [
-        .activitySummaryType(),
-        .workoutType(),
-        .stateOfMindType(),
         .quantityType(forIdentifier: .stepCount)!,
         .quantityType(forIdentifier: .vo2Max)!,
-        .quantityType(forIdentifier: .activeEnergyBurned)!,
-        .quantityType(forIdentifier: .heartRate)!,
         .quantityType(forIdentifier: .distanceWalkingRunning)!
       ]
     )
