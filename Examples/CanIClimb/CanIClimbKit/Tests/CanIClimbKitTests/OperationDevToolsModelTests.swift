@@ -1,6 +1,6 @@
 import CanIClimbKit
 import CustomDump
-import SharingGRDB
+import SQLiteData
 import Testing
 
 extension DependenciesTestSuite {

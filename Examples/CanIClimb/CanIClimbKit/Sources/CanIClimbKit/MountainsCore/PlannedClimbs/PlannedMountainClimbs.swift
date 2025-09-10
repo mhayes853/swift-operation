@@ -2,7 +2,7 @@ import Dependencies
 import GRDB
 import IdentifiedCollections
 import OrderedCollections
-import StructuredQueriesGRDB
+import SQLiteData
 import Tagged
 import UUIDV7
 

@@ -1,7 +1,7 @@
 import Dependencies
 import Foundation
 import IssueReporting
-import SharingGRDB
+import SQLiteData
 import StructuredQueries
 import SwiftUI
 

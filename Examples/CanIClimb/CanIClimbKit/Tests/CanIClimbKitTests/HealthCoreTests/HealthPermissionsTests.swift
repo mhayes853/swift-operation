@@ -1,6 +1,6 @@
 import CanIClimbKit
 import CustomDump
-import StructuredQueriesGRDB
+import SQLiteData
 import Testing
 
 @Suite("HealthPermissions tests")

@@ -1,7 +1,7 @@
 import Dependencies
 import GRDB
 import Operation
-import StructuredQueriesGRDB
+import SQLiteData
 
 // MARK: - CurrentUser
 

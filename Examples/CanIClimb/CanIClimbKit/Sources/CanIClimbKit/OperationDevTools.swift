@@ -1,6 +1,6 @@
 import IdentifiedCollections
 import Observation
-import SharingGRDB
+import SQLiteData
 import SwiftUI
 import SwiftUINavigation
 

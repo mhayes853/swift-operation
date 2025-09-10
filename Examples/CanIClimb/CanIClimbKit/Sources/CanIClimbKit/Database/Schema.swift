@@ -1,8 +1,7 @@
 import Foundation
 import IssueReporting
-import SharingGRDB
+import SQLiteData
 import StructuredQueries
-import StructuredQueriesGRDB
 import Tagged
 import UUIDV7
 

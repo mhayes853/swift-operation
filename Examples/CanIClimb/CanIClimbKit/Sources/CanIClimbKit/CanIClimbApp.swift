@@ -2,7 +2,7 @@ import Dependencies
 import FoundationModels
 import Observation
 import Operation
-import SharingGRDB
+import SQLiteData
 import SwiftUI
 import SwiftUINavigation
 

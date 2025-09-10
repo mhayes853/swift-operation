@@ -2,7 +2,7 @@ import Dependencies
 import GRDB
 import HealthKit
 import Operation
-import StructuredQueriesGRDB
+import SQLiteData
 import SwiftUINavigation
 
 // MARK: - HealthPermissions

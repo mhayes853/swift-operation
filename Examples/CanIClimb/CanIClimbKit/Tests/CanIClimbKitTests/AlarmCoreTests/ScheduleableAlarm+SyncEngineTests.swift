@@ -1,7 +1,7 @@
 import CanIClimbKit
 import CustomDump
 import GRDB
-import StructuredQueriesGRDB
+import SQLiteData
 import XCTest
 
 @MainActor

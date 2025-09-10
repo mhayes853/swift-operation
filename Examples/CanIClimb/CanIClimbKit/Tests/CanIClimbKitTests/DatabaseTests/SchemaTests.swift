@@ -1,7 +1,7 @@
 import CanIClimbKit
 import CustomDump
 import Foundation
-import StructuredQueriesGRDB
+import SQLiteData
 import Tagged
 import Testing
 

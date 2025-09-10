@@ -1,6 +1,6 @@
 import FoundationModels
 import GRDB
-import StructuredQueriesGRDB
+import SQLiteData
 
 public struct UserHumanityTool: Tool {
   @Generable

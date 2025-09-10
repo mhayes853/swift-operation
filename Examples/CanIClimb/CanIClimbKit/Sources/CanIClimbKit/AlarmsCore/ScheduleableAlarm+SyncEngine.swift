@@ -1,7 +1,7 @@
 import Dependencies
 import GRDB
 import Logging
-import StructuredQueriesGRDB
+import SQLiteData
 
 // MARK: - Observer
 
