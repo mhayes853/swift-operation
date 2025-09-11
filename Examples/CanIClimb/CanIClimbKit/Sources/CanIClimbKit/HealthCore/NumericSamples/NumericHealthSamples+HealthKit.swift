@@ -3,7 +3,7 @@ import HealthKit
 // MARK: - HKLoader
 
 extension NumericHealthSamples {
-  public struct HKLoader: Loader {
+  public final class HKLoader: Loader {
     private let healthStore: HKHealthStore
     private let kind: NumericHealthSamples.Kind
 
