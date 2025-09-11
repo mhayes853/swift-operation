@@ -15,7 +15,7 @@ extension NumericHealthSamples {
 }
 
 extension NumericHealthSamples.Request {
-  private static nonisolated(unsafe) let regex = Regex {
+  public static nonisolated(unsafe) let queryRegex = Regex {
     "last"
     Optionally {
       OneOrMore(.whitespace)
@@ -38,7 +38,7 @@ extension NumericHealthSamples.Request {
 
   public init(query: String, now: Date = .now, calendar: Calendar = .autoupdatingCurrent) {
     let normalized = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-    guard let match = normalized.firstMatch(of: Self.regex) else {
+    guard let match = normalized.firstMatch(of: Self.queryRegex) else {
       self.init(interval: DateInterval(start: now, end: now))
       return
     }
@@ -73,11 +73,22 @@ extension NumericHealthSamples.Request {
   }
 }
 
+// MARK: - Response
+
+extension NumericHealthSamples {
+  public enum Response: Hashable, Sendable {
+    case permissionDenied
+    case samples(NumericHealthSamples)
+  }
+}
+
 // MARK: - Loader
 
 extension NumericHealthSamples {
   public protocol Loader: Sendable, Identifiable where ID: Sendable {
-    func samples(from request: Request) async throws -> NumericHealthSamples
+    var kind: Kind { get }
+
+    func samples(from request: Request) async throws -> Response
   }
 }
 
@@ -87,7 +98,7 @@ extension NumericHealthSamples {
   public static func query(
     for request: Request,
     using loader: any Loader
-  ) -> some QueryRequest<NumericHealthSamples, any Error> {
+  ) -> some QueryRequest<Response, any Error> {
     Query(loader: loader, request: request)
   }
 
@@ -102,8 +113,8 @@ extension NumericHealthSamples {
     public func fetch(
       isolation: isolated (any Actor)?,
       in context: OperationContext,
-      with continuation: OperationContinuation<NumericHealthSamples, any Error>
-    ) async throws -> NumericHealthSamples {
+      with continuation: OperationContinuation<Response, any Error>
+    ) async throws -> Response {
       try await self.loader.samples(from: self.request)
     }
   }
