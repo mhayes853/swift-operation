@@ -27,7 +27,7 @@ public struct NumericHealthSamplesTool: Tool {
   public var description: String {
     switch self.loader.kind {
     case .distanceWalkingRunningMeters:
-      "Provides the distance traveled by the user during walking or running activities."
+      "Provides the distance (in meters) traveled by the user during walking or running activities."
     case .stepCount: "Provides the number of steps taken by the user on a day to day basis."
     case .vo2Max: "Provides VO2 Max samples from the user's health data."
     }

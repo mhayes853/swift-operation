@@ -4,7 +4,7 @@ import FoundationModels
 
 extension Mountain {
   @Generable
-  public struct ClimbReadiness: Hashable, Sendable {
+  public struct ClimbReadiness: Hashable, Sendable, Codable {
     @Guide(description: "The rating for how ready the user is for climbing the mountain.")
     public var rating: Rating
 
@@ -24,7 +24,7 @@ extension Mountain.ClimbReadiness.PartiallyGenerated: Sendable {}
 
 extension Mountain.ClimbReadiness {
   @Generable
-  public enum Rating: Hashable, Sendable {
+  public enum Rating: Hashable, Sendable, Codable {
     case notReady
     case partiallyReady
     case ready

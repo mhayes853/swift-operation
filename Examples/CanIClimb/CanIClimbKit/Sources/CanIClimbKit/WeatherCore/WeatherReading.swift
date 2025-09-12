@@ -150,4 +150,25 @@ extension WeatherReading {
       uvIndex: uvIndex
     )
   }
+
+  public static let freelPeak = WeatherReading(
+    location: LocationReading(
+      coordinate: Mountain.freelPeak.location.coordinate,
+      altitudeAboveSeaLevel: Mountain.freelPeak.elevation
+    ),
+    systemImageName: "cloud.sun",
+    condition: .mostlyCloudy,
+    humidity: 0.71,
+    temperature: Measurement(value: 59, unit: .fahrenheit),
+    feelsLikeTemperature: Measurement(value: 55, unit: .fahrenheit),
+    visibility: Measurement(value: 16, unit: .miles),
+    wind: Wind(
+      direction: .westNorthwest,
+      speed: Measurement(value: 6, unit: .milesPerHour)
+    ),
+    cloudCover: CloudCover(lowAltitude: 0.12, midAltitude: 0.55, highAltitude: 0.75),
+    precipitationIntensity: Measurement(value: 0, unit: .milesPerHour),
+    pressure: Pressure(amount: Measurement(value: 29.96, unit: .inchesOfMercury), trend: .rising),
+    uvIndex: UVIndex(amount: 0, exposureCategory: .low)
+  )
 }

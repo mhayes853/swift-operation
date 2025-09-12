@@ -35,7 +35,8 @@ let package = Package(
     ),
     .package(url: "https://github.com/apple/swift-collections", from: "1.2.1"),
     .package(url: "https://github.com/apple/swift-async-algorithms", from: "1.0.4"),
-    .package(url: "https://github.com/n3d1117/ExpandableText", from: "1.0.0")
+    .package(url: "https://github.com/n3d1117/ExpandableText", from: "1.0.0"),
+    .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", from: "1.18.6")
   ],
   targets: [
     .target(
@@ -61,7 +62,8 @@ let package = Package(
       name: "CanIClimbKitTests",
       dependencies: [
         "CanIClimbKit",
-        .product(name: "DependenciesTestSupport", package: "swift-dependencies")
+        .product(name: "DependenciesTestSupport", package: "swift-dependencies"),
+        .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
       ]
     )
   ],

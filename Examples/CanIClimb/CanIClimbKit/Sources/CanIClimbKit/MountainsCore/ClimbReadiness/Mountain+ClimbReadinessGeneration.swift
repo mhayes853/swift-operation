@@ -1,6 +1,7 @@
 import Dependencies
 import FoundationModels
-import Operation
+import SQLiteData
+import SharingOperation
 
 // MARK: - Generator
 
@@ -19,7 +20,17 @@ extension Mountain.ClimbReadiness {
 
   public enum GeneratorKey: DependencyKey {
     public static var liveValue: any Generator {
-      fatalError()
+      @Dependency(\.defaultDatabase) var database
+      @Dependency(\.defaultOperationClient) var client
+      return FoundationModelsGenerator(
+        database: database,
+        client: client,
+        vo2MaxLoader: NumericHealthSamples.HKLoader(kind: .vo2Max),
+        stepCounterLoader: NumericHealthSamples.HKLoader(kind: .stepCount),
+        distanceWalkingRunningLoader: NumericHealthSamples.HKLoader(
+          kind: .distanceWalkingRunningMeters
+        )
+      )
     }
   }
 }

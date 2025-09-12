@@ -92,6 +92,24 @@ extension NumericHealthSamples {
   }
 }
 
+extension NumericHealthSamples {
+  public final class SucceedingLoader: Loader {
+    public let kind: NumericHealthSamples.Kind
+    public let response: Response
+
+    public init(kind: NumericHealthSamples.Kind, response: Response) {
+      self.kind = kind
+      self.response = response
+    }
+
+    public func samples(
+      from request: NumericHealthSamples.Request
+    ) async throws -> NumericHealthSamples.Response {
+      self.response
+    }
+  }
+}
+
 // MARK: - Operation
 
 extension NumericHealthSamples {

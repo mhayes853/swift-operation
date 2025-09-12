@@ -196,4 +196,36 @@ extension Mountain {
       colorScheme: .dark
     )
   )
+
+  public static let freelPeak = Self(
+    id: ID(),
+    name: "Freel Peak",
+    displayDescription: """
+      Freel Peak is a mountain located in the Carson Range, a spur of the Sierra Nevada, near \
+      Lake Tahoe in California.
+
+      The peak is on the boundary between El Dorado County and Alpine County; and the boundary \
+      between the Eldorado National Forest and the Humboldt-Toiyabe National Forest. At 10,886 \
+      feet (3,318 m), it is the tallest summit in the Carson Range, El Dorado County, and the \
+      Tahoe Basin. Due to its elevation, most of the precipitation that falls on the mountain is \
+      snow.
+
+      In 1893, the U.S. Geological Survey assigned the name Freel Peak to what was then known as \
+      Jobs Peak. James Freel was an early settler in the area.
+      """,
+    elevation: Measurement(value: 10_886, unit: .feet),
+    location: Location(
+      coordinate: LocationCoordinate2D(latitude: 38.85747, longitude: -119.90000),
+      name: Location.Name(part1: "South Lake Tahoe", part2: "California")
+    ),
+    dateAdded: .now,
+    difficulty: ClimbingDifficulty(rawValue: 72)!,
+    image: Image(
+      url: URL(
+        string:
+          "https://tahoetrailguide.com/wp-content/uploads/2020/04/8-17-13_Hiking_Freel_Peak_Jobs_Sister_Jobs_Peak_2_Jared_Manninen_web.jpg"
+      )!,
+      colorScheme: .dark
+    )
+  )
 }
