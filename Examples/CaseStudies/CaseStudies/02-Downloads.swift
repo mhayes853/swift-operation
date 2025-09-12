@@ -13,7 +13,7 @@ struct DownloadsCaseStudy: CaseStudy {
     progress of the download from an `AsyncThrowingStream`.
 
     Additionally, for such expensive queries, you may want to opt out of automatic fetching by \
-    using the `disableAutomaticFetching` modifier. Applying this modifier means that your query \
+    using the `disableAutomaticRunning` modifier. Applying this modifier means that your query \
     will only fetch data when you explicitly call `fetch`.
     """
 
@@ -83,9 +83,9 @@ struct Download: Hashable, Sendable {
 // MARK: - Query
 
 extension Download {
-  static func query(for url: URL) -> some QueryRequest<Self, Query.State> {
+  static func query(for url: URL) -> some QueryRequest<Self, any Error> {
     Query(url: url)
-      .disableAutomaticFetching()
+      .disableAutomaticRunning()
       .staleWhenNoValue()
   }
 
@@ -93,8 +93,9 @@ extension Download {
     let url: URL
 
     func fetch(
+      isolation: isolated (any Actor)?,
       in context: OperationContext,
-      with continuation: OperationContinuation<Download>
+      with continuation: OperationContinuation<Download, any Error>
     ) async throws -> Download {
       @Dependency(FileDownloaderKey.self) var downloader
       var download = Download(progress: 0, url: nil)

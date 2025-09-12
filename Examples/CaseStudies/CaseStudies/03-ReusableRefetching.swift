@@ -62,11 +62,11 @@ extension Quote {
 
 // MARK: - Refetch On Notification
 
-extension OperationRequest {
+extension StatefulOperationRequest {
   func refetchOnPost(
     of name: Notification.Name,
     center: NotificationCenter = .default
-  ) -> ControlledQuery<Self, RefetchOnNotificationController<State>> {
+  ) -> ControlledOperation<Self, RefetchOnNotificationController<State>> {
     self.controlled(by: RefetchOnNotificationController(notification: name, center: center))
   }
 }
@@ -81,7 +81,7 @@ struct RefetchOnNotificationController<State: OperationState>: OperationControll
       object: nil,
       queue: nil
     ) { _ in
-      let task = controls.yieldRefetchTask()
+      let task = controls.yieldRerunTask()
       Task { try await task?.runIfNeeded() }
     }
     return OperationSubscription { self.center.removeObserver(observer) }

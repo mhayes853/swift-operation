@@ -8,17 +8,18 @@ struct InfiniteScrollingCaseStudy: CaseStudy {
   let description: LocalizedStringKey = """
     Infinite scrolling allows users to easily navigate paginated data in your application. We'll \
     use the `PaginatedRequest` to power the list for each tag. When the user reaches the \
-    bottom of the list. We'll call `fetchNextPage` on the infinite query to get the next page in \
+    bottom of the list. We'll call `fetchNextPage` on the pagindated request to get the next page in \
     the list.
 
     You can also pull to refresh the list, which is done through the `refreshable` view modifier. \
     Inside the closure for the modifier, we'll call `load` on the `@SharedOperation` property to \
-    reload the initial page of the query. This will reset the query state to just the initial page.
+    reload the initial page of the paginated request. This will reset the list state to just the \
+    initial page.
 
     Additionally, the like button will update the post in the list by writing directly to the \
-    `@SharedOperation` property that observes the state of the query. This will update the state of \
-    the query in the underyling `OperationStore` backing `@SharedOperation`, and so other parts of the app \
-    will be able to see the update.
+    `@SharedOperation` property that observes the state of the paginated request. This will update \
+    the state of the paginated request in the underyling `OperationStore` backing \
+    `@SharedOperation`, and so other parts of the app will be able to see the update.
     """
 
   var content: some View {
@@ -43,7 +44,7 @@ struct InfiniteScrollingCaseStudy: CaseStudy {
 
 private struct PostsListView: View {
   @SharedOperation<Post.ListByTagQuery.State>
-  private var list: PaginatedPagesFor<Post.ListByTagQuery>
+  private var list: PagesFor<Post.ListByTagQuery>
 
   let tag: String
 
@@ -102,7 +103,7 @@ private struct PostsListView: View {
   }
 }
 
-extension PaginatedPagesFor<Post.ListByTagQuery> {
+extension PagesFor<Post.ListByTagQuery> {
   fileprivate mutating func updateLike(for postId: Int, on pageId: Post.ListPage.ID) {
     guard var post = self[id: pageId]?.value.posts[id: postId] else { return }
     post.likeCount += post.isUserLiking ? -1 : 1

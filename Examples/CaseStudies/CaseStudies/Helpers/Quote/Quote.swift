@@ -40,10 +40,11 @@ extension Quote {
 extension Quote {
   static let randomQuery = RandomQuery()
 
-  struct RandomQuery: QueryRequest, Hashable {
+  struct RandomQuery: QueryRequest, Hashable, Sendable {
     func fetch(
+      isolation: isolated (any Actor)?,
       in context: OperationContext,
-      with continuation: OperationContinuation<Quote>
+      with continuation: OperationContinuation<Quote, any Error>
     ) async throws -> Quote {
       @Dependency(QuoteRandomLoaderKey.self) var loader
       return try await loader.randomQuote()

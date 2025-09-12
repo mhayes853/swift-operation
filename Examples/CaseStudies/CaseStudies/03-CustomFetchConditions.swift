@@ -5,17 +5,17 @@ import SwiftUI
 // MARK: - CustomFetchConditionsCaseStudy
 
 struct CustomFetchConditionsCaseStudy: CaseStudy {
-  let title: LocalizedStringKey = "Custom Fetch Conditions"
+  let title: LocalizedStringKey = "Custom Run Specifications"
   let description: LocalizedStringKey = """
-    The `FetchCondition` protocol allows one to control when a query automatically refetches its \
-    data. In fact, this protocol powers library features such as automatically refetching your \
-    queries when your app comes into the foreground, and automatically refetching your queries \
+    The `OperationRunSpecification` protocol allows one to control when a query automatically refetches its \
+    data. In fact, this protocol powers library features such as automatically rerunning your \
+    operations when your app comes into the foreground, and automatically rerunning your operations \
     when the user's network connection flips from offline to online.
 
-    In this example, we'll create a custom `FetchCondition` conformance called \
-    `IsInLowPowerModeCondition` which checks for whether or not the device is in low power mode \
+    In this example, we'll create a custom `OperationRunSpecification` conformance called \
+    `IsInLowPowerModeRunSpecification` which checks for whether or not the device is in low power mode \
     as the name suggests. When you enable low power mode on your device, the recipe will be \
-    refetched, which is achieved by using the `refetchOnChange` on change modifier.
+    refetched, which is achieved by using the `rerunOnChange` on change modifier.
     """
 
   @State private var client = OperationClient()
@@ -49,27 +49,27 @@ private struct InnerView: View {
 
 extension Recipe {
   fileprivate static let randomRefetchOnLowPowerModeQuery = RandomQuery()
-    .disableApplicationActiveRefetching()
-    .refetchOnChange(of: IsInLowPowerModeCondition())
+    .disableApplicationActiveRerunning()
+    .rerunOnChange(of: IsInLowPowerModeRunSpecification())
 }
 
-// MARK: - IsInLowPowerModeCondition
+// MARK: - IsInLowPowerModeRunSpecification
 
-struct IsInLowPowerModeCondition: FetchCondition {
+struct IsInLowPowerModeRunSpecification: OperationRunSpecification, Sendable {
   func isSatisfied(in context: OperationContext) -> Bool {
     ProcessInfo.processInfo.isLowPowerModeEnabled
   }
 
   func subscribe(
     in context: OperationContext,
-    _ observer: @escaping (Bool) -> Void
+    onChange observer: @escaping () -> Void
   ) -> OperationSubscription {
     nonisolated(unsafe) let observer = NotificationCenter.default.addObserver(
       forName: .NSProcessInfoPowerStateDidChange,
       object: nil,
       queue: nil,
     ) { _ in
-      observer(ProcessInfo.processInfo.isLowPowerModeEnabled)
+      observer()
     }
     return OperationSubscription {
       NotificationCenter.default.removeObserver(observer)

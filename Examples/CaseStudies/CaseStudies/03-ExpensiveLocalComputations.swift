@@ -8,15 +8,19 @@ struct ExpensiveLocalComputationsCaseStudy: CaseStudy {
   let description: LocalizedStringKey = """
     Some parts of your application may run entirely local on the user's device, but may be \
     computationally expensive. Examples of this include running a large query on a SQLite \
-    database, processing a large file, streaming a response from the Foundation Models framework, \
+    database, processing a large file, streaming a response from the FoundationModels framework, \
     or simply just calculating a long-running mathematical computation. These examples, while \
     entirely local would still benefit from being made into queries due to their long runtimes.
 
     You can use the `completelyOffline` modifier to signify that your query runs without a network \
     connection. This will prevent it from being refetched when the user's network flips from \
     offline to online. Additionally, if your query is just a computationally expensive pure \
-    function, you'll also want to add on the `disableApplicationActiveRefetching` modifier to \
+    function, you'll also want to add on the `disableApplicationActiveRerunning` modifier to \
     prevent the computation from re-running when the user foregrounds your app.
+    
+    For bonus points, though not implemented in this case study, you can use the \
+    `taskConfiguration` modifier to customize the `TaskExecutor` preference of the computation to \
+    run on a custom executor.
 
     Calculating the Nth prime number is fast for smaller numbers, but it gets slower for larger \
     numbers. Try playing around with the counter!
@@ -78,25 +82,26 @@ final class ExpensiveLocalComputationModel {
 // MARK: - Nth Prime
 
 extension Int {
-  static func nthPrimeQuery(for n: Int) -> some QueryRequest<Int?, NthPrimeQuery.State> {
+  static func nthPrimeQuery(for n: Int) -> some QueryRequest<Int?, any Error> {
     NthPrimeQuery(n: n)
       .completelyOffline()
-      .disableApplicationActiveRefetching()
+      .disableApplicationActiveRerunning()
   }
 
   struct NthPrimeQuery: QueryRequest, Hashable {
     let n: Int
 
     func fetch(
+      isolation: isolated (any Actor)?,
       in context: OperationContext,
-      with continuation: OperationContinuation<Int?>
+      with continuation: OperationContinuation<Int?, any Error>
     ) async throws -> Int? {
-      await nthPrime(for: self.n)
+      nthPrime(for: self.n)
     }
   }
 }
 
-func nthPrime(for n: Int) async -> Int? {
+func nthPrime(for n: Int) -> Int? {
   guard n > 0 else { return nil }
 
   let upperBound = n < 6 ? 15 : Int(Double(n) * log(Double(n)) + Double(n) * log(log(Double(n))))

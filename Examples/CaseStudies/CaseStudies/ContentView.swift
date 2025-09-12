@@ -35,7 +35,7 @@ struct ContentView: View {
         }
       }
       .navigationTitle("Case Studies")
-      .OperationClient(self.client)
+      .operationClient(self.client)
     }
   }
 }

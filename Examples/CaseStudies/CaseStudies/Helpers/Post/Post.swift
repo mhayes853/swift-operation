@@ -60,16 +60,17 @@ enum PostListByTagLoaderKey: DependencyKey {
 // MARK: - Query
 
 extension Post {
-  static func query(for id: Int) -> some QueryRequest<Self?, Query.State> {
+  static func query(for id: Int) -> some QueryRequest<Self?, any Error> {
     Query(id: id)
   }
 
-  struct Query: QueryRequest, Hashable {
+  struct Query: QueryRequest, Hashable, Sendable {
     let id: Int
 
     func fetch(
+      isolation: isolated (any Actor)?,
       in context: OperationContext,
-      with continuation: OperationContinuation<Post?>
+      with continuation: OperationContinuation<Post?, any Error>
     ) async throws -> Post? {
       @Dependency(PostsKey.self) var posts
       return try await posts.post(with: self.id)
@@ -80,7 +81,7 @@ extension Post {
 extension Post {
   static func searchQuery(
     by text: String
-  ) -> some QueryRequest<IdentifiedArrayOf<Self>, SearchQuery.State> {
+  ) -> some QueryRequest<IdentifiedArrayOf<Self>, any Error> {
     SearchQuery(text: text)
   }
 
@@ -88,8 +89,9 @@ extension Post {
     let text: String
 
     func fetch(
+      isolation: isolated (any Actor)?,
       in context: OperationContext,
-      with continuation: OperationContinuation<IdentifiedArrayOf<Post>>
+      with continuation: OperationContinuation<IdentifiedArrayOf<Post>, any Error>
     ) async throws -> IdentifiedArrayOf<Post> {
       @Dependency(PostSearcherKey.self) var posts
       return try await posts.search(by: self.text)
@@ -100,7 +102,7 @@ extension Post {
 extension Post {
   static func listByTagQuery(
     tag: String
-  ) -> some PaginatedRequest<ListPage.ID, ListPage> {
+  ) -> some PaginatedRequest<ListPage.ID, ListPage, any Error> {
     ListByTagQuery(tag: tag)
   }
 
@@ -117,8 +119,8 @@ extension Post {
     }
 
     func pageId(
-      after page: PaginatedPage<PageID, PageValue>,
-      using paging: PaginatedPaging<PageID, PageValue>,
+      after page: Page<PageID, PageValue>,
+      using paging: Paging<PageID, PageValue>,
       in context: OperationContext
     ) -> PageID? {
       let nextId = PageID(limit: page.id.limit, skip: page.id.skip + page.id.limit)
@@ -126,9 +128,10 @@ extension Post {
     }
 
     func fetchPage(
-      using paging: PaginatedPaging<PageID, PageValue>,
+      isolation: isolated (any Actor)?,
+      using paging: Paging<PageID, PageValue>,
       in context: OperationContext,
-      with continuation: OperationContinuation<PageValue>
+      with continuation: OperationContinuation<PageValue, any Error>
     ) async throws -> PageValue {
       @Dependency(PostListByTagLoaderKey.self) var loader
       return try await loader.posts(with: self.tag, for: paging.pageId)

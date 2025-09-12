@@ -10,10 +10,10 @@
 		16A0E92D2E0A57E0003BE8A3 /* SwiftNavigation in Frameworks */ = {isa = PBXBuildFile; productRef = 16A0E92C2E0A57E0003BE8A3 /* SwiftNavigation */; };
 		16A0E92F2E0A57E0003BE8A3 /* UIKitNavigation in Frameworks */ = {isa = PBXBuildFile; productRef = 16A0E92E2E0A57E0003BE8A3 /* UIKitNavigation */; };
 		16A0E97D2E0C7CBE003BE8A3 /* SwiftUINavigation in Frameworks */ = {isa = PBXBuildFile; productRef = 16A0E97C2E0C7CBE003BE8A3 /* SwiftUINavigation */; };
-		16AE2F032E09E7D1006D0EEF /* Query in Frameworks */ = {isa = PBXBuildFile; productRef = 16AE2F022E09E7D1006D0EEF /* Query */; };
-		16AE2F052E09E7D1006D0EEF /* QuerySwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 16AE2F042E09E7D1006D0EEF /* QuerySwiftUI */; };
-		16AE2F072E09E7D1006D0EEF /* SharingQuery in Frameworks */ = {isa = PBXBuildFile; productRef = 16AE2F062E09E7D1006D0EEF /* SharingQuery */; };
 		16AE2F142E09E8ED006D0EEF /* DependenciesTestSupport in Frameworks */ = {isa = PBXBuildFile; productRef = 16AE2F132E09E8ED006D0EEF /* DependenciesTestSupport */; };
+		16DB31F92E749C420059FF36 /* Operation in Frameworks */ = {isa = PBXBuildFile; productRef = 16DB31F82E749C420059FF36 /* Operation */; };
+		16DB31FB2E749C4D0059FF36 /* OperationSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 16DB31FA2E749C4D0059FF36 /* OperationSwiftUI */; };
+		16DB31FD2E749C4D0059FF36 /* SharingOperation in Frameworks */ = {isa = PBXBuildFile; productRef = 16DB31FC2E749C4D0059FF36 /* SharingOperation */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -101,11 +101,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				16A0E92D2E0A57E0003BE8A3 /* SwiftNavigation in Frameworks */,
-				16AE2F032E09E7D1006D0EEF /* Query in Frameworks */,
 				16A0E97D2E0C7CBE003BE8A3 /* SwiftUINavigation in Frameworks */,
-				16AE2F052E09E7D1006D0EEF /* QuerySwiftUI in Frameworks */,
-				16AE2F072E09E7D1006D0EEF /* SharingQuery in Frameworks */,
+				16DB31FB2E749C4D0059FF36 /* OperationSwiftUI in Frameworks */,
+				16DB31F92E749C420059FF36 /* Operation in Frameworks */,
 				16A0E92F2E0A57E0003BE8A3 /* UIKitNavigation in Frameworks */,
+				16DB31FD2E749C4D0059FF36 /* SharingOperation in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -175,12 +175,12 @@
 			);
 			name = CaseStudies;
 			packageProductDependencies = (
-				16AE2F022E09E7D1006D0EEF /* Query */,
-				16AE2F042E09E7D1006D0EEF /* QuerySwiftUI */,
-				16AE2F062E09E7D1006D0EEF /* SharingQuery */,
 				16A0E92C2E0A57E0003BE8A3 /* SwiftNavigation */,
 				16A0E92E2E0A57E0003BE8A3 /* UIKitNavigation */,
 				16A0E97C2E0C7CBE003BE8A3 /* SwiftUINavigation */,
+				16DB31F82E749C420059FF36 /* Operation */,
+				16DB31FA2E749C4D0059FF36 /* OperationSwiftUI */,
+				16DB31FC2E749C4D0059FF36 /* SharingOperation */,
 			);
 			productName = CaseStudies;
 			productReference = 16AE2EBE2E09E4A0006D0EEF /* CaseStudies.app */;
@@ -266,9 +266,9 @@
 			mainGroup = 16AE2EB52E09E4A0006D0EEF;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				16AE2F012E09E7D1006D0EEF /* XCRemoteSwiftPackageReference "swift-query" */,
 				16AE2F122E09E8ED006D0EEF /* XCRemoteSwiftPackageReference "swift-dependencies" */,
 				16A0E92B2E0A57E0003BE8A3 /* XCRemoteSwiftPackageReference "swift-navigation" */,
+				16DB31F72E749C420059FF36 /* XCRemoteSwiftPackageReference "swift-operation" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 16AE2EBF2E09E4A0006D0EEF /* Products */;
@@ -645,20 +645,20 @@
 				minimumVersion = 2.3.1;
 			};
 		};
-		16AE2F012E09E7D1006D0EEF /* XCRemoteSwiftPackageReference "swift-query" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/mhayes853/swift-query";
-			requirement = {
-				branch = main;
-				kind = branch;
-			};
-		};
 		16AE2F122E09E8ED006D0EEF /* XCRemoteSwiftPackageReference "swift-dependencies" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/pointfreeco/swift-dependencies";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 1.9.2;
+			};
+		};
+		16DB31F72E749C420059FF36 /* XCRemoteSwiftPackageReference "swift-operation" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/mhayes853/swift-operation";
+			requirement = {
+				branch = main;
+				kind = branch;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -679,25 +679,25 @@
 			package = 16A0E92B2E0A57E0003BE8A3 /* XCRemoteSwiftPackageReference "swift-navigation" */;
 			productName = SwiftUINavigation;
 		};
-		16AE2F022E09E7D1006D0EEF /* Query */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 16AE2F012E09E7D1006D0EEF /* XCRemoteSwiftPackageReference "swift-query" */;
-			productName = Query;
-		};
-		16AE2F042E09E7D1006D0EEF /* QuerySwiftUI */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 16AE2F012E09E7D1006D0EEF /* XCRemoteSwiftPackageReference "swift-query" */;
-			productName = QuerySwiftUI;
-		};
-		16AE2F062E09E7D1006D0EEF /* SharingQuery */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 16AE2F012E09E7D1006D0EEF /* XCRemoteSwiftPackageReference "swift-query" */;
-			productName = SharingQuery;
-		};
 		16AE2F132E09E8ED006D0EEF /* DependenciesTestSupport */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 16AE2F122E09E8ED006D0EEF /* XCRemoteSwiftPackageReference "swift-dependencies" */;
 			productName = DependenciesTestSupport;
+		};
+		16DB31F82E749C420059FF36 /* Operation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 16DB31F72E749C420059FF36 /* XCRemoteSwiftPackageReference "swift-operation" */;
+			productName = Operation;
+		};
+		16DB31FA2E749C4D0059FF36 /* OperationSwiftUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 16DB31F72E749C420059FF36 /* XCRemoteSwiftPackageReference "swift-operation" */;
+			productName = OperationSwiftUI;
+		};
+		16DB31FC2E749C4D0059FF36 /* SharingOperation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 16DB31F72E749C420059FF36 /* XCRemoteSwiftPackageReference "swift-operation" */;
+			productName = SharingOperation;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

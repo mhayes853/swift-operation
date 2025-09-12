@@ -106,16 +106,17 @@ extension Post {
 
   static let interactMutation = InteractMutation().retry(limit: 0)
 
-  struct InteractMutation: MutationRequest, Hashable {
+  struct InteractMutation: MutationRequest, Hashable, Sendable {
     struct Arguments: Sendable {
       let postId: Int
       let interaction: Interaction
     }
 
     func mutate(
+      isolation: isolated (any Actor)?,
       with arguments: Arguments,
       in context: OperationContext,
-      with continuation: OperationContinuation<Void>
+      with continuation: OperationContinuation<Void, any Error>
     ) async throws {
       @Dependency(\.defaultOperationClient) var client
       @Dependency(PostInteractorKey.self) var interactor

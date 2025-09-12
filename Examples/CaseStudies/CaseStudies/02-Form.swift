@@ -152,17 +152,18 @@ extension FormName {
     case nameTaken
   }
 
-  struct UpdateMutation: MutationRequest, Hashable {
+  struct UpdateMutation: MutationRequest, Hashable, Sendable {
     struct Arguments: Sendable {
       let name: FormName
     }
 
     func mutate(
+      isolation: isolated (any Actor)?,
       with arguments: Arguments,
       in context: OperationContext,
-      with continuation: OperationContinuation<UpdateResult>
+      with continuation: OperationContinuation<UpdateResult, any Error>
     ) async throws -> UpdateResult {
-      try await context.queryDelayer.delay(for: isTesting ? 0 : 0.5)
+      try await context.operationDelayer.delay(for: isTesting ? 0 : 0.5)
       if takenNames.contains(where: { $0.lowercased() == arguments.name.rawValue.lowercased() }) {
         return .nameTaken
       } else {

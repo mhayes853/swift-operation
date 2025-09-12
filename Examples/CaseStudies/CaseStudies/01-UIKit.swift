@@ -87,11 +87,11 @@ extension BasicUIKitViewController {
 extension BasicUIKitViewController {
   struct Representable: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> BasicUIKitViewController {
-      BasicUIKitViewController(client: context.environment.OperationClient)
+      BasicUIKitViewController(client: context.environment.operationClient)
     }
 
     func updateUIViewController(_ vc: BasicUIKitViewController, context: Context) {
-      vc.update(with: context.environment.OperationClient)
+      vc.update(with: context.environment.operationClient)
     }
   }
 }
