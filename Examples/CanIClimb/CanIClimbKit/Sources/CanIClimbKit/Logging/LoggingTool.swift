@@ -23,7 +23,7 @@ private struct LoggingTool<Base: Tool>: Tool {
       result = await Result { try await self.base.call(arguments: arguments) }
     }
     currentLogger.debug(
-      "\(self.name) tool called.",
+      "'\(self.name)' tool called.",
       metadata: [
         "call.arguments": "\(arguments)",
         "call.result": "\(result!)",

@@ -1,0 +1,13 @@
+{
+  "messages" : [
+
+  ],
+  "readiness" : {
+    "insight" : "Based on the data, you are currently partially prepared for climbing Freel Peak. Your VO2 Max suggests a moderate level of cardiovascular fitness, but your step count and distance traveled are relatively low, indicating a need for increased endurance training. The mountain's elevation and climbing difficulty suggest a challenging climb, and while you have some foundational fitness, you may benefit from targeted preparation climbs, strength training, and improved cardiovascular conditioning to enhance your readiness.",
+    "rating" : {
+      "partiallyReady" : {
+
+      }
+    }
+  }
+}

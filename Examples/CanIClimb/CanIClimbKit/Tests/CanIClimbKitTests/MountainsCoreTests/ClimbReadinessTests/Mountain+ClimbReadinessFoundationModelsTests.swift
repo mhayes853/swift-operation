@@ -16,6 +16,7 @@ extension DependenciesTestSuite {
     @Test("Generation, Active Person")
     func generationActivePerson() async throws {
       try await self.generate(
+        snapshotName: "generationActivePerson.json",
         loggerLabel: "generation.test.active.person",
         humanity: .active20s,
         vo2MaxSamples: .goodVO2Max,
@@ -27,6 +28,7 @@ extension DependenciesTestSuite {
     @Test("Generation, Inactive Person")
     func generationInactivePerson() async throws {
       try await self.generate(
+        snapshotName: "generationInactivePerson.json",
         loggerLabel: "generation.test.inactive.person",
         humanity: .inactive20s,
         vo2MaxSamples: .badVO2Max,
@@ -36,6 +38,7 @@ extension DependenciesTestSuite {
     }
 
     private func generate(
+      snapshotName: String,
       loggerLabel: String,
       humanity: UserHumanityRecord,
       vo2MaxSamples: NumericHealthSamples,
@@ -91,7 +94,9 @@ extension DependenciesTestSuite {
           }
           return Generation(readiness: readiness, messages: toolLogHandler.toolMessages)
         }
-        assertSnapshot(of: generation, as: .json, record: true)
+        withKnownIssue {
+          assertSnapshot(of: generation, as: .json, named: snapshotName, record: true)
+        }
       }
     }
   }

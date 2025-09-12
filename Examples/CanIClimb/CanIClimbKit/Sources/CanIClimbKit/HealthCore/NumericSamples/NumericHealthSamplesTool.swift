@@ -20,7 +20,7 @@ public struct NumericHealthSamplesTool: Tool {
     switch self.loader.kind {
     case .distanceWalkingRunningMeters: "User Distance Traveled (Walking/Running)"
     case .stepCount: "User Step Count"
-    case .vo2Max: "User VO2 Max"
+    case .vo2Max: "User VO2Max"
     }
   }
 
