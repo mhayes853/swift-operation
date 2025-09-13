@@ -37,7 +37,7 @@ public final class MountainDetailModel: HashableObject, Identifiable {
   }
 
   public func appeared() async {
-    for await (e1, e2) in zip(self.$mountain.states, self.$userLocation.states) {
+    for await (e1, e2) in combineLatest(self.$mountain.states, self.$userLocation.states) {
       self.detailsUpdated(mountainStatus: e1.state.status, userLocationStatus: e2.state.status)
     }
   }
@@ -309,7 +309,7 @@ private struct MountainClimbReadinessView: View {
       case .full(let full):
         Text(full.rating.title).font(.title.bold())
         HStack {
-          Text(full.insight)
+          Text(verbatim: full.insight)
           Spacer()
         }
       case .partial(let partial):
@@ -318,7 +318,7 @@ private struct MountainClimbReadinessView: View {
         }
         if let insight = partial.insight {
           HStack {
-            Text(insight)
+            Text(verbatim: insight)
             Spacer()
           }
         }

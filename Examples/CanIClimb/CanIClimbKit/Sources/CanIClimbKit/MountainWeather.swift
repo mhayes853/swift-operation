@@ -27,7 +27,7 @@ public final class MountainWeatherModel {
       WeatherReading.currentQuery(for: mountain.location.coordinate),
       animation: .bouncy
     )
-    self._userWeather = SharedOperation(wrappedValue: nil)
+    self._userWeather = SharedOperation()
   }
 
   public func userLocationUpdated(reading: Result<LocationReading, any Error>) {
@@ -39,7 +39,7 @@ public final class MountainWeatherModel {
         animation: .bouncy
       )
     case .failure:
-      self.$userWeather = SharedOperation(wrappedValue: nil)
+      self.$userWeather = SharedOperation()
     }
   }
 }
@@ -157,6 +157,8 @@ private struct WeatherSnippetView: View {
   let model: MountainWeatherModel
   let detail: MountainWeatherModel.Detail
 
+  @ScaledMetric private var locationSize = CGFloat(40)
+
   var body: some View {
     let details = VStack(alignment: .leading, spacing: 20) {
       HStack(alignment: .center) {
@@ -165,6 +167,7 @@ private struct WeatherSnippetView: View {
       }
       .font(.footnote.bold())
       .foregroundStyle(.secondary)
+      .frame(height: self.locationSize)
 
       if let unauthorizedText = self.detail.unauthorizedText {
         Text(unauthorizedText)
