@@ -68,7 +68,7 @@ extension NumericHealthSamples.Request {
       }
 
     default:
-      self.init(interval: DateInterval(start: now, end: now))
+      self.init(interval: DateInterval(start: now, duration: 0))
     }
   }
 }

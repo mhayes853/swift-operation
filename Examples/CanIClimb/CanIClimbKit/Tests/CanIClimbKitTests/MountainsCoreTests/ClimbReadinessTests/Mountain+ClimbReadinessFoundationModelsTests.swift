@@ -86,7 +86,7 @@ extension DependenciesTestSuite {
         )
 
         let generation = try await withCurrentLogger(logger) { @Sendable in
-          let segments = try await generator.readiness(for: mountain)
+          let segments = generator.readiness(for: mountain)
           var readiness: Mountain.ClimbReadiness?
           for try await segment in segments {
             guard case .full(let r) = segment else { continue }

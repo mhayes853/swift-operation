@@ -1,26 +1,6 @@
 {
   "messages" : [
     {
-      "content" : "'userVO2Max' tool called.",
-      "metadata" : {
-        "call.arguments" : {
-          "string" : {
-            "_0" : "Arguments(query: \"last 6 weeks\")"
-          }
-        },
-        "call.duration" : {
-          "string" : {
-            "_0" : "0.001687125 seconds"
-          }
-        },
-        "call.result" : {
-          "string" : {
-            "_0" : "success(CanIClimbKit.NumericHealthSamples.Response.samples(CanIClimbKit.NumericHealthSamples(kind: CanIClimbKit.NumericHealthSamples.Kind.vo2Max, elements: [CanIClimbKit.NumericHealthSamples.Element(timestamp: 2025-09-13 20:27:37 +0000, value: 33.4)])))"
-          }
-        }
-      }
-    },
-    {
       "content" : "'userLocation' tool called.",
       "metadata" : {
         "call.arguments" : {
@@ -30,7 +10,7 @@
         },
         "call.duration" : {
           "string" : {
-            "_0" : "0.002947709 seconds"
+            "_0" : "0.000378667 seconds"
           }
         },
         "call.result" : {
@@ -42,9 +22,9 @@
     }
   ],
   "readiness" : {
-    "insight" : "Based on your moderately active lifestyle and recent VO2 Max reading of 33.4 ml\/kg\/min, you are somewhat prepared for climbing Freel Peak, but there are areas for improvement. Freel Peak is a difficult climb with a rating of 72 out of 100. To better prepare, consider incorporating more vigorous walking or running into your routine, aiming for at least 3-4 times a week. Gradually increase your activity intensity and duration to build endurance. Also, ensure you maintain a balanced diet rich in carbohydrates, proteins, and healthy fats to support your training. Stay hydrated and consider acclimatization techniques if you plan to summit, especially given the peak's high elevation of 3,318 meters.",
+    "insight" : "Based on your age, gender, height, and current activity level, you are well-prepared for climbing Freel Peak. Your sedentary lifestyle suggests you may benefit from gradually increasing your physical activity to build endurance. Freel Peak, with an elevation of 3,318 meters and a climbing difficulty rating of 72 out of 100, requires significant physical effort. To enhance your readiness, consider incorporating regular walking or jogging into your routine to gradually build stamina and strength. Aim for at least three days of moderate exercise per week, gradually increasing the duration and intensity as you prepare. This will help improve your cardiovascular fitness and muscle endurance, essential for tackling the mountain's challenges. Additionally, focusing on strength training exercises, particularly for your legs and core, will provide the necessary support for the climb. As you prepare, ensure you maintain a balanced diet rich in carbohydrates, proteins, and healthy fats to fuel your workouts and recovery. Staying hydrated is also crucial, especially given the mountain's high elevation and potential for cold temperatures. Finally, listen to your body and allow for rest and recovery to prevent fatigue and injury. By following these preparation tips, you'll be well-equipped to handle the demands of Freel Peak.",
     "rating" : {
-      "partiallyReady" : {
+      "ready" : {
 
       }
     }

@@ -3,9 +3,9 @@
 
   ],
   "readiness" : {
-    "insight" : "Based on your self-reported physical activity level and workout frequency, along with your height and weight, you appear to be in good physical condition. However, you should consider doing some preparation climbs to build your endurance and strength further. Also, ensure that you are well hydrated and have the appropriate gear for the weather conditions on Freel Peak.",
+    "insight" : "Based on your active activity level and daily workouts, you show promise in terms of fitness, but you still have some areas to improve. Freel Peak is a difficult climb with a rating of 72 out of 100. You should consider doing more preparation climbs to build endurance and strength, particularly focusing on your cardiovascular capacity. Additionally, incorporating strength training exercises that target your legs and core muscles could be beneficial for climbing. Gradually increasing your training intensity and incorporating rest days will help prevent burnout and injuries. Prioritize proper nutrition to fuel your body, and stay hydrated, especially since the mountain is covered in snow.",
     "rating" : {
-      "ready" : {
+      "partiallyReady" : {
 
       }
     }
