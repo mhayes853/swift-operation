@@ -117,7 +117,13 @@ extension Prompt {
       """
       Here is some basic information about me, including my age, gender, and height. My \
       activity level is a self-described measure of how physically active I think I am, so \
-      you may want to take it with a grain of salt.
+      keep that in mind in your assessment.
+
+      DO NOT TELL ME WHAT MY VO2 MAX, STEP COUNT, DAILY DISTANCE TRAVELED, OR WEATHER CONDITIONS \
+      ARE IF YOU DID NOT GET THEM BY INVOKING THE APPROPRIATE TOOLS.
+
+      MAKE SURE TO CALL THE APPROPRIATE TOOLS SO THAT YOU CAN SAFELY ENCORPORATE MY VO2 MAX, STEP \
+      COUNT, DAILY DISTANCE TRAVELED, AND MOUNTAIN WEATHER CONDITIONS IN YOUR ASSESSMENT.
       """
       humanity
     }
