@@ -95,7 +95,7 @@ extension DependenciesTestSuite {
           return Generation(readiness: readiness, messages: toolLogHandler.toolMessages)
         }
         withKnownIssue {
-          assertSnapshot(of: generation, as: .json, named: snapshotName, record: true)
+          assertSnapshot(of: generation, as: .json, record: true, testName: snapshotName)
         }
       }
     }

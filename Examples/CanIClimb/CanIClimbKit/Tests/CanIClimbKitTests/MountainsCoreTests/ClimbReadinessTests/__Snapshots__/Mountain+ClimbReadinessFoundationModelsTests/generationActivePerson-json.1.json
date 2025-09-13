@@ -1,0 +1,13 @@
+{
+  "messages" : [
+
+  ],
+  "readiness" : {
+    "insight" : "Based on the information provided, you are not currently ready to climb Freel Peak. Although you have an active lifestyle with a workout frequency of every day and a high VO2 Max, your current step count is relatively low at 6000 steps per day, and your distance traveled through walking or running is only 2.3 kilometers per day. These metrics suggest that your cardiovascular endurance and stamina are insufficient for tackling the challenging 72-point difficulty rating of Freel Peak. Furthermore, the current weather conditions in South Lake Tahoe, California, where Freel Peak is located, appear to be overcast, which may affect visibility and climbing safety. To prepare for this climb, I recommend focusing on increasing your step count and distance traveled through regular walking or running, incorporating interval training to boost your cardiovascular fitness, and gradually acclimating to higher altitudes through simulated climbs or training at elevation. Additionally, monitoring the weather conditions closely before your climb and ensuring you have appropriate gear and safety measures in place will enhance your readiness.",
+    "rating" : {
+      "notReady" : {
+
+      }
+    }
+  }
+}

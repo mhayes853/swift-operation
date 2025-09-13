@@ -7,8 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		165C38702E1481F3003E775D /* CanIClimbKit in Frameworks */ = {isa = PBXBuildFile; productRef = 165C386F2E1481F3003E775D /* CanIClimbKit */; };
-		16B575DD2E3955A800113AC1 /* CanIClimbKit in Frameworks */ = {isa = PBXBuildFile; productRef = 16B575DC2E3955A800113AC1 /* CanIClimbKit */; };
+		164DF3E32E74D1C900F8483B /* CanIClimbKit in Frameworks */ = {isa = PBXBuildFile; productRef = 164DF3E22E74D1C900F8483B /* CanIClimbKit */; };
+		164DF3E52E74D1EC00F8483B /* CanIClimbKit in Frameworks */ = {isa = PBXBuildFile; productRef = 164DF3E42E74D1EC00F8483B /* CanIClimbKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -86,7 +86,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				16B575DD2E3955A800113AC1 /* CanIClimbKit in Frameworks */,
+				164DF3E52E74D1EC00F8483B /* CanIClimbKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -94,7 +94,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				165C38702E1481F3003E775D /* CanIClimbKit in Frameworks */,
+				164DF3E32E74D1C900F8483B /* CanIClimbKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -165,7 +165,7 @@
 			);
 			name = CanIClimbPreview;
 			packageProductDependencies = (
-				16B575DC2E3955A800113AC1 /* CanIClimbKit */,
+				164DF3E42E74D1EC00F8483B /* CanIClimbKit */,
 			);
 			productName = CanIClimbPreview;
 			productReference = 16B575D02E39559C00113AC1 /* CanIClimbPreview.app */;
@@ -188,7 +188,7 @@
 			);
 			name = CanIClimb;
 			packageProductDependencies = (
-				165C386F2E1481F3003E775D /* CanIClimbKit */,
+				164DF3E22E74D1C900F8483B /* CanIClimbKit */,
 			);
 			productName = CanIClimb;
 			productReference = 16E3E2EE2E1479B30057F981 /* CanIClimb.app */;
@@ -276,7 +276,7 @@
 			mainGroup = 16E3E2E52E1479B30057F981;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				165C386E2E1481F3003E775D /* XCLocalSwiftPackageReference "../CanIClimbKit" */,
+				164DF3E12E74D1C900F8483B /* XCLocalSwiftPackageReference "../CanIClimbKit" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 16E3E2EF2E1479B30057F981 /* Products */;
@@ -761,20 +761,20 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		165C386E2E1481F3003E775D /* XCLocalSwiftPackageReference "../CanIClimbKit" */ = {
+		164DF3E12E74D1C900F8483B /* XCLocalSwiftPackageReference "../CanIClimbKit" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../CanIClimbKit;
 		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		165C386F2E1481F3003E775D /* CanIClimbKit */ = {
+		164DF3E22E74D1C900F8483B /* CanIClimbKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = CanIClimbKit;
 		};
-		16B575DC2E3955A800113AC1 /* CanIClimbKit */ = {
+		164DF3E42E74D1EC00F8483B /* CanIClimbKit */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 165C386E2E1481F3003E775D /* XCLocalSwiftPackageReference "../CanIClimbKit" */;
+			package = 164DF3E12E74D1C900F8483B /* XCLocalSwiftPackageReference "../CanIClimbKit" */;
 			productName = CanIClimbKit;
 		};
 /* End XCSwiftPackageProductDependency section */

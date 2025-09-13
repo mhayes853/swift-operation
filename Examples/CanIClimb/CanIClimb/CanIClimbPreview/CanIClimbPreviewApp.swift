@@ -3,7 +3,7 @@ import CloudKit
 import Dependencies
 import IdentifiedCollections
 import Operation
-import SharingGRDB
+import SQLiteData
 import SharingOperation
 import SwiftUI
 import Tagged
@@ -27,7 +27,7 @@ struct CanIClimbPreviewApp: App {
       for i in 0..<10 {
         var mountains = IdentifiedArrayOf<Mountain>()
         for j in 0..<10 {
-          var mountain = Mountain.mock2
+          var mountain = Mountain.freelPeak
           mountain.name = "Mountain \((i + 1) * (j + 1))"
           mountain.id = Mountain.ID()
           mountain.location = Mountain.Location(
@@ -70,6 +70,10 @@ struct CanIClimbPreviewApp: App {
       $0[Mountain.PlannedClimbsLoaderKey.self] = plannedClimbs
 
       $0[WeatherReading.CurrentReaderKey.self] = WeatherReading.SucceedingCurrentReader()
+      
+      let location = MockUserLocation()
+      location.currentReading = .success(.mock(coordinate: .alcatraz))
+      $0[UserLocationKey.self] = location
 
       try $0.defaultDatabase.write {
         try InternalMetricsRecord.update(in: $0) { $0.hasCompletedOnboarding = true }
