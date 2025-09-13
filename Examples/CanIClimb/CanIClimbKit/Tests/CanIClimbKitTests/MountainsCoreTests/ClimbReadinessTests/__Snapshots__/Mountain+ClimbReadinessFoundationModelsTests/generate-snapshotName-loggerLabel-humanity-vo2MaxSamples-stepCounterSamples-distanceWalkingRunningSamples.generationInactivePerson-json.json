@@ -3,9 +3,9 @@
 
   ],
   "readiness" : {
-    "insight" : "Based on your VO2max and current fitness level, you are prepared to climb Freel Peak. However, you may need to prepare for the conditions at higher altitudes. Consider acclimatizing by doing some preparation climbs to build your endurance and strength. Also, make sure to check the weather forecast frequently to stay updated on any changes.",
+    "insight" : "Based on your current VO2 max, step count, and distance traveled, you are moderately prepared for climbing Freel Peak. However, your sedentary activity level and lack of training may require additional preparation, such as building endurance and strength, to ensure safety on the climb.",
     "rating" : {
-      "ready" : {
+      "partiallyReady" : {
 
       }
     }

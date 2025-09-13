@@ -7,6 +7,7 @@ import Operation
 extension Mountain.ClimbReadiness {
   public final class FoundationModelsGenerator: Generator {
     private let tools: [any Tool]
+    private let database: any DatabaseReader
 
     public init(
       database: any DatabaseReader,
@@ -15,9 +16,9 @@ extension Mountain.ClimbReadiness {
       stepCounterLoader: any NumericHealthSamples.Loader,
       distanceWalkingRunningLoader: any NumericHealthSamples.Loader
     ) {
+      self.database = database
       self.tools = [
         UserLocationTool(client: client).withLogging(),
-        UserHumanityTool(database: database).withLogging(),
         CurrentWeatherTool(client: client).withLogging(),
         NumericHealthSamplesTool(loader: vo2MaxLoader, client: client)
           .withLogging(),
@@ -30,13 +31,14 @@ extension Mountain.ClimbReadiness {
 
     public func readiness(
       for mountain: Mountain
-    ) async throws -> any AsyncSequence<GeneratedSegment, any Error> {
+    ) -> any AsyncSequence<GeneratedSegment, any Error> {
       let session = LanguageModelSession(tools: self.tools, instructions: .climbReadiness)
       return AsyncThrowingStream { continuation in
         let task = Task {
           do {
+            let humanity = try await self.humanity()
             let stream = session.streamResponse(
-              to: .climbReadiness(for: mountain),
+              to: .climbReadiness(for: mountain, humanity: humanity),
               generating: Mountain.ClimbReadiness.self
             )
             for try await snapshot in stream {
@@ -50,6 +52,12 @@ extension Mountain.ClimbReadiness {
           }
         }
         continuation.onTermination = { _ in task.cancel() }
+      }
+    }
+
+    private func humanity() async throws -> UserHumanityGenerable {
+      try await self.database.read { db in
+        UserHumanityGenerable(record: UserHumanityRecord.find(in: db))
       }
     }
   }
@@ -69,13 +77,11 @@ extension Instructions {
       preparation climbs, training regiments, nutrition advice, and other advice you deem useful.
 
       With each request make sure to invoke the tools available to you to learn more about the \
-      user.
+      user. Do not state any numerical facts about the user unless you get the numerical fact from \
+      a tool.
 
       Use the 'User Location' tool to obtain the user's current location, but note that the \
       user may have declined to share their location with you.
-
-      Use the 'User Humanity' tool to obtain the user's age, height, weight, gender, activity level, or workout \
-      frequency.
 
       Use the 'Current Weather' tool to obtain the current weather conditions for the mountain, or \
       the user's current location. You will need to provide the mountain's or the user's \
@@ -89,15 +95,6 @@ extension Instructions {
 
       Use the 'User Distance Traveled (Walking/Running)' tool to obtain the amount of distance \
       that the user travels each day by walking or running.
-
-      You will receive the mountain data in the following format.
-
-      NAME: <mountain name>
-      ELEVATION METERS: <mountain elevation>
-      DESCRIPTION: <mountain description>
-      LOCATION NAME: <mountain location>
-      LAT-LNG COORDINATE: <mountain latitude>, <mountain longitude>
-      CLIMBING DIFFICULTY: <mountain climbing difficulty out of 100>
       """
     }
   }
@@ -106,16 +103,23 @@ extension Instructions {
 // MARK: - Prompt
 
 extension Prompt {
-  fileprivate static func climbReadiness(for mountain: Mountain) -> Self {
+  fileprivate static func climbReadiness(
+    for mountain: Mountain,
+    humanity: UserHumanityGenerable
+  ) -> Self {
     Self {
       """
-      NAME: \(mountain.name)
-      ELEVATION METERS: \(mountain.elevation.converted(to: .meters).formatted(.measurement(width: .abbreviated, usage: .asProvided)))
-      DESCRIPTION: \(mountain.displayDescription)
-      LOCATION NAME: \(mountain.location.name.localizedStringResource)
-      LAT-LNG COORDINATE: \(mountain.location.coordinate.latitude), \(mountain.location.coordinate.longitude)
-      CLIMBING DIFFICULTY: \(mountain.difficulty.rawValue) out of 100
+      Asses whether or not the I'm ready to climb the mountain. Make sure to include \
+      recommendations for me as well.
       """
+      Mountain.Generable(mountain: mountain)
+
+      """
+      Here is some basic information about me, including my age, gender, and height. My \
+      activity level is a self-described measure of how physically active I think I am, so \
+      you may want to take it with a grain of salt.
+      """
+      humanity
     }
   }
 }

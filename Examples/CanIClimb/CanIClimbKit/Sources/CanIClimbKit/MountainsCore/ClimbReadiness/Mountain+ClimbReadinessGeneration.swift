@@ -1,21 +1,25 @@
+import CasePaths
 import Dependencies
 import FoundationModels
 import SQLiteData
 import SharingOperation
 
-// MARK: - Generator
+// MARK: - GeneratedSegment
 
 extension Mountain.ClimbReadiness {
+  @CasePathable
   public enum GeneratedSegment: Hashable, Sendable {
     case empty
     case partial(Mountain.ClimbReadiness.PartiallyGenerated)
     case full(Mountain.ClimbReadiness)
   }
+}
 
+// MARK: - Generator
+
+extension Mountain.ClimbReadiness {
   public protocol Generator: Sendable {
-    func readiness(
-      for mountain: Mountain
-    ) async throws -> any AsyncSequence<GeneratedSegment, any Error>
+    func readiness(for mountain: Mountain) -> any AsyncSequence<GeneratedSegment, any Error>
   }
 
   public enum GeneratorKey: DependencyKey {
@@ -47,16 +51,18 @@ extension Mountain.ClimbReadiness {
 
     public nonisolated func readiness(
       for mountain: Mountain
-    ) async throws -> any AsyncSequence<Mountain.ClimbReadiness.GeneratedSegment, any Error> {
-      if await self.shouldFail {
-        throw SomeError()
-      }
-      let segments = await self.segments
-      return AsyncThrowingStream {
-        for segment in segments {
-          $0.yield(segment)
+    ) -> any AsyncSequence<GeneratedSegment, any Error> {
+      AsyncThrowingStream { continuation in
+        Task {
+          guard !(await self.shouldFail) else {
+            continuation.finish(throwing: SomeError())
+            return
+          }
+          for segment in await self.segments {
+            continuation.yield(segment)
+          }
+          continuation.finish()
         }
-        $0.finish()
       }
     }
 
@@ -71,6 +77,8 @@ extension Mountain.ClimbReadiness {
     for mountain: Mountain
   ) -> some QueryRequest<GeneratedSegment, any Error> {
     GenerationQuery(mountain: mountain)
+      .disableApplicationActiveRerunning()
+      .satisfiedConnectionStatus(.disconnected)
   }
 
   public struct GenerationQuery: QueryRequest, Hashable {
@@ -82,12 +90,16 @@ extension Mountain.ClimbReadiness {
       with continuation: OperationContinuation<GeneratedSegment, any Error>
     ) async throws -> GeneratedSegment {
       @Dependency(Mountain.ClimbReadiness.GeneratorKey.self) var generator: any Generator
-      var segment = GeneratedSegment.empty
-      for try await s in try await generator.readiness(for: self.mountain) {
-        segment = s
-        continuation.yield(segment)
+
+      var context = context
+      context.operationClock = context.operationClock.frozen()
+
+      var currentSegment = GeneratedSegment.empty
+      for try await segment in generator.readiness(for: self.mountain) {
+        currentSegment = segment
+        continuation.yield(currentSegment, using: context)
       }
-      return segment
+      return currentSegment
     }
   }
 }

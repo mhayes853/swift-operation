@@ -225,7 +225,7 @@ extension Mountain {
         string:
           "https://tahoetrailguide.com/wp-content/uploads/2020/04/8-17-13_Hiking_Freel_Peak_Jobs_Sister_Jobs_Peak_2_Jared_Manninen_web.jpg"
       )!,
-      colorScheme: .dark
+      colorScheme: .light
     )
   )
 }

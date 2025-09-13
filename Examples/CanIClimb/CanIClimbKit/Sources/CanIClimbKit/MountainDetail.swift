@@ -54,7 +54,10 @@ public final class MountainDetailModel: HashableObject, Identifiable {
       if self.travelEstimates?.mountain != mountain {
         self.travelEstimates = MountainTravelEstimatesModel(mountain: mountain)
       }
-      self._readiness = SharedOperation(Mountain.ClimbReadiness.generationQuery(for: mountain))
+      self._readiness = SharedOperation(
+        Mountain.ClimbReadiness.generationQuery(for: mountain),
+        animation: .default
+      )
     case .result(.failure), .result(.success(nil)):
       self.weather = nil
       self.travelEstimates = nil
@@ -256,6 +259,8 @@ private struct MountainImageLabel: View {
 // MARK: - MountainDetailsView
 
 private struct MountainDetailsView: View {
+  @Environment(\.systemLanguageModelAvailability) var appleIntelligenceAvailability
+
   let model: MountainDetailModel
   let mountain: Mountain
 
@@ -283,6 +288,57 @@ private struct MountainDetailsView: View {
             .frame(height: self.travelEstimatesSize)
         }
       }
+
+      if self.appleIntelligenceAvailability == .available {
+        MountainDetailSectionView(title: "Climb Readiness") {
+          MountainClimbReadinessView(model: self.model)
+        }
+      }
+    }
+  }
+}
+
+// MARK: - MountainClimbReadinessView
+
+private struct MountainClimbReadinessView: View {
+  let model: MountainDetailModel
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 10) {
+      switch self.model.readiness {
+      case .full(let full):
+        Text(full.rating.title).font(.title.bold())
+        Text(full.insight)
+      case .partial(let partial):
+        if let rating = partial.rating {
+          Text(rating.title).font(.title.bold())
+        }
+        if let insight = partial.insight {
+          Text(insight)
+        }
+      default:
+        EmptyView()
+      }
+
+      if !self.model.readiness.is(\.full) {
+        SpinnerView()
+      }
+
+      if let lastUpdatedAt = self.model.$readiness.valueLastUpdatedAt {
+        Text("Generated on: \(lastUpdatedAt.formatted())")
+          .font(.footnote)
+          .foregroundStyle(.secondary)
+      }
+    }
+  }
+}
+
+extension Mountain.ClimbReadiness.Rating {
+  fileprivate var title: LocalizedStringResource {
+    switch self {
+    case .notReady: "Not Ready"
+    case .partiallyReady: "Partially Ready"
+    case .ready: "Ready"
     }
   }
 }

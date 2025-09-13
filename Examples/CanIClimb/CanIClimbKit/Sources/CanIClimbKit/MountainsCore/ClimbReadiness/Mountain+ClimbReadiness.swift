@@ -1,3 +1,5 @@
+import CasePaths
+import Foundation
 import FoundationModels
 
 // MARK: - ClimbReadiness
