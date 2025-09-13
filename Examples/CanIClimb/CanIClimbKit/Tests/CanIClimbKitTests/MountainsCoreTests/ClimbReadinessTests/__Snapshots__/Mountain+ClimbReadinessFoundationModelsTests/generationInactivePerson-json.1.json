@@ -1,9 +1,48 @@
 {
   "messages" : [
-
+    {
+      "content" : "'userVO2Max' tool called.",
+      "metadata" : {
+        "call.arguments" : {
+          "string" : {
+            "_0" : "Arguments(query: \"last 6 weeks\")"
+          }
+        },
+        "call.duration" : {
+          "string" : {
+            "_0" : "0.002202625 seconds"
+          }
+        },
+        "call.result" : {
+          "string" : {
+            "_0" : "success(CanIClimbKit.NumericHealthSamples.Response.samples(CanIClimbKit.NumericHealthSamples(kind: CanIClimbKit.NumericHealthSamples.Kind.vo2Max, elements: [CanIClimbKit.NumericHealthSamples.Element(timestamp: 2025-09-13 20:09:59 +0000, value: 33.4)])))"
+          }
+        }
+      }
+    },
+    {
+      "content" : "'userLocation' tool called.",
+      "metadata" : {
+        "call.arguments" : {
+          "string" : {
+            "_0" : "Arguments()"
+          }
+        },
+        "call.duration" : {
+          "string" : {
+            "_0" : "0.003430792 seconds"
+          }
+        },
+        "call.result" : {
+          "string" : {
+            "_0" : "success(CanIClimbKit.UserLocationTool.Output.reading(CanIClimbKit.LocationReading.Generable(coordinate: CanIClimbKit.LocationCoordinate2D.Generable(latitude: 37.825858, longitude: -122.422202), altitudeAboveSeaLevelMeters: 0.0)))"
+          }
+        }
+      }
+    }
   ],
   "readiness" : {
-    "insight" : "Based on the information provided, you are partially ready for climbing Freel Peak. Your activity level is sedentary, which means you may need to increase your physical activity to build the necessary endurance and strength. Additionally, climbing a mountain of this difficulty requires more than just physical capability; it also involves mental preparation and acclimatization to altitude changes. To improve your readiness, consider incorporating regular strength and cardiovascular training into your routine. Increasing your workout frequency to a few days per week can help improve your fitness level. It's also beneficial to acclimate to altitude gradually, perhaps by doing shorter hikes or training on trails with similar elevation gains. Finally, ensure you are well-prepared for changing weather conditions by checking forecasts and having appropriate gear ready.",
+    "insight" : "Based on your VO2 Max of 33.4 ml\/kg\/min and a sedentary activity level, you have some cardio fitness but lack the stamina needed for a difficult climb like Freel Peak. Freel Peak is rated 72.0 out of 100 in climbing difficulty, requiring a higher level of fitness and experience. To prepare, consider incorporating regular cardio exercises, strength training, and gradually increase your climbing experience. Aim for at least 3-4 times a week of walking or running, and start with easier hikes to build endurance and strength.",
     "rating" : {
       "partiallyReady" : {
 

@@ -276,6 +276,12 @@ private struct MountainDetailsView: View {
         #endif
       }
 
+      if self.appleIntelligenceAvailability == .available {
+        MountainDetailSectionView(title: "Climb Readiness") {
+          MountainClimbReadinessView(model: self.model)
+        }
+      }
+
       if let weatherModel = self.model.weather {
         MountainDetailSectionView(title: "Weather Comparison") {
           MountainWeatherView(model: weatherModel)
@@ -286,12 +292,6 @@ private struct MountainDetailsView: View {
         MountainDetailSectionView(title: "Directions") {
           MountainTravelEstimatesView(model: travelEstimatesModel)
             .frame(height: self.travelEstimatesSize)
-        }
-      }
-
-      if self.appleIntelligenceAvailability == .available {
-        MountainDetailSectionView(title: "Climb Readiness") {
-          MountainClimbReadinessView(model: self.model)
         }
       }
     }

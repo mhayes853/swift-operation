@@ -80,21 +80,23 @@ extension Instructions {
       user. Do not state any numerical facts about the user unless you get the numerical fact from \
       a tool.
 
-      Use the 'User Location' tool to obtain the user's current location, but note that the \
+      Use the 'userLocation' tool to obtain the user's current location, but note that the \
       user may have declined to share their location with you.
 
-      Use the 'Current Weather' tool to obtain the current weather conditions for the mountain, or \
+      Use the 'currentWeather' tool to obtain the current weather conditions for the mountain, or \
       the user's current location. You will need to provide the mountain's or the user's \
       latitude-longitude coordinate to the tool.
 
-      Use the 'User VO2Max' to obtain the user's vo2max. When using this tool, make sure to \
+      Use the 'userVO2Max' to obtain the user's vo2max. When using this tool, make sure to \
       invoke it with a duration of at least 6 weeks to be able to get enough samples to identify \
       trends.
 
-      Use the 'User Step Count' tool to obtain the user's step count on a day to day basis.
+      Use the 'userStepCount' tool to obtain the user's step count on a day to day basis.
 
-      Use the 'User Distance Traveled (Walking/Running)' tool to obtain the amount of distance \
+      Use the 'userDistanceTraveledWalkingRunning' tool to obtain the amount of distance \
       that the user travels each day by walking or running.
+
+      Make sure to always address the user directly, and not from a third person perspective.
       """
     }
   }
@@ -121,9 +123,6 @@ extension Prompt {
 
       DO NOT TELL ME WHAT MY VO2 MAX, STEP COUNT, DAILY DISTANCE TRAVELED, OR WEATHER CONDITIONS \
       ARE IF YOU DID NOT GET THEM BY INVOKING THE APPROPRIATE TOOLS.
-
-      MAKE SURE TO CALL THE APPROPRIATE TOOLS SO THAT YOU CAN SAFELY ENCORPORATE MY VO2 MAX, STEP \
-      COUNT, DAILY DISTANCE TRAVELED, AND MOUNTAIN WEATHER CONDITIONS IN YOUR ASSESSMENT.
       """
       humanity
     }

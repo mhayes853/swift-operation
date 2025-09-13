@@ -2,8 +2,9 @@ import FoundationModels
 import Operation
 
 public struct CurrentWeatherTool: Tool {
-  public let name = "Current Weather"
-  public let description = "Provides the current weather conditions for a lat-lng coordinate"
+  public let name = "currentWeather"
+  public let description =
+    "Provides the current weather conditions for a latitude - longitude coordinate."
 
   @Generable
   public struct Arguments: Hashable, Sendable {

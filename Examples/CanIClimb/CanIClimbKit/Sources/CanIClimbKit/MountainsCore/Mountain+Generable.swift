@@ -4,12 +4,25 @@ import FoundationModels
 extension Mountain {
   @Generable
   public struct Generable: Hashable, Sendable {
+    @Guide(description: "The name of the mountain.")
     public var name: String
+
+    @Guide(description: "A textual description of the mountain.")
     public var description: String
+
+    @Guide(description: "The elevation of the mountain's peak in meters.")
     public var peakElevation: String
+
+    @Guide(description: "A human-readable name for the mountain's location.")
     public var locationName: String
+
+    @Guide(description: "A latitude - longitude coordinate of the mountain's location.")
     public var locationCoordinate: LocationCoordinate2D.Generable
+
+    @Guide(description: "A textual description of the mountain's climbing difficulty out of 100.")
     public var climbingDifficulty: String
+
+    @Guide(description: "A textual description of the mountain's climbing difficulty rating.")
     public var climbingDifficultyRating: String
 
     public init(mountain: Mountain) {

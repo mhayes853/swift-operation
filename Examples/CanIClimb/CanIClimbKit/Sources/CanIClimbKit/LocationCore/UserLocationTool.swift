@@ -2,8 +2,9 @@ import FoundationModels
 import Operation
 
 public struct UserLocationTool: Tool {
-  public let name = "User Location"
-  public let description = "Provides the user's current location"
+  public let name = "userLocation"
+  public let description =
+    "Provides the user's current location as a latitude and longitude coordinate."
 
   @Generable
   public struct Arguments: Sendable {}

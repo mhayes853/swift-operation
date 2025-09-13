@@ -18,18 +18,29 @@ public struct NumericHealthSamplesTool: Tool {
 
   public var name: String {
     switch self.loader.kind {
-    case .distanceWalkingRunningMeters: "User Distance Traveled (Walking/Running)"
-    case .stepCount: "User Step Count"
-    case .vo2Max: "User VO2Max"
+    case .distanceWalkingRunningMeters: "userDistanceTraveledWalkingRunning"
+    case .stepCount: "userStepCount"
+    case .vo2Max: "userVO2Max"
     }
   }
 
   public var description: String {
     switch self.loader.kind {
     case .distanceWalkingRunningMeters:
-      "Provides the distance (in meters) traveled by the user during walking or running activities."
-    case .stepCount: "Provides the number of steps taken by the user on a day to day basis."
-    case .vo2Max: "Provides VO2 Max samples from the user's health data."
+      """
+      Provides the distance (in meters) traveled by the user during walking or running activities. \
+      Use this as a measure of physical activity intensity.
+      """
+    case .stepCount:
+      """
+      Provides the number of steps taken by the user on a day to day basis. \
+      Use this as a measure of physical activity frequency.
+      """
+    case .vo2Max:
+      """
+      Provides VO2 Max samples from the user's health data. \
+      Use this to determine their cardio fitness level.
+      """
     }
   }
 
