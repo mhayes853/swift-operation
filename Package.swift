@@ -47,7 +47,8 @@ let package = Package(
     .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.4.3"),
     .package(url: "https://github.com/pointfreeco/swift-navigation", from: "2.3.1"),
     .package(url: "https://github.com/apple/swift-log", from: "1.6.3"),
-    .package(url: "https://github.com/apple/swift-atomics", from: "1.3.0")
+    .package(url: "https://github.com/apple/swift-atomics", from: "1.3.0"),
+    .package(url: "https://github.com/pointfreeco/swift-perception", from: "2.0.7")
   ],
   targets: [
     .target(
@@ -170,6 +171,7 @@ if Context.environment["TEST_WASM"] != "1" {
           "SharingOperation",
           "OperationTestHelpers",
           .product(name: "CustomDump", package: "swift-custom-dump"),
+          .product(name: "Perception", package: "swift-perception"),
           .product(name: "IssueReportingTestSupport", package: "xctest-dynamic-overlay")
         ]
       ),

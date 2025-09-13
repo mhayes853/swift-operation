@@ -24,12 +24,14 @@ struct OperationStateKey<
   func load(context: LoadContext<Value>, continuation: LoadContinuation<Value>) {
     switch context {
     case .initialValue:
-      continuation.resume(returning: Value(store: self.store))
+      continuation.resume(returning: Value(store: self.store, isBacked: true))
     case .userInitiated:
       Task<Void, Never> {
         do {
           try await self.store.run()
-          self.scheduler.schedule { continuation.resume(returning: Value(store: self.store)) }
+          self.scheduler.schedule {
+            continuation.resume(returning: Value(store: self.store, isBacked: true))
+          }
         } catch {
           self.scheduler.schedule { continuation.resume(throwing: error) }
         }
@@ -49,7 +51,7 @@ struct OperationStateKey<
     let subscription = self.store.subscribe(
       with: OperationEventHandler { state, _ in
         self.scheduler.schedule {
-          let value = Value(store: self.store)
+          let value = Value(store: self.store, isBacked: true)
           subscriber.yield(value)
           if let error = state.error {
             subscriber.yield(throwing: error)
@@ -83,10 +85,12 @@ extension OperationStateKeyID: Hashable {
 
 struct OperationStateKeyValue<State: OperationState & Sendable> {
   var currentValue: State.StateValue
+  let isBacked: Bool
   let store: OperationStore<State>
 
-  init(store: OperationStore<State>) {
+  init(store: OperationStore<State>, isBacked: Bool) {
     self.store = store
     self.currentValue = store.currentValue
+    self.isBacked = isBacked
   }
 }

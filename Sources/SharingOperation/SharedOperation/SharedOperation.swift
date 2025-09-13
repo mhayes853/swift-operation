@@ -47,7 +47,9 @@ public struct SharedOperation<State: OperationState & Sendable>: Sendable {
   ///
   /// This property is true if this shared query was not created with a `QueryRequest` through
   /// ``init(initialState:)``.
-  public private(set) var isBacked = true
+  public var isBacked: Bool {
+    self.value.isBacked
+  }
 
   public var wrappedValue: State.StateValue {
     get { self.value.currentValue }
@@ -92,10 +94,10 @@ public struct SharedOperation<State: OperationState & Sendable>: Sendable {
   public init(initialState: State) {
     self._value = Shared(
       value: OperationStateKeyValue(
-        store: .detached(operation: UnbackedOperation(), initialState: initialState)
+        store: .detached(operation: UnbackedOperation(), initialState: initialState),
+        isBacked: false
       )
     )
-    self.isBacked = false
   }
 }
 
@@ -148,7 +150,7 @@ extension SharedOperation {
     scheduler: some SharedOperationStateScheduler = .synchronous
   ) {
     self._value = Shared(
-      wrappedValue: OperationStateKeyValue(store: store),
+      wrappedValue: OperationStateKeyValue(store: store, isBacked: true),
       OperationStateKey(store: store, scheduler: scheduler)
     )
   }

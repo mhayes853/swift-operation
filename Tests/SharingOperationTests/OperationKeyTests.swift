@@ -1,11 +1,14 @@
 import CustomDump
 import Dependencies
+import Operation
 @_spi(Warnings) import OperationTestHelpers
+import Perception
+import PerceptionCore
 @_spi(Warnings) import SharingOperation
 import Testing
 
-@Suite("QueryKey tests")
-struct QueryKeyTests {
+@Suite("OperationKey tests")
+struct OperationKeyTests {
   @Test("Nil Value Initially")
   func nilValueInitially() async throws {
     @Dependency(\.defaultOperationClient) var client
@@ -123,4 +126,31 @@ struct QueryKeyTests {
       }
     }
   #endif
+
+  @MainActor
+  @Test("IsBacked Observation")
+  func isBackedObservation() {
+    let model = IsBackedModel()
+
+    let didChange = Lock(false)
+    withPerceptionTracking {
+      _ = model.$value.isBacked
+    } onChange: {
+      didChange.withLock { $0 = true }
+    }
+
+    model.back()
+    didChange.withLock { expectNoDifference($0, true) }
+  }
+}
+
+@MainActor
+@Perceptible
+private final class IsBackedModel {
+  @PerceptionIgnored
+  @SharedOperation<EmptyMutation.State> var value = "blob"
+
+  func back() {
+    self.$value = SharedOperation(wrappedValue: nil, EmptyMutation())
+  }
 }

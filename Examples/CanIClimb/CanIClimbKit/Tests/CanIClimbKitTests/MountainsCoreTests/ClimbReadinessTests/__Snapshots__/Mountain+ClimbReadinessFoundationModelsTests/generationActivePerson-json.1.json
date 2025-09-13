@@ -3,9 +3,9 @@
 
   ],
   "readiness" : {
-    "insight" : "Based on your self-reported activity level and the current VO2 Max data, you are partially prepared for climbing Freel Peak. To better prepare, consider incorporating more endurance training, such as long-distance hikes and stair climbing. Additionally, focus on strength training exercises to enhance your climbing capabilities.",
+    "insight" : "Based on your self-reported physical activity level and workout frequency, along with your height and weight, you appear to be in good physical condition. However, you should consider doing some preparation climbs to build your endurance and strength further. Also, ensure that you are well hydrated and have the appropriate gear for the weather conditions on Freel Peak.",
     "rating" : {
-      "partiallyReady" : {
+      "ready" : {
 
       }
     }
