@@ -116,13 +116,19 @@ public struct MountainWeatherView: View {
         }
       } else {
         VStack {
-          HStack(alignment: .center) {
-            WeatherSnippetView(model: model, detail: model.userWeatherDetail)
-              .frame(maxWidth: .infinity)
+          HStack {
+            VStack {
+              WeatherSnippetView(model: model, detail: model.userWeatherDetail)
+              Spacer()
+            }
+            .frame(maxWidth: .infinity)
             Divider()
               .padding(.horizontal)
-            WeatherSnippetView(model: model, detail: model.mountainWeatherDetail)
-              .frame(maxWidth: .infinity)
+            VStack {
+              WeatherSnippetView(model: model, detail: model.mountainWeatherDetail)
+              Spacer()
+            }
+            .frame(maxWidth: .infinity)
           }
           HStack {
             Spacer()

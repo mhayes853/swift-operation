@@ -54,14 +54,14 @@ public final class MountainDetailModel: HashableObject, Identifiable {
       if self.travelEstimates?.mountain != mountain {
         self.travelEstimates = MountainTravelEstimatesModel(mountain: mountain)
       }
-      self._readiness = SharedOperation(
+      self.$readiness = SharedOperation(
         Mountain.ClimbReadiness.generationQuery(for: mountain),
         animation: .default
       )
     case .result(.failure), .result(.success(nil)):
       self.weather = nil
       self.travelEstimates = nil
-      self._readiness = SharedOperation()
+      self.$readiness = SharedOperation()
     default:
       break
     }
@@ -308,20 +308,30 @@ private struct MountainClimbReadinessView: View {
       switch self.model.readiness {
       case .full(let full):
         Text(full.rating.title).font(.title.bold())
-        Text(full.insight)
+        HStack {
+          Text(full.insight)
+          Spacer()
+        }
       case .partial(let partial):
         if let rating = partial.rating {
           Text(rating.title).font(.title.bold())
         }
         if let insight = partial.insight {
-          Text(insight)
+          HStack {
+            Text(insight)
+            Spacer()
+          }
         }
       default:
         EmptyView()
       }
 
       if !self.model.readiness.is(\.full) {
-        SpinnerView()
+        HStack {
+          Spacer()
+          SpinnerView()
+          Spacer()
+        }
       }
 
       if let lastUpdatedAt = self.model.$readiness.valueLastUpdatedAt {
