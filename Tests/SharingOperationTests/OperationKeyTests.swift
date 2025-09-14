@@ -6,6 +6,7 @@ import Perception
 import PerceptionCore
 @_spi(Warnings) import SharingOperation
 import Testing
+import XCTest
 
 @Suite("OperationKey tests")
 struct OperationKeyTests {
@@ -126,21 +127,23 @@ struct OperationKeyTests {
       }
     }
   #endif
+}
 
+final class OperationKeyXCTests: XCTestCase, @unchecked Sendable {
   @MainActor
-  @Test("IsBacked Observation")
-  func isBackedObservation() {
+  func testIsBackedObservation() async {
+    let expectation = self.expectation(description: "changes")
     let model = IsBackedModel()
 
     let didChange = Lock(false)
     withPerceptionTracking {
       _ = model.$value.isBacked
     } onChange: {
-      didChange.withLock { $0 = true }
+      expectation.fulfill()
     }
 
     model.back()
-    didChange.withLock { expectNoDifference($0, true) }
+    await self.fulfillment(of: [expectation], timeout: 1)
   }
 }
 
