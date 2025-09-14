@@ -46,9 +46,10 @@ extension DependenciesTestSuite {
       distanceWalkingRunningSamples: NumericHealthSamples
     ) async throws {
       let toolLogHandler = ToolLogHandler()
-      let logger = Logger(label: loggerLabel) { label in
+      var logger = Logger(label: loggerLabel) { label in
         MultiplexLogHandler([toolLogHandler, StreamLogHandler.standardOutput(label: label)])
       }
+      logger.handler.logLevel = .debug
       let mountain = Mountain.freelPeak
 
       try await withDependencies {
@@ -73,15 +74,15 @@ extension DependenciesTestSuite {
           client: client,
           vo2MaxLoader: NumericHealthSamples.SucceedingLoader(
             kind: .vo2Max,
-            response: .samples(vo2MaxSamples)
+            response: vo2MaxSamples
           ),
           stepCounterLoader: NumericHealthSamples.SucceedingLoader(
             kind: .stepCount,
-            response: .samples(stepCounterSamples)
+            response: stepCounterSamples
           ),
           distanceWalkingRunningLoader: NumericHealthSamples.SucceedingLoader(
             kind: .distanceWalkingRunningMeters,
-            response: .samples(distanceWalkingRunningSamples)
+            response: distanceWalkingRunningSamples
           )
         )
 

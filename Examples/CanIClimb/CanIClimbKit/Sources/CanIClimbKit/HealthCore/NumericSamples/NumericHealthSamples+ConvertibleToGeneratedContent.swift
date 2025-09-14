@@ -1,19 +1,5 @@
 import FoundationModels
 
-// MARK: - Response
-
-extension NumericHealthSamples.Response: ConvertibleToGeneratedContent {
-  public var generatedContent: GeneratedContent {
-    switch self {
-    case .permissionDenied:
-      GeneratedContent("Permission Denied")
-
-    case .samples(let samples):
-      samples.generatedContent
-    }
-  }
-}
-
 // MARK: - Samples
 
 extension NumericHealthSamples: ConvertibleToGeneratedContent {

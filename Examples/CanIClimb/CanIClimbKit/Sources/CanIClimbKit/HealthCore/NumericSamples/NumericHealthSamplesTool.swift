@@ -49,7 +49,7 @@ public struct NumericHealthSamplesTool: Tool {
     self.client = client
   }
 
-  public func call(arguments: Arguments) async throws -> NumericHealthSamples.Response {
+  public func call(arguments: Arguments) async throws -> NumericHealthSamples {
     let store = self.client.store(
       for: NumericHealthSamples.query(
         for: NumericHealthSamples.Request(query: arguments.query),

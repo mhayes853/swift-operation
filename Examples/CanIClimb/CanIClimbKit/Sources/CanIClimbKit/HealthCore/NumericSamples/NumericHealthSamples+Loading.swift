@@ -73,38 +73,29 @@ extension NumericHealthSamples.Request {
   }
 }
 
-// MARK: - Response
-
-extension NumericHealthSamples {
-  public enum Response: Hashable, Sendable {
-    case permissionDenied
-    case samples(NumericHealthSamples)
-  }
-}
-
 // MARK: - Loader
 
 extension NumericHealthSamples {
   public protocol Loader: Sendable, Identifiable where ID: Sendable {
     var kind: Kind { get }
 
-    func samples(from request: Request) async throws -> Response
+    func samples(from request: Request) async throws -> NumericHealthSamples
   }
 }
 
 extension NumericHealthSamples {
   public final class SucceedingLoader: Loader {
     public let kind: NumericHealthSamples.Kind
-    public let response: Response
+    public let response: NumericHealthSamples
 
-    public init(kind: NumericHealthSamples.Kind, response: Response) {
+    public init(kind: NumericHealthSamples.Kind, response: NumericHealthSamples) {
       self.kind = kind
       self.response = response
     }
 
     public func samples(
       from request: NumericHealthSamples.Request
-    ) async throws -> NumericHealthSamples.Response {
+    ) async throws -> NumericHealthSamples {
       self.response
     }
   }
@@ -116,7 +107,7 @@ extension NumericHealthSamples {
   public static func query(
     for request: Request,
     using loader: any Loader
-  ) -> some QueryRequest<Response, any Error> {
+  ) -> some QueryRequest<NumericHealthSamples, any Error> {
     Query(loader: loader, request: request)
   }
 
@@ -131,8 +122,8 @@ extension NumericHealthSamples {
     public func fetch(
       isolation: isolated (any Actor)?,
       in context: OperationContext,
-      with continuation: OperationContinuation<Response, any Error>
-    ) async throws -> Response {
+      with continuation: OperationContinuation<NumericHealthSamples, any Error>
+    ) async throws -> NumericHealthSamples {
       try await self.loader.samples(from: self.request)
     }
   }
