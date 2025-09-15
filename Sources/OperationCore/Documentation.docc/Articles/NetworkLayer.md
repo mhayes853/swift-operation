@@ -6,7 +6,7 @@ Learn how to best use the library alongside your app's network layer.
 
 One of the library's guiding design principles is to not care about what architecture or platforms you're building with. For all intensive purposes, those details should be left to your specific project, and the library should be usable regardless of how you do things.
 
-At it's core, the ``QueryRequest`` protocol works with _any_ async function, and is not inherently tied to network requests. This design gives you the flexibility to use the library no matter how your data is fetched. For simple apps it may very well be fine to fetch data using `URLSession` directly inside ``QueryRequest/fetch(in:with:)``, but for a larger more complicated application you'll almost certainly want a sophisticated network layer that encapsulates the details of how data is fetched.
+At it's core, the ``OperationRequest`` protocol works with _any_ async function, and is not inherently tied to network requests. This design gives you the flexibility to use the library no matter how your data is fetched. For simple apps it may very well be fine to fetch data using `URLSession` directly inside ``QueryRequest/fetch(isolation:in:with:)``, but for a larger more complicated application you'll almost certainly want a sophisticated network layer that encapsulates the details of how data is fetched.
 
 ***Swift Operation is designed to enhance your app's network logic regardless if it's represented by a sophisticated network layer or not.***
 
@@ -25,7 +25,7 @@ struct User: Codable {
 }
 
 extension User {
-  static func query(for id: Int) -> some QueryRequest<Self, Query.State> {
+  static func query(for id: Int) -> some QueryRequest<Self, any Error> {
     Query(id: id)
   }
 
@@ -33,8 +33,9 @@ extension User {
     let id: Int
 
     func fetch(
+      isolation: isolated (any Actor)?,
       in context: OperationContext,
-      with continuation: OperationContinuation<User>
+      with continuation: OperationContinuation<User, any Error>
     ) async throws -> User {
       let url = URL(string: "https://api.myapp.com/user/\(self.id)")!
       let (data, _) = try await URLSession.shared.data(from: url)
@@ -55,7 +56,7 @@ struct User: Codable {
 }
 
 extension User {
-  static func query(for id: Int) -> some QueryRequest<Self, Query.State> {
+  static func query(for id: Int) -> some QueryRequest<Self, any Error> {
     Query(id: id)
   }
 
@@ -63,8 +64,9 @@ extension User {
     let id: Int
 
     func fetch(
+      isolation: isolated (any Actor)?,
       in context: OperationContext,
-      with continuation: OperationContinuation<User>
+      with continuation: OperationContinuation<User, any Error>
     ) async throws -> User {
       try await context.myAppAPI.fetchUser(with: self.id)
     }
