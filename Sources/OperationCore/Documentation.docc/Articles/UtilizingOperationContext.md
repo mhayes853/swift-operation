@@ -4,41 +4,11 @@ Learn how to best use the ``OperationContext`` to facilitate dependency injectio
 
 ## Overview
 
-The `OperationContext` is a powerful tool utilized by many types in the library. In fact, every ``QueryRequest`` you create gets access to it.
+The `OperationContext` is a powerful tool used by many types in the library, and is accessible from within an operation. You can use the context as configuration, or even as a way to inject dependencies into your operations.
 
-```swift
-struct PlayerQuery: QueryRequest, Hashable {
-  let id: Int
+At it's core, the context is a flexible, strongly typed, and extendable key-value store. This means you can easily add custom properties to it.
 
-  func fetch(
-    in context: OperationContext,
-    using continuation: OperationContinuation<Player>
-  ) async throws -> Player {
-    // We can use the context in here...
-  }
-}
-```
-
-Inside a query, the `OperationContext` provides many different properties for the current execution context. For instance, you can access the current retry index allowing you to adjust your fetching behavior based on the number of retries.
-
-```swift
-struct PlayerQuery: QueryRequest, Hashable {
-  let id: Int
-
-  func fetch(
-    in context: OperationContext,
-    using continuation: OperationContinuation<Player>
-  ) async throws -> Player {
-    if context.retryIndex > 0 {
-      // Fetch considering how many times we've retried...
-    } else {
-      // Fetch normally...
-    }
-  }
-}
-```
-
-Yet the power of `OperationContext` is greater.
+Operations and operation modifiers also have the opportunity to setup the context through ``OperationRequest/setup(context:)-9fupm`` and ``OperationModifier/setup(context:using:)-40ul6`` respectively.
 
 ## Adding Custom Properties to OperationContext
 
@@ -82,8 +52,9 @@ struct PlayerQuery: QueryRequest, Hashable {
   let id: Int
 
   func fetch(
+    isolation: isolated (any Actor)?,
     in context: OperationContext,
-    using continuation: OperationContinuation<Player>
+    using continuation: OperationContinuation<Player, any Error>
   ) async throws -> Player {
     if context.customProperty == "hello!" {
       // Fetch...
@@ -113,7 +84,7 @@ extension OperationContext {
 
 ## Setting Up The Context
 
-The `QueryRequest` protocol has an optional requirement to setup a `OperationContext` in a way that the query likes. This method is ran a single time when a ``OperationStore`` for the query is initialized.
+The `OperationRequest` protocol has an optional requirement to setup a `OperationContext` in a way that the operation likes. This method is ran a single time when a ``OperationStore`` for the operation is initialized.
 
 ```swift
 struct SomeQuery: QueryRequest, Hashable {
@@ -151,7 +122,7 @@ struct Post: Sendable {
 }
 
 extension Post {
-  static func query(for id: Int) -> some QueryRequest<Self, Query.State> {
+  static func query(for id: Int) -> some QueryRequest<Self, any Error> {
     Query(id: id)
   }
 
@@ -159,8 +130,9 @@ extension Post {
     let id: Int
 
     func fetch(
+      isolation: isolated (any Actor)?,
       in context: OperationContext,
-      with continuation: OperationContinuation<Post>
+      with continuation: OperationContinuation<Post, any Error>
     ) async throws -> Post {
       let url = URL(
         string: "https://jsonplaceholder.typicode.com/posts/\(id)"
@@ -202,8 +174,9 @@ struct Query: QueryRequest, Hashable {
   let id: Int
 
   func fetch(
+    isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<Post>
+    with continuation: OperationContinuation<Post, any Error>
   ) async throws -> Post {
     let url = URL(
       string: "https://jsonplaceholder.typicode.com/posts/\(id)"
@@ -277,7 +250,7 @@ try await store.fetch()
 
 ### Overriding Delays
 
-The ``QueryDelayer`` protocol is used to artificially delay queries in the case of retries. By default, query retries utilize [Fibonacci Backoff](https://thuc.space/posts/retry_strategies/#fibonacci-backoff) where the query will be artificially delayed by an increasing amount of time based on the current retry index.
+The ``OperationDelayer`` protocol is used to artificially delay queries in the case of retries. By default, query retries utilize [Fibonacci Backoff](https://thuc.space/posts/retry_strategies/#fibonacci-backoff) where the query will be artificially delayed by an increasing amount of time based on the current retry index.
 
 For testing, this delay may be unacceptable, but thankfully you can override the `QueryDelayer` on the context to remove delays.
 
@@ -286,7 +259,7 @@ let store = OperationStore.detached(
   query: Post.query(for: 1),
   initialValue: nil
 )
-store.context.queryDelayer = .noDelay
+store.context.operationDelayer = .noDelay
 
 try await store.fetch() // Will incur no retry delays.
 ```
