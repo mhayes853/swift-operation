@@ -4,7 +4,7 @@ Learn how to best use the ``OperationRunSpecification`` protocol to control how 
 
 ## Overview
 
-The `OperationRunSpecification` protocol describes a set of conditions that can be used to determine when a query should fetch its data. For instance, ``NetworkConnectionRunSpecification`` utilizes a ``NetworkObserver`` to determine whether or not the current network connection status is suitable for fetching data. Additionally, ``ApplicationIsActiveRunSpecification`` (or `WindowIsVisibleRunSpecification` on WASM) listens for changes in the app's resign active state, which allows for automatic refetching when the app becomes active again.
+The `OperationRunSpecification` protocol describes a set of conditions that can be used to determine when a query should fetch its data. For instance, ``NetworkConnectionRunSpecification`` utilizes a ``NetworkObserver`` to determine whether or not the current network connection status is suitable for fetching data. Additionally, ``ApplicationIsActiveRunSpecification`` listens for changes in the app's resign active state, which allows for automatic refetching when the app becomes active again.
 
 The library provides many built-in modifiers that utilize fetch conditions. Let's explore how some of these modifiers work, and how you can create your own `OperationRunSpecification` conformances that take advantage of these modifiers.
 
@@ -52,7 +52,7 @@ The example above will refetch the query whenever the network comes back online 
 
 ## Stale When Revalidate
 
-`OperationStore` has a notion of stale-when-revalidate when fetching data. When a new subscriber is added to the store via ``OperationStore/subscribe(with:)-93jyd``, the store will refetch the data if both ``OperationStore/isStale`` and ``OperationStore/isAutomaticFetchingEnabled`` are true. You can control the value of `isStale` via a `OperationRunSpecification`.
+`OperationStore` has a notion of stale-when-revalidate when fetching data. When a new subscriber is added to the store via ``OperationStore/subscribe(with:)-(OperationEventHandler<State>)``, the store will refetch the data if both ``OperationStore/isStale`` and ``OperationStore/isAutomaticRunningEnabled`` are true. You can control the value of `isStale` via a `OperationRunSpecification`.
 
 ```swift
 import Combine
