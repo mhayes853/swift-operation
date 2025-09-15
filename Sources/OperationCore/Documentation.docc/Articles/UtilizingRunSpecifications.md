@@ -1,4 +1,4 @@
-# Utilizing Fetch Conditions
+# Utilizing Run Specifications
 
 Learn how to best use the ``OperationRunSpecification`` protocol to control how and when queries can fetch their data.
 

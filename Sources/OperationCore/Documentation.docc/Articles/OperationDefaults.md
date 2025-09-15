@@ -1,10 +1,10 @@
 # Defaults Values, Contexts, and Modifiers
 
-Learn how to best configure default values, contexts, and modifiers for your queries.
+Learn how to best configure default values, contexts, and modifiers for your operations.
 
-## Default Query Values
+## Default Operation Values
 
-It's quite straightforward to add a default value to a query.
+It's quite straightforward to add a default value to a query, mutation, or paginated request.
 
 ```swift
 struct YourQuery: QueryRequest, Hashable {
@@ -26,7 +26,7 @@ let value: String = client.store(for: query).currentValue // ✅ Compiles
 
 ## Default OperationContext
 
-The ``OperationClient`` holds onto a default ``OperationContext`` that is used to initialize every store it holds. By overriding this context, you can provide default contexts for your queries.
+The ``OperationClient`` holds onto a default ``OperationContext`` that is used to initialize every store it holds. By overriding this context, you can provide default contexts for your operations.
 
 ```swift
 let client = OperationClient()
@@ -35,21 +35,23 @@ client.defaultContext.maxRetries = 0
 
 The above example effectively disables retries for all queries since all future ``OperationStore``'s created by the client will use the default context.
 
-> Note: Mutating the default context like this has no effect on stores that have already been created within the query client. It only affects stores created afterwards.
+> Note: Mutating the default context like this has no effect on stores that have already been created within the client. It only affects stores created afterwards.
 
-## Default Query Modifiers
+## Default Operation Modifiers
 
 The default `OperationClient` already applies a set of default modifiers for both queries and mutations. Here's a list for both.
 
-**Queries**
+**Queries & Paginated Requests**
 - Deduplication
 - Retries
+- Exponential Backoff
 - Automatic Fetching
-- Refetching when the network comes back online
+- Refetching when the network status flips from offline to online
 - Refetching when the app reenters from the background
 
 **Mutations**
 - Retries
+- Exponential Backoff
 
 > Note: By default in testing environments, the `OperationClient` disables retries, backoff, refetching on network reconnection, refetching on the app reentering from the background, and artificial delays for queries and mutations.
 
@@ -69,11 +71,11 @@ If you want to apply a custom modifier on all of your queries by default, you ca
 
 ```swift
 struct MyStoreCreator: OperationClient.StoreCreator {
-  func store<Query: QueryRequest>(
-    for query: Query,
+  func store<Operation: StatefulOperationRequest & Sendable>(
+    for operation: Operation,
     in context: OperationContext,
-    with initialState: Query.State
-  ) -> OperationStore<Query.State> {
+    with initialState: Operation.State
+  ) -> OperationStore<Operation.State> {
     if query is any MutationRequest {
       // Modifiers applied only to mutations
       return .detached(
@@ -99,4 +101,4 @@ let client = OperationClient(storeCreator: MyStoreCreator())
 
 ## Conclusion
 
-In this article, you learned how to apply default values, modfiers, and contexts to your queries.
+In this article, you learned how to apply default values, modfiers, and contexts to your operations.
