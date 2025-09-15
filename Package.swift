@@ -122,16 +122,12 @@ let package = Package(
           .product(
             name: "JavaScriptKit",
             package: "JavaScriptKit",
-            condition: .when(platforms: [
-              .iOS, .tvOS, .macOS, .watchOS, .visionOS, .macCatalyst, .linux, .wasi
-            ])
+            condition: .when(platforms: [.wasi])
           ),
           .product(
             name: "JavaScriptEventLoop",
             package: "JavaScriptKit",
-            condition: .when(platforms: [
-              .iOS, .tvOS, .macOS, .watchOS, .visionOS, .macCatalyst, .linux, .wasi
-            ])
+            condition: .when(platforms: [.wasi])
           )
         ]
       ),

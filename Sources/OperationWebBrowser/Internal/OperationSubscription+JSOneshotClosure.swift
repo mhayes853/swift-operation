@@ -1,4 +1,4 @@
-#if canImport(JavaScriptKit)
+#if canImport(JavaScriptKit) && canImport(JavaScriptEventLoop)
   import JavaScriptEventLoop
   import JavaScriptKit
   import OperationCore
