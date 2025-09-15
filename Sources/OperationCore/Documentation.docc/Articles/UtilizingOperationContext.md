@@ -10,6 +10,8 @@ At it's core, the context is a flexible, strongly typed, and extendable key-valu
 
 Operations and operation modifiers also have the opportunity to setup the context through ``OperationRequest/setup(context:)-9fupm`` and ``OperationModifier/setup(context:using:)-40ul6`` respectively.
 
+Let's now take a look at how you can utilize all of these powers.
+
 ## Adding Custom Properties to OperationContext
 
 `OperationContext` behaves a lot like SwiftUI's `EnvironmentValues`, and you can extend it with custom properties in a very similar manner to `EnvironmentValues`.
