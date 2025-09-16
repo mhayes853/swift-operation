@@ -1,12 +1,12 @@
-# Multistage Queries
+# Multistage Operation
 
-Learn how to utilize ``OperationContinuation`` to yield multiple data updates from your query when fetching.
+Learn how to utilize ``OperationContinuation`` to yield multiple data updates from your operation while its running.
 
 ## Overview
 
-In many cases, it can be useful to yield multiple data updates from your query when fetching. For instance, you may want to populate your UI with locally stored or cached data while you fetch fresh data from a server. Or, you maybe your query represents a multistep or long-running business workflow, and you want to yield data for each step to your UI to update the user on its progress. Another possibility could be streaming data from a server that comes in over time in chunks such as LLM responses.
+In many cases, it can be useful to yield multiple data updates from your operation while its running. For instance, you may want to populate your UI with locally stored or cached data while you fetch fresh data from a server. Or, you maybe your operation represents a multistep or long-running business workflow, and you want to yield data for each step to your UI to update the user on its progress. Another possibility could be streaming LLM responses from FoundationModels or from a server-side LLM.
 
-All of this is possible by utilizing the `OperationContinuation` that's passed to your query's `fetch` method. Let's explore how we can use it!
+All of this is possible by utilizing the `OperationContinuation` that's passed to your operation. Let's explore how we can use it!
 
 ## Yielding Cached Data While Fetching Fresh Data
 
@@ -41,8 +41,9 @@ extension QueryData {
     let key: String
 
     func fetch(
+      isolation: isolated (any Actor)?,
       in context: OperationContext,
-      with continuation: OperationContinuation<QueryData>
+      with continuation: OperationContinuation<QueryData, any Error>
     ) async throws -> QueryData {
       if let cachedData = Cache.shared[key] {
         continuation.yield(cachedData)
@@ -76,8 +77,9 @@ extension QueryData {
 >   let key: String
 >
 >   func fetch(
+>     isolation: isolated (any Actor)?,
 >     in context: OperationContext,
->     with continuation: OperationContinuation<QueryData>
+>     with continuation: OperationContinuation<QueryData, any Error>
 >   ) async throws -> QueryData {
 > -     if let cachedData = Cache.shared[key] {
 > +     if let cachedData = context.cache[key] {
@@ -100,16 +102,16 @@ import SwiftUI
 import Operation
 
 struct ContentView: View {
-  @State.Operation(QueryData.cacheableQuery(for: "example")) var state
+  @State.Operation(QueryData.cacheableQuery(for: "example")) var value
 
   var body: some View {
     VStack {
       // This will still be visible while the cached data is displayed.
-      if state.isLoading {
+      if $value.isLoading {
         ProgressView()
       }
-      if let data = state.currentValue {
-        QueryDataView(data: data)
+      if let value {
+        QueryDataView(data: value)
       }
     }
   }
@@ -118,15 +120,16 @@ struct ContentView: View {
 
 ## Yielding Errors
 
-In addition to yielding values, you can also yield intermittent errors from your query while still fetching data. For instance, you may persist data locally on disk to support offline mode in your app. Thus, loading the persisted data has a possibility of failing, and we can yield an error in the meantime whilst we fetch the fresh data from the network.
+In addition to yielding values, you can also yield intermittent errors from your operation while still fetching data. For instance, you may persist data locally on disk to support offline mode in your app. Thus, loading the persisted data has a possibility of failing, and we can yield an error in the meantime whilst we fetch the fresh data from the network.
 
 ```swift
 struct DiskCacheableQuery: QueryRequest, Hashable {
   let key: String
 
   func fetch(
+    isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<QueryData>
+    with continuation: OperationContinuation<QueryData, any Error>
   ) async throws -> QueryData {
     let path = URL.documentsDirectory.appending(path: "cache/\(key)")
     do {
@@ -157,8 +160,9 @@ struct LinesQuery: QueryRequest, Hashable {
   let url: URL
 
   func fetch(
+    isolation: isolated (any Actor)?,
     in context: OperationContext,
-    with continuation: OperationContinuation<[String]>
+    with continuation: OperationContinuation<[String], any Error>
   ) async throws -> [String] {
     // Apply a time freeze to the context so that
     // valueLastUpdatedAt remains consistent when
@@ -216,8 +220,9 @@ extension EventsList {
     }
 
     func fetch(
+      isolation: isolated (any Actor)?,
       in context: OperationContext,
-      with continuation: OperationContinuation<EventsList>
+      with continuation: OperationContinuation<EventsList, any Error>
     ) async throws -> EventsList {
       guard let client = context.operationClient else {
         return try await fetchActualEventList(region)
@@ -250,4 +255,4 @@ In `NearbyEventsQuery` we utilize the pattern matching ability of ``OperationCli
 
 ## Conclusion
 
-In this article, you learned how to use `OperationContinuation` to yield multiple data updates from your query. With `OperationContinuation` its possible to implement a variety of fetching paradigms that allow your UI to be responsive whilst long or even flakey data fetching workflows occur in the background. When you yield either data or an error from your query, your UI can still remain in a loading state as the `isLoading` property is still true whilst you haven't returned from your query's `fetch` method.
+In this article, you learned how to use `OperationContinuation` to yield multiple data updates from your operations. With `OperationContinuation` its possible to implement a variety of operations that allow your UI to be responsive whilst long or even flakey data fetching workflows occur in the background. When you yield either data or an error from your operation, your UI can still remain in a loading state as the `isLoading` property is still true whilst your operation hasn't fully finished running.
