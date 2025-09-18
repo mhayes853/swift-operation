@@ -8,7 +8,7 @@
     func testIsSatisfiedWhenVisibilityStateIsVisible() {
       let window = TestWindow(visibility: .visible)
 
-      let condition: some OperationRunSpecification = .applicationIsActive(
+      let condition: some OperationRunSpecification & Sendable = .applicationIsActive(
         observer: window.observer
       )
       XCTAssertTrue(condition.isSatisfied(in: OperationContext()))
@@ -17,7 +17,7 @@
     func testIsNotSatisfiedWhenVisibilityStateIsHidden() {
       let window = TestWindow(visibility: .hidden)
 
-      let condition: some OperationRunSpecification = .applicationIsActive(
+      let condition: some OperationRunSpecification & Sendable = .applicationIsActive(
         observer: window.observer
       )
       XCTAssertFalse(condition.isSatisfied(in: OperationContext()))
@@ -26,7 +26,7 @@
     func testSubscribesToVisibilityStateChanges() {
       let window = TestWindow(visibility: .visible)
 
-      let condition: some OperationRunSpecification = .applicationIsActive(
+      let condition: some OperationRunSpecification & Sendable = .applicationIsActive(
         observer: window.observer
       )
 
@@ -66,7 +66,7 @@
     func change(visibility: WindowVisbility) {
       let event = JSObject.global.Event.function!.new("visibilitychange")
       self.document.visibilityState = .string(visibility.rawValue)
-      window.dispatchEvent!(event)
+      _ = window.dispatchEvent!(event)
     }
   }
 #endif

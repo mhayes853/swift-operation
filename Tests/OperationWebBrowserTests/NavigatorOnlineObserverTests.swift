@@ -33,9 +33,9 @@
 
       let onlineEvent = JSObject.global.Event.function!.new("online")
       let offlineEvent = JSObject.global.Event.function!.new("offline")
-      window.dispatchEvent!(offlineEvent)
-      window.dispatchEvent!(onlineEvent)
-      window.dispatchEvent!(offlineEvent)
+      _ = window.dispatchEvent!(offlineEvent)
+      _ = window.dispatchEvent!(onlineEvent)
+      _ = window.dispatchEvent!(offlineEvent)
 
       values.withLock {
         XCTAssertEqual(
