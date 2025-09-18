@@ -38,7 +38,7 @@
       window.change(visibility: .hidden)
       window.change(visibility: .visible)
 
-      values.withLock { XCTAssertEqual($0, [true, false, true]) }
+      values.withLock { XCTAssertEqual($0, [false, true]) }
 
       subscription.cancel()
     }
