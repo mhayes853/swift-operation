@@ -1,6 +1,6 @@
 # Utilizing the OperationContext
 
-Learn how to best use the ``OperationContext`` to facilitate dependency injection, customizing query behavior, and much more.
+Learn how to best use the ``OperationContext`` to facilitate dependency injection, customizing operation behavior, and much more.
 
 ## Overview
 
@@ -47,7 +47,7 @@ extension OperationContext {
 }
 ```
 
-Now you can access your custom property inside of queries.
+Now you can access your custom property inside of operations.
 
 ```swift
 struct PlayerQuery: QueryRequest, Hashable {
@@ -69,7 +69,7 @@ struct PlayerQuery: QueryRequest, Hashable {
 
 As can be seen here, we're able to customize the behavior of `PlayerQuery` based on a custom context property. Utilizing this technique allows you to use the `OperationContext` in a variety of ways, some of which we will talk about later.
 
-The `defaultValue` of a ``OperationContext/Key`` is computed everytime the `OperationContext` instance doesn't have an explicitly overriden value. If you want to lazily run an expensive computation for the default value, or use a shared reference, define your default value with as a `static let` property.
+The `defaultValue` of a ``OperationContext/Key`` is computed everytime the `OperationContext` instance doesn't have an explicitly overriden value. If you want to lazily run an expensive computation for the default value, or use a shared reference, define your default value with a `static let` property.
 
 ```swift
 extension OperationContext {
@@ -100,7 +100,7 @@ struct SomeQuery: QueryRequest, Hashable {
 
 When the query runs, the value of `customProperty` will be `"new value"`.
 
-This strategy is used for many query modifiers. For instance, retries do this to setup the context with the maximum number of retries allowed for the query. By setting this value in the context, it's possible to disable retries like so.
+This strategy is used for many operation modifiers. For instance, retries do this to setup the context with the maximum number of retries allowed for the operation. By setting this value in the context, it's possible to disable retries like so.
 
 ```swift
 struct NoRetryQuery: QueryRequest, Hashable {
@@ -114,7 +114,7 @@ struct NoRetryQuery: QueryRequest, Hashable {
 
 ## Dependency Injection
 
-> Note: If your project uses [swift-dependencies](https://github.com/pointfreeco/swift-dependencies), you should rely on the `@Dependency` property wrapper inside your queries instead of creating custom query context properties for your dependencies. Instead, only create custom query context properties for lightweight data that only your query needs to consume such as pagination cursors for HTTP API endpoints.
+> Note: If your project uses [swift-dependencies](https://github.com/pointfreeco/swift-dependencies), you can also rely on the `@Dependency` property wrapper inside your operations in addition to custom context properties for dependency injection. In this case, custom context properties are more useful for lightweight data that only your operation needs to consume such as pagination cursors for HTTP API endpoints.
 
 While making a query like this is easy.
 
@@ -233,6 +233,8 @@ struct MockDataTransport: HTTPDataTransport {
 }
 ```
 
+Now we no longer depend on a live networking service in our test suite, which allows us to write reliable and deterministic tests. However, this example can be taken further by adding a dedicated network layer to your app, see <doc:NetworkLayer> for more.
+
 ### Overriding Time
 
 ``OperationState/valueLastUpdatedAt`` and ``OperationState/errorLastUpdatedAt`` properties on ``OperationState`` conformances are computed using the ``OperationClock`` protocol. The clock lives on the context, and can be overridden. Therefore, if you want to ensure a deterministic date calculations for various reasons (time freeze, testing, etc.), you can do the following.
@@ -252,7 +254,7 @@ try await store.fetch()
 
 ### Overriding Delays
 
-The ``OperationDelayer`` protocol is used to artificially delay queries in the case of retries. By default, query retries utilize [Fibonacci Backoff](https://thuc.space/posts/retry_strategies/#fibonacci-backoff) where the query will be artificially delayed by an increasing amount of time based on the current retry index.
+The ``OperationDelayer`` protocol is used to artificially delay queries in the case of retries. By default, operation retries utilize exponential backoff where the operation will be artificially delayed by an increasing amount of time based on the current retry index.
 
 For testing, this delay may be unacceptable, but thankfully you can override the `QueryDelayer` on the context to remove delays.
 
@@ -266,6 +268,8 @@ store.context.operationDelayer = .noDelay
 try await store.fetch() // Will incur no retry delays.
 ```
 
+> Note: The default initializer of ``OperationClient`` will automatically disable delays for you during tests.
+
 ## Conclusion
 
-In this article, we explored how to utilize the `OperationContext` to customize query behavior, and even use it as a tool for dependency injection within queries. `OperationContext` can be extended with custom properties like the SwiftUI `EnvironmentValues`, and queries even have the opportunity to setup the context before fetching.
+In this article, we explored how to utilize the `OperationContext` to customize operation behavior, and even use it as a tool for dependency injection within operations. `OperationContext` can be extended with custom properties like SwiftUI's `EnvironmentValues`, and operations even have the opportunity to setup the context before running.

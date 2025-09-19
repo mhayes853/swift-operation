@@ -1,8 +1,8 @@
 // MARK: - OperationContext
 
-/// An extensible collection of values that are accessible by your queries.
+/// An extensible collection of values that are accessible by operations.
 ///
-/// `OperationContext` is a rough equivalent of SwiftUI's `EnvironmentValues` for your queries.
+/// `OperationContext` is a rough equivalent of SwiftUI's `EnvironmentValues` for an operation.
 /// Similarly to `EnvironmentValues`, you can extend the context by adding a custom context
 /// property using the ``Key`` protocol.
 ///
@@ -19,9 +19,9 @@
 /// }
 /// ```
 ///
-/// A context is handed to your query through ``QueryRequest/fetch(in:with:)``, however you can
-/// modify any properties on that context before it gets passed to your query via
-/// ``QueryRequest/setup(context:)`` or ``OperationStore/context`` (on a ``OperationStore`` instance).
+/// The context is accessible from many types in the library, including on ``OperationStore``
+/// instances, within ``OperationRequest/run(isolation:in:with:)``, ``OperationTask``, and much
+/// more.
 ///
 /// See <doc:UtilizingOperationContext> to learn about best practicies when utilizing the context.
 public struct OperationContext: Sendable {
