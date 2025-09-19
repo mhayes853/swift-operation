@@ -1,6 +1,6 @@
 // MARK: - OperationControls
 
-/// A data type for managing  a query's state from within a ``OperationController``.
+/// A data type for managing an operation's state from within a ``OperationController``.
 ///
 /// You do not create instances of this type. Instead, it is passed to your `OperationController`
 /// through ``OperationController/control(with:)``.
@@ -27,7 +27,7 @@ extension OperationControls {
 // MARK: - Context
 
 extension OperationControls {
-  /// The current ``OperationContext`` of the query.
+  /// The current ``OperationContext`` of the operation.
   public var context: OperationContext {
     self.store?.context ?? self.defaultContext
   }
@@ -36,7 +36,7 @@ extension OperationControls {
 // MARK: - State
 
 extension OperationControls {
-  /// The current state of the query.
+  /// The current state of the operation.
   public var state: State {
     self.store?.state ?? self.initialState
   }
@@ -45,16 +45,16 @@ extension OperationControls {
   ///
   /// The controls are thread-safe, but accessing individual properties without exclusive access can
   /// still lead to high-level data races. Use this method to ensure that your code has exclusive
-  /// access to the store when performing multiple property accesses to compute a value or to yield
+  /// access to the controls when performing multiple property accesses to compute a value or to yield
   /// a new value.
   ///
   /// ```swift
-  /// let controls: OperationControls<QueryState<Int, Int>>
+  /// let controls: OperationControls<QueryState<Int, any Error>>
   ///
   /// // 🔴 Is prone to high-level data races.
   /// controls.yield(controls.state.currentValue + 1)
   ///
-  //  // ✅ No data races.
+  /// // ✅ No data races.
   /// controls.withExclusiveAccess {
   ///   $0.yield($0.state.currentValue + 1)
   /// }
@@ -72,7 +72,7 @@ extension OperationControls {
 // MARK: - Is Stale
 
 extension OperationControls {
-  /// Whether or not the query is stale.
+  /// Whether or not the operation is stale.
   public var isStale: Bool {
     self.store?.isStale ?? false
   }
@@ -81,7 +81,7 @@ extension OperationControls {
 // MARK: - Yielding Values
 
 extension OperationControls {
-  /// Yields a new result to the query.
+  /// Yields a new result to the operation.
   ///
   /// - Parameters:
   ///   - result: The `Result` to yield.
@@ -93,7 +93,7 @@ extension OperationControls {
     self.store?.setResult(to: result, using: context ?? self.context)
   }
 
-  /// Yields an error to the query.
+  /// Yields an error to the operation.
   ///
   /// - Parameters:
   ///   - error: The `Error` to yield.
@@ -102,7 +102,7 @@ extension OperationControls {
     self.yield(with: .failure(error), using: context)
   }
 
-  /// Yields a value to the query.
+  /// Yields a value to the operation.
   ///
   /// - Parameters:
   ///   - value: The value to yield.
@@ -115,18 +115,18 @@ extension OperationControls {
 // MARK: - Refetching
 
 extension OperationControls {
-  /// Whether or not you can refetch the query through these controls.
+  /// Whether or not you can rerun the operation through these controls.
   ///
-  /// This property is true when automatic fetching is enabled on the query. See
-  /// ``QueryRequest/enableAutomaticRunning(onlyWhen:)`` for more.
+  /// This property is true when automatic running is enabled on the operation. See
+  /// ``OperationRequest/enableAutomaticRunning(onlyWhen:)`` for more.
   public var canYieldRerun: Bool {
     self.store?.isAutomaticRunningEnabled == true
   }
 
-  /// Yields a refetch to the query.
+  /// Yields an operation rerun.
   ///
   /// - Parameter context: The ``OperationContext`` to use for the underlying ``OperationTask``.
-  /// - Returns: The result of the refetch, or nil if refetching is unavailable.
+  /// - Returns: The result of the rerun, or nil if ``canYieldRerun`` is false.
   @discardableResult
   public func yieldRerun(
     with context: OperationContext? = nil
@@ -134,10 +134,10 @@ extension OperationControls {
     try await self.yieldRerunTask(with: context)?.runIfNeeded()
   }
 
-  /// Creates a ``OperationTask`` to refetch the query.
+  /// Creates a ``OperationTask`` to rerun the operation.
   ///
   /// - Parameter context: The ``OperationContext`` to use for the ``OperationTask``.
-  /// - Returns: A ``OperationTask`` to refetch the query, or nil if refetching is unavailable.
+  /// - Returns: A ``OperationTask`` to rerun the operation, or nil if ``canYieldRerun`` is false.
   public func yieldRerunTask(
     with context: OperationContext? = nil
   ) -> OperationTask<State.OperationValue, State.Failure>? {
@@ -149,7 +149,7 @@ extension OperationControls {
 // MARK: - Subscriber Count
 
 extension OperationControls {
-  /// The total number of subscribers for this query.
+  /// The total number of subscribers for this operation.
   public var subscriberCount: Int {
     self.store?.subscriberCount ?? 0
   }
@@ -158,10 +158,10 @@ extension OperationControls {
 // MARK: - Resetting
 
 extension OperationControls {
-  /// Yields a reset to the query's state.
+  /// Yields a reset to the operation's state.
   ///
-  /// > Important: This will cancel all active ``OperationTask``s on the query. Those cancellations will not be
-  /// > reflected in the reset query state.
+  /// > Important: This will cancel all active ``OperationTask``s on the operation. Those
+  /// > cancellations will not be reflected in the reset operation state.
   ///
   /// - Parameter context: The ``OperationContext`` to yield the reset in.
   public func yieldResetState(using context: OperationContext? = nil) {

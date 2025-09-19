@@ -21,10 +21,10 @@ public typealias ControlledOperation<
   Controller: OperationController<Operation.State>
 > = ModifiedOperation<Operation, _OperationControllerModifier<Operation, Controller>>
 
-// MARK: - OperationRequest
+// MARK: - StatefulOperationRequest
 
 extension StatefulOperationRequest {
-  /// Attaches a ``OperationController`` to this operation.
+  /// Attaches an ``OperationController`` to this operation.
   ///
   /// - Parameter controller: The controller to attach.
   /// - Returns: A ``ModifiedOperation``.
@@ -49,9 +49,9 @@ public struct _OperationControllerModifier<
 // MARK: - OperationContext
 
 extension OperationContext {
-  /// The ``OperationController``s attached to a ``OperationRequest``.
+  /// The ``OperationController``s attached to an ``OperationRequest``.
   ///
-  /// You generally add controllers via the ``OperationRequest/controlled(by:)`` modifier.
+  /// You generally add controllers via the ``StatefulOperationRequest/controlled(by:)`` modifier.
   public var operationControllers: [any OperationController & Sendable] {
     get { self[OperationControllersKey.self] }
     set { self[OperationControllersKey.self] = newValue }
