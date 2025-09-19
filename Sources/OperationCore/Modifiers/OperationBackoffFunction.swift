@@ -2,7 +2,7 @@ import Foundation
 
 // MARK: - OperationBackoffFunction
 
-/// A backoff function to use for retrying queries.
+/// A backoff function to use for retrying operations.
 public struct OperationBackoffFunction: Sendable {
   private let _description: @Sendable () -> String
   private let backoff: @Sendable (Int) -> TimeInterval
@@ -85,8 +85,8 @@ extension OperationBackoffFunction {
   /// Adds a jitter to this backoff function.
   ///
   /// Using a jitter will randomize the backoff value that is returned from the function in the
-  /// range [0, whatever the backoff function returns]. This ensures that many concurrently
-  /// running queries do not overload a server as a thundering herd when retrying.
+  /// range [0, x] where x is the value returned by this backoff function. This ensures that many
+  /// concurrent operation runs do not overload any external services they utilize.
   ///
   /// - Parameter generator: A `RandomNumberGenerator` to use for computing jitter values.
   /// - Returns: This backoff function with jitter applied.
