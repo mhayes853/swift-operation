@@ -118,8 +118,8 @@ extension OperationStore where State: _QueryStateProtocol {
   ) -> OperationEventHandler<State> {
     OperationEventHandler(
       onStateChanged: handler.onStateChanged,
-      onFetchingStarted: handler.onFetchingStarted,
-      onFetchingEnded: handler.onFetchingEnded,
+      onRunStarted: handler.onFetchingStarted,
+      onRunEnded: handler.onFetchingEnded,
       onResultReceived: handler.onResultReceived
     )
   }

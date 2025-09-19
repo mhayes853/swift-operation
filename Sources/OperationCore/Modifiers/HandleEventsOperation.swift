@@ -17,9 +17,9 @@ public struct _HandleEventsModifier<
     using operation: Operation,
     with continuation: OperationContinuation<Operation.Value, Operation.Failure>
   ) async throws(Operation.Failure) -> Operation.Value {
-    defer { self.eventHandler.onFetchingEnded?(context) }
+    defer { self.eventHandler.onRunEnded?(context) }
     do {
-      self.eventHandler.onFetchingStarted?(context)
+      self.eventHandler.onRunStarted?(context)
       let value = try await operation.run(
         isolation: isolation,
         in: context,

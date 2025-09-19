@@ -1,6 +1,9 @@
 import IdentifiedCollections
 
-/// An event handler that is passed to ``OperationStore/subscribe(with:)-7a55v``.
+/// An event handler that handles events from ``PaginatedRequest``.
+///
+/// Events include state changes, yielded/returned results, and detection for when an
+/// operation run begins and ends.
 public struct PaginatedEventHandler<State: _PaginatedStateProtocol>: Sendable {
   /// A callback that is invoked when the query state changes.
   public var onStateChanged: (@Sendable (State, OperationContext) -> Void)?
@@ -11,7 +14,7 @@ public struct PaginatedEventHandler<State: _PaginatedStateProtocol>: Sendable {
   /// A callback that is invoked when fetching for a specified page starts.
   public var onPageFetchingStarted: (@Sendable (State.PageID, OperationContext) -> Void)?
 
-  /// A callback that is invoked when the result for fetching a page is received.
+  /// A callback that is invoked when the result is received from fetching a specified page.
   public var onPageResultReceived:
     (
       @Sendable (
@@ -21,7 +24,7 @@ public struct PaginatedEventHandler<State: _PaginatedStateProtocol>: Sendable {
       ) -> Void
     )?
 
-  /// A callback that is invoked when a result is received from fetching on a ``OperationStore``.
+  /// A callback that is invoked when a result is received from fetching.
   public var onResultReceived:
     (
       @Sendable (
@@ -42,8 +45,8 @@ public struct PaginatedEventHandler<State: _PaginatedStateProtocol>: Sendable {
   ///   - onStateChanged: A callback that is invoked when the query state changes.
   ///   - onFetchingStarted: A callback that is invoked when fetching starts.
   ///   - onPageFetchingStarted: A callback that is invoked when fetching for a specified page starts.
-  ///   - onPageResultReceived: A callback that is invoked when the result for fetching a page is received.
-  ///   - onResultReceived: A callback that is invoked when a result is received from fetching on a ``OperationStore``.
+  ///   - onPageResultReceived: A callback that is invoked when the result is received from fetching a specified page.
+  ///   - onResultReceived: A callback that is invoked when a result is received from fetching.
   ///   - onPageFetchingEnded: A callback that is invoked when fetching for a specified page ends.
   ///   - onFetchingEnded: A callback that is invoked when fetching ends.
   public init(

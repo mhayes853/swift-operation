@@ -573,14 +573,14 @@ extension OperationStore {
 
 // MARK: - Event Handler
 
-extension OperationEventHandler {
+extension OperationEventHandler where State: Sendable {
   fileprivate init(subscriptions: OperationSubscriptions<Self>) {
     self.init { state, context in
       subscriptions.forEach { $0.onStateChanged?(state, context) }
-    } onFetchingStarted: { context in
-      subscriptions.forEach { $0.onFetchingStarted?(context) }
-    } onFetchingEnded: { context in
-      subscriptions.forEach { $0.onFetchingEnded?(context) }
+    } onRunStarted: { context in
+      subscriptions.forEach { $0.onRunStarted?(context) }
+    } onRunEnded: { context in
+      subscriptions.forEach { $0.onRunEnded?(context) }
     } onResultReceived: { result, context in
       subscriptions.forEach { $0.onResultReceived?(result, context) }
     }

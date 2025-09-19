@@ -322,8 +322,8 @@ extension OperationStore where State: _PaginatedStateProtocol {
   ) -> OperationEventHandler<State> {
     OperationEventHandler(
       onStateChanged: handler.onStateChanged,
-      onFetchingStarted: handler.onFetchingStarted,
-      onFetchingEnded: handler.onFetchingEnded,
+      onRunStarted: handler.onFetchingStarted,
+      onRunEnded: handler.onFetchingEnded,
       onResultReceived: { result, context in
         guard context.operationResultUpdateReason == .returnedFinalResult else { return }
         handler.onResultReceived?(

@@ -1,17 +1,31 @@
 // MARK: - OperationEventHandler
 
-/// An event handler that is passed to ``OperationStore/subscribe(with:)-93jyd``.
+/// An event handler that handles events from a ``StatefulOperationRequest``.
+///
+/// Events include state changes, yielded/returned results, and detection for when an
+/// operation run begins and ends. Both ``OperationStore`` and the
+/// ``StatefulOperationRequest/handleEvents(with:)`` modifier use event handlers to notify you when
+/// these events occur. Furthermore, `OperationStore` automatically applies the `handleEvents`
+/// modifier to your operation so you can observe events through
+/// ``OperationStore/subscribe(with:)-(OperationEventHandler<State>)``.
 public struct OperationEventHandler<State: OperationState>: Sendable {
   /// A callback that is invoked when the operation state changes.
   public var onStateChanged: (@Sendable (State, OperationContext) -> Void)?
 
-  /// A callback that is invoked when fetching begins on the ``OperationStore``.
-  public var onFetchingStarted: (@Sendable (OperationContext) -> Void)?
+  /// A callback that is invoked when an operation run begins.
+  ///
+  /// This callback is invoked after immediately after an ``OperationStore`` calls
+  /// ``OperationRequest/run(isolation:in:with:)``.
+  public var onRunStarted: (@Sendable (OperationContext) -> Void)?
 
-  /// A callback that is invoked when fetching ends on the ``OperationStore``.
-  public var onFetchingEnded: (@Sendable (OperationContext) -> Void)?
+  /// A callback that is invoked when an operation run ends.
+  ///
+  /// This callback is invoked before any state changes occur on an ``OperationStore``.
+  public var onRunEnded: (@Sendable (OperationContext) -> Void)?
 
-  /// A callback that is invoked when a result is received from fetching on a ``OperationStore``.
+  /// A callback that is invoked when a result is received from an operation run.
+  ///
+  /// This callback is invoked before any state changes occur on an ``OperationStore``.
   public var onResultReceived:
     (@Sendable (Result<State.OperationValue, State.Failure>, OperationContext) -> Void)?
 
@@ -19,21 +33,20 @@ public struct OperationEventHandler<State: OperationState>: Sendable {
   ///
   /// - Parameters:
   ///   - onStateChanged: A callback that is invoked when the operation state changes.
-  ///   - onFetchingStarted: A callback that is invoked when fetching begins on the ``OperationStore``.
-  ///   - onFetchingEnded: A callback that is invoked when fetching ends on the ``OperationStore``.
-  ///   - onResultReceived: A callback that is invoked when a result is received from fetching on a ``OperationStore``.
+  ///   - onRunStarted: A callback that is invoked when an operation run begins.
+  ///   - onRunEnded: A callback that is invoked when an operation run ends.
+  ///   - onResultReceived: A callback that is invoked when a result is received from an operation run.
   public init(
     onStateChanged: (@Sendable (State, OperationContext) -> Void)? = nil,
-    onFetchingStarted: (@Sendable (OperationContext) -> Void)? = nil,
-    onFetchingEnded: (@Sendable (OperationContext) -> Void)? = nil,
+    onRunStarted: (@Sendable (OperationContext) -> Void)? = nil,
+    onRunEnded: (@Sendable (OperationContext) -> Void)? = nil,
     onResultReceived: (
       @Sendable (Result<State.OperationValue, State.Failure>, OperationContext) -> Void
-    )? =
-      nil
+    )? = nil
   ) {
-    self.onFetchingStarted = onFetchingStarted
+    self.onRunStarted = onRunStarted
     self.onResultReceived = onResultReceived
-    self.onFetchingEnded = onFetchingEnded
+    self.onRunEnded = onRunEnded
     self.onStateChanged = onStateChanged
   }
 }

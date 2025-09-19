@@ -237,11 +237,11 @@ extension OperationStore where State: _MutationStateProtocol {
   ) -> OperationEventHandler<State> {
     OperationEventHandler(
       onStateChanged: handler.onStateChanged,
-      onFetchingStarted: {
+      onRunStarted: {
         guard let args = $0.mutationArgs(as: State.Arguments.self) else { return }
         handler.onMutatingStarted?(args, $0)
       },
-      onFetchingEnded: {
+      onRunEnded: {
         guard let args = $0.mutationArgs(as: State.Arguments.self) else { return }
         handler.onMutatingEnded?(args, $0)
       },
