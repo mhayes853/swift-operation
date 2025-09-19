@@ -2,11 +2,11 @@ import Foundation
 
 // MARK: - OperationClock
 
-/// A protocol for controlling the current date in queries.
+/// A protocol for controlling the current date in operations.
 ///
-/// You can override the ``OperationContext/queryClock`` context value to control the values of
+/// You can override the ``OperationContext/operationClock`` context value to control the values of
 /// ``OperationState/valueLastUpdatedAt`` and ``OperationState/errorLastUpdatedAt``
-/// whenever your query yields a result.
+/// whenever an operation yields a result.
 public protocol OperationClock {
   /// Returns the current date according to the clock.
   func now() -> Date
@@ -14,7 +14,7 @@ public protocol OperationClock {
 
 // MARK: - OperationClock
 
-/// A ``OperationClock`` that returns the system's current time.
+/// An ``OperationClock`` that returns the system's current time.
 public struct SystemTimeClock: OperationClock, Sendable {
   public init() {}
 
@@ -24,7 +24,7 @@ public struct SystemTimeClock: OperationClock, Sendable {
 }
 
 extension OperationClock where Self == SystemTimeClock {
-  /// A ``OperationClock`` that returns the system's current time.
+  /// An ``OperationClock`` that returns the system's current time.
   public static var systemTime: Self {
     SystemTimeClock()
   }
@@ -32,7 +32,7 @@ extension OperationClock where Self == SystemTimeClock {
 
 // MARK: - CustomOperationClock
 
-/// A ``OperationClock`` that returns the current date based on a specified closure.
+/// An ``OperationClock`` that returns the current date based on a specified closure.
 public struct CustomOperationClock: OperationClock, Sendable {
   private let _now: @Sendable () -> Date
 
@@ -46,7 +46,7 @@ public struct CustomOperationClock: OperationClock, Sendable {
 }
 
 extension OperationClock where Self == CustomOperationClock {
-  /// A ``OperationClock`` that returns the current date based on the return value of `now`.
+  /// An ``OperationClock`` that returns the current date based on the return value of `now`.
   ///
   /// - Parameter now: A closure to compute the current date.
   /// - Returns: A ``CustomOperationClock``.
@@ -57,7 +57,7 @@ extension OperationClock where Self == CustomOperationClock {
 
 // MARK: - TimeFreezeClock
 
-/// A ``OperationClock`` that returns a constant date.
+/// A n``OperationClock`` that returns a constant date.
 public struct TimeFreezeClock: OperationClock, Sendable {
   @usableFromInline
   let date: Date
@@ -73,12 +73,12 @@ public struct TimeFreezeClock: OperationClock, Sendable {
 }
 
 extension OperationClock where Self == TimeFreezeClock {
-  /// A ``OperationClock`` that computes the current date upon creation, and always returns that date.
+  /// An ``OperationClock`` that computes the current date upon creation, and always returns that date.
   public static var timeFreeze: Self {
     TimeFreezeClock(date: Date())
   }
 
-  /// A ``OperationClock`` that always returns the provided `date`.
+  /// An ``OperationClock`` that always returns the provided `date`.
   ///
   /// - Parameter date: The date to return.
   /// - Returns: A ``TimeFreezeClock``.
