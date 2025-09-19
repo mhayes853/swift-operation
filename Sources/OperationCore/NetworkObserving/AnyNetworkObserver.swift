@@ -1,3 +1,4 @@
+/// A type-erased ``NetworkObserver`` that's also Sendable.
 public struct AnySendableNetworkObserver: NetworkObserver, Sendable {
   public let base: any NetworkObserver & Sendable
 

@@ -1,4 +1,4 @@
-/// A ``NetworkObserver`` useful for faking network conditions in your queries.
+/// A ``NetworkObserver`` useful for faking network conditions.
 public final class MockNetworkObserver: NetworkObserver, Sendable {
   private typealias Handler = @Sendable (NetworkConnectionStatus) -> Void
 

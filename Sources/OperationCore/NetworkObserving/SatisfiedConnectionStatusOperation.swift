@@ -1,6 +1,6 @@
 extension OperationRequest {
-  /// Indicates what level of ``NetworkConnectionStatus`` is necessary for this query to be
-  /// considered as "connected to the network".
+  /// Indicates what level of ``NetworkConnectionStatus`` is necessary for this operation to be
+  /// considered "connected to the network".
   ///
   /// - Parameter status: The ``NetworkConnectionStatus``.
   /// - Returns: A ``ModifiedOperation``.
