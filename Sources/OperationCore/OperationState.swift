@@ -12,11 +12,11 @@ import IdentifiedCollections
 /// may also need to create a concrete conformance to this protocol in order to describe how the state
 /// management capabilities of your custom operation type.
 ///
-/// You typically do not interact with the `mutating` methods on this protocol directly, rather a
+/// You typically do not interact with the `mutating` methods on this protocol directly, rather an
 /// ``OperationStore`` instance will invoke them as needed. Most commonly, you will access the
 /// properties on this protocol to render your UI based the state of an operation.
 ///
-/// > Warning: You should not call any of the `mutating` methods directly on this type, rather a
+/// > Warning: You should not call any of the `mutating` methods directly on this type, rather an
 /// > ``OperationStore`` will call them at the appropriate time for you.
 public protocol OperationState<StateValue, OperationValue, Failure> {
   /// A data type returned from ``reset(using:)`` that determines the action that the
