@@ -1,19 +1,21 @@
 // MARK: - OperationModifier
 
-/// A protocol for defining reusable and composable logic for your queries.
+/// A protocol for defining reusable and composable logic for operations.
 ///
 /// The library comes with many built-in modifiers that you can use to customize the logic and
-/// behavior of your queries. For instance, ``QueryRequest/retry(limit:)`` adds
-/// retry logic to your queries.
+/// behavior of an operation. For instance, ``OperationRequest/retry(limit:)`` adds retry logic
+/// with backoff to any operation regardless of whether or not its a ``QueryRequest``,
+/// ``MutationRequest``, or ``PaginatedRequest``.
 ///
 /// To create your own modifier, create a data type that conforms to this protocol. We'll create a
-/// simple modifier that adds artificial delay to any query.
+/// simple modifier that adds artificial delay to any operation.
 ///
 /// ```swift
 /// struct DelayModifier<Operation: OperationRequest>: OperationModifier {
 ///   let seconds: TimeInterval
 ///
-///   func fetch(
+///   func run(
+///     isolation: isolated (any Actor)?,
 ///     in context: OperationContext,
 ///     using query: Query,
 ///     with continuation: OperationContinuation<Query.Value>
@@ -24,7 +26,8 @@
 /// }
 /// ```
 ///
-/// Then, write an extension property on ``QueryRequest`` that makes consuming your modifier easy.
+/// Then, write an extension method on ``OperationRequest`` that makes consuming your modifier
+/// easy for callers constructing an operation.
 ///
 /// ```swift
 /// extension OperationRequest {
@@ -37,35 +40,56 @@
 /// ```
 ///
 /// > Note: It's essential that we have `ModifiedOperation<Self, DelayModifier<Self>>` as the return
-/// > type instead of `some QueryRequest<Value, State>`. The former style ensures that infinite
-/// > queries and mutations can use our modifier whilst still being recognized as their respective
-/// > ``PaginatedRequest`` or ``MutationRequest`` conformances by the compiler.
+/// > type instead of `some OperationRequest<Value>`. The former style ensures that concrete operation types
+/// > can use our modifier whilst still being recognized as conformances to their respective base
+/// > operation type (eg. ``QueryRequest``) by the compiler.
+/// > ```swift
+/// > struct MyQuery: QueryRequest {
+/// >   // ...
+/// > }
+/// >
+/// > extension OperationRequest {
+/// >   // ❌ Don't return 'some OperationRequest<Value>'.
+/// >   func delay(
+/// >     for seconds: TimeInterval
+/// >   ) -> some OperationRequest<Value> {
+/// >     self.modifier(DelayModifier(seconds: seconds))
+/// >   }
+/// > }
+/// >
+/// > // ❌ QueryRequest conformance is lost due to opaque type.
+/// > let query = MyQuery().delay(for: 3)
+/// > ```
 public protocol OperationModifier<Value, Failure> {
   /// The underlying ``OperationRequest`` type.
   associatedtype Operation: OperationRequest
 
+  /// The value returned from an operation run with this modifier.
   associatedtype Value
+  
+  /// The error thrown from an operation run with this modifier.
   associatedtype Failure: Error
 
   /// Sets up the initial ``OperationContext`` for the specified operation.
   ///
-  /// This method is called a single time when a ``OperationStore`` is initialized with your operation.
+  /// This method is called a single time when a ``OperationStore`` is initialized with the
+  /// specified operation.
   ///
-  /// Make sure to call ``OperationRequest/setup`` on `operation` in order to apply the
-  /// functionallity required by other modifiers that are attached to this operation.
+  /// Make sure to call ``OperationRequest/setup(context:)-9fupm`` on `operation` in order to apply the
+  /// functionallity required by other modifiers that are attached to the specified operation.
   ///
   /// - Parameters:
   ///   - context: The ``OperationContext`` to setup.
-  ///   - operation: The underlying operation for this modifier.
+  ///   - operation: The specified operation this modifier must setup.
   func setup(context: inout OperationContext, using operation: Operation)
 
-  /// Fetches the data for the specified operation.
+  /// Runs the specified operation with this modifier's behavior attached.
   ///
   /// - Parameters:
   ///   - context: The ``OperationContext`` passed to this modifier.
-  ///   - operation: The underlying operation to fetch data from.
-  ///   - continuation: A ``OperationContinuation`` allowing you to yield multiple values from your
-  ///     modifier. See <doc:MultistageQueries> for more.
+  ///   - operation: The specified operation to run.
+  ///   - continuation: An ``OperationContinuation`` allowing you to yield multiple values from your
+  ///     modifier. See <doc:MultistageOperations> for more.
   /// - Returns: The operation value.
   func run(
     isolation: isolated (any Actor)?,
@@ -121,7 +145,7 @@ extension OperationRequest {
 
 /// An operation with a ``OperationModifier`` attached to it.
 ///
-/// You created instances of this type through ``OperationRequest/modifier(_:)``.
+/// You create instances of this type through ``OperationRequest/modifier(_:)``.
 public struct ModifiedOperation<
   Operation: OperationRequest,
   Modifier: OperationModifier

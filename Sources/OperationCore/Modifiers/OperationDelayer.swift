@@ -1,5 +1,8 @@
 import Foundation
 
+// TODO: - This should use some higher precision timing type. Duration cannot be used because it may
+// not be supported on some platforms (<iOS 16).
+
 // MARK: - OperationDelayer
 
 /// A protocol for artificially delaying operations.
