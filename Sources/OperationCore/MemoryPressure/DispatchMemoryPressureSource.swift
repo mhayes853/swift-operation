@@ -1,4 +1,4 @@
-#if canImport(Dispatch)
+#if canImport(Darwin)
   import Dispatch
 
   // MARK: - DispatchMemoryPressureSource
@@ -6,7 +6,7 @@
   /// A ``MemoryPressureSource`` backed by `DispatchSource.makeMemoryPressureSource`.
   public struct DispatchMemoryPressureSource: MemoryPressureSource, Sendable {
     private let queue: DispatchQueue?
-    
+
     /// Creates a memory pressure source backed by `DispatchSource.makeMemoryPressureSource`.
     ///
     /// - Parameter queue: The queue to observer pressure notifications on.
