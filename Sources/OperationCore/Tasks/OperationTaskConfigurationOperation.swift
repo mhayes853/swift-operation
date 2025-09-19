@@ -1,5 +1,5 @@
 extension OperationRequest {
-  /// Sets the default ``OperationTaskConfiguration`` for this query.
+  /// Sets the default ``OperationTaskConfiguration`` for this operation.
   ///
   /// - Parameter configuration: The configuration to use.
   /// - Returns: A ``ModifiedOperation``.
@@ -9,7 +9,7 @@ extension OperationRequest {
     self.modifier(_OperationTaskConfigurationModifier { $0 = configuration })
   }
 
-  /// Sets the default ``OperationTaskConfiguration`` for this query.
+  /// Sets the default ``OperationTaskConfiguration`` for this operation.
   ///
   /// - Parameter editConfiguration: A function to modify the default configuration.
   /// - Returns: A ``ModifiedOperation``.

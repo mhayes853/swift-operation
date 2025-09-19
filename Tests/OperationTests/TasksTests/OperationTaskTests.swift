@@ -369,7 +369,7 @@ struct OperationTaskTests {
       } matching: { [task1, task2] issue in
         issue.comments.contains(
           .warning(
-            .OperationTaskCircularScheduling(info: [
+            .operationTaskCircularScheduling(info: [
               task2.info, task1.info, task2.info
             ])
           )
@@ -399,7 +399,7 @@ struct OperationTaskTests {
       } matching: { [task1, task2, task3] issue in
         issue.comments.contains(
           .warning(
-            .OperationTaskCircularScheduling(info: [
+            .operationTaskCircularScheduling(info: [
               task3.info, task1.info, task2.info, task3.info
             ])
           )

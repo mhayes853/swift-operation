@@ -19,11 +19,12 @@ private protocol _OperationTask: Sendable, Identifiable {
 
 // MARK: - OperationTask
 
-/// A unit of work for systems that manage the execution and state of a ``QueryRequest``.
+/// A unit of work for systems that manage the execution and state of an ``OperationRequest``.
 ///
-/// Generally, `OperationTask`s are created by ``OperationStore``s, and then are retained within the
-/// store's state. In other words, you generally do not create tasks directly, but you can
-/// retrieve tasks from the store and configure their creation through ``OperationTaskConfiguration``.
+/// Generally, `OperationTask`s are created by ``OperationStore`` instances, and then are retained
+/// within the ``OperationState`` that the store manages. In other words, you generally do not
+/// create tasks directly, but you can retrieve tasks from the store and configure their creation
+/// through the ``OperationRequest/taskConfiguration(_:)-(OperationTaskConfiguration)`` modifier.
 ///
 /// Unlike a traditional `Task` in Swift, a `OperationTask` does not immediately begin scheduling its
 /// work on its preferred executor when initialized. Instead, you must explicitly schedule and
@@ -32,12 +33,12 @@ private protocol _OperationTask: Sendable, Identifiable {
 /// `runIfNeeded` will await an underyling `Task` created by the first call. You can configure
 /// the properties for this underlying task through `OperationTaskConfiguration`.
 ///
-/// `OperationTask` itself is a value type, and contains mutable properties (most notable
-/// ``configuration``). However, the underlying mechanism for the scheduling and run state is
-/// managed via a reference. Therefore, copied values of a task will point to the same underlying
-/// reference for the task's run state, including those returned from helpers such as ``map(_:)``.
-/// Once a task has begun running, any mutations to the task's mutable properties will have no
-/// effect on the active work.
+/// `OperationTask` itself is a value type, and contains mutable properties (most notably
+/// ``context`` and ``configuration``). However, the underlying mechanism for the scheduling and
+/// run state is managed via a reference. Therefore, copied values of a task will point to the
+/// same underlying reference for the task's run state, including those returned from helpers such
+/// as ``map(_:)``. Once a task has begun running, any mutations to the task's mutable properties
+/// will have no effect on the active work.
 ///
 /// Each `OperationTask` is paired with a unique ``OperationTaskIdentifier``, allowing it to conform to
 /// `Identifiable`. This identifier is also used to implement `Hashable` and `Equatable` just like
@@ -69,10 +70,11 @@ extension OperationTask {
   ///   - work: The task's actual work.
   public init(
     context: OperationContext,
-    work: @escaping @Sendable (
-      OperationTaskIdentifier,
-      OperationContext
-    ) async throws(Failure) -> Value
+    work:
+      @escaping @Sendable (
+        OperationTaskIdentifier,
+        OperationContext
+      ) async throws(Failure) -> Value
   ) where Failure == any Error {
     self.id = .next()
     self.context = context
@@ -89,10 +91,11 @@ extension OperationTask {
   ///   - work: The task's actual work.
   public init(
     context: OperationContext,
-    work: @escaping @Sendable (
-      OperationTaskIdentifier,
-      OperationContext
-    ) async -> Value
+    work:
+      @escaping @Sendable (
+        OperationTaskIdentifier,
+        OperationContext
+      ) async -> Value
   ) where Failure == Never {
     self.id = .next()
     self.context = context
@@ -174,7 +177,7 @@ extension OperationTask {
     ) {
       for dependency in self.dependencies {
         if visited.contains(dependency.id) {
-          reportWarning(.OperationTaskCircularScheduling(info: cyclicalIds + [dependency.info]))
+          reportWarning(.operationTaskCircularScheduling(info: cyclicalIds + [dependency.info]))
         } else {
           dependency.warnIfCyclesDetected(
             cyclicalIds: cyclicalIds + [dependency.info],
@@ -414,7 +417,7 @@ extension OperationTask {
 // MARK: - Warnings
 
 extension OperationWarning {
-  public static func OperationTaskCircularScheduling(info: [OperationTaskInfo]) -> Self {
+  public static func operationTaskCircularScheduling(info: [OperationTaskInfo]) -> Self {
     Self(
       """
       Circular scheduling detected for tasks.

@@ -18,7 +18,7 @@ public struct OperationTaskIdentifier: Hashable, Sendable {
 
 extension OperationTaskIdentifier: CustomDebugStringConvertible {
   public var debugDescription: String {
-    "#\(self.number)"
+    "OperationTaskIdentifier(#\(self.number))"
   }
 }
 
