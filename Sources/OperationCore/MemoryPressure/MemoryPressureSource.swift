@@ -1,9 +1,3 @@
-#if canImport(Dispatch)
-  import Dispatch
-#endif
-
-// MARK: - MemoryPressureSource
-
 /// A protocol for observing memory pressure notifications.
 ///
 /// ``OperationClient/DefaultStoreCache`` uses this protocol to evict inactive stores whenever a new

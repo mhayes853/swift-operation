@@ -1,14 +1,18 @@
 #if canImport(Dispatch)
   import Dispatch
-#endif
 
-// MARK: - DispatchMemoryPressureSource
+  // MARK: - DispatchMemoryPressureSource
 
-#if canImport(Darwin)
-  /// A ``MemoryPressureSource`` that uses `DispatchSource.makeMemoryPressureSource` to subscribe
-  /// to memory pressure notifications.
+  /// A ``MemoryPressureSource`` backed by `DispatchSource.makeMemoryPressureSource`.
   public struct DispatchMemoryPressureSource: MemoryPressureSource, Sendable {
-    let queue: DispatchQueue?
+    private let queue: DispatchQueue?
+    
+    /// Creates a memory pressure source backed by `DispatchSource.makeMemoryPressureSource`.
+    ///
+    /// - Parameter queue: The queue to observer pressure notifications on.
+    public init(queue: DispatchQueue?) {
+      self.queue = queue
+    }
 
     public func subscribe(
       with handler: @escaping @Sendable (MemoryPressure) -> Void
@@ -20,25 +24,21 @@
   }
 
   extension MemoryPressureSource where Self == DispatchMemoryPressureSource {
-    /// A ``MemoryPressureSource`` that uses `DispatchSource.makeMemoryPressureSource` to subscribe
-    /// to memory pressure notifications.
+    /// A ``MemoryPressureSource`` backed by `DispatchSource.makeMemoryPressureSource`.
     public static var dispatch: Self {
       .dispatch(queue: nil)
     }
 
-    /// A ``MemoryPressureSource`` that uses `DispatchSource.makeMemoryPressureSource` to subscribe
-    /// to memory pressure notifications.
+    /// A ``MemoryPressureSource`` backed by `DispatchSource.makeMemoryPressureSource`.
     ///
     /// - Parameter queue: The queue to observe pressure notifications on.
     public static func dispatch(queue: DispatchQueue?) -> Self {
       DispatchMemoryPressureSource(queue: queue)
     }
   }
-#endif
 
-// MARK: - MemoryPressure Helper
+  // MARK: - MemoryPressure Helper
 
-#if canImport(Darwin)
   extension MemoryPressure {
     /// Creates pressure from dispatch pressure.
     ///

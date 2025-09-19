@@ -1,18 +1,19 @@
-// MARK: - QueryRequest
+// MARK: - OperationRequest
 
 extension OperationRequest {
-  /// Indicates what severities that this query should be evicted from
-  /// ``OperationClient/DefaultStoreCache`` upon receiving a memory pressure notification.
+  /// Indicates what severities that an ``OperationStore`` using this operation should be evicted
+  /// from ``OperationClient/DefaultStoreCache`` upon receiving a memory pressure notification.
   ///
-  /// You can use this modifier to ensure that certain queries are never evicted from the store
+  /// You can use this modifier to ensure that certain operation stores are never evicted from the store
   /// cache, even if system memory runs low. For instance:
   ///
   /// ```swift
-  /// // 🔵 Indicates that query should never be evicted from the store cache.
+  /// // 🔵 Indicates that any store that uses query should never be evicted from the store cache.
   /// let query = MyQuery().evictWhen(pressure: [])
   /// ```
   ///
-  /// - Parameter pressure: The ``MemoryPressure`` at which this query should be evicted.
+  /// - Parameter pressure: The ``MemoryPressure`` at which this an operation store using this
+  /// operation should be evicted from the store cache.
   /// - Returns: A ``ModifiedOperation``.
   public func evictWhen(
     pressure: MemoryPressure
@@ -34,7 +35,7 @@ public struct _EvictWhenPressureModifier<
 // MARK: - OperationContext
 
 extension OperationContext {
-  /// The required ``MemoryPressure`` severity to evict the ``OperationStore`` from
+  /// The required ``MemoryPressure`` severity to evict an ``OperationStore`` from
   /// ``OperationClient/DefaultStoreCache`` upon receiving a memory pressure notification.
   ///
   /// The default value is ``MemoryPressure/defaultEvictable``.
