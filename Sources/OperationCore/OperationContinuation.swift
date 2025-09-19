@@ -1,15 +1,16 @@
 // MARK: - OperationContinuation
 
-/// A data type for yielding intermittent results from a ``QueryRequest``.
+/// A data type for yielding intermittent results from an ``OperationRequest``.
 ///
-/// Every query is passed a continuation in ``QueryRequest/fetch(in:with:)``, and you can use this
-/// continuation to yield multiple data updates while fetching the primary data from your query.
+/// Every operation is passed a continuation in to its body, which can be used to yield data
+/// updates while your operation is still running.
 ///
 /// ```swift
 /// struct CacheableQuery: QueryRequest, Hashable {
 ///   let key: String
 ///
 ///   func fetch(
+///     isolation: isolated (any Actor)?,
 ///     in context: OperationContext,
 ///     with continuation: OperationContinuation<QueryData>
 ///   ) async throws -> QueryData {
@@ -29,25 +30,25 @@
 /// }
 /// ```
 ///
-/// > Note: Read the <doc:MultistageQueries> article to learn the use cases for yielding data and
-/// > how most effectively yield data from your queries.
+/// > Note: Read the <doc:MultistageOperations> article to learn the use cases for yielding
+/// > intermittent data from your operations.
 public struct OperationContinuation<Value, Failure: Error>: Sendable {
-  private let onQueryResult: @Sendable (sending Result<Value, Failure>, OperationContext?) -> Void
+  private let onResult: @Sendable (sending Result<Value, Failure>, OperationContext?) -> Void
 
   /// Creates a continuation.
   ///
-  /// - Parameter onQueryResult: A function to handle yielded query results.
+  /// - Parameter onResult: A function to handle yielded operation results.
   public init(
-    onQueryResult: @escaping @Sendable (sending Result<Value, Failure>, OperationContext?) -> Void
+    onResult: @escaping @Sendable (sending Result<Value, Failure>, OperationContext?) -> Void
   ) {
-    self.onQueryResult = onQueryResult
+    self.onResult = onResult
   }
 }
 
 // MARK: - Yielding
 
 extension OperationContinuation {
-  /// Yields a value from the query.
+  /// Yields a value from the operation.
   ///
   /// - Parameters:
   ///   - value: The value to yield.
@@ -56,7 +57,7 @@ extension OperationContinuation {
     self.yield(with: .success(value), using: context)
   }
 
-  /// Yields an error from the query.
+  /// Yields an error from the operation.
   ///
   /// - Parameters:
   ///   - error: The error to yield.
@@ -65,7 +66,7 @@ extension OperationContinuation {
     self.yield(with: .failure(error), using: context)
   }
 
-  /// Yields a result from the query.
+  /// Yields a result from the operation.
   ///
   /// - Parameters:
   ///   - result: The result to yield.
@@ -74,6 +75,6 @@ extension OperationContinuation {
     with result: sending Result<Value, Failure>,
     using context: OperationContext? = nil
   ) {
-    self.onQueryResult(result, context)
+    self.onResult(result, context)
   }
 }

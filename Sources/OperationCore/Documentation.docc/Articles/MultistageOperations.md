@@ -1,4 +1,4 @@
-# Multistage Operation
+# Multistage Operations
 
 Learn how to utilize ``OperationContinuation`` to yield multiple data updates from your operation while its running.
 
