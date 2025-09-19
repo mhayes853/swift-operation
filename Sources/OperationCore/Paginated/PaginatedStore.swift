@@ -15,7 +15,7 @@ extension OperationStore {
   ///   - initialValue: The initial value.
   ///   - initialContext: The default ``OperationContext``.
   /// - Returns: A store.
-  public static func detached<Query: PaginatedRequest>(
+  public static func detached<Query: PaginatedRequest & SendableMetatype>(
     query: sending Query,
     initialValue: Query.State.StateValue = [],
     initialContext: OperationContext = OperationContext()
@@ -41,7 +41,7 @@ extension OperationStore {
   ///   - query: The ``PaginatedRequest``.
   ///   - initialContext: The default ``OperationContext``.
   /// - Returns: A store.
-  public static func detached<Query: PaginatedRequest>(
+  public static func detached<Query: PaginatedRequest & SendableMetatype>(
     query: sending Query.Default,
     initialContext: OperationContext = OperationContext()
   ) -> OperationStore<Query.Default.State> where State == DefaultStateOperation<Query>.State {

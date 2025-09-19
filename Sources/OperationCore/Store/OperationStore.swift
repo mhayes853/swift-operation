@@ -573,7 +573,7 @@ extension OperationStore {
 
 // MARK: - Event Handler
 
-extension OperationEventHandler where State: Sendable {
+extension OperationEventHandler {
   fileprivate init(subscriptions: OperationSubscriptions<Self>) {
     self.init { state, context in
       subscriptions.forEach { $0.onStateChanged?(state, context) }

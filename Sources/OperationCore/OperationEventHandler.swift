@@ -20,12 +20,14 @@ public struct OperationEventHandler<State: OperationState>: Sendable {
 
   /// A callback that is invoked when an operation run ends.
   ///
-  /// This callback is invoked before any state changes occur on an ``OperationStore``.
+  /// This callback is invoked before any state changes occur on an ``OperationStore``. If you want
+  /// to be alerted to state changes, you can listen to them in ``onStateChanged``.
   public var onRunEnded: (@Sendable (OperationContext) -> Void)?
 
   /// A callback that is invoked when a result is received from an operation run.
   ///
-  /// This callback is invoked before any state changes occur on an ``OperationStore``.
+  /// This callback is invoked before any state changes occur on an ``OperationStore``. If you want
+  /// to be alerted to state changes, you can listen to them in ``onStateChanged``.
   public var onResultReceived:
     (@Sendable (Result<State.OperationValue, State.Failure>, OperationContext) -> Void)?
 

@@ -9,12 +9,18 @@ public struct PaginatedEventHandler<State: _PaginatedStateProtocol>: Sendable {
   public var onStateChanged: (@Sendable (State, OperationContext) -> Void)?
 
   /// A callback that is invoked when fetching starts.
+  ///
+  /// This callback is invoked after immediately after an ``OperationStore`` calls
+  /// ``OperationRequest/run(isolation:in:with:)``.
   public var onFetchingStarted: (@Sendable (OperationContext) -> Void)?
 
   /// A callback that is invoked when fetching for a specified page starts.
   public var onPageFetchingStarted: (@Sendable (State.PageID, OperationContext) -> Void)?
 
   /// A callback that is invoked when the result is received from fetching a specified page.
+  ///
+  /// This callback is invoked before any state changes occur on an ``OperationStore``. If you want
+  /// to be alerted to state changes, you can listen to them in ``onStateChanged``.
   public var onPageResultReceived:
     (
       @Sendable (
@@ -25,6 +31,9 @@ public struct PaginatedEventHandler<State: _PaginatedStateProtocol>: Sendable {
     )?
 
   /// A callback that is invoked when a result is received from fetching.
+  ///
+  /// This callback is invoked before any state changes occur on an ``OperationStore``. If you want
+  /// to be alerted to state changes, you can listen to them in ``onStateChanged``.
   public var onResultReceived:
     (
       @Sendable (
@@ -34,9 +43,15 @@ public struct PaginatedEventHandler<State: _PaginatedStateProtocol>: Sendable {
     )?
 
   /// A callback that is invoked when fetching for a specified page ends.
+  ///
+  /// This callback is invoked before any state changes occur on an ``OperationStore``. If you want
+  /// to be alerted to state changes, you can listen to them in ``onStateChanged``.
   public var onPageFetchingEnded: (@Sendable (State.PageID, OperationContext) -> Void)?
 
   /// A callback that is invoked when fetching ends.
+  ///
+  /// This callback is invoked before any state changes occur on an ``OperationStore``. If you want
+  /// to be alerted to state changes, you can listen to them in ``onStateChanged``.
   public var onFetchingEnded: (@Sendable (OperationContext) -> Void)?
 
   /// Creates an event handler.

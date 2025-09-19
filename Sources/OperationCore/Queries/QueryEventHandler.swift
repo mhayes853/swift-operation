@@ -9,12 +9,21 @@ public struct QueryEventHandler<State: _QueryStateProtocol>: Sendable {
   public var onStateChanged: (@Sendable (State, OperationContext) -> Void)?
 
   /// A callback that is invoked when query fetching begins.
+  ///
+  /// This callback is invoked after immediately after an ``OperationStore`` calls
+  /// ``OperationRequest/run(isolation:in:with:)``.
   public var onFetchingStarted: (@Sendable (OperationContext) -> Void)?
 
   /// A callback that is invoked when query fetching ends.
+  ///
+  /// This callback is invoked before any state changes occur on an ``OperationStore``. If you want
+  /// to be alerted to state changes, you can listen to them in ``onStateChanged``.
   public var onFetchingEnded: (@Sendable (OperationContext) -> Void)?
 
   /// A callback that is invoked when a result is received from query fetching.
+  ///
+  /// This callback is invoked before any state changes occur on an ``OperationStore``. If you want
+  /// to be alerted to state changes, you can listen to them in ``onStateChanged``.
   public var onResultReceived:
     (@Sendable (Result<State.OperationValue, State.Failure>, OperationContext) -> Void)?
 

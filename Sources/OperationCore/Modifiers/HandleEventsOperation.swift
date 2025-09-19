@@ -1,4 +1,19 @@
 extension StatefulOperationRequest {
+  /// Handles events from this operation using an ``OperationEventHandler``.
+  ///
+  /// Immediately after ``OperationRequest/run(isolation:in:with:)`` is invoked,
+  /// ``OperationEventHandler/onRunStarted`` is invoked. Whenever this operation yields or returns
+  /// its final result, ``OperationEventHandler/onResultReceived`` is invoked. After the final
+  /// result has been returned from this operation, ``OperationEventHandler/onRunEnded`` is
+  /// invoked.
+  ///
+  /// ``OperationEventHandler/onStateChanged`` is not invoked by this modifier, and is invoked by
+  /// ``OperationStore`` instead.
+  ///
+  /// `OperationStore` automatically applies this modifier to your operation when a run begins.
+  ///
+  /// - Parameter eventHandler: An event handler.
+  /// - Returns: A ``ModifiedOperation``.
   public func handleEvents(
     with eventHandler: OperationEventHandler<State>
   ) -> ModifiedOperation<Self, _HandleEventsModifier<Self>> {

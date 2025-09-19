@@ -9,12 +9,21 @@ public struct OpaqueOperationEventHandler: Sendable {
   public var onStateChanged: (@Sendable (OpaqueOperationState, OperationContext) -> Void)?
 
   /// A callback that is invoked when an operation run begins.
+  ///
+  /// This callback is invoked after immediately after an ``OperationStore`` calls
+  /// ``OperationRequest/run(isolation:in:with:)``.
   public var onRunStarted: (@Sendable (OperationContext) -> Void)?
 
   /// A callback that is invoked when an operation run ends.
+  ///
+  /// This callback is invoked before any state changes occur on an ``OperationStore``. If you want
+  /// to be alerted to state changes, you can listen to them in ``onStateChanged``.
   public var onRunEnded: (@Sendable (OperationContext) -> Void)?
 
   /// A callback that is invoked when a result is received from an operation.
+  ///
+  /// This callback is invoked before any state changes occur on an ``OperationStore``. If you want
+  /// to be alerted to state changes, you can listen to them in ``onStateChanged``.
   public var onResultReceived:
     (@Sendable (Result<any Sendable, any Error>, OperationContext) -> Void)?
 

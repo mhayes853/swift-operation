@@ -12,7 +12,7 @@ extension OperationStore {
   ///   - initialState: The initial state.
   ///   - initialContext: The default ``OperationContext``.
   /// - Returns: A store.
-  public static func detached<Query: QueryRequest>(
+  public static func detached<Query: QueryRequest & SendableMetatype>(
     query: sending Query,
     initialState: Query.State,
     initialContext: OperationContext = OperationContext()
@@ -31,7 +31,7 @@ extension OperationStore {
   ///   - initialValue: The initial value.
   ///   - initialContext: The default ``OperationContext``.
   /// - Returns: A store.
-  public static func detached<Query: QueryRequest>(
+  public static func detached<Query: QueryRequest & SendableMetatype>(
     query: sending Query,
     initialValue: Query.State.StateValue,
     initialContext: OperationContext = OperationContext()
@@ -53,7 +53,7 @@ extension OperationStore {
   ///   - query: The default ``QueryRequest``.
   ///   - initialContext: The default ``OperationContext``.
   /// - Returns: A store.
-  public static func detached<Query: QueryRequest>(
+  public static func detached<Query: QueryRequest & SendableMetatype>(
     query: sending Query.Default,
     initialContext: OperationContext = OperationContext()
   ) -> OperationStore<Query.Default.State> where State == DefaultStateOperation<Query>.State {

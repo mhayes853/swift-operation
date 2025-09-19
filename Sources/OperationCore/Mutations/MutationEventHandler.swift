@@ -10,9 +10,15 @@ public struct MutationEventHandler<State: _MutationStateProtocol>: Sendable {
   public var onMutatingStarted: (@Sendable (State.Arguments, OperationContext) -> Void)?
 
   /// A callback that is invoked when a mutating has ended.
+  ///
+  /// This callback is invoked before any state changes occur on an ``OperationStore``. If you want
+  /// to be alerted to state changes, you can listen to them in ``onStateChanged``.
   public var onMutatingEnded: (@Sendable (State.Arguments, OperationContext) -> Void)?
 
   /// A callback that is invoked when a mutation emits a result.
+  ///
+  /// This callback is invoked before any state changes occur on an ``OperationStore``. If you want
+  /// to be alerted to state changes, you can listen to them in ``onStateChanged``.
   public var onMutationResultReceived:
     (@Sendable (State.Arguments, Result<State.Value, State.Failure>, OperationContext) -> Void)?
 
