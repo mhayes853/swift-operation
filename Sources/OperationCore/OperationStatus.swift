@@ -2,18 +2,18 @@ import IdentifiedCollections
 
 // MARK: - OperationStatus
 
-/// An enum representing the current status of a query.
+/// An enum representing the current status of an operation.
 ///
 /// You generally don't create instances of this enum directly, and instead you can access it via
-/// ``OperationState/status-5oj8d`` on your query's state.
+/// ``OperationState/status-87th9`` on your operation's state.
 public enum OperationStatus<Value, Failure: Error> {
-  /// The query has never been fetched.
+  /// The operation has never been fetched.
   case idle
 
-  /// The query is currently fetching data.
+  /// The operation is currently fetching data.
   case loading
 
-  /// The query has completed with a result.
+  /// The operation has completed with a result.
   case result(Result<Value, Failure>)
 }
 
@@ -36,7 +36,7 @@ extension OperationStatus {
     }
   }
 
-  /// The result value, if the status indicates that the query finished successfully.
+  /// The result value, if the status indicates that the operation finished successfully.
   public var resultValue: Value? {
     switch self {
     case .result(.success(let value)): value
@@ -44,7 +44,7 @@ extension OperationStatus {
     }
   }
 
-  /// The result error, if the status indicates that the query finished unsuccessfully.
+  /// The result error, if the status indicates that the operation finished unsuccessfully.
   public var resultError: Failure? {
     switch self {
     case .result(.failure(let error)): error
@@ -52,7 +52,7 @@ extension OperationStatus {
     }
   }
 
-  /// The result, if the status indicates that the query finished.
+  /// The result, if the status indicates that the operation finished.
   public var result: Result<Value, Failure>? {
     switch self {
     case .result(let result): result
@@ -60,22 +60,22 @@ extension OperationStatus {
     }
   }
 
-  /// Whether or not the query finished.
+  /// Whether or not the operation finished.
   public var isFinished: Bool {
     self.result != nil
   }
 
-  /// Whether or not the query finished successfully.
+  /// Whether or not the operation finished successfully.
   public var isSuccessful: Bool {
     self.resultValue != nil
   }
 
-  /// Whether or not the query finished unsuccessfully.
+  /// Whether or not the operation finished unsuccessfully.
   public var isFailure: Bool {
     self.resultError != nil
   }
 
-  /// Whether or not the query finished unsuccessfully with a `CancellationError`.
+  /// Whether or not the operation finished unsuccessfully with a `CancellationError`.
   public var isCancelled: Bool {
     self.resultError is CancellationError
   }
@@ -84,7 +84,7 @@ extension OperationStatus {
 // MARK: - Mapping
 
 extension OperationStatus {
-  /// Maps the success value of this status if it indicates that the query finished successfully.
+  /// Maps the success value of this status if it indicates that the operation finished successfully.
   ///
   /// If this status isn't successful, then it is returned instead.
   ///
@@ -141,14 +141,14 @@ extension OperationStatus: Sendable where Value: Sendable, Failure: Sendable {}
 // MARK: - OperationState
 
 extension OperationState where StateValue == StatusValue {
-  /// The current ``OperationStatus`` of this query.
+  /// The current ``OperationStatus`` of this operation.
   public var status: OperationStatus<StatusValue, Failure> {
     self.stateStatus
   }
 }
 
 extension OperationState where StateValue == StatusValue? {
-  /// The current ``OperationStatus`` of this query.
+  /// The current ``OperationStatus`` of this operation.
   public var status: OperationStatus<StatusValue, Failure> {
     self.stateStatus.flatMapSuccess { value in
       if let value {
