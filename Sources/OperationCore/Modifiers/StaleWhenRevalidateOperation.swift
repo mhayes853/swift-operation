@@ -3,11 +3,12 @@ import Foundation
 // MARK: - StaleWhenRevalidateQuery
 
 extension StatefulOperationRequest {
-  /// Marks ``OperationStore/isStale`` as true for this query whenever the specified predicate is true.
+  /// Marks ``OperationStore/isStale`` as true for this operation whenever the specified predicate
+  /// is true.
   ///
-  /// Chaining multiple instances of any modifier that begins with `stale` will result in an OR
-  /// operation being applied between the diffent conditions. For instance, the following queries
-  /// are equivalent:
+  /// Chaining multiple instances of any modifier that begins with `stale` will result in a boolean
+  /// OR being applied between the diffent conditions. For instance, the following operations
+  /// are equivalent with regards to their stale conditions.
   ///
   /// ```swift
   /// let q1 = MyQuery().staleWhen { state, _ in state.currentValue.isMultiple(of: 3) }
@@ -26,11 +27,12 @@ extension StatefulOperationRequest {
     self.modifier(_StaleWhenModifier(predicate: predicate))
   }
 
-  /// Marks ``OperationStore/isStale`` as true for this query whenever the specified ``FetchCondition`` is true.
+  /// Marks ``OperationStore/isStale`` as true for this operation whenever the specified
+  /// ``OperationRunSpecification`` is satisfied.
   ///
-  /// Chaining multiple instances of any modifier that begins with `stale` will result in an OR
-  /// operation being applied between the diffent conditions. For instance, the following queries
-  /// are equivalent:
+  /// Chaining multiple instances of any modifier that begins with `stale` will result in a boolean
+  /// OR being applied between the diffent conditions. For instance, the following operations
+  /// are equivalent with regards to their stale conditions.
   ///
   /// ```swift
   /// let q1 = MyQuery().staleWhen(condition: cond1)
@@ -39,7 +41,8 @@ extension StatefulOperationRequest {
   /// let q2 = MyQuery().staleWhen(condition: cond1 || cond2)
   /// ```
   ///
-  /// - Parameter condition: A ``FetchCondition`` to indicate whether or not ``OperationStore/isStale`` is true.
+  /// - Parameter specification: An ``OperationRunSpecification`` to indicate whether or not
+  /// ``OperationStore/isStale`` is true.
   /// - Returns: A ``ModifiedOperation``.
   public func staleWhen(
     satisfying specification: some OperationRunSpecification & Sendable
@@ -49,11 +52,11 @@ extension StatefulOperationRequest {
     )
   }
 
-  /// Marks ``OperationStore/isStale`` as true for this query whenever its current value is nil.
+  /// Marks ``OperationStore/isStale`` as true for this operation whenever its current value is nil.
   ///
-  /// Chaining multiple instances of any modifier that begins with `stale` will result in an OR
-  /// operation being applied between the diffent conditions. For instance, the following queries
-  /// are equivalent:
+  /// Chaining multiple instances of any modifier that begins with `stale` will result in a boolean
+  /// OR being applied between the diffent conditions. For instance, the following operations
+  /// are equivalent with regards to their stale conditions.
   ///
   /// ```swift
   /// let q1 = MyQuery().staleWhenNoValue()
@@ -70,11 +73,12 @@ extension StatefulOperationRequest {
     self.staleWhen { state, _ in state.currentValue == nil }
   }
 
-  /// Marks ``OperationStore/isStale`` as true for this query when the specified number of seconds has
-  /// elapsed since the last time this query was successfully fetched..
+  /// Marks ``OperationStore/isStale`` as true for this operation when the specified number of
+  /// seconds has elapsed since the last time this operation was successfully ran.
   ///
-  /// Chaining multiple instances of any modifier that begins with `stale` will result in an OR
-  /// operation being applied between the diffent conditions. For instance:
+  /// Chaining multiple instances of any modifier that begins with `stale` will result in a boolean
+  /// OR being applied between the diffent conditions. For instance, the following operations
+  /// are equivalent with regards to their stale conditions.
   ///
   /// ```swift
   /// // This query is stale whenever 5 minutes have elapsed since its last
@@ -83,7 +87,8 @@ extension StatefulOperationRequest {
   ///   .staleWhen { state, _ in state.currentValue == 1 }
   /// ```
   ///
-  /// - Parameter seconds: A `TimeInterval` at which ``OperationStore/isStale`` is true after a successful fetch.
+  /// - Parameter seconds: A `TimeInterval` at which ``OperationStore/isStale`` is true after a
+  /// successful operation run.
   /// - Returns: A ``ModifiedOperation``.
   public func stale(
     after seconds: TimeInterval
