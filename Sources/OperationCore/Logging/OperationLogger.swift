@@ -2,7 +2,9 @@
   import Logging
 
   extension OperationContext {
-    /// A `Logger` instance used for logging operation events.
+    /// The current `Logger` instance in this context.
+    ///
+    /// The default logger has the `"swift.operation"` label applied to it.
     public var operationLogger: Logger {
       get { self[OperationLoggerKey.self] }
       set { self[OperationLoggerKey.self] = newValue }

@@ -3,7 +3,7 @@
   import Foundation
 
   extension OperationRequest {
-    /// Logs the runtime duration of each fetch for this query in seconds.
+    /// Logs the runtime duration of each run for this operation in seconds.
     ///
     /// - Parameters:
     ///   - logger: A `Logger` to use (defaults to the logger in ``OperationContext``.
@@ -37,7 +37,7 @@
           "An operation finished running.",
           metadata: [
             "operation.type": "\(operation._debugTypeName)",
-            "operation.duration": "\(duration.durationFormatted())"
+            "operation.runDuration": "\(duration.durationFormatted())"
           ]
         )
       }

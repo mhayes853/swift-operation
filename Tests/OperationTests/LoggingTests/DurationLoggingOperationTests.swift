@@ -29,7 +29,7 @@
             TestHandler.Message(
               message: "An operation finished running.",
               level: .debug,
-              metadata: ["operation.type": "TestQuery", "operation.duration": "1.0 sec"]
+              metadata: ["operation.type": "TestQuery", "operation.runDuration": "1.0 sec"]
             )
           ]
         )
