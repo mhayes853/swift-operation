@@ -1,8 +1,8 @@
 extension OperationRequest where Value: Sendable {
-  /// Deduplicates fetches to this query.
+  /// Deduplicates fetches to this operation.
   ///
-  /// When 2 fetches on this query occur at the same time, the second fetch will not invoke this
-  /// query, but rather wait for the result of the first fetch.
+  /// When 2 runs on this operation occur at the same time, the second run will not invoke this
+  /// operation, but rather await the result of the first run.
   ///
   /// - Returns: A ``ModifiedOperation``.
   public func deduplicated() -> ModifiedOperation<Self, _DeduplicationModifier<Self>> {
@@ -16,12 +16,12 @@ extension OperationRequest where Value: Sendable {
     }
   }
 
-  /// Deduplicates fetches to this query based on a predicate.
+  /// Deduplicates fetches to this operation.
   ///
-  /// When 2 fetches on this query occur at the same time, the second fetch will not invoke this
-  /// query, but rather wait for the result of the first fetch.
+  /// When 2 runs on this operation occur at the same time, the second run will not invoke this
+  /// operation, but rather await the result of the first run.
   ///
-  /// - Parameter removeDuplicates: A predicate to distinguish duplicate fetch attempts.
+  /// - Parameter removeDuplicates: A predicate to distinguish duplicate runs.
   /// - Returns: A ``ModifiedOperation``.
   public func deduplicated(
     by removeDuplicates: @escaping @Sendable (OperationContext, OperationContext) -> Bool
@@ -58,6 +58,7 @@ public struct _DeduplicationModifier<
     let (shouldRun, taskId) = await storage.runAction(for: context)
     guard shouldRun else { return try await storage.wait(for: taskId) }
 
+    // NB: Can't use the Result convenience init due to losing typed throws.
     var result: Result<Operation.Value, Operation.Failure>
     do {
       result = .success(
