@@ -2,11 +2,11 @@ import Foundation
 
 // MARK: - OperationDelayer
 
-/// A protocol for artificially delaying queries.
+/// A protocol for artificially delaying operations.
 ///
-/// Artificial delays are useful for adding backoff to query retries, avoiding rate limits, and
-/// much more. You can override the ``OperationContext/operationDelayer`` context property to override the
-/// delay mechanism for your queries.
+/// Artificial delays are useful for adding backoff to operation retries, avoiding rate limits, and
+/// much more. You can use the ``OperationRequest/delayer(_:)`` modifier to override the delayer
+/// for an operation.
 public protocol OperationDelayer {
   /// Delay for the specified number of seconds.
   ///
@@ -16,7 +16,7 @@ public protocol OperationDelayer {
 
 // MARK: - Task Sleep Delayer
 
-/// A ``OperationDelayer`` that uses a `Task.sleep` for delaying.
+/// An ``OperationDelayer`` that uses a `Task.sleep` for delaying.
 public struct TaskSleepDelayer: OperationDelayer, Sendable {
   public init() {}
 
@@ -26,7 +26,7 @@ public struct TaskSleepDelayer: OperationDelayer, Sendable {
 }
 
 extension OperationDelayer where Self == TaskSleepDelayer {
-  /// A ``OperationDelayer`` that uses a `Task.sleep` for delaying.
+  /// An ``OperationDelayer`` that uses a `Task.sleep` for delaying.
   public static var taskSleep: Self {
     TaskSleepDelayer()
   }
@@ -38,7 +38,7 @@ extension OperationDelayer where Self == TaskSleepDelayer {
 
 // MARK: - Clock Delayer
 
-/// A ``OperationDelayer`` that uses the `Clock` protocol to delay queries.
+/// An ``OperationDelayer`` that uses the `Clock` protocol to delay operations.
 @available(iOS 16.0, macOS 13.0, watchOS 9.0, tvOS 16.0, *)
 public struct ClockDelayer<C: Clock>: OperationDelayer, Sendable where C.Duration == Duration {
   private let clock: C
@@ -54,10 +54,10 @@ public struct ClockDelayer<C: Clock>: OperationDelayer, Sendable where C.Duratio
 
 @available(iOS 16.0, macOS 13.0, watchOS 9.0, tvOS 16.0, *)
 extension OperationDelayer {
-  /// A ``OperationDelayer`` that uses the `Clock` protocol to delay queries.
+  /// An ``OperationDelayer`` that uses the `Clock` protocol to delay operations.
   ///
   /// - Parameter clock: The `Clock` to use to perform delays.
-  /// - Returns: A ``OperationDelayer``.
+  /// - Returns: A ``ClockDelayer``.
   public static func clock<C: Clock>(_ clock: C) -> Self where Self == ClockDelayer<C> {
     Self(clock)
   }
@@ -105,7 +105,7 @@ public struct AnySendableDelayer: OperationDelayer, Sendable {
 // MARK: - OperationModifier
 
 extension OperationRequest {
-  /// Sets the ``OperationDelayer`` to use for this query.
+  /// Sets the ``OperationDelayer`` to use for this operation.
   ///
   /// - Parameter delayer: The ``OperationDelayer`` to use.
   /// - Returns: A ``ModifiedOperation``.
@@ -132,9 +132,9 @@ public struct _DelayerModifier<
 extension OperationContext {
   /// The current ``OperationDelayer`` in this context.
   ///
-  /// The default value is platform dependent. On Darwin platforms,
-  /// ``OperationDelayer/taskSleep`` is the default value, and ``OperationDelayer/clock(_:)`` is the
-  /// default value on all other platforms.
+  /// The default value is platform dependent. If ``OperationDelayer/clock(_:)`` is available on
+  /// the current platform, then it is used. Otherwise, the default value falls back to
+  /// ``OperationDelayer/taskSleep``.
   public var operationDelayer: any OperationDelayer & Sendable {
     get { self[OperationDelayerKey.self] }
     set { self[OperationDelayerKey.self] = newValue }
