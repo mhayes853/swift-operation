@@ -78,7 +78,7 @@ extension OperationContext {
   func request<State: _PaginatedStateProtocol & Sendable>(
     _: State.Type
   ) -> PagingRequest<State.PageID> {
-    guard let store = self.currentFetchingOperationStore?.base as? OperationStore<State>
+    guard let store = self.runningOperationStore?.base as? OperationStore<State>
     else { return .initialPage }
     return store.state.request(in: self)
   }
@@ -86,7 +86,7 @@ extension OperationContext {
   func paging<Query: PaginatedRequest>(
     for query: Query
   ) -> Paging<Query.PageID, Query.PageValue> {
-    guard let store = self.currentFetchingOperationStore?.base as? OperationStore<Query.State>
+    guard let store = self.runningOperationStore?.base as? OperationStore<Query.State>
     else {
       return Paging(pageId: query.initialPageId, pages: [], request: .initialPage)
     }

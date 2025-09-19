@@ -6,60 +6,61 @@ import Foundation
 
 // MARK: - OperationStore
 
-/// The runtime for a ``QueryRequest``.
+/// The runtime for a ``StatefulOperationRequest``.
 ///
-/// `OperationStore`s are the runtime for your queries, and they manage its state and interactions to
-/// make your queries usable in your UI. If you're using SwiftUI, `@State.Operation` subscribes to a store
-/// under the hood to always have the latest data. If you're using [Sharing](https://github.com/pointfreeco/swift-sharing),
-/// `@SharedOperation` also subscribes to a store under the hood to always have the latest data.
+/// `OperationStore`s are the runtime for your operation, and they manage its state and interactions to
+/// make your operations usable in your UI. If you're using SwiftUI, `@State.Operation` subscribes
+/// to a store under the hood to always have the latest data. If you're using
+/// [Sharing](https://github.com/pointfreeco/swift-sharing), `@SharedOperation` also subscribes to
+/// a store under the hood to always have the latest data.
 ///
-/// You generally create `OperationStore` instances through ``OperationClient``, however you can also
-/// create stand alone stores through one of the ``detached(query:initialState:initialContext:)``
-/// static initializers.
+/// You generally create `OperationStore` instances through ``OperationClient``, however you can
+/// also create stand alone stores through one of the `detached` static initializers.
 ///
 /// ```swift
 /// let client = OperationClient()
 /// let store = client.store(for: MyQuery())
 ///
-/// let detachedStore = OperationStore.detached(MyQuery(), initialValue: nil)
+/// let detachedStore = OperationStore.detached(query: MyQuery(), initialValue: nil)
 /// ```
 ///
 /// > Note: Stores created through a one of the `detached` initializers are not stored in a
 /// > `OperationClient`. As a result, you will not be able to manage state on detached stores without
-/// > keeping a direct reference to the store instance. See
-/// > <doc:PatternMatchingAndStateManagement> for more.
+/// > keeping a direct reference to the store instance. See <doc:PatternMatchingAndStateManagement>
+/// > for more.
 ///
-/// Through a `OperationStore`, you can fetch your query's data.
+/// Through an `OperationStore`, you can run your operation.
 ///
 /// ```swift
-/// let data = try await store.fetch()
+/// let data = try await store.run()
 /// ```
 ///
-/// You can also subscribe to any query state updates from the store using ``subscribe(with:)-93jyd``.
+/// You can also subscribe to any state updates from the store using
+/// ``subscribe(with:)-(OperationEventHandler<State>)``.
 ///
 /// ```swift
 /// let subscription = store.subscribe(
-///   with: QueryEventHandler { state, context in
+///   with: OperationEventHandler { state, context in
 ///     print("State Changed", state)
 ///   }
 /// )
 /// ```
 ///
-/// > Note: Subscribing to the store will trigger the store to fetch data if the
+/// > Note: Subscribing to the store will trigger the store to run the operation if the
 /// > subscription is the first active subscription on the store and both ``isStale`` and
-/// > ``isAutomaticFetchingEnabled`` are true.
+/// > ``isAutomaticRunningEnabled`` are true.
 ///
-/// > Note: You can also subscribe to state updates via the Combine ``publisher-swift.property``
-/// > or ``states`` `AsyncSequence`.
+/// > Note: You can also subscribe to state updates via the Combine ``publisher`` or ``states``
+/// > `AsyncSequence`.
 ///
-/// You can also set the ``currentValue`` of the query directly through the store. Setting the
+/// You can also set the ``currentValue`` of the operation directly through the store. Setting the
 /// value will push a state update to all subscribers of a store, which can keep your UI in sync.
 ///
 /// ```swift
-/// store.currentValue = MyQueryData()
+/// store.currentValue = MyOperationData()
 /// ```
 ///
-/// You can also place the query in an error state via ``setResult(to:using:)``.
+/// You can also place the operation in an error state via ``setResult(to:using:)``.
 ///
 /// ```swift
 /// store.setResult(to: .failure(SomeError()))
@@ -89,7 +90,7 @@ public final class OperationStore<State: OperationState & Sendable>: OperationPa
     private let request: RequestActor<State.OperationValue, State.Failure>
   #endif
 
-  /// The ``OperationPath`` of the query managed by this store.
+  /// The ``OperationPath`` of the operation managed by this store.
   public let path: OperationPath
 
   private let values: RecursiveLock<Values>
@@ -149,9 +150,9 @@ public final class OperationStore<State: OperationState & Sendable>: OperationPa
 extension OperationStore {
   /// Creates a detached store.
   ///
-  /// Detached stores are not connected to a ``OperationClient``. As such, accessing the
-  /// ``OperationContext/OperationClient`` context property in your query will always yield a nil value.
-  /// Only use a detached store if you want a separate instances of a query runtime for the same query.
+  /// Detached stores are not connected to an ``OperationClient``. As such, accessing the
+  /// ``OperationContext/operationClient`` context property in your operation will always yield a nil
+  /// value.
   ///
   /// - Parameters:
   ///   - operation: The ``StatefulOperationRequest``.
@@ -174,8 +175,7 @@ extension OperationStore {
 // MARK: - Context
 
 extension OperationStore {
-  /// The ``OperationContext`` that is passed to the query every time ``fetch(using:handler:)`` is
-  /// called.
+  /// The ``OperationContext`` that is passed to the operation on every run.
   public var context: OperationContext {
     get { self.values.withLock { $0.context } }
     set { self.values.withLock { $0.context = newValue } }
@@ -185,24 +185,27 @@ extension OperationStore {
 // MARK: - Automatic Fetching
 
 extension OperationStore {
-  /// Whether or not automatic fetching is enabled for this query.
+  /// Whether or not automatic running is enabled for this operation.
   ///
-  /// Automatic fetching is defined as the process of data being fetched from this query without
-  /// explicitly calling ``OperationStore/fetch(using:handler:)``. This includes, but not limited to:
-  /// 1. Automatically fetching from this query when subscribed to via ``OperationStore/subscribe(with:)-93jyd``.
-  /// 2. Automatically fetching from this query when the app re-enters from the background.
-  /// 3. Automatically fetching from this query when the user's network connection comes back online.
-  /// 4. Automatically fetching from this query via a ``OperationController``.
-  /// 5. Automatically fetching from this query via ``QueryRequest/refetchOnChange(of:)``.
+  /// Automatic running is defined as the process of running this operation without explicitly
+  /// calling ``run(using:handler:)``. This includes, but not limited to:
+  /// 1. Running when subscribed to via ``OperationStore/subscribe(with:)-(OperationEventHandler<State>)``.
+  /// 2. Running when the app re-enters the foreground from the background.
+  /// 3. Running when the user's network connection flips from offline to online.
+  /// 4. Running via an ``OperationController``.
+  /// 5. Running via the ``StatefulOperationRequest/rerunOnChange(of:)`` modifier.
   ///
-  /// When automatic fetching is disabled, you are responsible for manually calling
-  /// ``OperationStore/fetch(using:handler:)`` to ensure that your query always has the latest data.
+  /// When automatic running is disabled, you are responsible for manually calling
+  /// ``run(using:handler:)`` to ensure that your operation always has the latest
+  /// data. Methods that work on specific operation types such as ``mutate(using:handler:)`` will
+  /// call ``run(using:handler:)`` under the hood for you.
   ///
-  /// When you use the default initializer of a ``OperationClient``, automatic fetching is enabled for all
-  /// ``QueryRequest`` conformances, and disabled for all ``MutationRequest`` conformances.
+  /// When you use the default initializer of a ``OperationClient``, automatic running is enabled for all
+  /// stores backed by ``QueryRequest`` and ``PaginatedRequest`` operations, and disabled for all
+  /// stores backed by ``MutationRequest`` operations.
   ///
-  /// Queries can individually enable or disable automatic fetching through the
-  /// ``QueryRequest/enableAutomaticRunning(onlyWhen:)`` modifier.
+  /// Operations can individually enable or disable automatic fetching through the
+  /// ``OperationRequest/enableAutomaticRunning(onlyWhen:)`` modifier.
   public var isAutomaticRunningEnabled: Bool {
     self.context.automaticRunningSpecification.isSatisfied(in: self.context)
   }
@@ -211,7 +214,7 @@ extension OperationStore {
 // MARK: - State
 
 extension OperationStore {
-  /// The current state of this query.
+  /// The current state of this operation.
   public var state: State {
     self.values.withLock { $0.state }
   }
@@ -235,7 +238,7 @@ extension OperationStore {
   /// // 🔴 Is prone to high-level data races.
   /// store.currentValue += 1
   ///
-  //  // ✅ No data races.
+  /// // ✅ No data races.
   /// store.withExclusiveAccess {
   ///   $0.currentValue += 1
   /// }
@@ -253,7 +256,7 @@ extension OperationStore {
 // MARK: - Current Value
 
 extension OperationStore {
-  /// The current value of the query.
+  /// The current value of the operation.
   public var currentValue: State.StateValue {
     get { self.state.currentValue }
     set {
@@ -267,7 +270,7 @@ extension OperationStore {
 // MARK: - Set Result
 
 extension OperationStore {
-  /// Directly sets the result of a query.
+  /// Directly sets the result of the operation.
   ///
   /// - Parameters:
   ///   - result: The `Result`.
@@ -285,12 +288,12 @@ extension OperationStore {
 // MARK: - Reset
 
 extension OperationStore {
-  /// Resets the state of the query to its original values.
+  /// Resets the state of the operation to its original values.
   ///
-  /// > Important: This will cancel all active ``OperationTask``s on the query. Those cancellations will not be
-  /// > reflected in the reset query state.
+  /// > Important: This will cancel all active ``OperationTask``s on the operation. Those cancellations will not be
+  /// > reflected in the reset operation state.
   ///
-  /// - Parameter context: The ``OperationContext`` to reset the query in.
+  /// - Parameter context: The ``OperationContext`` to reset the operation in.
   public func resetState(using context: OperationContext? = nil) {
     let effect = self.editValuesWithStateChangeEvent { values in
       values.taskHerdId += 1
@@ -303,14 +306,15 @@ extension OperationStore {
 // MARK: - Is Stale
 
 extension OperationStore {
-  /// Whether or not the currently fetched data from the query is considered stale.
+  /// Whether or not the current data from the operation is considered stale.
   ///
-  /// When this value is true, you should generally try to refetch the query data as soon as
-  /// possible. ``subscribe(with:)-93jyd`` will use this property to decide whether or not to
-  /// automatically fetch the query's data when the first active subscription is made to this store.
+  /// When this value is true, you should generally try to rerun the operation as soon as possible.
+  /// ``subscribe(with:)-(OperationEventHandler<State>)`` will use this property to decide whether
+  /// or not to automatically fetch the query's data when the first active subscription is made to
+  /// this store.
   ///
-  /// A query can customize the value of this property via the
-  /// ``QueryRequest/staleWhen(predicate:)`` modifier.
+  /// An operation can customize the value of this property via the
+  /// ``StatefulOperationRequest/staleWhen(predicate:)`` modifier.
   public var isStale: Bool {
     self.values.withLock {
       $0.context.staleWhenRevalidateCondition.evaluate(state: $0.state, in: $0.context)
@@ -351,7 +355,7 @@ extension OperationStore {
   ) -> OperationTask<State.OperationValue, State.Failure> {
     self.editValuesWithStateChangeEvent(in: context) { values in
       var context = context ?? self.context
-      context.currentFetchingOperationStore = OpaqueOperationStore(erasing: self)
+      context.runningOperationStore = OpaqueOperationStore(erasing: self)
       context.operationTaskConfiguration.name =
         context.operationTaskConfiguration.name
         ?? "\(typeName(Self.self, qualified: true, genericsAbbreviated: false)) Task"
@@ -469,9 +473,9 @@ extension OperationStore {
   /// Subscribes to events from this store using an ``OperationEventHandler``.
   ///
   /// If the subscription is the first active subscription on this store, this method will begin
-  /// fetching the operation's data if both ``isStale`` and ``isAutomaticFetchingEnabled`` are true. If
-  /// the subscriber count drops to 0 whilst performing this data fetch, then the fetch is
-  /// cancelled and a `CancellationError` will be present on the ``state`` property.
+  /// running the operation if both ``isStale`` and ``isAutomaticRunningEnabled`` are true. If
+  /// the subscriber count drops to 0 whilst performing this initial run, then the run is cancelled
+  /// and a `CancellationError` will be present on the ``state`` property.
   ///
   /// - Parameter handler: The event handler.
   /// - Returns: A ``OperationSubscription``.
@@ -590,19 +594,20 @@ extension OperationEventHandler {
 // MARK: - Access OperationStore In Query
 
 extension OperationContext {
-  /// The current query store that is fetching data.
+  /// The current operation store that is fetching data.
   ///
-  /// This property is only non-nil when accessed within ``QueryRequest/fetch(in:with:)``, and it
-  /// type erases the ``OperationStore`` that is fetching its data.
+  /// This property is only non-nil when accessed within an operation run, and it
+  /// type erases the ``OperationStore`` that is running the operation.
   ///
-  /// You can use this property to access the current state for your query inside its body.
+  /// You can use this property to access the current state for your operation inside its body.
   /// ```swift
   /// struct MyQuery: QueryRequest, Hashable {
   ///   func fetch(
+  ///     isolation: isolated (any Actor)?,
   ///     in context: OperationContext,
-  ///     with continuation: OperationContinuation<Value>
+  ///     with continuation: OperationContinuation<Value, any Error>
   ///   ) async throws -> Value {
-  ///     guard let store = context.currentFetchingOperationStore?.base as? OperationStore<State> else {
+  ///     guard let store = context.runningOperationStore?.base as? OperationStore<State> else {
   ///       throw InvalidStoreError()
   ///     }
   ///     // 🟢 Can access the current value from within the query.
@@ -612,7 +617,7 @@ extension OperationContext {
   ///   }
   /// }
   /// ```
-  public var currentFetchingOperationStore: OpaqueOperationStore? {
+  public var runningOperationStore: OpaqueOperationStore? {
     get { self[CurrentOperationStoreKey.self] }
     set { self[CurrentOperationStoreKey.self] = newValue }
   }
@@ -627,13 +632,13 @@ extension OperationContext {
 extension OperationWarning {
   public static func queryYieldedAfterReturning<T, E>(_ result: Result<T, E>) -> Self {
     """
-    A query yielded a result to its continuation after returning.
+    An operation yielded a result to its continuation after it finished running.
 
         Result: \(result)
 
-    This will not update the state of the query inside its OperationStore. Avoid escaping \
-    `OperationContinuation`s that are passed to a query. If you would like to yield a result \
-    after returning, consider using a `OperationController` instead.
+    This will not update the state of the operation inside its OperationStore. Avoid escaping \
+    `OperationContinuation`s that are passed to an operation. If you would like to yield a result \
+    when the operation is not running, consider using an `OperationController` instead.
     """
   }
 }

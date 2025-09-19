@@ -6,9 +6,9 @@ import IdentifiedCollections
 extension OperationStore {
   /// Creates a detached store.
   ///
-  /// Detached stores are not connected to a ``OperationClient``. As such, accessing the
-  /// ``OperationContext/OperationClient`` context property in your query will always yield a nil value.
-  /// Only use a detached store if you want a separate instances of a query runtime for the same query.
+  /// Detached stores are not connected to an ``OperationClient``. As such, accessing the
+  /// ``OperationContext/operationClient`` context property in your operation will always yield a nil
+  /// value.
   ///
   /// - Parameters:
   ///   - query: The ``PaginatedRequest``.
@@ -33,9 +33,9 @@ extension OperationStore {
 
   /// Creates a detached store.
   ///
-  /// Detached stores are not connected to a ``OperationClient``. As such, accessing the
-  /// ``OperationContext/OperationClient`` context property in your query will always yield a nil value.
-  /// Only use a detached store if you want a separate instances of a query runtime for the same query.
+  /// Detached stores are not connected to an ``OperationClient``. As such, accessing the
+  /// ``OperationContext/operationClient`` context property in your operation will always yield a nil
+  /// value.
   ///
   /// - Parameters:
   ///   - query: The ``PaginatedRequest``.
@@ -65,7 +65,8 @@ extension OperationStore where State: _PaginatedStateProtocol {
   ///
   /// - Parameters:
   ///   - context: The ``OperationContext`` to use for the underlying ``OperationTask``.
-  ///   - handler: An ``PaginatedEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
+  ///   - handler: An ``PaginatedEventHandler`` to subscribe to events from fetching the data.
+  ///   (This does not add an active subscriber to the store.)
   /// - Returns: The fetched data.
   @discardableResult
   public func refetchAllPages(
@@ -133,7 +134,8 @@ extension OperationStore where State: _PaginatedStateProtocol {
   ///
   /// - Parameters:
   ///   - context: The ``OperationContext`` to use for the underlying ``OperationTask``.
-  ///   - handler: An ``PaginatedEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
+  ///   - handler: An ``PaginatedEventHandler`` to subscribe to events from fetching the data.
+  ///   (This does not add an active subscriber to the store.)
   /// - Returns: The fetched page.
   @discardableResult
   public func fetchNextPage(
@@ -211,7 +213,8 @@ extension OperationStore where State: _PaginatedStateProtocol {
   ///
   /// - Parameters:
   ///   - context: The ``OperationContext`` to use for the underlying ``OperationTask``.
-  ///   - handler: An ``PaginatedEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
+  ///   - handler: An ``PaginatedEventHandler`` to subscribe to events from fetching the data.
+  ///   (This does not add an active subscriber to the store.)
   /// - Returns: The fetched page.
   @discardableResult
   public func fetchPreviousPage(
@@ -298,7 +301,7 @@ extension OperationStore where State: _PaginatedStateProtocol {
   /// Subscribes to events from this store using a ``PaginatedEventHandler``.
   ///
   /// If the subscription is the first active subscription on this store, this method will begin
-  /// fetching the query's data if both ``isStale`` and ``isAutomaticFetchingEnabled`` are true. If
+  /// fetching the query's data if both ``isStale`` and ``isAutomaticRunningEnabled`` are true. If
   /// the subscriber count drops to 0 whilst performing this data fetch, then the fetch is
   /// cancelled and a `CancellationError` will be present on the ``state`` property.
   ///

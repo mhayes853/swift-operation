@@ -3,9 +3,9 @@
 extension OperationStore {
   /// Creates a detached store.
   ///
-  /// Detached stores are not connected to a ``OperationClient``. As such, accessing the
-  /// ``OperationContext/OperationClient`` context property in your query will always yield a nil value.
-  /// Only use a detached store if you want a separate instances of a query runtime for the same query.
+  /// Detached stores are not connected to an ``OperationClient``. As such, accessing the
+  /// ``OperationContext/operationClient`` context property in your operation will always yield a nil
+  /// value.
   ///
   /// - Parameters:
   ///   - mutation: The ``MutationRequest``.
@@ -24,9 +24,9 @@ extension OperationStore {
 
   /// Creates a detached store.
   ///
-  /// Detached stores are not connected to a ``OperationClient``. As such, accessing the
-  /// ``OperationContext/OperationClient`` context property in your query will always yield a nil value.
-  /// Only use a detached store if you want a separate instances of a query runtime for the same query.
+  /// Detached stores are not connected to an ``OperationClient``. As such, accessing the
+  /// ``OperationContext/operationClient`` context property in your operation will always yield a nil
+  /// value.
   ///
   /// - Parameters:
   ///   - mutation: The ``MutationRequest``.
@@ -48,9 +48,9 @@ extension OperationStore {
 
   /// Creates a detached store.
   ///
-  /// Detached stores are not connected to a ``OperationClient``. As such, accessing the
-  /// ``OperationContext/OperationClient`` context property in your query will always yield a nil value.
-  /// Only use a detached store if you want a separate instances of a query runtime for the same query.
+  /// Detached stores are not connected to an ``OperationClient``. As such, accessing the
+  /// ``OperationContext/operationClient`` context property in your operation will always yield a nil
+  /// value.
   ///
   /// - Parameters:
   ///   - mutation: The ``MutationRequest``.
@@ -79,7 +79,8 @@ extension OperationStore where State: _MutationStateProtocol {
   /// - Parameters:
   ///   - arguments: The set of arguments to mutate with.
   ///   - context: The ``OperationContext`` used by the underlying ``OperationTask``.
-  ///   - handler: A ``QueryEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
+  ///   - handler: A ``QueryEventHandler`` to subscribe to events from fetching the data.
+  ///   (This does not add an active subscriber to the store.)
   /// - Returns: The mutated value.
   @discardableResult
   public func mutate(
@@ -132,7 +133,8 @@ extension OperationStore where State: _MutationStateProtocol, State.Arguments ==
   ///
   /// - Parameters:
   ///   - context: The ``OperationContext`` used by the underlying ``OperationTask``.
-  ///   - handler: A ``MutationEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
+  ///   - handler: A ``MutationEventHandler`` to subscribe to events from fetching the data.
+  ///   (This does not add an active subscriber to the store.)
   /// - Returns: The mutated value.
   @discardableResult
   public func mutate(
@@ -168,7 +170,8 @@ extension OperationStore where State: _MutationStateProtocol {
   ///
   /// - Parameters:
   ///   - context: The ``OperationContext`` used by the underlying ``OperationTask``.
-  ///   - handler: A ``MutationEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
+  ///   - handler: A ``MutationEventHandler`` to subscribe to events from fetching the data.
+  ///   (This does not add an active subscriber to the store.)
   /// - Returns: The mutated value.
   @discardableResult
   public func retryLatest(

@@ -30,7 +30,7 @@ extension OpaqueOperationStore {
 // MARK: - Path
 
 extension OpaqueOperationStore: OperationPathable {
-  /// The ``OperationPath`` of the query managed by this store.
+  /// The ``OperationPath`` of the operation managed by this store.
   public var path: OperationPath {
     self._base.path
   }
@@ -39,8 +39,7 @@ extension OpaqueOperationStore: OperationPathable {
 // MARK: - Context
 
 extension OpaqueOperationStore {
-  /// The ``OperationContext`` that is passed to the query every time ``fetch(using:handler:)`` is
-  /// called.
+  /// The ``OperationContext`` that is passed to the operation on each run.
   public var context: OperationContext {
     get { self._base.context }
     set { self._base.context = newValue }
@@ -50,24 +49,28 @@ extension OpaqueOperationStore {
 // MARK: - Automatic Fetching
 
 extension OpaqueOperationStore {
-  /// Whether or not automatic fetching is enabled for this query.
+  /// Whether or not automatic running is enabled for this operation.
   ///
-  /// Automatic fetching is defined as the process of data being fetched from this query without
-  /// explicitly calling ``fetch(using:handler:)``. This includes, but not limited to:
-  /// 1. Automatically fetching from this query when subscribed to via ``subscribe(with:)``.
-  /// 2. Automatically fetching from this query when the app re-enters from the background.
-  /// 3. Automatically fetching from this query when the user's network connection comes back online.
-  /// 4. Automatically fetching from this query via a ``OperationController``.
-  /// 5. Automatically fetching from this query via ``QueryRequest/refetchOnChange(of:)``.
+  /// Automatic running is defined as the process of running this operation without explicitly
+  /// calling ``run(using:handler:)``. This includes, but not limited to:
+  /// 1. Running when subscribed to via ``OperationStore/subscribe(with:)-(OperationEventHandler<State>)``.
+  /// 2. Running when the app re-enters the foreground from the background.
+  /// 3. Running when the user's network connection flips from offline to online.
+  /// 4. Running via an ``OperationController``.
+  /// 5. Running via the ``StatefulOperationRequest/rerunOnChange(of:)`` modifier.
   ///
-  /// When automatic fetching is disabled, you are responsible for manually calling
-  /// ``fetch(using:handler:)`` to ensure that your query always has the latest data.
+  /// When automatic running is disabled, you are responsible for manually calling
+  /// ``run(using:handler:)`` to ensure that your operation always has the latest
+  /// data. Methods that work on specific operation types such as
+  /// ``OperationStore/mutate(using:handler:)`` will call ``run(using:handler:)`` under the hood
+  /// for you.
   ///
-  /// When you use the default initializer of a ``OperationClient``, automatic fetching is enabled for all
-  /// ``QueryRequest`` conformances, and disabled for all ``MutationRequest`` conformances.
+  /// When you use the default initializer of a ``OperationClient``, automatic running is enabled for all
+  /// stores backed by ``QueryRequest`` and ``PaginatedRequest`` operations, and disabled for all
+  /// stores backed by ``MutationRequest`` operations.
   ///
-  /// Queries can individually enable or disable automatic fetching through the
-  /// ``QueryRequest/enableAutomaticRunning(onlyWhen:)`` modifier.
+  /// Operations can individually enable or disable automatic fetching through the
+  /// ``OperationRequest/enableAutomaticRunning(onlyWhen:)`` modifier.
   public var isAutomaticRunningEnabled: Bool {
     self._base.isAutomaticRunningEnabled
   }
@@ -76,7 +79,7 @@ extension OpaqueOperationStore {
 // MARK: - State
 
 extension OpaqueOperationStore {
-  /// The current state of this query.
+  /// The current state of this operation.
   public var state: OpaqueOperationState {
     self._base.opaqueState
   }
@@ -118,21 +121,22 @@ extension OpaqueOperationStore {
 // MARK: - Current Value
 
 extension OpaqueOperationStore {
-  /// The current value of the query.
+  /// The current value of the operation.
   public var currentValue: any Sendable {
     get { self.state.currentValue }
     @available(*, unavailable, message: "Call `uncheckedSetCurrentValue` instead.")
     set { self.uncheckedSetCurrentValue(newValue) }
   }
 
-  /// Sets the ``currentValue`` of the query.
+  /// Sets the ``currentValue`` of the operation state.
   ///
   /// This method will attempt force cast `value` to the underlying data type that represents the
-  /// value stored in your query. As such, prefer conditionally casting ``base`` to a strongly
-  /// typed ``OperationStore``, and setting the value through ``OperationStore/currentValue`` instead.
+  /// value stored in the operation's state. As such, prefer conditionally casting ``base`` to a
+  /// strongly typed ``OperationStore``, and setting the value through
+  /// ``OperationStore/currentValue`` instead.
   ///
   /// - Parameters:
-  ///   - value: The new query value.
+  ///   - value: The new state value of the operation.
   ///   - context: The ``OperationContext`` to set the value in
   public func uncheckedSetCurrentValue(
     _ value: any Sendable,
@@ -145,12 +149,12 @@ extension OpaqueOperationStore {
 // MARK: - Set Result
 
 extension OpaqueOperationStore {
-  /// Sets the result of the query.
+  /// Sets the result of the operation.
   ///
-  /// This method will attempt force cast successful `result`s to the underlying data type that
-  /// represents the value stored in your query. As such, prefer conditionally casting ``base`` to
-  /// a strongly typed ``OperationStore``, and setting the value through ``OperationStore/currentValue``
-  /// instead.
+  /// This method will attempt force cast `result` to the underlying data type that represents the
+  /// value stored in the operation's state. As such, prefer conditionally casting ``base`` to a
+  /// strongly typed ``OperationStore``, and setting the value through
+  /// ``OperationStore/currentValue`` instead.
   ///
   /// - Parameters:
   ///   - result: The `Result`.
@@ -166,12 +170,12 @@ extension OpaqueOperationStore {
 // MARK: - Reset
 
 extension OpaqueOperationStore {
-  /// Resets the state of the query to its original values.
+  /// Resets the state of the operation to its original values.
   ///
-  /// > Important: This will cancel all active ``OperationTask``s on the query. Those cancellations will not be
-  /// > reflected in the reset query state.
+  /// > Important: This will cancel all active ``OperationTask``s on the operation. Those
+  /// > cancellations will not be reflected in the reset query state.
   ///
-  /// - Parameter context: The ``OperationContext`` to reset the query in.
+  /// - Parameter context: The ``OperationContext`` to reset the operation in.
   public func resetState(using context: OperationContext? = nil) {
     self._base.resetState(using: context)
   }
@@ -180,14 +184,15 @@ extension OpaqueOperationStore {
 // MARK: - Is Stale
 
 extension OpaqueOperationStore {
-  /// Whether or not the currently fetched data from the query is considered stale.
+  /// Whether or not the current data from the operation is considered stale.
   ///
-  /// When this value is true, you should generally try to refetch the query data as soon as
-  /// possible. ``subscribe(with:)`` will use this property to decide whether or not to
-  /// automatically fetch the query's data when the first active subscription is made to this store.
+  /// When this value is true, you should generally try to rerun the operation as soon as possible.
+  /// ``subscribe(with:)`` will use this property to decide whether
+  /// or not to automatically fetch the query's data when the first active subscription is made to
+  /// this store.
   ///
-  /// A query can customize the value of this property via the
-  /// ``QueryRequest/staleWhen(predicate:)`` modifier.
+  /// An operation can customize the value of this property via the
+  /// ``StatefulOperationRequest/staleWhen(predicate:)`` modifier.
   public var isStale: Bool {
     self._base.isStale
   }
@@ -200,7 +205,8 @@ extension OpaqueOperationStore {
   ///
   /// - Parameters:
   ///   - context: The ``OperationContext`` to use for the underlying ``OperationTask``.
-  ///   - handler: An ``OpaqueOperationEventHandler`` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
+  ///   - handler: An ``OpaqueOperationEventHandler`` to subscribe to events from fetching the data.
+  ///   (This does not add an active subscriber to the store.)
   /// - Returns: The operation's returned data.
   @discardableResult
   public func run(
@@ -218,9 +224,9 @@ extension OpaqueOperationStore {
   /// - Parameter context: The ``OperationContext`` for the task.
   /// - Returns: A task to run the operation.
   @discardableResult
-  public func runTask(using context: OperationContext? = nil) -> OperationTask<
-    any Sendable, any Error
-  > {
+  public func runTask(
+    using context: OperationContext? = nil
+  ) -> OperationTask<any Sendable, any Error> {
     self._base.opaqueRunTask(using: context)
   }
 }
@@ -236,9 +242,9 @@ extension OpaqueOperationStore {
   /// Subscribes to events from this store using an ``OpaqueOperationEventHandler``.
   ///
   /// If the subscription is the first active subscription on this store, this method will begin
-  /// fetching the query's data if both ``isStale`` and ``isAutomaticFetchingEnabled`` are true. If
-  /// the subscriber count drops to 0 whilst performing this data fetch, then the fetch is
-  /// cancelled and a `CancellationError` will be present on the ``state`` property.
+  /// running the operation if both ``isStale`` and ``isAutomaticRunningEnabled`` are true. If
+  /// the subscriber count drops to 0 whilst performing this initial run, then the run is cancelled
+  /// and a `CancellationError` will be present on the ``state`` property.
   ///
   /// - Parameter handler: The event handler.
   /// - Returns: A ``OperationSubscription``.

@@ -3,9 +3,9 @@
 extension OperationStore {
   /// Creates a detached store.
   ///
-  /// Detached stores are not connected to a ``OperationClient``. As such, accessing the
-  /// ``OperationContext/OperationClient`` context property in your query will always yield a nil value.
-  /// Only use a detached store if you want a separate instances of a query runtime for the same query.
+  /// Detached stores are not connected to an ``OperationClient``. As such, accessing the
+  /// ``OperationContext/operationClient`` context property in your operation will always yield a nil
+  /// value.
   ///
   /// - Parameters:
   ///   - query: The ``QueryRequest``.
@@ -22,9 +22,9 @@ extension OperationStore {
 
   /// Creates a detached store.
   ///
-  /// Detached stores are not connected to a ``OperationClient``. As such, accessing the
-  /// ``OperationContext/OperationClient`` context property in your query will always yield a nil value.
-  /// Only use a detached store if you want a separate instances of a query runtime for the same query.
+  /// Detached stores are not connected to an ``OperationClient``. As such, accessing the
+  /// ``OperationContext/operationClient`` context property in your operation will always yield a nil
+  /// value.
   ///
   /// - Parameters:
   ///   - query: The ``QueryRequest``.
@@ -45,9 +45,9 @@ extension OperationStore {
 
   /// Creates a detached store.
   ///
-  /// Detached stores are not connected to a ``OperationClient``. As such, accessing the
-  /// ``OperationContext/OperationClient`` context property in your query will always yield a nil value.
-  /// Only use a detached store if you want a separate instances of a query runtime for the same query.
+  /// Detached stores are not connected to an ``OperationClient``. As such, accessing the
+  /// ``OperationContext/operationClient`` context property in your operation will always yield a nil
+  /// value.
   ///
   /// - Parameters:
   ///   - query: The default ``QueryRequest``.
@@ -99,7 +99,7 @@ extension OperationStore where State: _QueryStateProtocol {
   /// Subscribes to events from this store using a ``QueryEventHandler``.
   ///
   /// If the subscription is the first active subscription on this store, this method will begin
-  /// fetching the query's data if both ``isStale`` and ``isAutomaticFetchingEnabled`` are true. If
+  /// fetching the query's data if both ``isStale`` and ``isAutomaticRunningEnabled`` are true. If
   /// the subscriber count drops to 0 whilst performing this data fetch, then the fetch is
   /// cancelled and a `CancellationError` will be present on the ``state`` property.
   ///
