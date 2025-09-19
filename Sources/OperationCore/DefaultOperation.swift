@@ -3,12 +3,50 @@ import Foundation
 // MARK: - OperationRequest
 
 extension StatefulOperationRequest where State: DefaultableOperationState {
+  /// This operation with a default value attached.
   public typealias Default = DefaultStateOperation<Self>
 
-  /// Adds a default value to this operation.
+  /// Adds a type-safe default value to this operation.
+  ///
+  /// When declaring a default value for an operation, the operation gains type-safety on the
+  /// default value. For instance, applying a default value to a ``QueryRequest`` that returns an
+  /// optional will ensure that the value of the query's state will be non-optional.
+  ///
+  /// ```swift
+  /// struct SomeValue {
+  ///   static let defaultValue = SomeValue()
+  ///   // ...
+  /// }
+  ///
+  /// extension SomeValue {
+  ///   static func query(
+  ///     for id: Int
+  ///   ) -> (some QueryRequest<Self?, any Error>).Default {
+  ///     Query(id: id).defaultValue(.defaultValue)
+  ///   }
+  ///
+  ///   struct Query: QueryRequest, Hashable {
+  ///     let id: Int
+  ///
+  ///     func fetch(
+  ///       isolation: isolated (any Actor)?,
+  ///       in context: OperationContext,
+  ///       with continuation: OperationContinuation<SomeValue?, any Error>
+  ///     ) async throws -> SomeValue? {
+  ///       // ...
+  ///     }
+  ///   }
+  /// }
+  ///
+  /// let store = OperationStore.detached(query: SomeValue.query(for: 10))
+  /// print(store.currentValue) // ✅ currentValue is non-optional
+  /// ```
+  ///
+  /// > Note: If you declare a query like in the example above, you must ensure that the call to
+  /// > `defaultValue` is last in the chain. Otherwise, your code will not compile.
   ///
   /// - Parameter value: The default value for this operation.
-  /// - Returns: A ``DefaultOperation``.
+  /// - Returns: A ``DefaultStateOperation``.
   public func defaultValue(
     _ value: @autoclosure @escaping @Sendable () -> State.DefaultStateValue
   ) -> Default {
@@ -18,13 +56,21 @@ extension StatefulOperationRequest where State: DefaultableOperationState {
 
 // MARK: - DefaultOperation
 
+/// A ``StatefulOperationRequest`` that applies a default value to the state of an operation.
+///
+/// You don't create instances of this operation type directly. Rather, you apply the
+/// ``StatefulOperationRequest/defaultValue(_:)`` modifier to an operation.
+///
+/// The base operation's state type must conform to ``DefaultableOperationState``.
 public struct DefaultStateOperation<Operation: StatefulOperationRequest>: StatefulOperationRequest
 where Operation.State: DefaultableOperationState {
   public typealias Value = Operation.Value
   public typealias State = DefaultOperationState<Operation.State>
 
+  /// The base operation.
   public let operation: Operation
 
+  /// The default value for this operation.
   public var defaultValue: Operation.State.DefaultStateValue {
     self._defaultValue()
   }
@@ -56,12 +102,35 @@ extension DefaultStateOperation: Sendable where Operation: Sendable {}
 
 // MARK: - DefaultableOperationState
 
+/// An ``OperationState`` that provides a type-safe default value.
 public protocol DefaultableOperationState: OperationState {
+  /// The type of the default value.
+  ///
+  /// If ``OperationState/StateValue`` is an optional, this is typically a non-optional version of
+  /// that type.
   associatedtype DefaultStateValue: Sendable
-
+  
+  /// Returns the current value of this state based on the default value.
+  ///
+  /// - Parameter defaultValue: The default value of the operation state.
+  /// - Returns: The current state's value based on the default value.
   func currentValue(using defaultValue: DefaultStateValue) -> DefaultStateValue
+  
+  /// Returns the initial value of this state based on the default value.
+  ///
+  /// - Parameter defaultValue: The default value of the operation state.
+  /// - Returns: The initial state's value based on the default value.
   func initialValue(using defaultValue: DefaultStateValue) -> DefaultStateValue
-
+  
+  /// Converts a value of type ``DefaultStateValue`` to a value of the base
+  /// ``OperationState/StateValue`` type on this state.
+  ///
+  /// The value passed to this method is generally not the default value of the state, but rather a
+  /// value with same type as the default value.
+  ///
+  /// - Parameter defaultStateValue: A value with the same type as the default value.
+  /// - Returns: `defaultStateValue` converted to a value with of the base `StateValue` type on
+  ///   this state.
   func stateValue(for defaultStateValue: DefaultStateValue) -> StateValue
 }
 
@@ -90,12 +159,21 @@ where StateValue: _OptionalProtocol, DefaultStateValue == StateValue.Wrapped {
 
 // MARK: - DefaultOperationState
 
+/// An ``OperationState`` with a default value applied onto a base state.
 public struct DefaultOperationState<Base: DefaultableOperationState>: OperationState {
   public typealias StatusValue = Base.StatusValue
 
-  public var base: Base
+  /// The base state.
+  public private(set) var base: Base
+  
+  /// The default value applied to the base state.
   public let defaultValue: Base.DefaultStateValue
-
+  
+  /// Creates a default operation state.
+  ///
+  /// - Parameters:
+  ///   - base: The base state to apply the default value to.
+  ///   - defaultValue: The default value.
   public init(_ base: Base, defaultValue: Base.DefaultStateValue) {
     self.base = base
     self.defaultValue = defaultValue

@@ -25,8 +25,8 @@
 /// ```
 ///
 /// Additionally, you may return a subscription that will cancel other subscriptions when
-/// cancelled. You can use ``OperationSubscription/combined(_:)-(OperationSubscription...)`` to optimize this. In addition, using
-/// `combined` will also make equality and hashability checks more reliable.
+/// cancelled. You can use ``OperationSubscription/combined(_:)-(OperationSubscription...)`` to
+/// optimize this. In addition, using `combined` will also make equality and hashability checks more reliable.
 ///
 /// ```swift
 /// let s1 = OperationSubscription { /* ... */ }
