@@ -1,16 +1,19 @@
 extension StatefulOperationRequest {
-  /// Refetches this operation when the specified ``FetchCondition`` changes to true.
+  /// Reruns this operation when the specified ``OperationRunSpecification`` changes to be
+  /// satisfied.
   ///
-  /// This modifier is used to power automatic refetching when your app re-enters from the
-  /// background, and automatic fetching when the user's network connection comes back online.
+  /// This modifier is used to power automatic rerunning when your app re-enters the foreground
+  /// from the background, and automatic rerunning when the user's network connection comes back
+  /// online.
   ///
-  /// This operation is only refetched if all of these conditions hold:
-  /// 1. `condition` changes its value to true.
-  /// 2. The operation must have at least 1 subscriber.
-  /// 3. The operation must be stale.
-  /// 4. Automatic fetching is enabled for this operation.
+  /// The operation is only rerun if all of these conditions hold:
+  /// 1. `specification` changes its value to true.
+  /// 2. The store backed by the operation must have at least 1 subscriber.
+  /// 3. The ``OperationStore/isStale`` must be true for the store backed by this operation.
+  /// 4. ``OperationStore/isAutomaticRunningEnabled`` is true for the store backed by this
+  /// operation.
   ///
-  /// - Parameter condition: The ``FetchCondition`` to observe for operation refetching.
+  /// - Parameter specification: The ``OperationRunSpecification`` to observe for rerunning.
   /// - Returns: A ``ModifiedOperation``.
   public func rerunOnChange<Specification>(
     of specification: Specification

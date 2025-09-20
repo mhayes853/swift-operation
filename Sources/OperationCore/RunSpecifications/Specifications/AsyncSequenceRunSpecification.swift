@@ -1,14 +1,14 @@
-/// A ``FetchCondition`` that observes an `AsyncSequence`.
+/// An ``OperationRunSpecification`` that observes an `AsyncSequence`.
 ///
-/// To create this condition, provide a Sendable `AsyncSequence` and initial `Bool` value that is
-/// used for when your sequence hasn't emitted an element.
+/// To create this specification, provide a Sendable `AsyncSequence` and an initial boolean value
+/// that is used for when your sequence hasn't emitted an element.
 ///
-/// When initialized, this condition will immediately begin iterating over your sequence, and will
-/// store the iterated value internally. Additionally, each iteration will broadcast its result to
-/// all subscribers of this condition.
+/// When initialized, this specification will immediately begin iterating over your sequence, and
+/// will store the iterated value internally. Additionally, each iteration will broadcast its
+/// result to all subscribers of this specification.
 ///
-/// When this condition is deallocated, iteration stops on your sequence provided that you opt into
-/// cooperative cancellation.
+/// When this specification is deallocated, iteration stops on your sequence provided that your
+/// sequence opts into cooperative cancellation.
 @available(iOS 18.0, macOS 15.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, *)
 public final class AsyncSequenceRunSpecification<
   S: AsyncSequence & Sendable
@@ -25,10 +25,11 @@ where S.Element == Bool, S.Failure == Never {
     self.state.withLock {
       $0.task = Task { [weak self] in
         for await value in sequence {
-          self?.state
+          guard let self else { break }
+          self.state
             .withLock {
               $0.currentValue = value
-              self?.subscriptions.forEach { $0() }
+              self.subscriptions.forEach { $0() }
             }
         }
       }
@@ -53,12 +54,12 @@ where S.Element == Bool, S.Failure == Never {
 
 @available(iOS 18.0, macOS 15.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, *)
 extension OperationRunSpecification {
-  /// A ``FetchCondition`` that observes an `AsyncSequence`.
+  /// An ``OperationRunSpecification`` that observes an `AsyncSequence`.
   ///
   /// - Parameters:
   ///   - sequence: The sequence to observe.
   ///   - initialValue: The intial boolean value that is used while your sequence hasn't emitted anything.
-  /// - Returns: A ``AsyncSequenceCondition``.
+  /// - Returns: An ``AsyncSequenceRunSpecification``.
   public static func observing<S>(
     sequence: S,
     initialValue: Bool

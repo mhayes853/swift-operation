@@ -3,15 +3,15 @@
 
   // MARK: - PublisherObserver
 
-  /// A ``FetchCondition`` that observes the value of a Combine `Publisher`.
+  /// An ``OperationRunSpecification`` that observes the value of a Combine `Publisher`.
   ///
-  /// To create this condition, provide a thread-safe `Publisher` that emits a `Bool` and an
+  /// To create this specification, provide a thread-safe `Publisher` that emits a `Bool` and an
   /// initial `Bool` value that is used when your publisher has not emitted a value. If your
   /// publisher is a `CurrentValueSubject`, you can omit the initial value.
   ///
-  /// When initialized, this condition will immediately subscribe to your publisher, and will
+  /// When initialized, this specification will immediately subscribe to your publisher, and will
   /// manually store the latest output. Only 1 subscription is made to your publisher, and changes
-  /// from the single subscription are propagated to all subscribers of this condition.
+  /// from the single subscription are broadcasted to all subscribers of this specification.
   public final class PublisherRunSpecification<
     P: Publisher & Sendable
   >: OperationRunSpecification, Sendable
@@ -56,12 +56,12 @@
   // MARK: - FetchConditionObserver Extensions
 
   extension OperationRunSpecification {
-    /// A ``FetchCondition`` that observes the value of a Combine `Publisher`.
+    /// An ``OperationRunSpecification`` that observes the value of a Combine `Publisher`.
     ///
     /// - Parameters:
     ///   - publisher: The `Publisher` to observe.
     ///   - initialValue: The initial value of this condition that is used while your publisher hasn't emitted anything.
-    /// - Returns: A ``PublisherCondition``.
+    /// - Returns: A ``PublisherRunSpecification``.
     public static func observing<P: Publisher>(
       publisher: P,
       initialValue: Bool
@@ -69,10 +69,10 @@
       PublisherRunSpecification(publisher, initialValue: initialValue)
     }
 
-    /// A ``FetchCondition`` that observes the value of a `CurrentValueSubject`.
+    /// An ``OperationRunSpecification`` that observes the value of a Combine `Publisher`.
     ///
     /// - Parameter subject: The `CurrentValueSubject` to observe.
-    /// - Returns: A ``PublisherCondition``.
+    /// - Returns: A ``PublisherRunSpecification``.
     public static func observing(
       subject: CurrentValueSubject<Bool, Never>
     ) -> Self where Self == PublisherRunSpecification<CurrentValueSubject<Bool, Never>> {

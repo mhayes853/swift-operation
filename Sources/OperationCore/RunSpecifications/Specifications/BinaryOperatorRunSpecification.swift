@@ -1,6 +1,7 @@
 // MARK: - BinaryOperatorConditions
 
-/// A ``FetchCondition`` that applies a binary boolean operator between 2 conditions.
+/// An ``OperationRunSpecification`` that applies a binary boolean operator between the
+/// satisfaction of 2 specifications.
 public struct BinaryOperatorRunSpecification<
   Left: OperationRunSpecification,
   Right: OperationRunSpecification,
@@ -29,7 +30,8 @@ where Left: Sendable, Right: Sendable, Operator: Sendable {}
 
 // MARK: - Operators
 
-/// Applies a boolean AND operation between the 2 specified ``FetchCondition``s.
+/// Applies a boolean AND operation between the satisfaction of the 2 specified
+/// ``OperationRunSpecification``s.
 ///
 /// - Parameters:
 ///   - left: The left hand side condition.
@@ -42,7 +44,8 @@ public func && <Left: OperationRunSpecification, Right: OperationRunSpecificatio
   BinaryOperatorRunSpecification(left: left, right: right, op: _AndRunSpecificationOperator())
 }
 
-/// Applies a boolean OR operation between the 2 specified ``FetchCondition``s.
+/// Applies a boolean OR operation between the satisfaction of the 2 specified
+/// ``OperationRunSpecification``s.
 ///
 /// - Parameters:
 ///   - left: The left hand side condition.

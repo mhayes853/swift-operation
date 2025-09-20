@@ -1,4 +1,4 @@
-/// A ``FetchCondition`` that returns a static value.
+/// An ``OperationRunSpecification`` that returns a static value.
 public struct AlwaysRunSpecification: OperationRunSpecification, Sendable {
   @usableFromInline
   let isTrue: Bool
@@ -23,14 +23,12 @@ public struct AlwaysRunSpecification: OperationRunSpecification, Sendable {
 }
 
 extension OperationRunSpecification where Self == AlwaysRunSpecification {
-  /// A ``FetchCondition`` that returns a static value.
+  /// An ``OperationRunSpecification`` that returns a static value.
   ///
-  /// - Parameters:
-  ///   - value: The static value to always return from the condition.
-  ///   - shouldEmitInitialValue: Whether or not the condition should emit `value` when intially subscribed to.
-  /// - Returns: An ``AlwaysCondition``.
+  /// - Parameter isTrue: The static value to always return from the condition.
+  /// - Returns: An ``AlwaysRunSpecification``.
   @inlinable
-  public static func always(_ value: Bool) -> Self {
-    Self(isTrue: value)
+  public static func always(_ isTrue: Bool) -> Self {
+    Self(isTrue: isTrue)
   }
 }

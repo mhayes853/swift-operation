@@ -1,16 +1,13 @@
-/// A concrete, type-erased ``FetchCondition``.
-///
-/// Use this condition in scenarios where you need to return a concrete condition instead of an
-/// `any FetchConditon`, but still need to return 1 of many condition types.
+/// A concrete, type-erased ``OperationRunSpecification`` that is also Sendable.
 public struct AnySendableRunSpecification: OperationRunSpecification, Sendable {
-  /// The base ``FetchCondition`` as an existential.
+  /// The base ``OperationRunSpecification`` as an existential.
   public let base: any OperationRunSpecification & Sendable
 
-  /// Type-erases `condition`.
+  /// Type-erases `specification`.
   ///
-  /// - Parameter condition: The underlying ``FetchCondition`` to erase.
-  public init(_ condition: some OperationRunSpecification & Sendable) {
-    self.base = condition
+  /// - Parameter specification: The underlying ``OperationRunSpecification`` to erase.
+  public init(_ specification: some OperationRunSpecification & Sendable) {
+    self.base = specification
   }
 
   public func isSatisfied(in context: OperationContext) -> Bool {

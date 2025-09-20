@@ -73,14 +73,14 @@ extension OperationClient {
           .backoff(backoff)
           .delayer(delayer)
           .enableAutomaticRunning(onlyWhen: self.automaticRunningSpecification)
-          .rerunOnChange(of: self.refetchOnChangeCondition)
+          .rerunOnChange(of: self.rerunOnChangeSpecification)
           .deduplicated(),
         initialState: initialState,
         initialContext: context
       )
     }
 
-    private var refetchOnChangeCondition: AnySendableRunSpecification {
+    private var rerunOnChangeSpecification: AnySendableRunSpecification {
       switch (self.networkObserver, self.activityObserver) {
       case (let networkObserver?, let activityObserver?):
         return AnySendableRunSpecification(

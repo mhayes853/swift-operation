@@ -1,23 +1,27 @@
 # Utilizing Run Specifications
 
-Learn how to best use the ``OperationRunSpecification`` protocol to control how and when queries can fetch their data.
+Learn how to best use the ``OperationRunSpecification`` protocol to control how and when operations can automatically run.
 
 ## Overview
 
-The `OperationRunSpecification` protocol describes a set of conditions that can be used to determine when a query should fetch its data. For instance, ``NetworkConnectionRunSpecification`` utilizes a ``NetworkObserver`` to determine whether or not the current network connection status is suitable for fetching data. Additionally, ``ApplicationIsActiveRunSpecification`` listens for changes in the app's resign active state, which allows for automatic refetching when the app becomes active again.
+The `OperationRunSpecification` protocol describes a set of conditions that can be used to determine when an operation should run automatically. For instance, ``NetworkConnectionRunSpecification`` utilizes a ``NetworkObserver`` to determine whether or not the current network connection status is suitable for running an operation. Additionally, ``ApplicationIsActiveRunSpecification`` listens for changes in the app's foreground state, which allows for rerunning when the app reenters the foreground from the background.
 
-The library provides many built-in modifiers that utilize fetch conditions. Let's explore how some of these modifiers work, and how you can create your own `OperationRunSpecification` conformances that take advantage of these modifiers.
+The library provides many built-in modifiers that utilize run specifications. Let's explore how some of these modifiers work, and how you can create your own `OperationRunSpecification` conformances that take advantage of these modifiers.
 
-## Automatic Fetching
+## Automatic Running
 
-``OperationStore`` has a notion of automatic running, which essentially means that the operation can be run without having to manually call `run` on the store. You can check whether or not automatic running is enabled on your `OperationStore` via the `isAutomaticRunningEnabled` property. By default, all ``QueryRequest`` and ``PaginatedRequest`` conformances have automatic fetching enabled, and all ``MutationRequest`` conformances have automatic fetching disabled.
+Automatic running is defined as the process of running an operation without explicitly calling ``OperationStore/run(using:handler:)``. This includes, but is not limited to:
+1. Running when subscribed to via ``OperationStore/subscribe(with:)-(OperationEventHandler<State>)``.
+2. Running when the app re-enters the foreground from the background.
+3. Running when the user's network connection flips from offline to online.
+4. Running via an ``OperationController``.
+5. Running via the ``StatefulOperationRequest/rerunOnChange(of:)`` modifier.
 
-Automatic fetching covers the following scenarios:
-- Fetching when a new subscription to the store is added via ``OperationStore/subscribe(with:)-(OperationEventHandler<State>)``.
-- Fetching from within a ``OperationController``.
-  - This includes automatically refetching based on changes to `OperationRunSpecification`s.
+When automatic running is disabled, you are responsible for manually calling ``OperationStore/run(using:handler:)`` to ensure that your operation always has the latest data. Methods that work on specific operation types such as ``OperationStore/mutate(using:handler:)`` will call ``OperationStore/run(using:handler:)`` under the hood for you.
 
-To control whether or not automatic fetching is enabled, you can utilize the ``OperationRequest/enableAutomaticRunning(onlyWhen:)`` modifier alongside a `OperationRunSpecification`.
+When you use the default initializer of an ``OperationClient``, automatic running is enabled for all stores backed by ``QueryRequest`` and ``PaginatedRequest`` operations, and disabled for all stores backed by ``MutationRequest`` operations.
+
+To control whether or not automatic running is enabled, you can utilize the ``StatefulOperationRequest/enableAutomaticRunning(onlyWhen:)`` modifier alongside an `OperationRunSpecification`.
 
 ```swift
 struct MyQuery: QueryRequest {
@@ -32,15 +36,15 @@ However, it's also possible to disable it when the network is down by using `Net
 
 ```swift
 let query = MyQuery().enableAutomaticRunning(
-  when: .connected(to: NWPathMonitorObserver.shared)
+  when: .connected(to: NWPathMonitorObserver.startingShared())
 )
 ```
 
-> Note: In browser applications (WASM), you can use `NavigatorObserver.shared` which utilizes [`window.navigator`](https://developer.mozilla.org/en-US/docs/Web/API/Navigator) under the hood to observe network connectivity changes.
+> Note: In browser applications (WASM), you use `NavigatorOnlineObserver.shared` which utilizes [`window.navigator`](https://developer.mozilla.org/en-US/docs/Web/API/Navigator) under the hood instead of ``NWPathMonitorObserver`` to observe network connectivity changes.
 
-## Refetching On Change Of Conditions
+## Rerunning When a Specification is Satisfied
 
-Another modifier that utilizes fetch conditions is the ``StatefulOperationRequest/rerunOnChange(of:)`` modifier. This modifier allows you to specify a `OperationRunSpecification` that will trigger a refetch when the condition changed to true.
+Another modifier that utilizes specifications is the ``StatefulOperationRequest/rerunOnChange(of:)`` modifier. This modifier allows you to specify an `OperationRunSpecification` that will trigger a rerun when the specification changes to be satisfied.
 
 ```swift
 let query = MyQuery().rerunOnChange(
@@ -48,53 +52,55 @@ let query = MyQuery().rerunOnChange(
 )
 ```
 
-The example above will refetch the query whenever the network comes back online after being down.
+The example above will rerun the query whenever the network status flips from offline to online.
 
 ## Stale When Revalidate
 
-`OperationStore` has a notion of stale-when-revalidate when fetching data. When a new subscriber is added to the store via ``OperationStore/subscribe(with:)-(OperationEventHandler<State>)``, the store will refetch the data if both ``OperationStore/isStale`` and ``OperationStore/isAutomaticRunningEnabled`` are true. You can control the value of `isStale` via a `OperationRunSpecification`.
+`OperationStore` has a notion of stale-when-revalidate with respect to its latest held data. When a new subscriber is added to the store via ``OperationStore/subscribe(with:)-(OperationEventHandler<State>)``, the store will rerun its operation if both ``OperationStore/isStale`` and ``OperationStore/isAutomaticRunningEnabled`` are true. It's possible to control the value of `isStale` via an `OperationRunSpecification`.
 
 ```swift
 import Combine
 
 let subject = PassthroughSubject<Bool, Never>()
 let query = MyQuery().staleWhen(
-  condition: .observing(publisher: subject, initialValue: true)
+specification: .observing(publisher: subject, initialValue: true)
 )
 ```
 
 In this example, the query will be considered stale when the subject emits a value of `true`.
 
-> Note: Chaining multiple modifiers prefixed with `stale` will mark the query as stale when any one of those modifiers' conditions are met. In other words, the following code snippets are functionality equivalent.
+> Note: Chaining multiple modifiers prefixed with `stale` will mark the query as stale when any one of those modifiers' specifications are satisfied. In other words, the following code snippets are functionality equivalent.
 > ```swift
 > // query and query2 are functionality equivalent.
 >
 > let query = MyQuery()
->   .staleWhen(condition: .notificationFocus)
->   .staleWhen(condition: .connected(to: NWPathMonitorObserver.shared))
+>   .staleWhen(specification: .applicationIsActive(observer: UIApplicationActivityObserver.shared))
+>   .staleWhen(specification: .connected(to: NWPathMonitorObserver.shared))
 >
 > let query2 = MyQuery().staleWhen(
->   condition:
->     .notificationFocus || .connected(to: NWPathMonitorObserver.shared)
+>   specification:
+>     .applicationIsActive(observer: UIApplicationActivityObserver.shared)) 
+>       || .connected(to: NWPathMonitorObserver.shared)
 > )
 > ```
 
 ## Boolean Operators
 
-The ``!(_:)``, ``||(_:_:)``, and ``&&(_:_:)`` operators have been overloaded for the `OperationRunSpecification` protocol. This allows you to compose conditions just like you would with booleans.
+The ``!(_:)``, ``||(_:_:)``, and ``&&(_:_:)`` operators have been overloaded for the `OperationRunSpecification` protocol. This allows you to compose specifications just like you would with booleans.
 
 ```swift
 let query = MyQuery().staleWhen(
-  condition:
-    .connected(to: NWPathMonitorObserver.startingShared()) && .notificationFocus
+  specification:
+    .connected(to: NWPathMonitorObserver.startingShared()) 
+      && .applicationIsActive(observer: UIApplicationActivityObserver.shared)) 
 )
 ```
 
 This condition marks the query as stale when both the network is connected and when the app is currently active in the foreground.
 
-## Custom Fetch Conditions
+## Custom Run Specifications
 
-You can also define your own fetch conditions by conforming to the `OperationRunSpecification` protocol. For instance, you may want to make a condition to detect whether or not a user is logged in.
+You can also define your own specifications by conforming to the `OperationRunSpecification` protocol. For instance, you may want to make a specification to detect whether or not a user is logged in to your app.
 
 ```swift
 protocol UserAuthentication {
@@ -117,25 +123,25 @@ struct UserLoggedInRunSpecification<
     in context: OperationContext,
     onChange handler: @escaping @Sendable () -> Void
   ) -> OperationSubscription {
-    observer(isSatisfied(in: context))
-    let subscription = auth.subscribe { _ in observer() }
+    handler(isSatisfied(in: context))
+    let subscription = auth.subscribe { _ in handler() }
     return OperationSubscription { subscription.cancel() }
   }
 }
 ```
 
-Now you can use this condition to add powerful functionality, such as refetching all a query when a new user signs in.
+Now you can use this specification to add powerful functionality, such as rerunning a query when a new user signs in.
 
 ```swift
 final class FirebaseAuthentication: UserAuthentication {
   // ...
 }
 
-let query = MyQuery().refetchOnChange(
-  of: UserLoggedInCondition(auth: FirebaseAuthentication())
+let query = MyQuery().rerunOnChange(
+  of: UserLoggedInRunSpecification(auth: FirebaseAuthentication())
 )
 ```
 
 ## Conclusion
 
-In this article, you learned how the `OperationRunSpecification` protocol can be used to detect conditions for whether or not fetching data is suitable for a query. Alongside implementing your own `OperationRunSpecification`s, you can also utilize the powerful built-in modifiers that allow you to refetch when a condition changes, and much more.
+In this article, you learned how the `OperationRunSpecification` protocol can be used to determine when an operation should automatically run. Alongside implementing your own `OperationRunSpecification`s, you can also utilize the powerful built-in modifiers that automate operation runs.

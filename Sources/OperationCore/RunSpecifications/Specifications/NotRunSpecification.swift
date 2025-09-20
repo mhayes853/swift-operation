@@ -1,7 +1,7 @@
 // MARK: - NotCondition
 
-/// A ``FetchCondition`` that negates the value of a base condition by applying a boolean NOT
-/// operator to the base condition.
+/// An ``OperationRunSpecification`` that negates the satisfaction of a base condition by applying
+/// a boolean NOT operator to the base specification.
 public struct NotRunSpecification<Base: OperationRunSpecification>: OperationRunSpecification {
   @usableFromInline
   let base: Base
@@ -29,10 +29,11 @@ extension NotRunSpecification: Sendable where Base: Sendable {}
 
 // MARK: - Not Operator
 
-/// Applies a boolean NOT operation on the specified ``FetchCondition``.
+/// Applies a boolean NOT operation on the satisfaction of the specified
+/// ``OperationRunSpecification``.
 ///
-/// - Parameter base: The condition to negate.
-/// - Returns: A ``NotCondition``.
+/// - Parameter base: The specification to negate.
+/// - Returns: A ``NotRunSpecification``.
 @inlinable
 public prefix func ! <Base: OperationRunSpecification>(
   _ base: Base
