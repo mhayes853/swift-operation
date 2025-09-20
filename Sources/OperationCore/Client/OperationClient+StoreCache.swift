@@ -35,7 +35,7 @@ extension OperationClient {
   ///
   /// Only stores that have no active subscribers are evicted from the cache, and you can customize
   /// the ``MemoryPressure`` value at which a store is evicted via the
-  /// ``QueryRequest/evictWhen(pressure:)`` modifier.
+  /// ``OperationRequest/evictWhen(pressure:)`` modifier.
   public final class DefaultStoreCache: OperationClient.StoreCache, Sendable {
     private struct State {
       var stores = OperationPathableCollection<OpaqueOperationStore>()

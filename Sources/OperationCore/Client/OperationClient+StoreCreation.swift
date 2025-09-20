@@ -7,7 +7,7 @@ extension OperationClient {
   /// operations.
   /// ```swift
   /// struct MyStoreCreator: OperationClient.StoreCreator {
-  ///    func store<Operation: OperationRequest & Sendable>(
+  ///    func store<Operation: StatefulOperationRequest & Sendable>(
   ///      for operation: Operation,
   ///      in context: OperationContext,
   ///      with initialState: Operation.State
@@ -20,7 +20,7 @@ extension OperationClient {
   ///          initialContext: context
   ///        )
   ///      }
-  ///      // Modifiers applied only to operations and infinite operations
+  ///      // Modifiers applied only to all other operations
   ///      return .detached(
   ///        operation: operation.retry(limit: 3)
   ///          .enableAutomaticRunning(onlyWhen: .always(true))
@@ -32,7 +32,7 @@ extension OperationClient {
   ///    }
   ///  }
   /// ```
-  /// Read <doc:QueryDefaults> to learn more about how to set defaults for your operations.
+  /// Read <doc:OperationDefaults> to learn more about how to set defaults for your operations.
   public protocol StoreCreator {
     /// Creates a ``OperationStore`` for the specified ``OperationRequest``.
     ///
@@ -55,7 +55,7 @@ extension OperationClient {
   /// A data type that creates ``OperationStore`` instances from within the closure of
   /// ``OperationClient/withStores(matching:of:perform:)``.
   ///
-  /// Use this type to add `OperationStore` instances to a `OperationClient` when performing bulk edit
+  /// Use this type to add `OperationStore` instances to an `OperationClient` when performing bulk edit
   /// operations on the stores within the client.
   ///
   /// ```swift
@@ -84,7 +84,7 @@ extension OperationClient {
 }
 
 extension OperationClient.CreateStore {
-  /// Creates a ``OperationStore`` for an ``OperationRequest``.
+  /// Creates a ``OperationStore`` for a ``StatefulOperationRequest``.
   ///
   /// - Parameters:
   ///   - operation: The operation,.
@@ -136,7 +136,7 @@ extension OperationClient.CreateStore {
     self(for: query, initialState: query.initialState)
   }
 
-  /// Creates a ``OperationStore`` for an ``PaginatedRequest``.
+  /// Creates a ``OperationStore`` for a ``PaginatedRequest``.
   ///
   /// - Parameters:
   ///   - query: The query.
@@ -155,7 +155,7 @@ extension OperationClient.CreateStore {
     )
   }
 
-  /// Creates a ``OperationStore`` for an ``PaginatedRequest``.
+  /// Creates a ``OperationStore`` for a ``PaginatedRequest``.
   ///
   /// - Parameters:
   ///   - query: The query.

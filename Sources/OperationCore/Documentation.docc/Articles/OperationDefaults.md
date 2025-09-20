@@ -39,21 +39,21 @@ The above example effectively disables retries for all queries since all future 
 
 ## Default Operation Modifiers
 
-The default `OperationClient` already applies a set of default modifiers for both queries and mutations. Here's a list for both.
-
-**Queries & Paginated Requests**
-- Deduplication
-- Retries
-- Exponential Backoff
-- Automatic Fetching
-- Refetching when the network status flips from offline to online
-- Refetching when the app reenters from the background
+The default initializer `OperationClient` already applies a set of default modifiers to an operation when it creates its associated store. Here's a list of those modifiers.
 
 **Mutations**
 - Retries
 - Exponential Backoff
 
-> Note: By default in testing environments, the `OperationClient` disables retries, backoff, refetching on network reconnection, refetching on the app reentering from the background, and artificial delays for queries and mutations.
+**All Other Operations**
+- Deduplication
+- Retries
+- Exponential Backoff
+- Automatic Running
+- Rerunning when the network status flips from offline to online.
+- Rerunning when the app reenters from the background.
+
+> Note: By default in testing environments, the default initializer of `OperationClient` disables retries, backoff, refetching on network reconnection, refetching on the app reentering from the background, and artificial delays for queries and mutations.
 
 You can configure these defaults by utilizing the `storeCreator` parameter in the `OperationClient` initializer.
 
@@ -67,7 +67,7 @@ let client = OperationClient(
 )
 ```
 
-If you want to apply a custom modifier on all of your queries by default, you can make a conformance to the ``OperationClient/StoreCreator`` protocol. The protocol gives you the entirety of control over how a `OperationClient` constructs a store for a query, giving you the chance to apply whatever modifiers that your query needs.
+If you want to apply a custom modifier on all of your operations by default, you can make a conformance to the ``OperationClient/StoreCreator`` protocol. The protocol gives you the entirety of control over how a `OperationClient` constructs a store for an operation, giving you the chance to apply whatever modifiers that your operation needs.
 
 ```swift
 struct MyStoreCreator: OperationClient.StoreCreator {
@@ -84,7 +84,7 @@ struct MyStoreCreator: OperationClient.StoreCreator {
         initialContext: context
       )
     }
-    // Modifiers applied only to queries and infinite queries
+    // Modifiers applied only to all other operations
     return .detached(
       query: query.retry(limit: 3)
         .enableAutomaticRunning(onlyWhen: .always(true))

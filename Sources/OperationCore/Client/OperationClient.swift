@@ -7,15 +7,16 @@ import IssueReporting
 ///
 /// Generally, you should only create a single `OperationClient` instance, and share it across your entire
 /// application. The singleton instance will provide access to all `OperationStore` instances in your
-/// application. Adapters such as the `@State.Operation` and `@SharedOperation` property wrappers use
-/// this class under the hood to acces the underlying stores they observe.
+/// application. Adapters such as the `@SharedOperation` property wrapper uses this class under
+/// the hood to acces the underlying stores they observe.
 ///
-/// If you want to create a `OperationStore` that exists outside of a query client, you can call
-/// ``OperationStore/detached(query:initialContext:)-17q5k``. Stores created through the `detached`
-/// methods will not be associated with a `OperationClient`, and will manage their query's state in isolation.
+/// If you want to create an `OperationStore` that exists outside of a query client, you can use
+/// when of the `detached` static initializers on `OperationStore`. Stores created through the
+/// `detached` static initializers will not be associated with an `OperationClient`, and will
+/// manage their operation's state in isolation.
 ///
-/// You will most commonly interact with a `OperationClient` when you need to perform global state
-/// management operations across multiple different queries. You can find more about how to do
+/// You will most commonly interact with an `OperationClient` when you need to perform global state
+/// management operations across multiple different operation. You can find more about how to do
 /// this in <doc:PatternMatchingAndStateManagement>.
 ///
 /// ```swift
@@ -23,9 +24,10 @@ import IssueReporting
 ///   // ...
 ///
 ///   func mutate(
+///     isolation: isolated (any Actor)?,
 ///     with arguments: Arguments,
 ///     in context: OperationContext,
-///     with continuation: OperationContinuation<Void>
+///     with continuation: OperationContinuation<Void, any Error>
 ///   ) async throws {
 ///     try await sendFriendRequest(userId: arguments.userId)
 ///
@@ -48,16 +50,18 @@ import IssueReporting
 /// }
 /// ```
 ///
-/// `OperationClient` manages the in-memory storage for its stores via the ``StoreCache`` protocol. The
-/// default implementation of this protocol will evict stores from memory when the system runs low
-/// on memory. You can also write your own conformance to this protocol if you wish to customize
-/// how the client's stores are managed in memory.
+/// `OperationClient` manages the in-memory storage for its stores via the ``StoreCache`` protocol.
+/// The default implementation of this protocol will evict stores from memory when the system runs
+/// low on memory. You can also write your own conformance to this protocol if you wish to
+/// customize how the client's stores are managed in memory such as via an LRU or garbage
+/// collection scheme.
 ///
 /// You can also customize the client's creation of `OperationStore` instances through the
 /// ``StoreCreator`` protocol. The default implementation applies some default modifiers to each
-/// query when a store is created. If you want to override those default modifiers, consider
+/// operation when a store is created. If you want to override those default modifiers, consider
 /// creating a conformance to the protocol, and passing the conformance to
-/// ``init(defaultContext:storeCache:storeCreator:)``. For more on this, read <doc:QueryDefaults>.
+/// ``init(defaultContext:storeCache:storeCreator:)``. For more on this, read
+/// <doc:OperationDefaults>.
 public final class OperationClient: Sendable {
   private struct State {
     let storeCreator: any OperationClient.StoreCreator
@@ -79,7 +83,8 @@ public final class OperationClient: Sendable {
   /// Creates a client.
   ///
   /// - Parameters:
-  ///   - defaultContext: The default ``OperationContext`` to use for each ``OperationStore`` created by the client.
+  ///   - defaultContext: The default ``OperationContext`` to use for each ``OperationStore``
+  ///   created by the client.
   ///   - storeCache: The ``StoreCache`` to use.
   ///   - storeCreator: The ``StoreCreator`` to use.
   public init(
@@ -97,7 +102,8 @@ public final class OperationClient: Sendable {
 // MARK: - Default Context
 
 extension OperationClient {
-  /// The default ``OperationContext`` that is used to create subsequent ``OperationStore`` instances.
+  /// The default ``OperationContext`` that is used to create subsequent ``OperationStore``
+  /// instances.
   public var defaultContext: OperationContext {
     get { self.state.withLock { $0.initialContext } }
     set { self.state.withLock { $0.initialContext = newValue } }
@@ -107,7 +113,7 @@ extension OperationClient {
 // MARK: - Store
 
 extension OperationClient {
-  /// Retrieves the ``OperationStore`` for a ``OperationRequest``.
+  /// Retrieves the ``OperationStore`` for a ``StatefulOperationRequest``.
   ///
   /// - Parameters:
   ///   - operation: The operation.
@@ -157,7 +163,7 @@ extension OperationClient {
     self.withStoreCreation(for: query) { $0(for: $1) }
   }
 
-  /// Retrieves the ``OperationStore`` for an ``PaginatedRequest``.
+  /// Retrieves the ``OperationStore`` for a ``PaginatedRequest``.
   ///
   /// - Parameters:
   ///   - query: The query.
@@ -170,7 +176,7 @@ extension OperationClient {
     self.withStoreCreation(for: query) { $0(for: $1, initialValue: initialValue) }
   }
 
-  /// Retrieves the ``OperationStore`` for an ``PaginatedRequest``.
+  /// Retrieves the ``OperationStore`` for a ``PaginatedRequest``.
   ///
   /// - Parameters:
   ///   - query: The query.
@@ -440,24 +446,26 @@ extension OperationContext {
 extension OperationWarning {
   public static func duplicatePath(expectedType: Any.Type, foundType: Any.Type) -> Self {
     """
-    A OperationClient has detected a duplicate OperationPath used for different OperationRequest conformances.
+    A OperationClient has detected a duplicate OperationPath used for different OperationRequest \
+    conformances.
 
         Expected: \(String(reflecting: expectedType))
            Found: \(String(reflecting: foundType))
 
-    This is generally considered an application programming error. By using a different query type \
-    with the same path you open up your application to unexpected behavior around how a query \
-    fetches its data since a different set of modifiers can be applied to both queries.
+    This is generally considered an application programming error. By using a different operation type \
+    with the same path you open up your application to unexpected behavior around how the \ 
+    OperationStore runs its operationsince a different set of modifiers can be applied to both \
+    operations.
 
     A new OperationStore instance will be created for the type with the duplicate key, and this store \
     will not be retained within the OperationClient. This means that the state will not be shared \
-    between different OperationStore instances, and you will not be able to pattern match the query \
-    when calling ``OperationClient.stores(matching:)``.
+    between different OperationStore instances, and you will not be able to pattern match against \
+    the store when calling ``OperationClient.stores(matching:)``.
 
     To fix this, ensure that all of your OperationRequest conformances return unique OperationPath \
     instances. If your OperationRequest conformance type conforms to Hashable or Identifiable, the \
-    default OperationPath is represented by a single element path containing the instance of the query \
-    or its id respectively.
+    default OperationPath is represented by a single element path containing the instance of its \
+    hashability or identity respectively.
     """
   }
 }
