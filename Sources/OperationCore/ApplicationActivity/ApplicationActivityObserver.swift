@@ -2,7 +2,8 @@ import Foundation
 
 // MARK: - ApplicationActivityObserver
 
-/// A protocol for observing when the application becomes active or inactive.
+/// A protocol for observing when the application becomes active (foreground) or inactive
+/// (background).
 public protocol ApplicationActivityObserver {
   /// Subscribes to the observer for the latest changes in the application's activity state.
   ///
@@ -11,6 +12,6 @@ public protocol ApplicationActivityObserver {
   ///
   /// - Parameter handler: A closure that will be called when the application becomes active or
   ///   inactive.
-  /// - Returns: A ``OperationSubscription``.
+  /// - Returns: An ``OperationSubscription``.
   func subscribe(_ handler: @escaping @Sendable (Bool) -> Void) -> OperationSubscription
 }

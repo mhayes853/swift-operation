@@ -1,10 +1,8 @@
 import Foundation
 
-/// A ``FetchCondition`` that is satisfied whenever the app is active in the foreground using an
-/// ``ApplicationActivityObserver``.
-public final class ApplicationIsActiveRunSpecification<
-  Observer: ApplicationActivityObserver & Sendable
->: OperationRunSpecification, Sendable {
+/// An ``OperationRunSpecification`` that is satisfied whenever the app is active in the foreground
+/// according to an ``ApplicationActivityObserver``.
+public final class ApplicationIsActiveRunSpecification: OperationRunSpecification, Sendable {
   private typealias Handler = @Sendable () -> Void
   private struct State: Sendable {
     var isActive: Bool
@@ -13,8 +11,8 @@ public final class ApplicationIsActiveRunSpecification<
 
   private let state: RecursiveLock<State>
   private let subscriptions: OperationSubscriptions<Handler>
-
-  public init(observer: Observer) {
+  
+  public init(observer: some ApplicationActivityObserver) {
     self.state = RecursiveLock(State(isActive: true))
     self.subscriptions = OperationSubscriptions<Handler>()
     self.state.withLock { state in
@@ -43,15 +41,14 @@ public final class ApplicationIsActiveRunSpecification<
   }
 }
 
-extension OperationRunSpecification {
-  /// A ``FetchCondition`` that is satisfied whenever the app is active in the foreground using an
-  /// ``ApplicationActivityObserver``.
+extension OperationRunSpecification where Self == ApplicationIsActiveRunSpecification {
+  /// An ``OperationRunSpecification`` that is satisfied whenever the app is active in the foreground
+  /// according to an ``ApplicationActivityObserver``.
   ///
-  /// - Parameter observer: The observer to use to determine the app's active state.
-  /// - Returns: A ``FetchCondition`` that is satisfied whenever the app is active in the foreground.
-  public static func applicationIsActive<Observer>(
-    observer: Observer
-  ) -> Self where Self == ApplicationIsActiveRunSpecification<Observer> {
+  /// - Parameter observer: The observer to use to determine the app's activity state.
+  /// - Returns: An ``OperationRunSpecification`` that is satisfied whenever the app is active in
+  ///   the foreground.
+  public static func applicationIsActive(observer: some ApplicationActivityObserver) -> Self {
     ApplicationIsActiveRunSpecification(observer: observer)
   }
 }

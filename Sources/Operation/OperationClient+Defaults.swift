@@ -48,7 +48,7 @@ extension OperationClient {
     let delayer: (any OperationDelayer & Sendable)?
     let automaticRunningSpecification: AnySendableRunSpecification
     let networkObserver: AnySendableNetworkObserver?
-    let activityObserver: AnySendableApplicationActivityObserver?
+    let activityObserver: (any ApplicationActivityObserver)?
 
     public func store<Operation: StatefulOperationRequest & Sendable>(
       for operation: Operation,
@@ -158,7 +158,7 @@ extension OperationClient.StoreCreator where Self == OperationClient.DefaultStor
       delayer: delayer,
       automaticRunningSpecification: AnySendableRunSpecification(automaticRunningSpecification),
       networkObserver: networkObserver.map(AnySendableNetworkObserver.init),
-      activityObserver: activityObserver.map(AnySendableApplicationActivityObserver.init)
+      activityObserver: activityObserver
     )
   }
 }
