@@ -14,18 +14,6 @@ where OperationValue == Value, StatusValue == Value {
 
 /// A state type used for ``QueryRequest``.
 ///
-/// This state type is the default state type for your queries, though ``PaginatedRequest``
-/// and ``MutationRequest`` use ``PaginatedState`` and ``MutationState`` respectively as their
-/// state types.
-///
-/// You can only create instances of this state with an initial value that must have the same base
-/// type as `QueryValue`. A nil value for ``currentValue`` indicates that the query has not yet
-/// fetched any data, or has been yielded any value.
-///
-/// You can also access all active ``OperationTask`` instances on this state through the
-/// ``activeTasks`` property. Tasks are removed from `activeTasks` when ``finishFetchTask(_:)`` is
-/// called by a ``OperationStore``.
-///
 /// > Warning: You should not call any of the `mutating` methods directly on this type, rather a
 /// > ``OperationStore`` will call them at the appropriate time for you.
 public struct QueryState<Value: Sendable, Failure: Error>: Sendable {
