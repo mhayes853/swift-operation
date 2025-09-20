@@ -70,7 +70,7 @@ extension OpaqueOperationStore {
   /// stores backed by ``MutationRequest`` operations.
   ///
   /// Operations can individually enable or disable automatic fetching through the
-  /// ``OperationRequest/enableAutomaticRunning(onlyWhen:)`` modifier.
+  /// ``StatefulOperationRequest/enableAutomaticRunning(onlyWhen:)`` modifier.
   public var isAutomaticRunningEnabled: Bool {
     self._base.isAutomaticRunningEnabled
   }
