@@ -34,7 +34,7 @@ extension OperationRunSpecification {
   /// ``NetworkObserver``.
   ///
   /// - Parameter observer: A ``NetworkObserver``.
-  /// - Returns: A ``ConnectedCondition``.
+  /// - Returns: A ``NetworkConnectionRunSpecification``.
   public static func connected<Observer>(to observer: Observer) -> Self
   where Self == NetworkConnectionRunSpecification<Observer> {
     NetworkConnectionRunSpecification(observer: observer)
@@ -44,7 +44,7 @@ extension OperationRunSpecification {
 // MARK: - Satisfied Connection Status
 
 extension OperationContext {
-  /// The minimum satisfiable ``NetworkStatus`` status to satisfy
+  /// The minimum satisfiable ``NetworkConnectionStatus`` status to satisfy
   /// ``NetworkConnectionRunSpecification``.
   ///
   /// The default value is ``NetworkConnectionStatus/connected``.
