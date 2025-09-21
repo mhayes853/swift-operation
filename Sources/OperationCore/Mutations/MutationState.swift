@@ -32,12 +32,9 @@ public struct MutationState<Arguments: Sendable, Value: Sendable, Failure: Error
 
   /// The history of this mutation.
   ///
-  /// This array stores all ongoing and previous attempts of fetching a mutation. Each attempt is
-  /// marked by a ``HistoryEntry`` that contains the ``OperationTask`` used by the attempt,
+  /// This array stores all ongoing and previous mutation run attempts. Each attempt is
+  /// marked by a ``HistoryEntry`` that contains the ``OperationTask`` used by the run attempt,
   /// and information on the outcome of the attempt such as its ``OperationStatus``.
-  ///
-  /// You can use the history to implement UI flows that block known invalid inputs, prevent users
-  /// from performing actions after they're known to fail, and much more.
   public private(set) var history = IdentifiedArrayOf<HistoryEntry>()
 
   /// Creates a mutation state.
@@ -174,19 +171,19 @@ extension MutationState: _MutationStateProtocol {
 extension MutationState {
   /// An entry of history for a ``MutationState``.
   public struct HistoryEntry: Sendable {
-    /// The arguments passed to the mutation attempt represented by this entry.
+    /// The arguments passed to the mutation run attempt represented by this entry.
     public let arguments: Arguments
 
     /// The `Date` of when this entry was added.
     public let startDate: Date
 
-    /// The current and ongoing result of the mutation attempt represented by this entry.
+    /// The current and ongoing result of the mutation run attempt represented by this entry.
     public private(set) var currentResult: Result<Value, Failure>?
 
     /// The date this entry was last modified.
     public private(set) var lastUpdatedAt: Date?
 
-    /// The current ``OperationStatus`` of the mutation attempt represented by this entry.
+    /// The current ``OperationStatus`` of the mutation run attempt represented by this entry.
     public private(set) var status: OperationStatus<StatusValue, Failure>
 
     /// The ``OperationTask`` for this entry.
@@ -264,14 +261,14 @@ extension MutationState {
 extension OperationWarning {
   public static let mutationWithNoArgumentsOrHistory = OperationWarning(
     """
-    The latest mutation attempt was retried, but the retried mutation has no history.
+    The latest mutation run attempt was retried, but the mutation has no history.
 
-    Calling `fetch` or `retryLatest` on a `OperationStore` that uses a mutation will retry the latest \
-    mutation attempt in the history (ie. recalling `mutate`, but with the same arguments), but \
-    this is impossible if there is no history for the mutation.
+    Calling `run` or `retryLatest` on an `OperationStore` that uses a mutation will retry the \
+    latest mutation run attempt in the history (ie. recalling `mutate`, but with the same \
+    arguments), but this is impossible if there is no history for the mutation.
 
-    Make sure to call `mutate` on the store first before calling `fetch` on the `OperationStore` \
-    instance, or before calling `retryLatest` on the `MutationStore`.
+    Make sure to call `mutate` on the store first before calling `run` or `retryLatest` on the \ 
+    store.
     """
   )
 }

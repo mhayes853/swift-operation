@@ -79,7 +79,7 @@ extension OperationStore where State: _MutationStateProtocol {
   /// - Parameters:
   ///   - arguments: The set of arguments to mutate with.
   ///   - context: The ``OperationContext`` used by the underlying ``OperationTask``.
-  ///   - handler: A ``QueryEventHandler`` to subscribe to events from fetching the data.
+  ///   - handler: A ``MutationEventHandler`` to subscribe to events during the mutation run.
   ///   (This does not add an active subscriber to the store.)
   /// - Returns: The mutated value.
   @discardableResult
@@ -95,7 +95,7 @@ extension OperationStore where State: _MutationStateProtocol {
     .returnValue
   }
 
-  /// Creates a ``OperationTask`` that performs a mutation.
+  /// Creates an ``OperationTask`` that performs a mutation.
   ///
   /// The returned task does not begin fetching immediately. Rather you must call
   /// ``OperationTask/runIfNeeded()`` to fetch the data.
@@ -133,7 +133,7 @@ extension OperationStore where State: _MutationStateProtocol, State.Arguments ==
   ///
   /// - Parameters:
   ///   - context: The ``OperationContext`` used by the underlying ``OperationTask``.
-  ///   - handler: A ``MutationEventHandler`` to subscribe to events from fetching the data.
+  ///   - handler: A ``MutationEventHandler`` to subscribe to events from the mutation run.
   ///   (This does not add an active subscriber to the store.)
   /// - Returns: The mutated value.
   @discardableResult
@@ -144,7 +144,7 @@ extension OperationStore where State: _MutationStateProtocol, State.Arguments ==
     try await self.mutate(with: (), using: context, handler: handler)
   }
 
-  /// Creates a ``OperationTask`` that performs a mutation with no arguments.
+  /// Creates an ``OperationTask`` that performs a mutation with no arguments.
   ///
   /// The returned task does not begin fetching immediately. Rather you must call
   /// ``OperationTask/runIfNeeded()`` to fetch the data.
@@ -164,13 +164,12 @@ extension OperationStore where State: _MutationStateProtocol, State.Arguments ==
 extension OperationStore where State: _MutationStateProtocol {
   /// Retries the mutation with the most recently used set of arguments.
   ///
-  /// > Important: Calling this method without previously having called ``mutate(using:handler:)``
-  /// > will result in a purple runtime warning in Xcode, and a test failure for current running
-  /// > test. Additionally, the mutation will also throw an error.
+  /// > Warning: Calling this method without previously performing a mutation run attempt will
+  /// > result in a crash.
   ///
   /// - Parameters:
   ///   - context: The ``OperationContext`` used by the underlying ``OperationTask``.
-  ///   - handler: A ``MutationEventHandler`` to subscribe to events from fetching the data.
+  ///   - handler: A ``MutationEventHandler`` to subscribe to events from the mutation run.
   ///   (This does not add an active subscriber to the store.)
   /// - Returns: The mutated value.
   @discardableResult
@@ -191,9 +190,8 @@ extension OperationStore where State: _MutationStateProtocol {
   /// The returned task does not begin fetching immediately. Rather you must call
   /// ``OperationTask/runIfNeeded()`` to fetch the data.
   ///
-  /// > Important: Calling this method without previously having called ``mutate(using:handler:)``
-  /// > will result in a purple runtime warning in Xcode, and a test failure for current running
-  /// > test. Additionally, the mutation will also throw an error.
+  /// > Warning: Running the task returned by this method without previously performing a mutation
+  /// > run attempt will result in a crash.
   ///
   /// - Parameters:
   ///   - context: The ``OperationContext`` for the task.

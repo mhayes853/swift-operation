@@ -123,15 +123,16 @@ extension OperationClient.StoreCreator where Self == OperationClient.DefaultStor
   /// This store creator applies a set of default modifiers to both `QueryRequest` and
   /// `MutationRequest` instances.
   ///
-  /// **Queries**
+  /// **Mutations**
+  /// - Retries
+  /// - Exponential Backoff
+  ///
+  /// **All Other Operations**
   /// - Deduplication
   /// - Retries
   /// - Automatic Fetching
   /// - Refetching when the network comes back online
   /// - Refetching when the app reenters from the background
-  ///
-  /// **Mutations**
-  /// - Retries
   ///
   /// - Parameters:
   ///   - retryLimit: The maximum number of retries for queries and mutations.

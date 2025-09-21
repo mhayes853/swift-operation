@@ -4,32 +4,31 @@
 ///
 /// You do not construct this type, ``MutationRequest`` constructs  for you.
 public struct MutationOperationValue<ReturnValue: Sendable>: Sendable {
-  /// The value returned from ``MutationRequest/mutate(with:in:with:)``.
+  /// The value returned from ``MutationRequest/mutate(isolation:with:in:with:)``.
   public let returnValue: ReturnValue
 }
 
 // MARK: - MutationRequest
 
-/// A protocol describing a mutation.
+/// A protocol describing an operation that creates, deletes, or updates data asynchronously.
 ///
 /// Mutations are used when mutating remote data in your application. For instance, this may be
 /// submitting a POST request to an HTTP API based on user input from a form.
 ///
-/// `MutationRequest` inherits from ``QueryRequest``, and adds 2 additional requirements:
+/// `MutationRequest` inherits from ``StatefulOperationRequest``, and adds 2 additional requirements:
 /// 1. An ``Arguments`` associated type for defining the input to a mutation.
-/// 2. A ``mutate(with:in:with:)`` method to perform the mutation logic.
+/// 2. A ``mutate(isolation:with:in:with:)`` method to perform the mutation logic.
 ///
 /// ```swift
 /// extension Post {
 ///   static let likeMutation = LikeMutation()
 ///
 ///   struct LikeMutation: MutationRequest, Hashable {
-///     typealias Value = Void
-///
 ///     func mutate(
+///       isolation: isolated (any Actor)?,
 ///       with arguments: Post.ID,
 ///       in context: OperationContext,
-///       with continuation: OperationContinuation<Void>
+///       with continuation: OperationContinuation<Void, any Error>
 ///     ) async throws {
 ///       // POST to the API to like the post...
 ///     }
@@ -37,7 +36,7 @@ public struct MutationOperationValue<ReturnValue: Sendable>: Sendable {
 /// }
 /// ```
 ///
-/// Mutations are called with arguments directly. For instance, when you have a ``OperationStore``
+/// Mutations are called with arguments directly. For instance, when you have an ``OperationStore``
 /// that uses a mutation, you can invoke your mutation's logic via
 /// ``OperationStore/mutate(with:using:handler:)``.
 ///
@@ -54,29 +53,39 @@ public struct MutationOperationValue<ReturnValue: Sendable>: Sendable {
 /// try await store.retryLatest()
 /// ```
 ///
-/// > Notice: A purple runtime warning and test failure will be issued in Xcode if you call
-/// > `retryLatest` without ever having called `mutate` first. Additionally, your mutation will
-/// > throw an error.
+/// > Warning: Your app will crash if you call `retryLatest` without ever having called `mutate` first.
+///
+/// Avoid using mutations as only a means to fetch data. ``QueryRequest`` and ``PaginatedRequest``
+/// are more suitable for cases where you need to only fetch remote and external data without
+/// making edits to it. This is because a single mutation instance works with multiple sets of
+/// arguments passed to ``mutate(isolation:with:in:with:)`` at a time whilst separate
+/// `QueryRequest` and `PaginatedRequest` instances must be constructed for each set of
+/// arguments. Due to this, ``OperationClient`` is able to distinguish between separate
+/// `QueryRequest` and `PaginatedRequest` instances, whereas it cannot distinguish between 2 sets
+/// of arguments passed to a mutation.
 public protocol MutationRequest<Arguments, MutateValue, MutateFailure>: StatefulOperationRequest
 where
   Value == MutationOperationValue<MutateValue>,
   State == MutationState<Arguments, MutateValue, MutateFailure>,
   Failure == MutateFailure
 {
-  /// The data type of the arguments to submit to the mutation.
+  /// The data type of the arguments to use for a mutation run.
   associatedtype Arguments: Sendable
 
-  /// The data type of the returned from the mutation.
+  /// The data type of the returned from a mutation run.
   associatedtype MutateValue: Sendable
 
+  /// The error type thrown when a mutation run fails.
   associatedtype MutateFailure: Error
 
   /// Mutates with the specified arguments.
   ///
   /// - Parameters:
-  ///   - arguments: An instance of ``Arguments``.
-  ///   - context: The ``OperationContext`` passed to this mutation.
-  ///   - continuation: A ``OperationContinuation`` that allows you to yield values during the mutation. See <doc:MultistageQueries> for more.
+  ///   - isolation: The current isolation of the mutation run.
+  ///   - arguments: An instance of <doc:/documentation/OperationCore/MutationRequest/Arguments>.
+  ///   - context: The ``OperationContext`` of this mutation run.
+  ///   - continuation: An ``OperationContinuation`` that allows you to yield intermittent values
+  ///   during the mutation run. See <doc:MultistageOperations> for more.
   /// - Returns: The mutation value.
   func mutate(
     isolation: isolated (any Actor)?,
@@ -116,8 +125,10 @@ extension MutationRequest where Arguments == Void {
   /// Mutates with no arguments.
   ///
   /// - Parameters:
-  ///   - context: The ``OperationContext`` passed to this mutation.
-  ///   - continuation: A ``OperationContinuation`` that allows you to yield values during the mutation. See <doc:MultistageQueries> for more.
+  ///   - isolation: The current isolation of the mutation run.
+  ///   - context: The ``OperationContext`` of this mutation run.
+  ///   - continuation: An ``OperationContinuation`` that allows you to yield intermittent values
+  ///   during the mutation run. See <doc:MultistageOperations> for more.
   /// - Returns: The mutation value.
   public func mutate(
     isolation: isolated (any Actor)?,

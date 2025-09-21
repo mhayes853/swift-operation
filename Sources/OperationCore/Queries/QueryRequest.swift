@@ -27,22 +27,35 @@
 ///   }
 /// }
 /// ```
+///
+/// Queries are the most basic stateful operation type in the sense that their primary purpose is
+/// to just fetch data in its entirety with no strings attached. Ideally, they should not edit
+/// data on any remote or external sources they utilize. ``MutationRequest`` is more suitable for
+/// operations that edit data on remote and external sources.
+///
+/// Additionally, since queries fetch data in their entirety, you won't want to use them for cases
+/// where you cannot load all the necessary data at once. ``PaginatedRequest`` is suited for
+/// dealing with pagination in such cases.
 public protocol QueryRequest<FetchValue, FetchFailure>: StatefulOperationRequest
 where
   Self.FetchValue == Value,
   Self.FetchFailure == Failure,
   State == QueryState<FetchValue, FetchFailure>
 {
+  /// The value fetched from this query.
   associatedtype FetchValue: Sendable
+  
+  /// The error thrown from this query when fetching fails.
   associatedtype FetchFailure: Error
 
-  /// Fetches the data for your query.
+  /// Fetches the data for this query.
   ///
   /// - Parameters:
-  ///   - context: A ``OperationContext`` that is passed to your query.
-  ///   - continuation: A ``OperationContinuation`` that allows you to yield values while you're
-  ///   fetching data. See <doc:MultistageOperations> for more.
-  /// - Returns: The fetched value from your query.
+  ///   - isolation: The current isolation of the fetch.
+  ///   - context: The ``OperationContext`` for this fetch.
+  ///   - continuation: An ``OperationContinuation`` that allows you to yield intermittent values
+  ///   while fetching. See <doc:MultistageOperations> for more.
+  /// - Returns: The fetched value from this query.
   func fetch(
     isolation: isolated (any Actor)?,
     in context: OperationContext,
