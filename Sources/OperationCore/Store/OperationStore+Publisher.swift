@@ -3,7 +3,7 @@
   import Foundation
 
   extension OperationStore {
-    /// A Combine `Publisher` that emits state updates from a ``OperationStore``.
+    /// A Combine `Publisher` that emits state updates from an ``OperationStore``.
     ///
     /// This publisher will add a new subscription to the underlying store when subscribed to.
     public struct Publisher: Combine.Publisher, Sendable {

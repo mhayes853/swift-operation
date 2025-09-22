@@ -2,7 +2,7 @@ import Atomics
 
 // MARK: - OperationTaskIdentifier
 
-/// An opaque identifier for a ``OperationTask``.
+/// An opaque identifier for an ``OperationTask``.
 ///
 /// Each new `OperationTask` is assigned a unique identifier when it is initialized, you do not create
 /// instances of this identifier.

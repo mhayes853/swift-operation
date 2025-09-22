@@ -68,7 +68,7 @@ extension OperationDelayer {
 
 // MARK: - NoDelayer
 
-/// A ``OperationDelayer`` that performs no delays.
+/// an ``OperationDelayer`` that performs no delays.
 ///
 /// This is especially useful for testing, where having delays can slow down your test suite.
 public struct NoDelayer: OperationDelayer, Sendable {
@@ -81,7 +81,7 @@ public struct NoDelayer: OperationDelayer, Sendable {
 }
 
 extension OperationDelayer where Self == NoDelayer {
-  /// A ``OperationDelayer`` that performs no delays.
+  /// an ``OperationDelayer`` that performs no delays.
   ///
   /// This is especially useful for testing, where having delays can slow down your test suite.
   public static var noDelay: Self { NoDelayer() }

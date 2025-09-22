@@ -66,13 +66,13 @@ public protocol OperationModifier<Value, Failure> {
 
   /// The value returned from an operation run with this modifier.
   associatedtype Value
-  
+
   /// The error thrown from an operation run with this modifier.
   associatedtype Failure: Error
 
   /// Sets up the initial ``OperationContext`` for the specified operation.
   ///
-  /// This method is called a single time when a ``OperationStore`` is initialized with the
+  /// This method is called a single time when an ``OperationStore`` is initialized with the
   /// specified operation.
   ///
   /// Make sure to call ``OperationRequest/setup(context:)-9fupm`` on `operation` in order to apply the
@@ -143,7 +143,7 @@ extension OperationRequest {
   }
 }
 
-/// An operation with a ``OperationModifier`` attached to it.
+/// An operation with an ``OperationModifier`` attached to it.
 ///
 /// You create instances of this type through ``OperationRequest/modifier(_:)``.
 public struct ModifiedOperation<

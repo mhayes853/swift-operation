@@ -109,7 +109,7 @@ extension OperationPathableCollection {
 extension OperationPathableCollection {
   /// Returns a new collection containing the elements that match the specified path.
   ///
-  /// Matching is performed via ``OperationPath/isPrefix(of:)``.
+  /// Matching is performed vian ``OperationPath/isPrefix(of:)``.
   ///
   /// - Parameter path: The path to match.
   /// - Returns: A new collection containing the elements that match the specified path.

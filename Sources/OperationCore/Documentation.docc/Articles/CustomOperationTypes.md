@@ -231,7 +231,7 @@ extension OperationStore where State: _RecursiveStateProtocol {
 }
 ```
 
-The first thing that happens when `run` is called on a `OperationStore` is that the store will try to schedule a `OperationTask` on the current `State`. So we'll implement `scheduleFetchTask` on `RecursiveState`.
+The first thing that happens when `run` is called on an `OperationStore` is that the store will try to schedule an `OperationTask` on the current `State`. So we'll implement `scheduleFetchTask` on `RecursiveState`.
 
 ```swift
 struct RecursiveState<Value: RecursiveValue>: OperationState {
@@ -332,7 +332,7 @@ At this point the basics of our recursive operation type are implemented. Yet th
 
 ### Setting State Manually
 
-`OperationState` has 2 `update` requirements. The first is when the in progress operation yields a value when fetching, and this is associated with a `OperationTask`. However, the `OperationStore` also allows us to set the state value of the operation directly, which is useful for optimistic UI updates and much more. For this, `OperationState` has another update requirement, this time taking a result to the `StateValue` with a `OperationContext`. Implementing this is almost identical to the other `update` requirement on `RecursiveState`.
+`OperationState` has 2 `update` requirements. The first is when the in progress operation yields a value when fetching, and this is associated with an `OperationTask`. However, the `OperationStore` also allows us to set the state value of the operation directly, which is useful for optimistic UI updates and much more. For this, `OperationState` has another update requirement, this time taking a result to the `StateValue` with an `OperationContext`. Implementing this is almost identical to the other `update` requirement on `RecursiveState`.
 
 ```swift
 struct RecursiveState<Value: RecursiveValue>: OperationState {
@@ -389,7 +389,7 @@ struct RecursiveState<Value: RecursiveValue>: OperationState {
 
 ### Resetting State
 
-It's also possible to reset the entire `State` on a `OperationStore` via ``OperationStore/resetState(using:)``. When doing this, the store calls out to the `State` to reset itself, which is represented via a `reset` requirement on `OperationState`. When implementing this method you will reset the properties in your state to their initial values, and then you will return a `ResetEffect` with the `OperationTask` instances that you want to cancel. The `OperationStore` is responsible to for cancelling the tasks themselves. This is because the store is designed to be the runtime for the operation, whilst the state is meant to be a plain data type that represents the current state of the operation.
+It's also possible to reset the entire `State` on an `OperationStore` vian ``OperationStore/resetState(using:)``. When doing this, the store calls out to the `State` to reset itself, which is represented via a `reset` requirement on `OperationState`. When implementing this method you will reset the properties in your state to their initial values, and then you will return a `ResetEffect` with the `OperationTask` instances that you want to cancel. The `OperationStore` is responsible to for cancelling the tasks themselves. This is because the store is designed to be the runtime for the operation, whilst the state is meant to be a plain data type that represents the current state of the operation.
 
 ```swift
 struct RecursiveState<Value: RecursiveValue>: OperationState {

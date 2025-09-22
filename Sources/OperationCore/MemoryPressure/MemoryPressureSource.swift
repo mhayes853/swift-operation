@@ -6,7 +6,7 @@ public protocol MemoryPressureSource {
   /// Subcribes to pressure notifications from this source.
   ///
   /// - Parameter handler: A handler to run whenever a new notification is emitted.
-  /// - Returns: A ``OperationSubscription``.
+  /// - Returns: An ``OperationSubscription``.
   func subscribe(
     with handler: @escaping @Sendable (MemoryPressure) -> Void
   ) -> OperationSubscription

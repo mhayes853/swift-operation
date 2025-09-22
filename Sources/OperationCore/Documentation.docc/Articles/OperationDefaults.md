@@ -67,7 +67,7 @@ let client = OperationClient(
 )
 ```
 
-If you want to apply a custom modifier on all of your operations by default, you can make a conformance to the ``OperationClient/StoreCreator`` protocol. The protocol gives you the entirety of control over how a `OperationClient` constructs a store for an operation, giving you the chance to apply whatever modifiers that your operation needs.
+If you want to apply a custom modifier on all of your operations by default, you can make a conformance to the ``OperationClient/StoreCreator`` protocol. The protocol gives you the entirety of control over how an `OperationClient` constructs a store for an operation, giving you the chance to apply whatever modifiers that your operation needs.
 
 ```swift
 struct MyStoreCreator: OperationClient.StoreCreator {

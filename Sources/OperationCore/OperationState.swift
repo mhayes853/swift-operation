@@ -4,7 +4,7 @@ import IdentifiedCollections
 /// A protocol for the state of an operation.
 ///
 /// Each ``StatefulOperationRequest`` has an associated type that denotes the structure of its
-/// state inside a ``OperationStore``. Protocols that inherit from `StatefulOperationRequest` such
+/// state inside an ``OperationStore``. Protocols that inherit from `StatefulOperationRequest` such
 /// as ``QueryRequest`` and ``PaginatedRequest`` define their own state types as ``QueryState`` and
 /// ``MutationState`` respectively.
 ///
@@ -83,7 +83,7 @@ public protocol OperationState<StateValue, OperationValue, Failure> {
   /// Schedules an ``OperationTask`` on this state.
   ///
   /// An ``OperationState`` conformance is required to hold the instances of all active tasks
-  /// created by a ``OperationStore``. The store calls this method when a new task is created.
+  /// created by an ``OperationStore``. The store calls this method when a new task is created.
   ///
   /// - Parameter task: The ``OperationTask`` to schedule on this state.
   mutating func scheduleFetchTask(_ task: inout OperationTask<OperationValue, Failure>)
@@ -133,7 +133,7 @@ public protocol OperationState<StateValue, OperationValue, Failure> {
     for task: OperationTask<OperationValue, Failure>
   )
 
-  /// Indicates to this state that a ``OperationTask`` is about to finish running.
+  /// Indicates to this state that an ``OperationTask`` is about to finish running.
   ///
   /// This method is called by ``OperationStore`` when an operation run finishes, and is the last
   /// step in the specified task's body.

@@ -40,7 +40,7 @@ extension Task {
       }
     #endif
   }
-  
+
   /// Runs the given nonthrowing operation asynchronously as part of a new unstructured top-level task.
   ///
   /// - Parameters:

@@ -162,7 +162,7 @@ final class UserProjectsModel {
         guard let self else { return }
         if let user = element.state.currentValue {
           self.$projects = SharedOperation(
-            wrappedValue: nil, 
+            wrappedValue: nil,
             Project.userProjectsQuery(for: user.id)
           )
         } else {
@@ -174,7 +174,7 @@ final class UserProjectsModel {
 }
 ```
 
-Here, we regain the ability to have the `userId` in the `OperationPath` of the projects query, at the cost of ergonomics around how the query is constructed. This way, we allow for distinct user project queries to be represented by a `OperationPath`.
+Here, we regain the ability to have the `userId` in the `OperationPath` of the projects query, at the cost of ergonomics around how the query is constructed. This way, we allow for distinct user project queries to be represented by an `OperationPath`.
 
 ## Operation Merging
 

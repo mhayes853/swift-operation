@@ -1,7 +1,7 @@
 // MARK: - StoreCreator
 
 extension OperationClient {
-  /// A protocol that controls how a ``OperationClient`` creates ``OperationStore`` instances.
+  /// A protocol that controls how an ``OperationClient`` creates ``OperationStore`` instances.
   ///
   /// Conform to this protocol when you want to apply custom modifiers by default to all of your
   /// operations.
@@ -34,13 +34,13 @@ extension OperationClient {
   /// ```
   /// Read <doc:OperationDefaults> to learn more about how to set defaults for your operations.
   public protocol StoreCreator {
-    /// Creates a ``OperationStore`` for the specified ``OperationRequest``.
+    /// Creates an ``OperationStore`` for the specified ``OperationRequest``.
     ///
     /// - Parameters:
     ///   - operation: The operation.
     ///   - context: The initial ``OperationContext`` of the store.
     ///   - initialState: The initial state of the operation.
-    /// - Returns: A ``OperationStore``.
+    /// - Returns: An ``OperationStore``.
     func store<Operation: StatefulOperationRequest>(
       for operation: sending Operation,
       in context: OperationContext,
@@ -84,7 +84,7 @@ extension OperationClient {
 }
 
 extension OperationClient.CreateStore {
-  /// Creates a ``OperationStore`` for a ``StatefulOperationRequest``.
+  /// Creates an ``OperationStore`` for a ``StatefulOperationRequest``.
   ///
   /// - Parameters:
   ///   - operation: The operation,.
@@ -98,12 +98,12 @@ extension OperationClient.CreateStore {
     return self.creator.store(for: operation, in: self.initialContext, with: initialState)
   }
 
-  /// Creates a ``OperationStore`` for a ``QueryRequest``.
+  /// Creates an ``OperationStore`` for a ``QueryRequest``.
   ///
   /// - Parameters:
   ///   - query: The query.
   ///   - initialState: The initial state of the query.
-  /// - Returns: A ``OperationStore``.
+  /// - Returns: An ``OperationStore``.
   @_disfavoredOverload
   public func callAsFunction<Query: QueryRequest>(
     for query: sending Query,
@@ -112,12 +112,12 @@ extension OperationClient.CreateStore {
     self(for: query, initialState: initialState)
   }
 
-  /// Creates a ``OperationStore`` for a ``QueryRequest``.
+  /// Creates an ``OperationStore`` for a ``QueryRequest``.
   ///
   /// - Parameters:
   ///   - query: The query.
   ///   - initialValue: The initial value of the query.
-  /// - Returns: A ``OperationStore``.
+  /// - Returns: An ``OperationStore``.
   public func callAsFunction<Query: QueryRequest>(
     for query: sending Query,
     initialValue: Query.Value? = nil
@@ -125,23 +125,23 @@ extension OperationClient.CreateStore {
     self(for: query, initialState: Query.State(initialValue: initialValue))
   }
 
-  /// Creates a ``OperationStore`` for a ``QueryRequest``.
+  /// Creates an ``OperationStore`` for a ``QueryRequest``.
   ///
   /// - Parameters:
   ///   - query: The query.
-  /// - Returns: A ``OperationStore``.
+  /// - Returns: An ``OperationStore``.
   public func callAsFunction<Query: QueryRequest>(
     for query: sending Query.Default
   ) -> OperationStore<Query.Default.State> {
     self(for: query, initialState: query.initialState)
   }
 
-  /// Creates a ``OperationStore`` for a ``PaginatedRequest``.
+  /// Creates an ``OperationStore`` for a ``PaginatedRequest``.
   ///
   /// - Parameters:
   ///   - query: The query.
   ///   - initialValue: The initial value for the state of the query.
-  /// - Returns: A ``OperationStore``.
+  /// - Returns: An ``OperationStore``.
   public func callAsFunction<Query: PaginatedRequest>(
     for query: sending Query,
     initialValue: Query.State.StateValue = []
@@ -155,23 +155,23 @@ extension OperationClient.CreateStore {
     )
   }
 
-  /// Creates a ``OperationStore`` for a ``PaginatedRequest``.
+  /// Creates an ``OperationStore`` for a ``PaginatedRequest``.
   ///
   /// - Parameters:
   ///   - query: The query.
-  /// - Returns: A ``OperationStore``.
+  /// - Returns: An ``OperationStore``.
   public func callAsFunction<Query: PaginatedRequest>(
     for query: sending Query.Default
   ) -> OperationStore<Query.Default.State> {
     self(for: query, initialState: query.initialState)
   }
 
-  /// Creates a ``OperationStore`` for a ``MutationRequest``.
+  /// Creates an ``OperationStore`` for a ``MutationRequest``.
   ///
   /// - Parameters:
   ///   - mutation: The mutation.
   ///   - initialValue: The initial value for the state of the mutation.
-  /// - Returns: A ``OperationStore``.
+  /// - Returns: An ``OperationStore``.
   public func callAsFunction<Mutation: MutationRequest>(
     for mutation: sending Mutation,
     initialValue: Mutation.MutateValue? = nil
@@ -179,11 +179,11 @@ extension OperationClient.CreateStore {
     self(for: mutation, initialState: Mutation.State(initialValue: initialValue))
   }
 
-  /// Creates a ``OperationStore`` for a ``MutationRequest``.
+  /// Creates an ``OperationStore`` for a ``MutationRequest``.
   ///
   /// - Parameters:
   ///   - mutation: The mutation.
-  /// - Returns: A ``OperationStore``.
+  /// - Returns: An ``OperationStore``.
   public func callAsFunction<Mutation: MutationRequest>(
     for mutation: sending Mutation.Default,
   ) -> OperationStore<Mutation.Default.State> {

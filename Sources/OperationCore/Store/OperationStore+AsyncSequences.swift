@@ -1,5 +1,5 @@
 extension OperationStore {
-  /// An asynchronous sequence of states from a ``OperationStore``.
+  /// An asynchronous sequence of states from an ``OperationStore``.
   ///
   /// You can obtain an instance of this sequence by calling ``OperationStore/states``, and use
   /// for-await-in syntax to iterate over all state updates from the store.
@@ -52,7 +52,7 @@ extension OperationStore {
     }
   }
 
-  /// An asynchronous sequence of states from a ``OperationStore``.
+  /// An asynchronous sequence of states from an ``OperationStore``.
   ///
   /// You can use for-await-in syntax to loop over all states from this store.
   ///

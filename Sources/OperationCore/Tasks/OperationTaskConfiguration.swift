@@ -1,6 +1,6 @@
 // MARK: - OperationTaskConfiguration
 
-/// A configuration data type for a ``OperationTask`` that holds information on how the task runs, and
+/// A configuration data type for an ``OperationTask`` that holds information on how the task runs, and
 /// the ``OperationContext`` used to run the task.
 public struct OperationTaskConfiguration: Sendable {
   /// The name of the task.
@@ -51,9 +51,9 @@ extension OperationTaskConfiguration {
 // MARK: - OperationContext
 
 extension OperationContext {
-  /// The ``OperationTaskConfiguration`` to use for a ``OperationTask``.
+  /// The ``OperationTaskConfiguration`` to use for an ``OperationTask``.
   ///
-  /// The default value is a configuration equivalent to initializing a `OperationTaskConfiguration`
+  /// The default value is a configuration equivalent to initializing an `OperationTaskConfiguration`
   /// with the default arguments.
   public var operationTaskConfiguration: OperationTaskConfiguration {
     get { self[OperationTaskConfigurationKey.self] }

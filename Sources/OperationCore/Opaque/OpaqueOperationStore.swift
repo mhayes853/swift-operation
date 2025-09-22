@@ -53,7 +53,7 @@ extension OpaqueOperationStore {
   ///
   /// Automatic running is defined as the process of running this operation without explicitly
   /// calling ``run(using:handler:)``. This includes, but not limited to:
-  /// 1. Running when subscribed to via ``OperationStore/subscribe(with:)-(OperationEventHandler<State>)``.
+  /// 1. Running when subscribed to vian ``OperationStore/subscribe(with:)-(OperationEventHandler<State>)``.
   /// 2. Running when the app re-enters the foreground from the background.
   /// 3. Running when the user's network connection flips from offline to online.
   /// 4. Running via an ``OperationController``.
@@ -65,7 +65,7 @@ extension OpaqueOperationStore {
   /// ``OperationStore/mutate(using:handler:)`` will call ``run(using:handler:)`` under the hood
   /// for you.
   ///
-  /// When you use the default initializer of a ``OperationClient``, automatic running is enabled for all
+  /// When you use the default initializer of an ``OperationClient``, automatic running is enabled for all
   /// stores backed by ``QueryRequest`` and ``PaginatedRequest`` operations, and disabled for all
   /// stores backed by ``MutationRequest`` operations.
   ///
@@ -216,7 +216,7 @@ extension OpaqueOperationStore {
     try await self._base.opaqueRun(using: context, handler: handler)
   }
 
-  /// Creates a ``OperationTask`` to run the operation.
+  /// Creates an ``OperationTask`` to run the operation.
   ///
   /// The returned task does not begin fetching immediately. Rather you must call
   /// ``OperationTask/runIfNeeded()`` to fetch the data.
@@ -247,7 +247,7 @@ extension OpaqueOperationStore {
   /// and a `CancellationError` will be present on the ``state`` property.
   ///
   /// - Parameter handler: The event handler.
-  /// - Returns: A ``OperationSubscription``.
+  /// - Returns: An ``OperationSubscription``.
   public func subscribe(with handler: OpaqueOperationEventHandler) -> OperationSubscription {
     self._base.opaqueSubscribe(with: handler)
   }

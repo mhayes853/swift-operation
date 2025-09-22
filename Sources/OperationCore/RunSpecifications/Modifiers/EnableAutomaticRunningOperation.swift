@@ -5,7 +5,7 @@ extension StatefulOperationRequest {
   ///
   /// Automatic running is defined as the process of running this operation without explicitly
   /// calling ``OperationStore/run(using:handler:)``. This includes, but not limited to:
-  /// 1. Running when subscribed to via ``OperationStore/subscribe(with:)-(OperationEventHandler<State>)``.
+  /// 1. Running when subscribed to vian ``OperationStore/subscribe(with:)-(OperationEventHandler<State>)``.
   /// 2. Running when the app re-enters the foreground from the background.
   /// 3. Running when the user's network connection flips from offline to online.
   /// 4. Running via an ``OperationController``.
@@ -17,7 +17,7 @@ extension StatefulOperationRequest {
   /// ``OperationStore/mutate(using:handler:)`` will call ``OperationStore/run(using:handler:)``
   /// under the hood for you.
   ///
-  /// When you use the default initializer of a ``OperationClient``, automatic running is enabled for all
+  /// When you use the default initializer of an ``OperationClient``, automatic running is enabled for all
   /// stores backed by ``QueryRequest`` and ``PaginatedRequest`` operations, and disabled for all
   /// stores backed by ``MutationRequest`` operations.
   ///
@@ -34,7 +34,7 @@ extension StatefulOperationRequest {
   ///
   /// Automatic running is defined as the process of running this operation without explicitly
   /// calling ``OperationStore/run(using:handler:)``. This includes, but not limited to:
-  /// 1. Running when subscribed to via ``OperationStore/subscribe(with:)-(OperationEventHandler<State>)``.
+  /// 1. Running when subscribed to vian ``OperationStore/subscribe(with:)-(OperationEventHandler<State>)``.
   /// 2. Running when the app re-enters the foreground from the background.
   /// 3. Running when the user's network connection flips from offline to online.
   /// 4. Running via an ``OperationController``.
@@ -46,7 +46,7 @@ extension StatefulOperationRequest {
   /// ``OperationStore/mutate(using:handler:)`` will call ``OperationStore/run(using:handler:)``
   /// under the hood for you.
   ///
-  /// When you use the default initializer of a ``OperationClient``, automatic running is enabled for all
+  /// When you use the default initializer of an ``OperationClient``, automatic running is enabled for all
   /// stores backed by ``QueryRequest`` and ``PaginatedRequest`` operations, and disabled for all
   /// stores backed by ``MutationRequest`` operations.
   ///
@@ -82,7 +82,7 @@ extension OperationContext {
   /// ``StatefulOperationRequest/disableAutomaticRunning(_:)`` modifiers.
   ///
   /// The default value of this context property is a specification that always returns false.
-  /// However, if you use the default initializer of a ``OperationClient``, then the default value
+  /// However, if you use the default initializer of an ``OperationClient``, then the default value
   /// will be a specification that is true for all ``OperationStore`` instances backed by
   /// ``QueryRequest`` and ``PaginatedRequest`` operations, and always false for stores backed
   /// by ``MutationRequest`` operations.

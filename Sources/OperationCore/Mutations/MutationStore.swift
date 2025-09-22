@@ -184,7 +184,7 @@ extension OperationStore where State: _MutationStateProtocol {
     .returnValue
   }
 
-  /// Creates a ``OperationTask`` that retries the mutation with the most recently used set of
+  /// Creates an ``OperationTask`` that retries the mutation with the most recently used set of
   /// arguments.
   ///
   /// The returned task does not begin fetching immediately. Rather you must call
@@ -222,7 +222,7 @@ extension OperationStore where State: _MutationStateProtocol {
   /// Subscribes to events from this store using a ``MutationEventHandler``.
   ///
   /// - Parameter handler: The event handler.
-  /// - Returns: A ``OperationSubscription``.
+  /// - Returns: An ``OperationSubscription``.
   public func subscribe(
     with handler: MutationEventHandler<State>
   ) -> OperationSubscription {

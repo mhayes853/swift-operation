@@ -23,7 +23,7 @@
     /// - Parameters:
     ///   - operation: The `OperationRequest`.
     ///   - initialState: The initial state.
-    ///   - client: A `OperationClient` to obtain the `OperationStore` from.
+    ///   - client: An `OperationClient` to obtain the `OperationStore` from.
     ///   - scheduler: The ``SharedOperationStateScheduler`` to schedule state updates on.
     public init<Operation: StatefulOperationRequest>(
       _ operation: sending Operation,
@@ -48,7 +48,7 @@
     /// - Parameters:
     ///   - query: The `QueryRequest`.
     ///   - wrappedValue: The initial value.
-    ///   - client: A `OperationClient` to obtain the `OperationStore` from.
+    ///   - client: An `OperationClient` to obtain the `OperationStore` from.
     ///   - transaction: The `UITransaction` to use for state updates.
     public init<Query: QueryRequest>(
       wrappedValue: Query.State.StateValue = nil,
@@ -68,7 +68,7 @@
     ///
     /// - Parameters:
     ///   - query: The `QueryRequest`.
-    ///   - client: A `OperationClient` to obtain the `OperationStore` from.
+    ///   - client: An `OperationClient` to obtain the `OperationStore` from.
     ///   - transaction: The `UITransaction` to use for state updates.
     public init<Query: QueryRequest>(
       _ query: sending Query.Default,
@@ -92,7 +92,7 @@
     /// - Parameters:
     ///   - query: The `PaginatedRequest`.
     ///   - wrappedValue: The initial value.
-    ///   - client: A `OperationClient` to obtain the `OperationStore` from.
+    ///   - client: An `OperationClient` to obtain the `OperationStore` from.
     ///   - transaction: The `UITransaction` to use for state updates.
     public init<Query: PaginatedRequest>(
       wrappedValue: Query.State.StateValue = [],
@@ -112,7 +112,7 @@
     ///
     /// - Parameters:
     ///   - query: The `PaginatedRequest`.
-    ///   - client: A `OperationClient` to obtain the `OperationStore` from.
+    ///   - client: An `OperationClient` to obtain the `OperationStore` from.
     ///   - transaction: The `UITransaction` to use for state updates.
     public init<Query: PaginatedRequest>(
       _ query: sending Query.Default,
@@ -141,7 +141,7 @@
     /// - Parameters:
     ///   - mutation: The `MutationRequest`.
     ///   - wrappedValue: The initial value.
-    ///   - client: A `OperationClient` to obtain the `OperationStore` from.
+    ///   - client: An `OperationClient` to obtain the `OperationStore` from.
     ///   - transaction: The `UITransaction` to use for state updates.
     public init<Mutation: MutationRequest>(
       wrappedValue: Mutation.State.StateValue = nil,
@@ -161,7 +161,7 @@
     ///
     /// - Parameters:
     ///   - mutation: The `MutationRequest`.
-    ///   - client: A `OperationClient` to obtain the `OperationStore` from.
+    ///   - client: An `OperationClient` to obtain the `OperationStore` from.
     ///   - transaction: The `UITransaction` to use for state updates.
     public init<Mutation: MutationRequest>(
       _ mutation: sending Mutation.Default,

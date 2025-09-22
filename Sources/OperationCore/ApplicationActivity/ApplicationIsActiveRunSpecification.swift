@@ -11,7 +11,7 @@ public final class ApplicationIsActiveRunSpecification: OperationRunSpecificatio
 
   private let state: RecursiveLock<State>
   private let subscriptions: OperationSubscriptions<Handler>
-  
+
   public init(observer: some ApplicationActivityObserver) {
     self.state = RecursiveLock(State(isActive: true))
     self.subscriptions = OperationSubscriptions<Handler>()

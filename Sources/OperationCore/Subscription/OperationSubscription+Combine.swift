@@ -4,13 +4,13 @@
   extension OperationSubscription {
     /// A Combine `Subscription` conformance that wraps an ``OperationSubscription``.
     ///
-    /// Use this type if you need to integrate a `OperationSubscription` with a Combine `Publisher`.
+    /// Use this type if you need to integrate an `OperationSubscription` with a Combine `Publisher`.
     public final class Combine: Subscription {
       private let subscription: OperationSubscription
 
       /// Creates a Combine subscription.
       ///
-      /// - Parameter subscription: A ``OperationSubscription``.
+      /// - Parameter subscription: An ``OperationSubscription``.
       public init(_ subscription: OperationSubscription) {
         self.subscription = subscription
       }

@@ -296,7 +296,7 @@ where
   ///   - paging: The ``Paging`` for this operation. You can access the page id to fetch data for
   ///   via the ``Paging/pageId`` property.
   ///   - context: The ``OperationContext`` passed to this operation.
-  ///   - continuation: A ``OperationContinuation`` allowing you to yield multiple intermittent
+  ///   - continuation: An ``OperationContinuation`` allowing you to yield multiple intermittent
   ///   values from your operation. See <doc:MultistageOperations> for more.
   /// - Returns: The page value for the page.
   func fetchPage(

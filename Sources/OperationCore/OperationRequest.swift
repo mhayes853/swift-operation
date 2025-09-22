@@ -127,7 +127,7 @@ where Value: Sendable, State.OperationValue == Value, State.Failure == Failure {
   /// The state type for your operation.
   associatedtype State: OperationState
 
-  /// A ``OperationPath`` that uniquely identifies your operation.
+  /// an ``OperationPath`` that uniquely identifies your operation.
   ///
   /// If your operation conforms to Hashable or Identifiable, then this requirement is implemented by
   /// default. However, if you want to take advantage of pattern matching, then you'll want to

@@ -142,7 +142,7 @@ This works, however it's considerably likely that we'll have multiple instances 
 
 ## OperationPath and Store Pattern Matching
 
-To get around the aforementioned performance issue, we can utilize a `OperationPath` to pattern match the existing `OperationStore`s inside the `OperationClient`.
+To get around the aforementioned performance issue, we can utilize an `OperationPath` to pattern match the existing `OperationStore`s inside the `OperationClient`.
 
 ``StatefulOperationRequest``, and all protocols that inherit from it such as ``PaginatedRequest`` and ``MutationRequest`` have an optional `path` requirement. When your query type conforms to Hashable, this requirement is automatically implemented as follows.
 
@@ -152,11 +152,11 @@ extension StatefulOperationRequest where Self: Hashable {
 }
 ```
 
-This implementation, while convenient, does not take advantage of the full power of `OperationPath`. To understand why, we'll need to briefly cover what a `OperationPath` represents.
+This implementation, while convenient, does not take advantage of the full power of `OperationPath`. To understand why, we'll need to briefly cover what an `OperationPath` represents.
 
 ### OperationPath Basics
 
-At the very least, you can think of a `OperationPath` as an identifier for a query. This identifier is essentially an array of `Hashable` elements that uniquely identify the query. Under the hood, `OperationClient` utilizes a query's path as key into a dictionary of `OperationStore`s. If you're familiar with [Tanstack Query](https://tanstack.com/query/latest/docs/framework/react/guides/query-keys), `OperationPath` is analogous to the `queryKey` property.
+At the very least, you can think of an `OperationPath` as an identifier for a query. This identifier is essentially an array of `Hashable` elements that uniquely identify the query. Under the hood, `OperationClient` utilizes a query's path as key into a dictionary of `OperationStore`s. If you're familiar with [Tanstack Query](https://tanstack.com/query/latest/docs/framework/react/guides/query-keys), `OperationPath` is analogous to the `queryKey` property.
 
 If we remove the conformance to `Hashable` on `User.FriendsQuery`, we'll be forced to fill in a custom `OperationPath`.
 
@@ -177,7 +177,7 @@ struct FriendsQuery: PaginatedRequest {
 
 In this case, we have 2 identifying components of the query. First, we use a string to represent that this query is for a list of friends, and secondly we use the `userId` to represent the user for whom we are fetching friends.
 
-The real power of splitting the path into an array of multiple components is that you can pattern match the query utilizing a prefix. For instance, you can get access to the `OperationStore`s for all user friend list queries on a `OperationClient` by checking if the path starts with `["user-friends"]`.
+The real power of splitting the path into an array of multiple components is that you can pattern match the query utilizing a prefix. For instance, you can get access to the `OperationStore`s for all user friend list queries on an `OperationClient` by checking if the path starts with `["user-friends"]`.
 
 ```swift
 OperationClient.stores(
@@ -314,4 +314,4 @@ struct SendFriendRequestMutation: MutationRequest, Hashable {
 
 ## Conclusion
 
-In this article, you learned how to use the library to manage asynchronous data fetched by your operations. `OperationClient` can hold the `OperationStore` instances for your queries, and you can utilize `OperationPath` to pattern match these stores. In addition to setting the value of a `OperationStore` directly, you also can decide to refetch the data for a query in order to keep it's state as fresh as possible.
+In this article, you learned how to use the library to manage asynchronous data fetched by your operations. `OperationClient` can hold the `OperationStore` instances for your queries, and you can utilize `OperationPath` to pattern match these stores. In addition to setting the value of an `OperationStore` directly, you also can decide to refetch the data for a query in order to keep it's state as fresh as possible.

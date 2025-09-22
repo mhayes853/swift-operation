@@ -73,7 +73,7 @@ public struct SharedOperation<State: OperationState & Sendable>: Sendable {
   /// - Parameters:
   ///   - operation: The `OperationRequest`.
   ///   - initialState: The initial state.
-  ///   - client: A `OperationClient` to obtain the `OperationStore` from.
+  ///   - client: An `OperationClient` to obtain the `OperationStore` from.
   ///   - scheduler: The ``SharedOperationStateScheduler`` to schedule state updates on.
   public init<Operation: StatefulOperationRequest>(
     _ operation: sending Operation,
@@ -278,7 +278,7 @@ extension SharedOperation {
   ///
   /// - Parameters:
   ///   - context: The `OperationContext` to use for the underlying `OperationTask`.
-  ///   - handler: A `OperationEventHandler` to subscribe to events from fetching the data.
+  ///   - handler: An `OperationEventHandler` to subscribe to events from fetching the data.
   ///   (This does not add an active subscriber to the store.)
   /// - Returns: The data returned from the operation.
   @discardableResult
@@ -289,7 +289,7 @@ extension SharedOperation {
     try await self.store.run(using: context, handler: handler)
   }
 
-  /// Creates a `OperationTask` to run the operation.
+  /// Creates an `OperationTask` to run the operation.
   ///
   /// The returned task does not begin fetching immediately. Rather you must call
   /// `OperationTask.runIfNeeded` to fetch the data.
@@ -322,7 +322,7 @@ extension SharedOperation where State: _QueryStateProtocol {
     try await self.value.store.fetch(using: context, handler: handler)
   }
 
-  /// Creates a `OperationTask` to fetch the query's data.
+  /// Creates an `OperationTask` to fetch the query's data.
   ///
   /// The returned task does not begin fetching immediately. Rather you must call
   /// `OperationTask.runIfNeeded` to fetch the data.
@@ -382,7 +382,7 @@ extension SharedOperation {
   /// - Parameters:
   ///   - wrappedValue: The initial value.
   ///   - query: The `QueryRequest`.
-  ///   - client: A `OperationClient` to obtain the `OperationStore` from.
+  ///   - client: An `OperationClient` to obtain the `OperationStore` from.
   ///   - scheduler: The ``SharedOperationStateScheduler`` to schedule state updates on.
   public init<Query: QueryRequest>(
     wrappedValue: Query.State.StateValue = nil,
@@ -402,7 +402,7 @@ extension SharedOperation {
   ///
   /// - Parameters:
   ///   - query: The `QueryRequest`.
-  ///   - client: A `OperationClient` to obtain the `OperationStore` from.
+  ///   - client: An `OperationClient` to obtain the `OperationStore` from.
   ///   - scheduler: The ``SharedOperationStateScheduler`` to schedule state updates on.
   public init<Query: QueryRequest>(
     _ query: sending Query.Default,
@@ -421,7 +421,7 @@ extension SharedOperation {
   /// - Parameters:
   ///   - wrappedValue: The initial value.
   ///   - query: The `PaginatedRequest`.
-  ///   - client: A `OperationClient` to obtain the `OperationStore` from.
+  ///   - client: An `OperationClient` to obtain the `OperationStore` from.
   ///   - scheduler: The ``SharedOperationStateScheduler`` to schedule state updates on.
   public init<Query: PaginatedRequest>(
     wrappedValue: Query.State.StateValue = [],
@@ -444,7 +444,7 @@ extension SharedOperation {
   ///
   /// - Parameters:
   ///   - query: The `PaginatedRequest`.
-  ///   - client: A `OperationClient` to obtain the `OperationStore` from.
+  ///   - client: An `OperationClient` to obtain the `OperationStore` from.
   ///   - scheduler: The ``SharedOperationStateScheduler`` to schedule state updates on.
   public init<Query: PaginatedRequest>(
     _ query: sending Query.Default,
@@ -480,7 +480,7 @@ extension SharedOperation where State: _PaginatedStateProtocol {
     try await self.value.store.refetchAllPages(using: context, handler: handler)
   }
 
-  /// Creates a `OperationTask` that refetches all existing pages on the query.
+  /// Creates an `OperationTask` that refetches all existing pages on the query.
   ///
   /// The task will refetch pages in a waterfall effect, starting from the first page, and then
   /// continuing until either the last page is fetched, or until no more pages can be fetched.
@@ -517,7 +517,7 @@ extension SharedOperation where State: _PaginatedStateProtocol {
     try await self.value.store.fetchNextPage(using: context, handler: handler)
   }
 
-  /// Creates a `OperationTask` to fetch the page that will be placed after the last page in
+  /// Creates an `OperationTask` to fetch the page that will be placed after the last page in
   /// ``currentValue``.
   ///
   /// If no pages have been previously fetched, the initial page is fetched.
@@ -554,7 +554,7 @@ extension SharedOperation where State: _PaginatedStateProtocol {
     try await self.value.store.fetchPreviousPage(using: context, handler: handler)
   }
 
-  /// Creates a `OperationTask` to fetch the page that will be placed before the first page in
+  /// Creates an `OperationTask` to fetch the page that will be placed before the first page in
   /// ``currentValue``.
   ///
   /// If no pages have been previously fetched, the initial page is fetched.
@@ -582,7 +582,7 @@ extension SharedOperation {
   /// - Parameters:
   ///   - wrappedValue: The initial value.
   ///   - mutation: The `MutationRequest`.
-  ///   - client: A `OperationClient` to obtain the `OperationStore` from.
+  ///   - client: An `OperationClient` to obtain the `OperationStore` from.
   ///   - scheduler: The ``SharedOperationStateScheduler`` to schedule state updates on.
   public init<Mutation: MutationRequest>(
     wrappedValue: Mutation.State.StateValue = nil,
@@ -602,7 +602,7 @@ extension SharedOperation {
   ///
   /// - Parameters:
   ///   - mutation: The `MutationRequest`.
-  ///   - client: A `OperationClient` to obtain the `OperationStore` from.
+  ///   - client: An `OperationClient` to obtain the `OperationStore` from.
   ///   - scheduler: The ``SharedOperationStateScheduler`` to schedule state updates on.
   public init<Mutation: MutationRequest>(
     _ mutation: sending Mutation.Default,
@@ -630,7 +630,7 @@ extension SharedOperation where State: _MutationStateProtocol {
     try await self.value.store.mutate(with: arguments, using: context, handler: handler)
   }
 
-  /// Creates a `OperationTask` that performs a mutation with a set of arguments.
+  /// Creates an `OperationTask` that performs a mutation with a set of arguments.
   ///
   /// The returned task does not begin fetching immediately. Rather you must call
   /// `OperationTask.runIfNeeded` to fetch the data.
@@ -664,7 +664,7 @@ extension SharedOperation where State: _MutationStateProtocol {
     try await self.value.store.retryLatest(using: context, handler: handler)
   }
 
-  /// Creates a `OperationTask` that retries the mutation with the most recently used set of
+  /// Creates an `OperationTask` that retries the mutation with the most recently used set of
   /// arguments.
   ///
   /// The returned task does not begin fetching immediately. Rather you must call
@@ -699,7 +699,7 @@ extension SharedOperation where State: _MutationStateProtocol, State.Arguments =
     try await self.mutate(with: (), using: context, handler: handler)
   }
 
-  /// Creates a `OperationTask` that performs a mutation with no arguments.
+  /// Creates an `OperationTask` that performs a mutation with no arguments.
   ///
   /// The returned task does not begin fetching immediately. Rather you must call
   /// `OperationTask.runIfNeeded` to fetch the data.

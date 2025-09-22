@@ -26,7 +26,7 @@ private protocol _OperationTask: Sendable, Identifiable {
 /// create tasks directly, but you can retrieve tasks from the store and configure their creation
 /// through the ``OperationRequest/taskConfiguration(_:)-(OperationTaskConfiguration)`` modifier.
 ///
-/// Unlike a traditional `Task` in Swift, a `OperationTask` does not immediately begin scheduling its
+/// Unlike a traditional `Task` in Swift, an `OperationTask` does not immediately begin scheduling its
 /// work on its preferred executor when initialized. Instead, you must explicitly schedule and
 /// run the task using ``runIfNeeded()``, and you can check the running state via ``isRunning``
 /// and ``hasStarted``. Once `runIfNeeded` has been called, subsequent calls to

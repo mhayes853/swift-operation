@@ -134,10 +134,10 @@ extension OperationControls {
     try await self.yieldRerunTask(with: context)?.runIfNeeded()
   }
 
-  /// Creates a ``OperationTask`` to rerun the operation.
+  /// Creates an ``OperationTask`` to rerun the operation.
   ///
   /// - Parameter context: The ``OperationContext`` to use for the ``OperationTask``.
-  /// - Returns: A ``OperationTask`` to rerun the operation, or nil if ``canYieldRerun`` is false.
+  /// - Returns: An ``OperationTask`` to rerun the operation, or nil if ``canYieldRerun`` is false.
   public func yieldRerunTask(
     with context: OperationContext? = nil
   ) -> OperationTask<State.OperationValue, State.Failure>? {

@@ -44,7 +44,7 @@ where
 {
   /// The value fetched from this query.
   associatedtype FetchValue: Sendable
-  
+
   /// The error thrown from this query when fetching fails.
   associatedtype FetchFailure: Error
 

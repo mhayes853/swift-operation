@@ -11,7 +11,7 @@ The library provides many built-in modifiers that utilize run specifications. Le
 ## Automatic Running
 
 Automatic running is defined as the process of running an operation without explicitly calling ``OperationStore/run(using:handler:)``. This includes, but is not limited to:
-1. Running when subscribed to via ``OperationStore/subscribe(with:)-(OperationEventHandler<State>)``.
+1. Running when subscribed to vian ``OperationStore/subscribe(with:)-(OperationEventHandler<State>)``.
 2. Running when the app re-enters the foreground from the background.
 3. Running when the user's network connection flips from offline to online.
 4. Running via an ``OperationController``.
@@ -56,7 +56,7 @@ The example above will rerun the query whenever the network status flips from of
 
 ## Stale When Revalidate
 
-`OperationStore` has a notion of stale-when-revalidate with respect to its latest held data. When a new subscriber is added to the store via ``OperationStore/subscribe(with:)-(OperationEventHandler<State>)``, the store will rerun its operation if both ``OperationStore/isStale`` and ``OperationStore/isAutomaticRunningEnabled`` are true. It's possible to control the value of `isStale` via an `OperationRunSpecification`.
+`OperationStore` has a notion of stale-when-revalidate with respect to its latest held data. When a new subscriber is added to the store vian ``OperationStore/subscribe(with:)-(OperationEventHandler<State>)``, the store will rerun its operation if both ``OperationStore/isStale`` and ``OperationStore/isAutomaticRunningEnabled`` are true. It's possible to control the value of `isStale` via an `OperationRunSpecification`.
 
 ```swift
 import Combine
@@ -79,7 +79,7 @@ In this example, the query will be considered stale when the subject emits a val
 >
 > let query2 = MyQuery().staleWhen(
 >   specification:
->     .applicationIsActive(observer: UIApplicationActivityObserver.shared)) 
+>     .applicationIsActive(observer: UIApplicationActivityObserver.shared))
 >       || .connected(to: NWPathMonitorObserver.shared)
 > )
 > ```
@@ -91,8 +91,8 @@ The ``!(_:)``, ``||(_:_:)``, and ``&&(_:_:)`` operators have been overloaded for
 ```swift
 let query = MyQuery().staleWhen(
   specification:
-    .connected(to: NWPathMonitorObserver.startingShared()) 
-      && .applicationIsActive(observer: UIApplicationActivityObserver.shared)) 
+    .connected(to: NWPathMonitorObserver.startingShared())
+      && .applicationIsActive(observer: UIApplicationActivityObserver.shared))
 )
 ```
 

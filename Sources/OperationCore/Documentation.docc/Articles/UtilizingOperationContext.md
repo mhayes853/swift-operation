@@ -69,7 +69,7 @@ struct PlayerQuery: QueryRequest, Hashable {
 
 As can be seen here, we're able to customize the behavior of `PlayerQuery` based on a custom context property. Utilizing this technique allows you to use the `OperationContext` in a variety of ways, some of which we will talk about later.
 
-The `defaultValue` of a ``OperationContext/Key`` is computed everytime the `OperationContext` instance doesn't have an explicitly overriden value. If you want to lazily run an expensive computation for the default value, or use a shared reference, define your default value with a `static let` property.
+The `defaultValue` of an ``OperationContext/Key`` is computed everytime the `OperationContext` instance doesn't have an explicitly overriden value. If you want to lazily run an expensive computation for the default value, or use a shared reference, define your default value with a `static let` property.
 
 ```swift
 extension OperationContext {
@@ -86,7 +86,7 @@ extension OperationContext {
 
 ## Setting Up The Context
 
-The `OperationRequest` protocol has an optional requirement to setup a `OperationContext` in a way that the operation likes. This method is ran a single time when a ``OperationStore`` for the operation is initialized.
+The `OperationRequest` protocol has an optional requirement to setup an `OperationContext` in a way that the operation likes. This method is ran a single time when an ``OperationStore`` for the operation is initialized.
 
 ```swift
 struct SomeQuery: QueryRequest, Hashable {

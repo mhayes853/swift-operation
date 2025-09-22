@@ -118,7 +118,7 @@ extension OperationClient {
   /// - Parameters:
   ///   - operation: The operation.
   ///   - initialState: The initial state of the operation.
-  /// - Returns: A ``OperationStore``.
+  /// - Returns: An ``OperationStore``.
   public func store<Operation: StatefulOperationRequest>(
     for operation: sending Operation,
     initialState: Operation.State
@@ -131,7 +131,7 @@ extension OperationClient {
   /// - Parameters:
   ///   - query: The query.
   ///   - initialState: The initial state of the query.
-  /// - Returns: A ``OperationStore``.
+  /// - Returns: An ``OperationStore``.
   public func store<Query: QueryRequest>(
     for query: sending Query,
     initialState: Query.State
@@ -144,7 +144,7 @@ extension OperationClient {
   /// - Parameters:
   ///   - query: The query.
   ///   - initialValue: The initial value of the query.
-  /// - Returns: A ``OperationStore``.
+  /// - Returns: An ``OperationStore``.
   public func store<Query: QueryRequest>(
     for query: sending Query,
     initialValue: Query.Value? = nil
@@ -156,7 +156,7 @@ extension OperationClient {
   ///
   /// - Parameters:
   ///   - query: The query.
-  /// - Returns: A ``OperationStore``.
+  /// - Returns: An ``OperationStore``.
   public func store<Query: QueryRequest>(
     for query: sending Query.Default
   ) -> OperationStore<Query.Default.State> {
@@ -168,7 +168,7 @@ extension OperationClient {
   /// - Parameters:
   ///   - query: The query.
   ///   - initialValue: The initial value for the state of the query.
-  /// - Returns: A ``OperationStore``.
+  /// - Returns: An ``OperationStore``.
   public func store<Query: PaginatedRequest>(
     for query: sending Query,
     initialValue: Query.State.StateValue = []
@@ -180,7 +180,7 @@ extension OperationClient {
   ///
   /// - Parameters:
   ///   - query: The query.
-  /// - Returns: A ``OperationStore``.
+  /// - Returns: An ``OperationStore``.
   public func store<Query: PaginatedRequest>(
     for query: sending Query.Default
   ) -> OperationStore<Query.Default.State> {
@@ -192,7 +192,7 @@ extension OperationClient {
   /// - Parameters:
   ///   - mutation: The mutation.
   ///   - initialValue: The initial value for the state of the mutation.
-  /// - Returns: A ``OperationStore``.
+  /// - Returns: An ``OperationStore``.
   public func store<Mutation: MutationRequest>(
     for mutation: sending Mutation,
     initialValue: Mutation.MutateValue? = nil
@@ -204,7 +204,7 @@ extension OperationClient {
   ///
   /// - Parameters:
   ///   - mutation: The mutation.
-  /// - Returns: A ``OperationStore``.
+  /// - Returns: An ``OperationStore``.
   public func store<Mutation: MutationRequest>(
     for mutation: sending Mutation.Default
   ) -> OperationStore<Mutation.Default.State> {
@@ -255,7 +255,7 @@ extension OperationClient {
 
   /// Returns a collection of fully-type erased stores matching the specified ``OperationPath``.
   ///
-  /// The matching is performed via ``OperationPath/isPrefix(of:)``.
+  /// The matching is performed vian ``OperationPath/isPrefix(of:)``.
   ///
   /// - Parameter path: The path of the stores.
   /// - Returns: A collection of ``OpaqueOperationStore`` instances.
@@ -267,7 +267,7 @@ extension OperationClient {
 
   /// Returns a collection of ``OperationStore`` instances matching the specified ``OperationPath``.
   ///
-  /// The matching is performed via ``OperationPath/isPrefix(of:)``.
+  /// The matching is performed vian ``OperationPath/isPrefix(of:)``.
   ///
   /// - Parameters:
   ///   - path: The path of the stores.
@@ -292,7 +292,7 @@ extension OperationClient {
 extension OperationClient {
   /// Removes stores from the client that match the specified ``OperationPath``.
   ///
-  /// The matching is performed via ``OperationPath/isPrefix(of:)``.
+  /// The matching is performed vian ``OperationPath/isPrefix(of:)``.
   ///
   /// - Parameter path: The path of the stores.
   public func clearStores(matching path: OperationPath = OperationPath()) {
@@ -321,7 +321,7 @@ extension OperationClient {
   /// Provides a scope to edit a collection of fully-type erased stores that match the specified
   /// ``OperationPath``.
   ///
-  /// The matching is performed via ``OperationPath/isPrefix(of:)``.
+  /// The matching is performed vian ``OperationPath/isPrefix(of:)``.
   ///
   /// - Parameters:
   ///   - path: The path of the stores.
@@ -360,7 +360,7 @@ extension OperationClient {
   /// Provides a scope to edit a collection of ``OperationStore`` instances that match the specified
   /// ``OperationPath``.
   ///
-  /// The matching is performed via ``OperationPath/isPrefix(of:)``.
+  /// The matching is performed vian ``OperationPath/isPrefix(of:)``.
   ///
   /// - Parameters:
   ///   - path: The path of the stores.
@@ -406,10 +406,10 @@ extension OperationClient {
 extension OperationContext {
   /// The ``OperationClient`` in this context.
   ///
-  /// By default, the client is nil. When initializing a ``OperationClient``, this property will be
+  /// By default, the client is nil. When initializing an ``OperationClient``, this property will be
   /// set to the initialized client, and will become nil when the client is deinitialized.
   ///
-  /// ``OperationStore`` instances retrieved through a `OperationClient` will have this property set to
+  /// ``OperationStore`` instances retrieved through an `OperationClient` will have this property set to
   /// the client through ``OperationStore/context``. However, if the store was created through a
   /// `detached` static initializer, then its context will not contain an associated client, and
   /// this property will be nil.
@@ -453,7 +453,7 @@ extension OperationWarning {
            Found: \(String(reflecting: foundType))
 
     This is generally considered an application programming error. By using a different operation type \
-    with the same path you open up your application to unexpected behavior around how the \ 
+    with the same path you open up your application to unexpected behavior around how the \
     OperationStore runs its operationsince a different set of modifiers can be applied to both \
     operations.
 

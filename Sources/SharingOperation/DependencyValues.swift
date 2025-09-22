@@ -75,7 +75,7 @@ extension OperationWarning {
 
 // MARK: - DateDependencyClock
 
-/// A `OperationClock` that uses `@Depenendency(\.date)` to compute the current date.
+/// an `OperationClock` that uses `@Depenendency(\.date)` to compute the current date.
 public struct DateDependencyClock: OperationClock {
   @Dependency(\.date) private var date
 
@@ -85,7 +85,7 @@ public struct DateDependencyClock: OperationClock {
 }
 
 extension OperationClock where Self == DateDependencyClock {
-  /// A `OperationClock` that uses `@Depenendency(\.date)` to compute the current date.
+  /// an `OperationClock` that uses `@Depenendency(\.date)` to compute the current date.
   public static var dateDependency: Self {
     DateDependencyClock()
   }

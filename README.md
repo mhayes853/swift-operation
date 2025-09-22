@@ -67,7 +67,7 @@ extension Post {
 ```
 
 > [!NOTE]
-> You typically don't need to use all of the above modifiers unless you want to override the default behavior. The default initialization of a `OperationClient` instance will automatically add these modifiers to your queries when you use the library in conjunction with your preferred technology.
+> You typically don't need to use all of the above modifiers unless you want to override the default behavior. The default initialization of an `OperationClient` instance will automatically add these modifiers to your queries when you use the library in conjunction with your preferred technology.
 
 From here, there are a variety of ways that you can proceed depending on what technologies you're using. The library natively supports observing queries with the following technologies:
 - SwiftUI
@@ -308,7 +308,7 @@ So in no particular order, here are the primary design principles of this librar
    2. You should be able to create your own data fetching paradigm for your own purposes. For instance, one could theoretically create a query paradigm for fetching recursive data such as nested comment threads, and that could be represented via some `RecursiveQueryRequest` protocol.
 5. **All data fetching paradigms should be derived from the most basic paradigmn.**
    1. `MutationRequest` and `PaginatedRequest` are built directly on top of `QueryRequest` itself. This allows all 3 query paradigms to share query logic such as retries. By implementing the retry modifier once, we can reuse it with ordinary queries, paginated infinite queries, and mutations.
-   2. Your custom query paradigm should also be implementable on top of `QueryRequest`. This would allow all existing modifiers to work with your query paradigm, as well as being able to manage the state of your query paradigm though a `OperationStore`.
+   2. Your custom query paradigm should also be implementable on top of `QueryRequest`. This would allow all existing modifiers to work with your query paradigm, as well as being able to manage the state of your query paradigm though an `OperationStore`.
 6. **The library should support as many platforms, libraries, frameworks, and app architectures (TCA, MVVM, MV, etc.) as possible.**
    1. Just because you don’t like to put all your logic directly in a SwiftUI `View` doesn’t mean that you shouldn’t be able to use the full power of the library (unlike SwiftData).
    2. What architectural patterns or platforms you're deploying on have no concern with the library. Determing that is you, your team's, and your company’s job, not mine. As a result, it’s for the best that the library gives you a set of generic tools to integrate the library into your app's architecture.
@@ -320,7 +320,7 @@ Swift Operation is a powerful library for fetching and managing asynchronous dat
 - Applications with primarily local data stored with SQLite, Core/Swift Data, Realm, etc.
   - For these applications, you'll be better off using the SDKs directly that manage the local data, or if you're using SQLite you may look into [SharingGRDB](https://github.com/pointfreeco/sharing-grdb) instead. Swift Operation adds lots of extra noise such as loading states and multistage queries that isn't necessary if all of your data is stored locally on disk, and can be fetched with little delay.
 - Applications that primarily stream live data such from sources such as websockets.
-  - Swift Operation can work well with live data such as websockets via yielding live updates from the query using a `OperationController`. However, if your data is mostly "streamed" and not really "fetched", then you may be able to skip the noise of Swift Operation and utilize [Sharing](https://github.com/pointfreeco/swift-sharing) directly for managing state.
+  - Swift Operation can work well with live data such as websockets via yielding live updates from the query using an `OperationController`. However, if your data is mostly "streamed" and not really "fetched", then you may be able to skip the noise of Swift Operation and utilize [Sharing](https://github.com/pointfreeco/swift-sharing) directly for managing state.
 
 ## Installation
 

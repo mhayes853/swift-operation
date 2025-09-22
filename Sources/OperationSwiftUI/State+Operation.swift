@@ -312,7 +312,7 @@
     ///
     /// - Parameters:
     ///   - context: The `OperationContext` to use for the underlying `OperationTask`.
-    ///   - handler: A `OperationEventHandler` to subscribe to events from fetching the data.
+    ///   - handler: An `OperationEventHandler` to subscribe to events from fetching the data.
     ///   (This does not add an active subscriber to the store.)
     /// - Returns: The fetched data.
     @discardableResult
@@ -323,7 +323,7 @@
       try await self.store.run(using: context, handler: handler)
     }
 
-    /// Creates a `OperationTask` to fetch the query's data.
+    /// Creates an `OperationTask` to fetch the query's data.
     ///
     /// The returned task does not begin fetching immediately. Rather you must call
     /// `OperationTask.runIfNeeded` to fetch the data.
@@ -355,7 +355,7 @@
       try await self.store.fetch(using: context, handler: handler)
     }
 
-    /// Creates a `OperationTask` to fetch the query's data.
+    /// Creates an `OperationTask` to fetch the query's data.
     ///
     /// The returned task does not begin fetching immediately. Rather you must call
     /// `OperationTask.runIfNeeded` to fetch the data.
@@ -484,7 +484,7 @@
       try await self.store.refetchAllPages(using: context, handler: handler)
     }
 
-    /// Creates a `OperationTask` that refetches all existing pages on the query.
+    /// Creates an `OperationTask` that refetches all existing pages on the query.
     ///
     /// The task will refetch pages in a waterfall effect, starting from the first page, and then
     /// continuing until either the last page is fetched, or until no more pages can be fetched.
@@ -521,7 +521,7 @@
       try await self.store.fetchNextPage(using: context, handler: handler)
     }
 
-    /// Creates a `OperationTask` to fetch the page that will be placed after the last page in
+    /// Creates an `OperationTask` to fetch the page that will be placed after the last page in
     /// ``wrappedValue``.
     ///
     /// If no pages have been previously fetched, the initial page is fetched.
@@ -558,7 +558,7 @@
       try await self.store.fetchPreviousPage(using: context, handler: handler)
     }
 
-    /// Creates a `OperationTask` to fetch the page that will be placed before the first page in
+    /// Creates an `OperationTask` to fetch the page that will be placed before the first page in
     /// ``wrappedValue``.
     ///
     /// If no pages have been previously fetched, the initial page is fetched.
@@ -679,7 +679,7 @@
       try await self.store.mutate(with: arguments, using: context, handler: handler)
     }
 
-    /// Creates a `OperationTask` that performs a mutation.
+    /// Creates an `OperationTask` that performs a mutation.
     ///
     /// The returned task does not begin fetching immediately. Rather you must call
     /// `OperationTask.runIfNeeded` to fetch the data.
@@ -713,7 +713,7 @@
       try await self.store.retryLatest(using: context, handler: handler)
     }
 
-    /// Creates a `OperationTask` that retries the mutation with the most recently used set of
+    /// Creates an `OperationTask` that retries the mutation with the most recently used set of
     /// arguments.
     ///
     /// The returned task does not begin fetching immediately. Rather you must call
@@ -748,7 +748,7 @@
       try await self.store.mutate(using: context, handler: handler)
     }
 
-    /// Creates a `OperationTask` that performs a mutation with no arguments.
+    /// Creates an `OperationTask` that performs a mutation with no arguments.
     ///
     /// The returned task does not begin fetching immediately. Rather you must call
     /// `OperationTask.runIfNeeded` to fetch the data.

@@ -79,7 +79,7 @@ extension OperationStore where State: _QueryStateProtocol {
     try await self.run(using: context, handler: self.operationEventHandler(for: handler))
   }
 
-  /// Creates a ``OperationTask`` to run the query.
+  /// Creates an ``OperationTask`` to run the query.
   ///
   /// The returned task does not begin running immediately. Rather you must call
   /// ``OperationTask/runIfNeeded()`` to run the operation.
@@ -104,7 +104,7 @@ extension OperationStore where State: _QueryStateProtocol {
   /// cancelled and a `CancellationError` will be present on the ``state`` property.
   ///
   /// - Parameter handler: The event handler.
-  /// - Returns: A ``OperationSubscription``.
+  /// - Returns: An ``OperationSubscription``.
   public func subscribe(with handler: QueryEventHandler<State>) -> OperationSubscription {
     self.subscribe(with: self.operationEventHandler(for: handler))
   }

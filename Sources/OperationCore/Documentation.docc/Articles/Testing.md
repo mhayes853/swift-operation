@@ -80,7 +80,7 @@ final class SomeModel {
 
 In a test suite, your first instinct may be to assert on `value`. However, `value` will likely be in a loading state once the test begins, and it's difficult to determine when it will have been loaded.
 
-> Note: If you're code follows the Sharing example, you will override `@Dependency(\.operationClient)` instead of passing a `OperationClient` to `SomeModel`'s initializer.
+> Note: If you're code follows the Sharing example, you will override `@Dependency(\.operationClient)` instead of passing an `OperationClient` to `SomeModel`'s initializer.
 
 ```swift
 @Test
@@ -119,9 +119,9 @@ func valueLoads() async throws {
 > func valueLoads() async throws {
 >   let model = SomeModel()
 >   #expect(model.value == nil)
-> 
+>
 >   try await model.$value.load()
-> 
+>
 >   #expect(model.value == "loaded")
 > }
 > ```

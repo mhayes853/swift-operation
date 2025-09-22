@@ -101,7 +101,7 @@ extension OperationClock {
 extension OperationRequest {
   /// The ``OperationClock`` to use for this operation.
   ///
-  /// - Parameter clock: A ``OperationClock``.
+  /// - Parameter clock: An ``OperationClock``.
   /// - Returns: A ``ModifiedOperation``.
   public func clock<C>(_ clock: C) -> ModifiedOperation<Self, _OperationClockModifier<Self, C>> {
     self.modifier(_OperationClockModifier(clock: clock))
