@@ -1,7 +1,7 @@
 import Foundation
 import IdentifiedCollections
 
-// MARK: - InfiniteOperationState
+// MARK: - _PaginatedStateProtocol
 
 public protocol _PaginatedStateProtocol<PageID, PageValue>: OperationState
 where
@@ -81,20 +81,6 @@ extension _PaginatedStateProtocol {
 
 /// A state type for ``PaginatedRequest``.
 ///
-/// Infinite queries can have tasks that either:
-/// 1. Fetch the initial page of data.
-/// 2. Fetch the next page of data.
-///   - This can run concurrently with fetching the previous page of data.
-/// 3. Fetch the previous page (ie. The page at the beginning of the list of pages.) of data.
-///   - This can run concurrently with fetching the next page of data.
-/// 4. Refetching all pages.
-///
-/// You can access all of these active tasks through ``allPagesActiveTasks``,
-/// ``initialPageActiveTasks``, ``nextPageActiveTasks``, and ``previousPageActiveTasks``.
-///
-/// Additionally, the state keeps track of both ``nextPageId`` and ``previousPageId`` which are
-/// obtained by calling the appropriate methods on ``PaginatedRequest``.
-///
 /// > Warning: You should not call any of the `mutating` methods directly on this type, rather a
 /// > ``OperationStore`` will call them at the appropriate time for you.
 public struct PaginatedState<
@@ -112,11 +98,11 @@ public struct PaginatedState<
   public private(set) var errorUpdateCount = 0
   public private(set) var errorLastUpdatedAt: Date?
 
-  /// The page id that will be passed to the driving query when
+  /// The page id that will be passed to the driving operation when
   /// ``OperationStore/fetchNextPage(using:handler:)`` is called.
   public private(set) var nextPageId: PageID?
 
-  /// The page id that will be passed to the driving query when
+  /// The page id that will be passed to the driving operation when
   /// ``OperationStore/fetchPreviousPage(using:handler:)`` is called.
   public private(set) var previousPageId: PageID?
 
@@ -308,7 +294,7 @@ extension _PaginatedStateProtocol {
     in context: OperationContext
   ) -> Pages<PageID, PageValue> {
     var nextValue = self.currentValue
-    switch value.fetchValue {
+    switch value.runValue {
     case .allPages(let pages):
       nextValue = pages
     case .initialPage(let page):

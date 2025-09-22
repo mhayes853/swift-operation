@@ -2,7 +2,7 @@ import IdentifiedCollections
 
 // MARK: - PaginatedPage
 
-/// A page of data from an ``PaginatedRequest``.
+/// A page of data from a ``PaginatedRequest``.
 public struct Page<ID: Hashable & Sendable, Value: Sendable>: Sendable, Identifiable {
   /// The unique id of this page.
   public var id: ID
@@ -26,8 +26,7 @@ extension Page: Hashable where Value: Hashable {}
 
 // MARK: - PaginatedPages
 
-/// A helper typealias for ``PaginatedPages`` using a single ``PaginatedRequest`` generic
-/// parameter.
+/// A helper typealias for ``Pages`` using a single ``PaginatedRequest`` generic parameter.
 public typealias PagesFor<Query: PaginatedRequest> =
   Pages<Query.PageID, Query.PageValue>
 
@@ -37,10 +36,11 @@ public typealias Pages<PageID: Hashable & Sendable, PageValue: Sendable> =
 
 // MARK: - PaginatedPaging
 
-/// A data type that contains useful info when an ``PaginatedRequest`` is fetching its data.
+/// A data type that contains useful info when a method requirement of ``PaginatedRequest`` is
+/// invoked.
 ///
 /// You do not create instances of this type. Rather, your ``PaginatedRequest`` receives
-/// instances of this type in its requirements.
+/// instances of this type in its method requirements.
 public struct Paging<PageID: Hashable & Sendable, PageValue: Sendable>: Sendable {
   /// The page id that you must perform the required action for in ``PaginatedRequest``.
   public let pageId: PageID
@@ -48,7 +48,7 @@ public struct Paging<PageID: Hashable & Sendable, PageValue: Sendable>: Sendable
   /// The current list of pages from the query.
   public let pages: Pages<PageID, PageValue>
 
-  /// The ``PaginatedPagingRequest`` that will be carried out when fetching page data.
+  /// The ``PagingRequest`` that will be carried out when fetching page data.
   public let request: PagingRequest<PageID>
 }
 
@@ -57,32 +57,29 @@ extension Paging: Hashable where PageValue: Hashable {}
 
 // MARK: - PaginatedPagingRequest
 
-/// The kind of request that is being performed by an ``PaginatedRequest``.
+/// The kind of data fetching request that is being performed by n ``PaginatedRequest``.
 public enum PagingRequest<PageID: Hashable & Sendable>: Hashable, Sendable {
-  /// The query is requesting the next page.
+  /// Requesting to fetch the next page.
   case nextPage(PageID)
 
-  /// The query is requesting the page that will be placed at the beginning of the list.
+  /// Requesting to fetch the page that will be placed at the beginning of the list.
   case previousPage(PageID)
 
-  /// The query is requesting the initial page.
+  /// Requesting to fetch the initial page.
   case initialPage
 
-  /// The query is requesting that all pages be refetched.
+  /// Requesting that all pages be refetched.
   case allPages
 }
 
 // MARK: - PaginatedResponse
 
-/// The data type returned from an ``PaginatedRequest``.
+/// The data type returned from a ``PaginatedRequest``.
 ///
 /// You do not construct this type, ``PaginatedRequest`` constructs it for you.
-public struct PaginatedOperationValue<
-  PageID: Hashable & Sendable,
-  PageValue: Sendable
->: Sendable {
-  /// The value returned from fetching an ``PaginatedRequest``.
-  public let fetchValue: FetchValue
+public struct PaginatedOperationValue<PageID: Hashable & Sendable, PageValue: Sendable>: Sendable {
+  /// The value returned from running a ``PaginatedRequest``.
+  public let runValue: RunValue
 
   var nextPageId = PageIDResult.deferred
   var previousPageId = PageIDResult.deferred
@@ -96,15 +93,15 @@ extension PaginatedOperationValue {
 }
 
 extension PaginatedOperationValue {
-  /// A value returned from fetching an ``PaginatedRequest``.
-  public enum FetchValue: Sendable {
+  /// A value returned from running a ``PaginatedRequest``.
+  public enum RunValue: Sendable {
     /// All pages were refetched.
     case allPages(Pages<PageID, PageValue>)
 
     /// The next page was fetched.
     case nextPage(NextPage)
 
-    /// The previous page was fetched.
+    /// The page placed at the beginning of the pages list was fetched.
     case previousPage(PreviousPage)
 
     /// The initial page was fetched.
@@ -112,7 +109,7 @@ extension PaginatedOperationValue {
   }
 }
 
-extension PaginatedOperationValue.FetchValue {
+extension PaginatedOperationValue.RunValue {
   /// Details regarding the next fetched page.
   public struct NextPage: Sendable {
     /// The page that was fetched.
@@ -135,25 +132,27 @@ extension PaginatedOperationValue.FetchValue {
 extension PaginatedOperationValue: Equatable where PageValue: Equatable {}
 extension PaginatedOperationValue: Hashable where PageValue: Hashable {}
 
-extension PaginatedOperationValue.FetchValue: Equatable where PageValue: Equatable {}
-extension PaginatedOperationValue.FetchValue: Hashable where PageValue: Hashable {}
+extension PaginatedOperationValue.RunValue: Equatable where PageValue: Equatable {}
+extension PaginatedOperationValue.RunValue: Hashable where PageValue: Hashable {}
 
-extension PaginatedOperationValue.FetchValue.NextPage: Hashable where PageValue: Hashable {}
-extension PaginatedOperationValue.FetchValue.NextPage: Equatable where PageValue: Equatable {}
+extension PaginatedOperationValue.RunValue.NextPage: Hashable where PageValue: Hashable {}
+extension PaginatedOperationValue.RunValue.NextPage: Equatable where PageValue: Equatable {}
 
-extension PaginatedOperationValue.FetchValue.PreviousPage: Hashable where PageValue: Hashable {}
-extension PaginatedOperationValue.FetchValue.PreviousPage: Equatable
+extension PaginatedOperationValue.RunValue.PreviousPage: Hashable where PageValue: Hashable {}
+extension PaginatedOperationValue.RunValue.PreviousPage: Equatable
 where PageValue: Equatable {}
 
 // MARK: - PaginatedRequest
 
-/// A protocol for describing an infinite query.
+/// A protocol for describing an operation that paginates its data.
 ///
-/// Infinite queries are used whenever you're fetching paginated data that may be displayed in an
+/// Paginated requests are used whenever you're fetching paginated data that may be displayed in an
 /// infinitely scrolling list.
 ///
-/// `PaginatedRequest` inherits from ``QueryRequest``, and adds a few additional requirements:
-/// 1. Associated types for the page id (ie. the next page token from your API) and the page value (the data you're fetching for each page).
+/// `PaginatedRequest` inherits from ``StatefulOperationRequest``, and adds a few additional
+/// requirements.
+/// 1. Associated types for the page id (typically the next page token from your API) and the page
+/// value (the data you're fetching for each page).
 /// 2. The initial page id.
 /// 3. Methods to retrieve the next and previous page ids from the first and last pages respectively.
 /// 4. A method to fetch the data for a page.
@@ -162,7 +161,7 @@ where PageValue: Equatable {}
 /// extension PostsPage {
 ///   static func listQuery(
 ///     for feedId: Int
-///   ) -> some PaginatedRequest<String, PostsPage> {
+///   ) -> some PaginatedRequest<String, PostsPage, any Error> {
 ///     FeedQuery(feedId: feedId)
 ///   }
 ///
@@ -183,9 +182,10 @@ where PageValue: Equatable {}
 ///     }
 ///
 ///     func fetchPage(
+///       isolation: isolated (any Actor)?,
 ///       using paging: PaginatedPaging<String, PostsPage>,
 ///       in context: OperationContext,
-///       with continuation: OperationContinuation<PostsPage>
+///       with continuation: OperationContinuation<PostsPage, any Error>
 ///     ) async throws -> PostsPage {
 ///       try await self.fetchFeedPage(for: paging.pageId)
 ///     }
@@ -193,8 +193,8 @@ where PageValue: Equatable {}
 /// }
 /// ```
 ///
-/// An infinite query can fetch its data in 4 different ways, and you can inspect
-/// ``PaginatedPaging/request`` in your query to find out which way its fetching.
+/// A paginated operation can fetch its data in 4 different ways, and you can inspect
+/// ``Paging/request`` to find out how its fetching.
 /// 1. Fetching the initial page.
 /// 2. Fetching the next page in the list.
 ///   - This can run concurrently alongside fetching the previous page.
@@ -202,7 +202,7 @@ where PageValue: Equatable {}
 ///   - This can run concurrently alongside fetching the next page.
 /// 4. Refetching all existing pages.
 ///
-/// When that state of the query is an empty list of pages, calling
+/// When that state of the operation is an empty list of pages, calling
 /// ``OperationStore/fetchNextPage(using:handler:)`` or ``OperationStore/fetchPreviousPage(using:handler:)``
 ///  will fetch the initial page of data. Only subsequent calls to those methods will fetch the
 ///  next and previous page respectively after the initial page has been fetched.
@@ -210,28 +210,32 @@ where PageValue: Equatable {}
 ///  ```swift
 ///  let store = client.store(for: Post.listsQuery(for: 1))
 ///
-///  // Fetches inital page if store.currentValue.isEmpty == true
+///  // Fetches inital page if 'store.currentValue.isEmpty == true'.
+///  // Otherwise, it will fetch the next page in the list.
 ///  let page = try await store.fetchNextPage()
 ///  ```
 ///
-///  You can also refetch the entire list of pages, one at a time, by calling ``OperationStore/refetchAllPages(using:handler:)``.
+///  You can also refetch the entire list of pages, one at a time, by calling
+///  ``OperationStore/refetchAllPages(using:handler:)``. This will refetch all existing pages in a
+///  waterfall effect, starting from the first page, and then continuing until either the last
+///  known page is refetched, or until no more pages can be fetched.
 ///
 ///  ```swift
 ///  let store = client.store(for: Post.listsQuery(for: 1))
 ///
-///  let pages = try await store.fetchAllPages()
+///  let pages = try await store.refetchAllPages()
 ///  ```
 ///
 ///  After fetching a page, ``PaginatedRequest/pageId(after:using:in:)`` and
 ///  ``PaginatedRequest/pageId(before:using:in:)`` are called to eagerly calculate whether or
-///  not additional pages are available for your query to fetch. You can check
+///  not additional pages are available for your operation to fetch. You can check
 ///  ``PaginatedState/nextPageId`` or ``PaginatedState/previousPageId`` to check what the
-///  ids of the next and previous available pages for your query. A nil value for either of those
-///  properties indicates that there are no additional pages for your query to fetch through
-///  ``OperationStore/fetchNextPage(using:handler:)`` and
-///  ``OperationStore/fetchPreviousPage(using:handler:)`` respectively. If you just want to check
+///  ids of the next and previous available pages for your operation. If you just want to check
 ///  whether or not fetching additional pages is possible, you can check the boolean properties
 ///  ``PaginatedState/hasNextPage`` or ``PaginatedState/hasPreviousPage``.
+///
+///  Ideally, paginated operations should not edit data on any remote or external services they
+///  utilze. ``MutationRequest`` is more suitable for such edits.
 public protocol PaginatedRequest<PageID, PageValue, PageFailure>: StatefulOperationRequest
 where
   Value == PaginatedOperationValue<PageID, PageValue>,
@@ -243,10 +247,11 @@ where
 
   /// The type to identify the data in a page.
   ///
-  /// This is typically the `nextPageToken`/`previousPageToken` from your API, an integer
-  /// describing the page index or offset, or a custom cursor type from your API.
+  /// This is often the `nextPageToken`/`previousPageToken` from an HTTP API, an integer
+  /// describing the page index or offset, or a custom cursor type.
   associatedtype PageID: Hashable & Sendable
 
+  /// The error type thrown when fetching page data.
   associatedtype PageFailure: Error
 
   /// The id of the initial page to fetch.
@@ -254,13 +259,13 @@ where
 
   /// Retrieves the page id after the last page in the list.
   ///
-  /// If nil is returned, then it is assumed that the query will no longer be fetching pages after
+  /// If nil is returned, then it is assumed that the operation will no longer be fetching pages after
   /// the last page.
   ///
   /// - Parameters:
   ///   - page: The last page in the list.
-  ///   - paging: ``PaginatedPaging``.
-  ///   - context: The ``OperationContext`` passed to this query.
+  ///   - paging: ``Paging``.
+  ///   - context: The ``OperationContext`` passed to this operation.
   /// - Returns: The next page id, or nil if none.
   func pageId(
     after page: Page<PageID, PageValue>,
@@ -270,13 +275,13 @@ where
 
   /// Retrieves the page id before the first page in the list.
   ///
-  /// If nil is returned, then it is assumed that the query will no longer be fetching pages before
+  /// If nil is returned, then it is assumed that the operation will no longer be fetching pages before
   /// the first page.
   ///
   /// - Parameters:
   ///   - page: The first page in the list.
-  ///   - paging: ``PaginatedPaging``.
-  ///   - context: The ``OperationContext`` passed to this query.
+  ///   - paging: ``Paging``.
+  ///   - context: The ``OperationContext`` passed to this operation.
   /// - Returns: The previous page id, or nil if none.
   func pageId(
     before page: Page<PageID, PageValue>,
@@ -287,9 +292,12 @@ where
   /// Fetches the data for a specified page.
   ///
   /// - Parameters:
-  ///   - paging: The ``PaginatedPaging`` for this operation. You can access the page id to fetch data for via the ``PaginatedPaging/pageId`` property.
-  ///   - context: The ``OperationContext`` passed to this query.
-  ///   - continuation: A ``OperationContinuation`` allowing you to yield multiple values from your query. See <doc:MultistageQueries> for more.
+  ///   - isolation: The current isolation context of the page fetch.
+  ///   - paging: The ``Paging`` for this operation. You can access the page id to fetch data for
+  ///   via the ``Paging/pageId`` property.
+  ///   - context: The ``OperationContext`` passed to this operation.
+  ///   - continuation: A ``OperationContinuation`` allowing you to yield multiple intermittent
+  ///   values from your operation. See <doc:MultistageOperations> for more.
   /// - Returns: The page value for the page.
   func fetchPage(
     isolation: isolated (any Actor)?,
@@ -381,7 +389,7 @@ extension PaginatedRequest {
             with: result.map {
               var pages = newPages
               pages.append(Page(id: pageId, value: $0))
-              return PaginatedOperationValue(fetchValue: .allPages(pages))
+              return PaginatedOperationValue(runValue: .allPages(pages))
             },
             using: yieldedContext
           )
@@ -399,7 +407,7 @@ extension PaginatedRequest {
     in context: OperationContext
   ) -> Value {
     PaginatedOperationValue(
-      fetchValue: .allPages(pages),
+      runValue: .allPages(pages),
       nextPageId: pages.last.map {
         .computed(self.pageId(after: $0, using: paging, in: context))
       } ?? .computed(nil),
@@ -423,7 +431,7 @@ extension PaginatedRequest {
         continuation.yield(
           with: result.map {
             let page = Page(id: paging.pageId, value: $0)
-            return PaginatedOperationValue(fetchValue: .initialPage(page))
+            return PaginatedOperationValue(runValue: .initialPage(page))
           },
           using: yieldedContext
         )
@@ -439,7 +447,7 @@ extension PaginatedRequest {
   ) -> Value {
     let page = Page(id: paging.pageId, value: pageValue)
     return PaginatedOperationValue(
-      fetchValue: .initialPage(page),
+      runValue: .initialPage(page),
       nextPageId: .computed(self.pageId(after: page, using: paging, in: context)),
       previousPageId: .computed(self.pageId(before: page, using: paging, in: context))
     )
@@ -459,11 +467,11 @@ extension PaginatedRequest {
       with: OperationContinuation { result, yieldedContext in
         continuation.yield(
           with: result.map {
-            let next = PaginatedOperationValue.FetchValue.NextPage(
+            let next = PaginatedOperationValue.RunValue.NextPage(
               page: Page(id: pageId, value: $0),
               lastPageId: paging.pages.last!.id
             )
-            return PaginatedOperationValue(fetchValue: .nextPage(next))
+            return PaginatedOperationValue(runValue: .nextPage(next))
           },
           using: yieldedContext
         )
@@ -480,8 +488,8 @@ extension PaginatedRequest {
   ) -> Value {
     let page = Page(id: pageId, value: pageValue)
     return PaginatedOperationValue(
-      fetchValue: .nextPage(
-        PaginatedOperationValue.FetchValue.NextPage(
+      runValue: .nextPage(
+        PaginatedOperationValue.RunValue.NextPage(
           page: page,
           lastPageId: paging.pages.last!.id
         )
@@ -507,11 +515,11 @@ extension PaginatedRequest {
       with: OperationContinuation { result, yieldedContext in
         continuation.yield(
           with: result.map {
-            let next = PaginatedOperationValue.FetchValue.PreviousPage(
+            let next = PaginatedOperationValue.RunValue.PreviousPage(
               page: Page(id: pageId, value: $0),
               firstPageId: paging.pages.first!.id
             )
-            return PaginatedOperationValue(fetchValue: .previousPage(next))
+            return PaginatedOperationValue(runValue: .previousPage(next))
           },
           using: yieldedContext
         )
@@ -528,8 +536,8 @@ extension PaginatedRequest {
   ) -> Value {
     let page = Page(id: pageId, value: pageValue)
     return PaginatedOperationValue(
-      fetchValue: .previousPage(
-        PaginatedOperationValue.FetchValue.PreviousPage(
+      runValue: .previousPage(
+        PaginatedOperationValue.RunValue.PreviousPage(
           page: page,
           firstPageId: paging.pages.first!.id
         )

@@ -6,7 +6,8 @@ public enum NetworkConnectionStatus: Hashable, Sendable {
   /// The user is disconnected from the network.
   case disconnected
 
-  /// The user is not connected to the network, but establishing a new connection may activate the connection.
+  /// The user is not connected to the network, but establishing a new connection may activate the
+  /// connection.
   case requiresConnection
 }
 

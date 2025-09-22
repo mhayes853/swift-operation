@@ -56,7 +56,7 @@ extension OperationStore {
 // MARK: - Fetch All Pages
 
 extension OperationStore where State: _PaginatedStateProtocol {
-  /// Refetches all existing pages on the query.
+  /// Refetches all existing pages on the operation.
   ///
   /// This method will refetch pages in a waterfall effect, starting from the first page, and then
   /// continuing until either the last page is fetched, or until no more pages can be fetched.
@@ -80,7 +80,7 @@ extension OperationStore where State: _PaginatedStateProtocol {
     return self.allPages(from: value)
   }
 
-  /// Creates a ``OperationTask`` that refetches all existing pages on the query.
+  /// Creates an ``OperationTask`` that refetches all existing pages on the operation.
   ///
   /// The task will refetch pages in a waterfall effect, starting from the first page, and then
   /// continuing until either the last page is fetched, or until no more pages can be fetched.
@@ -103,7 +103,7 @@ extension OperationStore where State: _PaginatedStateProtocol {
   private func allPages(
     from value: PaginatedOperationValue<State.PageID, State.PageValue>
   ) -> Pages<State.PageID, State.PageValue> {
-    switch value.fetchValue {
+    switch value.runValue {
     case .allPages(let pages): pages
     default: self.state.currentValue
     }
@@ -150,7 +150,7 @@ extension OperationStore where State: _PaginatedStateProtocol {
     return self.nextPage(from: value)
   }
 
-  /// Creates a ``OperationTask`` to fetch the page that will be placed after the last page in
+  /// Creates an ``OperationTask`` to fetch the page that will be placed after the last page in
   /// ``currentValue``.
   ///
   /// If no pages have been previously fetched, the initial page is fetched.
@@ -180,7 +180,7 @@ extension OperationStore where State: _PaginatedStateProtocol {
   private func nextPage(
     from value: PaginatedOperationValue<State.PageID, State.PageValue>
   ) -> Page<State.PageID, State.PageValue>? {
-    switch value.fetchValue {
+    switch value.runValue {
     case .nextPage(let next): next.page
     case .initialPage(let page): page
     default: nil
@@ -229,7 +229,7 @@ extension OperationStore where State: _PaginatedStateProtocol {
     return self.previousPage(from: value)
   }
 
-  /// Creates a ``OperationTask`` to fetch the page that will be placed before the first page in
+  /// Creates an ``OperationTask`` to fetch the page that will be placed before the first page in
   /// ``currentValue``.
   ///
   /// If no pages have been previously fetched, the initial page is fetched.
@@ -259,7 +259,7 @@ extension OperationStore where State: _PaginatedStateProtocol {
   private func previousPage(
     from value: PaginatedOperationValue<State.PageID, State.PageValue>
   ) -> Page<State.PageID, State.PageValue>? {
-    switch value.fetchValue {
+    switch value.runValue {
     case .previousPage(let previous): previous.page
     case .initialPage(let page): page
     default: nil

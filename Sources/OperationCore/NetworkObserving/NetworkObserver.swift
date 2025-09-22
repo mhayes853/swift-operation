@@ -6,7 +6,7 @@ public protocol NetworkObserver {
   /// Subscribes to the ``NetworkConnectionStatus`` from this observer.
   ///
   /// - Parameter handler: A closure to yield back the latest network status.
-  /// - Returns: A ``OperationSubscription``.
+  /// - Returns: An ``OperationSubscription``.
   func subscribe(
     with handler: @escaping @Sendable (NetworkConnectionStatus) -> Void
   ) -> OperationSubscription
