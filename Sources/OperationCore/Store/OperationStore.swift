@@ -1,18 +1,12 @@
 import Foundation
 
-#if canImport(Combine)
-  @preconcurrency import Combine
-#endif
-
 // MARK: - OperationStore
 
 /// The runtime for a ``StatefulOperationRequest``.
 ///
 /// `OperationStore`s are the runtime for your operation, and they manage its state and interactions to
-/// make your operations usable in your UI. If you're using SwiftUI, `@State.Operation` subscribes
-/// to a store under the hood to always have the latest data. If you're using
-/// [Sharing](https://github.com/pointfreeco/swift-sharing), `@SharedOperation` also subscribes to
-/// a store under the hood to always have the latest data.
+/// make your operations usable in your UI. If you're using SharingOperation, `@SharedOperation`
+/// also subscribes to a store under the hood to always have the latest data.
 ///
 /// You generally create `OperationStore` instances through ``OperationClient``, however you can
 /// also create stand alone stores through one of the `detached` static initializers.

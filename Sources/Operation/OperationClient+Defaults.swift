@@ -8,7 +8,7 @@ import OperationCore
 // MARK: - Default Init
 
 extension OperationClient {
-  /// Creates a client.
+  /// Creates an operation client.
   ///
   /// - Parameters:
   ///   - defaultContext: The default ``OperationContext`` to use for each ``OperationStore``
@@ -29,20 +29,21 @@ extension OperationClient {
 // MARK: - DefaultStoreCreator
 
 extension OperationClient {
-  /// The default `StoreCreator` used by a query client.
+  /// The default `StoreCreator` used by an operation client.
   ///
   /// This store creator applies a set of default modifiers to both `QueryRequest` and
   /// `MutationRequest` instances.
   ///
-  /// **Queries**
+  /// **Mutations**
+  /// - Retries
+  /// - Exponential Backoff
+  ///
+  /// **All Other Operations**
   /// - Deduplication
   /// - Retries
   /// - Automatic Fetching
   /// - Refetching when the network comes back online
   /// - Refetching when the app reenters from the background
-  ///
-  /// **Mutations**
-  /// - Retries
   public struct DefaultStoreCreator: StoreCreator, Sendable {
     let retryLimit: Int
     let backoff: OperationBackoffFunction?
@@ -104,7 +105,7 @@ extension OperationClient {
 }
 
 extension OperationClient.StoreCreator where Self == OperationClient.DefaultStoreCreator {
-  /// The default `StoreCreator` used by a query client for testing.
+  /// The default `StoreCreator` used by an operation client for testing.
   ///
   /// In testing, retries are disabled, and the network status and application activity status are
   /// not observed, delays are disabled, and the backoff function is `OperationBackoffFunction.noBackoff`.
@@ -119,10 +120,9 @@ extension OperationClient.StoreCreator where Self == OperationClient.DefaultStor
     )
   }
 
-  /// The default `StoreCreator` used by a query client.
+  /// The default `StoreCreator` used by an operation client.
   ///
-  /// This store creator applies a set of default modifiers to both `QueryRequest` and
-  /// `MutationRequest` instances.
+  /// This store creator applies a set of default modifiers to all operations.
   ///
   /// **Mutations**
   /// - Retries
@@ -138,12 +138,12 @@ extension OperationClient.StoreCreator where Self == OperationClient.DefaultStor
   /// - Parameters:
   ///   - retryLimit: The maximum number of retries for queries and mutations.
   ///   - backoff: The backoff function to use for retries.
-  ///   - delayer: The `QueryDelayer` to use for delaying the execution of a retry.
-  ///   - queryEnableAutomaticFetchingCondition: The default `FetchCondition` that determines
+  ///   - delayer: The `OperationDelayer` to use for delaying the execution of a retry.
+  ///   - automaticRunningSpecification: The default `OperationRunSpecification` that determines
   ///   whether or not automatic fetching is enabled for queries (and not mutations).
   ///   - networkObserver: The default `NetworkObserver` to use.
   ///   - activityObserver: The default `ApplicationActivityObserver` to use.
-  /// - Returns: A ``QueryCore/OperationClient/DefaultStoreCreator``.
+  /// - Returns: A ``OperationCore/OperationClient/DefaultStoreCreator``.
   public static func `default`(
     retryLimit: Int = 3,
     backoff: OperationBackoffFunction? = nil,

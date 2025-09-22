@@ -73,7 +73,7 @@ public final class OperationClient: Sendable {
 
   private let state: RecursiveLock<State>
 
-  /// Creates a client.
+  /// Creates an operation client.
   ///
   /// - Parameters:
   ///   - defaultContext: The default ``OperationContext`` to use for each ``OperationStore``
