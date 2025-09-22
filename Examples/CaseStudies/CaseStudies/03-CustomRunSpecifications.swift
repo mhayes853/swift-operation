@@ -2,9 +2,9 @@ import Dependencies
 import SharingOperation
 import SwiftUI
 
-// MARK: - CustomFetchConditionsCaseStudy
+// MARK: - CustomRunSpecificationsCaseStudy
 
-struct CustomFetchConditionsCaseStudy: CaseStudy {
+struct CustomRunSpecificationsCaseStudy: CaseStudy {
   let title: LocalizedStringKey = "Custom Run Specifications"
   let description: LocalizedStringKey = """
     The `OperationRunSpecification` protocol allows one to control when a query automatically refetches its \
@@ -79,6 +79,6 @@ struct IsInLowPowerModeRunSpecification: OperationRunSpecification, Sendable {
 
 #Preview {
   NavigationStack {
-    CustomFetchConditionsCaseStudy()
+    CustomRunSpecificationsCaseStudy()
   }
 }

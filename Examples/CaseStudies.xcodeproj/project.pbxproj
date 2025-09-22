@@ -12,7 +12,6 @@
 		16A0E97D2E0C7CBE003BE8A3 /* SwiftUINavigation in Frameworks */ = {isa = PBXBuildFile; productRef = 16A0E97C2E0C7CBE003BE8A3 /* SwiftUINavigation */; };
 		16AE2F142E09E8ED006D0EEF /* DependenciesTestSupport in Frameworks */ = {isa = PBXBuildFile; productRef = 16AE2F132E09E8ED006D0EEF /* DependenciesTestSupport */; };
 		16DB31F92E749C420059FF36 /* Operation in Frameworks */ = {isa = PBXBuildFile; productRef = 16DB31F82E749C420059FF36 /* Operation */; };
-		16DB31FB2E749C4D0059FF36 /* OperationSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 16DB31FA2E749C4D0059FF36 /* OperationSwiftUI */; };
 		16DB31FD2E749C4D0059FF36 /* SharingOperation in Frameworks */ = {isa = PBXBuildFile; productRef = 16DB31FC2E749C4D0059FF36 /* SharingOperation */; };
 /* End PBXBuildFile section */
 
@@ -102,7 +101,6 @@
 			files = (
 				16A0E92D2E0A57E0003BE8A3 /* SwiftNavigation in Frameworks */,
 				16A0E97D2E0C7CBE003BE8A3 /* SwiftUINavigation in Frameworks */,
-				16DB31FB2E749C4D0059FF36 /* OperationSwiftUI in Frameworks */,
 				16DB31F92E749C420059FF36 /* Operation in Frameworks */,
 				16A0E92F2E0A57E0003BE8A3 /* UIKitNavigation in Frameworks */,
 				16DB31FD2E749C4D0059FF36 /* SharingOperation in Frameworks */,
@@ -179,7 +177,6 @@
 				16A0E92E2E0A57E0003BE8A3 /* UIKitNavigation */,
 				16A0E97C2E0C7CBE003BE8A3 /* SwiftUINavigation */,
 				16DB31F82E749C420059FF36 /* Operation */,
-				16DB31FA2E749C4D0059FF36 /* OperationSwiftUI */,
 				16DB31FC2E749C4D0059FF36 /* SharingOperation */,
 			);
 			productName = CaseStudies;
@@ -688,11 +685,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 16DB31F72E749C420059FF36 /* XCRemoteSwiftPackageReference "swift-operation" */;
 			productName = Operation;
-		};
-		16DB31FA2E749C4D0059FF36 /* OperationSwiftUI */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 16DB31F72E749C420059FF36 /* XCRemoteSwiftPackageReference "swift-operation" */;
-			productName = OperationSwiftUI;
 		};
 		16DB31FC2E749C4D0059FF36 /* SharingOperation */ = {
 			isa = XCSwiftPackageProductDependency;

@@ -17,7 +17,7 @@ struct DownloadsCaseStudy: CaseStudy {
     will only fetch data when you explicitly call `fetch`.
     """
 
-  @SharedOperation(Download.query(for: .hugeFile), animation: .bouncy) private var download
+  @SharedOperation(Download.query(for: .hugeFile)) private var download
 
   var content: some View {
     if let download {
@@ -63,6 +63,12 @@ struct DownloadsCaseStudy: CaseStudy {
         }
       }
       .disabled(self.$download.isLoading)
+      
+      if self.$download.isLoading {
+        Button("Reset") {
+          self.$download.resetState()
+        }
+      }
     } footer: {
       Text("The file will automatically be deleted when it finishes downloading.")
     }
@@ -70,7 +76,9 @@ struct DownloadsCaseStudy: CaseStudy {
 }
 
 extension URL {
-  fileprivate static let hugeFile = Self(string: "http://ipv4.download.thinkbroadband.com/1GB.zip")!
+  fileprivate static let hugeFile = Self(
+    string: "http://ipv4.download.thinkbroadband.com/1GB.zip"
+  )!
 }
 
 // MARK: - Download
@@ -120,7 +128,7 @@ enum FileDownloaderKey: DependencyKey {
 
 // MARK: - URLSessionDownloader
 
-final class URLSessionDownloader: NSObject {
+final class URLSessionDownloader: NSObject, FileDownloader {
   private let session: URLSession
   private let delegate: Delegate
 
@@ -132,9 +140,7 @@ final class URLSessionDownloader: NSObject {
     self.session = URLSession(configuration: config, delegate: self.delegate, delegateQueue: nil)
     super.init()
   }
-}
 
-extension URLSessionDownloader: FileDownloader {
   func download(from url: URL) -> any AsyncSequence<Download, any Error> {
     AsyncThrowingStream<Download, any Error> { continuation in
       self.delegate.continuation.withLock { $0 = continuation }

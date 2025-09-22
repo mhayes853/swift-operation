@@ -6,8 +6,6 @@ import SwiftUI
 // MARK: - ContentView
 
 struct ContentView: View {
-  @Dependency(\.defaultOperationClient) private var client
-
   var body: some View {
     NavigationStack {
       Form {
@@ -17,7 +15,6 @@ struct ContentView: View {
         Section("1 - The Basics (Start Here)") {
           CaseStudyLink(study: BasicSwiftUICaseStudy())
           CaseStudyLink(study: BasicUIKitCaseStudy())
-          CaseStudyLink(study: BasicSharingCaseStudy())
         }
 
         Section("2 - Common Use Cases") {
@@ -31,11 +28,10 @@ struct ContentView: View {
           CaseStudyLink(study: DebouncingCaseStudy())
           CaseStudyLink(study: ReusableRefetchingCaseStudy())
           CaseStudyLink(study: ExpensiveLocalComputationsCaseStudy())
-          CaseStudyLink(study: CustomFetchConditionsCaseStudy())
+          CaseStudyLink(study: CustomRunSpecificationsCaseStudy())
         }
       }
       .navigationTitle("Case Studies")
-      .operationClient(self.client)
     }
   }
 }

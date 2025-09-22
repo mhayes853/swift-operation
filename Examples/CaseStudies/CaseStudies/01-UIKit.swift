@@ -1,15 +1,19 @@
 import Dependencies
 import Foundation
-import OperationSwiftUI
 import SwiftUI
+import SwiftNavigation
+import SharingOperation
 
 // MARK: - BasicUIKitCaseStudy
 
 struct BasicUIKitCaseStudy: CaseStudy {
   let title: LocalizedStringKey = "Basic UIKit"
   let description: LocalizedStringKey = """
-    Basic usage of the library using `OperationStore` to observe the state of a query and \
-    update the state of a view controller based on a random quote from the Dummy JSON API.
+    Basic usage of the library using the `@SharedOperation` property wrapper to fetch a random \
+    quote from the Dummy JSON API in a UIViewController.
+    
+    You can use the `@SharedOperation` property wrapper anywhere including `@Observable` models and \
+    UIViewController instances.
     """
 
   var content: some View {
@@ -21,26 +25,16 @@ struct BasicUIKitCaseStudy: CaseStudy {
 // MARK: - BasicUIKitViewController
 
 final class BasicUIKitViewController: UIViewController {
-  private var store: OperationStore<Quote.RandomQuery.State>!
-  private var subscription: OperationSubscription?
-
+  @SharedOperation(Quote.randomQuery) private var quote
+  
   private lazy var reloadButton = UIButton(
     type: .system,
     primaryAction: UIAction(title: "Reload Quote") { [weak self] _ in
-      Task { @MainActor in try await self?.store.fetch() }
+      Task { @MainActor in try await self?.$quote.fetch() }
     }
   )
 
   private let statusView = BasicUIKitQuoteStatusView()
-
-  init(client: OperationClient) {
-    super.init(nibName: nil, bundle: nil)
-    self.update(with: client)
-  }
-
-  required init?(coder: NSCoder) {
-    fatalError("init(coder:) has not been implemented")
-  }
 
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -63,35 +57,22 @@ final class BasicUIKitViewController: UIViewController {
       stack.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),
       stack.trailingAnchor.constraint(equalTo: self.view.trailingAnchor)
     ])
-  }
-}
-
-extension BasicUIKitViewController {
-  func update(with client: OperationClient) {
-    let store = client.store(for: Quote.randomQuery)
-    guard self.store !== store else { return }
-    self.store = store
-    self.subscription = store.subscribe(
-      with: QueryEventHandler { [weak self] state, _ in
-        Task { @MainActor in self?.update(with: state) }
-      }
-    )
-  }
-
-  private func update(with state: Quote.RandomQuery.State) {
-    self.statusView.update(with: state)
-    self.reloadButton.isEnabled = !state.isLoading
+    
+    self.observe { [weak self] in
+      guard let self else { return }
+      self.statusView.update(with: self.$quote.state)
+      self.reloadButton.isEnabled = !self.$quote.isLoading
+    }
   }
 }
 
 extension BasicUIKitViewController {
   struct Representable: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> BasicUIKitViewController {
-      BasicUIKitViewController(client: context.environment.operationClient)
+      BasicUIKitViewController()
     }
 
     func updateUIViewController(_ vc: BasicUIKitViewController, context: Context) {
-      vc.update(with: context.environment.operationClient)
     }
   }
 }

@@ -8,8 +8,7 @@ let package = Package(
   platforms: [.iOS(.v13), .macOS(.v10_15), .tvOS(.v13), .watchOS(.v6), .macCatalyst(.v13)],
   products: [
     .library(name: "SharingOperation", targets: ["SharingOperation"]),
-    .library(name: "Operation", targets: ["Operation"]),
-    .library(name: "OperationSwiftUI", targets: ["OperationSwiftUI"])
+    .library(name: "Operation", targets: ["Operation"])
   ],
   traits: [
     .trait(
@@ -43,7 +42,6 @@ let package = Package(
       .upToNextMajor(from: "1.1.0")
     ),
     .package(url: "https://github.com/pointfreeco/xctest-dynamic-overlay", from: "1.4.3"),
-    .package(url: "https://github.com/nalexn/ViewInspector", from: "0.10.1"),
     .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.4.3"),
     .package(url: "https://github.com/pointfreeco/swift-navigation", from: "2.3.1"),
     .package(url: "https://github.com/apple/swift-log", from: "1.6.3"),
@@ -100,7 +98,6 @@ let package = Package(
         )
       ]
     ),
-    .target(name: "OperationSwiftUI", dependencies: ["Operation"]),
     .target(
       name: "OperationTestHelpers",
       dependencies: ["Operation", .product(name: "CustomDump", package: "swift-custom-dump")]
@@ -171,20 +168,7 @@ if Context.environment["TEST_WASM"] != "1" {
           .product(name: "IssueReportingTestSupport", package: "xctest-dynamic-overlay")
         ]
       ),
-      .testTarget(name: "OperationTests", dependencies: operationTestsDependencies),
-      .testTarget(
-        name: "OperationSwiftUITests",
-        dependencies: [
-          "OperationSwiftUI",
-          "OperationTestHelpers",
-          .product(name: "CustomDump", package: "swift-custom-dump"),
-          .product(
-            name: "ViewInspector",
-            package: "ViewInspector",
-            condition: .when(platforms: [.iOS, .macOS, .watchOS, .tvOS, .visionOS])
-          )
-        ]
-      )
+      .testTarget(name: "OperationTests", dependencies: operationTestsDependencies)
     ]
   )
 }
