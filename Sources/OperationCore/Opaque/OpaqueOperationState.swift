@@ -5,7 +5,8 @@ import Foundation
 /// An untyped state type that type erases any ``OperationState`` conformance.
 ///
 /// Generally, you only access this type from an ``OpaqueOperationStore``, which is typically accessed
-/// via pattern matching on a ``OperationClient``. See <doc:PatternMatchingAndStateManagement> for more.
+/// via pattern matching on an ``OperationClient``. See <doc:PatternMatchingAndStateManagement>
+/// for more.
 public struct OpaqueOperationState: Sendable {
   /// The underlying base state.
   public private(set) var base: any OperationState & Sendable

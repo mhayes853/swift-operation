@@ -4,13 +4,13 @@ import Foundation
 
 /// A fully type-erased ``OperationStore``.
 ///
-/// You generally only interact with instances of this type through a ``OperationClient``. See
+/// You generally only interact with instances of this type through an ``OperationClient``. See
 /// <doc:PatternMatchingAndStateManagement> for more.
 @dynamicMemberLookup
 public final class OpaqueOperationStore: Sendable {
   private let _base: any OpaqueableOperationStore
 
-  /// Creates an opaque store by type erasing a ``OperationStore``.
+  /// Creates an opaque store by type erasing an ``OperationStore``.
   ///
   /// - Parameter base: The store to type-erase.
   public init(erasing base: OperationStore<some OperationState & Sendable>) {
