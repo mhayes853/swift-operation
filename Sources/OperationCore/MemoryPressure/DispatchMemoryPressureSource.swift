@@ -44,7 +44,7 @@
     ///
     /// - Parameter dispatchPressure: A `DispatchSource.MemoryPressureEvent`.
     public init(from dispatchPressure: DispatchSource.MemoryPressureEvent) {
-      self.init(rawValue: Int(dispatchPressure.rawValue))
+      self.init(rawValue: UInt32(dispatchPressure.rawValue))
     }
   }
 #endif

@@ -2,9 +2,9 @@
 
 /// A data type describing the severity of memory pressure.
 public struct MemoryPressure: RawRepresentable, Sendable, Hashable {
-  public let rawValue: Int
+  public let rawValue: UInt32
 
-  public init(rawValue: Int) {
+  public init(rawValue: UInt32) {
     self.rawValue = rawValue
   }
 }

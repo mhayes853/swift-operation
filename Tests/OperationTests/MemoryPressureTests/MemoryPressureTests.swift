@@ -8,6 +8,7 @@
   struct MemoryPressureTests {
     @Test("Is Equivalent To Dispatch Pressure")
     func dispatchEquivalent() {
+      // NB: - Cannot use parameterized tests due to dispatch event not being Sendable.
       let args = [
         (DispatchSource.MemoryPressureEvent.all, MemoryPressure.all),
         (.warning, .warning),
