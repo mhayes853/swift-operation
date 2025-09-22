@@ -2,7 +2,7 @@ import Foundation
 
 // MARK: - StaleWhenRevalidateQuery
 
-extension StatefulOperationRequest {
+extension StatefulOperationRequest where Self: SendableMetatype, State: SendableMetatype {
   /// Marks ``OperationStore/isStale`` as true for this operation whenever the specified predicate
   /// is true.
   ///
@@ -104,8 +104,8 @@ extension StatefulOperationRequest {
 }
 
 public struct _StaleWhenModifier<
-  Operation: StatefulOperationRequest
->: _ContextUpdatingOperationModifier, Sendable {
+  Operation: StatefulOperationRequest & SendableMetatype
+>: _ContextUpdatingOperationModifier, Sendable where Operation.State: SendableMetatype {
   let predicate: @Sendable (Operation.State, OperationContext) -> Bool
 
   public func setup(context: inout OperationContext) {
