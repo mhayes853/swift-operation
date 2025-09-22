@@ -1,12 +1,12 @@
 // MARK: - ControlledOperation
 
-/// A helper typealias for specifying that your operation is controlled by a ``OperationController``.
+/// A helper typealias for specifying that your operation is controlled by an ``OperationController``.
 ///
-/// Use this typealias when you define an extension to ``OperationRequest`` that applies your
-/// controller.
+/// Use this typealias when you define an extension to ``StatefulOperationRequest`` that applies
+/// your controller.
 ///
 /// ```swift
-/// extension OperationRequest {
+/// extension StatefulOperationRequest {
 ///   func myControlled() -> ControlledOperation<Self, MyController<State>> {
 ///     self.controlled(by: MyController())
 ///   }
@@ -49,7 +49,7 @@ public struct _OperationControllerModifier<
 // MARK: - OperationContext
 
 extension OperationContext {
-  /// The ``OperationController``s attached to an ``OperationRequest``.
+  /// The ``OperationController``s attached to a ``StatefulOperationRequest``.
   ///
   /// You generally add controllers via the ``StatefulOperationRequest/controlled(by:)`` modifier.
   public var operationControllers: [any OperationController & Sendable] {

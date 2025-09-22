@@ -1,6 +1,6 @@
 // MARK: - OperationControls
 
-/// A data type for managing an operation's state from within a ``OperationController``.
+/// A data type for managing an operation's state from within an ``OperationController``.
 ///
 /// You do not create instances of this type. Instead, it is passed to your `OperationController`
 /// through ``OperationController/control(with:)``.
@@ -118,7 +118,7 @@ extension OperationControls {
   /// Whether or not you can rerun the operation through these controls.
   ///
   /// This property is true when automatic running is enabled on the operation. See
-  /// ``OperationRequest/enableAutomaticRunning(onlyWhen:)`` for more.
+  /// ``StatefulOperationRequest/enableAutomaticRunning(onlyWhen:)`` for more.
   public var canYieldRerun: Bool {
     self.store?.isAutomaticRunningEnabled == true
   }
@@ -187,7 +187,7 @@ extension OperationWarning {
   public static func controllerDeallocatedStoreAccess(stateType: Any.Type) -> Self {
     """
     An instance of `OperationStore<\(typeName(stateType))>` has been deallocated, but an access has \
-    been attempted from through a `OperationController`.
+    been attempted from through an `OperationController`.
 
     This is considered an application programming error, because the lifetime of the \
     `OperationControls` passed to the controller is managed by the store. To fix this, ensure that the \

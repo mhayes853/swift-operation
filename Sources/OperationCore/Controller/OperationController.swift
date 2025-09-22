@@ -2,8 +2,8 @@
 
 /// A protocol for controlling the state of an operation.
 ///
-/// OperationControllers represent reusable and composable pieces of logic that allow one to control
-/// thet state of an operation, and even automatically rerun an operation. You can attach an
+/// Controllers represent reusable and composable pieces of logic that allow one to control
+/// thet state of an operation, and even automatically run an operation. You can attach an
 /// `OperationController` to a ``StatefulOperationRequest`` via the
 /// ``StatefulOperationRequest/controlled(by:)`` modifier.
 ///
@@ -46,7 +46,7 @@ public protocol OperationController<State> {
   /// controller for later use. The ``OperationSubscription`` that you return from this method is
   /// responsible for performing any cleanup work involved with `controls`.
   ///
-  /// - Parameter controls: A ``OperationControls`` instance.
-  /// - Returns: A ``OperationSubscription``.
+  /// - Parameter controls: An ``OperationControls`` instance.
+  /// - Returns: An ``OperationSubscription``.
   func control(with controls: OperationControls<State>) -> OperationSubscription
 }
