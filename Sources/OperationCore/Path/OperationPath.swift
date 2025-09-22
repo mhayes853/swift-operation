@@ -1,9 +1,9 @@
 // MARK: - OperationPath
 
-/// A data type that uniquely identifies a ``QueryRequest``.
+/// A data type that uniquely identifies a ``StatefulOperationRequest``.
 ///
-/// You can opt to manually implement ``QueryRequest/path-1limj`` when your query does not conform
-/// to Hashable or Identifiable like so.
+/// You can opt to manually implement ``StatefulOperationRequest/path-3dph9`` when your operation
+/// does not conform to Hashable or Identifiable like so.
 ///
 /// ```swift
 /// struct UserByNameQuery: QueryRequest {
@@ -18,7 +18,7 @@
 /// ```
 ///
 /// If you have multiple views using `UserByNameQuery`, you can access all instances of the query
-/// state for those views by pattern matching with a ``OperationClient``.
+/// state for those views by pattern matching with an ``OperationClient``.
 ///
 /// ```swift
 /// // Retrieves all OperationStore instances for every UserByNameQuery

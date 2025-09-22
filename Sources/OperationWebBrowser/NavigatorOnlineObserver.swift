@@ -2,7 +2,7 @@
   import JavaScriptKit
   import OperationCore
 
-  // MARK: - NavigatorObserver
+  // MARK: - NavigatorOnlineObserver
 
   /// A `NetworkObserver` that uses the window navigator.
   public struct NavigatorOnlineObserver: NetworkObserver, Sendable {
