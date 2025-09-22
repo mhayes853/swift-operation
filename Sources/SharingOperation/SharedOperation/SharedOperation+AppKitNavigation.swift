@@ -5,7 +5,7 @@
   // MARK: - Store Initializer
 
   extension SharedOperation {
-    /// Creates a shared query.
+    /// Creates a shared operation.
     ///
     /// - Parameters:
     ///   - store: The `OperationStore` to subscribe to.
@@ -87,7 +87,7 @@
   // MARK: - Paginated Initializers
 
   extension SharedOperation {
-    /// Creates a shared query.
+    /// Creates a shared paginated operation.
     ///
     /// - Parameters:
     ///   - query: The `PaginatedRequest`.
@@ -108,7 +108,7 @@
       )
     }
 
-    /// Creates a shared query.
+    /// Creates a shared paginated operation.
     ///
     /// - Parameters:
     ///   - query: The `PaginatedRequest`.
@@ -136,7 +136,7 @@
   // MARK: - Mutation Initializer
 
   extension SharedOperation {
-    /// Creates a shared query.
+    /// Creates a shared mutation.
     ///
     /// - Parameters:
     ///   - mutation: The `MutationRequest`.
@@ -157,7 +157,7 @@
       )
     }
 
-    /// Creates a shared query.
+    /// Creates a shared mutation.
     ///
     /// - Parameters:
     ///   - mutation: The `MutationRequest`.

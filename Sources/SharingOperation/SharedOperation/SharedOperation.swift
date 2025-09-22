@@ -4,24 +4,33 @@ import Sharing
 
 // MARK: - SharedOperation
 
-/// A property wrapper for observing the state and interacting with a `QueryRequest`.
+/// A property wrapper for observing the state and interacting with a `StatefulOperationRequest`.
 ///
 /// ```swift
 /// import SharingOperation
+/// import SwiftUI
 ///
-/// // This will begin fetching the post.
-/// @SharedOperation(Post.query(for: 1)) var post
+/// struct PostView: View {
+///   // This will begin fetching the post.
+///   @SharedOperation(Post.query(for: 1)) var post
 ///
-/// if $post.isLoading {
-///   print("Loading")
-/// } else if let error = $post.error {
-///   print("Error", error)
-/// } else {
-///   print("Post", post)
+///   var body: some View {
+///     switch self.$post.status {
+///     case .result(.success(let post)):
+///       VStack(alignment: .leading) {
+///         Text(post.title)
+///         Text(post.body)
+///       }
+///     case .result(.failure(let error)):
+///       Text("Error: \(error.localizedDescription).")
+///     default:
+///       ProgressView()
+///     }
+///   }
 /// }
 /// ```
 ///
-/// You can also access all properties and methods to interact with the query that come through
+/// You can also access all properties and methods to interact with the operation that come through
 /// `OperationStore` on the projected value of this property wrapper.
 ///
 /// ```swift
@@ -30,7 +39,7 @@ import Sharing
 /// // ...
 /// ```
 ///
-/// When modifying the current value of the query, use ``withLock(_:fileID:filePath:line:column:)``
+/// When modifying the current value of the operation, use ``withLock(_:fileID:filePath:line:column:)``
 /// as if it were a normal `@Shared` property.
 ///
 /// ```swift
@@ -43,10 +52,11 @@ import Sharing
 public struct SharedOperation<State: OperationState & Sendable>: Sendable {
   @Shared var value: OperationStateKeyValue<State>
 
-  /// Whether or not this shared query is backed by a user specified `QueryRequest`.
+  /// Whether or not this shared operation is backed by a user specified
+  /// `StatefulOperationRequest`.
   ///
-  /// This property is true if this shared query was not created with a `QueryRequest` through
-  /// ``init(initialState:)``.
+  /// This property is true if this shared operation was not created with a
+  /// `StatefulOperationRequest` through ``init(initialState:)``.
   public var isBacked: Bool {
     self.value.isBacked
   }
@@ -79,7 +89,7 @@ public struct SharedOperation<State: OperationState & Sendable>: Sendable {
     _ operation: sending Operation,
     initialState: Operation.State,
     client: OperationClient? = nil,
-    scheduler: some SharedOperationStateScheduler = .synchronous
+    scheduler: some SharedOperationStateScheduler & Sendable = .synchronous
   ) where State == Operation.State {
     @Dependency(\.defaultOperationClient) var OperationClient
     self.init(
@@ -88,9 +98,9 @@ public struct SharedOperation<State: OperationState & Sendable>: Sendable {
     )
   }
 
-  /// Creates an unbacked shared query.
+  /// Creates an unbacked shared operation.
   ///
-  /// - Parameter initialState: The initial state of the query.
+  /// - Parameter initialState: The initial state of the operation.
   public init(initialState: State) {
     self._value = Shared(
       value: OperationStateKeyValue(
@@ -104,20 +114,20 @@ public struct SharedOperation<State: OperationState & Sendable>: Sendable {
 // MARK: - Unbacked Initializers
 
 extension SharedOperation {
-  /// Creates an unbacked shared query.
+  /// Creates an unbacked shared operation.
   ///
-  /// - Parameter wrappedValue: The initial value of the query.
+  /// - Parameter wrappedValue: The initial value of the operation.
   public init<Value: Sendable, Failure: Error>(
     wrappedValue: Value? = nil
   ) where State == QueryState<Value, Failure> {
     self.init(initialState: QueryState(initialValue: wrappedValue))
   }
 
-  /// Creates an unbacked shared query.
+  /// Creates an unbacked shared operation.
   ///
   /// - Parameters:
-  ///   - wrappedValue: The initial value of the query.
-  ///   - initialPageId: The initial page id of the query.
+  ///   - wrappedValue: The initial value of the operation.
+  ///   - initialPageId: The initial page id of the operation.
   public init<PageID, PageValue, PageFailure>(
     wrappedValue: State.StateValue,
     initialPageId: PageID
@@ -127,9 +137,9 @@ extension SharedOperation {
     )
   }
 
-  /// Creates an unbacked shared query.
+  /// Creates an unbacked shared operation.
   ///
-  /// - Parameter wrappedValue: The initial value of the query.
+  /// - Parameter wrappedValue: The initial value of the operation.
   public init<Arguments, MutateValue, MutateFailure>(
     wrappedValue: State.StateValue
   ) where State == MutationState<Arguments, MutateValue, MutateFailure> {
@@ -140,14 +150,14 @@ extension SharedOperation {
 // MARK: - Store Initializer
 
 extension SharedOperation {
-  /// Creates a shared query.
+  /// Creates a shared operation.
   ///
   /// - Parameters:
   ///   - store: The `OperationStore` to subscribe to.
   ///   - scheduler: The ``SharedOperationStateScheduler`` to schedule state updates on.
   public init(
     store: OperationStore<State>,
-    scheduler: some SharedOperationStateScheduler = .synchronous
+    scheduler: some SharedOperationStateScheduler & Sendable = .synchronous
   ) {
     self._value = Shared(
       wrappedValue: OperationStateKeyValue(store: store, isBacked: true),
@@ -159,7 +169,7 @@ extension SharedOperation {
 // MARK: - Shared Properties
 
 extension SharedOperation {
-  /// Loads the data from this query.
+  /// Loads the data from this shared operation.
   public func load() async throws {
     try await self.run()
   }
@@ -201,7 +211,7 @@ extension SharedOperation {
 // MARK: - Exclusive Access
 
 extension SharedOperation {
-  /// Exclusively accesses the query properties inside the specified closure.
+  /// Exclusively accesses the shared operation properties inside the specified closure.
   ///
   /// The property-wrapper is thread-safe due to the thread-safety of the underlying `OperationStore`,
   /// but accessing individual properties without exclusive access can still lead to high-level
@@ -232,7 +242,7 @@ extension SharedOperation {
 // MARK: - Store
 
 extension SharedOperation {
-  /// The backing `OperationStore` for this shared query.
+  /// The backing `OperationStore` for this shared operation.
   public var store: OperationStore<State> {
     self.value.store
   }
@@ -311,8 +321,8 @@ extension SharedOperation where State: _QueryStateProtocol {
   ///
   /// - Parameters:
   ///   - context: The `OperationContext` to use for the underlying `OperationTask`.
-  ///   - handler: A `QueryEventHandler` to subscribe to events from fetching the data.
-  ///   (This does not add an active subscriber to the store.)
+  ///   - handler: A `QueryEventHandler` to subscribe to events from fetching the data. (This
+  ///     does not add an active subscriber to the store.)
   /// - Returns: The fetched data.
   @discardableResult
   public func fetch(
@@ -322,13 +332,13 @@ extension SharedOperation where State: _QueryStateProtocol {
     try await self.value.store.fetch(using: context, handler: handler)
   }
 
-  /// Creates an `OperationTask` to fetch the query's data.
+  /// Creates an `OperationTask` to run the query.
   ///
-  /// The returned task does not begin fetching immediately. Rather you must call
-  /// `OperationTask.runIfNeeded` to fetch the data.
+  /// The returned task does not begin running immediately. Rather you must call
+  /// `OperationTask.runIfNeeded` to run the operation.
   ///
   /// - Parameter context: The `OperationContext` for the task.
-  /// - Returns: A task to fetch the query's data.
+  /// - Returns: A task to run the operation.
   public func fetchTask(
     using context: OperationContext? = nil
   ) -> OperationTask<State.OperationValue, State.Failure> {
@@ -339,12 +349,12 @@ extension SharedOperation where State: _QueryStateProtocol {
 // MARK: - Reset
 
 extension SharedOperation {
-  /// Resets the state of the query to its original values.
+  /// Resets the state of the operation to its original values.
   ///
-  /// > Important: This will cancel all active `OperationTask`s on the query. Those cancellations will not be
-  /// > reflected in the reset query state.
+  /// > Important: This will cancel all active `OperationTask`s on the operation. Those cancellations will not be
+  /// > reflected in the reset operation state.
   ///
-  /// - Parameter context: The `OperationContext` to reset the query in.
+  /// - Parameter context: The `OperationContext` to reset the operation in.
   public func resetState(using context: OperationContext? = nil) {
     self.value.store.resetState(using: context)
   }
@@ -353,7 +363,7 @@ extension SharedOperation {
 // MARK: - Set Result
 
 extension SharedOperation {
-  /// Directly sets the result of a query.
+  /// Directly sets the result of a operation.
   ///
   /// - Parameters:
   ///   - result: The `Result`.
@@ -388,7 +398,7 @@ extension SharedOperation {
     wrappedValue: Query.State.StateValue = nil,
     _ query: sending Query,
     client: OperationClient? = nil,
-    scheduler: some SharedOperationStateScheduler = .synchronous
+    scheduler: some SharedOperationStateScheduler & Sendable = .synchronous
   ) where State == QueryState<Query.Value, Query.Failure> {
     self.init(
       query,
@@ -407,16 +417,16 @@ extension SharedOperation {
   public init<Query: QueryRequest>(
     _ query: sending Query.Default,
     client: OperationClient? = nil,
-    scheduler: some SharedOperationStateScheduler = .synchronous
+    scheduler: some SharedOperationStateScheduler & Sendable = .synchronous
   ) where State == DefaultStateOperation<Query>.State {
     self.init(query, initialState: query.initialState, client: client, scheduler: scheduler)
   }
 }
 
-// MARK: - InfiniteQueries
+// MARK: - Pagination
 
 extension SharedOperation {
-  /// Creates a shared query.
+  /// Creates a shared paginated operation.
   ///
   /// - Parameters:
   ///   - wrappedValue: The initial value.
@@ -427,7 +437,7 @@ extension SharedOperation {
     wrappedValue: Query.State.StateValue = [],
     _ query: sending Query,
     client: OperationClient? = nil,
-    scheduler: some SharedOperationStateScheduler = .synchronous
+    scheduler: some SharedOperationStateScheduler & Sendable = .synchronous
   ) where State == PaginatedState<Query.PageID, Query.PageValue, Query.PageFailure> {
     self.init(
       query,
@@ -440,7 +450,7 @@ extension SharedOperation {
     )
   }
 
-  /// Creates a shared query.
+  /// Creates a shared paginated operation.
   ///
   /// - Parameters:
   ///   - query: The `PaginatedRequest`.
@@ -449,7 +459,7 @@ extension SharedOperation {
   public init<Query: PaginatedRequest>(
     _ query: sending Query.Default,
     client: OperationClient? = nil,
-    scheduler: some SharedOperationStateScheduler = .synchronous
+    scheduler: some SharedOperationStateScheduler & Sendable = .synchronous
   )
   where
     State == DefaultOperationState<
@@ -461,7 +471,7 @@ extension SharedOperation {
 }
 
 extension SharedOperation where State: _PaginatedStateProtocol {
-  /// Refetches all existing pages on the query.
+  /// Refetches all existing pages on the operation.
   ///
   /// This method will refetch pages in a waterfall effect, starting from the first page, and then
   /// continuing until either the last page is fetched, or until no more pages can be fetched.
@@ -470,7 +480,8 @@ extension SharedOperation where State: _PaginatedStateProtocol {
   ///
   /// - Parameters:
   ///   - context: The `OperationContext` to use for the underlying `OperationTask`.
-  ///   - handler: An `PaginatedEventHandler` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
+  ///   - handler: An `PaginatedEventHandler` to subscribe to events from fetching the data.
+  ///   (This does not add an active subscriber to the store.)
   /// - Returns: The fetched data.
   @discardableResult
   public func refetchAllPages(
@@ -480,7 +491,7 @@ extension SharedOperation where State: _PaginatedStateProtocol {
     try await self.value.store.refetchAllPages(using: context, handler: handler)
   }
 
-  /// Creates an `OperationTask` that refetches all existing pages on the query.
+  /// Creates an `OperationTask` that refetches all existing pages on the operation.
   ///
   /// The task will refetch pages in a waterfall effect, starting from the first page, and then
   /// continuing until either the last page is fetched, or until no more pages can be fetched.
@@ -499,7 +510,7 @@ extension SharedOperation where State: _PaginatedStateProtocol {
     self.value.store.refetchAllPagesTask(using: context)
   }
 
-  /// Fetches the page that will be placed after the last page in ``currentValue``.
+  /// Fetches the page that will be placed after the last page in ``wrappedValue``.
   ///
   /// If no pages have been previously fetched, the initial page is fetched.
   ///
@@ -507,7 +518,8 @@ extension SharedOperation where State: _PaginatedStateProtocol {
   ///
   /// - Parameters:
   ///   - context: The `OperationContext` to use for the underlying `OperationTask`.
-  ///   - handler: An `PaginatedEventHandler` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
+  ///   - handler: An `PaginatedEventHandler` to subscribe to events from fetching the data.
+  ///   (This does not add an active subscriber to the store.)
   /// - Returns: The fetched page.
   @discardableResult
   public func fetchNextPage(
@@ -518,7 +530,7 @@ extension SharedOperation where State: _PaginatedStateProtocol {
   }
 
   /// Creates an `OperationTask` to fetch the page that will be placed after the last page in
-  /// ``currentValue``.
+  /// ``wrappedValue``.
   ///
   /// If no pages have been previously fetched, the initial page is fetched.
   ///
@@ -536,7 +548,7 @@ extension SharedOperation where State: _PaginatedStateProtocol {
     self.value.store.fetchNextPageTask(using: context)
   }
 
-  /// Fetches the page that will be placed before the first page in ``currentValue``.
+  /// Fetches the page that will be placed before the first page in ``wrappedValue``.
   ///
   /// If no pages have been previously fetched, the initial page is fetched.
   ///
@@ -544,7 +556,8 @@ extension SharedOperation where State: _PaginatedStateProtocol {
   ///
   /// - Parameters:
   ///   - context: The `OperationContext` to use for the underlying `OperationTask`.
-  ///   - handler: An `PaginatedEventHandler` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
+  ///   - handler: An `PaginatedEventHandler` to subscribe to events from fetching the data.
+  ///   (This does not add an active subscriber to the store.)
   /// - Returns: The fetched page.
   @discardableResult
   public func fetchPreviousPage(
@@ -555,7 +568,7 @@ extension SharedOperation where State: _PaginatedStateProtocol {
   }
 
   /// Creates an `OperationTask` to fetch the page that will be placed before the first page in
-  /// ``currentValue``.
+  /// ``wrappedValue``.
   ///
   /// If no pages have been previously fetched, the initial page is fetched.
   ///
@@ -577,7 +590,7 @@ extension SharedOperation where State: _PaginatedStateProtocol {
 // MARK: - Mutations
 
 extension SharedOperation {
-  /// Creates a shared query.
+  /// Creates a shared mutation.
   ///
   /// - Parameters:
   ///   - wrappedValue: The initial value.
@@ -588,7 +601,7 @@ extension SharedOperation {
     wrappedValue: Mutation.State.StateValue = nil,
     _ mutation: sending Mutation,
     client: OperationClient? = nil,
-    scheduler: some SharedOperationStateScheduler = .synchronous
+    scheduler: some SharedOperationStateScheduler & Sendable = .synchronous
   ) where State == MutationState<Mutation.Arguments, Mutation.MutateValue, Mutation.Failure> {
     self.init(
       mutation,
@@ -598,7 +611,7 @@ extension SharedOperation {
     )
   }
 
-  /// Creates a shared query.
+  /// Creates a shared mutation.
   ///
   /// - Parameters:
   ///   - mutation: The `MutationRequest`.
@@ -607,19 +620,20 @@ extension SharedOperation {
   public init<Mutation: MutationRequest>(
     _ mutation: sending Mutation.Default,
     client: OperationClient? = nil,
-    scheduler: some SharedOperationStateScheduler = .synchronous
+    scheduler: some SharedOperationStateScheduler & Sendable = .synchronous
   ) where State == DefaultStateOperation<Mutation>.State {
     self.init(mutation, initialState: mutation.initialState, client: client, scheduler: scheduler)
   }
 }
 
 extension SharedOperation where State: _MutationStateProtocol {
-  /// Performs a mutation with a set of arguments.
+  /// Performs a mutation.
   ///
   /// - Parameters:
-  ///   - arguments: The set of arguments to use.
+  ///   - arguments: The set of arguments to mutate with.
   ///   - context: The `OperationContext` used by the underlying `OperationTask`.
-  ///   - handler: A `MutationEventHandler` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
+  ///   - handler: A `MutationEventHandler` to subscribe to events during the mutation run.
+  ///   (This does not add an active subscriber to the store.)
   /// - Returns: The mutated value.
   @discardableResult
   public func mutate(
@@ -630,13 +644,13 @@ extension SharedOperation where State: _MutationStateProtocol {
     try await self.value.store.mutate(with: arguments, using: context, handler: handler)
   }
 
-  /// Creates an `OperationTask` that performs a mutation with a set of arguments.
+  /// Creates an `OperationTask` that performs a mutation.
   ///
   /// The returned task does not begin fetching immediately. Rather you must call
   /// `OperationTask.runIfNeeded` to fetch the data.
   ///
   /// - Parameters:
-  ///   - arguments: The set of arguments to use.
+  ///   - arguments: The set of arguments to mutate with.
   ///   - context: The `OperationContext` for the task.
   /// - Returns: A task to perform the mutation.
   public func mutateTask(
@@ -648,13 +662,13 @@ extension SharedOperation where State: _MutationStateProtocol {
 
   /// Retries the mutation with the most recently used set of arguments.
   ///
-  /// > Important: Calling this method without previously having called ``mutate(using:handler:)``
-  /// > will result in a purple runtime warning in Xcode, and a test failure for current running
-  /// > test. Additionally, the mutation will also throw an error.
+  /// > Warning: Calling this method without previously performing a mutation run attempt will
+  /// > result in a crash.
   ///
   /// - Parameters:
   ///   - context: The `OperationContext` used by the underlying `OperationTask`.
-  ///   - handler: A `MutationEventHandler` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
+  ///   - handler: A `MutationEventHandler` to subscribe to events from the mutation run.
+  ///   (This does not add an active subscriber to the store.)
   /// - Returns: The mutated value.
   @discardableResult
   public func retryLatest(
@@ -670,9 +684,8 @@ extension SharedOperation where State: _MutationStateProtocol {
   /// The returned task does not begin fetching immediately. Rather you must call
   /// `OperationTask.runIfNeeded` to fetch the data.
   ///
-  /// > Important: Calling this method without previously having called ``mutate(using:handler:)``
-  /// > will result in a purple runtime warning in Xcode, and a test failure for current running
-  /// > test. Additionally, the mutation will also throw an error.
+  /// > Warning: Running the task returned by this method without previously performing a mutation
+  /// > run attempt will result in a crash.
   ///
   /// - Parameters:
   ///   - context: The `OperationContext` for the task.
@@ -689,7 +702,8 @@ extension SharedOperation where State: _MutationStateProtocol, State.Arguments =
   ///
   /// - Parameters:
   ///   - context: The `OperationContext` used by the underlying `OperationTask`.
-  ///   - handler: A `MutationEventHandler` to subscribe to events from fetching the data. (This does not add an active subscriber to the store.)
+  ///   - handler: A `MutationEventHandler` to subscribe to events from the mutation run.
+  ///   (This does not add an active subscriber to the store.)
   /// - Returns: The mutated value.
   @discardableResult
   public func mutate(

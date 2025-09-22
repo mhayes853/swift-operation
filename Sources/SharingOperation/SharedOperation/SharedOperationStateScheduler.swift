@@ -9,7 +9,7 @@
 // MARK: - SharedOperationStateScheduler
 
 /// A protocol to schedule state updates for ``SharedOperation``.
-public protocol SharedOperationStateScheduler: Sendable {
+public protocol SharedOperationStateScheduler {
   /// Schedules the state update.
   ///
   /// - Parameter work: The state update.
@@ -19,7 +19,7 @@ public protocol SharedOperationStateScheduler: Sendable {
 // MARK: - SynchronousStateScheduler
 
 /// A ``SharedOperationStateScheduler`` that schedules its work synchronously.
-public struct SynchronousStateScheduler: SharedOperationStateScheduler {
+public struct SynchronousStateScheduler: SharedOperationStateScheduler, Sendable {
   @inlinable
   public func schedule(work: () -> Void) {
     work()
@@ -36,7 +36,7 @@ extension SharedOperationStateScheduler where Self == SynchronousStateScheduler 
 #if canImport(SwiftUI)
   /// A ``SharedOperationStateScheduler`` that schedules its work on the MainActor inside a
   /// `withAnimation` block.
-  public struct AnimationStateScheduler: SharedOperationStateScheduler {
+  public struct AnimationStateScheduler: SharedOperationStateScheduler, Sendable {
     let animation: Animation
 
     public func schedule(work: @escaping @Sendable () -> Void) {
@@ -63,7 +63,7 @@ extension SharedOperationStateScheduler where Self == SynchronousStateScheduler 
 #if SwiftOperationNavigation
   /// A ``SharedOperationStateScheduler`` that schedules its work on the MainActor inside a
   /// `withUITransaction` block.
-  public struct UITransactionStateScheduler: SharedOperationStateScheduler {
+  public struct UITransactionStateScheduler: SharedOperationStateScheduler, Sendable {
     let transaction: UITransaction
 
     public func schedule(work: @escaping @Sendable () -> Void) {

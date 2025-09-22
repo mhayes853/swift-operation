@@ -8,7 +8,7 @@ import Sharing
 
 struct OperationStateKey<
   State: OperationState & Sendable,
-  Scheduler: SharedOperationStateScheduler
+  Scheduler: SharedOperationStateScheduler & Sendable
 >: SharedKey {
   private let store: OperationStore<State>
   let id = OperationStateKeyID()
