@@ -16,8 +16,10 @@
       let cancellable = store.publisher.sink { output in
         states.withLock { $0.append(output.state) }
       }
+      await Task.megaYield()
       _ = try? await store.activeTasks.first?.runIfNeeded()
       states.withLock {
+        print($0.map(\.status))
         expectNoDifference($0.count, 3)
         expectNoDifference($0[0].status.isIdle, true)
         expectNoDifference($0[1].isLoading, true)

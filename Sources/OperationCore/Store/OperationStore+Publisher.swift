@@ -3,7 +3,7 @@
   import Foundation
 
   extension OperationStore {
-    /// A Combine `Publisher` that emits state updates from an ``OperationStore``.
+    /// A Combine `Publisher` that emits state updates from a ``OperationStore``.
     ///
     /// This publisher will add a new subscription to the underlying store when subscribed to.
     public struct Publisher: Combine.Publisher, Sendable {
@@ -22,7 +22,7 @@
             conduit.send(Output(state: state, context: context))
           }
         )
-        subscriber.receive(subscription: CombineOperationSubscription(subscription))
+        subscriber.receive(subscription: OperationSubscription.Combine(subscription))
       }
     }
 
