@@ -3,25 +3,27 @@ import Foundation
 import Operation
 import Sharing
 
-// MARK: - NetworkStatusKey
+// MARK: - NetworkConnectionStatusKey
 
-extension SharedReaderKey where Self == NetworkStatusKey {
+extension SharedReaderKey where Self == NetworkConnectionStatusKey {
   /// A `SharedReaderKey` that observes the current user's network connection status.
-  public static var networkStatus: NetworkStatusKey {
-    NetworkStatusKey(observer: nil)
+  public static var networkStatus: NetworkConnectionStatusKey {
+    NetworkConnectionStatusKey(observer: nil)
   }
 
   /// A `SharedReaderKey` that observes the current user's network connection status.
   ///
   /// - Parameter observer: The `NetworkObserver` to use.
-  /// - Returns: A ``NetworkStatusKey``.
-  public static func networkStatus(observer: some NetworkObserver & Sendable) -> NetworkStatusKey {
-    NetworkStatusKey(observer: observer)
+  /// - Returns: A ``NetworkConnectionStatusKey``.
+  public static func networkStatus(
+    observer: some NetworkObserver & Sendable
+  ) -> NetworkConnectionStatusKey {
+    NetworkConnectionStatusKey(observer: observer)
   }
 }
 
 /// A `SharedReaderKey` that observes the current user's network connection status.
-public struct NetworkStatusKey: SharedReaderKey {
+public struct NetworkConnectionStatusKey: SharedReaderKey {
   private let observer: any NetworkObserver & Sendable
 
   public var id: ID {
@@ -51,7 +53,7 @@ public struct NetworkStatusKey: SharedReaderKey {
 
 // MARK: - ID
 
-extension NetworkStatusKey {
+extension NetworkConnectionStatusKey {
   public struct ID: Hashable, Sendable {
     private let observerIdentifier: ObjectIdentifier
 

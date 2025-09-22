@@ -184,4 +184,16 @@
       self.$value.update()
     }
   }
+
+  // MARK: - Binding
+
+  extension Binding {
+    /// Creates a binding from a ``SharedOperation``.
+    ///
+    /// - Parameter operation: The ``SharedOperation`` to bind to.
+    @MainActor
+    public init<State>(_ operation: SharedOperation<State>) where Value == State.StateValue {
+      self.init(operation.shared)
+    }
+  }
 #endif

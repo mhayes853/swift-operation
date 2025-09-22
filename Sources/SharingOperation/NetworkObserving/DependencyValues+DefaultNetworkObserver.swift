@@ -1,29 +1,7 @@
 import Dependencies
-import Foundation
-import IssueReporting
 @_spi(Warnings) import Operation
 
-// MARK: - OperationClient
-
-extension DependencyValues {
-  /// The default `OperationClient` to use with ``SharedOperation``.
-  public var defaultOperationClient: OperationClient {
-    get { self[OperationClientKey.self] }
-    set { self[OperationClientKey.self] = newValue }
-  }
-
-  private enum OperationClientKey: DependencyKey {
-    static var liveValue: OperationClient {
-      OperationClient()
-    }
-
-    static var testValue: OperationClient {
-      OperationClient()
-    }
-  }
-}
-
-// MARK: - NetworkObserver
+// MARK: - DependencyValues
 
 extension DependencyValues {
   /// The default `NetworkObserver` to use with ``Sharing/SharedReaderKey/networkStatus``.
@@ -45,6 +23,8 @@ extension DependencyValues {
   }
 }
 
+// MARK: - Warning
+
 extension OperationWarning {
   public static var noDefaultNetworkObserver: Self {
     """
@@ -59,7 +39,7 @@ extension OperationWarning {
         struct MyApp {
           static func main() {
             prepareDependencies {
-              $0.networkObserver = MyPlatformObserver()
+              $0.defaultNetworkObserver = MyPlatformObserver()
             }
           }
 
@@ -70,23 +50,5 @@ extension OperationWarning {
           // ...
         }
     """
-  }
-}
-
-// MARK: - DateDependencyClock
-
-/// An `OperationClock` that uses `@Depenendency(\.date)` to compute the current date.
-public struct DateDependencyClock: OperationClock {
-  @Dependency(\.date) private var date
-
-  public func now() -> Date {
-    self.date.now
-  }
-}
-
-extension OperationClock where Self == DateDependencyClock {
-  /// An `OperationClock` that uses `@Depenendency(\.date)` to compute the current date.
-  public static var dateDependency: Self {
-    DateDependencyClock()
   }
 }
