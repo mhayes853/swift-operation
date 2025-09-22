@@ -190,7 +190,7 @@ extension OperationClient {
   /// Retrieves the ``OperationStore`` for a ``MutationRequest``.
   ///
   /// - Parameters:
-  ///   - query: The mutation.
+  ///   - mutation: The mutation.
   ///   - initialValue: The initial value for the state of the mutation.
   /// - Returns: A ``OperationStore``.
   public func store<Mutation: MutationRequest>(
@@ -203,7 +203,7 @@ extension OperationClient {
   /// Retrieves the ``OperationStore`` for a ``MutationRequest``.
   ///
   /// - Parameters:
-  ///   - query: The mutation.
+  ///   - mutation: The mutation.
   /// - Returns: A ``OperationStore``.
   public func store<Mutation: MutationRequest>(
     for mutation: sending Mutation.Default
@@ -410,9 +410,9 @@ extension OperationContext {
   /// set to the initialized client, and will become nil when the client is deinitialized.
   ///
   /// ``OperationStore`` instances retrieved through a `OperationClient` will have this property set to
-  /// the client through ``OperationStore/context``. However, if the store was created through
-  /// ``OperationStore/detached(query:initialContext:)``, then its context will not contain
-  /// an associated client, and this property will be nil.
+  /// the client through ``OperationStore/context``. However, if the store was created through a
+  /// `detached` static initializer, then its context will not contain an associated client, and
+  /// this property will be nil.
   public var operationClient: OperationClient? {
     get { self[OperationClientKey.self]?.client }
     set { self[OperationClientKey.self] = newValue.map { .strong($0) } }

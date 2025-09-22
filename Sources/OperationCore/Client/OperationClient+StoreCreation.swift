@@ -169,7 +169,7 @@ extension OperationClient.CreateStore {
   /// Creates a ``OperationStore`` for a ``MutationRequest``.
   ///
   /// - Parameters:
-  ///   - query: The mutation.
+  ///   - mutation: The mutation.
   ///   - initialValue: The initial value for the state of the mutation.
   /// - Returns: A ``OperationStore``.
   public func callAsFunction<Mutation: MutationRequest>(
@@ -182,7 +182,7 @@ extension OperationClient.CreateStore {
   /// Creates a ``OperationStore`` for a ``MutationRequest``.
   ///
   /// - Parameters:
-  ///   - query: The mutation.
+  ///   - mutation: The mutation.
   /// - Returns: A ``OperationStore``.
   public func callAsFunction<Mutation: MutationRequest>(
     for mutation: sending Mutation.Default,
