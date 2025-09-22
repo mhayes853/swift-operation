@@ -15,11 +15,11 @@
         self.subscription = subscription
       }
 
-      public func request(_ demand: Subscribers.Demand) {
+      public func request(_ demand: Subscribers.Demand) {}
+
+      public func cancel() {
         self.subscription.cancel()
       }
-
-      public func cancel() {}
     }
   }
 #endif
