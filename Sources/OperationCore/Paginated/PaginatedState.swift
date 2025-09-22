@@ -3,7 +3,7 @@ import IdentifiedCollections
 
 // MARK: - _PaginatedStateProtocol
 
-public protocol _PaginatedStateProtocol<PageID, PageValue>: OperationState
+public protocol _PaginatedStateProtocol<PageID, PageValue>: OperationState, SendableMetatype
 where
   StateValue == Pages<PageID, PageValue>,
   OperationValue == PaginatedOperationValue<PageID, PageValue>,

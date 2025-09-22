@@ -35,13 +35,14 @@ public struct _HandleEventsModifier<
     defer { self.eventHandler.onRunEnded?(context) }
     do {
       self.eventHandler.onRunStarted?(context)
+      let onResultReceived = self.eventHandler.onResultReceived
       let value = try await operation.run(
         isolation: isolation,
         in: context,
         with: OperationContinuation { result, yieldedContext in
           var context = yieldedContext ?? context
           context.operationResultUpdateReason = .yieldedResult
-          self.eventHandler.onResultReceived?(result, context)
+          onResultReceived?(result, context)
           continuation.yield(with: result, using: context)
         }
       )

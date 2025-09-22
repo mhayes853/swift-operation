@@ -10,7 +10,7 @@ extension OperationClient {
     ///
     /// - Parameter body: A function that runs with scoped access to the stores.
     /// - Returns: Whatever `body` returns.
-    mutating func withStores<T>(
+    func withStores<T>(
       _ body: (inout OperationPathableCollection<OpaqueOperationStore>) throws -> sending T
     ) rethrows -> sending T
   }
@@ -18,8 +18,7 @@ extension OperationClient {
 
 extension OperationClient.StoreCache {
   func stores() -> OperationPathableCollection<OpaqueOperationStore> {
-    var current = self
-    return current.withStores { $0 }
+    self.withStores { $0 }
   }
 }
 

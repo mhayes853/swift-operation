@@ -11,11 +11,12 @@ extension OperationClient {
   /// Creates a client.
   ///
   /// - Parameters:
-  ///   - defaultContext: The default ``OperationContext`` to use for each ``OperationStore`` created by the client.
+  ///   - defaultContext: The default ``OperationContext`` to use for each ``OperationStore``
+  ///   created by the client.
   ///   - storeCache: The ``StoreCache`` to use.
   public convenience init(
     defaultContext: OperationContext = OperationContext(),
-    storeCache: sending some StoreCache = DefaultStoreCache()
+    storeCache: some StoreCache & Sendable = DefaultStoreCache()
   ) {
     self.init(
       defaultContext: defaultContext,
@@ -42,13 +43,13 @@ extension OperationClient {
   ///
   /// **Mutations**
   /// - Retries
-  public struct DefaultStoreCreator: StoreCreator {
+  public struct DefaultStoreCreator: StoreCreator, Sendable {
     let retryLimit: Int
     let backoff: OperationBackoffFunction?
     let delayer: (any OperationDelayer & Sendable)?
     let automaticRunningSpecification: AnySendableRunSpecification
     let networkObserver: AnySendableNetworkObserver?
-    let activityObserver: (any ApplicationActivityObserver)?
+    let activityObserver: (any ApplicationActivityObserver & Sendable)?
 
     public func store<Operation: StatefulOperationRequest & Sendable>(
       for operation: Operation,

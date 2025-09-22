@@ -64,19 +64,12 @@ import IssueReporting
 /// <doc:OperationDefaults>.
 public final class OperationClient: Sendable {
   private struct State {
-    let storeCreator: any OperationClient.StoreCreator
-    var storeCache: any StoreCache
     var initialContext: OperationContext
     var operationTypes = [OperationPath: Any.Type]()
-
-    func createStore() -> CreateStore {
-      CreateStore(
-        creator: self.storeCreator,
-        initialContext: self.initialContext,
-        operationTypes: MutableBox(value: self.operationTypes)
-      )
-    }
   }
+
+  private let storeCreator: any StoreCreator & Sendable
+  private let storeCache: any StoreCache & Sendable
 
   private let state: RecursiveLock<State>
 
@@ -89,12 +82,12 @@ public final class OperationClient: Sendable {
   ///   - storeCreator: The ``StoreCreator`` to use.
   public init(
     defaultContext: OperationContext = OperationContext(),
-    storeCache: sending some StoreCache = DefaultStoreCache(),
-    storeCreator: sending some StoreCreator
+    storeCache: some StoreCache & Sendable = DefaultStoreCache(),
+    storeCreator: some StoreCreator & Sendable
   ) {
-    self.state = RecursiveLock(
-      State(storeCreator: storeCreator, storeCache: storeCache, initialContext: defaultContext)
-    )
+    self.storeCache = storeCache
+    self.storeCreator = storeCreator
+    self.state = RecursiveLock(State(initialContext: defaultContext))
     self.state.withLock { $0.initialContext.setWeakOperationClient(self) }
   }
 }
@@ -123,7 +116,7 @@ extension OperationClient {
     for operation: sending Operation,
     initialState: Operation.State
   ) -> OperationStore<Operation.State> {
-    self.withStoreCreation(for: operation) { $0(for: $1, initialState: initialState) }
+    self.withStoreCreation(for: operation) { $0(for: $1.value, initialState: initialState) }
   }
 
   /// Retrieves the ``OperationStore`` for a ``QueryRequest``.
@@ -136,7 +129,7 @@ extension OperationClient {
     for query: sending Query,
     initialState: Query.State
   ) -> OperationStore<Query.State> {
-    self.withStoreCreation(for: query) { $0(for: $1, initialState: initialState) }
+    self.withStoreCreation(for: query) { $0(for: $1.value, initialState: initialState) }
   }
 
   /// Retrieves the ``OperationStore`` for a ``QueryRequest``.
@@ -149,7 +142,7 @@ extension OperationClient {
     for query: sending Query,
     initialValue: Query.Value? = nil
   ) -> OperationStore<Query.State> where Query.State == QueryState<Query.Value, Query.Failure> {
-    self.withStoreCreation(for: query) { $0(for: $1, initialValue: initialValue) }
+    self.withStoreCreation(for: query) { $0(for: $1.value, initialValue: initialValue) }
   }
 
   /// Retrieves the ``OperationStore`` for a ``QueryRequest``.
@@ -160,7 +153,7 @@ extension OperationClient {
   public func store<Query: QueryRequest>(
     for query: sending Query.Default
   ) -> OperationStore<Query.Default.State> {
-    self.withStoreCreation(for: query) { $0(for: $1) }
+    self.withStoreCreation(for: query) { $0(for: $1.value) }
   }
 
   /// Retrieves the ``OperationStore`` for a ``PaginatedRequest``.
@@ -173,7 +166,7 @@ extension OperationClient {
     for query: sending Query,
     initialValue: Query.State.StateValue = []
   ) -> OperationStore<Query.State> {
-    self.withStoreCreation(for: query) { $0(for: $1, initialValue: initialValue) }
+    self.withStoreCreation(for: query) { $0(for: $1.value, initialValue: initialValue) }
   }
 
   /// Retrieves the ``OperationStore`` for a ``PaginatedRequest``.
@@ -184,7 +177,7 @@ extension OperationClient {
   public func store<Query: PaginatedRequest>(
     for query: sending Query.Default
   ) -> OperationStore<Query.Default.State> {
-    self.withStoreCreation(for: query) { $0(for: $1) }
+    self.withStoreCreation(for: query) { $0(for: $1.value) }
   }
 
   /// Retrieves the ``OperationStore`` for a ``MutationRequest``.
@@ -197,7 +190,7 @@ extension OperationClient {
     for mutation: sending Mutation,
     initialValue: Mutation.MutateValue? = nil
   ) -> OperationStore<Mutation.State> {
-    self.withStoreCreation(for: mutation) { $0(for: $1, initialValue: initialValue) }
+    self.withStoreCreation(for: mutation) { $0(for: $1.value, initialValue: initialValue) }
   }
 
   /// Retrieves the ``OperationStore`` for a ``MutationRequest``.
@@ -208,31 +201,30 @@ extension OperationClient {
   public func store<Mutation: MutationRequest>(
     for mutation: sending Mutation.Default
   ) -> OperationStore<Mutation.Default.State> {
-    self.withStoreCreation(for: mutation) { $0(for: $1) }
+    self.withStoreCreation(for: mutation) { $0(for: $1.value) }
   }
 
   private func withStoreCreation<Operation: StatefulOperationRequest>(
     for operation: sending Operation,
-    _ create:
-      @Sendable (
-        borrowing CreateStore,
-        sending Operation
-      ) -> OperationStore<Operation.State>
+    _ create: (
+      borrowing CreateStore,
+      sending UnsafeTransfer<Operation>
+    ) -> OperationStore<Operation.State>
   ) -> OperationStore<Operation.State> {
     let transfer = UnsafeTransfer(value: operation)
     return self.state.withLock { state in
-      let createStore = state.createStore()
+      let createStore = self.createStore(in: state)
       defer { state.operationTypes = createStore.operationTypes.value }
       let type = state.operationTypes[transfer.value.path]
-      return state.storeCache.withStores { stores in
+      return self.storeCache.withStores { stores in
         if let opaqueStore = stores[transfer.value.path] {
           if let type, type != Operation.self {
             reportWarning(.duplicatePath(expectedType: type, foundType: Operation.self))
-            return create(createStore, transfer.value)
+            return create(createStore, transfer)
           }
           return opaqueStore.base as! OperationStore<Operation.State>
         }
-        let store = create(createStore, transfer.value)
+        let store = create(createStore, transfer)
         stores.update(OpaqueOperationStore(erasing: store))
         return store
       }
@@ -250,7 +242,7 @@ extension OperationClient {
   /// - Parameter path: The path of the store.
   /// - Returns: An ``OpaqueOperationStore``.
   public func store(with path: OperationPath) -> OpaqueOperationStore? {
-    self.state.withLock { $0.storeCache.stores()[path] }
+    self.storeCache.stores()[path]
   }
 
   /// Returns a collection of fully-type erased stores matching the specified ``OperationPath``.
@@ -262,7 +254,7 @@ extension OperationClient {
   public func stores(
     matching path: OperationPath
   ) -> OperationPathableCollection<OpaqueOperationStore> {
-    self.state.withLock { $0.storeCache.stores().collection(matching: path) }
+    self.storeCache.stores().collection(matching: path)
   }
 
   /// Returns a collection of ``OperationStore`` instances matching the specified ``OperationPath``.
@@ -277,13 +269,11 @@ extension OperationClient {
     matching path: OperationPath,
     of stateType: State.Type
   ) -> OperationPathableCollection<OperationStore<State>> {
-    self.state.withLock { state in
-      OperationPathableCollection<OperationStore<State>>(
-        state.storeCache.stores()
-          .collection(matching: path)
-          .compactMap { $0.base as? OperationStore<State> }
-      )
-    }
+    OperationPathableCollection<OperationStore<State>>(
+      self.storeCache.stores()
+        .collection(matching: path)
+        .compactMap { $0.base as? OperationStore<State> }
+    )
   }
 }
 
@@ -296,9 +286,7 @@ extension OperationClient {
   ///
   /// - Parameter path: The path of the stores.
   public func clearStores(matching path: OperationPath = OperationPath()) {
-    self.state.withLock { state in
-      state.storeCache.withStores { $0.removeAll(matching: path) }
-    }
+    self.storeCache.withStores { $0.removeAll(matching: path) }
   }
 
   /// Removes the store with the specified ``OperationPath``.
@@ -309,9 +297,7 @@ extension OperationClient {
   /// - Returns: The removed store as an ``OpaqueOperationStore``.
   @discardableResult
   public func clearStore(with path: OperationPath) -> OpaqueOperationStore? {
-    self.state.withLock { state in
-      state.storeCache.withStores { $0.removeValue(forPath: path) }
-    }
+    self.storeCache.withStores { $0.removeValue(forPath: path) }
   }
 }
 
@@ -329,16 +315,15 @@ extension OperationClient {
   /// - Returns: Whatever `fn` returns.
   public func withStores<T>(
     matching path: OperationPath,
-    perform fn:
-      @Sendable (
-        inout OperationPathableCollection<OpaqueOperationStore>,
-        borrowing CreateStore
-      ) throws -> sending T
+    perform fn: (
+      inout OperationPathableCollection<OpaqueOperationStore>,
+      borrowing CreateStore
+    ) throws -> sending T
   ) rethrows -> T {
     try self.state.withLock { state in
-      let createStore = state.createStore()
+      let createStore = self.createStore(in: state)
       defer { state.operationTypes = createStore.operationTypes.value }
-      return try state.storeCache.withStores { stores in
+      return try self.storeCache.withStores { stores in
         let beforeEntries = stores.collection(matching: path)
         var afterEntries = beforeEntries
         let value = try fn(&afterEntries, createStore)
@@ -370,16 +355,15 @@ extension OperationClient {
   public func withStores<T, State: OperationState>(
     matching path: OperationPath,
     of stateType: State.Type,
-    perform fn:
-      @Sendable (
-        inout OperationPathableCollection<OperationStore<State>>,
-        borrowing CreateStore
-      ) throws -> sending T
+    perform fn: (
+      inout OperationPathableCollection<OperationStore<State>>,
+      borrowing CreateStore
+    ) throws -> sending T
   ) rethrows -> T {
     try self.state.withLock { state in
-      let createStore = state.createStore()
+      let createStore = self.createStore(in: state)
       defer { state.operationTypes = createStore.operationTypes.value }
-      return try state.storeCache.withStores { stores in
+      return try self.storeCache.withStores { stores in
         let beforeEntries = OperationPathableCollection<OperationStore<State>>(
           stores.collection(matching: path).compactMap { $0.base as? OperationStore<State> }
         )
@@ -398,6 +382,18 @@ extension OperationClient {
         return value
       }
     }
+  }
+}
+
+// MARK: - CreateStore Helper
+
+extension OperationClient {
+  private func createStore(in state: State) -> CreateStore {
+    CreateStore(
+      creator: self.storeCreator,
+      initialContext: state.initialContext,
+      operationTypes: MutableBox(value: state.operationTypes)
+    )
   }
 }
 

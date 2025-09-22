@@ -135,7 +135,6 @@ final class OperationKeyXCTests: XCTestCase, @unchecked Sendable {
     let expectation = self.expectation(description: "changes")
     let model = IsBackedModel()
 
-    let didChange = Lock(false)
     withPerceptionTracking {
       _ = model.$value.isBacked
     } onChange: {

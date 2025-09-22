@@ -72,7 +72,7 @@ package typealias MutationStoreEventsCollector<
 where State.Arguments: Equatable, State.StatusValue: Equatable
 
 extension MutationStoreEventsCollector {
-  package func eventHandler<State: _MutationStateProtocol>()
+  package func eventHandler<State: _MutationStateProtocol & SendableMetatype>()
     -> MutationEventHandler<State>
   where Event == MutationStoreEvent<State> {
     MutationEventHandler(
@@ -203,7 +203,7 @@ package typealias OperationStoreEventsCollector<
 > = _OperationStoreEventsCollector<OperationStoreEvent<State>> where State.OperationValue: Equatable
 
 extension OperationStoreEventsCollector {
-  package func eventHandler<State>() -> QueryEventHandler<State>
+  package func eventHandler<State: SendableMetatype>() -> QueryEventHandler<State>
   where Event == OperationStoreEvent<State> {
     QueryEventHandler(
       onStateChanged: { _, _ in self.events.withLock { $0.append(.stateChanged) } },

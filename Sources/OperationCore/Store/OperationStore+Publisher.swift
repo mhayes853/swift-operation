@@ -15,7 +15,7 @@
 
       fileprivate let store: OperationStore<State>
 
-      public func receive(subscriber: some Subscriber<Output, Failure>) {
+      public func receive(subscriber: some Subscriber<Output, Failure> & SendableMetatype) {
         let conduit = Conduit(subscriber: subscriber)
         let subscription = self.store.subscribe(
           with: OperationEventHandler { state, context in
