@@ -1,5 +1,9 @@
 // MARK: - OperationDuration
 
+/// A precise duration type that's usable for delays.
+///
+/// If available, you should use Swift's built-in `Duration` instead. This type exists for
+/// platforms where the built-in `Duration` is unavailable, and has a similar API to compensate.
 public struct OperationDuration: Hashable, Sendable {
   private var secondsComponent: Int64
   private var attosecondsComponent: Int64
@@ -8,6 +12,10 @@ public struct OperationDuration: Hashable, Sendable {
 // MARK: - Components
 
 extension OperationDuration {
+  /// The composite components of the duration.
+  ///
+  /// This is intended for facilitating conversions to existing time types. The
+  /// attoseconds value will not exceed 1e18 or be lower than -1e18.
   public var components: (seconds: Int64, attoseconds: Int64) {
     (secondsComponent, attosecondsComponent)
   }
@@ -26,12 +34,22 @@ extension OperationDuration: Comparable {
 // MARK: - Initializers
 
 extension OperationDuration {
+  /// Construct a duration given a number of nanoseconds represented as a `BinaryInteger`.
+  ///
+  ///       let d: OperationDuration = .nanoseconds(77)
+  ///
+  /// - Returns: A duration representing a given number of nanoseconds.
   public static func nanoseconds(_ value: some BinaryInteger) -> Self {
     let secs = Int64(value) / 1_000_000_000
     let attos = Int64(value % 1_000_000_000) * attosecondsPerNanosecond
     return Self(secondsComponent: secs, attosecondsComponent: attos)
   }
 
+  /// Construct a duration given a number of nanoseconds represented as a `BinaryFloatingPoint`.
+  ///
+  ///       let d: OperationDuration = .nanoseconds(77.77)
+  ///
+  /// - Returns: A duration representing a given number of nanoseconds.
   public static func nanoseconds<F: BinaryFloatingPoint>(_ value: F) -> Self {
     let secs = Int64(value) / 1_000_000_000
     let attos = Int64(
@@ -40,12 +58,22 @@ extension OperationDuration {
     return Self(secondsComponent: secs, attosecondsComponent: attos)
   }
 
+  /// Construct a duration given a number of microseconds represented as a `BinaryInteger`.
+  ///
+  ///       let d: OperationDuration = .microseconds(77)
+  ///
+  /// - Returns: A duration representing a given number of microseconds.
   public static func microseconds(_ value: some BinaryInteger) -> Self {
     let secs = Int64(value) / 1_000_000
     let attos = Int64(value % 1_000_000) * attosecondsPerMicrosecond
     return Self(secondsComponent: secs, attosecondsComponent: attos)
   }
 
+  /// Construct a duration given a number of microseconds represented as a `BinaryFloatingPoint`.
+  ///
+  ///       let d: OperationDuration = .microseconds(77.77)
+  ///
+  /// - Returns: A duration representing a given number of microseconds.
   public static func microseconds<F: BinaryFloatingPoint>(_ value: F) -> Self {
     let secs = Int64(value) / 1_000_000
     let attos = Int64(
@@ -54,22 +82,42 @@ extension OperationDuration {
     return Self(secondsComponent: secs, attosecondsComponent: attos)
   }
 
+  /// Construct a duration given a number of milliseconds represented as a `BinaryInteger`.
+  ///
+  ///       let d: OperationDuration = .milliseconds(77)
+  ///
+  /// - Returns: A duration representing a given number of milliseconds.
   public static func milliseconds(_ value: some BinaryInteger) -> Self {
     let secs = Int64(value) / 1000
     let attos = Int64(value) % 1000 * attosecondsPerMillisecond
     return Self(secondsComponent: secs, attosecondsComponent: attos)
   }
 
+  /// Construct a duration given a number of milliseconds represented as a `BinaryFloatingPoint`.
+  ///
+  ///       let d: OperationDuration = .milliseconds(77.77)
+  ///
+  /// - Returns: A duration representing a given number of milliseconds.
   public static func milliseconds<F: BinaryFloatingPoint>(_ value: F) -> Self {
     let secs = Int64(value) / 1000
     let attos = Int64(value.truncatingRemainder(dividingBy: 1000) * F(attosecondsPerMillisecond))
     return Self(secondsComponent: secs, attosecondsComponent: attos)
   }
 
+  /// Construct a duration given a number of seconds represented as a `BinaryInteger`.
+  ///
+  ///       let d: OperationDuration = .seconds(77)
+  ///
+  /// - Returns: A duration representing a given number of seconds.
   public static func seconds(_ value: some BinaryInteger) -> Self {
     Self(secondsComponent: Int64(value), attosecondsComponent: 0)
   }
 
+  /// Construct a duration given a number of seconds represented as a `BinaryFloatingPoint`.
+  ///
+  ///       let d: OperationDuration = .seconds(77.77)
+  ///
+  /// - Returns: A duration representing a given number of seconds.
   public static func seconds<F: BinaryFloatingPoint>(_ value: F) -> Self {
     let attos = Int64(value.truncatingRemainder(dividingBy: 1) * F(attosecondsPerSecond))
     return Self(secondsComponent: Int64(value), attosecondsComponent: attos)
@@ -82,16 +130,14 @@ extension OperationDuration: AdditiveArithmetic {
   public static let zero = Self(secondsComponent: 0, attosecondsComponent: 0)
 
   public static func + (lhs: Self, rhs: Self) -> Self {
-    guard rhs >= .zero else { return lhs - -rhs }
-    return Self.normalize(
+    Self.normalize(
       secs: lhs.secondsComponent &+ rhs.secondsComponent,
       attos: lhs.attosecondsComponent &+ rhs.attosecondsComponent
     )
   }
 
   public static func - (lhs: Self, rhs: Self) -> Self {
-    guard rhs >= .zero else { return lhs + -rhs }
-    return Self.normalize(
+    Self.normalize(
       secs: lhs.secondsComponent &- rhs.secondsComponent,
       attos: lhs.attosecondsComponent &- rhs.attosecondsComponent
     )
@@ -168,6 +214,9 @@ extension OperationDuration {
 
 @available(iOS 16.0, macOS 13.0, watchOS 9.0, tvOS 16.0, *)
 extension OperationDuration {
+  /// Creates a duration from Swift's built-in `Duration` type.
+  ///
+  /// - Parameter duration: A `Duration`.
   public init(duration: Duration) {
     let (secs, attos) = duration.components
     self.init(secondsComponent: secs, attosecondsComponent: attos)
@@ -176,6 +225,9 @@ extension OperationDuration {
 
 @available(iOS 16.0, macOS 13.0, watchOS 9.0, tvOS 16.0, *)
 extension Duration {
+  /// Creates a duration from an ``OperationDuration`` type.
+  ///
+  /// - Parameter duration: An ``OperationDuration``.
   public init(duration: OperationDuration) {
     let (secs, attos) = duration.components
     self.init(secondsComponent: secs, attosecondsComponent: attos)
@@ -189,12 +241,27 @@ extension OperationDuration: DurationProtocol {}
 
 @available(iOS 18.0, macOS 15.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
 extension OperationDuration {
+  /// Construct a duration from the given number of attoseconds.
+  ///
+  /// This directly constructs a `Duration` from the given number of attoseconds.
+  ///
+  ///     let d = Duration(attoseconds: 1_000_000_000_000_000_000)
+  ///     print(d) // 1.0 seconds
+  ///
+  /// - Parameter attoseconds: The total duration expressed in attoseconds.
   public init(attoseconds: Int128) {
     let seconds = Int64(attoseconds / Int128(attosecondsPerSecond))
     let attos = Int64(attoseconds % Int128(attosecondsPerSecond))
     self.init(secondsComponent: seconds, attosecondsComponent: attos)
   }
 
+  /// The number of attoseconds represented by this duration.
+  ///
+  /// This property provides direct access to the underlying number of attoseconds
+  /// that the current duration represents.
+  ///
+  ///     let d = OperationDuration.seconds(1)
+  ///     print(d.attoseconds) // 1_000_000_000_000_000_000
   public var attoseconds: Int128 {
     let attos = Int128(self.secondsComponent) * Int128(attosecondsPerSecond)
     return attos + Int128(self.attosecondsComponent)
