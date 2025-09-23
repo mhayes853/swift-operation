@@ -3,9 +3,9 @@
 
   ],
   "readiness" : {
-    "insight" : "Based on your information, you are somewhat ready for climbing Freel Peak, but there are areas for improvement. You are in your 20s and of average height and weight for your age. However, your activity level is sedentary, meaning your physical fitness is relatively low. Freel Peak is a difficult climb, so improving your fitness will be important. To prepare, start with short, regular walking or jogging sessions to gradually increase your stamina. Consider incorporating strength training exercises, particularly for your legs, to help manage the climb's challenges. Also, plan for longer hikes in the coming weeks to build your endurance. These actions will help you get closer to being ready for the climb.",
+    "insight" : "Based on your self-reported sedentary activity level and age in your 20s, along with the challenging difficulty rating of Freel Peak at 72 out of 100, you are not currently ready for this climb. Freel Peak is a difficult climb, and your current activity level may not support the physical demands involved. Consider gradually increasing your activity level and building up your stamina before attempting such a challenging climb.",
     "rating" : {
-      "partiallyReady" : {
+      "notReady" : {
 
       }
     }
