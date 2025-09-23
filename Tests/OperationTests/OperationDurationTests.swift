@@ -1,4 +1,5 @@
 import CustomDump
+import Foundation
 import Operation
 import Testing
 
@@ -310,5 +311,21 @@ struct OperationDurationTests {
   )
   func createsFromSecondsAndAttosecondsComponents(d1: OperationDuration, d2: OperationDuration) {
     expectNoDifference(d1, d2)
+  }
+
+  @Test(
+    "Codable",
+    arguments: [
+      OperationDuration.seconds(1),
+      .seconds(1.23),
+      .milliseconds(123_456),
+      .microseconds(123_456_789),
+      .nanoseconds(203_248_938_162),
+      .seconds(129.19)
+    ]
+  )
+  func codable(d: OperationDuration) throws {
+    let data = try JSONEncoder().encode(d)
+    expectNoDifference(try JSONDecoder().decode(OperationDuration.self, from: data), d)
   }
 }

@@ -44,12 +44,10 @@ public struct OperationDuration: Hashable, Sendable {
   ///   - attosecondsComponent: The attosecond component portion of the duration value.
   public init(secondsComponent: Int64, attosecondsComponent: Int64) {
     self.init(_secondsComponent: secondsComponent, _attosecondsComponent: 0)
-
-    let attosDuration = Self(
+    self += Self(
       _secondsComponent: attosecondsComponent / attosecondsPerSecond,
       _attosecondsComponent: attosecondsComponent % attosecondsPerSecond
     )
-    self += attosDuration
   }
 }
 
@@ -262,6 +260,25 @@ extension OperationDuration {
   }
 }
 
+// MARK: - Codable
+
+extension OperationDuration: Encodable {
+  public func encode(to encoder: any Encoder) throws {
+    var container = encoder.unkeyedContainer()
+    try container.encode(self.secondsComponent)
+    try container.encode(self.attosecondsComponent)
+  }
+}
+
+extension OperationDuration: Decodable {
+  public init(from decoder: any Decoder) throws {
+    var container = try decoder.unkeyedContainer()
+    let secs = try container.decode(Int64.self)
+    let attos = try container.decode(Int64.self)
+    self.init(_secondsComponent: secs, _attosecondsComponent: attos)
+  }
+}
+
 // MARK: - Duration Interop
 
 @available(iOS 16.0, macOS 13.0, watchOS 9.0, tvOS 16.0, *)
@@ -295,9 +312,9 @@ extension OperationDuration: DurationProtocol {}
 extension OperationDuration {
   /// Construct a duration from the given number of attoseconds.
   ///
-  /// This directly constructs a `Duration` from the given number of attoseconds.
+  /// This directly constructs a duration from the given number of attoseconds.
   ///
-  ///     let d = Duration(attoseconds: 1_000_000_000_000_000_000)
+  ///     let d = OperationDuration(attoseconds: 1_000_000_000_000_000_000)
   ///     print(d) // 1.0 seconds
   ///
   /// - Parameter attoseconds: The total duration expressed in attoseconds.
