@@ -1,48 +1,9 @@
 {
   "messages" : [
-    {
-      "content" : "'userLocation' tool called.",
-      "metadata" : {
-        "call.arguments" : {
-          "string" : {
-            "_0" : "Arguments()"
-          }
-        },
-        "call.duration" : {
-          "string" : {
-            "_0" : "0.000441875 seconds"
-          }
-        },
-        "call.result" : {
-          "string" : {
-            "_0" : "success(CanIClimbKit.UserLocationTool.Output.reading(CanIClimbKit.LocationReading.Generable(coordinate: CanIClimbKit.LocationCoordinate2D.Generable(latitude: 37.825858, longitude: -122.422202), altitudeAboveSeaLevelMeters: 0.0)))"
-          }
-        }
-      }
-    },
-    {
-      "content" : "'userVO2Max' tool called.",
-      "metadata" : {
-        "call.arguments" : {
-          "string" : {
-            "_0" : "Arguments(query: \"last 6 weeks\")"
-          }
-        },
-        "call.duration" : {
-          "string" : {
-            "_0" : "0.001182333 seconds"
-          }
-        },
-        "call.result" : {
-          "string" : {
-            "_0" : "success(CanIClimbKit.NumericHealthSamples(kind: CanIClimbKit.NumericHealthSamples.Kind.vo2Max, elements: [CanIClimbKit.NumericHealthSamples.Element(timestamp: 2025-09-23 19:42:14 +0000, value: 33.4)]))"
-          }
-        }
-      }
-    }
+
   ],
   "readiness" : {
-    "insight" : "Based on your partially ready rating, here are some preparation tips to enhance your climbing readiness. First, focus on gradually increasing your cardio fitness through regular cardiovascular exercise. Incorporate activities like running, cycling, or swimming into your routine at least 3-4 times a week to improve your VO2 max. Second, consider strength training exercises to build muscle endurance and support your body during the climb. Incorporate weightlifting and bodyweight exercises 2-3 times a week, targeting major muscle groups. Third, enhance your flexibility and balance with activities such as yoga or dynamic stretching, ideally 2-3 times a week to reduce the risk of injury. Lastly, plan a series of easier climbs to acclimate to the physical demands. Start with local hikes or trails that match or slightly exceed the difficulty of Freel Peak, gradually increasing the challenge as you build endurance and strength. Consult with a fitness professional to tailor a program that suits your current fitness level and progress.",
+    "insight" : "Based on your information, you are somewhat ready for climbing Freel Peak, but there are areas for improvement. You are in your 20s and of average height and weight for your age. However, your activity level is sedentary, meaning your physical fitness is relatively low. Freel Peak is a difficult climb, so improving your fitness will be important. To prepare, start with short, regular walking or jogging sessions to gradually increase your stamina. Consider incorporating strength training exercises, particularly for your legs, to help manage the climb's challenges. Also, plan for longer hikes in the coming weeks to build your endurance. These actions will help you get closer to being ready for the climb.",
     "rating" : {
       "partiallyReady" : {
 

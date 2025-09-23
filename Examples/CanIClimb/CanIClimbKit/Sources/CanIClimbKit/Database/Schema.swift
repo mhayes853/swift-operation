@@ -427,7 +427,7 @@ public func canIClimbDatabase(
   var configuration = Configuration()
   configuration.foreignKeysEnabled = isTesting
   configuration.prepareDatabase { db in
-    db.add(function: .localizedStandardContains)
+    db.add(function: $localizedStandardContains)
     db.addUUIDV7Functions()
     #if DEBUG
       if isTracingEnabled {
