@@ -38,7 +38,7 @@ extension CanIClimbAPI {
       return try (
         body.data(),
         HTTPURLResponse(
-          url: request.urlRequest(in: context).url!,
+          url: context.baseURL,
           statusCode: status,
           httpVersion: nil,
           headerFields: nil

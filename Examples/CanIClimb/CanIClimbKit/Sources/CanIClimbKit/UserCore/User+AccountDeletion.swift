@@ -50,11 +50,7 @@ extension User {
       @Dependency(User.AccountDeleterKey.self) var deleter
 
       try await deleter.delete()
-      let userStore = client.store(for: User.currentQuery)
-      userStore.withExclusiveAccess {
-        $0.currentValue = nil
-        $0.setResult(to: .failure(User.UnauthorizedError()))
-      }
+      client.store(for: User.currentQuery).withExclusiveAccess { $0.currentValue = .some(nil) }
     }
   }
 }

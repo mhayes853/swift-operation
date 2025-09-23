@@ -214,7 +214,8 @@ extension CanIClimbAPI {
 
   private func refreshAccessToken(in context: Request.Context) async throws -> String {
     let response = try await self.tokens.load {
-      let (data, _) = try await self.transport.send(request: .refreshAccessToken, in: context)
+      let (data, resp) = try await self.transport.send(request: .refreshAccessToken, in: context)
+      guard resp.statusCode != 401 else { throw User.UnauthorizedError() }
       return try JSONDecoder().decode(Tokens.Response.self, from: data)
     }
     return response.accessToken

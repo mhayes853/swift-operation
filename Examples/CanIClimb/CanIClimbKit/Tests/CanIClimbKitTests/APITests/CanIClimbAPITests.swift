@@ -2,6 +2,7 @@ import CanIClimbKit
 import CustomDump
 import Foundation
 import Operation
+import Synchronization
 import Testing
 
 @Suite("CanIClimbAPI tests")
@@ -102,6 +103,23 @@ struct CanIClimbAPITests {
     try await api.signIn(with: credentials)
     let user = try await api.user()
     expectNoDifference(user, userResponse)
+  }
+
+  @Test("Throws UnauthorizedError When Refreshing Access Token Fails")
+  func unauthorizedErrorWhenRefreshingAccessTokenFails() async throws {
+    let refreshCount = Mutex(0)
+    let api = CanIClimbAPI(
+      transport: CanIClimbAPI.MockDataTransport { request, context in
+        switch request {
+        case .refreshAccessToken: refreshCount.withLock { $0 += 1 }
+        default: break
+        }
+        return (401, .data(Data()))
+      },
+      tokens: self.tokens()
+    )
+    await #expect(throws: User.UnauthorizedError.self) { try await api.user() }
+    refreshCount.withLock { expectNoDifference($0, 1) }
   }
 
   @Test("Removes Refresh Token When Signing Out")
