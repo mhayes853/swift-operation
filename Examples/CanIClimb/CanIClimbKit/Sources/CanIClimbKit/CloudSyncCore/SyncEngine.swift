@@ -16,6 +16,8 @@ extension SyncEngine {
       OperationAnalysisRecord.self,
       ApplicationLaunchRecord.self,
       PlannedClimbAlarmRecord.self,
+      CachedPlannedClimbRecord.self,
+      CachedMountainRecord.self,
       containerIdentifier: CKContainer.canIClimb.containerIdentifier
     )
   }

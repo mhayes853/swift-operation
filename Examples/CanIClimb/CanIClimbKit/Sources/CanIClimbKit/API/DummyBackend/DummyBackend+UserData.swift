@@ -102,8 +102,9 @@ extension DummyBackend.UserData {
 
     private func access<T>(_ fn: (inout DummyBackend.UserData) throws -> T) throws -> T {
       if self.data == nil {
-        self.data = try JSONDecoder()
+        let savedData = try? JSONDecoder()
           .decode(DummyBackend.UserData.self, from: Data(contentsOf: .dummyBackendUserData))
+        self.data = savedData ?? DummyBackend.UserData()
       }
       let value = try fn(&self.data!)
       try JSONEncoder().encode(self.data!).write(to: .dummyBackendUserData)
