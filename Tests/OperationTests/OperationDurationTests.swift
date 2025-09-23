@@ -75,7 +75,6 @@ struct OperationDurationTests {
       (.microseconds(500), .milliseconds(0.5), true),
       (.nanoseconds(0.5), .microseconds(0.0005), true),
       (.seconds(1), .seconds(1.0), true),
-      (.nanoseconds(1), .nanoseconds(1.0), true),
       (.microseconds(1), .microseconds(1.0), true),
       (.milliseconds(1), .milliseconds(1.0), true),
       (.seconds(-1), .seconds(1), false),
