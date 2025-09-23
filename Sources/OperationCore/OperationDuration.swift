@@ -4,8 +4,10 @@ import Foundation
 
 /// A precise duration type that's usable for delays.
 ///
-/// If available, you should use Swift's built-in `Duration` instead. This type exists for
-/// platforms where the built-in `Duration` is unavailable, and has a similar API to compensate.
+/// The library uses this type because Swift's `Duration` is not available on all platforms the
+/// library supports. The API is nearly identical to the built-in `Duration`, and you can convert
+/// between this type and the built-in `Duration` with the ``OperationDuration/init(duration:)``
+/// and ``Swift/Duration/init(duration:)`` initializers.
 public struct OperationDuration: Hashable, Sendable {
   private var secondsComponent: Int64
   private var attosecondsComponent: Int64
@@ -185,7 +187,7 @@ extension OperationDuration: AdditiveArithmetic {
     )
   }
 
-  static func normalize(secs: Int64, attos: Int64) -> Self {
+  private static func normalize(secs: Int64, attos: Int64) -> Self {
     var s = secs
     var a = attos
     if a <= -attosecondsPerSecond || a >= attosecondsPerSecond {
@@ -208,11 +210,26 @@ extension OperationDuration: AdditiveArithmetic {
 // MARK: - Negation
 
 extension OperationDuration {
+  /// Negates this duration.
+  ///
+  /// This will flip the seconds and attoseconds components to their negative values when retrieved
+  /// from ``components``.
+  ///
+  /// - Parameter duration: The duration to negate.
+  /// - Returns: A negated duration.
   public static prefix func - (duration: Self) -> Self {
     Self(
       _secondsComponent: -duration.secondsComponent,
       _attosecondsComponent: -duration.attosecondsComponent
     )
+  }
+
+  /// Negates this duration.
+  ///
+  /// This will flip the seconds and attoseconds components to their negative values when retrieved
+  /// from ``components``.
+  public mutating func negate() {
+    self = -self
   }
 }
 
