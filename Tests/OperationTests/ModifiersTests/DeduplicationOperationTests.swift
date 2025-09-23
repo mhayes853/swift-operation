@@ -93,7 +93,7 @@ private final actor DeduplicationQuery: QueryRequest, Identifiable {
     with continuation: OperationContinuation<String, any Error>
   ) async throws -> String {
     // NB: Give enough time for deduplication.
-    try await TaskSleepDelayer.taskSleep.delay(for: 0.1)
+    try await TaskSleepDelayer.taskSleep.delay(for: .milliseconds(50))
     await isolate(self) { @Sendable in $0.fetchCount += 1 }
     return "blob"
   }
@@ -131,7 +131,7 @@ private final actor DeduplicationPaginated: PaginatedRequest, Identifiable {
     with continuation: OperationContinuation<String, any Error>
   ) async throws -> String {
     // NB: Give enough time for deduplication.
-    try await TaskSleepDelayer.taskSleep.delay(for: 0.1)
+    try await TaskSleepDelayer.taskSleep.delay(for: .milliseconds(50))
     await isolate(self) { @Sendable in $0.fetchCount += 1 }
     return "blob"
   }

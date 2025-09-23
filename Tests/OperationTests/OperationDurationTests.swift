@@ -269,4 +269,13 @@ struct OperationDurationTests {
     expectNoDifference(d.attoseconds, 123_456_789_123_456_789_123_456_789)
     expectNoDifference(d.components.seconds, 123_456_789)
   }
+
+  @Test("Random Stays In Range")
+  func randomStaysInRange() {
+    let r = (OperationDuration.seconds(100)..<(.seconds(1000.1)))
+    for _ in 0..<100_000 {
+      let d = OperationDuration.random(in: r)
+      expectNoDifference(r.contains(d), true)
+    }
+  }
 }

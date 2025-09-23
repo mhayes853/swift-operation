@@ -1,8 +1,5 @@
 import Foundation
 
-// TODO: - This should use some higher precision timing type. Duration cannot be used because it may
-// not be supported on some platforms (<iOS 16).
-
 // MARK: - OperationDelayer
 
 /// A protocol for artificially delaying operations.
@@ -11,10 +8,20 @@ import Foundation
 /// much more. You can use the ``OperationRequest/delayer(_:)`` modifier to override the delayer
 /// for an operation.
 public protocol OperationDelayer {
-  /// Delay for the specified number of seconds.
+  /// Delay for the specified ``OperationDuration``.
   ///
-  /// - Parameter seconds: The number of seconds to delay for.
-  func delay(for seconds: TimeInterval) async throws
+  /// - Parameter duration: The duration to delay for.
+  func delay(for duration: OperationDuration) async throws
+}
+
+@available(iOS 16.0, macOS 13.0, watchOS 9.0, tvOS 16.0, *)
+extension OperationDelayer {
+  /// Delay for the specified `OperationDuration`.
+  ///
+  /// - Parameter duration: The duration to delay for.
+  public func delay(for duration: Duration) async throws {
+    try await self.delay(for: OperationDuration(duration: duration))
+  }
 }
 
 // MARK: - Task Sleep Delayer
@@ -23,8 +30,8 @@ public protocol OperationDelayer {
 public struct TaskSleepDelayer: OperationDelayer, Sendable {
   public init() {}
 
-  public func delay(for seconds: TimeInterval) async throws {
-    try await Task.sleep(nanoseconds: UInt64(TimeInterval(NSEC_PER_SEC) * seconds))
+  public func delay(for duration: OperationDuration) async throws {
+    try await Task.sleep(nanoseconds: UInt64(duration.secondsDouble * nanosecondsPerSecond))
   }
 }
 
@@ -35,9 +42,7 @@ extension OperationDelayer where Self == TaskSleepDelayer {
   }
 }
 
-#if !canImport(Darwin)
-  private let NSEC_PER_SEC: UInt64 = 1_000_000_000
-#endif
+private let nanosecondsPerSecond = Double(1_000_000_000)
 
 // MARK: - Clock Delayer
 
@@ -50,8 +55,8 @@ public struct ClockDelayer<C: Clock>: OperationDelayer, Sendable where C.Duratio
     self.clock = clock
   }
 
-  public func delay(for seconds: TimeInterval) async throws {
-    try await clock.sleep(for: .seconds(seconds))
+  public func delay(for duration: OperationDuration) async throws {
+    try await clock.sleep(for: Duration(duration: duration))
   }
 }
 
@@ -75,7 +80,7 @@ public struct NoDelayer: OperationDelayer, Sendable {
   public init() {}
 
   @inlinable
-  public func delay(for seconds: TimeInterval) async throws {
+  public func delay(for duration: OperationDuration) async throws {
     try Task.checkCancellation()
   }
 }
@@ -100,8 +105,8 @@ public struct AnySendableDelayer: OperationDelayer, Sendable {
     self.base = base
   }
 
-  public func delay(for seconds: TimeInterval) async throws {
-    try await self.base.delay(for: seconds)
+  public func delay(for duration: OperationDuration) async throws {
+    try await self.base.delay(for: duration)
   }
 }
 

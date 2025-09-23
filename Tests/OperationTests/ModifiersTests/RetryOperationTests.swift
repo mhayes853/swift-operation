@@ -119,18 +119,24 @@ struct RetryOperationTests {
     let delayer = TestDelayer()
     let query = FailingQuery()
       .delayer(delayer)
-      .backoff(.linear(1000))
+      .backoff(.linear(.milliseconds(1000)))
       .retry(limit: 5)
     let store = OperationStore.detached(query: query, initialValue: nil)
     _ = try? await store.fetch()
-    expectNoDifference(delayer.delays, [1000, 2000, 3000, 4000, 5000])
+    expectNoDifference(
+      delayer.delays,
+      [
+        .milliseconds(1000), .milliseconds(2000), .milliseconds(3000), .milliseconds(4000),
+        .milliseconds(5000)
+      ]
+    )
   }
 
   @Test("Does Not Cancel If Operation Is Not Cancellable")
   func doesNotCancelIfOperationIsNotCancellable() async throws {
     let query = TestQuery()
       .delayer(.noDelay)
-      .backoff(.linear(1000))
+      .backoff(.linear(.milliseconds(1000)))
       .retry(limit: 5)
     let store = OperationStore.detached(query: query, initialValue: nil)
     let task = store.fetchTask()

@@ -1,3 +1,5 @@
+import Foundation
+
 // MARK: - OperationDuration
 
 /// A precise duration type that's usable for delays.
@@ -202,10 +204,18 @@ extension OperationDuration {
   }
 }
 
+// MARK: - CustomStringConvertible
+
+extension OperationDuration: CustomStringConvertible {
+  public var description: String {
+    "\(self.secondsDouble) seconds"
+  }
+}
+
 // MARK: - Seconds Double
 
 extension OperationDuration {
-  private var secondsDouble: Double {
+  var secondsDouble: Double {
     Double(secondsComponent) + Double(attosecondsComponent) / Double(attosecondsPerSecond)
   }
 }
@@ -265,6 +275,43 @@ extension OperationDuration {
   public var attoseconds: Int128 {
     let attos = Int128(self.secondsComponent) * Int128(attosecondsPerSecond)
     return attos + Int128(self.attosecondsComponent)
+  }
+}
+
+// MARK: - Random
+
+extension OperationDuration {
+  /// Generates a random duration in the specified `range`.
+  ///
+  /// - Parameter range: The range to generate in.
+  /// - Returns: A random duration in `range`.
+  public static func random(in range: Range<Self>) -> Self {
+    var generator = SystemRandomNumberGenerator()
+    return .random(in: range, using: &generator)
+  }
+  
+  /// Generates a random duration in the specified `range`.
+  ///
+  /// - Parameters:
+  ///   - range: The range to generate in.
+  ///   - generator: The `RandomNumberGenerator` to use.
+  /// - Returns: A random duration in `range`.
+  public static func random(
+    in range: Range<Self>,
+    using generator: inout some RandomNumberGenerator
+  ) -> Self {
+    let secs = Int64.random(
+      in: range.lowerBound.secondsComponent..<range.upperBound.secondsComponent,
+      using: &generator
+    )
+    var attos = Int64.random(in: 0..<attosecondsPerSecond, using: &generator)
+    if secs <= range.lowerBound.secondsComponent || secs >= range.upperBound.secondsComponent {
+      let next = attos.clamped(
+        in: range.lowerBound.attosecondsComponent..<range.upperBound.attosecondsComponent
+      )
+      attos = next ?? 0
+    }
+    return Self(secondsComponent: secs, attosecondsComponent: attos)
   }
 }
 

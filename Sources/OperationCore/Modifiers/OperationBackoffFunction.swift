@@ -5,19 +5,19 @@ import Foundation
 /// A backoff function to use for retrying operations.
 public struct OperationBackoffFunction: Sendable {
   private let _description: @Sendable () -> String
-  private let backoff: @Sendable (Int) -> TimeInterval
+  private let backoff: @Sendable (Int) -> OperationDuration
 
   /// Creates a backoff function using a closure you specify.
   ///
-  /// The current retry index is passed to your closure, and you must compute a `TimeInterval` for
-  /// how long the backoff should be (in seconds).
+  /// The current retry index is passed to your closure, and you must compute an
+  /// ``OperationDuration`` for how long the backoff should be.
   ///
   /// - Parameters:
   ///    - description: A description of the backoff function.
   ///    - backoff: A closure to compute the backoff.
   public init(
     _ description: @autoclosure @escaping @Sendable () -> String = "Custom",
-    _ backoff: @escaping @Sendable (Int) -> TimeInterval
+    _ backoff: @escaping @Sendable (Int) -> OperationDuration
   ) {
     self.backoff = backoff
     self._description = description
@@ -28,14 +28,14 @@ public struct OperationBackoffFunction: Sendable {
 
 extension OperationBackoffFunction {
   /// A backoff function that returns no backoff.
-  public static let noBackoff = Self("No Backoff") { _ in 0 }
+  public static let noBackoff = Self("No Backoff") { _ in .zero }
 
-  /// A constant backoff function that always returns the specified `interval`.
+  /// A constant backoff function that always returns the specified `duration`.
   ///
-  /// - Parameter interval: The backoff value/
+  /// - Parameter duration: The backoff value.
   /// - Returns: A constant backoff function.
-  public static func constant(_ interval: TimeInterval) -> Self {
-    Self("Constant \(interval.durationFormatted())") { _ in interval }
+  public static func constant(_ duration: OperationDuration) -> Self {
+    Self("Constant \(duration)") { _ in duration }
   }
 }
 
@@ -44,11 +44,11 @@ extension OperationBackoffFunction {
 extension OperationBackoffFunction {
   /// An exponential backoff function.
   ///
-  /// - Parameter interval: The base interval of backoff.
+  /// - Parameter duration: The base duration of backoff.
   /// - Returns: An exponential backoff function.
-  public static func exponential(_ interval: TimeInterval) -> Self {
-    Self("Exponential every \(interval.durationFormatted())") {
-      $0 == 0 ? 0 : interval * pow(2, TimeInterval($0 - 1))
+  public static func exponential(_ duration: OperationDuration) -> Self {
+    Self("Exponential every \(duration)") {
+      $0 == 0 ? .zero : duration * Int(pow(2, Double($0 - 1)))
     }
   }
 }
@@ -58,10 +58,10 @@ extension OperationBackoffFunction {
 extension OperationBackoffFunction {
   /// A linear backoff function.
   ///
-  /// - Parameter interval: The base interval of backoff.
+  /// - Parameter duration: The base duration of backoff.
   /// - Returns: A linear backoff function.
-  public static func linear(_ interval: TimeInterval) -> Self {
-    Self("Linear every \(interval.durationFormatted())") { TimeInterval($0) * interval }
+  public static func linear(_ duration: OperationDuration) -> Self {
+    Self("Linear every \(duration)") { duration * $0 }
   }
 }
 
@@ -70,12 +70,10 @@ extension OperationBackoffFunction {
 extension OperationBackoffFunction {
   /// A fibonacci backoff function.
   ///
-  /// - Parameter interval: The base interval of backoff.
+  /// - Parameter duration: The base duration of backoff.
   /// - Returns: A fibonacci backoff function.
-  public static func fibonacci(_ interval: TimeInterval) -> Self {
-    Self("Fibonacci every \(interval.durationFormatted())") {
-      TimeInterval(OperationCore.fibonacci($0)) * interval
-    }
+  public static func fibonacci(_ duration: OperationDuration) -> Self {
+    Self("Fibonacci every \(duration)") { duration * OperationCore.fibonacci($0) }
   }
 }
 
@@ -95,7 +93,7 @@ extension OperationBackoffFunction {
   ) -> Self {
     let generator = LockedBox(value: generator)
     return Self("\(self.rawDescription) with jitter") { attempt in
-      generator.inner.withLock { TimeInterval.random(in: 0..<self(attempt), using: &$0) }
+      generator.inner.withLock { .random(in: (.zero)..<self(attempt), using: &$0) }
     }
   }
 }
@@ -115,8 +113,8 @@ extension OperationBackoffFunction {
   /// ```
   ///
   /// - Parameter attempt: The current retry attempt.
-  /// - Returns: A `TimeInterval` for how long a query should wait before the next attempt.
-  public func callAsFunction(_ attempt: Int) -> TimeInterval {
+  /// - Returns: An ``OperationDuration`` for how long a query should wait before the next attempt.
+  public func callAsFunction(_ attempt: Int) -> OperationDuration {
     self.backoff(attempt)
   }
 }
@@ -163,13 +161,14 @@ public struct _OperationBackoffFunctionModifier<
 extension OperationContext {
   /// The current ``OperationBackoffFunction`` in this context.
   ///
-  /// The default value is ``OperationBackoffFunction/exponential(_:)`` with a base interval of 1 second.
+  /// The default value is ``OperationBackoffFunction/exponential(_:)`` with a base duration of 1
+  /// second.
   public var operationBackoffFunction: OperationBackoffFunction {
     get { self[OperationBackoffFunctionKey.self] }
     set { self[OperationBackoffFunctionKey.self] = newValue }
   }
 
   private enum OperationBackoffFunctionKey: Key {
-    static var defaultValue: OperationBackoffFunction { .exponential(1) }
+    static var defaultValue: OperationBackoffFunction { .exponential(.seconds(1)) }
   }
 }
