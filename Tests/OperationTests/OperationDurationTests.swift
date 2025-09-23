@@ -32,6 +32,7 @@ struct OperationDurationTests {
       (.microseconds(1), .microseconds(1.0), true),
       (.milliseconds(1), .milliseconds(1.0), true),
       (.seconds(-1), .seconds(1), false),
+      (.seconds(-1), -.seconds(1), true),
       (.seconds(-1), .seconds(-1), true),
       (.milliseconds(-1000), .seconds(-1), true),
       (.milliseconds(-1500), .seconds(-1.5), true),
@@ -201,5 +202,22 @@ struct OperationDurationTests {
   )
   func subtraction(d1: OperationDuration, d2: OperationDuration, subbed: OperationDuration) {
     expectNoDifference(d1 - d2, subbed)
+  }
+
+  @Test(
+    "Integer Multiplication",
+    arguments: [
+      (OperationDuration.seconds(1), 0, OperationDuration.zero),
+      (.seconds(1), 10, .seconds(10)),
+      (.seconds(5), 10, .seconds(50)),
+      (.milliseconds(5500), 10, .seconds(55)),
+      (.nanoseconds(5123), 126, .nanoseconds(645_498)),
+      (.nanoseconds(5123), -126, .nanoseconds(-645_498)),
+      (.nanoseconds(-5123), 126, .nanoseconds(-645_498)),
+      (.nanoseconds(-5123), -126, .nanoseconds(645_498))
+    ]
+  )
+  func integerMultiplication(d1: OperationDuration, d2: Int, multiplied: OperationDuration) {
+    expectNoDifference(d1 * d2, multiplied)
   }
 }

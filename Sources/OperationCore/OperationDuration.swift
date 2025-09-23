@@ -117,12 +117,55 @@ extension OperationDuration: AdditiveArithmetic {
   }
 }
 
+// MARK: - Negation
+
 extension OperationDuration {
   public static prefix func - (duration: Self) -> Self {
     Self(
       secondsComponent: -duration.secondsComponent,
       attosecondsComponent: -duration.attosecondsComponent
     )
+  }
+}
+
+// MARK: - Multiplication
+
+extension OperationDuration {
+  public static func * (lhs: Self, rhs: Self) -> Self {
+    .zero
+  }
+
+  public static func *= (lhs: inout Self, rhs: Self) {
+    lhs = lhs * rhs
+  }
+
+  public static func * (lhs: Self, rhs: Int) -> Self {
+    let factor = Int64(abs(rhs))
+    let combinedAttos = lhs.attosecondsComponent * factor
+    let attos = combinedAttos % attosecondsPerSecond
+    let secs = lhs.secondsComponent * factor + Int64(combinedAttos / attosecondsPerSecond)
+    let multiplied = Self(secondsComponent: secs, attosecondsComponent: attos)
+    return rhs < 0 ? -multiplied : multiplied
+  }
+
+  public static func *= (lhs: inout Self, rhs: Int) {
+    lhs = lhs * rhs
+  }
+}
+
+// MARK: - Division
+
+extension OperationDuration {
+  public static func / (lhs: Self, rhs: Self) -> Double {
+    .zero
+  }
+
+  public static func / (lhs: Self, rhs: Int) -> Self {
+    .zero
+  }
+
+  public static func /= (lhs: inout Self, rhs: Int) {
+    lhs = lhs / rhs
   }
 }
 
@@ -143,6 +186,9 @@ extension Duration {
     self.init(secondsComponent: secs, attosecondsComponent: attos)
   }
 }
+
+@available(iOS 16.0, macOS 13.0, watchOS 9.0, tvOS 16.0, *)
+extension OperationDuration: DurationProtocol {}
 
 // MARK: - Constants
 
