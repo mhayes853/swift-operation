@@ -278,4 +278,37 @@ struct OperationDurationTests {
       expectNoDifference(r.contains(d), true)
     }
   }
+
+  @Test(
+    "Creates From Seconds And Attoseconds Components",
+    arguments: [
+      (
+        OperationDuration(secondsComponent: 1, attosecondsComponent: 2_000_000_000_000_000_000),
+        OperationDuration.seconds(3)
+      ),
+      (
+        OperationDuration(secondsComponent: 1, attosecondsComponent: 1_500_000_000_000_000_000),
+        .seconds(2.5)
+      ),
+      (
+        OperationDuration(secondsComponent: 1, attosecondsComponent: 500_000_000_000_000_000),
+        .seconds(1.5)
+      ),
+      (
+        OperationDuration(secondsComponent: 1, attosecondsComponent: -500_000_000_000_000_000),
+        .seconds(0.5)
+      ),
+      (
+        OperationDuration(secondsComponent: -1, attosecondsComponent: -500_000_000_000_000_000),
+        .seconds(-1.5)
+      ),
+      (
+        OperationDuration(secondsComponent: -1, attosecondsComponent: 500_000_000_000_000_000),
+        .seconds(-0.5)
+      )
+    ]
+  )
+  func createsFromSecondsAndAttosecondsComponents(d1: OperationDuration, d2: OperationDuration) {
+    expectNoDifference(d1, d2)
+  }
 }

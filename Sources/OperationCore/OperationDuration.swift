@@ -9,6 +9,48 @@ import Foundation
 public struct OperationDuration: Hashable, Sendable {
   private var secondsComponent: Int64
   private var attosecondsComponent: Int64
+
+  private init(_secondsComponent: Int64, _attosecondsComponent: Int64) {
+    self.secondsComponent = _secondsComponent
+    self.attosecondsComponent = _attosecondsComponent
+  }
+
+  /// Construct a duration by adding attoseconds to a seconds value.
+  ///
+  /// This is useful for when an external decomposed components of a duration
+  /// has been stored and needs to be reconstituted. Since the values are added
+  /// no precondition is expressed for the attoseconds being limited to 1e18.
+  ///
+  ///       let d1 = OperationDuration(
+  ///         secondsComponent: 3,
+  ///         attosecondsComponent: 123000000000000000
+  ///       )
+  ///       print(d1) // 3.123 seconds
+  ///
+  ///       let d2 = OperationDuration(
+  ///         secondsComponent: 3,
+  ///         attosecondsComponent: -123000000000000000
+  ///       )
+  ///       print(d2) // 2.877 seconds
+  ///
+  ///       let d3 = OperationDuration(
+  ///         secondsComponent: -3,
+  ///         attosecondsComponent: -123000000000000000
+  ///       )
+  ///       print(d3) // -3.123 seconds
+  ///
+  /// - Parameters:
+  ///   - secondsComponent: The seconds component portion of the duration value.
+  ///   - attosecondsComponent: The attosecond component portion of the duration value.
+  public init(secondsComponent: Int64, attosecondsComponent: Int64) {
+    self.init(_secondsComponent: secondsComponent, _attosecondsComponent: 0)
+
+    let attosDuration = Self(
+      _secondsComponent: attosecondsComponent / attosecondsPerSecond,
+      _attosecondsComponent: attosecondsComponent % attosecondsPerSecond
+    )
+    self += attosDuration
+  }
 }
 
 // MARK: - Components
@@ -44,7 +86,7 @@ extension OperationDuration {
   public static func nanoseconds(_ value: some BinaryInteger) -> Self {
     let secs = Int64(value) / 1_000_000_000
     let attos = Int64(value % 1_000_000_000) * attosecondsPerNanosecond
-    return Self(secondsComponent: secs, attosecondsComponent: attos)
+    return Self(_secondsComponent: secs, _attosecondsComponent: attos)
   }
 
   /// Construct a duration given a number of nanoseconds represented as a `BinaryFloatingPoint`.
@@ -57,7 +99,7 @@ extension OperationDuration {
     let attos = Int64(
       value.truncatingRemainder(dividingBy: 1_000_000_000) * F(attosecondsPerNanosecond)
     )
-    return Self(secondsComponent: secs, attosecondsComponent: attos)
+    return Self(_secondsComponent: secs, _attosecondsComponent: attos)
   }
 
   /// Construct a duration given a number of microseconds represented as a `BinaryInteger`.
@@ -68,7 +110,7 @@ extension OperationDuration {
   public static func microseconds(_ value: some BinaryInteger) -> Self {
     let secs = Int64(value) / 1_000_000
     let attos = Int64(value % 1_000_000) * attosecondsPerMicrosecond
-    return Self(secondsComponent: secs, attosecondsComponent: attos)
+    return Self(_secondsComponent: secs, _attosecondsComponent: attos)
   }
 
   /// Construct a duration given a number of microseconds represented as a `BinaryFloatingPoint`.
@@ -81,7 +123,7 @@ extension OperationDuration {
     let attos = Int64(
       value.truncatingRemainder(dividingBy: 1_000_000) * F(attosecondsPerMicrosecond)
     )
-    return Self(secondsComponent: secs, attosecondsComponent: attos)
+    return Self(_secondsComponent: secs, _attosecondsComponent: attos)
   }
 
   /// Construct a duration given a number of milliseconds represented as a `BinaryInteger`.
@@ -92,7 +134,7 @@ extension OperationDuration {
   public static func milliseconds(_ value: some BinaryInteger) -> Self {
     let secs = Int64(value) / 1000
     let attos = Int64(value) % 1000 * attosecondsPerMillisecond
-    return Self(secondsComponent: secs, attosecondsComponent: attos)
+    return Self(_secondsComponent: secs, _attosecondsComponent: attos)
   }
 
   /// Construct a duration given a number of milliseconds represented as a `BinaryFloatingPoint`.
@@ -103,7 +145,7 @@ extension OperationDuration {
   public static func milliseconds<F: BinaryFloatingPoint>(_ value: F) -> Self {
     let secs = Int64(value) / 1000
     let attos = Int64(value.truncatingRemainder(dividingBy: 1000) * F(attosecondsPerMillisecond))
-    return Self(secondsComponent: secs, attosecondsComponent: attos)
+    return Self(_secondsComponent: secs, _attosecondsComponent: attos)
   }
 
   /// Construct a duration given a number of seconds represented as a `BinaryInteger`.
@@ -112,7 +154,7 @@ extension OperationDuration {
   ///
   /// - Returns: A duration representing a given number of seconds.
   public static func seconds(_ value: some BinaryInteger) -> Self {
-    Self(secondsComponent: Int64(value), attosecondsComponent: 0)
+    Self(_secondsComponent: Int64(value), _attosecondsComponent: 0)
   }
 
   /// Construct a duration given a number of seconds represented as a `BinaryFloatingPoint`.
@@ -122,7 +164,7 @@ extension OperationDuration {
   /// - Returns: A duration representing a given number of seconds.
   public static func seconds<F: BinaryFloatingPoint>(_ value: F) -> Self {
     let attos = Int64(value.truncatingRemainder(dividingBy: 1) * F(attosecondsPerSecond))
-    return Self(secondsComponent: Int64(value), attosecondsComponent: attos)
+    return Self(_secondsComponent: Int64(value), _attosecondsComponent: attos)
   }
 }
 
@@ -161,7 +203,7 @@ extension OperationDuration: AdditiveArithmetic {
       s &+= 1
       a &-= attosecondsPerSecond
     }
-    return Self(secondsComponent: s, attosecondsComponent: a)
+    return Self(_secondsComponent: s, _attosecondsComponent: a)
   }
 }
 
@@ -170,8 +212,8 @@ extension OperationDuration: AdditiveArithmetic {
 extension OperationDuration {
   public static prefix func - (duration: Self) -> Self {
     Self(
-      secondsComponent: -duration.secondsComponent,
-      attosecondsComponent: -duration.attosecondsComponent
+      _secondsComponent: -duration.secondsComponent,
+      _attosecondsComponent: -duration.attosecondsComponent
     )
   }
 }
@@ -229,7 +271,7 @@ extension OperationDuration {
   /// - Parameter duration: A `Duration`.
   public init(duration: Duration) {
     let (secs, attos) = duration.components
-    self.init(secondsComponent: secs, attosecondsComponent: attos)
+    self.init(_secondsComponent: secs, _attosecondsComponent: attos)
   }
 }
 
@@ -262,7 +304,7 @@ extension OperationDuration {
   public init(attoseconds: Int128) {
     let seconds = Int64(attoseconds / Int128(attosecondsPerSecond))
     let attos = Int64(attoseconds % Int128(attosecondsPerSecond))
-    self.init(secondsComponent: seconds, attosecondsComponent: attos)
+    self.init(_secondsComponent: seconds, _attosecondsComponent: attos)
   }
 
   /// The number of attoseconds represented by this duration.
@@ -289,7 +331,7 @@ extension OperationDuration {
     var generator = SystemRandomNumberGenerator()
     return .random(in: range, using: &generator)
   }
-  
+
   /// Generates a random duration in the specified `range`.
   ///
   /// - Parameters:
@@ -311,7 +353,7 @@ extension OperationDuration {
       )
       attos = next ?? 0
     }
-    return Self(secondsComponent: secs, attosecondsComponent: attos)
+    return Self(_secondsComponent: secs, _attosecondsComponent: attos)
   }
 }
 
