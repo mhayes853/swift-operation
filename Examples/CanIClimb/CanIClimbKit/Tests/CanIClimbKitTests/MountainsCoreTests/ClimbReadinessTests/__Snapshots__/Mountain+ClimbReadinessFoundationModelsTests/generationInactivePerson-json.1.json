@@ -1,11 +1,50 @@
 {
   "messages" : [
-
+    {
+      "content" : "'userLocation' tool called.",
+      "metadata" : {
+        "call.arguments" : {
+          "string" : {
+            "_0" : "Arguments()"
+          }
+        },
+        "call.duration" : {
+          "string" : {
+            "_0" : "0.0004415 seconds"
+          }
+        },
+        "call.result" : {
+          "string" : {
+            "_0" : "success(CanIClimbKit.UserLocationTool.Output.reading(CanIClimbKit.LocationReading.Generable(coordinate: CanIClimbKit.LocationCoordinate2D.Generable(latitude: 37.825858, longitude: -122.422202), altitudeAboveSeaLevelMeters: 0.0)))"
+          }
+        }
+      }
+    },
+    {
+      "content" : "'userVO2Max' tool called.",
+      "metadata" : {
+        "call.arguments" : {
+          "string" : {
+            "_0" : "Arguments(query: \"last 6 weeks\")"
+          }
+        },
+        "call.duration" : {
+          "string" : {
+            "_0" : "0.001115583 seconds"
+          }
+        },
+        "call.result" : {
+          "string" : {
+            "_0" : "success(CanIClimbKit.NumericHealthSamples(kind: CanIClimbKit.NumericHealthSamples.Kind.vo2Max, elements: [CanIClimbKit.NumericHealthSamples.Element(timestamp: 2025-09-23 21:05:10 +0000, value: 33.4)]))"
+          }
+        }
+      }
+    }
   ],
   "readiness" : {
-    "insight" : "Based on your self-reported sedentary activity level and age in your 20s, along with the challenging difficulty rating of Freel Peak at 72 out of 100, you are not currently ready for this climb. Freel Peak is a difficult climb, and your current activity level may not support the physical demands involved. Consider gradually increasing your activity level and building up your stamina before attempting such a challenging climb.",
+    "insight" : "Based on your VO2 Max of 33.4 ml\/kg\/min and your sedentary activity level, you are somewhat prepared for climbing Freel Peak. Freel Peak has a climbing difficulty rating of 72.0 out of 100, indicating a challenging climb. To improve your readiness, consider incorporating regular cardiovascular exercises, strength training, and gradually increasing your hiking or climbing activities. Aim for at least 3-4 days of moderate exercise per week, and consider joining a local hiking group for guidance and motivation. Additionally, ensure you are acclimating properly by gradually increasing your elevation exposure.",
     "rating" : {
-      "notReady" : {
+      "partiallyReady" : {
 
       }
     }

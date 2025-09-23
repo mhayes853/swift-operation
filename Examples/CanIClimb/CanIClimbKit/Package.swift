@@ -10,6 +10,7 @@ let package = Package(
     .library(name: "CanIClimbKit", targets: ["CanIClimbKit"])
   ],
   dependencies: [
+    .package(url: "https://github.com/pointfreeco/swift-tagged", from: "0.10.0"),
     .package(
       url: "https://github.com/mhayes853/swift-operation",
       branch: "main",
@@ -17,12 +18,12 @@ let package = Package(
     ),
     .package(
       url: "https://github.com/pointfreeco/swift-structured-queries",
-      from: "0.19.0",
+      from: "0.20.0",
       traits: ["StructuredQueriesTagged"]
     ),
     .package(
-      url: "https://github.com/pointfreeco/sharing-grdb",
-      branch: "cloudkit",
+      url: "https://github.com/pointfreeco/sqlite-data",
+      from: "1.0.0",
       traits: ["SQLiteDataTagged"]
     ),
     .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.9.2"),
@@ -30,7 +31,7 @@ let package = Package(
     .package(url: "https://github.com/evgenyneu/keychain-swift", from: "24.0.0"),
     .package(
       url: "https://github.com/mhayes853/swift-uuidv7",
-      branch: "sharing-grdb-icloud",
+      from: "0.3.0",
       traits: ["SwiftUUIDV7SQLiteData", "SwiftUUIDV7Tagged", "SwiftUUIDV7Dependencies"]
     ),
     .package(url: "https://github.com/apple/swift-collections", from: "1.2.1"),
@@ -43,7 +44,7 @@ let package = Package(
       name: "CanIClimbKit",
       dependencies: [
         .product(name: "SharingOperation", package: "swift-operation"),
-        .product(name: "SQLiteData", package: "sharing-grdb"),
+        .product(name: "SQLiteData", package: "sqlite-data"),
         .product(name: "SwiftUINavigation", package: "swift-navigation"),
         .product(name: "UIKitNavigation", package: "swift-navigation"),
         .product(name: "KeychainSwift", package: "keychain-swift"),

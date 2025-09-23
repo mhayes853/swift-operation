@@ -1,5 +1,5 @@
 {
-  "originHash" : "bd779e3874ee39e81b401c544b4fdab7e52c35fa0773146623f46914a838f0f4",
+  "originHash" : "5efd7993b02b2e1f0c2c6a0d36ea1966972321346ca058e32cfe3d7c27017d3e",
   "pins" : [
     {
       "identity" : "combine-schedulers",
@@ -47,12 +47,12 @@
       }
     },
     {
-      "identity" : "sharing-grdb",
+      "identity" : "sqlite-data",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/pointfreeco/sharing-grdb",
+      "location" : "https://github.com/pointfreeco/sqlite-data",
       "state" : {
-        "branch" : "cloudkit",
-        "revision" : "ddf30401bf5dcfed58c3cfb8189604acf26e6f12"
+        "revision" : "7d1ffa5e20e34eb5f857a0765081a6ef6408d268",
+        "version" : "1.0.0"
       }
     },
     {
@@ -150,8 +150,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-navigation",
       "state" : {
-        "revision" : "6b7f44d218e776bb7a5246efb940440d57c8b2cf",
-        "version" : "2.4.2"
+        "revision" : "65806ffbc9eb3be026b56fafaf26de0bb8b132de",
+        "version" : "2.5.0"
       }
     },
     {
@@ -222,8 +222,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/mhayes853/swift-uuidv7",
       "state" : {
-        "branch" : "sharing-grdb-icloud",
-        "revision" : "b006c29a8b1e2a1bcdf44a0ca6ef79c9c71284ee"
+        "revision" : "02c3e05095347a2649846c199adbde756f0c2e90",
+        "version" : "0.3.0"
       }
     },
     {
