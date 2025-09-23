@@ -28,37 +28,41 @@ extension OperationDuration: Comparable {
 extension OperationDuration {
   public static func nanoseconds(_ value: some BinaryInteger) -> Self {
     let secs = Int64(value) / 1_000_000_000
-    let attos = Int64(value % 1_000_000_000) * 1_000_000_000
+    let attos = Int64(value % 1_000_000_000) * attosecondsPerNanosecond
     return Self(secondsComponent: secs, attosecondsComponent: attos)
   }
 
-  public static func nanoseconds(_ value: some BinaryFloatingPoint) -> Self {
+  public static func nanoseconds<F: BinaryFloatingPoint>(_ value: F) -> Self {
     let secs = Int64(value) / 1_000_000_000
-    let attos = Int64(value.truncatingRemainder(dividingBy: 1_000_000_000) * 1_000_000_000)
+    let attos = Int64(
+      value.truncatingRemainder(dividingBy: 1_000_000_000) * F(attosecondsPerNanosecond)
+    )
     return Self(secondsComponent: secs, attosecondsComponent: attos)
   }
 
   public static func microseconds(_ value: some BinaryInteger) -> Self {
     let secs = Int64(value) / 1_000_000
-    let attos = Int64(value % 1_000_000) * 1_000_000_000_000
+    let attos = Int64(value % 1_000_000) * attosecondsPerMicrosecond
     return Self(secondsComponent: secs, attosecondsComponent: attos)
   }
 
-  public static func microseconds(_ value: some BinaryFloatingPoint) -> Self {
+  public static func microseconds<F: BinaryFloatingPoint>(_ value: F) -> Self {
     let secs = Int64(value) / 1_000_000
-    let attos = Int64(value.truncatingRemainder(dividingBy: 1_000_000) * 1_000_000_000_000)
+    let attos = Int64(
+      value.truncatingRemainder(dividingBy: 1_000_000) * F(attosecondsPerMicrosecond)
+    )
     return Self(secondsComponent: secs, attosecondsComponent: attos)
   }
 
   public static func milliseconds(_ value: some BinaryInteger) -> Self {
     let secs = Int64(value) / 1000
-    let attos = Int64(value) % 1000 * 1_000_000_000_000_000
+    let attos = Int64(value) % 1000 * attosecondsPerMillisecond
     return Self(secondsComponent: secs, attosecondsComponent: attos)
   }
 
-  public static func milliseconds(_ value: some BinaryFloatingPoint) -> Self {
+  public static func milliseconds<F: BinaryFloatingPoint>(_ value: F) -> Self {
     let secs = Int64(value) / 1000
-    let attos = Int64(value.truncatingRemainder(dividingBy: 1000) * 1_000_000_000_000_000)
+    let attos = Int64(value.truncatingRemainder(dividingBy: 1000) * F(attosecondsPerMillisecond))
     return Self(secondsComponent: secs, attosecondsComponent: attos)
   }
 
@@ -143,3 +147,6 @@ extension Duration {
 // MARK: - Constants
 
 private let attosecondsPerSecond = Int64(1_000_000_000_000_000_000)
+private let attosecondsPerMillisecond = Int64(1_000_000_000_000_000)
+private let attosecondsPerMicrosecond = Int64(1_000_000_000_000)
+private let attosecondsPerNanosecond = Int64(1_000_000_000)
