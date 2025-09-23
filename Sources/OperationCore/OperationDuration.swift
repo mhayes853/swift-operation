@@ -131,21 +131,8 @@ extension OperationDuration {
 // MARK: - Multiplication
 
 extension OperationDuration {
-  public static func * (lhs: Self, rhs: Self) -> Self {
-    .zero
-  }
-
-  public static func *= (lhs: inout Self, rhs: Self) {
-    lhs = lhs * rhs
-  }
-
   public static func * (lhs: Self, rhs: Int) -> Self {
-    let factor = Int64(abs(rhs))
-    let combinedAttos = lhs.attosecondsComponent * factor
-    let attos = combinedAttos % attosecondsPerSecond
-    let secs = lhs.secondsComponent * factor + Int64(combinedAttos / attosecondsPerSecond)
-    let multiplied = Self(secondsComponent: secs, attosecondsComponent: attos)
-    return rhs < 0 ? -multiplied : multiplied
+    .seconds(lhs.secondsDouble * Double(rhs))
   }
 
   public static func *= (lhs: inout Self, rhs: Int) {
@@ -157,15 +144,23 @@ extension OperationDuration {
 
 extension OperationDuration {
   public static func / (lhs: Self, rhs: Self) -> Double {
-    .zero
+    lhs.secondsDouble / rhs.secondsDouble
   }
 
   public static func / (lhs: Self, rhs: Int) -> Self {
-    .zero
+    .seconds(lhs.secondsDouble / Double(rhs))
   }
 
   public static func /= (lhs: inout Self, rhs: Int) {
     lhs = lhs / rhs
+  }
+}
+
+// MARK: - Seconds Double
+
+extension OperationDuration {
+  private var secondsDouble: Double {
+    Double(secondsComponent) + Double(attosecondsComponent) / Double(attosecondsPerSecond)
   }
 }
 

@@ -220,4 +220,45 @@ struct OperationDurationTests {
   func integerMultiplication(d1: OperationDuration, d2: Int, multiplied: OperationDuration) {
     expectNoDifference(d1 * d2, multiplied)
   }
+
+  @Test(
+    "Integer Division",
+    arguments: [
+      (OperationDuration.seconds(1), 1, OperationDuration.seconds(1)),
+      (.zero, 10, .zero),
+      (.seconds(1), 10, .milliseconds(100)),
+      (.seconds(5), 10, .milliseconds(500)),
+      (.milliseconds(5500), 10, .seconds(0.55)),
+      (.nanoseconds(5123), 1, .nanoseconds(5123)),
+      (.nanoseconds(5000), 100, .nanoseconds(50)),
+      (.nanoseconds(-5000), 100, .nanoseconds(-50)),
+      (.nanoseconds(5000), -100, .nanoseconds(-50)),
+      (.nanoseconds(-5000), -100, .nanoseconds(50))
+    ]
+  )
+  func integerDivision(d1: OperationDuration, d2: Int, divided: OperationDuration) {
+    expectNoDifference(d1 / d2, divided)
+  }
+
+  @Test(
+    "Division",
+    arguments: [
+      (OperationDuration.seconds(1), OperationDuration.seconds(1), 1),
+      (.nanoseconds(5), .milliseconds(2), 2.5e-06),
+      (.milliseconds(5), .milliseconds(5), 1),
+      (.milliseconds(5), .microseconds(2), 2500),
+      (.milliseconds(5), .milliseconds(2), 2.5),
+      (.nanoseconds(5), .nanoseconds(5), 1),
+      (.nanoseconds(5), .seconds(5), 1e-09),
+      (.milliseconds(5), .milliseconds(-2), -2.5),
+      (.milliseconds(-5), .milliseconds(2), -2.5),
+      (.milliseconds(-5), .milliseconds(-2), 2.5),
+      (.microseconds(55), .milliseconds(100), 0.00055),
+      (.milliseconds(55), .microseconds(123), 447.1544715447154),
+      (.milliseconds(5.75), .microseconds(2), 2875)
+    ]
+  )
+  func division(d1: OperationDuration, d2: OperationDuration, divided: Double) {
+    expectNoDifference(d1 / d2, divided)
+  }
 }
