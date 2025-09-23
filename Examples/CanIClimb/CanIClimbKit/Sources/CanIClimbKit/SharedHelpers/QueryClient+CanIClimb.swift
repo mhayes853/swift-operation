@@ -9,8 +9,8 @@ extension OperationClient {
 // MARK: - CanIClimbStoreCreator
 
 extension OperationClient {
-  public struct CanIClimbStoreCreator: StoreCreator {
-    let base: any StoreCreator
+  public struct CanIClimbStoreCreator: StoreCreator, Sendable {
+    let base: any StoreCreator & Sendable
 
     public func store<Operation: StatefulOperationRequest & Sendable>(
       for query: Operation,
@@ -27,7 +27,7 @@ extension OperationClient.StoreCreator where Self == OperationClient.CanIClimbSt
     OperationClient.CanIClimbStoreCreator(base: .default())
   }
 
-  public static func canIClimb(_ base: any OperationClient.StoreCreator) -> Self {
+  public static func canIClimb(_ base: any OperationClient.StoreCreator & Sendable) -> Self {
     OperationClient.CanIClimbStoreCreator(base: base)
   }
 }

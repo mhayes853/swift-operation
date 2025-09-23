@@ -10,7 +10,7 @@
         },
         "call.duration" : {
           "string" : {
-            "_0" : "0.000387417 seconds"
+            "_0" : "0.000441875 seconds"
           }
         },
         "call.result" : {
@@ -30,19 +30,19 @@
         },
         "call.duration" : {
           "string" : {
-            "_0" : "0.001019458 seconds"
+            "_0" : "0.001182333 seconds"
           }
         },
         "call.result" : {
           "string" : {
-            "_0" : "success(CanIClimbKit.NumericHealthSamples(kind: CanIClimbKit.NumericHealthSamples.Kind.vo2Max, elements: [CanIClimbKit.NumericHealthSamples.Element(timestamp: 2025-09-14 03:50:01 +0000, value: 33.4)]))"
+            "_0" : "success(CanIClimbKit.NumericHealthSamples(kind: CanIClimbKit.NumericHealthSamples.Kind.vo2Max, elements: [CanIClimbKit.NumericHealthSamples.Element(timestamp: 2025-09-23 19:42:14 +0000, value: 33.4)]))"
           }
         }
       }
     }
   ],
   "readiness" : {
-    "insight" : "Based on your partially ready rating, your current fitness level and activity suggest that you have some ground to cover before attempting Freel Peak. Freel Peak is rated with a climbing difficulty of 72 out of 100, which is quite challenging. Although your VO2 max indicates a moderate level of cardio fitness, your sedentary activity level and lack of regular exercise mean that your overall endurance and stamina might not be sufficient for such a demanding climb. To prepare for this climb, consider incorporating regular cardio exercises such as running or cycling into your routine to build stamina. Increase your weekly activity gradually, aiming for at least 150 minutes of moderate aerobic exercise per week, as recommended. Complement your cardio training with strength exercises targeting your legs and core to improve your climbing efficiency and reduce the risk of injury. Additionally, ensure you maintain a balanced diet rich in carbohydrates, proteins, and healthy fats to fuel your workouts and recovery. Gradually acclimate to altitude by planning a shorter, easier climb before attempting Freel Peak to prepare your body for the elevation changes. Consulting with a fitness professional can provide personalized guidance tailored to your progress and needs.",
+    "insight" : "Based on your partially ready rating, here are some preparation tips to enhance your climbing readiness. First, focus on gradually increasing your cardio fitness through regular cardiovascular exercise. Incorporate activities like running, cycling, or swimming into your routine at least 3-4 times a week to improve your VO2 max. Second, consider strength training exercises to build muscle endurance and support your body during the climb. Incorporate weightlifting and bodyweight exercises 2-3 times a week, targeting major muscle groups. Third, enhance your flexibility and balance with activities such as yoga or dynamic stretching, ideally 2-3 times a week to reduce the risk of injury. Lastly, plan a series of easier climbs to acclimate to the physical demands. Start with local hikes or trails that match or slightly exceed the difficulty of Freel Peak, gradually increasing the challenge as you build endurance and strength. Consult with a fitness professional to tailor a program that suits your current fitness level and progress.",
     "rating" : {
       "partiallyReady" : {
 
