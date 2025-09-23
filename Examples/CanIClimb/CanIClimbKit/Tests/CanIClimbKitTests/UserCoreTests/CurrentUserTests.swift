@@ -100,4 +100,21 @@ struct CurrentUserTests {
     expectNoDifference(localUser, .mock2)
     expectNoDifference(editedUser, localUser)
   }
+
+  @Test("Current User Is Nil When Unauthorized")
+  func currentUserIsNilWhenUnauthorized() async throws {
+    let api = CanIClimbAPI.testInstance(
+      transport: .mock { request, _ in
+        switch request {
+        case .currentUser:
+          (401, .data(Data()))
+        default:
+          (400, .data(Data()))
+        }
+      }
+    )
+    let currentUser = CurrentUser(database: database, api: api)
+    let user = try await currentUser.user()
+    expectNoDifference(user, nil)
+  }
 }

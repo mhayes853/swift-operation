@@ -14,9 +14,7 @@ public final class DummyBackend: CanIClimbAPI.DataTransport {
     try await self.randomDelay()
     switch request {
     case .achieveClimb(let id):
-      guard context.isAuthenticated else {
-        return (Data(), HTTPURLResponse(context: context, statusCode: 401))
-      }
+      guard context.isAuthenticated else { return self.unauthorizedResponse(in: context) }
       let climb = try await self.storage.achieveClimb(with: id)
       return (
         try JSONEncoder().encode(climb),
@@ -24,9 +22,7 @@ public final class DummyBackend: CanIClimbAPI.DataTransport {
       )
 
     case .unachieveClimb(let id):
-      guard context.isAuthenticated else {
-        return (Data(), HTTPURLResponse(context: context, statusCode: 401))
-      }
+      guard context.isAuthenticated else { return self.unauthorizedResponse(in: context) }
       let climb = try await self.storage.unachieveClimb(with: id)
       return (
         try JSONEncoder().encode(climb),
@@ -35,22 +31,18 @@ public final class DummyBackend: CanIClimbAPI.DataTransport {
 
     case .currentUser:
       guard context.isAuthenticated, let user = await self.storage.currentUser else {
-        return (Data(), HTTPURLResponse(context: context, statusCode: 401))
+        return self.unauthorizedResponse(in: context)
       }
       return (try JSONEncoder().encode(user), HTTPURLResponse(context: context, statusCode: 200))
 
     case .deleteCurrentUser:
-      guard context.isAuthenticated else {
-        return (Data(), HTTPURLResponse(context: context, statusCode: 401))
-      }
+      guard context.isAuthenticated else { return self.unauthorizedResponse(in: context) }
       try await self.storage.deleteCurrentUser()
       return (Data(), HTTPURLResponse(context: context, statusCode: 204))
 
     case .editCurrentUser(let edit):
       guard context.isAuthenticated, let user = try await self.storage.editCurrentUser(with: edit)
-      else {
-        return (Data(), HTTPURLResponse(context: context, statusCode: 401))
-      }
+      else { return self.unauthorizedResponse(in: context) }
       return (try JSONEncoder().encode(user), HTTPURLResponse(context: context, statusCode: 200))
 
     case .mountain(let id):
@@ -61,30 +53,22 @@ public final class DummyBackend: CanIClimbAPI.DataTransport {
       return (try JSONEncoder().encode(result), HTTPURLResponse(context: context, statusCode: 200))
 
     case .planClimb(let request):
-      guard context.isAuthenticated else {
-        return (Data(), HTTPURLResponse(context: context, statusCode: 401))
-      }
+      guard context.isAuthenticated else { return self.unauthorizedResponse(in: context) }
       let climb = try await self.storage.planClimb(with: request)
       return (try JSONEncoder().encode(climb), HTTPURLResponse(context: context, statusCode: 201))
 
     case .unplanClimbs(let ids):
-      guard context.isAuthenticated else {
-        return (Data(), HTTPURLResponse(context: context, statusCode: 401))
-      }
+      guard context.isAuthenticated else { return self.unauthorizedResponse(in: context) }
       try await self.storage.unplanClimbs(with: ids)
       return (Data(), HTTPURLResponse(context: context, statusCode: 204))
 
     case .plannedClimbs(let mountainId):
-      guard context.isAuthenticated else {
-        return (Data(), HTTPURLResponse(context: context, statusCode: 401))
-      }
+      guard context.isAuthenticated else { return self.unauthorizedResponse(in: context) }
       let climbs = try await self.storage.plannedClimbs(for: mountainId)
       return (try JSONEncoder().encode(climbs), HTTPURLResponse(context: context, statusCode: 200))
 
     case .refreshAccessToken:
-      guard context.refreshToken != nil else {
-        return (Data(), HTTPURLResponse(context: context, statusCode: 401))
-      }
+      guard context.refreshToken != nil else { return self.unauthorizedResponse(in: context) }
       let tokens = CanIClimbAPI.Tokens.Response(accessToken: "access", refreshToken: nil)
       return (try JSONEncoder().encode(tokens), HTTPURLResponse(context: context, statusCode: 200))
 
@@ -94,12 +78,16 @@ public final class DummyBackend: CanIClimbAPI.DataTransport {
       return (try JSONEncoder().encode(tokens), HTTPURLResponse(context: context, statusCode: 200))
 
     case .signOut:
-      guard context.isAuthenticated else {
-        return (Data(), HTTPURLResponse(context: context, statusCode: 401))
-      }
+      guard context.isAuthenticated else { return self.unauthorizedResponse(in: context) }
       try await self.storage.signOutCurrentUser()
       return (Data(), HTTPURLResponse(context: context, statusCode: 204))
     }
+  }
+
+  private func unauthorizedResponse(
+    in context: CanIClimbAPI.Request.Context
+  ) -> (Data, HTTPURLResponse) {
+    (Data("{\"error\":\"Unauthorized\"}".utf8), HTTPURLResponse(context: context, statusCode: 401))
   }
 
   private func randomDelay() async throws {

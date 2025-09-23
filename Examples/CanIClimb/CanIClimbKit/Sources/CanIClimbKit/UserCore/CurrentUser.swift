@@ -47,10 +47,14 @@ extension CurrentUser: User.CurrentLoader {
     }
   }
 
-  public func user() async throws -> User {
-    let user = try await self.api.user()
-    try await self.saveLocalUser(user)
-    return user
+  public func user() async throws -> User? {
+    do {
+      let user = try await self.api.user()
+      try await self.saveLocalUser(user)
+      return user
+    } catch is User.UnauthorizedError {
+      return nil
+    }
   }
 }
 

@@ -91,27 +91,22 @@ private struct UserProfileSectionView: View {
 
   var body: some View {
     Section {
-      switch self.$user.status {
-      case .result(.success(let user)):
-        NavigationLink(value: SettingsModel.Path.userSettings(UserSettingsModel(user: user))) {
-          UserCardView(user: user)
-        }
-
-      case .result(.failure(let error)) where error is User.UnauthorizedError:
-        SignInButton(label: .signIn, model: self.model)
-
-      default:
-        if let user {
-          NavigationLink(value: SettingsModel.Path.userSettings(UserSettingsModel(user: user))) {
-            UserCardView(user: user)
+      if let user {
+        if let innerUser = user {
+          NavigationLink(
+            value: SettingsModel.Path.userSettings(UserSettingsModel(user: innerUser))
+          ) {
+            UserCardView(user: innerUser)
           }
         } else {
-          Label {
-            Text("Loading Profile...")
-              .foregroundStyle(.secondary)
-          } icon: {
-            SpinnerView()
-          }
+          SignInButton(label: .signIn, model: self.model)
+        }
+      } else {
+        Label {
+          Text("Loading Profile...")
+            .foregroundStyle(.secondary)
+        } icon: {
+          SpinnerView()
         }
       }
     } header: {

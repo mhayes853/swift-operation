@@ -6,7 +6,7 @@ import SharingOperation
 extension User {
   public protocol CurrentLoader: Sendable {
     func localUser() async throws -> User?
-    func user() async throws -> User
+    func user() async throws -> User?
   }
 
   public enum CurrentLoaderKey: DependencyKey {
@@ -19,10 +19,10 @@ extension User {
 extension User {
   @MainActor
   public final class MockCurrentLoader: CurrentLoader {
-    public var result: Result<User, any Error>
+    public var result: Result<User?, any Error>
     public var localUser: User?
 
-    public init(result: Result<User, any Error>) {
+    public init(result: Result<User?, any Error>) {
       self.result = result
     }
 
@@ -30,7 +30,7 @@ extension User {
       self.localUser
     }
 
-    public func user() async throws -> User {
+    public func user() async throws -> User? {
       try self.result.get()
     }
   }
@@ -45,8 +45,8 @@ extension User {
     public func fetch(
       isolation: isolated (any Actor)?,
       in context: OperationContext,
-      with continuation: OperationContinuation<User, any Error>
-    ) async throws -> User {
+      with continuation: OperationContinuation<User?, any Error>
+    ) async throws -> User? {
       let loader = Dependency(User.CurrentLoaderKey.self).wrappedValue
 
       async let user = loader.user()
