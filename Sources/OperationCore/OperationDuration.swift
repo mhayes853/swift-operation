@@ -185,6 +185,22 @@ extension Duration {
 @available(iOS 16.0, macOS 13.0, watchOS 9.0, tvOS 16.0, *)
 extension OperationDuration: DurationProtocol {}
 
+// MARK: - Attoseconds Interop
+
+@available(iOS 18.0, macOS 15.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
+extension OperationDuration {
+  public init(attoseconds: Int128) {
+    let seconds = Int64(attoseconds / Int128(attosecondsPerSecond))
+    let attos = Int64(attoseconds % Int128(attosecondsPerSecond))
+    self.init(secondsComponent: seconds, attosecondsComponent: attos)
+  }
+
+  public var attoseconds: Int128 {
+    let attos = Int128(self.secondsComponent) * Int128(attosecondsPerSecond)
+    return attos + Int128(self.attosecondsComponent)
+  }
+}
+
 // MARK: - Constants
 
 private let attosecondsPerSecond = Int64(1_000_000_000_000_000_000)

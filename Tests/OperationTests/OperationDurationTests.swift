@@ -261,4 +261,12 @@ struct OperationDurationTests {
   func division(d1: OperationDuration, d2: OperationDuration, divided: Double) {
     expectNoDifference(d1 / d2, divided)
   }
+
+  @Test("Attoseconds")
+  @available(iOS 18.0, macOS 15.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
+  func attoseconds() {
+    let d = OperationDuration(attoseconds: 123_456_789_123_456_789_123_456_789)
+    expectNoDifference(d.attoseconds, 123_456_789_123_456_789_123_456_789)
+    expectNoDifference(d.components.seconds, 123_456_789)
+  }
 }
