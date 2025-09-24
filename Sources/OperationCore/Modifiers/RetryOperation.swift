@@ -18,6 +18,18 @@ extension OperationRequest {
   /// supports cooperative cancellation, and avoid doing any irreversible synchronous work before
   /// reaching a suspension point in this operation.
   ///
+  /// When multiple retry modifiers are applied to an operation, only the first one applied will
+  /// have any effect. This is to allow you to override the default retry behavior applied by the
+  /// default initializer of ``OperationClient``.
+  ///
+  /// ```swift
+  /// // The operation retry limit is 5, and the second retry modifier
+  /// // has no effect on `operation`.
+  /// let operation = MyOperation()
+  ///   .retry(limit: 5)
+  ///   .retry(limit: 3)
+  /// ```
+  ///
   /// - Parameters:
   ///   - limit: The maximum number of retries.
   /// - Returns: A ``ModifiedOperation``.
