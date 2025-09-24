@@ -16,8 +16,8 @@
       transaction[TestKey.self] = 10
       @SharedOperation(query, transaction: transaction) var state
 
-      let token = observe { transaction in
-        _ = state
+      let token = observe { [state = $state] transaction in
+        _ = state.wrappedValue
         if transaction[TestKey.self] == 10 {
           expectation.fulfill()
         }
