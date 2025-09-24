@@ -229,7 +229,11 @@ private struct AnalysisSectionView: View {
       HStack {
         Text("Retry Attempt").font(.headline)
         Spacer()
-        Text("\(self.analysis.operationRetryAttempt)")
+        if let attempt = self.analysis.operationRetryAttempt {
+          Text("\(attempt)")
+        } else {
+          Text("N/A")
+        }
       }
 
       HStack {

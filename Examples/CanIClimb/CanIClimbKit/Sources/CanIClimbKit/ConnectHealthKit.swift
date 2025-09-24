@@ -19,6 +19,10 @@ public final class ConnectToHealthKitModel {
     self._localMetrics.hasConnectedHealthKit
   }
 
+  public var isConnecting: Bool {
+    self.$request.isLoading
+  }
+
   public func connectInvoked() async {
     try? await self.$request.mutate()
   }

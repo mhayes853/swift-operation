@@ -130,10 +130,6 @@ public struct CanIClimbView: View {
               .fullScreenCover(item: self.$model.destination.onboarding) { model in
                 OnboardingView(model: model).background(.background)
               }
-            #else
-              .sheet(item: self.$model.destination.onboarding) { model in
-                OnboardingView(model: model)
-              }
             #endif
         }
         .transition(.opacity)

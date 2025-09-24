@@ -98,12 +98,6 @@ public struct MountainsListView<SheetContent: View>: View {
             }
             .presentationBackground(.regularMaterial)
           }
-        #else
-          .sheet(item: self.$model.destination.mountainDetail) { model in
-            NavigationStack {
-              MountainDetailView(model: model).dismissable()
-            }
-          }
         #endif
         NavigationStack {
           self.sheetContent(AnyView(erasing: content))

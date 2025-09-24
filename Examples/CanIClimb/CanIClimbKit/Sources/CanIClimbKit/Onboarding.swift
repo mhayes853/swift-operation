@@ -25,8 +25,8 @@ public final class OnboardingModel: HashableObject, Identifiable {
   @Dependency(\.defaultDatabase) private var database
 
   @ObservationIgnored
-  @SharedOperation(LocationReading.requestUserPermissionMutation) private
-    var requestLocationPermission
+  @SharedOperation(LocationReading.requestUserPermissionMutation)
+  private var requestLocationPermission
 
   @ObservationIgnored
   @SingleRow(SettingsRecord.self) private var _settings
@@ -50,6 +50,10 @@ extension OnboardingModel {
 
   public var isLocationSharingEnabled: Bool {
     self.requestLocationPermission == true
+  }
+
+  public var isRequestingLocationSharing: Bool {
+    self.$requestLocationPermission.isLoading
   }
 }
 
@@ -460,6 +464,7 @@ private struct ConnectHealthKitView: View {
         Button(self.model.connectToHealthKit.isConnected ? "Continue" : "Skip") {
           Task { await self.model.connectToHealthKitStepInvoked(action: .skip) }
         }
+        .disabled(self.model.connectToHealthKit.isConnecting)
         .tint(.primary)
         .buttonStyle(.plain)
       }
@@ -506,6 +511,7 @@ private struct ShareLocationView: View {
           Button("Skip") {
             Task { await self.model.locationPermissionStepInvoked(action: .skip) }
           }
+          .disabled(self.model.isRequestingLocationSharing)
           .tint(.primary)
           .buttonStyle(.plain)
         }
@@ -543,6 +549,7 @@ private struct SignInView: View {
         Button(self.model.signIn.isSignedIn ? "Continue" : "Skip") {
           self.model.signInSkipped()
         }
+        .disabled(self.model.signIn.$signIn.isLoading)
         .tint(.primary)
         .buttonStyle(.plain)
       }

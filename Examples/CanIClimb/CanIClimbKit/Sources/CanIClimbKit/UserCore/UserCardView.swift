@@ -14,7 +14,7 @@ public struct UserCardView: View {
       ProfileCircleView(height: self.profileHeight)
       VStack(alignment: .leading) {
         Text(self.user.name.formatted()).font(.headline)
-        Text(self.user.subtitle == "" ? "No subtitle" : self.user.subtitle)
+        Text(self.user.subtitle.isEmpty ? "No subtitle" : self.user.subtitle)
           .font(.caption)
           .foregroundStyle(.secondary)
       }
