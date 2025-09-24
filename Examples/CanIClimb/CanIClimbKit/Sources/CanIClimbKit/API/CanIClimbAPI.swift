@@ -49,7 +49,10 @@ extension CanIClimbAPI {
   public func signIn(with credentials: User.SignInCredentials) async throws {
     try await withCurrentLogger(Logger(label: "caniclimb.api.signin")) {
       _ = try await self.tokens.load(taskName: "sign-in") {
-        let (data, _) = try await self.perform(request: .signIn(credentials))
+        let (data, _) = try await self.transport.send(
+          request: .signIn(credentials),
+          in: Request.Context(baseURL: self.baseURL)
+        )
         return try JSONDecoder().decode(Tokens.Response.self, from: data)
       }
     }

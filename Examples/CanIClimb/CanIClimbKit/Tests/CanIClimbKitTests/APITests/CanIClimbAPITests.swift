@@ -50,6 +50,32 @@ struct CanIClimbAPITests {
     expectNoDifference(user, userResponse)
   }
 
+  @Test("Doesn't Get Stuck Refreshing Token When Refresh Token Exists On Sign In")
+  func doesntGetStuckRefreshingTokenWhenRefreshTokenExistsOnSignIn() async throws {
+    let credentials = User.SignInCredentials.mock
+    let resp = CanIClimbAPI.Tokens.Response.signIn
+
+    let key = "test_refresh_token"
+    self.storage[key] = Data("refresh_token_from_previous_app_install".utf8)
+
+    let api = CanIClimbAPI(
+      transport: .mock { request, _ in
+        switch request {
+        case .signIn: (200, .json(resp))
+        default: (400, .empty)
+        }
+      },
+      tokens: CanIClimbAPI.Tokens(
+        client: OperationClient(),
+        secureStorage: self.storage,
+        refreshTokenKey: key
+      )
+    )
+
+    try await api.signIn(with: credentials)
+    expectNoDifference(self.storage[key], Data(resp.refreshToken!.utf8))
+  }
+
   @Test("Refreshes Access Token When Not Present")
   func refreshTokenWhenNotPresent() async throws {
     let credentials = User.SignInCredentials.mock
