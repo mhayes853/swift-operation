@@ -64,7 +64,7 @@ struct CanIClimbPreviewApp: App {
 
       $0[CKAccountStatus.LoaderKey.self] = CKAccountStatus.MockLoader { .available }
 
-      $0[User.CurrentLoaderKey.self] = User.MockCurrentLoader(result: .success(.mock1))
+      $0[User.CurrentLoaderKey.self] = User.MockCurrentLoader(result: .success(.user(.mock1)))
 
       $0[Mountain.PlanClimberKey.self] = Mountain.SucceedingClimbPlanner()
       $0[Mountain.PlannedClimbsLoaderKey.self] = plannedClimbs
