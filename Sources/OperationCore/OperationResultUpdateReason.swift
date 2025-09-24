@@ -14,22 +14,12 @@
 ///   // Runs when `MyQuery` returns its final result...
 /// }
 /// ```
-public struct OperationResultUpdateReason: Hashable, Sendable {
-  private let rawValue: String
-}
-
-extension OperationResultUpdateReason {
+public enum OperationResultUpdateReason: Hashable, Sendable {
   /// The operation yielded a result through an ``OperationContinuation``.
-  public static let yieldedResult = Self(rawValue: "yieldedResult")
+  case yieldedResult
 
   /// The operation returned its final value from ``OperationRequest/run(isolation:in:with:)``.
-  public static let returnedFinalResult = Self(rawValue: "returnedFinalResult")
-}
-
-extension OperationResultUpdateReason: CustomStringConvertible {
-  public var description: String {
-    self.rawValue
-  }
+  case returnedFinalResult
 }
 
 // MARK: - OperationContext

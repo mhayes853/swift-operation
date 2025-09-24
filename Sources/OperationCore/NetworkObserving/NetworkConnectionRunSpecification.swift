@@ -40,20 +40,3 @@ extension OperationRunSpecification {
     NetworkConnectionRunSpecification(observer: observer)
   }
 }
-
-// MARK: - Satisfied Connection Status
-
-extension OperationContext {
-  /// The minimum satisfiable ``NetworkConnectionStatus`` status to satisfy
-  /// ``NetworkConnectionRunSpecification``.
-  ///
-  /// The default value is ``NetworkConnectionStatus/connected``.
-  public var satisfiedConnectionStatus: NetworkConnectionStatus {
-    get { self[SatisfiedConnectionStatusKey.self] }
-    set { self[SatisfiedConnectionStatusKey.self] = newValue }
-  }
-
-  private struct SatisfiedConnectionStatusKey: Key {
-    static let defaultValue = NetworkConnectionStatus.connected
-  }
-}
