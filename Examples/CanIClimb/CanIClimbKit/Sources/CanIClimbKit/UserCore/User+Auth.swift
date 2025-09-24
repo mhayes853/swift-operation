@@ -118,7 +118,8 @@ extension User {
       try await authenticator.signIn(with: arguments.credentials)
 
       let userStore = client.store(for: User.currentQuery)
-      userStore.resetState()
+      // NB: Prevent deduplication against tasks in the process of being cancelled.
+      await userStore.resetWaitingForAllActiveTasksToFinish()
       Task { try await userStore.fetch() }
     }
   }
@@ -139,7 +140,10 @@ extension User {
       @Dependency(\.defaultOperationClient) var client
 
       try await authenticator.signOut()
-      client.store(for: User.currentQuery).withExclusiveAccess { $0.currentValue = .some(nil) }
+
+      let userStore = client.store(for: User.currentQuery)
+      userStore.resetState()
+      userStore.currentValue = .some(nil)
     }
   }
 }

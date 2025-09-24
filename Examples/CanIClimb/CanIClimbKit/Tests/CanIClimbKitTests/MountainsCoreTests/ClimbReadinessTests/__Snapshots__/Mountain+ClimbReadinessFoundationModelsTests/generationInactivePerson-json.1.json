@@ -1,9 +1,48 @@
 {
   "messages" : [
-
+    {
+      "content" : "'userLocation' tool called.",
+      "metadata" : {
+        "call.arguments" : {
+          "string" : {
+            "_0" : "Arguments()"
+          }
+        },
+        "call.duration" : {
+          "string" : {
+            "_0" : "0.000446833 seconds"
+          }
+        },
+        "call.result" : {
+          "string" : {
+            "_0" : "success(CanIClimbKit.UserLocationTool.Output.reading(CanIClimbKit.LocationReading.Generable(coordinate: CanIClimbKit.LocationCoordinate2D.Generable(latitude: 37.825858, longitude: -122.422202), altitudeAboveSeaLevelMeters: 0.0)))"
+          }
+        }
+      }
+    },
+    {
+      "content" : "'userVO2Max' tool called.",
+      "metadata" : {
+        "call.arguments" : {
+          "string" : {
+            "_0" : "Arguments(query: \"last 6 weeks\")"
+          }
+        },
+        "call.duration" : {
+          "string" : {
+            "_0" : "0.001120458 seconds"
+          }
+        },
+        "call.result" : {
+          "string" : {
+            "_0" : "success(CanIClimbKit.NumericHealthSamples(kind: CanIClimbKit.NumericHealthSamples.Kind.vo2Max, elements: [CanIClimbKit.NumericHealthSamples.Element(timestamp: 2025-09-24 19:06:04 +0000, value: 33.4)]))"
+          }
+        }
+      }
+    }
   ],
   "readiness" : {
-    "insight" : "Based on your current physical activity level and other factors, you are somewhat prepared for climbing Freel Peak. However, there are several areas where you can improve your readiness. To enhance your cardio fitness, consider incorporating regular cardiovascular exercises into your routine, such as brisk walking, jogging, or cycling. Increasing your weekly workout frequency and duration can help improve your stamina and endurance, which are crucial for climbing a challenging peak like Freel Peak. Additionally, focusing on strength training, particularly for your legs and core, will enhance your climbing efficiency and reduce the risk of injury. This can be achieved through exercises like squats, lunges, and planks. It's also important to gradually acclimate to altitude, especially since Freel Peak's elevation is quite high. If possible, practice climbing on easier trails to build confidence and experience. Lastly, ensure you are well-prepared for varying weather conditions by checking the forecast regularly and dressing appropriately. Preparing adequately will enhance your safety and enjoyment of the climb.",
+    "insight" : "Based on the recent VO2 Max reading of 33.4 ml\/kg\/min, which indicates a moderate level of cardiovascular fitness, along with your sedentary activity level and lack of regular workouts, you are currently not fully prepared for the climb.",
     "rating" : {
       "partiallyReady" : {
 
