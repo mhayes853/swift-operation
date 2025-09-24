@@ -22,7 +22,7 @@ extension DependenciesTestSuite {
 
       try await withDependencies {
         $0[User.AuthenticatorKey.self] = authenticator
-        $0[User.CurrentLoaderKey.self] = User.MockCurrentLoader(result: .success(.mock1))
+        $0[User.CurrentLoaderKey.self] = User.MockCurrentLoader(result: .success(.user(.mock1)))
       } operation: {
         let model = SignInModel()
         let onSuccessCount = Mutex(0)
@@ -65,7 +65,7 @@ extension DependenciesTestSuite {
 
       await withDependencies {
         $0[User.AuthenticatorKey.self] = authenticator
-        $0[User.CurrentLoaderKey.self] = User.MockCurrentLoader(result: .success(.mock1))
+        $0[User.CurrentLoaderKey.self] = User.MockCurrentLoader(result: .success(.user(.mock1)))
       } operation: {
         let model = SignInModel()
         let onSuccessCount = Mutex(0)

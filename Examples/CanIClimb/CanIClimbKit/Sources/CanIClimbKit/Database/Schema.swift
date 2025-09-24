@@ -26,6 +26,7 @@ public struct LocalInternalMetricsRecord: Hashable, Sendable, SingleRowTable {
   public private(set) var id: UUID = .nil
   public var hasConnectedHealthKit = false
   public var currentUserId: User.ID?
+  public var hasAttemptedSignIn = false
 
   public init() {}
 }
@@ -560,6 +561,7 @@ extension DatabaseMigrator {
         CREATE TABLE IF NOT EXISTS LocalInternalMetrics (
           \(raw: singleRowTablePrimaryKeyColumnSQL),
           hasConnectedHealthKit BOOLEAN NOT NULL,
+          hasAttemptedSignIn BOOLEAN NOT NULL,
           currentUserId TEXT
         );
         """,

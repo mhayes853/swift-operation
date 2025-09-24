@@ -4,5 +4,9 @@
 <dict>
 	<key>NSAlarmKitUsageDescription</key>
 	<string>Alarms will let you know when it's time to set off on a climb!</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 </dict>
 </plist>

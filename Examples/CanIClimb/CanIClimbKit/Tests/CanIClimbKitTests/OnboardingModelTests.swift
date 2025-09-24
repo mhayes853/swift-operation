@@ -105,7 +105,7 @@ extension DependenciesTestSuite {
 
       try await withDependencies {
         $0[User.AuthenticatorKey.self] = authenticator
-        $0[User.CurrentLoaderKey.self] = User.MockCurrentLoader(result: .success(.mock1))
+        $0[User.CurrentLoaderKey.self] = User.MockCurrentLoader(result: .success(.user(.mock1)))
       } operation: {
         @Dependency(\.defaultOperationClient) var client
 
@@ -117,9 +117,9 @@ extension DependenciesTestSuite {
           connectHealthKit: .skip
         )
 
-        let userStore = client.store(for: User.currentQuery)
+        let userStore = client.store(for: User.currentStatusQuery)
         _ = try? await userStore.activeTasks.first?.runIfNeeded()
-        expectNoDifference(userStore.currentValue, .mock1)
+        expectNoDifference(userStore.currentValue, .user(.mock1))
       }
     }
   }

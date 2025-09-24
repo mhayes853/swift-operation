@@ -117,7 +117,7 @@ extension User {
 
       try await authenticator.signIn(with: arguments.credentials)
 
-      let userStore = client.store(for: User.currentQuery)
+      let userStore = client.store(for: User.currentStatusQuery)
       // NB: Prevent deduplication against tasks in the process of being cancelled.
       await userStore.resetWaitingForAllActiveTasksToFinish()
       Task { try await userStore.fetch() }
@@ -141,9 +141,9 @@ extension User {
 
       try await authenticator.signOut()
 
-      let userStore = client.store(for: User.currentQuery)
+      let userStore = client.store(for: User.currentStatusQuery)
       userStore.resetState()
-      userStore.currentValue = .some(nil)
+      userStore.currentValue = .unauthorized
     }
   }
 }

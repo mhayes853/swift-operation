@@ -88,7 +88,7 @@ extension EnvironmentValues {
     $0.defaultDatabase = try! canIClimbDatabase()
     $0.defaultOperationClient = OperationClient(storeCreator: .canIClimb)
     $0[User.AuthenticatorKey.self] = authenticator
-    $0[User.CurrentLoaderKey.self] = User.MockCurrentLoader(result: .success(.mock1))
+    $0[User.CurrentLoaderKey.self] = User.MockCurrentLoader(result: .success(.user(.mock1)))
   }
 
   SignInButton(label: .continue, model: SignInModel())

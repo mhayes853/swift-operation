@@ -83,7 +83,7 @@ extension User {
       @Dependency(User.EditorKey.self) var editor
 
       let user = try await editor.edit(with: arguments.edit)
-      client.store(for: User.currentQuery).currentValue = user
+      client.store(for: User.currentStatusQuery).currentValue = .user(user)
       return user
     }
   }

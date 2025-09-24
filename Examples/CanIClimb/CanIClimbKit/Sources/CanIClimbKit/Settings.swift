@@ -86,22 +86,21 @@ public struct SettingsView: View {
 // MARK: - UserProfileSectionView
 
 private struct UserProfileSectionView: View {
-  @SharedOperation(User.currentQuery, animation: .bouncy) private var user
+  @SharedOperation(User.currentStatusQuery, animation: .bouncy) private var status
   let model: SignInModel
 
   var body: some View {
     Section {
-      if let user {
-        if let innerUser = user {
-          NavigationLink(
-            value: SettingsModel.Path.userSettings(UserSettingsModel(user: innerUser))
-          ) {
-            UserCardView(user: innerUser)
-          }
-        } else {
-          SignInButton(label: .signIn, model: self.model)
+      switch self.status {
+      case .user(let user):
+        NavigationLink(
+          value: SettingsModel.Path.userSettings(UserSettingsModel(user: user))
+        ) {
+          UserCardView(user: user)
         }
-      } else {
+      case .unauthorized:
+        SignInButton(label: .signIn, model: self.model)
+      default:
         Label {
           Text("Loading Profile...")
             .foregroundStyle(.secondary)
@@ -476,7 +475,7 @@ private struct DisclaimerSectionView: View {
       requester: requester
     )
 
-    let loader = User.MockCurrentLoader(result: .success(.mock1))
+    let loader = User.MockCurrentLoader(result: .success(.user(.mock1)))
     $0[User.CurrentLoaderKey.self] = loader
     $0[User.AuthenticatorKey.self] = User.MockAuthenticator()
     $0[User.EditorKey.self] = User.PassthroughEditor()

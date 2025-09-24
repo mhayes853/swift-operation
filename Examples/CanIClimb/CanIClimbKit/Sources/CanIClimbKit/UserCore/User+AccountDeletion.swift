@@ -51,9 +51,9 @@ extension User {
 
       try await deleter.delete()
 
-      let userStore = client.store(for: User.currentQuery)
+      let userStore = client.store(for: User.currentStatusQuery)
       userStore.resetState()
-      userStore.currentValue = .some(nil)
+      userStore.currentValue = .unauthorized
     }
   }
 }

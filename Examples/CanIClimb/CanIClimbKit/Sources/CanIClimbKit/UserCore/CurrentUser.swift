@@ -29,6 +29,9 @@ extension CurrentUser {
 extension CurrentUser: User.Authenticator {
   public func signIn(with credentials: CachedUserRecord.SignInCredentials) async throws {
     try await self.api.signIn(with: credentials)
+    try await self.database.write { db in
+      try LocalInternalMetricsRecord.update(in: db) { $0.hasAttemptedSignIn = true }
+    }
   }
 
   public func signOut() async throws {
@@ -47,13 +50,17 @@ extension CurrentUser: User.CurrentLoader {
     }
   }
 
-  public func user() async throws -> User? {
+  public func currentStatus() async throws -> User.CurrentStatus {
     do {
+      let hasAttemptedSignIn = try await self.database.read { db in
+        LocalInternalMetricsRecord.find(in: db).hasAttemptedSignIn
+      }
+      guard hasAttemptedSignIn else { return .unauthorized }
       let user = try await self.api.user()
       try await self.saveLocalUser(user)
-      return user
+      return .user(user)
     } catch is User.UnauthorizedError {
-      return nil
+      return .unauthorized
     }
   }
 }
@@ -80,7 +87,10 @@ extension CurrentUser: User.AccountDeleter {
 extension CurrentUser {
   private func removeLocalUser() async throws {
     try await self.database.write { db in
-      try LocalInternalMetricsRecord.update(in: db) { $0.currentUserId = nil }
+      try LocalInternalMetricsRecord.update(in: db) {
+        $0.currentUserId = nil
+        $0.hasAttemptedSignIn = false
+      }
       try CachedUserRecord.delete().execute(db)
     }
   }

@@ -1,12 +1,23 @@
+import CasePaths
 import Dependencies
 import SharingOperation
+
+// MARK: - Current Status
+
+extension User {
+  @CasePathable
+  public enum CurrentStatus: Hashable, Sendable {
+    case user(User)
+    case unauthorized
+  }
+}
 
 // MARK: - Current Loader
 
 extension User {
   public protocol CurrentLoader: Sendable {
     func localUser() async throws -> User?
-    func user() async throws -> User?
+    func currentStatus() async throws -> CurrentStatus
   }
 
   public enum CurrentLoaderKey: DependencyKey {
@@ -19,10 +30,10 @@ extension User {
 extension User {
   @MainActor
   public final class MockCurrentLoader: CurrentLoader {
-    public var result: Result<User?, any Error>
+    public var result: Result<CurrentStatus, any Error>
     public var localUser: User?
 
-    public init(result: Result<User?, any Error>) {
+    public init(result: Result<CurrentStatus, any Error>) {
       self.result = result
     }
 
@@ -30,7 +41,7 @@ extension User {
       self.localUser
     }
 
-    public func user() async throws -> User? {
+    public func currentStatus() async throws -> CurrentStatus {
       try self.result.get()
     }
   }
@@ -39,21 +50,21 @@ extension User {
 // MARK: - Query
 
 extension User {
-  public static let currentQuery = CurrentQuery()
+  public static let currentStatusQuery = CurrentStatusQuery()
 
-  public struct CurrentQuery: QueryRequest, Hashable, Sendable {
+  public struct CurrentStatusQuery: QueryRequest, Hashable, Sendable {
     public func fetch(
       isolation: isolated (any Actor)?,
       in context: OperationContext,
-      with continuation: OperationContinuation<User?, any Error>
-    ) async throws -> User? {
+      with continuation: OperationContinuation<CurrentStatus, any Error>
+    ) async throws -> CurrentStatus {
       let loader = Dependency(User.CurrentLoaderKey.self).wrappedValue
 
-      async let user = loader.user()
+      async let status = loader.currentStatus()
       if let localUser = try await loader.localUser() {
-        continuation.yield(localUser)
+        continuation.yield(.user(localUser))
       }
-      return try await user
+      return try await status
     }
   }
 }
