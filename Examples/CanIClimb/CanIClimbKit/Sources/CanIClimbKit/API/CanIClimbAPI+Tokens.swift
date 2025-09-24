@@ -52,9 +52,18 @@ extension CanIClimbAPI.Tokens {
 extension CanIClimbAPI.Tokens {
   @discardableResult
   public func load(
+    taskName: String,
     using loader: @escaping @Sendable () async throws -> CanIClimbAPI.Tokens.Response
   ) async throws -> CanIClimbAPI.Tokens.Response {
-    let response = try await self.store.mutate(with: loader)
+    currentLogger.info("Requesting Tokens", metadata: ["task.name": .string(taskName)])
+
+    var context = self.store.context
+    context.operationTaskConfiguration.name = taskName
+
+    let response = try await self.store.mutate(
+      with: Response.Mutation.Arguments(load: loader),
+      using: context
+    )
     if let refreshToken = response.refreshToken {
       self.secureStorage[self.refreshTokenKey] = Data(refreshToken.utf8)
     }
@@ -74,28 +83,22 @@ extension CanIClimbAPI.Tokens {
 // MARK: - Mutation
 
 extension CanIClimbAPI.Tokens.Response {
-  // NB: Use a query store to control fetches to the access token to prevent duplicate concurrent
-  // requests from either signing the user in, or refreshing the access token. This also adds
-  // automatic retries and exponential backoff.
-  //
-  // Additionally, we'll ensure that the store that powers the mutation is never evicted from the
-  // query cache by using the `evictWhen` modifier in conjunction with an empty set of evictable
-  // memory pressures.
   fileprivate static let mutation = Mutation()
     .maxHistory(length: 1)
     .deduplicated()
-    .evictWhen(pressure: [])
 
   fileprivate struct Mutation: MutationRequest, Hashable, Sendable {
-    typealias Arguments = @Sendable () async throws -> CanIClimbAPI.Tokens.Response
+    struct Arguments: Sendable {
+      let load: @Sendable () async throws -> CanIClimbAPI.Tokens.Response
+    }
 
     func mutate(
       isolation: isolated (any Actor)?,
-      with arguments: @Sendable () async throws -> CanIClimbAPI.Tokens.Response,
+      with arguments: Arguments,
       in context: OperationContext,
       with continuation: OperationContinuation<CanIClimbAPI.Tokens.Response, any Error>
     ) async throws -> CanIClimbAPI.Tokens.Response {
-      try await arguments()
+      try await arguments.load()
     }
   }
 }

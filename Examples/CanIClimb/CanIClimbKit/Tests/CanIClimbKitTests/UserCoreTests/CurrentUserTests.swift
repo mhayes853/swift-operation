@@ -7,7 +7,7 @@ import Testing
 
 @Suite("CurrentUser tests")
 struct CurrentUserTests {
-  private let database = try! canIClimbDatabase()
+  private let database = try! canIClimbDatabase(isTracingEnabled: false)
 
   @Test("Caches Current User When Loaded")
   func cachesCurrentUserWhenLoaded() async throws {
@@ -103,16 +103,7 @@ struct CurrentUserTests {
 
   @Test("Current User Is Nil When Unauthorized")
   func currentUserIsNilWhenUnauthorized() async throws {
-    let api = CanIClimbAPI.testInstance(
-      transport: .mock { request, _ in
-        switch request {
-        case .currentUser:
-          (401, .data(Data()))
-        default:
-          (400, .data(Data()))
-        }
-      }
-    )
+    let api = CanIClimbAPI.testInstance(transport: .mock { _, _ in (401, .data(Data())) })
     let currentUser = CurrentUser(database: database, api: api)
     let user = try await currentUser.user()
     expectNoDifference(user, nil)

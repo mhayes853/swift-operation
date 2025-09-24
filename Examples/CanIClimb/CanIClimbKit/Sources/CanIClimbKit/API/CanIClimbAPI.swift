@@ -1,5 +1,6 @@
 import Foundation
 import IssueReporting
+import Logging
 import Operation
 import OrderedCollections
 import Tagged
@@ -46,9 +47,11 @@ extension URL {
 
 extension CanIClimbAPI {
   public func signIn(with credentials: User.SignInCredentials) async throws {
-    try await self.tokens.load {
-      let (data, _) = try await self.perform(request: .signIn(credentials))
-      return try JSONDecoder().decode(Tokens.Response.self, from: data)
+    try await withCurrentLogger(Logger(label: "caniclimb.api.signin")) {
+      _ = try await self.tokens.load(taskName: "sign-in") {
+        let (data, _) = try await self.perform(request: .signIn(credentials))
+        return try JSONDecoder().decode(Tokens.Response.self, from: data)
+      }
     }
   }
 
@@ -213,11 +216,13 @@ extension CanIClimbAPI {
   }
 
   private func refreshAccessToken(in context: Request.Context) async throws -> String {
-    let response = try await self.tokens.load {
-      let (data, resp) = try await self.transport.send(request: .refreshAccessToken, in: context)
-      guard resp.statusCode != 401 else { throw User.UnauthorizedError() }
-      return try JSONDecoder().decode(Tokens.Response.self, from: data)
+    try await withCurrentLogger(Logger(label: "caniclimb.api.refresh")) {
+      let response = try await self.tokens.load(taskName: "refresh-access-token") {
+        let (data, resp) = try await self.transport.send(request: .refreshAccessToken, in: context)
+        guard resp.statusCode != 401 else { throw User.UnauthorizedError() }
+        return try JSONDecoder().decode(Tokens.Response.self, from: data)
+      }
+      return response.accessToken
     }
-    return response.accessToken
   }
 }

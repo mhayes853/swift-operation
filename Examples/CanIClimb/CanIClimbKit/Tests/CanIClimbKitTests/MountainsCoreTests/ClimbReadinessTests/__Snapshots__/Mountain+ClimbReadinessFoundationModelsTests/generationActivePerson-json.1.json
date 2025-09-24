@@ -3,9 +3,9 @@
 
   ],
   "readiness" : {
-    "insight" : "Based on your age, activity level, and climbing experience, you appear to be well-prepared for climbing Freel Peak. Your daily workouts and active lifestyle indicate good cardiovascular fitness, which is crucial for such climbs. However, given the mountain's difficulty rating, consider focusing on strength training and endurance exercises to enhance your climbing capabilities. Also, ensure you're well-equipped for snowy conditions by practicing in varied weather environments.",
+    "insight" : "Based on your active activity level and daily workout routine, you have some foundation in physical fitness, but there are areas for improvement. Freel Peak is a challenging climb, so you should focus on enhancing your cardiovascular endurance, strength, and acclimatization to high altitudes. Consider incorporating interval training, strength workouts targeting your legs and core, and gradually increasing your exposure to higher altitudes to prepare effectively.",
     "rating" : {
-      "ready" : {
+      "partiallyReady" : {
 
       }
     }
