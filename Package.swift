@@ -14,24 +14,31 @@ let package = Package(
     .trait(
       name: "SwiftOperationWebBrowser",
       description:
-        "Integrates web browser APIs with the library. (Only enable for WASM Browser Applications)",
+        "Integrates web browser APIs with the library using JavaScriptKit. (Only enable for WASM Browser Applications)",
       enabledTraits: []
     ),
     .trait(
       name: "SwiftOperationNavigation",
-      description: "Integrates SwiftNavigation's UITransaction with SharingOperation."
+      description: "Integrates SwiftNavigation's `UITransaction` with `@SharedOperation`."
     ),
     .trait(
       name: "SwiftOperationUIKitNavigation",
-      description: "Integrates UIKitNavigation's UIKitAnimation with SharingOperation.",
+      description: "Integrates UIKitNavigation's `UIKitAnimation` with `@SharedOperation`.",
       enabledTraits: ["SwiftOperationNavigation"]
     ),
     .trait(
       name: "SwiftOperationAppKitNavigation",
-      description: "Integrates AppKitNavigation's AppKitAnimation with SharingOperation.",
+      description: "Integrates AppKitNavigation's `AppKitAnimation` with `@SharedOperation`.",
       enabledTraits: ["SwiftOperationNavigation"]
     ),
-    .trait(name: "SwiftOperationLogging", description: "Integrates swift-log with the library.")
+    .trait(
+      name: "SwiftOperationLogging",
+      description:
+        """
+        Adds swift-log support to the library, including a `Logger` context property and the \
+        `logDuration` modifier.
+        """
+    )
   ],
   dependencies: [
     .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.9.3"),
