@@ -86,9 +86,9 @@ jobs:
         run: |
           PREFIX=/opt/swift
           set -ex
-          curl -f -o /tmp/swift.tar.gz "https://download.swift.org/swift-6.2-release/ubuntu2204/swift-6.2-RELEASE/swift-6.2-RELEASE-ubuntu22.04.tar.gz"
+          curl -f -o /tmp/swift.tar.gz "https://download.swift.org/swift-6.1-release/ubuntu2204/swift-6.1-RELEASE/swift-6.1-RELEASE-ubuntu22.04.tar.gz"
           sudo mkdir -p $PREFIX; sudo tar -xzf /tmp/swift.tar.gz -C $PREFIX --strip-component 1
-          $PREFIX/usr/bin/swift sdk install https://github.com/swiftwasm/swift/releases/download/swift-wasm-6.2-RELEASE/swift-wasm-6.2-RELEASE-wasm32-unknown-wasip1.artifactbundle.zip --checksum f206a9ff2352f726d88a59d2241b9581264326471265229b7ffd133d2593b92b
+          $PREFIX/usr/bin/swift sdk install https://github.com/swiftwasm/swift/releases/download/swift-wasm-6.1-RELEASE/swift-wasm-6.1-RELEASE-wasm32-unknown-wasi.artifactbundle.zip --checksum 7550b4c77a55f4b637c376f5d192f297fe185607003a6212ad608276928db992
           echo "$PREFIX/usr/bin" >> $GITHUB_PATH
       - name: Install Playwright
         run: npm install playwright && npx playwright install chromium
