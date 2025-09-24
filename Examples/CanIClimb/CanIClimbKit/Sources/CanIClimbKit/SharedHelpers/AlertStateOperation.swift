@@ -60,7 +60,7 @@ public struct OperationAlertMessage: NotificationCenter.MainActorMessage {
   public let alert: AlertState<Never>
 }
 
-// MARK: - View Modifier
+// MARK: - Observe View Modifier
 
 extension View {
   public func observeOperationAlerts() -> some View {
@@ -69,7 +69,6 @@ extension View {
 }
 
 private struct ObserveOperationAlertsModifier: ViewModifier {
-  @State private var alert: AlertState<Never>?
   @State private var token: NotificationCenter.ObservationToken?
   @Dependency(\.notificationCenter) var center
 
@@ -77,9 +76,7 @@ private struct ObserveOperationAlertsModifier: ViewModifier {
     content
       .onAppear {
         self.token = self.center.addObserver(for: OperationAlertMessage.self) { message in
-          #if os(macOS)
-            self.alert = message.alert
-          #else
+          #if os(iOS)
             // NB: Present through UIKit directly on iOS due to SwiftUI dismissing children sheets
             // when an alert is presented from a parent view.
             let alert = GlobalAlertController.withOkButton(state: message.alert)
@@ -91,6 +88,5 @@ private struct ObserveOperationAlertsModifier: ViewModifier {
         guard let token = self.token else { return }
         self.center.removeObserver(token)
       }
-      .alert(self.$alert)
   }
 }

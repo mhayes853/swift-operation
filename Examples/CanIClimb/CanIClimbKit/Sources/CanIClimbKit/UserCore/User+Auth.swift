@@ -116,7 +116,10 @@ extension User {
       @Dependency(\.defaultOperationClient) var client
 
       try await authenticator.signIn(with: arguments.credentials)
-      Task { try await client.store(for: User.currentQuery).fetch() }
+
+      let userStore = client.store(for: User.currentQuery)
+      userStore.resetState()
+      Task { try await userStore.fetch() }
     }
   }
 }
