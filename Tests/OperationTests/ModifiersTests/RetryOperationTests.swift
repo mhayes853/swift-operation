@@ -176,6 +176,22 @@ struct RetryOperationTests {
     let indicies = await query.retryIndicies
     expectNoDifference(indicies, [nil, 0, 1, 2, 3, 4])
   }
+
+  @Test("Only Applies First Application Of Retry Modifier")
+  func onlyAppliesFirstApplicationOfRetryModifier() async {
+    let query = RetryIndiciesReadingQuery()
+    let store = OperationStore.detached(
+      query: query.retry(limit: 5)
+        .retry(limit: 3)
+        .backoff(.noBackoff)
+        .delayer(.noDelay),
+      initialValue: nil
+    )
+    expectNoDifference(store.context.operationMaxRetries, 5)
+    _ = try? await store.fetch()
+    let indicies = await query.retryIndicies
+    expectNoDifference(indicies, [nil, 0, 1, 2, 3, 4])
+  }
 }
 
 private actor RetryIndexReadingQuery: QueryRequest, Identifiable {

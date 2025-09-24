@@ -28,9 +28,11 @@ extension OperationRequest {
 
 public struct _RetryModifier<Operation: OperationRequest>: OperationModifier, Sendable {
   let limit: Int
+  private let retryerId = RetryerID()
 
   public func setup(context: inout OperationContext, using operation: Operation) {
     context.operationMaxRetries = self.limit
+    context[RetryerIDKey.self] = self.retryerId
     operation.setup(context: &context)
   }
 
@@ -40,6 +42,10 @@ public struct _RetryModifier<Operation: OperationRequest>: OperationModifier, Se
     using operation: Operation,
     with continuation: OperationContinuation<Operation.Value, Operation.Failure>
   ) async throws(Operation.Failure) -> Operation.Value {
+    guard context[RetryerIDKey.self] === self.retryerId else {
+      return try await operation.run(isolation: isolation, in: context, with: continuation)
+    }
+
     var context = context
     for index in 0..<context.operationMaxRetries {
       do {
@@ -53,6 +59,14 @@ public struct _RetryModifier<Operation: OperationRequest>: OperationModifier, Se
       context.operationMaxRetries > 0 ? context.operationMaxRetries - 1 : nil
     return try await operation.run(isolation: isolation, in: context, with: continuation)
   }
+}
+
+// MARK: - RetryerID
+
+private final class RetryerID: Sendable {}
+
+private enum RetryerIDKey: OperationContext.Key {
+  static var defaultValue: RetryerID? { nil }
 }
 
 // MARK: - OperationContext
