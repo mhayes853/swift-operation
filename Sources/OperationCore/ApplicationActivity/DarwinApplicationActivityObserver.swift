@@ -111,6 +111,8 @@
     @MainActor
     @available(watchOS 7.0, *)
     public struct WKApplicationActivityObserver: DarwinApplicationActivityObserver {
+      public static nonisolated let shared = WKApplicationActivityObserver()
+      
       package static var didBecomeActiveNotification: Notification.Name {
         WKApplication.didBecomeActiveNotification
       }
@@ -126,15 +128,13 @@
       public nonisolated init() {}
     }
 
-    extension WKApplicationActivityObserver {
-      public static nonisolated let shared = WKApplicationActivityObserver()
-    }
-
     /// An ``ApplicationActivityObserver`` that observes the application activity state from
     /// `WKExtension`.
     @MainActor
     @available(watchOS 7.0, *)
     public struct WKExtensionActivityObserver: DarwinApplicationActivityObserver {
+      public static nonisolated let shared = WKExtensionActivityObserver()
+      
       package static var didBecomeActiveNotification: Notification.Name {
         WKExtension.applicationDidBecomeActiveNotification
       }
@@ -148,10 +148,6 @@
       }
 
       public nonisolated init() {}
-    }
-
-    extension WKExtensionActivityObserver {
-      public static nonisolated let shared = WKExtensionActivityObserver()
     }
   #endif
 

@@ -197,7 +197,9 @@ extension OperationClient {
       NSApplicationActivityObserver.shared
     #elseif os(watchOS)
       if #available(watchOS 7.0, *) {
-        WKApplicationActivityObserver.shared
+        isRunningInWatchExtension
+          ? WKExtensionActivityObserver.shared
+          : WKApplicationActivityObserver.shared
       } else {
         nil
       }
