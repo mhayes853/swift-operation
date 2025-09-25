@@ -11,21 +11,36 @@ import SharingOperation
 import SwiftUI
 
 struct PostView: View {
-  // This will begin fetching the post.
-  @SharedOperation(Post.query(for: 1)) var post
+  @SharedOperation<Post.Query.State> var post: Post??
+
+  init(id: Int) {
+    // By default, this will begin fetching the post.
+    self._post = SharedOperation(Post.query(for: id))
+  }
 
   var body: some View {
-    switch self.$post.status {
-    case .result(.success(let post)):
-      VStack(alignment: .leading) {
-        Text(post.title)
-        Text(post.body)
+    Group {
+      VStack {
+        switch self.$post.status {
+        case .result(.success(let post)):
+          if let post {
+            PostDetailView(post: post)
+          } else {
+            Text("Post Not Found")
+          }
+        case .result(.failure(let error)):
+          Text("Error: \(error.localizedDescription).")
+        case .loading:
+          ProgressView()
+        default:
+          EmptyView()
+        }
+        Button("Reload") {
+          Task { try await self.$post.fetch() }
+        }
       }
-    case .result(.failure(let error)):
-      Text("Error: \(error.localizedDescription).")
-    default:
-      ProgressView()
     }
+    .frame(maxWidth: .infinity, alignment: .leading)
   }
 }
 ```

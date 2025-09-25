@@ -1,6 +1,6 @@
 # ``Operation``
 
-Powerful asynchronous state management for Swift, SwiftUI, Linux, WASM, and more.
+Flexible asynchronous operation and state management for SwiftUI, Linux, WASM, and more.
 
 ## Overview
 

@@ -4,9 +4,34 @@ Learn how to utilize ``OperationPath`` and ``OperationClient`` to pattern match 
 
 ## Overview
 
-While the library provides powerful tools to help you fetch data, managing consistency of the fetched data is a whole other challenge, and often a more complicated one than fetching the data itself.
+While the library provides powerful tools to help you fetch data and run other complex operations, managing consistency of the fetched data is a whole other challenge, and often a more complicated one than fetching the data itself.
 
-For example, let's consider the scenario of a typical social platform where users can send friend requests to each other, and where users can see their and others' list of friends and requested friends. The `relationship` field for each user in the list will represent the current active user's relationship to that user. We may model 1 paginated request and 1 mutation in this scenario. For the friends list, we may utilize a paginated request, and sending a friend request could be modeled as a mutation.
+The `@SharedOperation` property wrapper is the primary manner in which you observe the state of an operation in your application. In fact, when multiple instances of the property wrapper are in-memory, they will refer to the same ``OperationStore`` under the hood. This means that your operation is efficiently observed in the sense that the state of one operation run is reported to multiple `@SharedOperation` property wrapper instances.
+
+```swift
+// ParentView and ChildView observe the same post operation.
+// Therefore the post is only fetched a single time.
+
+struct ParentView: View {
+  @SharedOperation(Post.query(for: 10)) private var post
+
+  var body: some View {
+    ChildView()
+  }
+}
+
+struct ChildView: View {
+  @SharedOperation(Post.query(for: 10)) private var post
+
+  var body: some View {
+    // ...
+  }
+}
+```
+
+However, this is just the tip of the iceberg. In many cases, the result of running some operation should affect the data represented by other operations. 
+
+Consider the scenario of a typical social platform where users can send friend requests to each other, and where users can see their and others' list of friends and requested friends. The `relationship` field for each user in the list will represent the current active user's relationship to that user. We may model 1 paginated operation and 1 mutation in this scenario. For the friends list, we may utilize a paginated operation, and sending a friend request could be modeled as a mutation.
 
 ```swift
 struct User: Sendable {
@@ -122,10 +147,10 @@ struct SendFriendRequestMutation: MutationRequest, Hashable {
     in context: OperationContext,
     with continuation: OperationContinuation<Void, any Error>
   ) async throws {
+    @Dependency(\.defaultOperationClient) var client
     try await sendFriendRequest(userId: arguments.userId)
 
     // Friend request sent successfully, now update the friends list.
-    guard let client = context.operationClient else { return }
     let query = UserFriendsQuery(userId: arguments.userId)
     let store = client.store(for: query)
     store.withExclusiveAccess { store in
@@ -180,7 +205,7 @@ In this case, we have 2 identifying components of the query. First, we use a str
 The real power of splitting the path into an array of multiple components is that you can pattern match the query utilizing a prefix. For instance, you can get access to the `OperationStore`s for all user friend list queries on an `OperationClient` by checking if the path starts with `["user-friends"]`.
 
 ```swift
-OperationClient.stores(
+client.stores(
   matching: ["user-friends"],
   of: User.FriendsQuery.State.self
 )
@@ -204,11 +229,11 @@ struct SendFriendRequestMutation: MutationRequest, Hashable {
     in context: OperationContext,
     with continuation: OperationContinuation<Void, any Error>
   ) async throws {
+    @Dependency(\.defaultOperationClient) var client
     try await sendFriendRequest(userId: arguments.userId)
 
-    // Friend request sent successfully, now update all
-    // friends lists in the app.
-    guard let client = context.operationClient else { return }
+    // Friend request succeeded, now optimistically update the state of all 
+    // friends list queries in the app.
     let stores = client.stores(
       matching: ["user-friends"],
       of: User.FriendsQuery.State.self
@@ -265,7 +290,7 @@ struct SendFriendRequestMutation: MutationRequest, Hashable {
     userId: Int,
     in context: OperationContext
   ) {
-    guard let client = context.operationClient else { return }
+    @Dependency(\.defaultOperationClient) var client
     let stores = client.stores(
       matching: ["user-friends"],
       of: User.FriendsQuery.State.self
@@ -296,11 +321,11 @@ struct SendFriendRequestMutation: MutationRequest, Hashable {
     in context: OperationContext,
     with continuation: OperationContinuation<Void, any Error>
   ) async throws {
+    @Dependency(\.defaultOperationClient) var client
     try await sendFriendRequest(userId: arguments.userId)
 
     // Friend request sent successfully, now refetch all
     // friends lists in the app.
-    guard let client = context.operationClient else { return }
     Task {
       try await withThrowingTaskGroup(of: Void.self) { group in
         for store in client.stores(matching: ["user-friends"]) {

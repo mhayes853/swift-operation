@@ -399,7 +399,18 @@ extension OperationTask {
       box: self.box
     )
   }
-
+  
+  /// Returns a new `OperationTask` that applies a transformation to this work's error value of
+  /// this task.
+  ///
+  /// The new `OperationTask` has the same ``OperationTaskIdentifier``, and points to the same
+  /// underlying reference as this task. This means that the 2 tasks remain equivalent with each
+  /// other according to `Hashable` and `Equatable`, and that their running states will be
+  /// equivalent. When ``runIfNeeded()`` is called on either task, both will be in a running state.
+  ///
+  /// - Parameter transform: A closure to transform the work's error value from this task.
+  /// - Returns: A new `OperationTask` with the new work error value that has the same underlying
+  ///   reference an identifier as this task.
   public func mapError<E: Error>(
     _ transform: @escaping @Sendable (Failure) -> E
   ) -> OperationTask<Value, E> {

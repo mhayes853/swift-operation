@@ -63,7 +63,7 @@ import Combine
 
 let subject = PassthroughSubject<Bool, Never>()
 let query = MyQuery().staleWhen(
-specification: .observing(publisher: subject, initialValue: true)
+  specification: .observing(publisher: subject, initialValue: true)
 )
 ```
 
