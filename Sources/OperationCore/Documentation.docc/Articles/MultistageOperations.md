@@ -56,43 +56,6 @@ extension QueryData {
 }
 ```
 
-> Note: Instead of using a singleton for `Cache`, you may consider using a custom property on the ``OperationContext`` allowing you to do things like reliably running tests in parallel no matter what key is used.
-> ```swift
-> extension OperationContext {
->   var cache: Cache {
->     get { self[CacheKey.self] }
->     set { self[CacheKey.self] = newValue }
->   }
->
->   private enum CacheKey: Key {
->     static var defaultValue: Cache { Cache() }
->   }
-> }
-> ```
->
-> Then, you can update `CacheableQuery` to use the new context property.
->
-> ```diff
-> struct CacheableQuery: QueryRequest, Hashable {
->   let key: String
->
->   func fetch(
->     isolation: isolated (any Actor)?,
->     in context: OperationContext,
->     with continuation: OperationContinuation<QueryData, any Error>
->   ) async throws -> QueryData {
-> -     if let cachedData = Cache.shared[key] {
-> +     if let cachedData = context.cache[key] {
->       continuation.yield(cachedData)
->     }
->     let freshData = try await fetchFreshData()
-> -     Cache.shared[key] = freshData
-> +     context.cache[key] = freshData
->     return freshData
->   }
-> }
-> ```
-
 In the above example, we first yield a cached value from the query if one exists in the cache, and then afterwards we fetch the latest data from the network. After receiving the fresh data, we ensure to update the cache with the fresh data before returning.
 
 Now we can consume the yielded cached data in our UI while we fetch the real data in the background. Furthermore, `isLoading` will still be true on the query state while the fresh data is being fetched despite yielding cached data. This allows you to still show a loading spinner in your UI at the same time the cached data is displayed.
@@ -229,9 +192,16 @@ extension EventsList {
       }
       // Look for other EventLists we've fetched and use the data from
       // any that are within the distance threshold.
-      for store in client.stores(matching: ["nearby-events"], of: State.self) {
-        if store.currentValue.region.distance(to: region) < context.distanceThreshold {
-          continuation.yield(EventsList(region: region, events: list.events))
+      let stores = client.stores(
+        matching: ["nearby-events"], 
+        of: State.self
+      )
+      for store in stores {
+        let distance = store.currentValue.region.distance(to: region)
+        if distance < context.distanceThreshold {
+          continuation.yield(
+            EventsList(region: region, events: list.events)
+          )
         }
       }
       return try await fetchActualEventList(region)

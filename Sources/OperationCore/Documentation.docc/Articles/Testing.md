@@ -12,7 +12,7 @@ Let's take a look at how we can test operations depending on your usage of the l
 
 ## Reliable and Deterministic Tests
 
-Depending on your usage of the library, you may implement a class `SomeModel` that utilizes `SomeData.query` in the following ways.
+Depending on your usage of the library, you may implement a class `SomeModel` that utilizes `SomeData.query`.
 
 **Sharing**
 ```swift
@@ -27,66 +27,13 @@ final class SomeModel {
 }
 ```
 
-**Combine**
-```swift
-import Operation
-import Combine
-
-@MainActor
-final class SomeModel: ObservableObject {
-  @Published var value: String?
-  private var cancellables = Set<AnyCancellable>()
-
-  init(
-    client: OperationClient,
-    scheduler: some Scheduler = DispatchQueue.main
-  ) {
-    client.store(for: SomeData.query)
-      .publisher
-      .receive(on: scheduler)
-      .sink { [weak self] output in
-        self?.value = output.state.currentValue
-      }
-      .store(in: &cancellables)
-  }
-}
-```
-
-**Pure Swift (With Observation)**
-```swift
-import Observation
-import Operation
-
-@MainActor
-@Observable
-final class SomeModel {
-  var value: String?
-
-  @ObservationIgnored private var subscriptions = Set<OperationSubscription>()
-
-  init(client: OperationClient) {
-    let store = client.store(for: SomeData.query)
-    store.subscribe(
-      with: QueryEventHandler { [weak self] state, _ in
-        Task { @MainActor in
-          self?.value = state.currentValue
-        }
-      }
-    )
-    .store(in: &subscriptions)
-  }
-}
-```
-
 In a test suite, your first instinct may be to assert on `value`. However, `value` will likely be in a loading state once the test begins, and it's difficult to determine when it will have been loaded.
-
-> Note: If you're code follows the Sharing example, you will override `@Dependency(\.operationClient)` instead of passing an `OperationClient` to `SomeModel`'s initializer.
 
 ```swift
 @Test
 @MainActor
 func valueLoads() {
-  let model = SomeModel(client: OperationClient())
+  let model = SomeModel()
   #expect(model.value == nil)
 
   // Wait for value to load...
@@ -95,36 +42,20 @@ func valueLoads() {
 }
 ```
 
-The main issue here is the "Wait for value to load..." comment as it's not exactly clear when `model.value` will have been loaded. To get around this, you can technically reach into the ``OperationStore`` for `SomeData.query`, and call ``OperationStore/fetch(using:handler:)``. Since by default, queries are deduplicated, this will not unnecessarily invoke the query. Rather, it will await for the ongoing fetch call to finish.
+The main issue here is the "Wait for value to load..." comment as it's not exactly clear when `model.value` will have been loaded. To get around this, you can invoke `load` on the `@SharedOperation` property wrapper. Since by default, queries are deduplicated, this will not unnecessarily invoke the query. Rather, it will await for the ongoing fetch call to finish.
 
 ```swift
 @Test
 @MainActor
 func valueLoads() async throws {
-  let client = OperationClient()
-
-  let model = SomeModel(client: client)
+  let model = SomeModel()
   #expect(model.value == nil)
 
-  try await client.store(for: SomeData.query).fetch()
+  try await model.$value.load()
 
   #expect(model.value == "loaded")
 }
 ```
-
-> Note: If you're code follows the Sharing example, then you can also invoke `load` directly on the `@SharedOperation` property.
-> ```swift
-> @Test
-> @MainActor
-> func valueLoads() async throws {
->   let model = SomeModel()
->   #expect(model.value == nil)
->
->   try await model.$value.load()
->
->   #expect(model.value == "loaded")
-> }
-> ```
 
 ## Testing Operations Directly
 
@@ -144,4 +75,4 @@ func valueLoades() async throws {
 
 ## Conclusion
 
-The biggest hurdle in testing how your code interacts with your operations is managing to have control over their execution. To clear this hurdle, you can hook into the underlying ``OperationStore``, or you can test the operation using the store directly.
+The biggest hurdle in testing how your code interacts with your operations is managing to have control over their execution. To clear this hurdle, you can hook into the various APIs provided by the `@SharedOperation` property wrapper, or you can test the operation using an `OperationStore` directly.

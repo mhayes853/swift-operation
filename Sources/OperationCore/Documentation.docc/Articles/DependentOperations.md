@@ -57,7 +57,9 @@ extension Project {
       return try await self.fetchProjects(for: user.id)
     }
 
-    private func fetchProjects(for userId: UUID) async throws -> [Project] {
+    private func fetchProjects(
+      for userId: UUID
+    ) async throws -> [Project] {
       // ...
     }
   }
@@ -103,7 +105,9 @@ extension Project {
       return try await self.fetchProjects(for: user.id)
     }
 
-    private func fetchProjects(for userId: UUID) async throws -> [Project] {
+    private func fetchProjects(
+      for userId: UUID
+    ) async throws -> [Project] {
       // ...
     }
   }
@@ -162,7 +166,6 @@ final class UserProjectsModel {
         guard let self else { return }
         if let user = element.state.currentValue {
           self.$projects = SharedOperation(
-            wrappedValue: nil,
             Project.userProjectsQuery(for: user.id)
           )
         } else {
@@ -175,6 +178,34 @@ final class UserProjectsModel {
 ```
 
 Here, we regain the ability to have the `userId` in the `OperationPath` of the projects query, at the cost of ergonomics around how the query is constructed. This way, we allow for distinct user project queries to be represented by an `OperationPath`.
+
+However, you can also rely on SwiftUI to rerender a child view with your dependent operation, and reconstruct the `@SharedOperation` every time the child view is recreated.
+```swift
+struct UserProjectsView: View {
+  @SharedOperation(User.currentQuery) var user
+
+  var body: some View {
+    if let user {
+      ProjectsListView(userId: user.id)
+    }
+  }
+}
+
+struct ProjectsListView: View {
+  @SharedOperation<Project.UserProjectsQuery.State> var projects
+
+  init(userId: Int) {
+    self._projects = SharedOperation(
+      Project.userProjectsQuery(for: user.id)
+    )
+  }
+
+  var body: some View {
+    // ...
+  }
+}
+```
+However, the disadvantage of this is that you no longer get to have both operations in a shared `@Observable` model.
 
 ## Operation Merging
 
@@ -201,7 +232,9 @@ extension Project {
       // ...
     }
 
-    private func fetchProjects(for userId: UUID) async throws -> [Project] {
+    private func fetchProjects(
+      for userId: UUID
+    ) async throws -> [Project] {
       // ...
     }
   }

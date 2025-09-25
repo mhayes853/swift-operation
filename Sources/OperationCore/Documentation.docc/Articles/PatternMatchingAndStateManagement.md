@@ -232,8 +232,8 @@ struct SendFriendRequestMutation: MutationRequest, Hashable {
     @Dependency(\.defaultOperationClient) var client
     try await sendFriendRequest(userId: arguments.userId)
 
-    // Friend request succeeded, now optimistically update the state of all 
-    // friends list queries in the app.
+    // Friend request succeeded, now optimistically update the 
+    // state of all friends list queries in the app.
     let stores = client.stores(
       matching: ["user-friends"],
       of: User.FriendsQuery.State.self
@@ -266,8 +266,8 @@ struct SendFriendRequestMutation: MutationRequest, Hashable {
     in context: OperationContext,
     with continuation: OperationContinuation<Void, any Error>
   ) async throws {
-    // Optimistically update the user relationships, and reset them to the
-    // default state if the mutation fails.
+    // Optimistically update the user relationships, and reset them 
+    // to the default state if the mutation fails.
     do {
       updateRelationships(
         for: arguments.userId,

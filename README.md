@@ -1,4 +1,5 @@
 # Swift Operation
+[![CI](https://github.com/mhayes853/swift-operation/actions/workflows/ci.yml/badge.svg)](https://github.com/mhayes853/swift-operation/actions/workflows/ci.yml)
 Flexible asynchronous operation and state management for SwiftUI, Linux, WASM, and more.
 
 ## Motivation
@@ -38,7 +39,10 @@ extension Post {
       with continuation: OperationContinuation<Post?, any Error>
     ) async throws -> Post? {
       let url = URL(string: "https://dummyjson.com/posts/\(id)")!
-      let (data, _) = try await URLSession.shared.data(from: url)
+      let (data, resp) = try await URLSession.shared.data(from: url)
+      if (resp as? HTTPURLResponse)?.statusCode == 404 {
+        return nil
+      }
       return try JSONDecoder().decode(Post.self, from: data)
     }
   }

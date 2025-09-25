@@ -7,12 +7,14 @@ Learn about how to create a custom operation type. In this article, we'll explor
 The library provides 3 operation types that are applicable to different situations:
 
 1. **Queries**: The most basic type that supports fetching any kind of data.
-2. **Paginated Requests**: A type for fetching paginated data that can be put into an infinite scrollable list piece by piece.
+2. **Pagination**: A type for fetching paginated data that can be put into an infinite scrollable list piece by piece.
 3. **Mutations**: A type for updating data asynchronously, such as performing a POST request to an API.
 
 All types are built on top of the ``OperationRequest`` protocol, and so all modifiers and functionallity that works with a generic `OperationRequest` will also work with all 3 types.
 
-You can also build your own operation types to support cases that the built-in types don't support by inheriting from the `OperationRequest` protocol. We'll explore how one could make a simplified type for fetching recursive data such as nested comments in a comment thread. This is an advanced topic, but the built-in type should support nearly every case you encounter in your app, so implementing your own type should be relatively rare. Nevertheless, this article still serves as insight into how the built-in types work under the hood, and should further your understanding of the internals of the library.
+You can also build your own operation types to support cases that the built-in types don't support by inheriting from the `OperationRequest` protocol. We'll explore how one could make a simplified type for fetching recursive data such as nested comments in a comment thread. 
+
+This is a very advanced topic, but the built-in types should support nearly every case you encounter in your app, so implementing your own type should be relatively rare. Nevertheless, this article still serves as insight into how the built-in types work under the hood, and should further your understanding of the of the library.
 
 ## Building a Recursive Operation Type
 
@@ -107,7 +109,8 @@ struct RecursiveState<Value: RecursiveValue>: OperationState {
   private(set) var error: (any Error)?
   private(set) var errorUpdateCount = 0
   private(set) var errorLastUpdatedAt: Date?
-  private(set) var activeTasks = IdentifiedArrayOf<OperationTask<Value, any Error>>()
+  private(set) var activeTasks = 
+    IdentifiedArrayOf<OperationTask<Value, any Error>>()
 
   init(initialValue: Value) {
     self.currentValue = initialValue
@@ -241,7 +244,9 @@ struct RecursiveState<Value: RecursiveValue>: OperationState {
     !self.activeTasks.isEmpty
   }
 
-  mutating func scheduleFetchTask(_ task: inout OperationTask<Value, any Error>) {
+  mutating func scheduleFetchTask(
+    _ task: inout OperationTask<Value, any Error>
+  ) {
     activeTasks.append(task)
   }
 
@@ -249,7 +254,7 @@ struct RecursiveState<Value: RecursiveValue>: OperationState {
 }
 ```
 
-> Note: In a real implementation, we may want to see if we are also fetching subtrees for the parent nodes and wait for those tasks to finish first before fetching the subtree. For that we can use the ``OperationTask/schedule(after:)-(OperationTask<V,E>)`` API.
+> Note: In a real implementation, we may want to see if we are also fetching subtrees for the parent nodes and wait for those tasks to finish first before fetching the subtree. For that you can use the `OperationTask.schedule` API.
 
 As we can see here, we just need to append the task to our list of active tasks on the state, and we can even compute `isLoading` by checking if there are any active tasks on the state.
 
@@ -320,7 +325,9 @@ Once the operation itself stops running, the `OperationStore` will indicate to t
 struct RecursiveState<Value: RecursiveValue>: OperationState {
   // ...
 
-  mutating func finishFetchTask(_ task: OperationTask<QueryValue, any Error>) {
+  mutating func finishFetchTask(
+    _ task: OperationTask<QueryValue, any Error>
+  ) {
     activeTasks.remove(id: task.id)
   }
 
@@ -486,7 +493,8 @@ struct RecursiveState<
   private(set) var error: (any Error)?
   private(set) var errorUpdateCount = 0
   private(set) var errorLastUpdatedAt: Date?
-  private(set) var activeTasks = IdentifiedArrayOf<OperationTask<Value, any Error>>()
+  private(set) var activeTasks = 
+    IdentifiedArrayOf<OperationTask<Value, any Error>>()
 
   init(initialValue: Value) {
     self.currentValue = initialValue
@@ -497,7 +505,9 @@ struct RecursiveState<
     !self.activeTasks.isEmpty
   }
 
-  mutating func scheduleFetchTask(_ task: inout OperationTask<Value, any Error>) {
+  mutating func scheduleFetchTask(
+    _ task: inout OperationTask<Value, any Error>
+  ) {
     activeTasks.append(task)
   }
 
@@ -525,7 +535,9 @@ struct RecursiveState<
     update(with: result, using: task.context)
   }
 
-  mutating func finishFetchTask(_ task: OperationTask<OperationValue, any Error>) {
+  mutating func finishFetchTask(
+    _ task: OperationTask<OperationValue, any Error>
+  ) {
     activeTasks.remove(id: task.id)
   }
 

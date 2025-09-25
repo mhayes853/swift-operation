@@ -74,13 +74,21 @@ In this example, the query will be considered stale when the subject emits a val
 > // query and query2 are functionality equivalent.
 >
 > let query = MyQuery()
->   .staleWhen(specification: .applicationIsActive(observer: UIApplicationActivityObserver.shared))
->   .staleWhen(specification: .connected(to: NWPathMonitorObserver.shared))
+>   .staleWhen(
+>     specification: .applicationIsActive(
+>       observer: UIApplicationActivityObserver.shared
+>     )
+>   )
+>   .staleWhen(
+>     specification: .connected(to: NWPathMonitorObserver.shared)
+>   )
 >
 > let query2 = MyQuery().staleWhen(
 >   specification:
->     .applicationIsActive(observer: UIApplicationActivityObserver.shared))
->       || .connected(to: NWPathMonitorObserver.shared)
+>     .applicationIsActive(
+>       observer: UIApplicationActivityObserver.shared)
+>     )
+>     || .connected(to: NWPathMonitorObserver.shared)
 > )
 > ```
 
@@ -91,8 +99,11 @@ The ``!(_:)``, ``||(_:_:)``, and ``&&(_:_:)`` operators have been overloaded for
 ```swift
 let query = MyQuery().staleWhen(
   specification:
-    .connected(to: NWPathMonitorObserver.startingShared())
-      && .applicationIsActive(observer: UIApplicationActivityObserver.shared))
+    .connected(
+      to: NWPathMonitorObserver.startingShared()
+    )
+    && 
+    .applicationIsActive(observer: UIApplicationActivityObserver.shared))
 )
 ```
 
