@@ -62,10 +62,10 @@ Now we can consume the yielded cached data in our UI while we fetch the real dat
 
 ```swift
 import SwiftUI
-import Operation
+import SharingOperation
 
 struct ContentView: View {
-  @State.Operation(QueryData.cacheableQuery(for: "example")) var value
+  @SharedOperation(QueryData.cacheableQuery(for: "example")) var value
 
   var body: some View {
     VStack {
@@ -193,7 +193,7 @@ extension EventsList {
       // Look for other EventLists we've fetched and use the data from
       // any that are within the distance threshold.
       let stores = client.stores(
-        matching: ["nearby-events"], 
+        matching: ["nearby-events"],
         of: State.self
       )
       for store in stores {

@@ -14,7 +14,6 @@ Let's take a look at how we can test operations depending on your usage of the l
 
 Depending on your usage of the library, you may implement a class `SomeModel` that utilizes `SomeData.query`.
 
-**Sharing**
 ```swift
 import Observation
 import SharingOperation
