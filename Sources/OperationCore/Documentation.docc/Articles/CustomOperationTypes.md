@@ -70,7 +70,7 @@ where Value == NodeValue {
 +    isolation: isolated (any Actor)?,
 +    for id: NodeID,
 +    in context: OperationContext,
-+    with continuation: OperationContinuation<NodeValue>
++    with continuation: OperationContinuation<NodeValue, any Error>
 +  ) async throws -> NodeValue
 }
 ```
@@ -89,7 +89,7 @@ where Value == NodeValue {
     isolation: isolated (any Actor)?,
     for id: NodeID,
     in context: OperationContext,
-    with continuation: OperationContinuation<NodeValue>
+    with continuation: OperationContinuation<NodeValue, any Error>
   ) async throws -> NodeValue
 }
 ```
@@ -136,7 +136,7 @@ protocol RecursiveRequest<NodeValue, NodeID>: StatefulOperationRequest
     isolation: isolated (any Actor)?,
     for id: NodeID,
     in context: OperationContext,
-    with continuation: OperationContinuation<NodeValue>
+    with continuation: OperationContinuation<NodeValue, any Error>
   ) async throws -> NodeValue
 }
 ```

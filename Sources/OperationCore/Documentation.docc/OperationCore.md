@@ -117,7 +117,7 @@ extension Post {
       request.httpMethod = "POST"
       request.httpBody = try JSONEncoder().encode(arguments)
       request.addValue(
-        "application/json", 
+        "application/json",
         forHTTPHeaderField: "Content-Type"
       )
       let (data, _) = try await URLSession.shared.data(for: request)
@@ -209,7 +209,7 @@ extension Post {
         queryItems: [
           URLQueryItem(name: "limit", value: "\(Self.limit)"),
           URLQueryItem(
-            name: "skip", 
+            name: "skip",
             value: "\(paging.pageId * Self.limit)"
           )
         ]
@@ -275,8 +275,8 @@ struct DelayModifer<
   ) async throws(Operation.Failure) -> Operation.Value {
     try? await context.operationDelayer.delay(for: self.duration)
     return try await operation.run(
-      isolation: isolation, 
-      in: context, 
+      isolation: isolation,
+      in: context,
       with: continuation
     )
   }
@@ -386,3 +386,198 @@ The library ships with a handful of package traits, which allow you to condition
 - `SwiftOperationNavigation` - Integrates SwiftNavigation's `UITransaction` with `@SharedOperation`.
 - `SwiftOperationUIKitNavigation` - Integrates UIKitNavigation's `UIKitAnimation` with `@SharedOperation`.
 - `SwiftOperationAppKitNavigation` - Integrates AppKitNavigation's `AppKitAnimation` with `@SharedOperation`.
+
+## Topics
+
+### Operations
+- ``OperationRequest``
+- ``OperationContext``
+- ``OperationContinuation``
+- ``QueryRequest``
+- ``MutationRequest``
+- ``PaginatedRequest``
+- <doc:UtilizingOperationContext>
+- <doc:MultistageOperations>
+- <doc:DependentOperations>
+- <doc:NetworkLayer>
+- <doc:Testing>
+- <doc:CustomOperationTypes>
+
+### Operation State
+- ``StatefulOperationRequest``
+- ``OperationState``
+- ``OperationStatus``
+- ``QueryState``
+- ``MutationState``
+- ``PaginatedState``
+- ``OpaqueOperationState``
+- ``OperationStore/resetState(using:)``
+- ``OperationStateResetEffect``
+
+### Operation Client
+- ``OperationClient``
+- ``OperationClient/StoreCache``
+- ``OperationClient/StoreCreator``
+
+### Operation Store
+- ``OperationStore``
+- ``OperationClient/store(for:initialState:)->OperationStore<Operation.State>``
+- ``OpaqueOperationStore``
+
+### Operation Path
+- ``OperationPath``
+- ``OperationPathable``
+- ``OperationPathableCollection``
+- ``OperationClient/stores(matching:of:)``
+- ``OperationClient/withStores(matching:of:perform:)``
+- <doc:PatternMatchingAndStateManagement>
+
+### Stale When Revalidate
+- ``StatefulOperationRequest/staleWhen(predicate:)``
+- ``StatefulOperationRequest/staleWhenNoValue()``
+- ``StatefulOperationRequest/stale(after:)``
+- ``StatefulOperationRequest/staleWhen(satisfying:)``
+- ``OperationStore/isStale``
+
+### Default Values
+- ``DefaultOperationState``
+- ``DefaultableOperationState``
+- ``DefaultStateOperation``
+- ``StatefulOperationRequest/defaultValue(_:)``
+- <doc:OperationDefaults>
+
+### Event Handling
+- ``OperationEventHandler``
+- ``OpaqueOperationEventHandler``
+- ``OperationResultUpdateReason``
+- ``OperationStore/subscribe(with:)-(OperationEventHandler<State>)``
+- ``StatefulOperationRequest/handleEvents(with:)``
+
+### Modifiers
+- ``OperationModifier``
+- ``ModifiedOperation``
+- ``OperationRequest/backoff(_:)``
+- ``OperationRequest/clock(_:)``
+- ``OperationRequest/retry(limit:)``
+- ``OperationRequest/taskConfiguration(_:)-((OperationTaskConfiguration)->Void)``
+- ``OperationRequest/deduplicated()``
+- ``OperationRequest/modifier(_:)``
+
+### Queries
+- ``QueryRequest``
+- ``QueryState``
+- ``QueryEventHandler``
+- ``OperationStore/fetch(using:handler:)``
+
+### Mutations
+- ``MutationRequest``
+- ``MutationState``
+- ``MutationEventHandler``
+- ``MutationOperationValue``
+- ``MutationState/HistoryEntry``
+- ``MutationRequest/maxHistory(length:)``
+- ``OperationStore/mutate(with:using:handler:)``
+- ``OperationStore/retryLatest(using:handler:)``
+
+### Pagination
+- ``PaginatedRequest``
+- ``PaginatedState``
+- ``PaginatedEventHandler``
+- ``Pages``
+- ``Paging``
+- ``Page``
+- ``PagingRequest``
+- ``PagesFor``
+- ``PaginatedOperationValue``
+- ``OperationStore/fetchNextPage(using:handler:)``
+- ``OperationStore/fetchPreviousPage(using:handler:)``
+- ``OperationStore/refetchAllPages(using:handler:)``
+
+### Controllers
+- ``OperationController``
+- ``ControlledOperation``
+- ``OperationControls``
+- ``StatefulOperationRequest/controlled(by:)``
+
+### Run Specifications
+- ``OperationRunSpecification``
+- ``AlwaysRunSpecification``
+- ``AsyncSequenceRunSpecification``
+- ``PublisherRunSpecification``
+- ``AnySendableRunSpecification``
+- ``StatefulOperationRequest/enableAutomaticRunning(onlyWhen:)``
+- ``StatefulOperationRequest/rerunOnChange(of:)``
+- <doc:UtilizingRunSpecifications>
+
+#### Boolean Operators
+- ``&&(_:_:)``
+- ``||(_:_:)``
+- ``BinaryOperatorRunSpecification``
+- ``!(_:)``
+- ``NotRunSpecification``
+
+### Subscriptions
+- ``OperationSubscription``
+
+### Network Connection Observing
+- ``NetworkObserver``
+- ``NetworkConnectionStatus``
+- ``NetworkConnectionRunSpecification``
+- ``AnySendableNetworkObserver``
+- ``NWPathMonitorObserver``
+- ``MockNetworkObserver``
+- ``OperationRequest/satisfiedConnectionStatus(_:)``
+- ``OperationRequest/completelyOffline(_:)``
+
+### Application Activity Observing
+- ``ApplicationActivityObserver``
+- ``ApplicationIsActiveRunSpecification``
+- ``UIApplicationActivityObserver``
+- ``NSApplicationActivityObserver``
+- ``WKExtensionActivityObserver``
+- ``WKApplicationActivityObserver``
+- ``OperationRequest/disableApplicationActiveRerunning(_:)``
+
+### Memory Pressure Observing
+- ``MemoryPressureSource``
+- ``MemoryPressure``
+- ``DispatchMemoryPressureSource``
+- ``OperationRequest/evictWhen(pressure:)``
+
+### Controlling Time
+- ``OperationClock``
+- ``SystemTimeClock``
+- ``TimeFreezeClock``
+- ``CustomOperationClock``
+- ``OperationClock/frozen()``
+
+### Backoff
+- ``OperationBackoffFunction``
+- ``OperationBackoffFunction/exponential(_:)``
+- ``OperationRequest/backoff(_:)``
+- ``OperationDelayer``
+- ``TaskSleepDelayer``
+- ``NoDelayer``
+- ``AnySendableDelayer``
+- ``ClockDelayer``
+- ``OperationRequest/delayer(_:)``
+- ``OperationDuration``
+
+### Tasks
+- ``OperationTask``
+- ``OperationTask/runIfNeeded()``
+- ``OperationTaskIdentifier``
+- ``OperationTaskConfiguration``
+- ``OperationTaskInfo``
+- ``OperationRequest/taskConfiguration(_:)-((OperationTaskConfiguration)->Void)``
+- ``OperationStore/runTask(using:)``
+- ``QueryState/activeTasks``
+
+### Async Sequences
+- ``OperationStore/AsyncStates``
+- ``OperationStore/states``
+
+### Combine
+- ``OperationStore/Publisher``
+- ``OperationStore/publisher``
+- ``OperationSubscription/Combine``

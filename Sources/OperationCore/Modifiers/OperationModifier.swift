@@ -86,6 +86,7 @@ public protocol OperationModifier<Value, Failure> {
   /// Runs the specified operation with this modifier's behavior attached.
   ///
   /// - Parameters:
+  ///   - isolation: The current isolation context of the `operation` run.
   ///   - context: The ``OperationContext`` passed to this modifier.
   ///   - operation: The specified operation to run.
   ///   - continuation: An ``OperationContinuation`` allowing you to yield multiple values from your
@@ -100,8 +101,8 @@ public protocol OperationModifier<Value, Failure> {
 }
 
 extension OperationModifier {
-  public func setup(context: inout OperationContext, using query: Operation) {
-    query.setup(context: &context)
+  public func setup(context: inout OperationContext, using operation: Operation) {
+    operation.setup(context: &context)
   }
 }
 

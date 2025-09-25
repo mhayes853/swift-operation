@@ -91,7 +91,7 @@ extension Project {
   struct UserProjectsQuery: QueryRequest {
     func fetch(
       in context: OperationContext,
-      with continuation: OperationContinuation<[Project]>
+      with continuation: OperationContinuation<[Project], any Error>
     ) async throws -> [Project] {
 -      guard let client = context.operationClient else { return [] }
 -      let store = client.store(for: User.currentQuery)
@@ -140,7 +140,7 @@ extension Project {
 
     func fetch(
       in context: OperationContext,
-      with continuation: OperationContinuation<[Project]>
+      with continuation: OperationContinuation<[Project], any Error>
     ) async throws -> [Project] {
       // ...
     }
@@ -222,7 +222,7 @@ extension Project {
 
     func fetch(
       in context: OperationContext,
-      with continuation: OperationContinuation<[Project]>
+      with continuation: OperationContinuation<[Project], any Error>
     ) async throws -> [Project] {
       let user = try await self.fetchCurrentUser()
       return try await self.fetchProjects(for: user.id)

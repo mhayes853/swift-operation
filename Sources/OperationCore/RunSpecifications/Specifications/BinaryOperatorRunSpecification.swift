@@ -36,7 +36,7 @@ where Left: Sendable, Right: Sendable, Operator: Sendable {}
 /// - Parameters:
 ///   - left: The left hand side condition.
 ///   - right: The right hand side condition.
-/// - Returns: A ``BinaryOperatorCondition`` that applies a boolean AND.
+/// - Returns: A ``BinaryOperatorRunSpecification`` that applies a boolean AND.
 public func && <Left: OperationRunSpecification, Right: OperationRunSpecification>(
   _ left: Left,
   _ right: Right
@@ -50,7 +50,7 @@ public func && <Left: OperationRunSpecification, Right: OperationRunSpecificatio
 /// - Parameters:
 ///   - left: The left hand side condition.
 ///   - right: The right hand side condition.
-/// - Returns: A ``BinaryOperatorCondition`` that applies a boolean OR.
+/// - Returns: A ``BinaryOperatorRunSpecification`` that applies a boolean OR.
 public func || <Left: OperationRunSpecification, Right: OperationRunSpecification>(
   _ left: Left,
   _ right: Right

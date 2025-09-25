@@ -9,7 +9,7 @@
     ///
     /// - Parameters:
     ///   - store: The `OperationStore` to subscribe to.
-    ///   - scheduler: The `Animation` to use for state updates.
+    ///   - animation: The `Animation` to use for state updates.
     public init(store: OperationStore<State>, animation: Animation) {
       self.init(store: store, scheduler: .animation(animation))
     }
@@ -24,7 +24,7 @@
     ///   - operation: The `OperationRequest`.
     ///   - initialState: The initial state.
     ///   - client: An `OperationClient` to obtain the `OperationStore` from.
-    ///   - scheduler: The ``SharedOperationStateScheduler`` to schedule state updates on.
+    ///   - animation: The ``SharedOperationStateScheduler`` to schedule state updates on.
     public init<Operation: StatefulOperationRequest>(
       _ operation: sending Operation,
       initialState: Operation.State,

@@ -12,7 +12,7 @@
 ///   func fetch(
 ///     isolation: isolated (any Actor)?,
 ///     in context: OperationContext,
-///     with continuation: OperationContinuation<QueryData>
+///     with continuation: OperationContinuation<QueryData, any Error>
 ///   ) async throws -> QueryData {
 ///     if let cachedData = context.cache[key] {
 ///       continuation.yield(cachedData)
