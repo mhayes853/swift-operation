@@ -5,16 +5,20 @@
 
   /// A ``NetworkObserver`` that utilizes `NWPathMonitor` to observe an interface's connection
   /// status.
-  public final class NWPathMonitorObserver: Sendable {
+  public final class NWPathMonitorObserver: NetworkObserver, Sendable {
     private typealias Handler = @Sendable (NetworkConnectionStatus) -> Void
 
     private let monitor: NWPathMonitor
     private let subscriptions = OperationSubscriptions<Handler>()
 
+    /// True if the observer is actively monitoring network connection status changes.
     public var isRunning: Bool {
       self.monitor.queue != nil
     }
-
+    
+    /// Creates an observer.
+    ///
+    /// - Parameter monitor: The path monitor to use.
     public init(_ monitor: NWPathMonitor = NWPathMonitor()) {
       self.monitor = monitor
 
@@ -25,7 +29,7 @@
       }
     }
 
-    /// Creates a path monitor observer, and begins observing path updates.
+    /// Creates a path monitor observer, and starts monitoring network connection status changes.
     ///
     /// This initializer updates the `pathUpdateHandler` of the specifed `monitor` by first calling
     /// out to the current handler, and then by propagating the new path status to all subscribers
@@ -46,14 +50,28 @@
     }
 
     deinit { self.monitor.cancel() }
-
+    
+    /// Starts monitoring for network status changes on the specified queue.
+    ///
+    /// - Parameter queue: The queue to use to listen to changes.
     public func start(on queue: DispatchQueue) {
       self.monitor.cancel()
       self.monitor.start(queue: queue)
     }
-
+    
+    /// Stops listening for network status changes.
     public func stop() {
       self.monitor.cancel()
+    }
+    
+    public var currentStatus: NetworkConnectionStatus {
+      NetworkConnectionStatus(self.monitor.currentPath.status)
+    }
+
+    public func subscribe(
+      with handler: @escaping @Sendable (NetworkConnectionStatus) -> Void
+    ) -> OperationSubscription {
+      self.subscriptions.add(handler: handler).subscription
     }
   }
 
@@ -62,6 +80,7 @@
   extension NWPathMonitorObserver {
     private static let _shared = Lock<NWPathMonitorObserver?>(nil)
 
+    /// A shared path monitor observer instance that monitors all available network interfaces.
     public static var shared: NWPathMonitorObserver {
       Self._shared.withLock { observer in
         if let observer {
@@ -72,7 +91,10 @@
       }
     }
 
-    /// Creates a shared path monitor observer instance that starts monitoring all available network interfaces.
+    /// Creates a shared path monitor observer instance that starts monitoring the network
+    /// connection status on all available network interfaces.
+    ///
+    /// ``isRunning`` will be true on the returned instance.
     ///
     /// - Returns: A shared instance of `NWPathMonitorObserver`.
     public static func startingShared() -> NWPathMonitorObserver {
@@ -81,20 +103,6 @@
         shared.start(on: .global())
       }
       return shared
-    }
-  }
-
-  // MARK: - NetworkObserver Conformance
-
-  extension NWPathMonitorObserver: NetworkObserver {
-    public var currentStatus: NetworkConnectionStatus {
-      NetworkConnectionStatus(self.monitor.currentPath.status)
-    }
-
-    public func subscribe(
-      with handler: @escaping @Sendable (NetworkConnectionStatus) -> Void
-    ) -> OperationSubscription {
-      self.subscriptions.add(handler: handler).subscription
     }
   }
 
