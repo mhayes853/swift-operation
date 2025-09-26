@@ -25,6 +25,13 @@ extension DummyBackend.UserData {
       }
     }
 
+    var plannedMountainIds: Set<Mountain.ID> {
+      let ids = try? self.access { data in
+        Set(data.plannedClimbs.map(\.mountainId))
+      }
+      return ids ?? []
+    }
+
     func editCurrentUser(with edit: User.Edit) throws -> User? {
       try self.access { data in
         guard let id = data.activeUserId else { return nil }

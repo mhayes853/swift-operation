@@ -1,8 +1,10 @@
 import Foundation
+import Logging
 
 // MARK: - DummyBackend
 
 public final class DummyBackend: CanIClimbAPI.DataTransport {
+  private let mountains = Mountains()
   private let storage = UserData.Storage()
 
   public init() {}
@@ -12,6 +14,15 @@ public final class DummyBackend: CanIClimbAPI.DataTransport {
     in context: CanIClimbAPI.Request.Context
   ) async throws -> (Data, HTTPURLResponse) {
     try await self.randomDelay()
+    return try await withCurrentLogger(Logger(label: "dummy.backend")) {
+      try await self.handle(request: request, in: context)
+    }
+  }
+
+  private func handle(
+    request: CanIClimbAPI.Request,
+    in context: CanIClimbAPI.Request.Context
+  ) async throws -> (Data, HTTPURLResponse) {
     switch request {
     case .achieveClimb(let id):
       guard context.isAuthenticated else { return self.unauthorizedResponse(in: context) }
@@ -46,10 +57,16 @@ public final class DummyBackend: CanIClimbAPI.DataTransport {
       return (try JSONEncoder().encode(user), HTTPURLResponse(context: context, statusCode: 200))
 
     case .mountain(let id):
-      return (Data(), HTTPURLResponse(context: context, statusCode: 404))
+      guard let mountain = try await self.mountains.mountain(for: id) else {
+        return (Data(), HTTPURLResponse(context: context, statusCode: 404))
+      }
+      return (
+        try JSONEncoder().encode(mountain), HTTPURLResponse(context: context, statusCode: 200)
+      )
 
     case .searchMountains(let query):
-      let result = Mountain.SearchResult(mountains: [], hasNextPage: false)
+      let plannedIds = await self.storage.plannedMountainIds
+      let result = try await self.mountains.mountains(for: query, plannedIds: plannedIds)
       return (try JSONEncoder().encode(result), HTTPURLResponse(context: context, statusCode: 200))
 
     case .planClimb(let request):

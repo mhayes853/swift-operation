@@ -3,9 +3,9 @@
 
   ],
   "readiness" : {
-    "insight" : "Based on your active activity level and daily workout routine, you've shown a reasonable level of fitness for a challenging climb. However, you should consider doing some preparation climbs to build your stamina further, especially on steep inclines. Increasing your weekly mileage and incorporating interval training will help improve your cardiovascular endurance and strength. Aim for a balanced diet with sufficient protein, healthy fats, and carbohydrates to fuel your training. Stay hydrated, especially as you approach your climb, and listen to your body to avoid overtraining.",
+    "insight" : "Based on your age, activity level, and climbing difficulty, you are not currently ready for Freel Peak. Your activity level is considered 'Active' which is good, but climbing a 72 out of 100 difficulty rating mountain requires more specialized training and experience. Preparation tips include starting with easier climbs to build strength and endurance, gradually increasing your VO2 Max through interval training and long hikes, and focusing on strength training for your legs and core. You should also plan your nutrition to support sustained energy during long hikes and consider acclimatization techniques if you're climbing at high elevations.",
     "rating" : {
-      "partiallyReady" : {
+      "notReady" : {
 
       }
     }
