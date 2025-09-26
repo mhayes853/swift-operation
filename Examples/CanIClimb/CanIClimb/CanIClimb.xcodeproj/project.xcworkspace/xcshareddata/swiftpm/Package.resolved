@@ -160,7 +160,7 @@
       "location" : "https://github.com/mhayes853/swift-operation",
       "state" : {
         "branch" : "main",
-        "revision" : "bfe285b1c32e616d8706325ddb3bcdba2b9b123a"
+        "revision" : "5eda9cde5fb23757bb805cc70688a99f1bdd6704"
       }
     },
     {
@@ -195,8 +195,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-structured-queries",
       "state" : {
-        "revision" : "4c125c204ef4ff9664f0020ad3a203ed1b5893cc",
-        "version" : "0.20.0"
+        "revision" : "23cc67c0b2f71acb2319b777ff4aec9d45909ed8",
+        "version" : "0.21.0"
       }
     },
     {

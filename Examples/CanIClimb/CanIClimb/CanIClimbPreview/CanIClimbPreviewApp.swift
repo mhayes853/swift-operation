@@ -28,7 +28,7 @@ struct CanIClimbPreviewApp: App {
         var mountains = IdentifiedArrayOf<Mountain>()
         for j in 0..<10 {
           var mountain = Mountain.freelPeak
-          mountain.name = "Mountain \((i + 1) * (j + 1))"
+          mountain.name = "Mountain ABCDEFG \((i + 1) * (j + 1))"
           mountain.id = Mountain.ID()
           mountain.location = Mountain.Location(
             coordinate: .random(),

@@ -44,12 +44,14 @@ private struct CardContentView: View {
   @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
   let mountain: Mountain
+  
+  @ScaledMetric private var normalMaxImageHeight = CGFloat(175)
 
   private var imageSize: CGSize {
     if self.dynamicTypeSize.isAccessibilitySize {
       CGSize(width: .infinity, height: 150.0)
     } else {
-      CGSize(width: 150.0, height: .infinity)
+      CGSize(width: 150.0, height: self.normalMaxImageHeight)
     }
   }
 
