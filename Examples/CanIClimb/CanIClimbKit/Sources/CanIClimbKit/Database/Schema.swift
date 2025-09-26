@@ -281,7 +281,6 @@ extension Measurement where UnitType == UnitTemperature {
 
 @Table("CachedPlannedClimbs")
 public struct CachedPlannedClimbRecord: Hashable, Sendable, Codable, Identifiable {
-  @Column(as: Mountain.PlannedClimb.IDRepresentation.self)
   public let id: Mountain.PlannedClimb.ID
 
   @Column(as: Mountain.IDRepresentation.self)
@@ -392,14 +391,9 @@ extension ScheduleableAlarmRecord {
 @Table("PlannedClimbAlarms")
 public struct PlannedClimbAlarmRecord: Hashable, Sendable, Codable {
   public typealias ID = Tagged<PlannedClimbAlarmRecord, UUIDV7>
-  public typealias IDRepresentation = Tagged<PlannedClimbAlarmRecord, UUIDV7.BytesRepresentation>
 
-  @Column(as: IDRepresentation.self)
   public var id: ID
-
-  @Column(as: Mountain.PlannedClimb.IDRepresentation.self)
   public var plannedClimbId: Mountain.PlannedClimb.ID
-
   public var alarmId: ScheduleableAlarm.ID
 
   public init(
@@ -545,7 +539,7 @@ extension DatabaseMigrator {
       try #sql(
         """
         CREATE TABLE IF NOT EXISTS CachedPlannedClimbs (
-          id BLOB PRIMARY KEY,
+          id TEXT PRIMARY KEY,
           mountainId BLOB NOT NULL,
           targetDate TIMESTAMP NOT NULL,
           achievedDate TIMESTAMP
@@ -631,7 +625,7 @@ extension DatabaseMigrator {
         """
         CREATE TABLE IF NOT EXISTS PlannedClimbAlarms (
           id TEXT NOT NULL,
-          plannedClimbId BLOB NOT NULL REFERENCES CachedPlannedClimbs(id) ON DELETE CASCADE,
+          plannedClimbId TEXT NOT NULL REFERENCES CachedPlannedClimbs(id) ON DELETE CASCADE,
           alarmId TEXT NOT NULL REFERENCES ScheduleableAlarms(id) ON DELETE CASCADE,
           PRIMARY KEY (plannedClimbID, alarmId)
         );
