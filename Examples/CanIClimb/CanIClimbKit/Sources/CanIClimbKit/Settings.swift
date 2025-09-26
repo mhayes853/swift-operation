@@ -68,7 +68,6 @@ public struct SettingsView: View {
           metricPreference: self.model.settings.metricPreference
         )
         SocialsSectionView()
-        DisclaimerSectionView()
       }
       .navigationDestination(for: SettingsModel.Path.self) { path in
         switch path {
@@ -423,16 +422,16 @@ private struct SocialsSectionView: View {
     Section {
       Link(
         "Swift Operation Github Repo",
-        destination: URL(string: "https://github.com/mhayes853/swift-query")!
+        destination: URL(string: "https://github.com/mhayes853/swift-operation")!
       )
       Link(
         "Swift Operation Introduction Blog Post",
-        destination: URL(string: "https://whypeople.xyz/swift-query")!
+        destination: URL(string: "https://whypeople.xyz/swift-operation")!
       )
       Link(
         "CanIClimb Source Code",
         destination: URL(
-          string: "https://github.com/mhayes853/swift-query/tree/main/Examples/CanIClimb"
+          string: "https://github.com/mhayes853/swift-operation/tree/main/Examples/CanIClimb"
         )!
       )
     } header: {
@@ -444,18 +443,6 @@ private struct SocialsSectionView: View {
         complex application. Check out the links to learn more.
         """
       )
-    }
-  }
-}
-
-// MARK: - Disclaimer Section
-
-private struct DisclaimerSectionView: View {
-  var body: some View {
-    Section {
-      Text(disclaimer)
-    } header: {
-      Text("DISCLAIMER")
     }
   }
 }
