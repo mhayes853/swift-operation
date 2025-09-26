@@ -205,6 +205,10 @@ private struct MountainImageView: View {
               .colorScheme(ColorScheme(mountainImageScheme: self.mountain.image.colorScheme))
               .padding()
               .frame(maxHeight: .infinity, alignment: .bottom)
+
+            MountainDifficultyView(difficulty: self.mountain.difficulty)
+              .padding()
+              .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
           }
         default:
           ZStack {
@@ -215,6 +219,10 @@ private struct MountainImageView: View {
           MountainImageLabel(mountain: self.mountain)
             .padding()
             .frame(maxHeight: .infinity, alignment: .bottom)
+
+          MountainDifficultyView(difficulty: self.mountain.difficulty)
+            .padding()
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
         }
       }
     }
@@ -238,17 +246,12 @@ private struct MountainImageLabel: View {
       VStack(alignment: .leading) {
         Text(self.mountain.name)
           .font(.title.bold())
-        Spacer()
-        MountainLocationNameLabel(name: self.mountain.location.name)
-          .foregroundStyle(.secondary)
-      }
-      .frame(height: self.columnSize)
-      Spacer()
-      VStack(alignment: .center) {
-        MountainDifficultyView(difficulty: self.mountain.difficulty)
-        Spacer()
-        ElevationLabel(elevation: self.mountain.elevation)
-          .foregroundColor(.secondary)
+        HStack(alignment: .center) {
+          MountainLocationNameLabel(name: self.mountain.location.name)
+          Spacer()
+          ElevationLabel(elevation: self.mountain.elevation)
+        }
+        .foregroundStyle(.secondary)
       }
       .frame(height: self.columnSize)
     }

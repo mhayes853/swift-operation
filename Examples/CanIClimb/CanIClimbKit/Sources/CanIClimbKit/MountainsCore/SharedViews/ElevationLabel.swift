@@ -12,7 +12,13 @@ public struct ElevationLabel: View {
       Image(systemName: "mountain.2.fill")
       Text(
         self.elevation.converted(to: .feet)
-          .formatted(.measurement(width: .abbreviated, usage: .asProvided))
+          .formatted(
+            .measurement(
+              width: .abbreviated,
+              usage: .asProvided,
+              numberFormatStyle: .number.rounded(rule: .up, increment: 1)
+            )
+          )
       )
     }
     .font(.footnote)
