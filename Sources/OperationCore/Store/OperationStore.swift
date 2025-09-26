@@ -485,7 +485,8 @@ extension OperationStore {
       }
       return subscription
     }
-    return OperationSubscription {
+    return OperationSubscription { [weak self] in
+      guard let self else { return }
       self.values.withLock { values in
         subscription.cancel()
         if self.subscriptions.count < 1 {

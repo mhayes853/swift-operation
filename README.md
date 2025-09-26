@@ -1,5 +1,6 @@
 # Swift Operation
 [![CI](https://github.com/mhayes853/swift-operation/actions/workflows/ci.yml/badge.svg)](https://github.com/mhayes853/swift-operation/actions/workflows/ci.yml)
+
 Flexible asynchronous operation and state management for SwiftUI, Linux, WASM, and more.
 
 ## Motivation
