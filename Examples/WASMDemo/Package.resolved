@@ -1,5 +1,5 @@
 {
-  "originHash" : "4cac737567bccc9494d19d36162b2578d0ca276f15b283d96386cd31a3ddb8bf",
+  "originHash" : "cb0052c5f76e81ba3303f4fc77f65159b9d8daf1b5427159d9c9b391b24acc62",
   "pins" : [
     {
       "identity" : "combine-schedulers",
@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swiftwasm/JavaScriptKit",
       "state" : {
-        "revision" : "1603fce33630df9e6064ad321d6ca0a8dde8c785",
-        "version" : "0.35.0"
+        "revision" : "a069e3af73ab950220d054d2488120b8f54585cf",
+        "version" : "0.36.0"
       }
     },
     {
@@ -33,8 +33,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-case-paths",
       "state" : {
-        "revision" : "9810c8d6c2914de251e072312f01d3bf80071852",
-        "version" : "1.7.1"
+        "revision" : "6989976265be3f8d2b5802c722f9ba168e227c71",
+        "version" : "1.7.2"
       }
     },
     {
@@ -76,10 +76,10 @@
     {
       "identity" : "swift-dependencies",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/pointfreeco/swift-dependencies",
+      "location" : "https://github.com/mhayes853/swift-dependencies",
       "state" : {
-        "revision" : "a501eebe552fd23691c560adf474fca2169ad8aa",
-        "version" : "1.9.4"
+        "branch" : "fix-wasm-build",
+        "revision" : "6cb9dd023a4b81a4bc06a6fe5f8e99a1b21203da"
       }
     },
     {
@@ -105,8 +105,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-navigation",
       "state" : {
-        "revision" : "6b7f44d218e776bb7a5246efb940440d57c8b2cf",
-        "version" : "2.4.2"
+        "revision" : "91415670c91d41e8e1872ef6fe1bf118e20dee37",
+        "version" : "2.5.1"
       }
     },
     {
@@ -115,7 +115,7 @@
       "location" : "https://github.com/mhayes853/swift-operation",
       "state" : {
         "branch" : "main",
-        "revision" : "31e6f921e59a6a1523d385d35a7197a739a7f482"
+        "revision" : "29934b0becce1aaa0be64eb94aa8159a14527f97"
       }
     },
     {
@@ -123,8 +123,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-perception",
       "state" : {
-        "revision" : "59b00dfa5548b5b91ebbda6d94d6328d82ca00fe",
-        "version" : "2.0.6"
+        "revision" : "30721accd0370d7c9cb5bd0f7cdf5a1a767b383d",
+        "version" : "2.0.8"
       }
     },
     {

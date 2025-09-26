@@ -176,7 +176,7 @@ extension OperationClient {
   public static var defaultNetworkObserver: (any NetworkObserver & Sendable)? {
     #if canImport(Network)
       NWPathMonitorObserver.startingShared()
-    #elseif SwiftQueryWebBrowser && canImport(JavaScriptKit)
+    #elseif SwiftOperationWebBrowser && canImport(JavaScriptKit)
       NavigatorOnlineObserver.shared
     #else
       nil
@@ -203,7 +203,7 @@ extension OperationClient {
       } else {
         nil
       }
-    #elseif SwiftQueryWebBrowser && canImport(JavaScriptKit)
+    #elseif SwiftOperationWebBrowser && canImport(JavaScriptKit)
       WindowVisibilityObserver.shared
     #else
       nil
