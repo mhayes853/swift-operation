@@ -79,7 +79,6 @@ extension OperationDelayer {
 public struct NoDelayer: OperationDelayer, Sendable {
   public init() {}
 
-  @inlinable
   public func delay(for duration: OperationDuration) async throws {
     try Task.checkCancellation()
   }

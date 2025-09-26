@@ -113,13 +113,11 @@ public protocol _ContextUpdatingOperationModifier: OperationModifier, Sendable {
 }
 
 extension _ContextUpdatingOperationModifier {
-  @inlinable
-  public func setup(context: inout OperationContext, using query: Operation) {
+  public func setup(context: inout OperationContext, using operation: Operation) {
     self.setup(context: &context)
-    query.setup(context: &context)
+    operation.setup(context: &context)
   }
 
-  @inlinable
   public func run(
     isolation: isolated (any Actor)?,
     in context: OperationContext,

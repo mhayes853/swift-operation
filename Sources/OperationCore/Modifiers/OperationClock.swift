@@ -59,14 +59,12 @@ extension OperationClock where Self == CustomOperationClock {
 
 /// A n``OperationClock`` that returns a constant date.
 public struct TimeFreezeClock: OperationClock, Sendable {
-  @usableFromInline
-  let date: Date
+  private let date: Date
 
   public init(date: Date) {
     self.date = date
   }
 
-  @inlinable
   public func now() -> Date {
     self.date
   }
