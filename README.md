@@ -300,7 +300,7 @@ extension Post {
 }
 ```
 > [!NOTE]
-> To learn more about multiple data updates, checkout [Multistage Operations](https://swiftpackageindex.com/mhayes853/swift-operation/main/documentation/swiftoperation/multistageoperations). Additionally, you can also find usage examples such as [file downloads](https://github.com/mhayes853/swift-operation/blob/main/Examples/CaseStudies/CaseStudies/02-Downloads.swift) and [FoundationModels streaming](https://github.com/mhayes853/swift-operation/blob/main/Examples/CanIClimb/CanIClimbKit/Sources/CanIClimbKit/MountainsCore/ClimbReadiness/Mountain%2BClimbReadinessGeneration.swift) in the demos.
+> To learn more about multiple data updates, checkout [Multistage Operations](https://swiftpackageindex.com/mhayes853/swift-operation/main/documentation/operationcore/multistageoperations). Additionally, you can also find usage examples such as [file downloads](https://github.com/mhayes853/swift-operation/blob/main/Examples/CaseStudies/CaseStudies/02-Downloads.swift) and [FoundationModels streaming](https://github.com/mhayes853/swift-operation/blob/main/Examples/CanIClimb/CanIClimbKit/Sources/CanIClimbKit/MountainsCore/ClimbReadiness/Mountain%2BClimbReadinessGeneration.swift) in the demos.
 
 ### Sharing State
 Using different instances of the `@SharedOperation` property wrapper with the same operation will efficiently share the state of the operation across both usages. In the following example, both `ParentView` and `ChildView` will observe state from the fetch of the post, that is the post will only be fetched a single time despite 2 instances of the property wrapper being in-memory.
@@ -366,7 +366,7 @@ struct SendFriendRequestMutation: MutationRequest, Hashable {
 }
 ```
 > [!NOTE]
-> To learn more about advanced state management practices including pattern matching using the `OperationPath` type, similar to [Tanstack Query’s query key](https://tanstack.com/query/latest/docs/framework/react/guides/query-keys) pattern matching, checkout [Pattern Matching and State Management](https://swiftpackageindex.com/mhayes853/swift-operation/main/documentation/swiftoperation/patternmatchingandstatemanagement).
+> To learn more about advanced state management practices including pattern matching using the `OperationPath` type, similar to [Tanstack Query’s query key](https://tanstack.com/query/latest/docs/framework/react/guides/query-keys) pattern matching, checkout [Pattern Matching and State Management](https://swiftpackageindex.com/mhayes853/swift-operation/main/documentation/operationcore/patternmatchingandstatemanagement).
 
 ## Traits
 The library ships with a handful of package traits, which allow you to conditionally compile dependencies and features of the library. You can learn more about package traits from reading the official evolution [proposal](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0450-swiftpm-package-traits.md).
@@ -378,8 +378,12 @@ The library ships with a handful of package traits, which allow you to condition
 
 ## Documentation
 The documentation for releases and main are available here.
-* [main](https://swiftpackageindex.com/mhayes853/swift-operation/main/documentation/swiftoperation/)
-* [0.x.x](https://swiftpackageindex.com/mhayes853/swift-operation/~/documentation/swiftoperation/)
+* [main](https://swiftpackageindex.com/mhayes853/swift-operation/main/documentation/operationcore/)
+* [0.x.x](https://swiftpackageindex.com/mhayes853/swift-operation/~/documentation/operationcore/)
+
+#### SharingOperation
+* [main](https://swiftpackageindex.com/mhayes853/swift-operation/main/documentation/sharingoperation/)
+* [0.x.x](https://swiftpackageindex.com/mhayes853/swift-operation/~/documentation/sharingoperation/)
 
 ## Demos
 There are multiple demos available in the repo to see the library in action across a variety of different scenarios and platforms.
