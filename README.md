@@ -1,5 +1,7 @@
 # Swift Operation
 [![CI](https://github.com/mhayes853/swift-operation/actions/workflows/ci.yml/badge.svg)](https://github.com/mhayes853/swift-operation/actions/workflows/ci.yml)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fmhayes853%2Fswift-operation%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/mhayes853/swift-operation)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fmhayes853%2Fswift-operation%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/mhayes853/swift-operation)
 
 Flexible asynchronous operation and state management for SwiftUI, Linux, WASM, and more.
 

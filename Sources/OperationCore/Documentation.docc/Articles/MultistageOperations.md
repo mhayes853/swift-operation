@@ -33,7 +33,7 @@ struct QueryData: Codable, Sendable {
 extension QueryData {
   static func cacheableQuery(
     for key: String
-  ) -> some QueryRequest<Self, CacheableQuery.State> {
+  ) -> some QueryRequest<Self, any Error> {
     CacheableQuery(key: key)
   }
 
@@ -171,7 +171,7 @@ struct EventsList: Sendable {
 extension EventsList {
   static func nearbyQuery(
     for region: Region
-  ) -> some QueryRequest<Self, NearbyEventsQuery.State> {
+  ) -> some QueryRequest<Self, any Error> {
     NearbyEventsQuery(region: region)
   }
 
