@@ -378,8 +378,8 @@ The library ships with a handful of package traits, which allow you to condition
 
 ## Documentation
 The documentation for releases and main are available here.
-* ~[main](https://swiftpackageindex.com/mhayes853/swift-operation/main/documentation/swiftoperation/)~
-* ~[0.x.x](https://swiftpackageindex.com/mhayes853/swift-operation/~/documentation/swiftoperation/)~
+* [main](https://swiftpackageindex.com/mhayes853/swift-operation/main/documentation/swiftoperation/)
+* [0.x.x](https://swiftpackageindex.com/mhayes853/swift-operation/~/documentation/swiftoperation/)
 
 ## Demos
 There are multiple demos available in the repo to see the library in action across a variety of different scenarios and platforms.
@@ -426,4 +426,4 @@ And then adding the product to any target that needs access to the library.
 ```
 
 ## License
-This library is licensed under an MIT License. See ~[LICENSE](https://github.com/mhayes853/swift-operation/blob/main/LICENSE)~ for details.
+This library is licensed under an MIT License. See [LICENSE](https://github.com/mhayes853/swift-operation/blob/main/LICENSE) for details.
