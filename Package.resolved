@@ -1,5 +1,5 @@
 {
-  "originHash" : "d430a90a3641b4f444cfd3688b69e44cbd46ea927e23d93b69751e52dd3367a1",
+  "originHash" : "f66a773521439f7794ca1f0acfbaff6540a8c88ea559b6d079ea174170663d8f",
   "pins" : [
     {
       "identity" : "combine-schedulers",
@@ -125,6 +125,15 @@
       "state" : {
         "revision" : "f99ae8aa18f0cf0d53481901f88a0991dc3bd4a2",
         "version" : "601.0.1"
+      }
+    },
+    {
+      "identity" : "swift-uuidv7",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/mhayes853/swift-uuidv7",
+      "state" : {
+        "revision" : "02c3e05095347a2649846c199adbde756f0c2e90",
+        "version" : "0.3.0"
       }
     },
     {
