@@ -298,8 +298,8 @@ extension Post {
 
     func fetch(
       isolation: isolated (any Actor)?,
-      in context: OperationCore.OperationContext,
-      with continuation: OperationCore.OperationContinuation<Post?, any Error>
+      in context: OperationContext,
+      with continuation: OperationContinuation<Post?, any Error>
     ) async throws -> Post? {
       async let post = self.fetchPost(for: self.id)
       if let cached = try PostCache.shared.post(for: self.id) {
