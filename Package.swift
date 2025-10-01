@@ -53,7 +53,8 @@ let package = Package(
     .package(url: "https://github.com/pointfreeco/swift-navigation", from: "2.3.1"),
     .package(url: "https://github.com/apple/swift-log", from: "1.6.3"),
     .package(url: "https://github.com/apple/swift-atomics", from: "1.3.0"),
-    .package(url: "https://github.com/pointfreeco/swift-perception", from: "2.0.7")
+    .package(url: "https://github.com/pointfreeco/swift-perception", from: "2.0.7"),
+    .package(url: "https://github.com/mhayes853/swift-uuidv7", from: "0.3.0")
   ],
   targets: [
     .target(
@@ -108,7 +109,12 @@ let package = Package(
     .target(
       name: "OperationTestHelpers",
       dependencies: ["Operation", .product(name: "CustomDump", package: "swift-custom-dump")]
-    )
+    ),
+    .target(
+      name: "OperationAnalytics",
+      dependencies: ["Operation", .product(name: "UUIDV7", package: "swift-uuidv7")]
+    ),
+    .testTarget(name: "OperationAnalyticsTests", dependencies: ["OperationAnalytics"])
   ],
   swiftLanguageModes: [.v6]
 )
