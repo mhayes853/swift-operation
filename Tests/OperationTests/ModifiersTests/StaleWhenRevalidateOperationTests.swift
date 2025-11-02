@@ -94,6 +94,22 @@ struct StaleWhenRevalidateOperationTests {
     expectNoDifference(store.isStale, true)
   }
 
+  @Test("Stale After Duration")
+  func staleAfterDuration() async throws {
+    let clock = TestOperationClock(date: Date())
+    let query = TestQuery().stale(after: .seconds(1))
+    let store = OperationStore.detached(query: query, initialValue: nil)
+    store.context.operationClock = clock
+
+    expectNoDifference(store.isStale, true)
+
+    try await store.fetch()
+    expectNoDifference(store.isStale, false)
+
+    clock.date += 2
+    expectNoDifference(store.isStale, true)
+  }
+
   @Test("Stale When No Value")
   func staleWhenHasValue() async throws {
     let query = TestQuery().staleWhenNoValue()
