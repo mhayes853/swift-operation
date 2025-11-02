@@ -90,6 +90,7 @@ extension StatefulOperationRequest where Self: SendableMetatype, State: Sendable
   /// - Parameter seconds: A `TimeInterval` at which ``OperationStore/isStale`` is true after a
   /// successful operation run.
   /// - Returns: A ``ModifiedOperation``.
+  @available(*, deprecated, message: "Pass a `Duration` or `OperationDuration` instead.")
   public func stale(
     after seconds: TimeInterval
   ) -> ModifiedOperation<Self, _StaleWhenModifier<Self>> {
@@ -98,6 +99,68 @@ extension StatefulOperationRequest where Self: SendableMetatype, State: Sendable
         guard let date = state.valueLastUpdatedAt else { return true }
         let now = context.operationClock.now()
         return now.timeIntervalSince(date) > seconds
+      }
+    )
+  }
+
+  /// Marks ``OperationStore/isStale`` as true for this operation when the specified
+  /// `Duration` has elapsed since the last time this operation was successfully ran.
+  ///
+  /// Chaining multiple instances of any modifier that begins with `stale` will result in a boolean
+  /// OR being applied between the diffent conditions. For instance, the following operations
+  /// are equivalent with regards to their stale conditions.
+  ///
+  /// ```swift
+  /// // This query is stale whenever 5 minutes have elapsed since its last
+  /// // successful fetch, OR when its current value is 1.
+  /// let query = MyQuery().stale(after: .seconds(60 * 5))
+  ///   .staleWhen { state, _ in state.currentValue == 1 }
+  /// ```
+  ///
+  /// - Parameters:
+  ///   - duration: A `Duration` at which ``OperationStore/isStale`` is true after a successful
+  ///   operation run.
+  ///   - whenNoValue: A boolean indicating whether or not ``OperationStore/isStale`` is true when
+  ///   no value is present.
+  /// - Returns: A ``ModifiedOperation``.
+  @available(iOS 16.0, macOS 13.0, watchOS 9.0, tvOS 16.0, *)
+  public func stale(
+    after duration: Duration,
+    whenNoValue: Bool = true
+  ) -> ModifiedOperation<Self, _StaleWhenModifier<Self>> {
+    self.stale(after: OperationDuration(duration: duration), whenNoValue: whenNoValue)
+  }
+
+  /// Marks ``OperationStore/isStale`` as true for this operation when the specified
+  /// ``OperationDuration`` has elapsed since the last time this operation was successfully ran.
+  ///
+  /// Chaining multiple instances of any modifier that begins with `stale` will result in a boolean
+  /// OR being applied between the diffent conditions. For instance, the following operations
+  /// are equivalent with regards to their stale conditions.
+  ///
+  /// ```swift
+  /// // This query is stale whenever 5 minutes have elapsed since its last
+  /// // successful fetch, OR when its current value is 1.
+  /// let query = MyQuery().stale(after: .seconds(60 * 5))
+  ///   .staleWhen { state, _ in state.currentValue == 1 }
+  /// ```
+  ///
+  /// - Parameters:
+  ///   - duration: An ``OperationDuration`` at which ``OperationStore/isStale`` is true after a
+  ///   successful operation run.
+  ///   - whenNoValue: A boolean indicating whether or not ``OperationStore/isStale`` is true when
+  ///   no value is present.
+  /// - Returns: A ``ModifiedOperation``.
+  @_disfavoredOverload
+  public func stale(
+    after duration: OperationDuration,
+    whenNoValue: Bool = true
+  ) -> ModifiedOperation<Self, _StaleWhenModifier<Self>> {
+    self.modifier(
+      _StaleWhenModifier { state, context in
+        guard let date = state.valueLastUpdatedAt else { return whenNoValue }
+        let now = context.operationClock.now()
+        return .seconds(now.timeIntervalSince(date)) > duration
       }
     )
   }
