@@ -393,6 +393,8 @@ The library ships with a handful of package traits, which allow you to condition
 - ``OperationRequest``
 - ``OperationContext``
 - ``OperationContinuation``
+- ``OperationRunner``
+- ``AnyOperation``
 - ``QueryRequest``
 - ``MutationRequest``
 - ``PaginatedRequest``

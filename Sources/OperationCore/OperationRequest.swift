@@ -64,7 +64,8 @@ public protocol OperationRequest<Value, Failure> {
   /// Sets up an ``OperationContext`` in preparation for it being passed to
   /// ``run(isolation:in:with:)``.
   ///
-  /// This method is called a single time when an ``OperationStore`` is initialized with this operation.
+  /// This method is called a single time when an ``OperationStore`` or ``OperationRunner`` is
+  /// initialized with this operation.
   ///
   /// - Parameter context: The context to setup.
   func setup(context: inout OperationContext)
@@ -76,7 +77,7 @@ public protocol OperationRequest<Value, Failure> {
   ///   - context: An ``OperationContext`` that is passed to this operation.
   ///   - continuation: An ``OperationContinuation`` that allows you to yield data while this
   ///   operation is still running. See <doc:MultistageOperations> for more.
-  /// - Returns: The value return from this operation.
+  /// - Returns: The value returned from this operation.
   func run(
     isolation: isolated (any Actor)?,
     in context: OperationContext,

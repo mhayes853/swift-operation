@@ -1,6 +1,11 @@
+/// A type-erased ``OperationRequest``.
 public struct AnyOperation<Value, Failure: Error>: OperationRequest {
+  /// An existential to the erased operation.
   public let base: any OperationRequest<Value, Failure>
-
+  
+  /// Type erases an ``OperationRequest``.
+  ///
+  /// - Parameter operation: The operation to erase.
   public init(_ operation: some OperationRequest<Value, Failure>) {
     self.base = operation
   }
