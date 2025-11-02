@@ -34,7 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run tests
-        run: swift test --enable-all-traits
+        run: swift test --traits SwiftOperationLogging
 
   linux:
     name: Linux (Swift 6.2)
@@ -44,7 +44,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run tests
-        run: swift test --enable-all-traits
+        run: swift test --traits SwiftOperationLogging
 
   android:
     name: Android (Swift 6.2)
@@ -56,7 +56,7 @@ jobs:
         uses: swift-android-sdk/swift-android-action@v2
         with:
           swift-version: 6.2
-          swift-build-flags: --enable-all-traits
+          swift-build-flags: --traits SwiftOperationLogging
           run-tests: false
 
   windows:
