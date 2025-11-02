@@ -78,11 +78,7 @@ public final class OperationStore<State: OperationState & Sendable>: OperationPa
     var subscribeTask: Task<State.OperationValue, any Error>?
   }
 
-  #if swift(>=6.2)
-    private let request: RequestActor
-  #else
-    private let request: RequestActor<State.OperationValue, State.Failure>
-  #endif
+  private let request: RequestActor<State.OperationValue, State.Failure>
 
   /// The ``OperationPath`` of the operation managed by this store.
   public let path: OperationPath
@@ -96,23 +92,25 @@ public final class OperationStore<State: OperationState & Sendable>: OperationPa
     initialContext: OperationContext
   ) where State == Operation.State, State.OperationValue == Operation.Value {
     let subscriptions = OperationSubscriptions<OperationEventHandler<State>>()
-    var context = initialContext
-    operation.setup(context: &context)
-    self.path = operation.path
-    self.request = RequestActor(
-      operation.handleEvents(with: OperationEventHandler(subscriptions: subscriptions))
+    let runner = OperationRunner(
+      operation: AnyOperation(
+        operation.handleEvents(with: OperationEventHandler(subscriptions: subscriptions))
+      ),
+      initialContext: initialContext
     )
+    self.path = operation.path
     self.values = RecursiveLock(
       Values(
         state: initialState,
         taskHerdId: 0,
-        context: context,
+        context: runner.context,
         controllerSubscription: .empty,
         subscribeTask: nil
       )
     )
+    self.request = RequestActor(runner)
     self.subscriptions = subscriptions
-    self.setupOperation(with: context, initialState: initialState)
+    self.setupOperation(with: self.context, initialState: initialState)
   }
 
   deinit {
@@ -516,59 +514,25 @@ extension OperationStore {
 
 // MARK: - OperationActor
 
-// NB: This weird contraption is required because just using an existential OperationRequest in
-// here causes the compiler (Swift >=6.2) to complain about "sending" the "non-Sendable" Value
-// generic. (That is literally required to be Sendable via constraints???)
+private final actor RequestActor<Value: Sendable, Failure: Error> {
+  private let runner: OperationRunner<AnyOperation<Value, Failure>>
 
-#if swift(>=6.2)
-  private final actor RequestActor {
-    private let request:
-      (isolated RequestActor, OperationContext, OperationContinuation<any Sendable, any Error>)
-        async throws -> any Sendable
+  init(_ runner: sending OperationRunner<AnyOperation<Value, Failure>>) {
+    self.runner = runner
+  }
 
-    init<Value: Sendable, Failure: Error>(
-      _ operation: sending any OperationRequest<Value, Failure>
-    ) {
-      self.request = { isolation, context, continuation in
-        try await operation.run(
-          isolation: isolation,
-          in: context,
-          with: OperationContinuation { result, yieldedContext in
-            continuation.yield(with: result.map { $0 }.mapError { $0 }, using: yieldedContext)
-          }
-        )
+  func run(
+    context: OperationContext,
+    continuation: OperationContinuation<any Sendable, any Error>
+  ) async throws -> any Sendable {
+    try await self.runner.run(
+      in: context,
+      with: OperationContinuation { result, yieldedContext in
+        continuation.yield(with: result.map { $0 }.mapError { $0 }, using: yieldedContext)
       }
-    }
-
-    func run(
-      context: OperationContext,
-      continuation: OperationContinuation<any Sendable, any Error>
-    ) async throws -> any Sendable {
-      try await self.request(self, context, continuation)
-    }
+    )
   }
-#else
-  private final actor RequestActor<Value: Sendable, Failure: Error> {
-    private let request: any OperationRequest<Value, Failure>
-
-    init(_ operation: sending any OperationRequest<Value, Failure>) {
-      self.request = operation
-    }
-
-    func run(
-      context: OperationContext,
-      continuation: OperationContinuation<any Sendable, any Error>
-    ) async throws -> any Sendable {
-      try await self.request.run(
-        isolation: self,
-        in: context,
-        with: OperationContinuation { result, yieldedContext in
-          continuation.yield(with: result.map { $0 }.mapError { $0 }, using: yieldedContext)
-        }
-      )
-    }
-  }
-#endif
+}
 
 // MARK: - Event Handler
 

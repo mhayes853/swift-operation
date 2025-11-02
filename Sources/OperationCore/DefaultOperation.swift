@@ -109,19 +109,19 @@ public protocol DefaultableOperationState: OperationState {
   /// If ``OperationState/StateValue`` is an optional, this is typically a non-optional version of
   /// that type.
   associatedtype DefaultStateValue: Sendable
-  
+
   /// Returns the current value of this state based on the default value.
   ///
   /// - Parameter defaultValue: The default value of the operation state.
   /// - Returns: The current state's value based on the default value.
   func currentValue(using defaultValue: DefaultStateValue) -> DefaultStateValue
-  
+
   /// Returns the initial value of this state based on the default value.
   ///
   /// - Parameter defaultValue: The default value of the operation state.
   /// - Returns: The initial state's value based on the default value.
   func initialValue(using defaultValue: DefaultStateValue) -> DefaultStateValue
-  
+
   /// Converts a value of type ``DefaultStateValue`` to a value of the base
   /// ``OperationState/StateValue`` type on this state.
   ///
@@ -165,10 +165,10 @@ public struct DefaultOperationState<Base: DefaultableOperationState>: OperationS
 
   /// The base state.
   public private(set) var base: Base
-  
+
   /// The default value applied to the base state.
   public let defaultValue: Base.DefaultStateValue
-  
+
   /// Creates a default operation state.
   ///
   /// - Parameters:
