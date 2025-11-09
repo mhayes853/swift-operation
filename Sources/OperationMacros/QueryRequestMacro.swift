@@ -16,6 +16,7 @@ public enum QueryRequestMacro: PeerMacro {
       reservedNames: Self.reservedArgumentNames
     )
     guard let syntax else { return [] }
+    let pathSynthesizer = PathSyntesizerSyntax(node: node)
 
     return [
       """
@@ -24,8 +25,9 @@ public enum QueryRequestMacro: PeerMacro {
       """
       \(raw: syntax.declaration.availability ?? "")
       \(raw: syntax.accessModifier)nonisolated struct \(raw: syntax.operationTypeNameDeclaration): \
-      OperationCore.QueryRequest {
+      OperationCore.QueryRequest, \(raw: pathSynthesizer.operationTypeConformance) {
         \(raw: syntax.operationTypeArgs)
+        \(raw: pathSynthesizer.operationPathAccessor(with: syntax, in: context))
         \(raw: syntax.isPrivate ? "" : syntax.accessModifier)func fetch(
           isolation: isolated (any Actor)?,
           in context: OperationCore.OperationContext,

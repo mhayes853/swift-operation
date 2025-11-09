@@ -27,6 +27,10 @@ struct OperationFunctionSyntax {
     self.functionArgs.contains { !self.reservedNames.contains($0.operationalName) }
   }
 
+  var hasIDArgument: Bool {
+    self.functionArgs.contains { $0.operationalName == "id" }
+  }
+
   var returnType: String {
     self.declaration.operationReturnTypeName
   }

@@ -24,8 +24,11 @@ extension BaseTestSuite {
           __macro_local_9somethingfMu_()
         }
 
-        nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable {
 
+          var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
           func fetch(
             isolation: isolated (any Actor)?,
             in context: OperationCore.OperationContext,
@@ -57,8 +60,11 @@ extension BaseTestSuite {
           __macro_local_9somethingfMu_()
         }
 
-        nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable {
 
+          var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
           func fetch(
             isolation: isolated (any Actor)?,
             in context: OperationCore.OperationContext,
@@ -90,9 +96,12 @@ extension BaseTestSuite {
           __macro_local_9somethingfMu_(arg: arg, arg2: arg2)
         }
 
-        nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable {
           let arg: Int
           let arg2: String
+          var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
           func fetch(
             isolation: isolated (any Actor)?,
             in context: OperationCore.OperationContext,
@@ -124,9 +133,12 @@ extension BaseTestSuite {
           __macro_local_9somethingfMu_(arg: arg, arg2: arg2)
         }
 
-        nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable {
           let arg: Int
           let arg2: String
+          var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
           func fetch(
             isolation: isolated (any Actor)?,
             in context: OperationCore.OperationContext,
@@ -158,8 +170,11 @@ extension BaseTestSuite {
           __macro_local_9somethingfMu_(arg: arg)
         }
 
-        nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable {
           let arg: Int
+          var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
           func fetch(
             isolation: isolated (any Actor)?,
             in context: OperationCore.OperationContext,
@@ -239,8 +254,11 @@ extension BaseTestSuite {
           __macro_local_9somethingfMu_(arg: arg)
         }
 
-        nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable {
           let arg: Int
+          var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
           func fetch(
             isolation: isolated (any Actor)?,
             in context: OperationCore.OperationContext,
@@ -280,8 +298,11 @@ extension BaseTestSuite {
           __macro_local_9somethingfMu_(arg: arg)
         }
 
-        nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable {
           let arg: Int
+          var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
           func fetch(
             isolation: isolated (any Actor)?,
             in context: OperationCore.OperationContext,
@@ -323,8 +344,11 @@ extension BaseTestSuite {
           __macro_local_9somethingfMu_(arg: arg)
         }
 
-        nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable {
           let arg: Int
+          var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
           func fetch(
             isolation: isolated (any Actor)?,
             in context: OperationCore.OperationContext,
@@ -364,8 +388,11 @@ extension BaseTestSuite {
           __macro_local_9somethingfMu_()
         }
 
-        nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable {
 
+          var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
           func fetch(
             isolation: isolated (any Actor)?,
             in context: OperationCore.OperationContext,
@@ -400,9 +427,12 @@ extension BaseTestSuite {
             __macro_local_9somethingfMu_(arg: arg, __macro_local_4typefMu_: Self.self)
           }
 
-          nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest {
+          nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable {
             let arg: Int
             let __macro_local_4typefMu_: Foo.Type
+            var path: OperationCore.OperationPath {
+            OperationCore.OperationPath(self)
+            }
             func fetch(
               isolation: isolated (any Actor)?,
               in context: OperationCore.OperationContext,
@@ -441,8 +471,11 @@ extension BaseTestSuite {
             __macro_local_9somethingfMu_(__macro_local_4typefMu_: Self.self)
           }
 
-          nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest {
+          nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable {
             let __macro_local_4typefMu_: Foo.Type
+            var path: OperationCore.OperationPath {
+            OperationCore.OperationPath(self)
+            }
             func fetch(
               isolation: isolated (any Actor)?,
               in context: OperationCore.OperationContext,
@@ -484,9 +517,12 @@ extension BaseTestSuite {
             __macro_local_9somethingfMu_(arg: arg, __macro_local_4typefMu_: Self.self)
           }
 
-          nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest {
+          nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable {
             let arg: Int
             let __macro_local_4typefMu_: Foo.Type
+            var path: OperationCore.OperationPath {
+            OperationCore.OperationPath(self)
+            }
             func fetch(
               isolation: isolated (any Actor)?,
               in context: OperationCore.OperationContext,
@@ -525,9 +561,12 @@ extension BaseTestSuite {
             __macro_local_9somethingfMu_(arg: arg, __macro_local_4typefMu_: self)
           }
 
-          nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest {
+          nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable {
             let arg: Int
             let __macro_local_4typefMu_: Foo
+            var path: OperationCore.OperationPath {
+            OperationCore.OperationPath(self)
+            }
             func fetch(
               isolation: isolated (any Actor)?,
               in context: OperationCore.OperationContext,
@@ -571,9 +610,12 @@ extension BaseTestSuite {
             __macro_local_9somethingfMu_(arg: arg, __macro_local_4typefMu_: self)
           }
 
-          nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest {
+          nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable {
             let arg: Int
             let __macro_local_4typefMu_: Foo
+            var path: OperationCore.OperationPath {
+            OperationCore.OperationPath(self)
+            }
             func fetch(
               isolation: isolated (any Actor)?,
               in context: OperationCore.OperationContext,
@@ -609,8 +651,11 @@ extension BaseTestSuite {
             __macro_local_9somethingfMu_(arg: arg)
           }
 
-          nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest {
+          nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable {
             let arg: Int
+            var path: OperationCore.OperationPath {
+            OperationCore.OperationPath(self)
+            }
             func fetch(
               isolation: isolated (any Actor)?,
               in context: OperationCore.OperationContext,
@@ -649,9 +694,12 @@ extension BaseTestSuite {
               __macro_local_9somethingfMu_(arg: arg, __macro_local_4typefMu_: self)
             }
 
-            nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest {
+            nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable {
               let arg: Int
               let __macro_local_4typefMu_: Foo
+              var path: OperationCore.OperationPath {
+              OperationCore.OperationPath(self)
+              }
               func fetch(
                 isolation: isolated (any Actor)?,
                 in context: OperationCore.OperationContext,
@@ -685,8 +733,11 @@ extension BaseTestSuite {
           __macro_local_9somethingfMu_(arg: arg)
         }
 
-        public nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest {
+        public nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable {
           let arg: Int
+          public var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
           public func fetch(
             isolation: isolated (any Actor)?,
             in context: OperationCore.OperationContext,
@@ -714,8 +765,11 @@ extension BaseTestSuite {
           __macro_local_9somethingfMu_(arg: arg)
         }
 
-        private nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest {
+        private nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable {
           let arg: Int
+          private var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
           func fetch(
             isolation: isolated (any Actor)?,
             in context: OperationCore.OperationContext,
@@ -743,8 +797,11 @@ extension BaseTestSuite {
           __macro_local_9somethingfMu_(arg: arg)
         }
 
-        fileprivate nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest {
+        fileprivate nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable {
           let arg: Int
+          fileprivate var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
           fileprivate func fetch(
             isolation: isolated (any Actor)?,
             in context: OperationCore.OperationContext,
@@ -780,8 +837,11 @@ extension BaseTestSuite {
         }
 
         @available(iOS 13.0, *)
-        nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable {
           let arg: Int
+          var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
           func fetch(
             isolation: isolated (any Actor)?,
             in context: OperationCore.OperationContext,
@@ -818,8 +878,11 @@ extension BaseTestSuite {
 
         @available(iOS 13.0, *)
         @available(tvOS 13.0, *)
-        nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable {
           let arg: Int
+          var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
           func fetch(
             isolation: isolated (any Actor)?,
             in context: OperationCore.OperationContext,
@@ -863,8 +926,11 @@ extension BaseTestSuite {
           __macro_local_9somethingfMu_(arg: arg)
         }
 
-        nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable {
           let arg: Int
+          var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
           func fetch(
             isolation: isolated (any Actor)?,
             in context: OperationCore.OperationContext,
@@ -911,8 +977,11 @@ extension BaseTestSuite {
           __macro_local_9somethingfMu_(arg: arg)
         }
 
-        nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable {
           let arg: Int
+          var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
           func fetch(
             isolation: isolated (any Actor)?,
             in context: OperationCore.OperationContext,
@@ -956,8 +1025,11 @@ extension BaseTestSuite {
           __macro_local_9somethingfMu_(arg: arg)
         }
 
-        nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable {
           let arg: Int
+          var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
           func fetch(
             isolation: isolated (any Actor)?,
             in context: OperationCore.OperationContext,
@@ -1004,8 +1076,11 @@ extension BaseTestSuite {
           __macro_local_9somethingfMu_(arg: arg)
         }
 
-        nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable {
           let arg: Int
+          var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
           func fetch(
             isolation: isolated (any Actor)?,
             in context: OperationCore.OperationContext,
@@ -1037,8 +1112,11 @@ extension BaseTestSuite {
           __macro_local_9somethingfMu_<T>()
         }
 
-        nonisolated struct __macro_local_9somethingfMu_<T: Creatable>: OperationCore.QueryRequest {
+        nonisolated struct __macro_local_9somethingfMu_<T: Creatable>: OperationCore.QueryRequest, Hashable {
 
+          var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
           func fetch(
             isolation: isolated (any Actor)?,
             in context: OperationCore.OperationContext,
@@ -1066,8 +1144,11 @@ extension BaseTestSuite {
           __macro_local_9somethingfMu_<T>()
         }
 
-        nonisolated struct __macro_local_9somethingfMu_<T: Creatable>: OperationCore.QueryRequest {
+        nonisolated struct __macro_local_9somethingfMu_<T: Creatable>: OperationCore.QueryRequest, Hashable {
 
+          var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
           func fetch(
             isolation: isolated (any Actor)?,
             in context: OperationCore.OperationContext,
@@ -1155,6 +1236,62 @@ extension BaseTestSuite {
         func something(continuation: Int) -> Int {
                        ┬────────────────
                        ╰─ 🛑 'continuation' argument must be of type 'OperationContinuation<Int, Never>'
+          arg
+        }
+        """
+      }
+    }
+
+    @Test("Query With Path Inferred From ID")
+    func queryWithPathInferredFromID() {
+      assertMacro {
+        """
+        @QueryRequest(path: .inferredFromIdentifiable)
+        func something(id: Int) -> Int {
+          id
+        }
+        """
+      } expansion: {
+        """
+        func something(id: Int) -> Int {
+          id
+        }
+
+        nonisolated func $something(id: Int) -> __macro_local_9somethingfMu_ {
+          __macro_local_9somethingfMu_(id: id)
+        }
+
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Identifiable {
+          let id: Int
+          var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(id)
+          }
+          func fetch(
+            isolation: isolated (any Actor)?,
+            in context: OperationCore.OperationContext,
+            with continuation: OperationCore.OperationContinuation<Int, Never>
+          ) async -> Int {
+            something(id: id)
+          }
+        }
+        """
+      }
+    }
+
+    @Test("Query With Path Inferred From ID, No ID Argument")
+    func queryWithPathInferredFromIDNoIDArgument() {
+      assertMacro {
+        """
+        @QueryRequest(path: .inferredFromIdentifiable)
+        func something(arg: Int) -> Int {
+          arg
+        }
+        """
+      } diagnostics: {
+        """
+        @QueryRequest(path: .inferredFromIdentifiable)
+        ╰─ 🛑 An 'id' argument is required when using '.inferredFromIdentifiable'
+        func something(arg: Int) -> Int {
           arg
         }
         """
