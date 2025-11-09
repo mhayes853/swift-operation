@@ -42,7 +42,7 @@ public enum ContextEntryMacro: PeerMacro, AccessorMacro {
     if let type = binding.typeAnnotation?.type.valueTypeName {
       peerStruct = try StructDeclSyntax(
         """
-        private struct \(raw: keyTypeName): Key
+        private struct \(raw: keyTypeName): OperationCore.OperationContext.Key
         """
       ) {
         DeclSyntax("static let defaultValue: \(raw: type)= \(binding.initializer?.value ?? "nil")")
@@ -50,7 +50,7 @@ public enum ContextEntryMacro: PeerMacro, AccessorMacro {
     } else {
       peerStruct = try StructDeclSyntax(
         """
-        private struct \(raw: keyTypeName): Key
+        private struct \(raw: keyTypeName): OperationCore.OperationContext.Key
         """
       ) {
         DeclSyntax("static let defaultValue = \(binding.initializer?.value ?? "nil")")

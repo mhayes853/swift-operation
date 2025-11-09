@@ -8,12 +8,13 @@ struct OperationFunctionSyntax {
   let declaration: FunctionDeclSyntax
   let parentTypeName: String?
   let selfArgName: String
+  let baseOperationTypeName: String
   let reservedNames: Set<String>
 
   var accessModifier: String {
     self.declaration.accessModifier.map { "\($0) " } ?? ""
   }
-  
+
   var isPrivate: Bool {
     self.declaration.accessModifier == "private"
   }
@@ -22,14 +23,14 @@ struct OperationFunctionSyntax {
     self.declaration.signature.parameterClause.parameters
   }
 
-  var hasArgs: Bool {
-    !self.functionArgs.isEmpty
+  var hasNonReservedArgs: Bool {
+    self.functionArgs.contains { !self.reservedNames.contains($0.operationalName) }
   }
 
   var returnType: String {
     self.declaration.operationReturnTypeName
   }
-  
+
   var returnTypeWithoutModifiers: String {
     self.declaration.operationReturnTypeNameWithoutModifiers
   }
@@ -56,7 +57,7 @@ struct OperationFunctionSyntax {
       } else {
         ""
       }
-    return "\(self.declaration.isAsync ? "async " : "")\(throwsClause)\(returnTypeClause)"
+    return "async \(throwsClause)\(returnTypeClause)"
   }
 
   var operationTypeArgs: String {
@@ -110,40 +111,37 @@ struct OperationFunctionSyntax {
       """
   }
 
-  func accessorProperty(typeNameSuffix: String) -> String {
-    let typeName = self.invokeOperationTypeName(suffix: typeNameSuffix)
-    let isFunction = self.hasArgs || self.hasGenericArgs
+  var accessorProperty: String {
+    let isFunction = self.hasNonReservedArgs || self.hasGenericArgs
     return """
       \(self.declaration.availability ?? "")
       \(self.accessModifier)\
-      \(self.declaration.isStatic ? "static " : "")\(isFunction ? "func" : "var") \
+      \(self.declaration.isStatic ? "static " : "")nonisolated \(isFunction ? "func" : "var") \
       $\(self.declaration.name)\
       \(self.declaration.genericParameterClause ?? "")\
       \(isFunction ? "(\(self.createOperationTypeFunctionArgs)) ->" : ":") \
-      \(typeName) {
-        \(typeName)(\(self.createOperationTypeInvoke))
+      \(self.operationTypeName) {
+        \(self.operationTypeName)(\(self.createOperationTypeInvoke))
       }
       """
   }
 
-  func operationTypeName(suffix: String) -> String {
-    self.declaration.name.text.firstCharacterCapitalized
-      + suffix
+  var operationTypeNameDeclaration: String {
+    self.baseOperationTypeName
       + "\(self.declaration.genericParameterClause ?? "")"
   }
-  
-  func invokeOperationTypeName(suffix: String) -> String {
+
+  var operationTypeName: String {
     let genericsList = self.declaration.genericParameterClause?.parameters
       .map { $0.name.text }
       .joined(separator: ", ")
-    return self.declaration.name.text.firstCharacterCapitalized
-      + suffix
-      + (genericsList.map { "<\($0)>" } ?? "")
+    return self.baseOperationTypeName + (genericsList.map { "<\($0)>" } ?? "")
   }
 }
 
 extension OperationFunctionSyntax {
   init?(
+    node: AttributeSyntax,
     declaration: some DeclSyntaxProtocol,
     in context: some MacroExpansionContext,
     reservedNames: Set<String> = []
@@ -223,6 +221,7 @@ extension OperationFunctionSyntax {
       declaration: declaration,
       parentTypeName: context.parentTypeName,
       selfArgName: context.makeUniqueName("type").text,
+      baseOperationTypeName: context.makeUniqueName(declaration.name.text).text,
       reservedNames: reservedNames
     )
   }
@@ -234,7 +233,7 @@ extension FunctionDeclSyntax {
   fileprivate var operationReturnTypeName: String {
     self.signature.returnClause?.type.trimmedDescription ?? "Void"
   }
-  
+
   fileprivate var operationReturnTypeNameWithoutModifiers: String {
     if let attributed = self.signature.returnClause?.type.as(AttributedTypeSyntax.self) {
       return attributed.baseType.trimmedDescription

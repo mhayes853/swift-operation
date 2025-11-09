@@ -12,6 +12,7 @@ public enum OperationRequestMacro: PeerMacro {
     in context: some MacroExpansionContext
   ) throws -> [DeclSyntax] {
     let syntax = OperationFunctionSyntax(
+      node: node,
       declaration: declaration,
       in: context,
       reservedNames: Self.reservedArgumentNames
@@ -20,17 +21,17 @@ public enum OperationRequestMacro: PeerMacro {
 
     return [
       """
-      \(raw: syntax.accessorProperty(typeNameSuffix: "Operation"))
+      \(raw: syntax.accessorProperty)
       """,
       """
       \(raw: syntax.declaration.availability ?? "")
-      \(raw: syntax.accessModifier)struct \(raw: syntax.operationTypeName(suffix: "Operation")): \
-      OperationRequest {
+      \(raw: syntax.accessModifier)nonisolated struct \(raw: syntax.operationTypeNameDeclaration): \
+      OperationCore.OperationRequest {
         \(raw: syntax.operationTypeArgs)
         \(raw: syntax.isPrivate ? "" : syntax.accessModifier)func run(
           isolation: isolated (any Actor)?,
-          in context: OperationContext,
-          with continuation: OperationContinuation<\(raw: syntax.returnTypeWithoutModifiers), \
+          in context: OperationCore.OperationContext,
+          with continuation: OperationCore.OperationContinuation<\(raw: syntax.returnTypeWithoutModifiers), \
       \(raw: syntax.errorType)>
         ) \(raw: syntax.operationTypeReturnSignature) {
           \(raw: syntax.functionFromOperationTypeInvoke)

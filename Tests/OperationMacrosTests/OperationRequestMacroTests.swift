@@ -20,17 +20,17 @@ extension BaseTestSuite {
           42
         }
 
-        var $something: SomethingOperation {
-          SomethingOperation()
+        nonisolated var $something: __macro_local_9somethingfMu_ {
+          __macro_local_9somethingfMu_()
         }
 
-        struct SomethingOperation: OperationRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
 
           func run(
             isolation: isolated (any Actor)?,
-            in context: OperationContext,
-            with continuation: OperationContinuation<Int, Never>
-          ) -> Int {
+            in context: OperationCore.OperationContext,
+            with continuation: OperationCore.OperationContinuation<Int, Never>
+          ) async -> Int {
             something()
           }
         }
@@ -53,17 +53,17 @@ extension BaseTestSuite {
           42
         }
 
-        var $something: SomethingOperation {
-          SomethingOperation()
+        nonisolated var $something: __macro_local_9somethingfMu_ {
+          __macro_local_9somethingfMu_()
         }
 
-        struct SomethingOperation: OperationRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
 
           func run(
             isolation: isolated (any Actor)?,
-            in context: OperationContext,
-            with continuation: OperationContinuation<Void, Never>
-          )  {
+            in context: OperationCore.OperationContext,
+            with continuation: OperationCore.OperationContinuation<Void, Never>
+          ) async  {
             something()
           }
         }
@@ -86,18 +86,18 @@ extension BaseTestSuite {
           arg2.count + arg
         }
 
-        func $something(arg: Int, with arg2: String) -> SomethingOperation {
-          SomethingOperation(arg: arg, arg2: arg2)
+        nonisolated func $something(arg: Int, with arg2: String) -> __macro_local_9somethingfMu_ {
+          __macro_local_9somethingfMu_(arg: arg, arg2: arg2)
         }
 
-        struct SomethingOperation: OperationRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
           let arg: Int
           let arg2: String
           func run(
             isolation: isolated (any Actor)?,
-            in context: OperationContext,
-            with continuation: OperationContinuation<Int, Never>
-          ) -> Int {
+            in context: OperationCore.OperationContext,
+            with continuation: OperationCore.OperationContinuation<Int, Never>
+          ) async -> Int {
             something(arg: arg, with: arg2)
           }
         }
@@ -120,18 +120,18 @@ extension BaseTestSuite {
           arg2.count + arg
         }
 
-        func $something(with arg: Int, with arg2: String) -> SomethingOperation {
-          SomethingOperation(arg: arg, arg2: arg2)
+        nonisolated func $something(with arg: Int, with arg2: String) -> __macro_local_9somethingfMu_ {
+          __macro_local_9somethingfMu_(arg: arg, arg2: arg2)
         }
 
-        struct SomethingOperation: OperationRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
           let arg: Int
           let arg2: String
           func run(
             isolation: isolated (any Actor)?,
-            in context: OperationContext,
-            with continuation: OperationContinuation<Int, Never>
-          ) -> Int {
+            in context: OperationCore.OperationContext,
+            with continuation: OperationCore.OperationContinuation<Int, Never>
+          ) async -> Int {
             something(with: arg, with: arg2)
           }
         }
@@ -154,17 +154,17 @@ extension BaseTestSuite {
           arg
         }
 
-        func $something(arg: Int = 0) -> SomethingOperation {
-          SomethingOperation(arg: arg)
+        nonisolated func $something(arg: Int = 0) -> __macro_local_9somethingfMu_ {
+          __macro_local_9somethingfMu_(arg: arg)
         }
 
-        struct SomethingOperation: OperationRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
           let arg: Int
           func run(
             isolation: isolated (any Actor)?,
-            in context: OperationContext,
-            with continuation: OperationContinuation<Int, Never>
-          ) -> Int {
+            in context: OperationCore.OperationContext,
+            with continuation: OperationCore.OperationContinuation<Int, Never>
+          ) async -> Int {
             something(arg: arg)
           }
         }
@@ -231,17 +231,17 @@ extension BaseTestSuite {
           arg
         }
 
-        func $something(arg: Int,) -> SomethingOperation {
-          SomethingOperation(arg: arg)
+        nonisolated func $something(arg: Int,) -> __macro_local_9somethingfMu_ {
+          __macro_local_9somethingfMu_(arg: arg)
         }
 
-        struct SomethingOperation: OperationRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
           let arg: Int
           func run(
             isolation: isolated (any Actor)?,
-            in context: OperationContext,
-            with continuation: OperationContinuation<Int, Never>
-          ) -> Int {
+            in context: OperationCore.OperationContext,
+            with continuation: OperationCore.OperationContinuation<Int, Never>
+          ) async -> Int {
             something(arg: arg, context: context)
           }
         }
@@ -272,17 +272,17 @@ extension BaseTestSuite {
           arg
         }
 
-        func $something(arg: Int,) -> SomethingOperation {
-          SomethingOperation(arg: arg)
+        nonisolated func $something(arg: Int,) -> __macro_local_9somethingfMu_ {
+          __macro_local_9somethingfMu_(arg: arg)
         }
 
-        struct SomethingOperation: OperationRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
           let arg: Int
           func run(
             isolation: isolated (any Actor)?,
-            in context: OperationContext,
-            with continuation: OperationContinuation<Int, Never>
-          ) -> Int {
+            in context: OperationCore.OperationContext,
+            with continuation: OperationCore.OperationContinuation<Int, Never>
+          ) async -> Int {
             something(arg: arg, context: context, continuation: continuation)
           }
         }
@@ -315,18 +315,59 @@ extension BaseTestSuite {
           arg
         }
 
-        func $something(arg: Int,) -> SomethingOperation {
-          SomethingOperation(arg: arg)
+        nonisolated func $something(arg: Int,) -> __macro_local_9somethingfMu_ {
+          __macro_local_9somethingfMu_(arg: arg)
         }
 
-        struct SomethingOperation: OperationRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
           let arg: Int
           func run(
             isolation: isolated (any Actor)?,
-            in context: OperationContext,
-            with continuation: OperationContinuation<Int, Never>
-          ) -> Int {
+            in context: OperationCore.OperationContext,
+            with continuation: OperationCore.OperationContinuation<Int, Never>
+          ) async -> Int {
             something(arg: arg, isolation: isolation, context: context, continuation: continuation)
+          }
+        }
+        """
+      }
+    }
+
+    @Test("Operation With Only Reserved Arguments")
+    func operationWithOnlyReservedArguments() {
+      assertMacro {
+        """
+        @OperationRequest
+        func something(
+          isolation: isolated (any Actor)?,
+          context: OperationContext,
+          continuation: OperationContinuation<Int, Never>
+        ) -> Int {
+          42
+        }
+        """
+      } expansion: {
+        """
+        func something(
+          isolation: isolated (any Actor)?,
+          context: OperationContext,
+          continuation: OperationContinuation<Int, Never>
+        ) -> Int {
+          42
+        }
+
+        nonisolated var $something: __macro_local_9somethingfMu_ {
+          __macro_local_9somethingfMu_()
+        }
+
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
+
+          func run(
+            isolation: isolated (any Actor)?,
+            in context: OperationCore.OperationContext,
+            with continuation: OperationCore.OperationContinuation<Int, Never>
+          ) async -> Int {
+            something(isolation: isolation, context: context, continuation: continuation)
           }
         }
         """
@@ -351,18 +392,18 @@ extension BaseTestSuite {
             arg
           }
 
-          static func $something(arg: Int) -> SomethingOperation {
-            SomethingOperation(arg: arg, __macro_local_4typefMu_: Self.self)
+          static nonisolated func $something(arg: Int) -> __macro_local_9somethingfMu_ {
+            __macro_local_9somethingfMu_(arg: arg, __macro_local_4typefMu_: Self.self)
           }
 
-          struct SomethingOperation: OperationRequest {
+          nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
             let arg: Int
             let __macro_local_4typefMu_: Foo.Type
             func run(
               isolation: isolated (any Actor)?,
-              in context: OperationContext,
-              with continuation: OperationContinuation<Int, Never>
-            ) -> Int {
+              in context: OperationCore.OperationContext,
+              with continuation: OperationCore.OperationContinuation<Int, Never>
+            ) async -> Int {
               __macro_local_4typefMu_.something(arg: arg)
             }
           }
@@ -392,17 +433,17 @@ extension BaseTestSuite {
             Self.value
           }
 
-          static var $something: SomethingOperation {
-            SomethingOperation(__macro_local_4typefMu_: Self.self)
+          static nonisolated var $something: __macro_local_9somethingfMu_ {
+            __macro_local_9somethingfMu_(__macro_local_4typefMu_: Self.self)
           }
 
-          struct SomethingOperation: OperationRequest {
+          nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
             let __macro_local_4typefMu_: Foo.Type
             func run(
               isolation: isolated (any Actor)?,
-              in context: OperationContext,
-              with continuation: OperationContinuation<Int, Never>
-            ) -> Int {
+              in context: OperationCore.OperationContext,
+              with continuation: OperationCore.OperationContinuation<Int, Never>
+            ) async -> Int {
               __macro_local_4typefMu_.something()
             }
           }
@@ -435,18 +476,18 @@ extension BaseTestSuite {
             arg
           }
 
-          static func $something(arg: Int) -> SomethingOperation {
-            SomethingOperation(arg: arg, __macro_local_4typefMu_: Self.self)
+          static nonisolated func $something(arg: Int) -> __macro_local_9somethingfMu_ {
+            __macro_local_9somethingfMu_(arg: arg, __macro_local_4typefMu_: Self.self)
           }
 
-          struct SomethingOperation: OperationRequest {
+          nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
             let arg: Int
             let __macro_local_4typefMu_: Foo.Type
             func run(
               isolation: isolated (any Actor)?,
-              in context: OperationContext,
-              with continuation: OperationContinuation<Int, Never>
-            ) -> Int {
+              in context: OperationCore.OperationContext,
+              with continuation: OperationCore.OperationContinuation<Int, Never>
+            ) async -> Int {
               __macro_local_4typefMu_.something(arg: arg)
             }
           }
@@ -476,18 +517,18 @@ extension BaseTestSuite {
             self.value
           }
 
-          func $something(arg: Int) -> SomethingOperation {
-            SomethingOperation(arg: arg, __macro_local_4typefMu_: self)
+          nonisolated func $something(arg: Int) -> __macro_local_9somethingfMu_ {
+            __macro_local_9somethingfMu_(arg: arg, __macro_local_4typefMu_: self)
           }
 
-          struct SomethingOperation: OperationRequest {
+          nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
             let arg: Int
             let __macro_local_4typefMu_: Foo
             func run(
               isolation: isolated (any Actor)?,
-              in context: OperationContext,
-              with continuation: OperationContinuation<Int, Never>
-            ) -> Int {
+              in context: OperationCore.OperationContext,
+              with continuation: OperationCore.OperationContinuation<Int, Never>
+            ) async -> Int {
               __macro_local_4typefMu_.something(arg: arg)
             }
           }
@@ -522,18 +563,18 @@ extension BaseTestSuite {
             self.value
           }
 
-          func $something(arg: Int) -> SomethingOperation {
-            SomethingOperation(arg: arg, __macro_local_4typefMu_: self)
+          nonisolated func $something(arg: Int) -> __macro_local_9somethingfMu_ {
+            __macro_local_9somethingfMu_(arg: arg, __macro_local_4typefMu_: self)
           }
 
-          struct SomethingOperation: OperationRequest {
+          nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
             let arg: Int
             let __macro_local_4typefMu_: Foo
             func run(
               isolation: isolated (any Actor)?,
-              in context: OperationContext,
-              with continuation: OperationContinuation<Int, Never>
-            ) -> Int {
+              in context: OperationCore.OperationContext,
+              with continuation: OperationCore.OperationContinuation<Int, Never>
+            ) async -> Int {
               __macro_local_4typefMu_.something(arg: arg)
             }
           }
@@ -560,17 +601,17 @@ extension BaseTestSuite {
             self.value
           }
 
-          func $something(arg: Int) -> SomethingOperation {
-            SomethingOperation(arg: arg)
+          nonisolated func $something(arg: Int) -> __macro_local_9somethingfMu_ {
+            __macro_local_9somethingfMu_(arg: arg)
           }
 
-          struct SomethingOperation: OperationRequest {
+          nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
             let arg: Int
             func run(
               isolation: isolated (any Actor)?,
-              in context: OperationContext,
-              with continuation: OperationContinuation<Int, Never>
-            ) -> Int {
+              in context: OperationCore.OperationContext,
+              with continuation: OperationCore.OperationContinuation<Int, Never>
+            ) async -> Int {
               something(arg: arg)
             }
           }
@@ -600,18 +641,18 @@ extension BaseTestSuite {
               self.value
             }
 
-            func $something(arg: Int) -> SomethingOperation {
-              SomethingOperation(arg: arg, __macro_local_4typefMu_: self)
+            nonisolated func $something(arg: Int) -> __macro_local_9somethingfMu_ {
+              __macro_local_9somethingfMu_(arg: arg, __macro_local_4typefMu_: self)
             }
 
-            struct SomethingOperation: OperationRequest {
+            nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
               let arg: Int
               let __macro_local_4typefMu_: Foo
               func run(
                 isolation: isolated (any Actor)?,
-                in context: OperationContext,
-                with continuation: OperationContinuation<Int, Never>
-              ) -> Int {
+                in context: OperationCore.OperationContext,
+                with continuation: OperationCore.OperationContinuation<Int, Never>
+              ) async -> Int {
                 __macro_local_4typefMu_.something(arg: arg)
               }
             }
@@ -636,17 +677,17 @@ extension BaseTestSuite {
           arg
         }
 
-        public func $something(arg: Int) -> SomethingOperation {
-          SomethingOperation(arg: arg)
+        public nonisolated func $something(arg: Int) -> __macro_local_9somethingfMu_ {
+          __macro_local_9somethingfMu_(arg: arg)
         }
 
-        public struct SomethingOperation: OperationRequest {
+        public nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
           let arg: Int
           public func run(
             isolation: isolated (any Actor)?,
-            in context: OperationContext,
-            with continuation: OperationContinuation<Int, Never>
-          ) -> Int {
+            in context: OperationCore.OperationContext,
+            with continuation: OperationCore.OperationContinuation<Int, Never>
+          ) async -> Int {
             something(arg: arg)
           }
         }
@@ -665,17 +706,17 @@ extension BaseTestSuite {
           arg
         }
 
-        private func $something(arg: Int) -> SomethingOperation {
-          SomethingOperation(arg: arg)
+        private nonisolated func $something(arg: Int) -> __macro_local_9somethingfMu_ {
+          __macro_local_9somethingfMu_(arg: arg)
         }
 
-        private struct SomethingOperation: OperationRequest {
+        private nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
           let arg: Int
           func run(
             isolation: isolated (any Actor)?,
-            in context: OperationContext,
-            with continuation: OperationContinuation<Int, Never>
-          ) -> Int {
+            in context: OperationCore.OperationContext,
+            with continuation: OperationCore.OperationContinuation<Int, Never>
+          ) async -> Int {
             something(arg: arg)
           }
         }
@@ -694,17 +735,17 @@ extension BaseTestSuite {
           arg
         }
 
-        fileprivate func $something(arg: Int) -> SomethingOperation {
-          SomethingOperation(arg: arg)
+        fileprivate nonisolated func $something(arg: Int) -> __macro_local_9somethingfMu_ {
+          __macro_local_9somethingfMu_(arg: arg)
         }
 
-        fileprivate struct SomethingOperation: OperationRequest {
+        fileprivate nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
           let arg: Int
           fileprivate func run(
             isolation: isolated (any Actor)?,
-            in context: OperationContext,
-            with continuation: OperationContinuation<Int, Never>
-          ) -> Int {
+            in context: OperationCore.OperationContext,
+            with continuation: OperationCore.OperationContinuation<Int, Never>
+          ) async -> Int {
             something(arg: arg)
           }
         }
@@ -730,18 +771,18 @@ extension BaseTestSuite {
         }
 
         @available(iOS 13.0, *)
-        func $something(arg: Int) -> SomethingOperation {
-          SomethingOperation(arg: arg)
+        nonisolated func $something(arg: Int) -> __macro_local_9somethingfMu_ {
+          __macro_local_9somethingfMu_(arg: arg)
         }
 
         @available(iOS 13.0, *)
-        struct SomethingOperation: OperationRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
           let arg: Int
           func run(
             isolation: isolated (any Actor)?,
-            in context: OperationContext,
-            with continuation: OperationContinuation<Int, Never>
-          ) -> Int {
+            in context: OperationCore.OperationContext,
+            with continuation: OperationCore.OperationContinuation<Int, Never>
+          ) async -> Int {
             something(arg: arg)
           }
         }
@@ -767,19 +808,19 @@ extension BaseTestSuite {
 
         @available(iOS 13.0, *)
         @available(tvOS 13.0, *)
-        func $something(arg: Int) -> SomethingOperation {
-          SomethingOperation(arg: arg)
+        nonisolated func $something(arg: Int) -> __macro_local_9somethingfMu_ {
+          __macro_local_9somethingfMu_(arg: arg)
         }
 
         @available(iOS 13.0, *)
         @available(tvOS 13.0, *)
-        struct SomethingOperation: OperationRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
           let arg: Int
           func run(
             isolation: isolated (any Actor)?,
-            in context: OperationContext,
-            with continuation: OperationContinuation<Int, Never>
-          ) -> Int {
+            in context: OperationCore.OperationContext,
+            with continuation: OperationCore.OperationContinuation<Int, Never>
+          ) async -> Int {
             something(arg: arg)
           }
         }
@@ -810,17 +851,17 @@ extension BaseTestSuite {
           arg
         }
 
-        func $something(arg: Int,) -> SomethingOperation {
-          SomethingOperation(arg: arg)
+        nonisolated func $something(arg: Int,) -> __macro_local_9somethingfMu_ {
+          __macro_local_9somethingfMu_(arg: arg)
         }
 
-        struct SomethingOperation: OperationRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
           let arg: Int
           func run(
             isolation: isolated (any Actor)?,
-            in context: OperationContext,
-            with continuation: OperationContinuation<Int, any Error>
-          ) throws -> Int {
+            in context: OperationCore.OperationContext,
+            with continuation: OperationCore.OperationContinuation<Int, any Error>
+          ) async throws -> Int {
             try something(arg: arg, context: context, continuation: continuation)
           }
         }
@@ -854,17 +895,17 @@ extension BaseTestSuite {
           arg
         }
 
-        func $something(arg: Int,) -> SomethingOperation {
-          SomethingOperation(arg: arg)
+        nonisolated func $something(arg: Int,) -> __macro_local_9somethingfMu_ {
+          __macro_local_9somethingfMu_(arg: arg)
         }
 
-        struct SomethingOperation: OperationRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
           let arg: Int
           func run(
             isolation: isolated (any Actor)?,
-            in context: OperationContext,
-            with continuation: OperationContinuation<Int, MyError>
-          ) throws(MyError) -> Int {
+            in context: OperationCore.OperationContext,
+            with continuation: OperationCore.OperationContinuation<Int, MyError>
+          ) async throws(MyError) -> Int {
             try something(arg: arg, context: context, continuation: continuation)
           }
         }
@@ -895,17 +936,17 @@ extension BaseTestSuite {
           arg
         }
 
-        func $something(arg: Int,) -> SomethingOperation {
-          SomethingOperation(arg: arg)
+        nonisolated func $something(arg: Int,) -> __macro_local_9somethingfMu_ {
+          __macro_local_9somethingfMu_(arg: arg)
         }
 
-        struct SomethingOperation: OperationRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
           let arg: Int
           func run(
             isolation: isolated (any Actor)?,
-            in context: OperationContext,
-            with continuation: OperationContinuation<Int, any Error>
-          ) throws -> Int {
+            in context: OperationCore.OperationContext,
+            with continuation: OperationCore.OperationContinuation<Int, any Error>
+          ) async throws -> Int {
             try something(arg: arg, context: context, continuation: continuation)
           }
         }
@@ -939,17 +980,17 @@ extension BaseTestSuite {
           arg
         }
 
-        func $something(arg: Int,) -> SomethingOperation {
-          SomethingOperation(arg: arg)
+        nonisolated func $something(arg: Int,) -> __macro_local_9somethingfMu_ {
+          __macro_local_9somethingfMu_(arg: arg)
         }
 
-        struct SomethingOperation: OperationRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
           let arg: Int
           func run(
             isolation: isolated (any Actor)?,
-            in context: OperationContext,
-            with continuation: OperationContinuation<Int, MyError>
-          ) throws(MyError) -> Int {
+            in context: OperationCore.OperationContext,
+            with continuation: OperationCore.OperationContinuation<Int, MyError>
+          ) async throws(MyError) -> Int {
             try something(arg: arg, context: context, continuation: continuation)
           }
         }
@@ -972,17 +1013,17 @@ extension BaseTestSuite {
           T()
         }
 
-        func $something<T: Creatable>() -> SomethingOperation<T> {
-          SomethingOperation<T>()
+        nonisolated func $something<T: Creatable>() -> __macro_local_9somethingfMu_<T> {
+          __macro_local_9somethingfMu_<T>()
         }
 
-        struct SomethingOperation<T: Creatable>: OperationRequest {
+        nonisolated struct __macro_local_9somethingfMu_<T: Creatable>: OperationCore.OperationRequest {
 
           func run(
             isolation: isolated (any Actor)?,
-            in context: OperationContext,
-            with continuation: OperationContinuation<T, Never>
-          ) -> sending T {
+            in context: OperationCore.OperationContext,
+            with continuation: OperationCore.OperationContinuation<T, Never>
+          ) async -> sending T {
             something()
           }
         }
@@ -1001,17 +1042,17 @@ extension BaseTestSuite {
           T()
         }
 
-        func $something<T: Creatable>() -> SomethingOperation<T> {
-          SomethingOperation<T>()
+        nonisolated func $something<T: Creatable>() -> __macro_local_9somethingfMu_<T> {
+          __macro_local_9somethingfMu_<T>()
         }
 
-        struct SomethingOperation<T: Creatable>: OperationRequest {
+        nonisolated struct __macro_local_9somethingfMu_<T: Creatable>: OperationCore.OperationRequest {
 
           func run(
             isolation: isolated (any Actor)?,
-            in context: OperationContext,
-            with continuation: OperationContinuation<T, Never>
-          ) -> T {
+            in context: OperationCore.OperationContext,
+            with continuation: OperationCore.OperationContinuation<T, Never>
+          ) async -> T {
             something()
           }
         }

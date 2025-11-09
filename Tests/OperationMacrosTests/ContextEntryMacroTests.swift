@@ -24,7 +24,7 @@ extension BaseTestSuite {
             }
           }
 
-          private struct __Key_property: Key {
+          private struct __Key_property: OperationCore.OperationContext.Key {
             static let defaultValue = "blob"
           }
         }
@@ -52,7 +52,7 @@ extension BaseTestSuite {
             }
           }
 
-          private struct __Key_property: Key {
+          private struct __Key_property: OperationCore.OperationContext.Key {
             static let defaultValue: String? = nil
           }
         }
@@ -76,7 +76,7 @@ extension BaseTestSuite {
             }
           }
 
-          private struct __Key_property: Key {
+          private struct __Key_property: OperationCore.OperationContext.Key {
             static let defaultValue: Optional<String> = nil
           }
         }
@@ -100,7 +100,7 @@ extension BaseTestSuite {
             }
           }
 
-          private struct __Key_property: Key {
+          private struct __Key_property: OperationCore.OperationContext.Key {
             static let defaultValue: String? = nil
           }
         }
@@ -132,7 +132,7 @@ extension BaseTestSuite {
             }
           }
 
-          private struct __Key_property: Key {
+          private struct __Key_property: OperationCore.OperationContext.Key {
             static let defaultValue = {
                 var b = "blob"
                 b = someTransform(b)
@@ -164,7 +164,7 @@ extension BaseTestSuite {
             }
           }
 
-          private struct __Key_property: Key {
+          private struct __Key_property: OperationCore.OperationContext.Key {
             static let defaultValue = "blob"
           }
         }
@@ -211,7 +211,7 @@ extension BaseTestSuite {
             }
           }
 
-          private struct __Key_property: Key {
+          private struct __Key_property: OperationCore.OperationContext.Key {
             static let defaultValue = "blob"
           }
         }
@@ -243,7 +243,7 @@ extension BaseTestSuite {
             }
           }
 
-          private struct __Key_property: Key {
+          private struct __Key_property: OperationCore.OperationContext.Key {
             static let defaultValue: Foo = .init()
           }
         }
@@ -271,7 +271,7 @@ extension BaseTestSuite {
             }
           }
 
-          private struct __Key_property: Key {
+          private struct __Key_property: OperationCore.OperationContext.Key {
             static let defaultValue = "blob"
           }
         }
