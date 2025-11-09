@@ -5,6 +5,7 @@ import SwiftSyntaxMacros
 struct OperationMacrosPlugin: CompilerPlugin {
   let providingMacros: [any Macro.Type] = [
     ContextEntryMacro.self,
-    OperationRequestMacro.self
+    OperationRequestMacro.self,
+    QueryRequestMacro.self
   ]
 }

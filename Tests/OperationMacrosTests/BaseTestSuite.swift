@@ -9,7 +9,8 @@ import Testing
   .macros(
     [
       "ContextEntry": ContextEntryMacro.self,
-      "OperationRequest": OperationRequestMacro.self
+      "OperationRequest": OperationRequestMacro.self,
+      "QueryRequest": QueryRequestMacro.self
     ],
     record: .failed
   )
