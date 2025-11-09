@@ -10,7 +10,8 @@ import Testing
     [
       "ContextEntry": ContextEntryMacro.self,
       "OperationRequest": OperationRequestMacro.self,
-      "QueryRequest": QueryRequestMacro.self
+      "QueryRequest": QueryRequestMacro.self,
+      "MutationRequest": MutationRequestMacro.self
     ],
     record: .failed
   )

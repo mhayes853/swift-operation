@@ -13,6 +13,11 @@ public macro QueryRequest(
   path: _OperationPathMacroSynthesizer = .inferredFromHashable
 ) = #externalMacro(module: "OperationMacros", type: "QueryRequestMacro")
 
+@attached(peer, names: overloaded, prefixed(`$`))
+public macro MutationRequest(
+  path: _OperationPathMacroSynthesizer = .inferredFromHashable
+) = #externalMacro(module: "OperationMacros", type: "MutationRequestMacro")
+
 // MARK: - _OperationPathMacroSynthesizer
 
 public struct _OperationPathMacroSynthesizer: Sendable {

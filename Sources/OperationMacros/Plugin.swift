@@ -6,6 +6,7 @@ struct OperationMacrosPlugin: CompilerPlugin {
   let providingMacros: [any Macro.Type] = [
     ContextEntryMacro.self,
     OperationRequestMacro.self,
-    QueryRequestMacro.self
+    QueryRequestMacro.self,
+    MutationRequestMacro.self
   ]
 }
