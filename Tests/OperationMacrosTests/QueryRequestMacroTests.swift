@@ -767,7 +767,7 @@ extension BaseTestSuite {
 
         private nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable {
           let arg: Int
-          private var path: OperationCore.OperationPath {
+          var path: OperationCore.OperationPath {
           OperationCore.OperationPath(self)
           }
           func fetch(
@@ -1293,6 +1293,280 @@ extension BaseTestSuite {
         ╰─ 🛑 An 'id' argument is required when using '.inferredFromIdentifiable'
         func something(arg: Int) -> Int {
           arg
+        }
+        """
+      }
+    }
+
+    @Test("Query With Custom Path Synthesis")
+    func queryWithCustomPathSynthesis() {
+      assertMacro {
+        """
+        @QueryRequest(path: .custom { OperationPath("blob") })
+        func something() -> Int {
+          42
+        }
+        """
+      } expansion: {
+        """
+        func something() -> Int {
+          42
+        }
+
+        nonisolated var $something: __macro_local_9somethingfMu_ {
+          __macro_local_9somethingfMu_()
+        }
+
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest {
+
+          var path: OperationCore.OperationPath {
+          makePath()
+          }
+          private func makePath() -> OperationCore.OperationPath {
+            OperationPath("blob")
+          }
+          func fetch(
+            isolation: isolated (any Actor)?,
+            in context: OperationCore.OperationContext,
+            with continuation: OperationCore.OperationContinuation<Int, Never>
+          ) async -> Int {
+            something()
+          }
+        }
+        """
+      }
+      assertMacro {
+        """
+        @QueryRequest(
+          path: .custom { () -> OperationPath in
+            OperationPath("blob")
+          }
+        )
+        func something() -> Int {
+          42
+        }
+        """
+      } expansion: {
+        """
+        func something() -> Int {
+          42
+        }
+
+        nonisolated var $something: __macro_local_9somethingfMu_ {
+          __macro_local_9somethingfMu_()
+        }
+
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest {
+
+          var path: OperationCore.OperationPath {
+          makePath()
+          }
+          private func makePath() -> OperationCore.OperationPath {
+
+              OperationPath("blob")
+          }
+          func fetch(
+            isolation: isolated (any Actor)?,
+            in context: OperationCore.OperationContext,
+            with continuation: OperationCore.OperationContinuation<Int, Never>
+          ) async -> Int {
+            something()
+          }
+        }
+        """
+      }
+      assertMacro {
+        """
+        @QueryRequest(path: .custom { (arg: Int) in ["blob", arg] })
+        func something(arg: Int) -> Int {
+          arg
+        }
+        """
+      } expansion: {
+        """
+        func something(arg: Int) -> Int {
+          arg
+        }
+
+        nonisolated func $something(arg: Int) -> __macro_local_9somethingfMu_ {
+          __macro_local_9somethingfMu_(arg: arg)
+        }
+
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest {
+          let arg: Int
+          var path: OperationCore.OperationPath {
+          makePath(arg: arg)
+          }
+          private func makePath(arg: Int) -> OperationCore.OperationPath {
+            ["blob", arg]
+          }
+          func fetch(
+            isolation: isolated (any Actor)?,
+            in context: OperationCore.OperationContext,
+            with continuation: OperationCore.OperationContinuation<Int, Never>
+          ) async -> Int {
+            something(arg: arg)
+          }
+        }
+        """
+      }
+      assertMacro {
+        """
+        @QueryRequest(path: .custom { (arg: Int) in ["blob", arg] })
+        func something(arg: Int, context: OperationContext) -> Int {
+          arg
+        }
+        """
+      } expansion: {
+        """
+        func something(arg: Int, context: OperationContext) -> Int {
+          arg
+        }
+
+        nonisolated func $something(arg: Int,) -> __macro_local_9somethingfMu_ {
+          __macro_local_9somethingfMu_(arg: arg)
+        }
+
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest {
+          let arg: Int
+          var path: OperationCore.OperationPath {
+          makePath(arg: arg)
+          }
+          private func makePath(arg: Int) -> OperationCore.OperationPath {
+            ["blob", arg]
+          }
+          func fetch(
+            isolation: isolated (any Actor)?,
+            in context: OperationCore.OperationContext,
+            with continuation: OperationCore.OperationContinuation<Int, Never>
+          ) async -> Int {
+            something(arg: arg, context: context)
+          }
+        }
+        """
+      }
+      assertMacro {
+        """
+        @QueryRequest(path: .custom { (arg: Int, arg2: String) in ["blob", arg, arg2] })
+        func something(arg: Int, arg2: String) -> Int {
+          arg
+        }
+        """
+      } expansion: {
+        """
+        func something(arg: Int, arg2: String) -> Int {
+          arg
+        }
+
+        nonisolated func $something(arg: Int, arg2: String) -> __macro_local_9somethingfMu_ {
+          __macro_local_9somethingfMu_(arg: arg, arg2: arg2)
+        }
+
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest {
+          let arg: Int
+          let arg2: String
+          var path: OperationCore.OperationPath {
+          makePath(arg: arg, arg2: arg2)
+          }
+          private func makePath(arg: Int, arg2: String) -> OperationCore.OperationPath {
+            ["blob", arg, arg2]
+          }
+          func fetch(
+            isolation: isolated (any Actor)?,
+            in context: OperationCore.OperationContext,
+            with continuation: OperationCore.OperationContinuation<Int, Never>
+          ) async -> Int {
+            something(arg: arg, arg2: arg2)
+          }
+        }
+        """
+      }
+    }
+
+    @Test("Query With Custom Path Synthesis, Invalid Arguments")
+    func queryWithCustomPathSynthesisInvalidArguments() {
+      assertMacro {
+        """
+        @QueryRequest(path: .custom { OperationPath("blob") })
+        func something(arg: Int) -> Int {
+          42
+        }
+        """
+      } diagnostics: {
+        """
+        @QueryRequest(path: .custom { OperationPath("blob") })
+                                    ┬────────────────────────
+                                    ╰─ 🛑 Custom path closure must have arguments '(arg: Int)'
+        func something(arg: Int) -> Int {
+          42
+        }
+        """
+      }
+      assertMacro {
+        """
+        @QueryRequest(path: .custom { (arg: String) in OperationPath(arg) })
+        func something(arg: Int) -> Int {
+          42
+        }
+        """
+      } diagnostics: {
+        """
+        @QueryRequest(path: .custom { (arg: String) in OperationPath(arg) })
+                                    ┬──────────────────────────────────────
+                                    ╰─ 🛑 Custom path closure must have arguments '(arg: Int)'
+        func something(arg: Int) -> Int {
+          42
+        }
+        """
+      }
+      assertMacro {
+        """
+        @QueryRequest(path: .custom { (arg: String, arg2: Int) in [arg, arg2] })
+        func something(arg: Int) -> Int {
+          42
+        }
+        """
+      } diagnostics: {
+        """
+        @QueryRequest(path: .custom { (arg: String, arg2: Int) in [arg, arg2] })
+                                    ┬──────────────────────────────────────────
+                                    ╰─ 🛑 Custom path closure must have arguments '(arg: Int)'
+        func something(arg: Int) -> Int {
+          42
+        }
+        """
+      }
+      assertMacro {
+        """
+        @QueryRequest(path: .custom { (arg1: Int) in [arg] })
+        func something(arg: Int) -> Int {
+          42
+        }
+        """
+      } diagnostics: {
+        """
+        @QueryRequest(path: .custom { (arg1: Int) in [arg] })
+                                    ┬───────────────────────
+                                    ╰─ 🛑 Custom path closure must have arguments '(arg: Int)'
+        func something(arg: Int) -> Int {
+          42
+        }
+        """
+      }
+      assertMacro {
+        """
+        @QueryRequest(path: .custom { (arg: Int) in [arg] })
+        func something(arg: Int, arg2: String) -> Int {
+          42
+        }
+        """
+      } diagnostics: {
+        """
+        @QueryRequest(path: .custom { (arg: Int) in [arg] })
+                                    ┬──────────────────────
+                                    ╰─ 🛑 Custom path closure must have arguments '(arg: Int, arg2: String)'
+        func something(arg: Int, arg2: String) -> Int {
+          42
         }
         """
       }
