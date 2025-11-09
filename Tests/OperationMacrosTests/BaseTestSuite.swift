@@ -7,7 +7,10 @@ import Testing
 @Suite(
   .serialized,
   .macros(
-    ["ContextEntry": ContextEntryMacro.self],
+    [
+      "ContextEntry": ContextEntryMacro.self,
+      "OperationRequest": OperationRequestMacro.self
+    ],
     record: .failed
   )
 ) struct BaseTestSuite {}

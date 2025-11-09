@@ -6,7 +6,7 @@ public enum ContextEntryMacro: PeerMacro, AccessorMacro {
     of node: AttributeSyntax,
     providingPeersOf declaration: some DeclSyntaxProtocol,
     in context: some MacroExpansionContext
-  ) throws -> [SwiftSyntax.DeclSyntax] {
+  ) throws -> [DeclSyntax] {
     let extensionType = context.lexicalContext.first?
       .as(ExtensionDeclSyntax.self)?
       .extendedType

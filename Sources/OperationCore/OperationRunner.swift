@@ -18,9 +18,9 @@
 public struct OperationRunner<Operation: OperationRequest> {
   /// The current ``OperationContext`` associated with the underlying operation.
   public var context: OperationContext
-  
+
   private let operation: Operation
-  
+
   /// Creates a runner.
   ///
   /// This initializer invokes ``OperationRequest/setup(context:)-8y79v`` on the specified
@@ -35,7 +35,7 @@ public struct OperationRunner<Operation: OperationRequest> {
     self.context = context
     self.operation = operation
   }
-  
+
   /// Runs the underlying operation of this runner.
   ///
   /// - Parameters:
