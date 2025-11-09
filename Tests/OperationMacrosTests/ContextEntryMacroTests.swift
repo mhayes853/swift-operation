@@ -342,7 +342,7 @@ extension BaseTestSuite {
         extension OperationContext {
           @ContextEntry var property: Foo
           ┬────────────
-          ╰─ 🛑 @ContextEntry requires a default value.
+          ╰─ 🛑 @ContextEntry requires a default value for a non-optional type.
         }
         """
       }

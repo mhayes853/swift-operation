@@ -32,7 +32,9 @@ public enum ContextEntryMacro: PeerMacro, AccessorMacro {
     let keyTypeName = "__Key_\(name)"
     let isExplicitlyOptionalType = binding.typeAnnotation?.type.isOptional ?? false
     guard binding.initializer != nil || isExplicitlyOptionalType else {
-      throw MacroExpansionErrorMessage("@ContextEntry requires a default value.")
+      throw MacroExpansionErrorMessage(
+        "@ContextEntry requires a default value for a non-optional type."
+      )
     }
 
     let peerStruct: StructDeclSyntax
