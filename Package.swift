@@ -9,7 +9,8 @@ let package = Package(
   platforms: [.iOS(.v13), .macOS(.v10_15), .tvOS(.v13), .watchOS(.v6), .macCatalyst(.v13)],
   products: [
     .library(name: "SharingOperation", targets: ["SharingOperation"]),
-    .library(name: "Operation", targets: ["Operation"])
+    .library(name: "Operation", targets: ["Operation"]),
+    .library(name: "OperationCore", targets: ["OperationCore"])
   ],
   traits: [
     .trait(
