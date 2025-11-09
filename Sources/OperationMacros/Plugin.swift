@@ -3,5 +3,7 @@ import SwiftSyntaxMacros
 
 @main
 struct OperationMacrosPlugin: CompilerPlugin {
-  let providingMacros: [Macro.Type] = []
+  let providingMacros: [any Macro.Type] = [
+    ContextEntryMacro.self
+  ]
 }

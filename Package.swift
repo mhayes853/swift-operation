@@ -88,7 +88,7 @@ let package = Package(
         )
       ]
     ),
-    .target(name: "Operation", dependencies: ["OperationCore"]),
+    .target(name: "Operation", dependencies: ["OperationCore", "OperationMacros"]),
     .target(
       name: "OperationCore",
       dependencies: [
