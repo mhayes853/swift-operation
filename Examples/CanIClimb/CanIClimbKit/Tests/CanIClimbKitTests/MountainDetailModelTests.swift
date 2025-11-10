@@ -24,7 +24,7 @@ extension DependenciesTestSuite {
         )
 
         expectNoDifference(ctx.model.travelEstimates?.mountain, .mock1)
-        
+
         try await ctx.model.$readiness.load()
         expectNoDifference(ctx.model.readiness, .full(.mock))
       }
@@ -194,7 +194,7 @@ private func withModelsDerivationTest(
     $0[TravelEstimate.LoaderKey.self] = loader
 
     $0[Mountain.PlannedClimbsLoaderKey.self] = Mountain.MockPlannedClimbsLoader()
-    $0[Mountain.ClimbReadiness.GeneratorKey.self] = Mountain.ClimbReadiness.MockGenerator(
+    $0[MountainClimbReadiness.GeneratorKey.self] = MountainClimbReadiness.MockGenerator(
       segments: [.full(.mock)]
     )
   } operation: {

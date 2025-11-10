@@ -43,7 +43,7 @@ extension Mountain {
 
 extension Mountain {
   public static func query(id: Mountain.ID) -> some QueryRequest<Self?, any Error> {
-    Query(id: id).stale(after: TimeInterval(duration: .fiveMinutes))
+    Query(id: id).stale(after: .fiveMinutes)
   }
 
   public struct Query: QueryRequest, Sendable {

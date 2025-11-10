@@ -4,27 +4,25 @@ import FoundationModels
 
 // MARK: - ClimbReadiness
 
-extension Mountain {
-  @Generable
-  public struct ClimbReadiness: Hashable, Sendable, Codable {
-    @Guide(description: "The rating for how ready the user is for climbing the mountain.")
-    public var rating: Rating
+@Generable
+public struct MountainClimbReadiness: Hashable, Sendable, Codable {
+  @Guide(description: "The rating for how ready the user is for climbing the mountain.")
+  public var rating: Rating
 
-    @Guide(description: "A justification for the rating alongside climbing preparation advice.")
-    public var insight: String
+  @Guide(description: "A justification for the rating alongside climbing preparation advice.")
+  public var insight: String
 
-    public init(rating: Mountain.ClimbReadiness.Rating, insight: String) {
-      self.rating = rating
-      self.insight = insight
-    }
+  public init(rating: MountainClimbReadiness.Rating, insight: String) {
+    self.rating = rating
+    self.insight = insight
   }
 }
 
-extension Mountain.ClimbReadiness.PartiallyGenerated: Sendable {}
+extension MountainClimbReadiness.PartiallyGenerated: Sendable {}
 
 // MARK: - Rating
 
-extension Mountain.ClimbReadiness {
+extension MountainClimbReadiness {
   @Generable
   public enum Rating: Hashable, Sendable, Codable {
     case notReady
@@ -35,7 +33,7 @@ extension Mountain.ClimbReadiness {
 
 // MARK: - Mocks
 
-extension Mountain.ClimbReadiness {
+extension MountainClimbReadiness {
   public static let mock = Self(
     rating: .partiallyReady,
     insight: "You need to buy hiking shoes in order to climb this mountain."

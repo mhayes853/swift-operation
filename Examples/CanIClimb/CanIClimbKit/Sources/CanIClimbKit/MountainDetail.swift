@@ -20,8 +20,8 @@ public final class MountainDetailModel: HashableObject, Identifiable {
   @SharedOperation(LocationReading.userQuery) public var userLocation
 
   @ObservationIgnored
-  @SharedOperation<Mountain.ClimbReadiness.GenerationQuery.State>
-  public var readiness: Mountain.ClimbReadiness.GeneratedSegment?
+  @SharedOperation<MountainClimbReadiness.GenerationQuery.State>
+  public var readiness: MountainClimbReadiness.GeneratedSegment?
 
   public let plannedClimbs: PlannedClimbsListModel
 
@@ -55,7 +55,7 @@ public final class MountainDetailModel: HashableObject, Identifiable {
         self.travelEstimates = MountainTravelEstimatesModel(mountain: mountain)
       }
       self.$readiness = SharedOperation(
-        Mountain.ClimbReadiness.generationQuery(for: mountain),
+        MountainClimbReadiness.generationQuery(for: mountain),
         animation: .default
       )
     case .result(.failure), .result(.success(nil)):
@@ -346,7 +346,7 @@ private struct MountainClimbReadinessView: View {
   }
 }
 
-extension Mountain.ClimbReadiness.Rating {
+extension MountainClimbReadiness.Rating {
   fileprivate var title: LocalizedStringResource {
     switch self {
     case .notReady: "Not Ready"

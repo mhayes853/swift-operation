@@ -10,12 +10,12 @@
         },
         "call.duration" : {
           "string" : {
-            "_0" : "0.000485458 seconds"
+            "_0" : "0.000599458 seconds"
           }
         },
         "call.result" : {
           "string" : {
-            "_0" : "success(CanIClimbKit.UserLocationTool.Output.reading(CanIClimbKit.LocationReading.Generable(coordinate: CanIClimbKit.LocationCoordinate2D.Generable(latitude: 37.825858, longitude: -122.422202), altitudeAboveSeaLevelMeters: 0.0)))"
+            "_0" : "success(CanIClimbKit.UserLocationTool.Output.reading(CanIClimbKit.LocationReadingGenerable(coordinate: CanIClimbKit.LocationCoordinate2DGenerable(latitude: 37.825858, longitude: -122.422202), altitudeAboveSeaLevelMeters: 0.0)))"
           }
         }
       }
@@ -30,19 +30,19 @@
         },
         "call.duration" : {
           "string" : {
-            "_0" : "0.001169416 seconds"
+            "_0" : "0.001406875 seconds"
           }
         },
         "call.result" : {
           "string" : {
-            "_0" : "success(CanIClimbKit.NumericHealthSamples(kind: CanIClimbKit.NumericHealthSamples.Kind.vo2Max, elements: [CanIClimbKit.NumericHealthSamples.Element(timestamp: 2025-09-25 22:07:09 +0000, value: 33.4)]))"
+            "_0" : "success(CanIClimbKit.NumericHealthSamples(kind: CanIClimbKit.NumericHealthSamples.Kind.vo2Max, elements: [CanIClimbKit.NumericHealthSamples.Element(timestamp: 2025-11-10 07:52:59 +0000, value: 33.4)]))"
           }
         }
       }
     }
   ],
   "readiness" : {
-    "insight" : "Based on your VO2 Max of 33.4 ml\/kg\/min and a sedentary activity level, you have some cardio fitness but will require significant improvement to prepare for the challenging climb of Freel Peak, rated at 72.0 out of 100 in difficulty. To prepare, consider incorporating regular cardio exercises, strength training, and gradually increase your activity intensity.",
+    "insight" : "Based on your VO2 Max of 33.4 ml\/kg\/min, your cardio fitness is average. However, your step count and daily distance traveled are quite low for a sedentary individual, and your age in the 20s suggests a potential for improvement. Freel Peak, with an elevation of 3318 meters and a difficulty rating of 72 out of 100, demands significant physical effort. To prepare adequately, you should focus on increasing your cardio fitness through regular aerobic exercises, strength training, and progressively challenging hikes to build endurance and strength.",
     "rating" : {
       "partiallyReady" : {
 

@@ -12,7 +12,7 @@ public struct UserLocationTool: Tool {
   @Generable
   public enum Output: Hashable, Sendable {
     case permissionDenied
-    case reading(LocationReading.Generable)
+    case reading(LocationReadingGenerable)
   }
 
   private let client: OperationClient
@@ -24,7 +24,7 @@ public struct UserLocationTool: Tool {
   public func call(arguments: Arguments) async throws -> Output {
     do {
       let store = self.client.store(for: LocationReading.userQuery)
-      return .reading(LocationReading.Generable(reading: try await store.fetch()))
+      return .reading(LocationReadingGenerable(reading: try await store.fetch()))
     } catch is UserLocationUnauthorizedError {
       return .permissionDenied
     }

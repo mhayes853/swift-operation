@@ -4,7 +4,7 @@ import Operation
 
 // MARK: - FoundationModelsGenerator
 
-extension Mountain.ClimbReadiness {
+extension MountainClimbReadiness {
   public final class FoundationModelsGenerator: Generator {
     private let tools: [any Tool]
     private let database: any DatabaseReader
@@ -39,7 +39,7 @@ extension Mountain.ClimbReadiness {
             let humanity = try await self.humanity()
             let stream = session.streamResponse(
               to: .climbReadiness(for: mountain, humanity: humanity),
-              generating: Mountain.ClimbReadiness.self
+              generating: MountainClimbReadiness.self
             )
             for try await snapshot in stream {
               continuation.yield(.partial(snapshot.content))
@@ -114,7 +114,7 @@ extension Prompt {
       Asses whether or not the I'm ready to climb the mountain. Make sure to include \
       recommendations for me as well.
       """
-      Mountain.Generable(mountain: mountain)
+      MountainGenerable(mountain: mountain)
 
       """
       Here is some basic information about me, including my age, gender, and height. My \
