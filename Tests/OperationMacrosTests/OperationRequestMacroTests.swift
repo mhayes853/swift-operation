@@ -1044,6 +1044,55 @@ extension BaseTestSuite {
       }
     }
 
+    @Test("Static Nested In Inner Type Operation")
+    func staticNestedInInnerTypeOperation() {
+      assertMacro {
+        """
+        struct Foo {
+          struct Bar {
+            static let blob = 42
+          }
+        }
+
+        extension Foo.Bar {
+          @OperationRequest
+          static func something() async throws -> Int {
+            Self.blob
+          }
+        }
+        """
+      } expansion: {
+        """
+        struct Foo {
+          struct Bar {
+            static let blob = 42
+          }
+        }
+
+        extension Foo.Bar {
+          static func something() async throws -> Int {
+            Self.blob
+          }
+
+          static nonisolated var $something: __macro_local_9somethingfMu_ {
+            __macro_local_9somethingfMu_(__macro_local_4typefMu_: _OperationHashableMetatype(type: Foo.Bar.self))
+          }
+
+          nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
+            let __macro_local_4typefMu_: _OperationHashableMetatype<Foo.Bar>
+            func run(
+              isolation: isolated (any Actor)?,
+              in context: OperationCore.OperationContext,
+              with continuation: OperationCore.OperationContinuation<Int, any Error>
+            ) async throws -> Int {
+              try await __macro_local_4typefMu_.type.something()
+            }
+          }
+        }
+        """
+      }
+    }
+
     @Test("Generic Operation")
     func genericOperation() {
       assertMacro {

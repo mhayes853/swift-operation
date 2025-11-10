@@ -7,7 +7,9 @@ extension CanIClimbAPI {
   public final actor Tokens {
     private let secureStorage: any SecureStorage
     private let refreshTokenKey: String
-    private let store: OperationStore<Response.Mutation.State>
+    private let store: OperationStore<
+      MutationState<Response.LoadArguments, Response, any Error>
+    >
 
     public init(
       client: OperationClient,
@@ -61,7 +63,7 @@ extension CanIClimbAPI.Tokens {
     context.operationTaskConfiguration.name = taskName
 
     let response = try await self.store.mutate(
-      with: Response.Mutation.Arguments(load: loader),
+      with: Response.LoadArguments(load: loader),
       using: context
     )
     if let refreshToken = response.refreshToken {
@@ -83,26 +85,18 @@ extension CanIClimbAPI.Tokens {
 // MARK: - Mutation
 
 extension CanIClimbAPI.Tokens.Response {
-  fileprivate struct Arguments: Sendable {
+  fileprivate struct LoadArguments: Sendable {
     let load: @Sendable () async throws -> CanIClimbAPI.Tokens.Response
   }
 
-  fileprivate static let mutation = Mutation()
-    .maxHistory(length: 1)
-    .deduplicated()
+  fileprivate static var mutation:
+    some MutationRequest<LoadArguments, CanIClimbAPI.Tokens.Response, any Error>
+  {
+    Self.$mutation.maxHistory(length: 1).deduplicated()
+  }
 
-  fileprivate struct Mutation: MutationRequest, Hashable, Sendable {
-    struct Arguments: Sendable {
-      let load: @Sendable () async throws -> CanIClimbAPI.Tokens.Response
-    }
-
-    func mutate(
-      isolation: isolated (any Actor)?,
-      with arguments: Arguments,
-      in context: OperationContext,
-      with continuation: OperationContinuation<CanIClimbAPI.Tokens.Response, any Error>
-    ) async throws -> CanIClimbAPI.Tokens.Response {
-      try await arguments.load()
-    }
+  @MutationRequest
+  private static func mutation(arguments: LoadArguments) async throws -> CanIClimbAPI.Tokens.Response {
+    try await arguments.load()
   }
 }
