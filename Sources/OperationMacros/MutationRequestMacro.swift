@@ -36,12 +36,11 @@ public enum MutationRequestMacro: PeerMacro {
       \(raw: syntax.declaration.availability ?? "")
       \(raw: syntax.accessModifier)nonisolated struct \(raw: syntax.operationTypeNameDeclaration): \
       OperationCore.MutationRequest\(raw: typeConformance) {
-        \(raw: syntax.isPrivate ? "" : syntax.accessModifier)typealias Arguments = \(raw: argumentsTypeName)
         \(raw: syntax.operationTypeArgs)
         \(raw: pathSynthesizer.operationPathAccessor(with: syntax, in: context))
         \(raw: syntax.isPrivate ? "" : syntax.accessModifier)func mutate(
           isolation: isolated (any Actor)?,
-          with arguments: Arguments,
+          with arguments: \(raw: argumentsTypeName),
           in context: OperationCore.OperationContext,
           with continuation: OperationCore.OperationContinuation<\(raw: syntax.returnTypeWithoutModifiers), \
       \(raw: syntax.errorType)>

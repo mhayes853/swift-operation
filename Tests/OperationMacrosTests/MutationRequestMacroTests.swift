@@ -25,14 +25,13 @@ extension BaseTestSuite {
         }
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
-          typealias Arguments = Void
 
           var path: OperationCore.OperationPath {
           OperationCore.OperationPath(self)
           }
           func mutate(
             isolation: isolated (any Actor)?,
-            with arguments: Arguments,
+            with arguments: Void,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
@@ -63,14 +62,13 @@ extension BaseTestSuite {
         }
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
-          typealias Arguments = Void
 
           var path: OperationCore.OperationPath {
           OperationCore.OperationPath(self)
           }
           func mutate(
             isolation: isolated (any Actor)?,
-            with arguments: Arguments,
+            with arguments: Void,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Void, Never>
           ) async  {
@@ -110,14 +108,13 @@ extension BaseTestSuite {
         }
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
-          typealias Arguments = Args
 
           var path: OperationCore.OperationPath {
           OperationCore.OperationPath(self)
           }
           func mutate(
             isolation: isolated (any Actor)?,
-            with arguments: Arguments,
+            with arguments: Args,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
@@ -148,9 +145,48 @@ extension BaseTestSuite {
         }
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
-          typealias Arguments = Void
           let arg: Int
           let arg2: String
+          var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
+          func mutate(
+            isolation: isolated (any Actor)?,
+            with arguments: Void,
+            in context: OperationCore.OperationContext,
+            with continuation: OperationCore.OperationContinuation<Int, Never>
+          ) async -> Int {
+            something(arg: self.arg, with: self.arg2)
+          }
+        }
+        """
+      }
+    }
+
+    @Test("Mutation With Arguments Type Names Arguments")
+    func mutationWithArgumentsTypeNamesArguments() {
+      assertMacro {
+        """
+        struct Arguments: Sendable {}
+
+        @MutationRequest
+        func something(arguments: Arguments) -> Int {
+          42
+        }
+        """
+      } expansion: {
+        """
+        struct Arguments: Sendable {}
+        func something(arguments: Arguments) -> Int {
+          42
+        }
+
+        nonisolated var $something: __macro_local_9somethingfMu_ {
+          __macro_local_9somethingfMu_()
+        }
+
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
+
           var path: OperationCore.OperationPath {
           OperationCore.OperationPath(self)
           }
@@ -160,7 +196,7 @@ extension BaseTestSuite {
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
-            something(arg: self.arg, with: self.arg2)
+            something(arguments: arguments)
           }
         }
         """
@@ -187,7 +223,6 @@ extension BaseTestSuite {
         }
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
-          typealias Arguments = Void
           let arg: Int
           let arg2: String
           var path: OperationCore.OperationPath {
@@ -195,7 +230,7 @@ extension BaseTestSuite {
           }
           func mutate(
             isolation: isolated (any Actor)?,
-            with arguments: Arguments,
+            with arguments: Void,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
@@ -226,14 +261,13 @@ extension BaseTestSuite {
         }
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
-          typealias Arguments = Void
           let arg: Int
           var path: OperationCore.OperationPath {
           OperationCore.OperationPath(self)
           }
           func mutate(
             isolation: isolated (any Actor)?,
-            with arguments: Arguments,
+            with arguments: Void,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
@@ -312,14 +346,13 @@ extension BaseTestSuite {
         }
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
-          typealias Arguments = Void
           let arg: Int
           var path: OperationCore.OperationPath {
           OperationCore.OperationPath(self)
           }
           func mutate(
             isolation: isolated (any Actor)?,
-            with arguments: Arguments,
+            with arguments: Void,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
@@ -358,14 +391,13 @@ extension BaseTestSuite {
         }
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
-          typealias Arguments = Void
           let arg: Int
           var path: OperationCore.OperationPath {
           OperationCore.OperationPath(self)
           }
           func mutate(
             isolation: isolated (any Actor)?,
-            with arguments: Arguments,
+            with arguments: Void,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
@@ -406,14 +438,13 @@ extension BaseTestSuite {
         }
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
-          typealias Arguments = Void
           let arg: Int
           var path: OperationCore.OperationPath {
           OperationCore.OperationPath(self)
           }
           func mutate(
             isolation: isolated (any Actor)?,
-            with arguments: Arguments,
+            with arguments: Void,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
@@ -452,14 +483,13 @@ extension BaseTestSuite {
         }
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
-          typealias Arguments = Void
 
           var path: OperationCore.OperationPath {
           OperationCore.OperationPath(self)
           }
           func mutate(
             isolation: isolated (any Actor)?,
-            with arguments: Arguments,
+            with arguments: Void,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
@@ -493,7 +523,6 @@ extension BaseTestSuite {
           }
 
           nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
-            typealias Arguments = Void
             let arg: Int
             let __macro_local_4typefMu_: _OperationHashableMetatype<Foo>
             var path: OperationCore.OperationPath {
@@ -501,7 +530,7 @@ extension BaseTestSuite {
             }
             func mutate(
               isolation: isolated (any Actor)?,
-              with arguments: Arguments,
+              with arguments: Void,
               in context: OperationCore.OperationContext,
               with continuation: OperationCore.OperationContinuation<Int, Never>
             ) async -> Int {
@@ -539,14 +568,13 @@ extension BaseTestSuite {
           }
 
           nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
-            typealias Arguments = Void
             let __macro_local_4typefMu_: _OperationHashableMetatype<Foo>
             var path: OperationCore.OperationPath {
             OperationCore.OperationPath(self)
             }
             func mutate(
               isolation: isolated (any Actor)?,
-              with arguments: Arguments,
+              with arguments: Void,
               in context: OperationCore.OperationContext,
               with continuation: OperationCore.OperationContinuation<Int, Never>
             ) async -> Int {
@@ -587,7 +615,6 @@ extension BaseTestSuite {
           }
 
           nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
-            typealias Arguments = Void
             let arg: Int
             let __macro_local_4typefMu_: _OperationHashableMetatype<Foo>
             var path: OperationCore.OperationPath {
@@ -595,7 +622,7 @@ extension BaseTestSuite {
             }
             func mutate(
               isolation: isolated (any Actor)?,
-              with arguments: Arguments,
+              with arguments: Void,
               in context: OperationCore.OperationContext,
               with continuation: OperationCore.OperationContinuation<Int, Never>
             ) async -> Int {
@@ -633,7 +660,6 @@ extension BaseTestSuite {
           }
 
           nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
-            typealias Arguments = Void
             let arg: Int
             let __macro_local_4typefMu_: Foo
             var path: OperationCore.OperationPath {
@@ -641,7 +667,7 @@ extension BaseTestSuite {
             }
             func mutate(
               isolation: isolated (any Actor)?,
-              with arguments: Arguments,
+              with arguments: Void,
               in context: OperationCore.OperationContext,
               with continuation: OperationCore.OperationContinuation<Int, Never>
             ) async -> Int {
@@ -684,7 +710,6 @@ extension BaseTestSuite {
           }
 
           nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
-            typealias Arguments = Void
             let arg: Int
             let __macro_local_4typefMu_: Foo
             var path: OperationCore.OperationPath {
@@ -692,7 +717,7 @@ extension BaseTestSuite {
             }
             func mutate(
               isolation: isolated (any Actor)?,
-              with arguments: Arguments,
+              with arguments: Void,
               in context: OperationCore.OperationContext,
               with continuation: OperationCore.OperationContinuation<Int, Never>
             ) async -> Int {
@@ -727,14 +752,13 @@ extension BaseTestSuite {
           }
 
           nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
-            typealias Arguments = Void
             let arg: Int
             var path: OperationCore.OperationPath {
             OperationCore.OperationPath(self)
             }
             func mutate(
               isolation: isolated (any Actor)?,
-              with arguments: Arguments,
+              with arguments: Void,
               in context: OperationCore.OperationContext,
               with continuation: OperationCore.OperationContinuation<Int, Never>
             ) async -> Int {
@@ -772,7 +796,6 @@ extension BaseTestSuite {
             }
 
             nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
-              typealias Arguments = Void
               let arg: Int
               let __macro_local_4typefMu_: Foo
               var path: OperationCore.OperationPath {
@@ -780,7 +803,7 @@ extension BaseTestSuite {
               }
               func mutate(
                 isolation: isolated (any Actor)?,
-                with arguments: Arguments,
+                with arguments: Void,
                 in context: OperationCore.OperationContext,
                 with continuation: OperationCore.OperationContinuation<Int, Never>
               ) async -> Int {
@@ -813,14 +836,13 @@ extension BaseTestSuite {
         }
 
         public nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
-          public typealias Arguments = Void
           let arg: Int
           public var path: OperationCore.OperationPath {
           OperationCore.OperationPath(self)
           }
           public func mutate(
             isolation: isolated (any Actor)?,
-            with arguments: Arguments,
+            with arguments: Void,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
@@ -847,14 +869,13 @@ extension BaseTestSuite {
         }
 
         private nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
-          typealias Arguments = Void
           let arg: Int
           var path: OperationCore.OperationPath {
           OperationCore.OperationPath(self)
           }
           func mutate(
             isolation: isolated (any Actor)?,
-            with arguments: Arguments,
+            with arguments: Void,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
@@ -881,14 +902,13 @@ extension BaseTestSuite {
         }
 
         fileprivate nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
-          fileprivate typealias Arguments = Void
           let arg: Int
           fileprivate var path: OperationCore.OperationPath {
           OperationCore.OperationPath(self)
           }
           fileprivate func mutate(
             isolation: isolated (any Actor)?,
-            with arguments: Arguments,
+            with arguments: Void,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
@@ -923,14 +943,13 @@ extension BaseTestSuite {
 
         @available(iOS 13.0, *)
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
-          typealias Arguments = Void
           let arg: Int
           var path: OperationCore.OperationPath {
           OperationCore.OperationPath(self)
           }
           func mutate(
             isolation: isolated (any Actor)?,
-            with arguments: Arguments,
+            with arguments: Void,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
@@ -966,14 +985,13 @@ extension BaseTestSuite {
         @available(iOS 13.0, *)
         @available(tvOS 13.0, *)
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
-          typealias Arguments = Void
           let arg: Int
           var path: OperationCore.OperationPath {
           OperationCore.OperationPath(self)
           }
           func mutate(
             isolation: isolated (any Actor)?,
-            with arguments: Arguments,
+            with arguments: Void,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
@@ -1016,14 +1034,13 @@ extension BaseTestSuite {
         }
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
-          typealias Arguments = Void
           let arg: Int
           var path: OperationCore.OperationPath {
           OperationCore.OperationPath(self)
           }
           func mutate(
             isolation: isolated (any Actor)?,
-            with arguments: Arguments,
+            with arguments: Void,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, any Error>
           ) async throws -> Int {
@@ -1069,14 +1086,13 @@ extension BaseTestSuite {
         }
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
-          typealias Arguments = Void
           let arg: Int
           var path: OperationCore.OperationPath {
           OperationCore.OperationPath(self)
           }
           func mutate(
             isolation: isolated (any Actor)?,
-            with arguments: Arguments,
+            with arguments: Void,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, MyError>
           ) async throws(MyError) -> Int {
@@ -1119,14 +1135,13 @@ extension BaseTestSuite {
         }
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
-          typealias Arguments = Void
           let arg: Int
           var path: OperationCore.OperationPath {
           OperationCore.OperationPath(self)
           }
           func mutate(
             isolation: isolated (any Actor)?,
-            with arguments: Arguments,
+            with arguments: Void,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, any Error>
           ) async throws -> Int {
@@ -1172,14 +1187,13 @@ extension BaseTestSuite {
         }
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
-          typealias Arguments = Void
           let arg: Int
           var path: OperationCore.OperationPath {
           OperationCore.OperationPath(self)
           }
           func mutate(
             isolation: isolated (any Actor)?,
-            with arguments: Arguments,
+            with arguments: Void,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, MyError>
           ) async throws(MyError) -> Int {
@@ -1210,14 +1224,13 @@ extension BaseTestSuite {
         }
 
         nonisolated struct __macro_local_9somethingfMu_<T: Creatable>: OperationCore.MutationRequest, Hashable {
-          typealias Arguments = Void
 
           var path: OperationCore.OperationPath {
           OperationCore.OperationPath(self)
           }
           func mutate(
             isolation: isolated (any Actor)?,
-            with arguments: Arguments,
+            with arguments: Void,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<T, Never>
           ) async -> sending T {
@@ -1244,14 +1257,13 @@ extension BaseTestSuite {
         }
 
         nonisolated struct __macro_local_9somethingfMu_<T: Creatable>: OperationCore.MutationRequest, Hashable {
-          typealias Arguments = Void
 
           var path: OperationCore.OperationPath {
           OperationCore.OperationPath(self)
           }
           func mutate(
             isolation: isolated (any Actor)?,
-            with arguments: Arguments,
+            with arguments: Void,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<T, Never>
           ) async -> T {
@@ -1363,14 +1375,13 @@ extension BaseTestSuite {
         }
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Identifiable {
-          typealias Arguments = Void
           let id: Int
           var path: OperationCore.OperationPath {
           OperationCore.OperationPath(id)
           }
           func mutate(
             isolation: isolated (any Actor)?,
-            with arguments: Arguments,
+            with arguments: Void,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
@@ -1421,7 +1432,6 @@ extension BaseTestSuite {
         }
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest {
-          typealias Arguments = Void
 
           var path: OperationCore.OperationPath {
           makePath()
@@ -1431,7 +1441,7 @@ extension BaseTestSuite {
           }
           func mutate(
             isolation: isolated (any Actor)?,
-            with arguments: Arguments,
+            with arguments: Void,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
@@ -1462,7 +1472,6 @@ extension BaseTestSuite {
         }
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest {
-          typealias Arguments = Void
 
           var path: OperationCore.OperationPath {
           makePath()
@@ -1473,7 +1482,7 @@ extension BaseTestSuite {
           }
           func mutate(
             isolation: isolated (any Actor)?,
-            with arguments: Arguments,
+            with arguments: Void,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
@@ -1500,7 +1509,6 @@ extension BaseTestSuite {
         }
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest {
-          typealias Arguments = Void
           let arg: Int
           var path: OperationCore.OperationPath {
           makePath(arg: arg)
@@ -1510,7 +1518,7 @@ extension BaseTestSuite {
           }
           func mutate(
             isolation: isolated (any Actor)?,
-            with arguments: Arguments,
+            with arguments: Void,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
@@ -1537,7 +1545,6 @@ extension BaseTestSuite {
         }
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest {
-          typealias Arguments = Void
           let arg: Int
           var path: OperationCore.OperationPath {
           makePath(arg: arg)
@@ -1547,7 +1554,7 @@ extension BaseTestSuite {
           }
           func mutate(
             isolation: isolated (any Actor)?,
-            with arguments: Arguments,
+            with arguments: Void,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
@@ -1577,7 +1584,6 @@ extension BaseTestSuite {
         }
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest {
-          typealias Arguments = Args
           let arg: Int
           var path: OperationCore.OperationPath {
           makePath(arg: arg)
@@ -1587,7 +1593,7 @@ extension BaseTestSuite {
           }
           func mutate(
             isolation: isolated (any Actor)?,
-            with arguments: Arguments,
+            with arguments: Args,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
@@ -1614,7 +1620,6 @@ extension BaseTestSuite {
         }
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest {
-          typealias Arguments = Void
           let arg: Int
           let arg2: String
           var path: OperationCore.OperationPath {
@@ -1625,7 +1630,7 @@ extension BaseTestSuite {
           }
           func mutate(
             isolation: isolated (any Actor)?,
-            with arguments: Arguments,
+            with arguments: Void,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
@@ -1745,14 +1750,13 @@ extension BaseTestSuite {
         }
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
-          typealias Arguments = Void
 
           var path: OperationCore.OperationPath {
           OperationCore.OperationPath(self)
           }
           func mutate(
             isolation: isolated (any Actor)?,
-            with arguments: Arguments,
+            with arguments: Void,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
