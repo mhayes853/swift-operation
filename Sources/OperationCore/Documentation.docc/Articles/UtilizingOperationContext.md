@@ -50,19 +50,15 @@ extension OperationContext {
 Now you can access your custom property inside of operations.
 
 ```swift
-struct PlayerQuery: QueryRequest, Hashable {
-  let id: Int
-
-  func fetch(
-    isolation: isolated (any Actor)?,
-    in context: OperationContext,
-    using continuation: OperationContinuation<Player, any Error>
-  ) async throws -> Player {
-    if context.customProperty == "hello!" {
-      // Fetch...
-    } else {
-      // Fetch Differently...
-    }
+@QueryRequest
+func playerQuery(
+  id: Int, 
+  context: OperationContext
+) async throws -> Player {
+  if context.customProperty == "hello!" {
+    // Fetch...
+  } else {
+    // Fetch Differently...
   }
 }
 ```

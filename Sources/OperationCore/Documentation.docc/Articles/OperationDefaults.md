@@ -7,11 +7,12 @@ Learn how to best configure default values, contexts, and modifiers for your ope
 It's quite straightforward to add a default value to a query, mutation, or paginated request.
 
 ```swift
-struct YourQuery: QueryRequest, Hashable {
+@QueryRequest
+func yourQuery() -> String {
   // ...
 }
 
-let query = YourQuery().defaultValue("i am the default value")
+let query = $yourQuery.defaultValue("i am the default value")
 let store = client.store(for: query)
 
 #expect(store.currentValue == "i am the default value")
@@ -20,7 +21,7 @@ let store = client.store(for: query)
 In fact, this will event grant you type safety on the current value.
 
 ```swift
-let query = YourQuery().defaultValue("i am the default value")
+let query = $yourQuery.defaultValue("i am the default value")
 let value: String = client.store(for: query).currentValue // ✅ Compiles
 ```
 

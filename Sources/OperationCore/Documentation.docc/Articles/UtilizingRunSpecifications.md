@@ -24,18 +24,19 @@ When you use the default initializer of an ``OperationClient``, automatic runnin
 To control whether or not automatic running is enabled, you can utilize the ``StatefulOperationRequest/enableAutomaticRunning(onlyWhen:)`` modifier alongside an `OperationRunSpecification`.
 
 ```swift
-struct MyQuery: QueryRequest {
+@QueryRequest
+func myQuery() async throws -> SomeData {
   // ...
 }
 
 // Automatic running is always disabled for this query.
-let query = MyQuery().disableAutomaticRunning()
+let query = $myQuery.disableAutomaticRunning()
 ```
 
 However, it's also possible to disable it when the network is down by using `NetworkConnectionRunSpecification`.
 
 ```swift
-let query = MyQuery().enableAutomaticRunning(
+let query = $myQuery.enableAutomaticRunning(
   when: .connected(to: NWPathMonitorObserver.startingShared())
 )
 ```
@@ -47,7 +48,7 @@ let query = MyQuery().enableAutomaticRunning(
 Another modifier that utilizes specifications is the ``StatefulOperationRequest/rerunOnChange(of:)`` modifier. This modifier allows you to specify an `OperationRunSpecification` that will trigger a rerun when the specification changes to be satisfied.
 
 ```swift
-let query = MyQuery().rerunOnChange(
+let query = $myQuery.rerunOnChange(
   of: .connected(to: NWPathMonitorObserver.shared)
 )
 ```
@@ -62,7 +63,7 @@ The example above will rerun the query whenever the network status flips from of
 import Combine
 
 let subject = PassthroughSubject<Bool, Never>()
-let query = MyQuery().staleWhen(
+let query = $myQuery.staleWhen(
   specification: .observing(publisher: subject, initialValue: true)
 )
 ```
@@ -73,7 +74,7 @@ In this example, the query will be considered stale when the subject emits a val
 > ```swift
 > // query and query2 are functionality equivalent.
 >
-> let query = MyQuery()
+> let query = $myQuery
 >   .staleWhen(
 >     specification: .applicationIsActive(
 >       observer: UIApplicationActivityObserver.shared
@@ -83,7 +84,7 @@ In this example, the query will be considered stale when the subject emits a val
 >     specification: .connected(to: NWPathMonitorObserver.shared)
 >   )
 >
-> let query2 = MyQuery().staleWhen(
+> let query2 = $myQuery.staleWhen(
 >   specification:
 >     .applicationIsActive(
 >       observer: UIApplicationActivityObserver.shared)
@@ -97,7 +98,7 @@ In this example, the query will be considered stale when the subject emits a val
 The ``!(_:)``, ``||(_:_:)``, and ``&&(_:_:)`` operators have been overloaded for the `OperationRunSpecification` protocol. This allows you to compose specifications just like you would with booleans.
 
 ```swift
-let query = MyQuery().staleWhen(
+let query = $myQuery.staleWhen(
   specification:
     .connected(
       to: NWPathMonitorObserver.startingShared()
@@ -148,7 +149,7 @@ final class FirebaseAuthentication: UserAuthentication {
   // ...
 }
 
-let query = MyQuery().rerunOnChange(
+let query = $myQuery.rerunOnChange(
   of: UserLoggedInRunSpecification(auth: FirebaseAuthentication())
 )
 ```
