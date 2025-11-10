@@ -3,13 +3,13 @@ import OperationMacros
 import Testing
 
 extension BaseTestSuite {
-  @Suite("OperationRequestMacro tests")
-  struct OperationRequestMacroTests {
-    @Test("Basic Operation")
-    func basicOperation() {
+  @Suite("MutationRequestMacro tests")
+  struct MutationRequestMacroTests {
+    @Test("Basic Mutation")
+    func basicMutation() {
       assertMacro {
         """
-        @OperationRequest
+        @MutationRequest
         func something() -> Int {
           42
         }
@@ -24,10 +24,15 @@ extension BaseTestSuite {
           __macro_local_9somethingfMu_()
         }
 
-        nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
+          typealias Arguments = Void
 
-          func run(
+          var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
+          func mutate(
             isolation: isolated (any Actor)?,
+            with arguments: Arguments,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
@@ -38,11 +43,11 @@ extension BaseTestSuite {
       }
     }
 
-    @Test("Void Operation")
-    func voidOperation() {
+    @Test("Void Mutation")
+    func voidMutation() {
       assertMacro {
         """
-        @OperationRequest
+        @MutationRequest
         func something() {
           42
         }
@@ -57,10 +62,15 @@ extension BaseTestSuite {
           __macro_local_9somethingfMu_()
         }
 
-        nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
+          typealias Arguments = Void
 
-          func run(
+          var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
+          func mutate(
             isolation: isolated (any Actor)?,
+            with arguments: Arguments,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Void, Never>
           ) async  {
@@ -71,11 +81,58 @@ extension BaseTestSuite {
       }
     }
 
-    @Test("Operation With Arguments")
-    func operationWithArguments() {
+    @Test("Mutation With Arguments")
+    func mutationWithArguments() {
       assertMacro {
         """
-        @OperationRequest
+        struct Args: Sendable {
+          let arg: Int
+          let arg2: String
+        }
+
+        @MutationRequest
+        func something(arguments: Args) -> Int {
+          arguments.arg2.count + arguments.arg
+        }
+        """
+      } expansion: {
+        """
+        struct Args: Sendable {
+          let arg: Int
+          let arg2: String
+        }
+        func something(arguments: Args) -> Int {
+          arguments.arg2.count + arguments.arg
+        }
+
+        nonisolated var $something: __macro_local_9somethingfMu_ {
+          __macro_local_9somethingfMu_()
+        }
+
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
+          typealias Arguments = Args
+
+          var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
+          func mutate(
+            isolation: isolated (any Actor)?,
+            with arguments: Arguments,
+            in context: OperationCore.OperationContext,
+            with continuation: OperationCore.OperationContinuation<Int, Never>
+          ) async -> Int {
+            something(arguments: arguments)
+          }
+        }
+        """
+      }
+    }
+
+    @Test("Mutation With Constructable Arguments")
+    func mutationWithConstructableArguments() {
+      assertMacro {
+        """
+        @MutationRequest
         func something(arg: Int, with arg2: String) -> Int {
           arg2.count + arg
         }
@@ -90,11 +147,16 @@ extension BaseTestSuite {
           __macro_local_9somethingfMu_(arg: arg, arg2: arg2)
         }
 
-        nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
+          typealias Arguments = Void
           let arg: Int
           let arg2: String
-          func run(
+          var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
+          func mutate(
             isolation: isolated (any Actor)?,
+            with arguments: Arguments,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
@@ -105,11 +167,11 @@ extension BaseTestSuite {
       }
     }
 
-    @Test("Operation With Duplicate Arguments")
-    func operationWithDuplicateArguments() {
+    @Test("Mutation With Duplicate Constructable Arguments")
+    func mutationWithDuplicateConstructableArguments() {
       assertMacro {
         """
-        @OperationRequest
+        @MutationRequest
         func something(with arg: Int, with arg2: String) -> Int {
           arg2.count + arg
         }
@@ -124,11 +186,16 @@ extension BaseTestSuite {
           __macro_local_9somethingfMu_(arg: arg, arg2: arg2)
         }
 
-        nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
+          typealias Arguments = Void
           let arg: Int
           let arg2: String
-          func run(
+          var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
+          func mutate(
             isolation: isolated (any Actor)?,
+            with arguments: Arguments,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
@@ -139,11 +206,11 @@ extension BaseTestSuite {
       }
     }
 
-    @Test("Operation With Default Arguments")
-    func operationWithDefaultArguments() {
+    @Test("Mutation With Default Arguments")
+    func mutationWithDefaultArguments() {
       assertMacro {
         """
-        @OperationRequest
+        @MutationRequest
         func something(arg: Int = 0) -> Int {
           arg
         }
@@ -158,10 +225,15 @@ extension BaseTestSuite {
           __macro_local_9somethingfMu_(arg: arg)
         }
 
-        nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
+          typealias Arguments = Void
           let arg: Int
-          func run(
+          var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
+          func mutate(
             isolation: isolated (any Actor)?,
+            with arguments: Arguments,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
@@ -172,18 +244,18 @@ extension BaseTestSuite {
       }
     }
 
-    @Test("Operation With Variadic Arguments")
-    func operationWithVariadicArguments() {
+    @Test("Mutation With Variadic Arguments")
+    func mutationWithVariadicArguments() {
       assertMacro {
         """
-        @OperationRequest
+        @MutationRequest
         func something(args: Int...) -> Int {
           args.reduce(0, +)
         }
         """
       } diagnostics: {
         """
-        @OperationRequest
+        @MutationRequest
         func something(args: Int...) -> Int {
                        ┬───────────
                        ╰─ 🛑 Variadic arguments are not supported.
@@ -193,11 +265,11 @@ extension BaseTestSuite {
       }
     }
 
-    @Test("Operation With Inout Argument")
-    func operationWithInoutArgument() {
+    @Test("Mutation With Inout Argument")
+    func mutationWithInoutArgument() {
       assertMacro {
         """
-        @OperationRequest
+        @MutationRequest
         func something(arg: inout Int) -> Int {
           arg += 1
           return arg
@@ -205,7 +277,7 @@ extension BaseTestSuite {
         """
       } diagnostics: {
         """
-        @OperationRequest
+        @MutationRequest
         func something(arg: inout Int) -> Int {
                        ┬─────────────
                        ╰─ 🛑 Inout arguments are not supported.
@@ -216,14 +288,18 @@ extension BaseTestSuite {
       }
     }
 
-    @Test("Operation With Context")
-    func operationWithContext() {
+    @Test("Mutation With Context")
+    func mutationWithContext() {
       assertMacro {
         """
-        @OperationRequest
+        @MutationRequest
         func something(arg: Int, context: OperationContext) -> Int {
           arg
         }
+        """
+      } diagnostics: {
+        """
+
         """
       } expansion: {
         """
@@ -235,10 +311,15 @@ extension BaseTestSuite {
           __macro_local_9somethingfMu_(arg: arg)
         }
 
-        nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
+          typealias Arguments = Void
           let arg: Int
-          func run(
+          var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
+          func mutate(
             isolation: isolated (any Actor)?,
+            with arguments: Arguments,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
@@ -249,11 +330,11 @@ extension BaseTestSuite {
       }
     }
 
-    @Test("Operation With Context And Continuation")
-    func operationWithContextAndContinuation() {
+    @Test("Mutation With Context And Continuation")
+    func mutationWithContextAndContinuation() {
       assertMacro {
         """
-        @OperationRequest
+        @MutationRequest
         func something(
           arg: Int,
           context: OperationContext,
@@ -276,10 +357,15 @@ extension BaseTestSuite {
           __macro_local_9somethingfMu_(arg: arg)
         }
 
-        nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
+          typealias Arguments = Void
           let arg: Int
-          func run(
+          var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
+          func mutate(
             isolation: isolated (any Actor)?,
+            with arguments: Arguments,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
@@ -290,11 +376,11 @@ extension BaseTestSuite {
       }
     }
 
-    @Test("Operation With Context, Continuation, And Isolation")
-    func operationWithContextAndContinuationAndIsolation() {
+    @Test("Mutation With Context, Continuation, And Isolation")
+    func mutationWithContextAndContinuationAndIsolation() {
       assertMacro {
         """
-        @OperationRequest
+        @MutationRequest
         func something(
           arg: Int,
           isolation: isolated (any Actor)?,
@@ -319,10 +405,15 @@ extension BaseTestSuite {
           __macro_local_9somethingfMu_(arg: arg)
         }
 
-        nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
+          typealias Arguments = Void
           let arg: Int
-          func run(
+          var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
+          func mutate(
             isolation: isolated (any Actor)?,
+            with arguments: Arguments,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
@@ -333,11 +424,11 @@ extension BaseTestSuite {
       }
     }
 
-    @Test("Operation With Only Reserved Arguments")
-    func operationWithOnlyReservedArguments() {
+    @Test("Mutation With Only Reserved Arguments")
+    func mutationWithOnlyReservedArguments() {
       assertMacro {
         """
-        @OperationRequest
+        @MutationRequest
         func something(
           isolation: isolated (any Actor)?,
           context: OperationContext,
@@ -360,10 +451,15 @@ extension BaseTestSuite {
           __macro_local_9somethingfMu_()
         }
 
-        nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
+          typealias Arguments = Void
 
-          func run(
+          var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
+          func mutate(
             isolation: isolated (any Actor)?,
+            with arguments: Arguments,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
@@ -374,12 +470,12 @@ extension BaseTestSuite {
       }
     }
 
-    @Test("Static Operation")
-    func staticOperation() {
+    @Test("Static Mutation")
+    func staticMutation() {
       assertMacro {
         """
         struct Foo {
-          @OperationRequest
+          @MutationRequest
           static func something(arg: Int) -> Int {
             arg
           }
@@ -396,11 +492,16 @@ extension BaseTestSuite {
             __macro_local_9somethingfMu_(arg: arg, __macro_local_4typefMu_: Self.self)
           }
 
-          nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
+          nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
+            typealias Arguments = Void
             let arg: Int
             let __macro_local_4typefMu_: Foo.Type
-            func run(
+            var path: OperationCore.OperationPath {
+            OperationCore.OperationPath(self)
+            }
+            func mutate(
               isolation: isolated (any Actor)?,
+              with arguments: Arguments,
               in context: OperationCore.OperationContext,
               with continuation: OperationCore.OperationContinuation<Int, Never>
             ) async -> Int {
@@ -412,14 +513,14 @@ extension BaseTestSuite {
       }
     }
 
-    @Test("Metatype Operation")
-    func metatypeOperation() {
+    @Test("Metatype Mutation")
+    func metatypeMutation() {
       assertMacro {
         """
         struct Foo {
           static let value = 42
 
-          @OperationRequest
+          @MutationRequest
           static func something() -> Int {
             Self.value
           }
@@ -437,10 +538,15 @@ extension BaseTestSuite {
             __macro_local_9somethingfMu_(__macro_local_4typefMu_: Self.self)
           }
 
-          nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
+          nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
+            typealias Arguments = Void
             let __macro_local_4typefMu_: Foo.Type
-            func run(
+            var path: OperationCore.OperationPath {
+            OperationCore.OperationPath(self)
+            }
+            func mutate(
               isolation: isolated (any Actor)?,
+              with arguments: Arguments,
               in context: OperationCore.OperationContext,
               with continuation: OperationCore.OperationContinuation<Int, Never>
             ) async -> Int {
@@ -452,15 +558,15 @@ extension BaseTestSuite {
       }
     }
 
-    @Test("Extension Metatype Operation")
-    func extensionMetatypeOperation() {
+    @Test("Extension Metatype Mutation")
+    func extensionMetatypeMutation() {
       assertMacro {
         """
         struct Foo {
         }
 
         extension Foo {
-          @OperationRequest
+          @MutationRequest
           static func something(arg: Int) -> Int {
             arg
           }
@@ -480,11 +586,16 @@ extension BaseTestSuite {
             __macro_local_9somethingfMu_(arg: arg, __macro_local_4typefMu_: Self.self)
           }
 
-          nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
+          nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
+            typealias Arguments = Void
             let arg: Int
             let __macro_local_4typefMu_: Foo.Type
-            func run(
+            var path: OperationCore.OperationPath {
+            OperationCore.OperationPath(self)
+            }
+            func mutate(
               isolation: isolated (any Actor)?,
+              with arguments: Arguments,
               in context: OperationCore.OperationContext,
               with continuation: OperationCore.OperationContinuation<Int, Never>
             ) async -> Int {
@@ -496,14 +607,14 @@ extension BaseTestSuite {
       }
     }
 
-    @Test("Member Operation")
-    func memberOperation() {
+    @Test("Member Mutation")
+    func memberMutation() {
       assertMacro {
         """
         struct Foo {
           let value: Int
 
-          @OperationRequest
+          @MutationRequest
           func something(arg: Int) -> Int {
             self.value
           }
@@ -521,11 +632,16 @@ extension BaseTestSuite {
             __macro_local_9somethingfMu_(arg: arg, __macro_local_4typefMu_: self)
           }
 
-          nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
+          nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
+            typealias Arguments = Void
             let arg: Int
             let __macro_local_4typefMu_: Foo
-            func run(
+            var path: OperationCore.OperationPath {
+            OperationCore.OperationPath(self)
+            }
+            func mutate(
               isolation: isolated (any Actor)?,
+              with arguments: Arguments,
               in context: OperationCore.OperationContext,
               with continuation: OperationCore.OperationContinuation<Int, Never>
             ) async -> Int {
@@ -537,8 +653,8 @@ extension BaseTestSuite {
       }
     }
 
-    @Test("Extension Member Operation")
-    func extensionMemberOperation() {
+    @Test("Extension Member Mutation")
+    func extensionMemberMutation() {
       assertMacro {
         """
         struct Foo {
@@ -546,7 +662,7 @@ extension BaseTestSuite {
         }
 
         extension Foo {
-          @OperationRequest
+          @MutationRequest
           func something(arg: Int) -> Int {
             self.value
           }
@@ -567,11 +683,16 @@ extension BaseTestSuite {
             __macro_local_9somethingfMu_(arg: arg, __macro_local_4typefMu_: self)
           }
 
-          nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
+          nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
+            typealias Arguments = Void
             let arg: Int
             let __macro_local_4typefMu_: Foo
-            func run(
+            var path: OperationCore.OperationPath {
+            OperationCore.OperationPath(self)
+            }
+            func mutate(
               isolation: isolated (any Actor)?,
+              with arguments: Arguments,
               in context: OperationCore.OperationContext,
               with continuation: OperationCore.OperationContinuation<Int, Never>
             ) async -> Int {
@@ -583,12 +704,12 @@ extension BaseTestSuite {
       }
     }
 
-    @Test("Nested Function Operation")
-    func nestedFunctionOperation() {
+    @Test("Nested Function Mutation")
+    func nestedFunctionMutation() {
       assertMacro {
         """
         func foo() {
-          @OperationRequest
+          @MutationRequest
           func something(arg: Int) -> Int {
             self.value
           }
@@ -605,10 +726,15 @@ extension BaseTestSuite {
             __macro_local_9somethingfMu_(arg: arg)
           }
 
-          nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
+          nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
+            typealias Arguments = Void
             let arg: Int
-            func run(
+            var path: OperationCore.OperationPath {
+            OperationCore.OperationPath(self)
+            }
+            func mutate(
               isolation: isolated (any Actor)?,
+              with arguments: Arguments,
               in context: OperationCore.OperationContext,
               with continuation: OperationCore.OperationContinuation<Int, Never>
             ) async -> Int {
@@ -620,13 +746,13 @@ extension BaseTestSuite {
       }
     }
 
-    @Test("Nested Function In Type Operation")
-    func nestedFunctionInTypeOperation() {
+    @Test("Nested Function In Type Mutation")
+    func nestedFunctionInTypeMutation() {
       assertMacro {
         """
         struct Foo {
           func foo() {
-            @OperationRequest
+            @MutationRequest
             func something(arg: Int) -> Int {
               self.value
             }
@@ -645,11 +771,16 @@ extension BaseTestSuite {
               __macro_local_9somethingfMu_(arg: arg, __macro_local_4typefMu_: self)
             }
 
-            nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
+            nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
+              typealias Arguments = Void
               let arg: Int
               let __macro_local_4typefMu_: Foo
-              func run(
+              var path: OperationCore.OperationPath {
+              OperationCore.OperationPath(self)
+              }
+              func mutate(
                 isolation: isolated (any Actor)?,
+                with arguments: Arguments,
                 in context: OperationCore.OperationContext,
                 with continuation: OperationCore.OperationContinuation<Int, Never>
               ) async -> Int {
@@ -662,11 +793,11 @@ extension BaseTestSuite {
       }
     }
 
-    @Test("Access Control Operation")
-    func accessControlOperation() {
+    @Test("Access Control Mutation")
+    func accessControlMutation() {
       assertMacro {
         """
-        @OperationRequest
+        @MutationRequest
         public func something(arg: Int) -> Int {
           arg
         }
@@ -681,10 +812,15 @@ extension BaseTestSuite {
           __macro_local_9somethingfMu_(arg: arg)
         }
 
-        public nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
+        public nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
+          public typealias Arguments = Void
           let arg: Int
-          public func run(
+          public var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
+          public func mutate(
             isolation: isolated (any Actor)?,
+            with arguments: Arguments,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
@@ -695,7 +831,7 @@ extension BaseTestSuite {
       }
       assertMacro {
         """
-        @OperationRequest
+        @MutationRequest
         private func something(arg: Int) -> Int {
           arg
         }
@@ -710,10 +846,15 @@ extension BaseTestSuite {
           __macro_local_9somethingfMu_(arg: arg)
         }
 
-        private nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
+        private nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
+          typealias Arguments = Void
           let arg: Int
-          func run(
+          var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
+          func mutate(
             isolation: isolated (any Actor)?,
+            with arguments: Arguments,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
@@ -724,7 +865,7 @@ extension BaseTestSuite {
       }
       assertMacro {
         """
-        @OperationRequest
+        @MutationRequest
         fileprivate func something(arg: Int) -> Int {
           arg
         }
@@ -739,10 +880,15 @@ extension BaseTestSuite {
           __macro_local_9somethingfMu_(arg: arg)
         }
 
-        fileprivate nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
+        fileprivate nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
+          fileprivate typealias Arguments = Void
           let arg: Int
-          fileprivate func run(
+          fileprivate var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
+          fileprivate func mutate(
             isolation: isolated (any Actor)?,
+            with arguments: Arguments,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
@@ -753,11 +899,11 @@ extension BaseTestSuite {
       }
     }
 
-    @Test("Availability Operation")
-    func availabilityOperation() {
+    @Test("Availability Mutation")
+    func availabilityMutation() {
       assertMacro {
         """
-        @OperationRequest
+        @MutationRequest
         @available(iOS 13.0, *)
         func something(arg: Int) -> Int {
           arg
@@ -776,10 +922,15 @@ extension BaseTestSuite {
         }
 
         @available(iOS 13.0, *)
-        nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
+          typealias Arguments = Void
           let arg: Int
-          func run(
+          var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
+          func mutate(
             isolation: isolated (any Actor)?,
+            with arguments: Arguments,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
@@ -791,7 +942,7 @@ extension BaseTestSuite {
 
       assertMacro {
         """
-        @OperationRequest
+        @MutationRequest
         @available(iOS 13.0, *)
         @available(tvOS 13.0, *)
         func something(arg: Int) -> Int {
@@ -814,10 +965,15 @@ extension BaseTestSuite {
 
         @available(iOS 13.0, *)
         @available(tvOS 13.0, *)
-        nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
+          typealias Arguments = Void
           let arg: Int
-          func run(
+          var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
+          func mutate(
             isolation: isolated (any Actor)?,
+            with arguments: Arguments,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
@@ -828,11 +984,11 @@ extension BaseTestSuite {
       }
     }
 
-    @Test("Throwing Operation")
-    func throwingOperation() {
+    @Test("Throwing Mutation")
+    func throwingMutation() {
       assertMacro {
         """
-        @OperationRequest
+        @MutationRequest
         func something(
           arg: Int,
           context: OperationContext,
@@ -840,6 +996,10 @@ extension BaseTestSuite {
         ) throws -> Int {
           arg
         }
+        """
+      } diagnostics: {
+        """
+
         """
       } expansion: {
         """
@@ -855,10 +1015,15 @@ extension BaseTestSuite {
           __macro_local_9somethingfMu_(arg: arg)
         }
 
-        nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
+          typealias Arguments = Void
           let arg: Int
-          func run(
+          var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
+          func mutate(
             isolation: isolated (any Actor)?,
+            with arguments: Arguments,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, any Error>
           ) async throws -> Int {
@@ -869,13 +1034,13 @@ extension BaseTestSuite {
       }
     }
 
-    @Test("Typed-Throwing Operation")
-    func typedThrowingOperation() {
+    @Test("Typed-Throwing Mutation")
+    func typedThrowingMutation() {
       assertMacro {
         """
         struct MyError: Error {}
 
-        @OperationRequest
+        @MutationRequest
         func something(
           arg: Int,
           context: OperationContext,
@@ -883,6 +1048,10 @@ extension BaseTestSuite {
         ) throws(MyError) -> Int {
           arg
         }
+        """
+      } diagnostics: {
+        """
+
         """
       } expansion: {
         """
@@ -899,10 +1068,15 @@ extension BaseTestSuite {
           __macro_local_9somethingfMu_(arg: arg)
         }
 
-        nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
+          typealias Arguments = Void
           let arg: Int
-          func run(
+          var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
+          func mutate(
             isolation: isolated (any Actor)?,
+            with arguments: Arguments,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, MyError>
           ) async throws(MyError) -> Int {
@@ -913,11 +1087,11 @@ extension BaseTestSuite {
       }
     }
 
-    @Test("Async Throwing Operation")
-    func asyncThrowingOperation() {
+    @Test("Async Throwing Mutation")
+    func asyncThrowingMutation() {
       assertMacro {
         """
-        @OperationRequest
+        @MutationRequest
         func something(
           arg: Int,
           context: OperationContext,
@@ -925,6 +1099,10 @@ extension BaseTestSuite {
         ) async throws -> Int {
           arg
         }
+        """
+      } diagnostics: {
+        """
+
         """
       } expansion: {
         """
@@ -940,10 +1118,15 @@ extension BaseTestSuite {
           __macro_local_9somethingfMu_(arg: arg)
         }
 
-        nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
+          typealias Arguments = Void
           let arg: Int
-          func run(
+          var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
+          func mutate(
             isolation: isolated (any Actor)?,
+            with arguments: Arguments,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, any Error>
           ) async throws -> Int {
@@ -954,59 +1137,13 @@ extension BaseTestSuite {
       }
     }
 
-    @Test("Static Async Throwing Operation")
-    func staticAsyncThrowingOperation() {
-      assertMacro {
-        """
-        struct Foo {
-          @OperationRequest
-          static func something(
-            arg: Int,
-            context: OperationContext,
-            continuation: OperationContinuation<Int, any Error>
-          ) async throws -> Int {
-            arg
-          }
-        }
-        """
-      } expansion: {
-        """
-        struct Foo {
-          static func something(
-            arg: Int,
-            context: OperationContext,
-            continuation: OperationContinuation<Int, any Error>
-          ) async throws -> Int {
-            arg
-          }
-
-          static nonisolated func $something(arg: Int,) -> __macro_local_9somethingfMu_ {
-            __macro_local_9somethingfMu_(arg: arg, __macro_local_4typefMu_: Self.self)
-          }
-
-          nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
-            let arg: Int
-            let __macro_local_4typefMu_: Foo.Type
-            func run(
-              isolation: isolated (any Actor)?,
-              in context: OperationCore.OperationContext,
-              with continuation: OperationCore.OperationContinuation<Int, any Error>
-            ) async throws -> Int {
-              try await __macro_local_4typefMu_.something(arg: self.arg, context: context, continuation: continuation)
-            }
-          }
-        }
-        """
-      }
-    }
-
-    @Test("Async Typed-Throws Operation")
-    func asyncTypedThrowsOperation() {
+    @Test("Async Typed-Throws Mutation")
+    func asyncTypedThrowsMutation() {
       assertMacro {
         """
         struct MyError: Error {}
 
-        @OperationRequest
+        @MutationRequest
         func something(
           arg: Int,
           context: OperationContext,
@@ -1014,6 +1151,10 @@ extension BaseTestSuite {
         ) async throws(MyError) -> Int {
           arg
         }
+        """
+      } diagnostics: {
+        """
+
         """
       } expansion: {
         """
@@ -1030,10 +1171,15 @@ extension BaseTestSuite {
           __macro_local_9somethingfMu_(arg: arg)
         }
 
-        nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
+          typealias Arguments = Void
           let arg: Int
-          func run(
+          var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
+          func mutate(
             isolation: isolated (any Actor)?,
+            with arguments: Arguments,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, MyError>
           ) async throws(MyError) -> Int {
@@ -1044,11 +1190,11 @@ extension BaseTestSuite {
       }
     }
 
-    @Test("Generic Operation")
-    func genericOperation() {
+    @Test("Generic Mutation")
+    func genericMutation() {
       assertMacro {
         """
-        @OperationRequest
+        @MutationRequest
         func something<T: Creatable>() -> sending T {
           T()
         }
@@ -1063,10 +1209,15 @@ extension BaseTestSuite {
           __macro_local_9somethingfMu_<T>()
         }
 
-        nonisolated struct __macro_local_9somethingfMu_<T: Creatable>: OperationCore.OperationRequest {
+        nonisolated struct __macro_local_9somethingfMu_<T: Creatable>: OperationCore.MutationRequest, Hashable {
+          typealias Arguments = Void
 
-          func run(
+          var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
+          func mutate(
             isolation: isolated (any Actor)?,
+            with arguments: Arguments,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<T, Never>
           ) async -> sending T {
@@ -1077,7 +1228,7 @@ extension BaseTestSuite {
       }
       assertMacro {
         """
-        @OperationRequest
+        @MutationRequest
         func something<T: Creatable>() -> T {
           T()
         }
@@ -1092,10 +1243,15 @@ extension BaseTestSuite {
           __macro_local_9somethingfMu_<T>()
         }
 
-        nonisolated struct __macro_local_9somethingfMu_<T: Creatable>: OperationCore.OperationRequest {
+        nonisolated struct __macro_local_9somethingfMu_<T: Creatable>: OperationCore.MutationRequest, Hashable {
+          typealias Arguments = Void
 
-          func run(
+          var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
+          func mutate(
             isolation: isolated (any Actor)?,
+            with arguments: Arguments,
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<T, Never>
           ) async -> T {
@@ -1110,13 +1266,13 @@ extension BaseTestSuite {
     func wrongDeclaration() {
       assertMacro {
         """
-        @OperationRequest
+        @MutationRequest
         struct Foo {
         }
         """
       } diagnostics: {
         """
-        @OperationRequest
+        @MutationRequest
         ╰─ 🛑 @OperationRequest can only be applied to functions.
         struct Foo {
         }
@@ -1124,18 +1280,18 @@ extension BaseTestSuite {
       }
     }
 
-    @Test("Operation With Invalid Isolation Parameter")
-    func operationWithInvalidIsolationParameter() {
+    @Test("Mutation With Invalid Isolation Parameter")
+    func mutationWithInvalidIsolationParameter() {
       assertMacro {
         """
-        @OperationRequest
+        @MutationRequest
         func something(isolation: Int) -> Int {
           arg
         }
         """
       } diagnostics: {
         """
-        @OperationRequest
+        @MutationRequest
         func something(isolation: Int) -> Int {
                        ┬─────────────
                        ╰─ 🛑 'isolation' argument must be 'isolated (any Actor)?'.
@@ -1145,18 +1301,18 @@ extension BaseTestSuite {
       }
     }
 
-    @Test("Operation With Invalid Context Parameter")
-    func operationWithInvalidContextParameter() {
+    @Test("Mutation With Invalid Context Parameter")
+    func mutationWithInvalidContextParameter() {
       assertMacro {
         """
-        @OperationRequest
+        @MutationRequest
         func something(context: Int) -> Int {
           arg
         }
         """
       } diagnostics: {
         """
-        @OperationRequest
+        @MutationRequest
         func something(context: Int) -> Int {
                        ┬───────────
                        ╰─ 🛑 'context' argument must be of type 'OperationContext'.
@@ -1166,22 +1322,404 @@ extension BaseTestSuite {
       }
     }
 
-    @Test("Operation With Invalid Continuation Parameter")
-    func operationWithInvalidContinuationParameter() {
+    @Test("Mutation With Invalid Continuation Parameter")
+    func mutationWithInvalidContinuationParameter() {
       assertMacro {
         """
-        @OperationRequest
+        @MutationRequest
         func something(continuation: Int) -> Int {
           arg
         }
         """
       } diagnostics: {
         """
-        @OperationRequest
+        @MutationRequest
         func something(continuation: Int) -> Int {
                        ┬────────────────
                        ╰─ 🛑 'continuation' argument must be of type 'OperationContinuation<Int, Never>'
           arg
+        }
+        """
+      }
+    }
+
+    @Test("Mutation With Path Inferred From ID")
+    func mutationWithPathInferredFromID() {
+      assertMacro {
+        """
+        @MutationRequest(path: .inferredFromIdentifiable)
+        func something(id: Int) -> Int {
+          id
+        }
+        """
+      } expansion: {
+        """
+        func something(id: Int) -> Int {
+          id
+        }
+
+        nonisolated func $something(id: Int) -> __macro_local_9somethingfMu_ {
+          __macro_local_9somethingfMu_(id: id)
+        }
+
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Identifiable {
+          typealias Arguments = Void
+          let id: Int
+          var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(id)
+          }
+          func mutate(
+            isolation: isolated (any Actor)?,
+            with arguments: Arguments,
+            in context: OperationCore.OperationContext,
+            with continuation: OperationCore.OperationContinuation<Int, Never>
+          ) async -> Int {
+            something(id: self.id)
+          }
+        }
+        """
+      }
+    }
+
+    @Test("Mutation With Path Inferred From ID, No ID Argument")
+    func mutationWithPathInferredFromIDNoIDArgument() {
+      assertMacro {
+        """
+        @MutationRequest(path: .inferredFromIdentifiable)
+        func something(arg: Int) -> Int {
+          arg
+        }
+        """
+      } diagnostics: {
+        """
+        @MutationRequest(path: .inferredFromIdentifiable)
+        ╰─ 🛑 An 'id' argument is required when using '.inferredFromIdentifiable'
+        func something(arg: Int) -> Int {
+          arg
+        }
+        """
+      }
+    }
+
+    @Test("Mutation With Custom Path Synthesis")
+    func mutationWithCustomPathSynthesis() {
+      assertMacro {
+        """
+        @MutationRequest(path: .custom { OperationPath("blob") })
+        func something() -> Int {
+          42
+        }
+        """
+      } expansion: {
+        """
+        func something() -> Int {
+          42
+        }
+
+        nonisolated var $something: __macro_local_9somethingfMu_ {
+          __macro_local_9somethingfMu_()
+        }
+
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest {
+          typealias Arguments = Void
+
+          var path: OperationCore.OperationPath {
+          makePath()
+          }
+          private func makePath() -> OperationCore.OperationPath {
+            OperationPath("blob")
+          }
+          func mutate(
+            isolation: isolated (any Actor)?,
+            with arguments: Arguments,
+            in context: OperationCore.OperationContext,
+            with continuation: OperationCore.OperationContinuation<Int, Never>
+          ) async -> Int {
+            something()
+          }
+        }
+        """
+      }
+      assertMacro {
+        """
+        @MutationRequest(
+          path: .custom { () -> OperationPath in
+            OperationPath("blob")
+          }
+        )
+        func something() -> Int {
+          42
+        }
+        """
+      } expansion: {
+        """
+        func something() -> Int {
+          42
+        }
+
+        nonisolated var $something: __macro_local_9somethingfMu_ {
+          __macro_local_9somethingfMu_()
+        }
+
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest {
+          typealias Arguments = Void
+
+          var path: OperationCore.OperationPath {
+          makePath()
+          }
+          private func makePath() -> OperationCore.OperationPath {
+
+              OperationPath("blob")
+          }
+          func mutate(
+            isolation: isolated (any Actor)?,
+            with arguments: Arguments,
+            in context: OperationCore.OperationContext,
+            with continuation: OperationCore.OperationContinuation<Int, Never>
+          ) async -> Int {
+            something()
+          }
+        }
+        """
+      }
+      assertMacro {
+        """
+        @MutationRequest(path: .custom { (arg: Int) in ["blob", arg] })
+        func something(arg: Int) -> Int {
+          arg
+        }
+        """
+      } expansion: {
+        """
+        func something(arg: Int) -> Int {
+          arg
+        }
+
+        nonisolated func $something(arg: Int) -> __macro_local_9somethingfMu_ {
+          __macro_local_9somethingfMu_(arg: arg)
+        }
+
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest {
+          typealias Arguments = Void
+          let arg: Int
+          var path: OperationCore.OperationPath {
+          makePath(arg: arg)
+          }
+          private func makePath(arg: Int) -> OperationCore.OperationPath {
+            ["blob", arg]
+          }
+          func mutate(
+            isolation: isolated (any Actor)?,
+            with arguments: Arguments,
+            in context: OperationCore.OperationContext,
+            with continuation: OperationCore.OperationContinuation<Int, Never>
+          ) async -> Int {
+            something(arg: self.arg)
+          }
+        }
+        """
+      }
+      assertMacro {
+        """
+        @MutationRequest(path: .custom { (arg: Int) in ["blob", arg] })
+        func something(arg: Int, context: OperationContext) -> Int {
+          arg
+        }
+        """
+      } expansion: {
+        """
+        func something(arg: Int, context: OperationContext) -> Int {
+          arg
+        }
+
+        nonisolated func $something(arg: Int,) -> __macro_local_9somethingfMu_ {
+          __macro_local_9somethingfMu_(arg: arg)
+        }
+
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest {
+          typealias Arguments = Void
+          let arg: Int
+          var path: OperationCore.OperationPath {
+          makePath(arg: arg)
+          }
+          private func makePath(arg: Int) -> OperationCore.OperationPath {
+            ["blob", arg]
+          }
+          func mutate(
+            isolation: isolated (any Actor)?,
+            with arguments: Arguments,
+            in context: OperationCore.OperationContext,
+            with continuation: OperationCore.OperationContinuation<Int, Never>
+          ) async -> Int {
+            something(arg: self.arg, context: context)
+          }
+        }
+        """
+      }
+      assertMacro {
+        """
+        struct Args: Sendable {}
+
+        @MutationRequest(path: .custom { (arg: Int) in ["blob", arg] })
+        func something(arg: Int, arguments: Args) -> Int {
+          arg
+        }
+        """
+      } expansion: {
+        """
+        struct Args: Sendable {}
+        func something(arg: Int, arguments: Args) -> Int {
+          arg
+        }
+
+        nonisolated func $something(arg: Int,) -> __macro_local_9somethingfMu_ {
+          __macro_local_9somethingfMu_(arg: arg)
+        }
+
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest {
+          typealias Arguments = Args
+          let arg: Int
+          var path: OperationCore.OperationPath {
+          makePath(arg: arg)
+          }
+          private func makePath(arg: Int) -> OperationCore.OperationPath {
+            ["blob", arg]
+          }
+          func mutate(
+            isolation: isolated (any Actor)?,
+            with arguments: Arguments,
+            in context: OperationCore.OperationContext,
+            with continuation: OperationCore.OperationContinuation<Int, Never>
+          ) async -> Int {
+            something(arg: self.arg, arguments: arguments)
+          }
+        }
+        """
+      }
+      assertMacro {
+        """
+        @MutationRequest(path: .custom { (arg: Int, arg2: String) in ["blob", arg, arg2] })
+        func something(arg: Int, arg2: String) -> Int {
+          arg
+        }
+        """
+      } expansion: {
+        """
+        func something(arg: Int, arg2: String) -> Int {
+          arg
+        }
+
+        nonisolated func $something(arg: Int, arg2: String) -> __macro_local_9somethingfMu_ {
+          __macro_local_9somethingfMu_(arg: arg, arg2: arg2)
+        }
+
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest {
+          typealias Arguments = Void
+          let arg: Int
+          let arg2: String
+          var path: OperationCore.OperationPath {
+          makePath(arg: arg, arg2: arg2)
+          }
+          private func makePath(arg: Int, arg2: String) -> OperationCore.OperationPath {
+            ["blob", arg, arg2]
+          }
+          func mutate(
+            isolation: isolated (any Actor)?,
+            with arguments: Arguments,
+            in context: OperationCore.OperationContext,
+            with continuation: OperationCore.OperationContinuation<Int, Never>
+          ) async -> Int {
+            something(arg: self.arg, arg2: self.arg2)
+          }
+        }
+        """
+      }
+    }
+
+    @Test("Mutation With Custom Path Synthesis, Invalid Arguments")
+    func mutationWithCustomPathSynthesisInvalidArguments() {
+      assertMacro {
+        """
+        @MutationRequest(path: .custom { OperationPath("blob") })
+        func something(arg: Int) -> Int {
+          42
+        }
+        """
+      } diagnostics: {
+        """
+        @MutationRequest(path: .custom { OperationPath("blob") })
+                                       ┬────────────────────────
+                                       ╰─ 🛑 Custom path closure must have arguments '(arg: Int)'
+        func something(arg: Int) -> Int {
+          42
+        }
+        """
+      }
+      assertMacro {
+        """
+        @MutationRequest(path: .custom { (arg: String) in OperationPath(arg) })
+        func something(arg: Int) -> Int {
+          42
+        }
+        """
+      } diagnostics: {
+        """
+        @MutationRequest(path: .custom { (arg: String) in OperationPath(arg) })
+                                       ┬──────────────────────────────────────
+                                       ╰─ 🛑 Custom path closure must have arguments '(arg: Int)'
+        func something(arg: Int) -> Int {
+          42
+        }
+        """
+      }
+      assertMacro {
+        """
+        @MutationRequest(path: .custom { (arg: String, arg2: Int) in [arg, arg2] })
+        func something(arg: Int) -> Int {
+          42
+        }
+        """
+      } diagnostics: {
+        """
+        @MutationRequest(path: .custom { (arg: String, arg2: Int) in [arg, arg2] })
+                                       ┬──────────────────────────────────────────
+                                       ╰─ 🛑 Custom path closure must have arguments '(arg: Int)'
+        func something(arg: Int) -> Int {
+          42
+        }
+        """
+      }
+      assertMacro {
+        """
+        @MutationRequest(path: .custom { (arg1: Int) in [arg] })
+        func something(arg: Int) -> Int {
+          42
+        }
+        """
+      } diagnostics: {
+        """
+        @MutationRequest(path: .custom { (arg1: Int) in [arg] })
+                                       ┬───────────────────────
+                                       ╰─ 🛑 Custom path closure must have arguments '(arg: Int)'
+        func something(arg: Int) -> Int {
+          42
+        }
+        """
+      }
+      assertMacro {
+        """
+        @MutationRequest(path: .custom { (arg: Int) in [arg] })
+        func something(arg: Int, arg2: String) -> Int {
+          42
+        }
+        """
+      } diagnostics: {
+        """
+        @MutationRequest(path: .custom { (arg: Int) in [arg] })
+                                       ┬──────────────────────
+                                       ╰─ 🛑 Custom path closure must have arguments '(arg: Int, arg2: String)'
+        func something(arg: Int, arg2: String) -> Int {
+          42
         }
         """
       }

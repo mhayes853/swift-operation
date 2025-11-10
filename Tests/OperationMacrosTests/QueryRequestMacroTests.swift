@@ -107,7 +107,7 @@ extension BaseTestSuite {
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
-            something(arg: arg, with: arg2)
+            something(arg: self.arg, with: self.arg2)
           }
         }
         """
@@ -144,7 +144,7 @@ extension BaseTestSuite {
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
-            something(with: arg, with: arg2)
+            something(with: self.arg, with: self.arg2)
           }
         }
         """
@@ -180,7 +180,7 @@ extension BaseTestSuite {
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
-            something(arg: arg)
+            something(arg: self.arg)
           }
         }
         """
@@ -264,7 +264,7 @@ extension BaseTestSuite {
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
-            something(arg: arg, context: context)
+            something(arg: self.arg, context: context)
           }
         }
         """
@@ -308,7 +308,7 @@ extension BaseTestSuite {
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
-            something(arg: arg, context: context, continuation: continuation)
+            something(arg: self.arg, context: context, continuation: continuation)
           }
         }
         """
@@ -354,7 +354,7 @@ extension BaseTestSuite {
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
-            something(arg: arg, isolation: isolation, context: context, continuation: continuation)
+            something(arg: self.arg, isolation: isolation, context: context, continuation: continuation)
           }
         }
         """
@@ -438,7 +438,7 @@ extension BaseTestSuite {
               in context: OperationCore.OperationContext,
               with continuation: OperationCore.OperationContinuation<Int, Never>
             ) async -> Int {
-              __macro_local_4typefMu_.something(arg: arg)
+              __macro_local_4typefMu_.something(arg: self.arg)
             }
           }
         }
@@ -528,7 +528,7 @@ extension BaseTestSuite {
               in context: OperationCore.OperationContext,
               with continuation: OperationCore.OperationContinuation<Int, Never>
             ) async -> Int {
-              __macro_local_4typefMu_.something(arg: arg)
+              __macro_local_4typefMu_.something(arg: self.arg)
             }
           }
         }
@@ -572,7 +572,7 @@ extension BaseTestSuite {
               in context: OperationCore.OperationContext,
               with continuation: OperationCore.OperationContinuation<Int, Never>
             ) async -> Int {
-              __macro_local_4typefMu_.something(arg: arg)
+              __macro_local_4typefMu_.something(arg: self.arg)
             }
           }
         }
@@ -621,7 +621,7 @@ extension BaseTestSuite {
               in context: OperationCore.OperationContext,
               with continuation: OperationCore.OperationContinuation<Int, Never>
             ) async -> Int {
-              __macro_local_4typefMu_.something(arg: arg)
+              __macro_local_4typefMu_.something(arg: self.arg)
             }
           }
         }
@@ -661,7 +661,7 @@ extension BaseTestSuite {
               in context: OperationCore.OperationContext,
               with continuation: OperationCore.OperationContinuation<Int, Never>
             ) async -> Int {
-              something(arg: arg)
+              something(arg: self.arg)
             }
           }
         }
@@ -705,7 +705,7 @@ extension BaseTestSuite {
                 in context: OperationCore.OperationContext,
                 with continuation: OperationCore.OperationContinuation<Int, Never>
               ) async -> Int {
-                __macro_local_4typefMu_.something(arg: arg)
+                __macro_local_4typefMu_.something(arg: self.arg)
               }
             }
           }
@@ -743,7 +743,7 @@ extension BaseTestSuite {
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
-            something(arg: arg)
+            something(arg: self.arg)
           }
         }
         """
@@ -775,7 +775,7 @@ extension BaseTestSuite {
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
-            something(arg: arg)
+            something(arg: self.arg)
           }
         }
         """
@@ -807,7 +807,7 @@ extension BaseTestSuite {
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
-            something(arg: arg)
+            something(arg: self.arg)
           }
         }
         """
@@ -847,7 +847,7 @@ extension BaseTestSuite {
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
-            something(arg: arg)
+            something(arg: self.arg)
           }
         }
         """
@@ -888,7 +888,7 @@ extension BaseTestSuite {
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
-            something(arg: arg)
+            something(arg: self.arg)
           }
         }
         """
@@ -936,7 +936,7 @@ extension BaseTestSuite {
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, any Error>
           ) async throws -> Int {
-            try something(arg: arg, context: context, continuation: continuation)
+            try something(arg: self.arg, context: context, continuation: continuation)
           }
         }
         """
@@ -957,10 +957,6 @@ extension BaseTestSuite {
         ) throws(MyError) -> Int {
           arg
         }
-        """
-      } diagnostics: {
-        """
-
         """
       } expansion: {
         """
@@ -987,7 +983,7 @@ extension BaseTestSuite {
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, MyError>
           ) async throws(MyError) -> Int {
-            try something(arg: arg, context: context, continuation: continuation)
+            try something(arg: self.arg, context: context, continuation: continuation)
           }
         }
         """
@@ -1006,10 +1002,6 @@ extension BaseTestSuite {
         ) async throws -> Int {
           arg
         }
-        """
-      } diagnostics: {
-        """
-
         """
       } expansion: {
         """
@@ -1035,7 +1027,7 @@ extension BaseTestSuite {
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, any Error>
           ) async throws -> Int {
-            try something(arg: arg, context: context, continuation: continuation)
+            try await something(arg: self.arg, context: context, continuation: continuation)
           }
         }
         """
@@ -1056,10 +1048,6 @@ extension BaseTestSuite {
         ) async throws(MyError) -> Int {
           arg
         }
-        """
-      } diagnostics: {
-        """
-
         """
       } expansion: {
         """
@@ -1086,7 +1074,7 @@ extension BaseTestSuite {
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, MyError>
           ) async throws(MyError) -> Int {
-            try something(arg: arg, context: context, continuation: continuation)
+            try await something(arg: self.arg, context: context, continuation: continuation)
           }
         }
         """
@@ -1271,7 +1259,7 @@ extension BaseTestSuite {
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
-            something(id: id)
+            something(id: self.id)
           }
         }
         """
@@ -1405,7 +1393,7 @@ extension BaseTestSuite {
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
-            something(arg: arg)
+            something(arg: self.arg)
           }
         }
         """
@@ -1440,7 +1428,7 @@ extension BaseTestSuite {
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
-            something(arg: arg, context: context)
+            something(arg: self.arg, context: context)
           }
         }
         """
@@ -1476,7 +1464,7 @@ extension BaseTestSuite {
             in context: OperationCore.OperationContext,
             with continuation: OperationCore.OperationContinuation<Int, Never>
           ) async -> Int {
-            something(arg: arg, arg2: arg2)
+            something(arg: self.arg, arg2: self.arg2)
           }
         }
         """

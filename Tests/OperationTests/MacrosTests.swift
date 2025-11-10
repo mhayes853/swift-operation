@@ -10,9 +10,19 @@ struct MacrosTests {
     expectNoDifference(value, 42)
   }
 
+  @Test("Runs Mutation")
+  func runsMutation() async {
+    let store = OperationStore.detached(mutation: $testMutation)
+    let value = await store.mutate(with: TestArgs(arg: 42))
+    expectNoDifference(value, 42)
+  }
+
   @Test("Has Proper Path")
   func hasProperPath() async {
-    let path = $testPathQuery(arg: 1, arg2: "blob").path
+    var path = $testPathQuery(arg: 1, arg2: "blob").path
+    expectNoDifference(path, [1, "blob"])
+
+    path = $testPathMutation(arg: 1, arg2: "blob").path
     expectNoDifference(path, [1, "blob"])
   }
 }
@@ -24,5 +34,19 @@ private func testQuery() -> Int {
 
 @QueryRequest(path: .custom { (arg: Int, arg2: String) in [arg, arg2] })
 private func testPathQuery(arg: Int, arg2: String) -> Int {
+  42
+}
+
+private struct TestArgs: Sendable {
+  let arg: Int
+}
+
+@MutationRequest
+private func testMutation(arguments: TestArgs) -> Int {
+  arguments.arg
+}
+
+@MutationRequest(path: .custom { (arg: Int, arg2: String) in [arg, arg2] })
+private func testPathMutation(arg: Int, arg2: String) -> Int {
   42
 }

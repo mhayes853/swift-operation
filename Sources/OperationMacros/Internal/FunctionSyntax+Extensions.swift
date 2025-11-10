@@ -121,12 +121,7 @@ extension FunctionDeclSyntax {
 
 extension FunctionDeclSyntax {
   var isAsync: Bool {
-    self.modifiers.contains { modifier in
-      switch modifier.name.tokenKind {
-      case .keyword(.async): true
-      default: false
-      }
-    }
+    self.signature.effectSpecifiers?.asyncSpecifier != nil
   }
 }
 

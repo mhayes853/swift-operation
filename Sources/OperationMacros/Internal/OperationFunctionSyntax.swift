@@ -105,8 +105,12 @@ struct OperationFunctionSyntax {
   }
 
   var functionFromOperationTypeInvoke: String {
-    let args = self.functionArgs.map {
-      "\($0.firstName.text.trimmingCharacters(in: .whitespacesAndNewlines)): \($0.operationalName)"
+    let args = self.functionArgs.map { functionArg in
+      let value =
+        self.reservedNames.contains(functionArg.operationalName)
+        ? functionArg.operationalName : "self.\(functionArg.operationalName)"
+      return
+        "\(functionArg.firstName.text.trimmingCharacters(in: .whitespacesAndNewlines)): \(value)"
     }
     return """
       \(self.declaration.isThrowing ? "try " : "")\(self.declaration.isAsync ? "await " : "")\
