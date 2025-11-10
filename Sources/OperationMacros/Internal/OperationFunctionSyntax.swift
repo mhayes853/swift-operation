@@ -72,9 +72,13 @@ struct OperationFunctionSyntax {
         return "let \(name): \(functionArg.type)"
       }
     if let parentTypeName {
-      args.append(
-        "let \(self.selfArgName): \(parentTypeName)\(self.declaration.isStatic ? ".Type" : "")"
-      )
+      if self.declaration.isStatic {
+        args.append(
+          "let \(self.selfArgName): Operation._OperationHashableMetatype<\(parentTypeName)>"
+        )
+      } else {
+        args.append("let \(self.selfArgName): \(parentTypeName)")
+      }
     }
     return args.joined(separator: "\n")
   }
@@ -88,7 +92,7 @@ struct OperationFunctionSyntax {
       }
     if self.parentTypeName != nil {
       invoke.append(
-        "\(self.selfArgName): \(self.declaration.isStatic ? "Self.self" : "self")"
+        "\(self.selfArgName): \(self.declaration.isStatic ? "Operation._OperationHashableMetatype(type: Self.self)" : "self")"
       )
     }
     return invoke.joined(separator: ", ")
@@ -114,7 +118,7 @@ struct OperationFunctionSyntax {
     }
     return """
       \(self.declaration.isThrowing ? "try " : "")\(self.declaration.isAsync ? "await " : "")\
-      \(self.parentTypeName != nil ? "\(self.selfArgName)." : "")\
+      \(self.parentTypeName != nil ? "\(self.selfArgName).\(self.declaration.isStatic ? "type." : "")" : "")\
       \(self.declaration.name)(\(args.joined(separator: ", ")))
       """
   }
@@ -228,7 +232,7 @@ extension OperationFunctionSyntax {
     self.init(
       declaration: declaration,
       parentTypeName: context.parentTypeName,
-      selfArgName: context.makeUniqueName("type").text,
+      selfArgName: String(context.makeUniqueName("type").text.drop { $0 == "$" }),
       baseOperationTypeName: context.makeUniqueName(declaration.name.text).text,
       reservedNames: reservedNames
     )

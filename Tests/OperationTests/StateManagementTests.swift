@@ -16,8 +16,8 @@ struct StateManagementTests {
       [Page(id: 0, value: [User(id: 10, relationship: .notFriends)])]
     )
 
-    let store2 = self.client.store(for: $sendFriendRequest)
-    try await store2.mutate(with: SendFriendRequestArgs(userId: 10))
+    let store2 = self.client.store(for: User.$sendFriendRequest)
+    try await store2.mutate(with: User.SendFriendRequestArgs(userId: 10))
 
     expectNoDifference(
       store.currentValue,
@@ -74,28 +74,30 @@ extension User {
   }
 }
 
-private struct SendFriendRequestArgs: Sendable {
-  let userId: Int
-}
+extension User {
+  struct SendFriendRequestArgs: Sendable {
+    let userId: Int
+  }
 
-@MutationRequest
-private func sendFriendRequest(
-  arguments: SendFriendRequestArgs,
-  context: OperationContext
-) async throws {
-  guard let client = context.operationClient else { return }
-  for store in client.stores(matching: ["user-friends"], of: User.FriendsQuery.State.self) {
-    let pages = store.currentValue.map { page in
-      var page = page
-      page.value = page.value.map { user in
-        var user = user
-        if user.id == arguments.userId {
-          user.relationship = .friendRequestSent
+  @MutationRequest
+  static func sendFriendRequest(
+    arguments: SendFriendRequestArgs,
+    context: OperationContext
+  ) async throws {
+    guard let client = context.operationClient else { return }
+    for store in client.stores(matching: ["user-friends"], of: User.FriendsQuery.State.self) {
+      let pages = store.currentValue.map { page in
+        var page = page
+        page.value = page.value.map { user in
+          var user = user
+          if user.id == arguments.userId {
+            user.relationship = .friendRequestSent
+          }
+          return user
         }
-        return user
+        return page
       }
-      return page
+      store.currentValue = Pages(uniqueElements: pages)
     }
-    store.currentValue = Pages(uniqueElements: pages)
   }
 }

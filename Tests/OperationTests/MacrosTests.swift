@@ -10,6 +10,13 @@ struct MacrosTests {
     expectNoDifference(value, 42)
   }
 
+  @Test("Runs Container Query")
+  func runsContainerQuery() async {
+    let container = Container(value: 42)
+    let value = await OperationRunner(operation: container.$query).run()
+    expectNoDifference(value, 42)
+  }
+
   @Test("Runs Mutation")
   func runsMutation() async {
     let store = OperationStore.detached(mutation: $testMutation)
@@ -49,4 +56,13 @@ private func testMutation(arguments: TestArgs) -> Int {
 @MutationRequest(path: .custom { (arg: Int, arg2: String) in [arg, arg2] })
 private func testPathMutation(arg: Int, arg2: String) -> Int {
   42
+}
+
+private struct Container: Hashable {
+  let value: Int
+
+  @QueryRequest
+  func query() -> Int {
+    self.value
+  }
 }

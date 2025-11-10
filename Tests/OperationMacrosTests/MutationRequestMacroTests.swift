@@ -489,13 +489,13 @@ extension BaseTestSuite {
           }
 
           static nonisolated func $something(arg: Int) -> __macro_local_9somethingfMu_ {
-            __macro_local_9somethingfMu_(arg: arg, __macro_local_4typefMu_: Self.self)
+            __macro_local_9somethingfMu_(arg: arg, __macro_local_4typefMu_: Operation._OperationHashableMetatype(type: Self.self))
           }
 
           nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
             typealias Arguments = Void
             let arg: Int
-            let __macro_local_4typefMu_: Foo.Type
+            let __macro_local_4typefMu_: Operation._OperationHashableMetatype<Foo>
             var path: OperationCore.OperationPath {
             OperationCore.OperationPath(self)
             }
@@ -505,7 +505,7 @@ extension BaseTestSuite {
               in context: OperationCore.OperationContext,
               with continuation: OperationCore.OperationContinuation<Int, Never>
             ) async -> Int {
-              __macro_local_4typefMu_.something(arg: self.arg)
+              __macro_local_4typefMu_.type.something(arg: self.arg)
             }
           }
         }
@@ -535,12 +535,12 @@ extension BaseTestSuite {
           }
 
           static nonisolated var $something: __macro_local_9somethingfMu_ {
-            __macro_local_9somethingfMu_(__macro_local_4typefMu_: Self.self)
+            __macro_local_9somethingfMu_(__macro_local_4typefMu_: Operation._OperationHashableMetatype(type: Self.self))
           }
 
           nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
             typealias Arguments = Void
-            let __macro_local_4typefMu_: Foo.Type
+            let __macro_local_4typefMu_: Operation._OperationHashableMetatype<Foo>
             var path: OperationCore.OperationPath {
             OperationCore.OperationPath(self)
             }
@@ -550,7 +550,7 @@ extension BaseTestSuite {
               in context: OperationCore.OperationContext,
               with continuation: OperationCore.OperationContinuation<Int, Never>
             ) async -> Int {
-              __macro_local_4typefMu_.something()
+              __macro_local_4typefMu_.type.something()
             }
           }
         }
@@ -583,13 +583,13 @@ extension BaseTestSuite {
           }
 
           static nonisolated func $something(arg: Int) -> __macro_local_9somethingfMu_ {
-            __macro_local_9somethingfMu_(arg: arg, __macro_local_4typefMu_: Self.self)
+            __macro_local_9somethingfMu_(arg: arg, __macro_local_4typefMu_: Operation._OperationHashableMetatype(type: Self.self))
           }
 
           nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
             typealias Arguments = Void
             let arg: Int
-            let __macro_local_4typefMu_: Foo.Type
+            let __macro_local_4typefMu_: Operation._OperationHashableMetatype<Foo>
             var path: OperationCore.OperationPath {
             OperationCore.OperationPath(self)
             }
@@ -599,7 +599,7 @@ extension BaseTestSuite {
               in context: OperationCore.OperationContext,
               with continuation: OperationCore.OperationContinuation<Int, Never>
             ) async -> Int {
-              __macro_local_4typefMu_.something(arg: self.arg)
+              __macro_local_4typefMu_.type.something(arg: self.arg)
             }
           }
         }

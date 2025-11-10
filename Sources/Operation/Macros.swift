@@ -32,3 +32,21 @@ public struct _OperationPathMacroSynthesizer: Sendable {
 
   private init() {}
 }
+
+// MARK: - _OperationHashableMetatype
+
+public struct _OperationHashableMetatype<T>: Hashable, Sendable {
+  public let type: T.Type
+
+  public init(type: T.Type) {
+    self.type = type
+  }
+
+  public static func == (lhs: Self, rhs: Self) -> Bool {
+    lhs.type == rhs.type
+  }
+
+  public func hash(into hasher: inout Hasher) {
+    hasher.combine(ObjectIdentifier(self.type))
+  }
+}
