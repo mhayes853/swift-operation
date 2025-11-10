@@ -49,7 +49,7 @@ struct OptimisticUpdatesCaseStudy: CaseStudy {
 @Observable
 final class OptimisticUpdatesModel {
   @ObservationIgnored
-  @SharedOperation<Post.Query.State> var post: Post??
+  @SharedOperation<QueryState<Post?, any Error>> var post: Post??
 
   @ObservationIgnored
   @SharedOperation(Post.interactMutation) var interact: Void?
@@ -57,7 +57,7 @@ final class OptimisticUpdatesModel {
   var alert: AlertState<AlertAction>?
 
   init(id: Int) {
-    self._post = SharedOperation(Post.query(for: id), animation: .bouncy)
+    self._post = SharedOperation(Post.$query(for: id), animation: .bouncy)
   }
 }
 
@@ -67,7 +67,7 @@ extension OptimisticUpdatesModel {
     let interaction = post.isUserLiking ? Post.Interaction.unlike : .like
     do {
       try await self.$interact.mutate(
-        with: Post.InteractMutation.Arguments(postId: post.id, interaction: interaction)
+        with: Post.InteractArguments(postId: post.id, interaction: interaction)
       )
     } catch {
       self.alert = .failure(interaction: interaction)
@@ -103,37 +103,31 @@ extension Post {
     case like
     case unlike
   }
+  
+  struct InteractArguments: Sendable {
+    let postId: Int
+    let interaction: Interaction
+  }
+  
+  @MutationRequest
+  static func interact(arguments: InteractArguments) async throws {
+    @Dependency(\.defaultOperationClient) var client
+    @Dependency(PostInteractorKey.self) var interactor
+    let postStore = client.store(for: Post.$query(for: arguments.postId))
 
-  static let interactMutation = InteractMutation().retry(limit: 0)
-
-  struct InteractMutation: MutationRequest, Hashable, Sendable {
-    struct Arguments: Sendable {
-      let postId: Int
-      let interaction: Interaction
-    }
-
-    func mutate(
-      isolation: isolated (any Actor)?,
-      with arguments: Arguments,
-      in context: OperationContext,
-      with continuation: OperationContinuation<Void, any Error>
-    ) async throws {
-      @Dependency(\.defaultOperationClient) var client
-      @Dependency(PostInteractorKey.self) var interactor
-      let postStore = client.store(for: Post.query(for: arguments.postId))
-
-      do {
-        postStore.currentValue??.updateLikes(with: arguments.interaction)
-        try await interactor.applyInteraction(
-          to: arguments.postId,
-          interaction: arguments.interaction
-        )
-      } catch {
-        postStore.currentValue??.updateLikes(with: arguments.interaction.inverse)
-        throw error
-      }
+    do {
+      postStore.currentValue??.updateLikes(with: arguments.interaction)
+      try await interactor.applyInteraction(
+        to: arguments.postId,
+        interaction: arguments.interaction
+      )
+    } catch {
+      postStore.currentValue??.updateLikes(with: arguments.interaction.inverse)
+      throw error
     }
   }
+
+  static let interactMutation = Self.$interact.retry(limit: 0)
 }
 
 extension Post.Interaction {

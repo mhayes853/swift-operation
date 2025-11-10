@@ -74,7 +74,7 @@ struct OperationFunctionSyntax {
     if let parentTypeName {
       if self.declaration.isStatic {
         args.append(
-          "let \(self.selfArgName): Operation._OperationHashableMetatype<\(parentTypeName)>"
+          "let \(self.selfArgName): _OperationHashableMetatype<\(parentTypeName)>"
         )
       } else {
         args.append("let \(self.selfArgName): \(parentTypeName)")
@@ -92,7 +92,7 @@ struct OperationFunctionSyntax {
       }
     if self.parentTypeName != nil {
       invoke.append(
-        "\(self.selfArgName): \(self.declaration.isStatic ? "Operation._OperationHashableMetatype(type: Self.self)" : "self")"
+        "\(self.selfArgName): \(self.declaration.isStatic ? "_OperationHashableMetatype(type: Self.self)" : "self")"
       )
     }
     return invoke.joined(separator: ", ")

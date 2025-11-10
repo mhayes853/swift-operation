@@ -393,12 +393,12 @@ extension BaseTestSuite {
           }
 
           static nonisolated func $something(arg: Int) -> __macro_local_9somethingfMu_ {
-            __macro_local_9somethingfMu_(arg: arg, __macro_local_4typefMu_: Operation._OperationHashableMetatype(type: Self.self))
+            __macro_local_9somethingfMu_(arg: arg, __macro_local_4typefMu_: _OperationHashableMetatype(type: Self.self))
           }
 
           nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
             let arg: Int
-            let __macro_local_4typefMu_: Operation._OperationHashableMetatype<Foo>
+            let __macro_local_4typefMu_: _OperationHashableMetatype<Foo>
             func run(
               isolation: isolated (any Actor)?,
               in context: OperationCore.OperationContext,
@@ -434,11 +434,11 @@ extension BaseTestSuite {
           }
 
           static nonisolated var $something: __macro_local_9somethingfMu_ {
-            __macro_local_9somethingfMu_(__macro_local_4typefMu_: Operation._OperationHashableMetatype(type: Self.self))
+            __macro_local_9somethingfMu_(__macro_local_4typefMu_: _OperationHashableMetatype(type: Self.self))
           }
 
           nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
-            let __macro_local_4typefMu_: Operation._OperationHashableMetatype<Foo>
+            let __macro_local_4typefMu_: _OperationHashableMetatype<Foo>
             func run(
               isolation: isolated (any Actor)?,
               in context: OperationCore.OperationContext,
@@ -477,12 +477,12 @@ extension BaseTestSuite {
           }
 
           static nonisolated func $something(arg: Int) -> __macro_local_9somethingfMu_ {
-            __macro_local_9somethingfMu_(arg: arg, __macro_local_4typefMu_: Operation._OperationHashableMetatype(type: Self.self))
+            __macro_local_9somethingfMu_(arg: arg, __macro_local_4typefMu_: _OperationHashableMetatype(type: Self.self))
           }
 
           nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
             let arg: Int
-            let __macro_local_4typefMu_: Operation._OperationHashableMetatype<Foo>
+            let __macro_local_4typefMu_: _OperationHashableMetatype<Foo>
             func run(
               isolation: isolated (any Actor)?,
               in context: OperationCore.OperationContext,
@@ -981,12 +981,12 @@ extension BaseTestSuite {
           }
 
           static nonisolated func $something(arg: Int,) -> __macro_local_9somethingfMu_ {
-            __macro_local_9somethingfMu_(arg: arg, __macro_local_4typefMu_: Operation._OperationHashableMetatype(type: Self.self))
+            __macro_local_9somethingfMu_(arg: arg, __macro_local_4typefMu_: _OperationHashableMetatype(type: Self.self))
           }
 
           nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
             let arg: Int
-            let __macro_local_4typefMu_: Operation._OperationHashableMetatype<Foo>
+            let __macro_local_4typefMu_: _OperationHashableMetatype<Foo>
             func run(
               isolation: isolated (any Actor)?,
               in context: OperationCore.OperationContext,

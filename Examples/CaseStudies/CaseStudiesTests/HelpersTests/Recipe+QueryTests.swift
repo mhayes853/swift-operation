@@ -61,7 +61,7 @@ struct RecipeQueryTests {
     try await withDependencies {
       $0[RecipeIDLoaderKey.self] = DummyJSONAPI(transport: transport)
     } operation: {
-      @SharedOperation(Recipe.randomQuery) var recipe
+      @SharedOperation(Recipe.$randomQuery) var recipe
       try await $recipe.load()
 
       let expectedRecipe = Recipe(
@@ -100,7 +100,7 @@ struct RecipeQueryTests {
     try await withDependencies {
       $0[RecipeIDLoaderKey.self] = DummyJSONAPI(transport: transport)
     } operation: {
-      @SharedOperation(Recipe.randomQuery) var recipe
+      @SharedOperation(Recipe.$randomQuery) var recipe
       try await $recipe.load()
 
       expectNoDifference(recipe, .some(nil))

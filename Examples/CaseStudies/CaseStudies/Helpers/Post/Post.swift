@@ -60,42 +60,18 @@ enum PostListByTagLoaderKey: DependencyKey {
 // MARK: - Query
 
 extension Post {
-  static func query(for id: Int) -> some QueryRequest<Self?, any Error> {
-    Query(id: id)
-  }
-
-  struct Query: QueryRequest, Hashable, Sendable {
-    let id: Int
-
-    func fetch(
-      isolation: isolated (any Actor)?,
-      in context: OperationContext,
-      with continuation: OperationContinuation<Post?, any Error>
-    ) async throws -> Post? {
-      @Dependency(PostsKey.self) var posts
-      return try await posts.post(with: self.id)
-    }
+  @QueryRequest
+  static func query(for id: Int) async throws -> Post? {
+    @Dependency(PostsKey.self) var posts
+    return try await posts.post(with: id)
   }
 }
 
 extension Post {
-  static func searchQuery(
-    by text: String
-  ) -> some QueryRequest<IdentifiedArrayOf<Self>, any Error> {
-    SearchQuery(text: text)
-  }
-
-  struct SearchQuery: QueryRequest, Hashable {
-    let text: String
-
-    func fetch(
-      isolation: isolated (any Actor)?,
-      in context: OperationContext,
-      with continuation: OperationContinuation<IdentifiedArrayOf<Post>, any Error>
-    ) async throws -> IdentifiedArrayOf<Post> {
-      @Dependency(PostSearcherKey.self) var posts
-      return try await posts.search(by: self.text)
-    }
+  @QueryRequest
+  static func searchQuery(by text: String) async throws -> IdentifiedArrayOf<Post> {
+    @Dependency(PostSearcherKey.self) var posts
+    return try await posts.search(by: text)
   }
 }
 

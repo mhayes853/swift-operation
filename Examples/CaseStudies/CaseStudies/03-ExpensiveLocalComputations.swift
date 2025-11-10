@@ -82,51 +82,40 @@ final class ExpensiveLocalComputationModel {
 // MARK: - Nth Prime
 
 extension Int {
-  static func nthPrimeQuery(for n: Int) -> some QueryRequest<Int?, any Error> {
-    NthPrimeQuery(n: n)
+  static func nthPrimeQuery(for n: Int) -> some QueryRequest<Int?, Never> {
+    Self.$nthPrime(n: n)
       .completelyOffline()
       .disableApplicationActiveRerunning()
   }
+  
+  @QueryRequest
+  static func nthPrime(n: Int) -> Int? {
+    guard n > 0 else { return nil }
 
-  struct NthPrimeQuery: QueryRequest, Hashable {
-    let n: Int
+    let upperBound = n < 6 ? 15 : Int(Double(n) * log(Double(n)) + Double(n) * log(log(Double(n))))
 
-    func fetch(
-      isolation: isolated (any Actor)?,
-      in context: OperationContext,
-      with continuation: OperationContinuation<Int?, any Error>
-    ) async throws -> Int? {
-      nthPrime(for: self.n)
-    }
-  }
-}
+    var isPrime = [Bool](repeating: true, count: upperBound + 1)
+    isPrime[0] = false
+    isPrime[1] = false
 
-func nthPrime(for n: Int) -> Int? {
-  guard n > 0 else { return nil }
-
-  let upperBound = n < 6 ? 15 : Int(Double(n) * log(Double(n)) + Double(n) * log(log(Double(n))))
-
-  var isPrime = [Bool](repeating: true, count: upperBound + 1)
-  isPrime[0] = false
-  isPrime[1] = false
-
-  for i in 2...Int(Double(upperBound).squareRoot()) {
-    if isPrime[i] {
-      for multiple in stride(from: i * i, through: upperBound, by: i) {
-        isPrime[multiple] = false
+    for i in 2...Int(Double(upperBound).squareRoot()) {
+      if isPrime[i] {
+        for multiple in stride(from: i * i, through: upperBound, by: i) {
+          isPrime[multiple] = false
+        }
       }
     }
-  }
 
-  var count = 0
-  for (index, isPrime) in isPrime.enumerated() {
-    guard isPrime else { continue }
-    count += 1
-    if count == n {
-      return index
+    var count = 0
+    for (index, isPrime) in isPrime.enumerated() {
+      guard isPrime else { continue }
+      count += 1
+      if count == n {
+        return index
+      }
     }
+    return nil
   }
-  return nil
 }
 
 // MARK: - Preview

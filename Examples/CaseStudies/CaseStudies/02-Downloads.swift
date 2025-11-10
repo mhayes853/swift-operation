@@ -92,27 +92,23 @@ struct Download: Hashable, Sendable {
 
 extension Download {
   static func query(for url: URL) -> some QueryRequest<Self, any Error> {
-    Query(url: url)
+    Self.$_query(for: url)
       .disableAutomaticRunning()
       .staleWhenNoValue()
   }
-
-  struct Query: QueryRequest, Hashable {
-    let url: URL
-
-    func fetch(
-      isolation: isolated (any Actor)?,
-      in context: OperationContext,
-      with continuation: OperationContinuation<Download, any Error>
-    ) async throws -> Download {
-      @Dependency(FileDownloaderKey.self) var downloader
-      var download = Download(progress: 0, url: nil)
-      for try await progress in downloader.download(from: self.url) {
-        continuation.yield(progress)
-        download = progress
-      }
-      return download
+  
+  @QueryRequest
+  private static func _query(
+    for url: URL,
+    continuation: OperationContinuation<Download, any Error>
+  ) async throws -> Download {
+    @Dependency(FileDownloaderKey.self) var downloader
+    var download = Download(progress: 0, url: nil)
+    for try await progress in downloader.download(from: url) {
+      continuation.yield(progress)
+      download = progress
     }
+    return download
   }
 }
 

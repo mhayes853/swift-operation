@@ -51,12 +51,12 @@ private struct InnerView: View {
 // MARK: - Queries
 
 extension Recipe {
-  static let randomScreenshotQuery = RandomQuery()
+  static let randomScreenshotQuery = Self.$randomQuery
     .refetchOnPost(of: UIApplication.userDidTakeScreenshotNotification)
 }
 
 extension Quote {
-  static let randomScreenshotQuery = RandomQuery()
+  static let randomScreenshotQuery = Self.$randomQuery
     .refetchOnPost(of: UIApplication.userDidTakeScreenshotNotification)
 }
 
