@@ -5,37 +5,30 @@ import SwiftUI
 // MARK: - Query
 
 extension Post {
-  static func query(for id: Int) -> some QueryRequest<Self?, any Error> {
+  static func query(for id: Int) -> some QueryRequest<Post?, any Error> {
     // The modifiers on the query are applied by default, they are
     // only being shown to demonstrate how to configure operations.
-    Query(id: id)
+    Self.$query(for: id)
       .retry(limit: 3)
       .deduplicated()
       .rerunOnChange(of: .connected(to: NWPathMonitorObserver.startingShared()))
   }
 
-  struct Query: QueryRequest, Hashable {
-    let id: Int
-
-    func fetch(
-      isolation: isolated (any Actor)?,
-      in context: OperationContext,
-      with continuation: OperationContinuation<Post?, any Error>
-    ) async throws -> Post? {
-      let url = URL(string: "https://dummyjson.com/posts/\(id)")!
-      let (data, resp) = try await URLSession.shared.data(from: url)
-      if (resp as? HTTPURLResponse)?.statusCode == 404 {
-        return nil
-      }
-      return try JSONDecoder().decode(Post.self, from: data)
+  @QueryRequest
+  private static func query(for id: Int) async throws -> Post? {
+    let url = URL(string: "https://dummyjson.com/posts/\(id)")!
+    let (data, resp) = try await URLSession.shared.data(from: url)
+    if (resp as? HTTPURLResponse)?.statusCode == 404 {
+      return nil
     }
+    return try JSONDecoder().decode(Post.self, from: data)
   }
 }
 
 // MARK: - PostView
 
 struct PostView: View {
-  @SharedOperation<Post.Query.State> var post: Post??
+  @SharedOperation<QueryState<Post?, any Error>> var post: Post??
 
   init(id: Int) {
     // By default, this will begin fetching the post.

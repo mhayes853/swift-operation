@@ -4,4 +4,4 @@ Flexible asynchronous operation and state management for SwiftUI, Linux, WASM, a
 
 ## Overview
 
-The core functionality of this library is defined in `OperationCore` which this library exports.
+The core functionality of this library is defined in [`OperationCore`](https://swiftpackageindex.com/mhayes853/swift-operation/~/documentation/operationcore/) which this library exports.

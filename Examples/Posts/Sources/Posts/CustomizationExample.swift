@@ -20,6 +20,15 @@ struct DelayModifer<Operation: OperationRequest>: OperationModifier, Sendable {
   }
 }
 
-let delayedPostQuery = Post.Query(id: 1).delay(for: .seconds(1))
-let delayedCreateMutation = Post.CreateMutation().delay(for: .seconds(1))
-let delayedFeedQuery = Post.FeedQuery().delay(for: .seconds(1))
+@QueryRequest
+func someQuery() {
+  // ...
+}
+
+@MutationRequest
+func someMutation() {
+  // ...
+}
+
+let delayedQuery = $someQuery.delay(for: .seconds(1))
+let delayedMutation = $someMutation.delay(for: .seconds(1))

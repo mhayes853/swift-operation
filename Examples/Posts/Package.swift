@@ -10,7 +10,7 @@ let package = Package(
     .library(name: "Posts", targets: ["Posts"])
   ],
   dependencies: [
-    .package(url: "https://github.com/mhayes853/swift-operation", branch: "main")
+    .package(path: "../..")
   ],
   targets: [
     .target(
