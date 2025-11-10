@@ -11,14 +11,14 @@ import SwiftUINavigation
 @Observable
 public final class PlanClimbModel: HashableObject, Identifiable {
   @ObservationIgnored
-  @SharedOperation<Mountain.Query.State> public var mountain: Mountain??
+  @SharedOperation<QueryState<Mountain?, any Error>> public var mountain: Mountain??
 
   @ObservationIgnored
   @SharedReader(.alarmsAuthorization) public var alarmsAuthorization
 
   @ObservationIgnored
-  @SharedOperation(ScheduleableAlarm.requestAuthorizationMutation) public
-    var requestAlarmAuthorization
+  @SharedOperation(ScheduleableAlarm.$requestAuthorizationMutation)
+  public var requestAlarmAuthorization
 
   @ObservationIgnored
   @SharedOperation(Mountain.planClimbMutation) public var planClimb
@@ -79,7 +79,7 @@ extension PlanClimbModel {
       )
     }
     let (_, plannedClimb) = try await self.$planClimb.mutate(
-      with: Mountain.PlanClimbMutation.Arguments(mountain: mountain, create: create)
+      with: Mountain.PlanClimbArguments(mountain: mountain, create: create)
     )
     self.onPlanned?(plannedClimb)
   }

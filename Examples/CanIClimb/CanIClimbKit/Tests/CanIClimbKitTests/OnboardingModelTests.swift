@@ -117,7 +117,7 @@ extension DependenciesTestSuite {
           connectHealthKit: .skip
         )
 
-        let userStore = client.store(for: User.currentStatusQuery)
+        let userStore = client.store(for: User.$currentStatusQuery)
         _ = try? await userStore.activeTasks.first?.runIfNeeded()
         expectNoDifference(userStore.currentValue, .user(.mock1))
       }

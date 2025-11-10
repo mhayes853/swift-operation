@@ -27,7 +27,7 @@ public final class SignInModel {
       self.destination = .alert(.signInFailure)
       return
     }
-    try await self.$signIn.mutate(with: User.SignInMutation.Arguments(credentials: credentials))
+    try await self.$signIn.mutate(with: User.SignInArguments(credentials: credentials))
     self.onSignInSuccess?()
   }
 }

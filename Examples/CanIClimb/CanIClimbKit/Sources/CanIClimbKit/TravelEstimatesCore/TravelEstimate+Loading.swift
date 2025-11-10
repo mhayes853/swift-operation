@@ -59,20 +59,9 @@ extension TravelEstimate {
 // MARK: - Query
 
 extension TravelEstimate {
-  public static func query(for request: Request) -> some QueryRequest<Self, any Error> {
-    Query(request: request)
-  }
-
-  public struct Query: QueryRequest, Hashable, Sendable {
-    let request: Request
-
-    public func fetch(
-      isolation: isolated (any Actor)?,
-      in context: OperationContext,
-      with continuation: OperationContinuation<TravelEstimate, any Error>
-    ) async throws -> TravelEstimate {
-      @Dependency(TravelEstimate.LoaderKey.self) var loader
-      return try await loader.estimate(for: self.request)
-    }
+  @QueryRequest
+  public static func query(for request: Request) async throws -> TravelEstimate {
+    @Dependency(TravelEstimate.LoaderKey.self) var loader
+    return try await loader.estimate(for: request)
   }
 }

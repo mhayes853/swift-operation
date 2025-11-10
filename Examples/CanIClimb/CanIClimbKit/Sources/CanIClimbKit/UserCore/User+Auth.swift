@@ -94,57 +94,47 @@ extension User {
 // MARK: - Mutations
 
 extension User {
-  public static let signInMutation = SignInMutation()
-    .alerts(success: .signInSuccess, failure: .signInFailure)
+  public struct SignInArguments: Sendable {
+    let credentials: User.SignInCredentials
 
-  public struct SignInMutation: MutationRequest, Sendable, Hashable {
-    public struct Arguments: Sendable {
-      let credentials: User.SignInCredentials
-
-      public init(credentials: User.SignInCredentials) {
-        self.credentials = credentials
-      }
+    public init(credentials: User.SignInCredentials) {
+      self.credentials = credentials
     }
+  }
 
-    public func mutate(
-      isolation: isolated (any Actor)?,
-      with arguments: Arguments,
-      in context: OperationContext,
-      with continuation: OperationContinuation<Void, any Error>
-    ) async throws {
-      @Dependency(User.AuthenticatorKey.self) var authenticator
-      @Dependency(\.defaultOperationClient) var client
+  public static var signInMutation: some MutationRequest<SignInArguments, Void, any Error> {
+    Self.$signInMutation.alerts(success: .signInSuccess, failure: .signInFailure)
+  }
 
-      try await authenticator.signIn(with: arguments.credentials)
+  @MutationRequest
+  private static func signInMutation(arguments: SignInArguments) async throws {
+    @Dependency(User.AuthenticatorKey.self) var authenticator
+    @Dependency(\.defaultOperationClient) var client
 
-      let userStore = client.store(for: User.currentStatusQuery)
-      // NB: Prevent deduplication against tasks in the process of being cancelled.
-      await userStore.resetWaitingForAllActiveTasksToFinish()
-      Task { try await userStore.fetch() }
-    }
+    try await authenticator.signIn(with: arguments.credentials)
+
+    let userStore = client.store(for: User.$currentStatusQuery)
+    // NB: Prevent deduplication against tasks in the process of being cancelled.
+    await userStore.resetWaitingForAllActiveTasksToFinish()
+    Task { try await userStore.fetch() }
   }
 }
 
 extension User {
-  public static let signOutMutation = SignOutMutation()
-    .alerts(success: .signOutSuccess, failure: .signOutFailure)
+  public static var signOutMutation: some MutationRequest<Void, Void, any Error> {
+    Self.$signOutMutation.alerts(success: .signOutSuccess, failure: .signOutFailure)
+  }
 
-  public struct SignOutMutation: MutationRequest, Hashable, Sendable {
-    public func mutate(
-      isolation: isolated (any Actor)?,
-      with arguments: Void,
-      in context: OperationContext,
-      with continuation: OperationContinuation<Void, any Error>
-    ) async throws {
-      @Dependency(User.AuthenticatorKey.self) var authenticator
-      @Dependency(\.defaultOperationClient) var client
+  @MutationRequest
+  private static func signOutMutation() async throws {
+    @Dependency(User.AuthenticatorKey.self) var authenticator
+    @Dependency(\.defaultOperationClient) var client
 
-      try await authenticator.signOut()
+    try await authenticator.signOut()
 
-      let userStore = client.store(for: User.currentStatusQuery)
-      userStore.resetState()
-      userStore.currentValue = .unauthorized
-    }
+    let userStore = client.store(for: User.$currentStatusQuery)
+    userStore.resetState()
+    userStore.currentValue = .unauthorized
   }
 }
 

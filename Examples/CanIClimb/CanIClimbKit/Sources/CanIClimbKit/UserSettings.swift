@@ -60,7 +60,7 @@ extension UserSettingsModel {
   }
 
   public func editSubmitted(edit: User.Edit) async throws {
-    let task = self.$editProfile.mutateTask(with: User.EditMutation.Arguments(edit: edit))
+    let task = self.$editProfile.mutateTask(with: User.EditArguments(edit: edit))
     self.indicateLoading()
     let user = try await task.runIfNeeded()
     self.originalEditableFields = EditableFields(user: user)

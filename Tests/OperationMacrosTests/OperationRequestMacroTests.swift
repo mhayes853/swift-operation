@@ -393,7 +393,7 @@ extension BaseTestSuite {
           }
 
           static nonisolated func $something(arg: Int) -> __macro_local_9somethingfMu_ {
-            __macro_local_9somethingfMu_(arg: arg, __macro_local_4typefMu_: _OperationHashableMetatype(type: Self.self))
+            __macro_local_9somethingfMu_(arg: arg, __macro_local_4typefMu_: _OperationHashableMetatype(type: Foo.self))
           }
 
           nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
@@ -434,7 +434,7 @@ extension BaseTestSuite {
           }
 
           static nonisolated var $something: __macro_local_9somethingfMu_ {
-            __macro_local_9somethingfMu_(__macro_local_4typefMu_: _OperationHashableMetatype(type: Self.self))
+            __macro_local_9somethingfMu_(__macro_local_4typefMu_: _OperationHashableMetatype(type: Foo.self))
           }
 
           nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
@@ -477,7 +477,7 @@ extension BaseTestSuite {
           }
 
           static nonisolated func $something(arg: Int) -> __macro_local_9somethingfMu_ {
-            __macro_local_9somethingfMu_(arg: arg, __macro_local_4typefMu_: _OperationHashableMetatype(type: Self.self))
+            __macro_local_9somethingfMu_(arg: arg, __macro_local_4typefMu_: _OperationHashableMetatype(type: Foo.self))
           }
 
           nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
@@ -981,7 +981,7 @@ extension BaseTestSuite {
           }
 
           static nonisolated func $something(arg: Int,) -> __macro_local_9somethingfMu_ {
-            __macro_local_9somethingfMu_(arg: arg, __macro_local_4typefMu_: _OperationHashableMetatype(type: Self.self))
+            __macro_local_9somethingfMu_(arg: arg, __macro_local_4typefMu_: _OperationHashableMetatype(type: Foo.self))
           }
 
           nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {

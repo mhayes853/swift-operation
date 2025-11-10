@@ -83,6 +83,10 @@ extension CanIClimbAPI.Tokens {
 // MARK: - Mutation
 
 extension CanIClimbAPI.Tokens.Response {
+  fileprivate struct Arguments: Sendable {
+    let load: @Sendable () async throws -> CanIClimbAPI.Tokens.Response
+  }
+
   fileprivate static let mutation = Mutation()
     .maxHistory(length: 1)
     .deduplicated()

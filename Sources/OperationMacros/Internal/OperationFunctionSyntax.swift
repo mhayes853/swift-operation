@@ -90,9 +90,9 @@ struct OperationFunctionSyntax {
         guard !self.reservedNames.contains(name) else { return nil }
         return "\(name): \(name)"
       }
-    if self.parentTypeName != nil {
+    if let parentTypeName {
       invoke.append(
-        "\(self.selfArgName): \(self.declaration.isStatic ? "_OperationHashableMetatype(type: Self.self)" : "self")"
+        "\(self.selfArgName): \(self.declaration.isStatic ? "_OperationHashableMetatype(type: \(parentTypeName).self)" : "self")"
       )
     }
     return invoke.joined(separator: ", ")

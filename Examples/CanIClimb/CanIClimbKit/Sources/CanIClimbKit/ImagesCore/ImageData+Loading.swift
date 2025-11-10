@@ -29,20 +29,13 @@ extension ImageData.Loader {
 
 extension ImageData {
   public static func query(for url: URL) -> some QueryRequest<Self, any Error> {
-    Query(url: url).staleWhenNoValue()
+    Self.$query(for: url).staleWhenNoValue()
       .taskConfiguration { $0.name = "Fetch image for \(url)" }
   }
 
-  public struct Query: QueryRequest, Hashable {
-    let url: URL
-
-    public func fetch(
-      isolation: isolated (any Actor)?,
-      in context: OperationContext,
-      with continuation: OperationContinuation<ImageData, any Error>
-    ) async throws -> ImageData {
-      @Dependency(ImageData.LoaderKey.self) var loader
-      return try await loader.image(for: self.url)
-    }
+  @QueryRequest
+  private static func query(for url: URL) async throws -> ImageData {
+    @Dependency(ImageData.LoaderKey.self) var loader
+    return try await loader.image(for: url)
   }
 }

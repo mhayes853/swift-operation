@@ -5,18 +5,14 @@ import Operation
 // MARK: - Query
 
 extension CKAccountStatus {
-  public static let currentQuery = CurrentQuery().staleWhenNoValue()
-    .refetchOnPost(of: .CKAccountChanged)
+  public static var currentQuery: some QueryRequest<CKAccountStatus, any Error> {
+    Self.$currentQuery.staleWhenNoValue().refetchOnPost(of: .CKAccountChanged)
+  }
 
-  public struct CurrentQuery: QueryRequest, Hashable, Sendable {
-    public func fetch(
-      isolation: isolated (any Actor)?,
-      in context: OperationContext,
-      with continuation: OperationContinuation<CKAccountStatus, any Error>
-    ) async throws -> CKAccountStatus {
-      @Dependency(CKAccountStatus.LoaderKey.self) var loader
-      return try await loader.accountStatus()
-    }
+  @QueryRequest
+  private static func currentQuery() async throws -> CKAccountStatus {
+    @Dependency(CKAccountStatus.LoaderKey.self) var loader
+    return try await loader.accountStatus()
   }
 }
 

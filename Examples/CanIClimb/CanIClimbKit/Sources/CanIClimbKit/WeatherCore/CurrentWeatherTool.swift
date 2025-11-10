@@ -19,7 +19,7 @@ public struct CurrentWeatherTool: Tool {
 
   public func call(arguments: Arguments) async throws -> WeatherReadingGenerable {
     let coordinate = LocationCoordinate2D(generable: arguments.coordinate)
-    let store = client.store(for: WeatherReading.currentQuery(for: coordinate))
+    let store = client.store(for: WeatherReading.$currentQuery(for: coordinate))
     return WeatherReadingGenerable(reading: try await store.fetch())
   }
 }

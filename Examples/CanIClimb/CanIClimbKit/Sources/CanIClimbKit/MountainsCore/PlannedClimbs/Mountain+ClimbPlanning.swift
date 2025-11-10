@@ -127,95 +127,95 @@ extension Mountain {
 // MARK: - Mutations
 
 extension Mountain {
-  public static let planClimbMutation = PlanClimbMutation()
-    .alerts { value in
-      let (mountain, plannedClimb) = value.returnValue
-      return .planClimbSuccess(mountainName: mountain.name, targetDate: plannedClimb.targetDate)
-    } failure: { _ in
-      .planClimbFailure
+  public struct PlanClimbArguments: Sendable {
+    public let mountain: Mountain
+    public let create: ClimbPlanCreate
+
+    public init(mountain: Mountain, create: ClimbPlanCreate) {
+      self.mountain = mountain
+      self.create = create
     }
+  }
 
-  public struct PlanClimbMutation: MutationRequest, Hashable, Sendable {
-    public struct Arguments: Sendable {
-      public let mountain: Mountain
-      public let create: ClimbPlanCreate
-
-      public init(mountain: Mountain, create: ClimbPlanCreate) {
-        self.mountain = mountain
-        self.create = create
+  public static var planClimbMutation:
+    some MutationRequest<PlanClimbArguments, (Mountain, PlannedClimb), any Error>
+  {
+    Self.$planClimbMutation
+      .alerts { value in
+        let (mountain, plannedClimb) = value.returnValue
+        return .planClimbSuccess(mountainName: mountain.name, targetDate: plannedClimb.targetDate)
+      } failure: { _ in
+        .planClimbFailure
       }
+  }
+
+  @MutationRequest
+  private static func planClimbMutation(
+    arguments: PlanClimbArguments
+  ) async throws -> (Mountain, PlannedClimb) {
+    @Dependency(Mountain.PlanClimberKey.self) var planner
+    @Dependency(\.defaultOperationClient) var client
+
+    let plannedClimb = try await planner.plan(create: arguments.create)
+
+    let climbsStore = client.store(for: Mountain.$plannedClimbsQuery(for: arguments.mountain.id))
+    climbsStore.withExclusiveAccess {
+      var currentValue = $0.currentValue ?? []
+      currentValue.append(plannedClimb)
+      currentValue.sort { $0.targetDate > $1.targetDate }
+      $0.currentValue = currentValue
     }
 
-    public func mutate(
-      isolation: isolated (any Actor)?,
-      with arguments: Arguments,
-      in context: OperationContext,
-      with continuation: OperationContinuation<(Mountain, PlannedClimb), any Error>
-    ) async throws -> (Mountain, PlannedClimb) {
-      @Dependency(Mountain.PlanClimberKey.self) var planner
-      @Dependency(\.defaultOperationClient) var client
-
-      let plannedClimb = try await planner.plan(create: arguments.create)
-
-      let climbsStore = client.store(for: Mountain.plannedClimbsQuery(for: arguments.mountain.id))
-      climbsStore.withExclusiveAccess {
-        var currentValue = $0.currentValue ?? []
-        currentValue.append(plannedClimb)
-        currentValue.sort { $0.targetDate > $1.targetDate }
-        $0.currentValue = currentValue
-      }
-
-      return (arguments.mountain, plannedClimb)
-    }
+    return (arguments.mountain, plannedClimb)
   }
 }
 
 extension Mountain {
-  public static let unplanClimbsMutation = UnplanClimbsMutation()
-    .alerts { _ in
-      nil
-    } failure: { error in
-      (error as? UnplanClimbsError).map { .unplanClimbsFailure(count: $0.ids.count) }
+  public struct UnplanClimbsArguments: Sendable {
+    public let mountainId: Mountain.ID
+    public let ids: OrderedSet<PlannedClimb.ID>
+
+    public init(mountainId: Mountain.ID, ids: OrderedSet<PlannedClimb.ID>) {
+      self.ids = ids
+      self.mountainId = mountainId
     }
+  }
 
-  public struct UnplanClimbsMutation: MutationRequest, Hashable, Sendable {
-    public struct Arguments: Sendable {
-      public let mountainId: Mountain.ID
-      public let ids: OrderedSet<PlannedClimb.ID>
-
-      public init(mountainId: Mountain.ID, ids: OrderedSet<PlannedClimb.ID>) {
-        self.ids = ids
-        self.mountainId = mountainId
+  public static var unplanClimbsMutation:
+    some MutationRequest<UnplanClimbsArguments, Void, UnplanClimbsError>
+  {
+    Self.$unplanClimbsMutation
+      .alerts { _ in
+        nil
+      } failure: { error in
+        (error as? UnplanClimbsError).map { .unplanClimbsFailure(count: $0.ids.count) }
       }
-    }
+  }
 
-    public func mutate(
-      isolation: isolated (any Actor)?,
-      with arguments: Arguments,
-      in context: OperationContext,
-      with continuation: OperationContinuation<Void, any Error>
-    ) async throws {
-      @Dependency(Mountain.PlanClimberKey.self) var planner
-      @Dependency(\.defaultOperationClient) var client
+  @MutationRequest
+  private static func unplanClimbsMutation(
+    arguments: UnplanClimbsArguments
+  ) async throws(UnplanClimbsError) {
+    @Dependency(Mountain.PlanClimberKey.self) var planner
+    @Dependency(\.defaultOperationClient) var client
 
-      let climbsStore = client.store(for: Mountain.plannedClimbsQuery(for: arguments.mountainId))
-      var currentPlans: IdentifiedArrayOf<Mountain.PlannedClimb>?
-      var lastUpdatedAt: Date?
+    let climbsStore = client.store(for: Mountain.$plannedClimbsQuery(for: arguments.mountainId))
+    var currentPlans: IdentifiedArrayOf<Mountain.PlannedClimb>?
+    var lastUpdatedAt: Date?
 
-      do {
-        climbsStore.withExclusiveAccess {
-          currentPlans = $0.currentValue
-          $0.currentValue?.removeAll(where: { arguments.ids.contains($0.id) })
-          lastUpdatedAt = $0.valueLastUpdatedAt
-        }
-        try await planner.unplanClimbs(ids: arguments.ids)
-      } catch {
-        climbsStore.withExclusiveAccess {
-          guard $0.valueLastUpdatedAt == lastUpdatedAt else { return }
-          $0.currentValue = currentPlans
-        }
-        throw UnplanClimbsError(ids: arguments.ids, inner: error)
+    do {
+      climbsStore.withExclusiveAccess {
+        currentPlans = $0.currentValue
+        $0.currentValue?.removeAll(where: { arguments.ids.contains($0.id) })
+        lastUpdatedAt = $0.valueLastUpdatedAt
       }
+      try await planner.unplanClimbs(ids: arguments.ids)
+    } catch {
+      climbsStore.withExclusiveAccess {
+        guard $0.valueLastUpdatedAt == lastUpdatedAt else { return }
+        $0.currentValue = currentPlans
+      }
+      throw UnplanClimbsError(ids: arguments.ids, inner: error)
     }
   }
 

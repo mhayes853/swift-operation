@@ -43,22 +43,11 @@ extension WeatherReading {
 // MARK: - Query
 
 extension WeatherReading {
+  @QueryRequest
   public static func currentQuery(
     for coordinate: LocationCoordinate2D
-  ) -> some QueryRequest<Self, any Error> {
-    CurrentQuery(coordinate: coordinate)
-  }
-
-  public struct CurrentQuery: QueryRequest, Hashable {
-    let coordinate: LocationCoordinate2D
-
-    public func fetch(
-      isolation: isolated (any Actor)?,
-      in context: OperationContext,
-      with continuation: OperationContinuation<WeatherReading, any Error>
-    ) async throws -> WeatherReading {
-      @Dependency(WeatherReading.CurrentReaderKey.self) var reader
-      return try await reader.reading(for: coordinate)
-    }
+  ) async throws -> WeatherReading {
+    @Dependency(WeatherReading.CurrentReaderKey.self) var reader
+    return try await reader.reading(for: coordinate)
   }
 }

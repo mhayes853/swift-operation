@@ -3,7 +3,7 @@ import SharingOperation
 import SwiftUI
 
 public struct ImageDataView<Content: View>: View {
-  @SharedOperation<ImageData.Query.State> private var image: ImageData?
+  @SharedOperation<QueryState<ImageData, any Error>> private var image: ImageData?
   private let content: (OperationStatus<Image, any Error>) -> Content
 
   public init(

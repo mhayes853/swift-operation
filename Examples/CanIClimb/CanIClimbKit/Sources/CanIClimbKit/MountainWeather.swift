@@ -11,20 +11,22 @@ import SwiftUINavigation
 @Observable
 public final class MountainWeatherModel {
   @ObservationIgnored
-  @SharedOperation<WeatherReading.CurrentQuery.State> private var mountainWeather: WeatherReading?
+  @SharedOperation<QueryState<WeatherReading, any Error>>
+  private var mountainWeather: WeatherReading?
 
   public var destination: Destination?
   public let mountain: Mountain
 
   @ObservationIgnored
-  @SharedOperation<WeatherReading.CurrentQuery.State> private var userWeather: WeatherReading?
+  @SharedOperation<QueryState<WeatherReading, any Error>>
+  private var userWeather: WeatherReading?
 
   private var userLocation: Result<LocationReading, any Error>?
 
   public init(mountain: Mountain) {
     self.mountain = mountain
     self._mountainWeather = SharedOperation(
-      WeatherReading.currentQuery(for: mountain.location.coordinate),
+      WeatherReading.$currentQuery(for: mountain.location.coordinate),
       animation: .bouncy
     )
     self._userWeather = SharedOperation()
@@ -35,7 +37,7 @@ public final class MountainWeatherModel {
     switch reading {
     case .success(let location):
       self.$userWeather = SharedOperation(
-        WeatherReading.currentQuery(for: location.coordinate),
+        WeatherReading.$currentQuery(for: location.coordinate),
         animation: .bouncy
       )
     case .failure:
@@ -55,7 +57,7 @@ extension MountainWeatherModel {
     public let systemImageName: String
     public let locationName: LocalizedStringResource
     public let unauthorizedText: LocalizedStringResource?
-    @SharedOperation<WeatherReading.CurrentQuery.State> public var reading: WeatherReading?
+    @SharedOperation<QueryState<WeatherReading, any Error>> public var reading: WeatherReading?
   }
 
   public var userWeatherDetail: Detail {

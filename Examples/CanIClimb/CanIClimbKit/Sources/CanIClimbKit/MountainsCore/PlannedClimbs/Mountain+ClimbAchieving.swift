@@ -30,68 +30,58 @@ extension Mountain {
 // MARK: - Mutations
 
 extension Mountain {
-  public static let achieveClimbMutation = AchieveClimbMutation()
+  public struct AchieveClimbArguments: Sendable {
+    public let id: PlannedClimb.ID
+    public let mountainId: Mountain.ID
 
-  public struct AchieveClimbMutation: MutationRequest, Hashable, Sendable {
-    public struct Arguments: Sendable {
-      public let id: PlannedClimb.ID
-      public let mountainId: Mountain.ID
+    public init(id: Mountain.PlannedClimb.ID, mountainId: Mountain.ID) {
+      self.id = id
+      self.mountainId = mountainId
+    }
+  }
 
-      public init(id: Mountain.PlannedClimb.ID, mountainId: Mountain.ID) {
-        self.id = id
-        self.mountainId = mountainId
-      }
+  @MutationRequest
+  public static func achieveClimbMutation(
+    arguments: AchieveClimbArguments,
+    context: OperationContext
+  ) async throws {
+    @Dependency(Mountain.ClimbAchieverKey.self) var achiever
+    @Dependency(\.defaultOperationClient) var client
+    @Dependency(\.date) var now
+
+    if context.isFirstRunAttempt {
+      let climbsStore = client.store(for: Mountain.$plannedClimbsQuery(for: arguments.mountainId))
+      climbsStore.currentValue?[id: arguments.id]?.achievedDate = now()
     }
 
-    public func mutate(
-      isolation: isolated (any Actor)?,
-      with arguments: Arguments,
-      in context: OperationContext,
-      with continuation: OperationContinuation<Void, any Error>
-    ) async throws {
-      @Dependency(Mountain.ClimbAchieverKey.self) var achiever
-      @Dependency(\.defaultOperationClient) var client
-      @Dependency(\.date) var now
-
-      if context.isFirstRunAttempt {
-        let climbsStore = client.store(for: Mountain.plannedClimbsQuery(for: arguments.mountainId))
-        climbsStore.currentValue?[id: arguments.id]?.achievedDate = now()
-      }
-
-      try await achiever.achieveClimb(id: arguments.id)
-    }
+    try await achiever.achieveClimb(id: arguments.id)
   }
 }
 
 extension Mountain {
-  public static let unachieveClimbMutation = UnachieveClimbMutation()
+  public struct UnachieveClimbArguments: Sendable {
+    public let id: PlannedClimb.ID
+    public let mountainId: Mountain.ID
 
-  public struct UnachieveClimbMutation: MutationRequest, Hashable, Sendable {
-    public struct Arguments: Sendable {
-      public let id: PlannedClimb.ID
-      public let mountainId: Mountain.ID
+    public init(id: Mountain.PlannedClimb.ID, mountainId: Mountain.ID) {
+      self.id = id
+      self.mountainId = mountainId
+    }
+  }
 
-      public init(id: Mountain.PlannedClimb.ID, mountainId: Mountain.ID) {
-        self.id = id
-        self.mountainId = mountainId
-      }
+  @MutationRequest
+  public static func unachieveClimbMutation(
+    arguments: UnachieveClimbArguments,
+    context: OperationContext
+  ) async throws {
+    @Dependency(Mountain.ClimbAchieverKey.self) var achiever
+    @Dependency(\.defaultOperationClient) var client
+
+    let climbsStore = client.store(for: Mountain.$plannedClimbsQuery(for: arguments.mountainId))
+    if context.isFirstRunAttempt {
+      climbsStore.currentValue?[id: arguments.id]?.achievedDate = nil
     }
 
-    public func mutate(
-      isolation: isolated (any Actor)?,
-      with arguments: Arguments,
-      in context: OperationContext,
-      with continuation: OperationContinuation<Void, any Error>
-    ) async throws {
-      @Dependency(Mountain.ClimbAchieverKey.self) var achiever
-      @Dependency(\.defaultOperationClient) var client
-
-      let climbsStore = client.store(for: Mountain.plannedClimbsQuery(for: arguments.mountainId))
-      if context.isFirstRunAttempt {
-        climbsStore.currentValue?[id: arguments.id]?.achievedDate = nil
-      }
-
-      try await achiever.unachieveClimb(id: arguments.id)
-    }
+    try await achiever.unachieveClimb(id: arguments.id)
   }
 }

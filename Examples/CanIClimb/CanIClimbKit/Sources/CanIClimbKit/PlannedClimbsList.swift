@@ -13,7 +13,7 @@ import UUIDV7
 @Observable
 public final class PlannedClimbsListModel {
   @ObservationIgnored
-  @SharedOperation<Mountain.PlannedClimbsQuery.State>
+  @SharedOperation<QueryState<IdentifiedArrayOf<Mountain.PlannedClimb>, any Error>>
   public var plannedClimbs: IdentifiedArrayOf<Mountain.PlannedClimb>?
 
   public var destination: Destination? {
@@ -25,7 +25,7 @@ public final class PlannedClimbsListModel {
   public init(mountainId: Mountain.ID) {
     self.mountainId = mountainId
     self._plannedClimbs = SharedOperation(
-      Mountain.plannedClimbsQuery(for: mountainId),
+      Mountain.$plannedClimbsQuery(for: mountainId),
       animation: .bouncy
     )
   }

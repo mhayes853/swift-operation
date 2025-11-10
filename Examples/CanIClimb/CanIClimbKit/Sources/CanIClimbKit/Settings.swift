@@ -85,7 +85,7 @@ public struct SettingsView: View {
 // MARK: - UserProfileSectionView
 
 private struct UserProfileSectionView: View {
-  @SharedOperation(User.currentStatusQuery, animation: .bouncy) private var status
+  @SharedOperation(User.$currentStatusQuery, animation: .bouncy) private var status
   let model: SignInModel
 
   var body: some View {

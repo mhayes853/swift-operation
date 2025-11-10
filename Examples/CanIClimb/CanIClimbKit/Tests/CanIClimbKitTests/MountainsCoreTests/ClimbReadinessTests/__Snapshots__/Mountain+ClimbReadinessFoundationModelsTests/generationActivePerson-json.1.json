@@ -1,70 +1,11 @@
 {
   "messages" : [
-    {
-      "content" : "'userLocation' tool called.",
-      "metadata" : {
-        "call.arguments" : {
-          "string" : {
-            "_0" : "Arguments()"
-          }
-        },
-        "call.duration" : {
-          "string" : {
-            "_0" : "0.00043575 seconds"
-          }
-        },
-        "call.result" : {
-          "string" : {
-            "_0" : "success(CanIClimbKit.UserLocationTool.Output.reading(CanIClimbKit.LocationReadingGenerable(coordinate: CanIClimbKit.LocationCoordinate2DGenerable(latitude: 37.825858, longitude: -122.422202), altitudeAboveSeaLevelMeters: 0.0)))"
-          }
-        }
-      }
-    },
-    {
-      "content" : "'userVO2Max' tool called.",
-      "metadata" : {
-        "call.arguments" : {
-          "string" : {
-            "_0" : "Arguments(query: \"last 6 weeks\")"
-          }
-        },
-        "call.duration" : {
-          "string" : {
-            "_0" : "0.000196167 seconds"
-          }
-        },
-        "call.result" : {
-          "string" : {
-            "_0" : "success(CanIClimbKit.NumericHealthSamples(kind: CanIClimbKit.NumericHealthSamples.Kind.vo2Max, elements: [CanIClimbKit.NumericHealthSamples.Element(timestamp: 2025-11-10 07:52:59 +0000, value: 55.2)]))"
-          }
-        }
-      }
-    },
-    {
-      "content" : "'currentWeather' tool called.",
-      "metadata" : {
-        "call.arguments" : {
-          "string" : {
-            "_0" : "Arguments(coordinate: CanIClimbKit.LocationCoordinate2DGenerable(latitude: 38.85747, longitude: -119.9))"
-          }
-        },
-        "call.duration" : {
-          "string" : {
-            "_0" : "0.003685125 seconds"
-          }
-        },
-        "call.result" : {
-          "string" : {
-            "_0" : "success(CanIClimbKit.WeatherReadingGenerable(condition: \"Mostly Cloudy\", humidity: 0.71, temperatureCelsius: 15.00000000000233, feelsLikeTemperatureCelsius: 12.777777777780102, visibilityMeters: 25749.504, windDirection: \"West Northwest\", windSpeedKMPH: 9.65605627515498, cloudCoverLowAltitude: 0.12, cloudCoverMidAltitude: 0.55, cloudCoverHighAltitude: 0.75, precipitationIntensityKMPH: 0.0, pressureAmountKilopascals: 101.4562444, pressureTrend: \"Rising\", uvIndexAmount: 0, uvIndexExposureCategory: \"Low\"))"
-          }
-        }
-      }
-    }
+
   ],
   "readiness" : {
-    "insight" : "Based on your age in your 20s, your relatively high VO2 max, and your active lifestyle, you appear to be well-suited for climbing Freel Peak. However, please consider acclimatizing to high altitudes by spending a few days at the base of the mountain before attempting the climb. Also, ensure your gear is suitable for snowy conditions, as most precipitation on Freel Peak falls as snow. As you're already an active person, maintaining your current workout frequency will help you stay in shape. Further, you should carry enough water to stay hydrated, wear layered clothing to adjust to changing temperatures, and bring snacks for energy.",
+    "insight" : "Based on your active activity level and daily workout routine, you are somewhat prepared for climbing Freel Peak. However, your climbing difficulty rating is 72 out of 100, indicating that you will likely encounter significant challenges. To improve your readiness, consider incorporating more climbing-specific exercises, such as interval training and strength training focused on your legs and core. Also, try to acclimatize to higher altitudes gradually by doing shorter climbs with longer rests to get your body used to the elevation changes.",
     "rating" : {
-      "ready" : {
+      "partiallyReady" : {
 
       }
     }

@@ -14,13 +14,13 @@ import SwiftUINavigation
 @Observable
 public final class MountainDetailModel: HashableObject, Identifiable {
   @ObservationIgnored
-  @SharedOperation<Mountain.Query.State> public var mountain: Mountain??
+  @SharedOperation<QueryState<Mountain?, any Error>> public var mountain: Mountain??
 
   @ObservationIgnored
   @SharedOperation(LocationReading.userQuery) public var userLocation
 
   @ObservationIgnored
-  @SharedOperation<MountainClimbReadiness.GenerationQuery.State>
+  @SharedOperation<QueryState<MountainClimbReadiness.GeneratedSegment, any Error>>
   public var readiness: MountainClimbReadiness.GeneratedSegment?
 
   public let plannedClimbs: PlannedClimbsListModel
@@ -162,7 +162,7 @@ private struct MountainDetailScrollView: View {
 // MARK: - MountainImageView
 
 private struct MountainImageView: View {
-  @SharedOperation<ImageData.Query.State> private var image: ImageData?
+  @SharedOperation<QueryState<ImageData, any Error>> private var image: ImageData?
 
   let mountain: Mountain
 

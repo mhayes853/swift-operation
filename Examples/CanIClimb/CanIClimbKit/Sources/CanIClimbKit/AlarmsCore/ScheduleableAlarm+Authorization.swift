@@ -119,19 +119,9 @@ extension ScheduleableAlarm.AuthorizationStatus {
 // MARK: - Query
 
 extension ScheduleableAlarm {
-  public static let requestAuthorizationMutation = RequestAuthorizationMutation()
-
-  public struct RequestAuthorizationMutation: MutationRequest, Hashable, Sendable {
-    public typealias Arguments = Void
-
-    public func mutate(
-      isolation: isolated (any Actor)?,
-      with arguments: Void,
-      in context: OperationContext,
-      with continuation: OperationContinuation<AuthorizationStatus, any Error>
-    ) async throws -> AuthorizationStatus {
-      @Dependency(ScheduleableAlarm.AuthorizerKey.self) var authorizer
-      return try await authorizer.requestAuthorization()
-    }
+  @MutationRequest
+  public static func requestAuthorizationMutation() async throws -> AuthorizationStatus {
+    @Dependency(ScheduleableAlarm.AuthorizerKey.self) var authorizer
+    return try await authorizer.requestAuthorization()
   }
 }
