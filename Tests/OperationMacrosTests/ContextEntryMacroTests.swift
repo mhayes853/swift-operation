@@ -188,7 +188,7 @@ extension BaseTestSuite {
           ╰─ 🛑 @ContextEntry can only be applied to a 'var' declaration.
         }
         """
-      } 
+      }
     }
 
     @Test("Private Context Property")

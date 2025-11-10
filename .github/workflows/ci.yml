@@ -48,6 +48,8 @@ jobs:
 
   android:
     name: Android (Swift 6.2)
+    env:
+      CI_ANDROID: 1
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
