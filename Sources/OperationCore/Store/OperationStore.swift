@@ -13,9 +13,9 @@ import Foundation
 ///
 /// ```swift
 /// let client = OperationClient()
-/// let store = client.store(for: MyQuery())
+/// let store = client.store(for: $myQuery)
 ///
-/// let detachedStore = OperationStore.detached(query: MyQuery(), initialValue: nil)
+/// let detachedStore = OperationStore.detached(query: $myQuery, initialValue: nil)
 /// ```
 ///
 /// > Note: Stores created through a one of the `detached` initializers are not stored in a
@@ -225,7 +225,7 @@ extension OperationStore {
   /// the store.
   ///
   /// ```swift
-  /// let store: OperationStore<QueryState<Int, Int>>
+  /// let store: OperationStore<QueryState<Int, any Error>>
   ///
   /// // 🔴 Is prone to high-level data races.
   /// store.currentValue += 1
@@ -560,20 +560,15 @@ extension OperationContext {
   ///
   /// You can use this property to access the current state for your operation inside its body.
   /// ```swift
-  /// struct MyQuery: QueryRequest, Hashable {
-  ///   func fetch(
-  ///     isolation: isolated (any Actor)?,
-  ///     in context: OperationContext,
-  ///     with continuation: OperationContinuation<Value, any Error>
-  ///   ) async throws -> Value {
-  ///     guard let store = context.runningOperationStore?.base as? OperationStore<State> else {
-  ///       throw InvalidStoreError()
-  ///     }
-  ///     // 🟢 Can access the current value from within the query.
-  ///     let currentValue = store.currentValue
-  ///
-  ///     // ...
+  /// @QueryRequest
+  /// func myQuery() async throws -> Value {
+  ///   guard let store = context.runningOperationStore?.base as? OperationStore<State> else {
+  ///     throw InvalidStoreError()
   ///   }
+  ///   // 🟢 Can access the current value from within the query.
+  ///   let currentValue = store.currentValue
+  ///
+  ///   // ...
   /// }
   /// ```
   public var runningOperationStore: OpaqueOperationStore? {

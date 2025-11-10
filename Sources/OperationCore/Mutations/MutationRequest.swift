@@ -21,17 +21,13 @@ public struct MutationOperationValue<ReturnValue: Sendable>: Sendable {
 ///
 /// ```swift
 /// extension Post {
-///   static let likeMutation = LikeMutation()
+///   struct LikePostArguments: Sendable {
+///     let id: Post.ID
+///   }
 ///
-///   struct LikeMutation: MutationRequest, Hashable {
-///     func mutate(
-///       isolation: isolated (any Actor)?,
-///       with arguments: Post.ID,
-///       in context: OperationContext,
-///       with continuation: OperationContinuation<Void, any Error>
-///     ) async throws {
-///       // POST to the API to like the post...
-///     }
+///   @MutationRequest
+///   static func likeMutation(arguments: LikePostArguments) async throws {
+///     // POST to the API to like the post...
 ///   }
 /// }
 /// ```
@@ -41,7 +37,7 @@ public struct MutationOperationValue<ReturnValue: Sendable>: Sendable {
 /// ``OperationStore/mutate(with:using:handler:)``.
 ///
 /// ```swift
-/// let store = client.store(for: Post.likeMutation)
+/// let store = client.store(for: Post.$likeMutation)
 ///
 /// try await store.mutate(with: postId)
 /// ```

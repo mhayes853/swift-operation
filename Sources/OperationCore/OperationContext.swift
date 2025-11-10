@@ -91,18 +91,11 @@ extension OperationContext {
   ///
   /// Typically, you only use this subscript when defining a computed property for a custom
   /// context property. Similarly to SwiftUI's `EnvironmentValues`, you can extend the context by
-  /// adding a custom context property using the ``Key`` protocol.
+  /// adding a custom context property using the `@ContextEntry` macro.
   ///
   /// ```swift
   /// extension OperationContext {
-  ///   var myProperty: String {
-  ///     get { self[MyPropertyKey.self] }
-  ///     set { self[MyPropertyKey.self] = newValue }
-  ///   }
-  ///
-  ///   private enum MyPropertyKey: Key {
-  ///     static let defaultValue = "test"
-  ///   }
+  ///   @ContextEntry var myProperty = "test"
   /// }
   /// ```
   ///

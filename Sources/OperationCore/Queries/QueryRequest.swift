@@ -8,22 +8,9 @@
 /// }
 ///
 /// extension User {
-///   static func query(
-///     for id: Int
-///   ) -> some QueryRequest<Self, any Error> {
-///     Query(userId: id)
-///   }
-///
-///   struct Query: QueryRequest, Hashable {
-///     let userId: Int
-///
-///     func fetch(
-///       isolation: isolated (any Actor)?,
-///       in context: OperationContext,
-///       with continuation: OperationContinuation<User, any Error>
-///     ) async throws -> User {
-///       // Fetch the user...
-///     }
+///   @QueryRequest
+///   static func query(for id: Int) async throws -> User {
+///     // Fetch the user...
 ///   }
 /// }
 /// ```

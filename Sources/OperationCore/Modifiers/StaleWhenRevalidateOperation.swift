@@ -11,10 +11,10 @@ extension StatefulOperationRequest where Self: SendableMetatype, State: Sendable
   /// are equivalent with regards to their stale conditions.
   ///
   /// ```swift
-  /// let q1 = MyQuery().staleWhen { state, _ in state.currentValue.isMultiple(of: 3) }
+  /// let q1 = $myQuery.staleWhen { state, _ in state.currentValue.isMultiple(of: 3) }
   ///   .staleWhen { state, _ in state.currentValue.isMultiple(of: 2) }
   ///
-  /// let q2 = MyQuery().staleWhen { state, _ in
+  /// let q2 = $myQuery.staleWhen { state, _ in
   ///   state.currentValue.isMultiple(of: 3) || state.currentValue.isMultiple(of: 2)
   /// }
   /// ```
@@ -35,10 +35,10 @@ extension StatefulOperationRequest where Self: SendableMetatype, State: Sendable
   /// are equivalent with regards to their stale conditions.
   ///
   /// ```swift
-  /// let q1 = MyQuery().staleWhen(condition: cond1)
+  /// let q1 = $myQuery.staleWhen(condition: cond1)
   ///   .staleWhen(condition: cond2)
   ///
-  /// let q2 = MyQuery().staleWhen(condition: cond1 || cond2)
+  /// let q2 = $myQuery.staleWhen(condition: cond1 || cond2)
   /// ```
   ///
   /// - Parameter specification: An ``OperationRunSpecification`` to indicate whether or not
@@ -59,10 +59,10 @@ extension StatefulOperationRequest where Self: SendableMetatype, State: Sendable
   /// are equivalent with regards to their stale conditions.
   ///
   /// ```swift
-  /// let q1 = MyQuery().staleWhenNoValue()
+  /// let q1 = $myQuery.staleWhenNoValue()
   ///   .staleWhen { state, _ in state.currentValue == 1 }
   ///
-  /// let q2 = MyQuery().staleWhen { state, _ in
+  /// let q2 = $myQuery.staleWhen { state, _ in
   ///   state.currentValue == nil || state.currentValue == 1
   /// }
   /// ```
@@ -83,7 +83,7 @@ extension StatefulOperationRequest where Self: SendableMetatype, State: Sendable
   /// ```swift
   /// // This query is stale whenever 5 minutes have elapsed since its last
   /// // successful fetch, OR when its current value is 1.
-  /// let query = MyQuery().stale(after: fiveMinutes)
+  /// let query = $myQuery.stale(after: fiveMinutes)
   ///   .staleWhen { state, _ in state.currentValue == 1 }
   /// ```
   ///
@@ -113,7 +113,7 @@ extension StatefulOperationRequest where Self: SendableMetatype, State: Sendable
   /// ```swift
   /// // This query is stale whenever 5 minutes have elapsed since its last
   /// // successful fetch, OR when its current value is 1.
-  /// let query = MyQuery().stale(after: .seconds(60 * 5))
+  /// let query = $myQuery.stale(after: .seconds(60 * 5))
   ///   .staleWhen { state, _ in state.currentValue == 1 }
   /// ```
   ///
@@ -141,7 +141,7 @@ extension StatefulOperationRequest where Self: SendableMetatype, State: Sendable
   /// ```swift
   /// // This query is stale whenever 5 minutes have elapsed since its last
   /// // successful fetch, OR when its current value is 1.
-  /// let query = MyQuery().stale(after: .seconds(60 * 5))
+  /// let query = $myQuery.stale(after: .seconds(60 * 5))
   ///   .staleWhen { state, _ in state.currentValue == 1 }
   /// ```
   ///

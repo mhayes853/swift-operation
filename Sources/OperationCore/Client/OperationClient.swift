@@ -20,31 +20,30 @@ import IssueReporting
 /// this in <doc:PatternMatchingAndStateManagement>.
 ///
 /// ```swift
-/// struct SendFriendRequestMutation: MutationRequest, Hashable {
-///   // ...
+/// struct SendFriendRequestArguments: Sendable {
+///   let userId: Int
+/// }
 ///
-///   func mutate(
-///     isolation: isolated (any Actor)?,
-///     with arguments: Arguments,
-///     in context: OperationContext,
-///     with continuation: OperationContinuation<Void, any Error>
-///   ) async throws {
-///     try await sendFriendRequest(userId: arguments.userId)
+/// @MutationRequest
+/// func sendFriendRequestMutation(
+///   arguments: SendFriendRequestArguments
+/// ) async throws {
+///   @Dependency(\.defaultOperationClient) var client
+///   try await sendFriendRequest(userId: arguments.userId)
 ///
-///     // Friend request sent successfully, now update all
-///     // friends lists in the app.
-///     guard let client = context.operationClient else { return }
-///     let stores = client.stores(
-///       matching: ["user-friends"],
-///       of: User.FriendsQuery.State.self
-///     )
-///     for store in stores {
-///       store.withExclusiveAccess {
-///         store.currentValue = store.currentValue.updateRelationship(
-///           for: arguments.userId,
-///           to: .friendRequestSent
-///         )
-///       }
+///   // Friend request sent successfully, now update all
+///   // friends lists in the app.
+///   guard let client = context.operationClient else { return }
+///   let stores = client.stores(
+///     matching: ["user-friends"],
+///     of: PaginatedState<[User], Int>.self
+///   )
+///   for store in stores {
+///     store.withExclusiveAccess {
+///       store.currentValue = store.currentValue.updateRelationship(
+///         for: arguments.userId,
+///         to: .friendRequestSent
+///       )
 ///     }
 ///   }
 /// }

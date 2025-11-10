@@ -23,27 +23,13 @@ import SwiftUI
 // 🟢 SwiftUI
 
 extension EnvironmentValues {
-  var customProperty: String {
-    get { self[CustomPropertyKey.self] }
-    set { self[CustomPropertyKey.self] = newValue }
-  }
-
-  private enum CustomPropertyKey: EnvironmentKey {
-    static let defaultValue: String = "hello!"
-  }
+  @Entry var customProperty = "hello!"
 }
 
 // 🟢 OperationContext
 
 extension OperationContext {
-  var customProperty: String {
-    get { self[CustomPropertyKey.self] }
-    set { self[CustomPropertyKey.self] = newValue }
-  }
-
-  private enum CustomPropertyKey: Key {
-    static let defaultValue: String = "hello!"
-  }
+  @ContextEntry var customProperty = "hello!"
 }
 ```
 

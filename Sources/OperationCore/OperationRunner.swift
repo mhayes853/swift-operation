@@ -1,11 +1,12 @@
 /// A simple runtime for an ``OperationRequest``.
 ///
 /// ```swift
-/// struct MyOperation: OperationRequest {
+/// @OperationRequest
+/// func myOperation() async throws -> Value {
 ///   // ...
 /// }
 ///
-/// let runner = OperationRunner(operation: MyOperation())
+/// let runner = OperationRunner(operation: $myOperation)
 /// let value = try await runner.run()
 ///
 /// // ...
