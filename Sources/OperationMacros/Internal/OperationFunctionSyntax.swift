@@ -215,14 +215,25 @@ extension OperationFunctionSyntax {
         let returnType = declaration.operationReturnTypeNameWithoutModifiers
         let errorType = declaration.operationErrorTypeName
 
-        let isContinuation = typeName.name.text == "OperationContinuation"
-        if !isContinuation {
+        if typeName.name.text != "OperationContinuation" {
           context.diagnose(
             Diagnostic(
               node: functionArg,
               message: MacroExpansionErrorMessage(
                 "'continuation' argument must be of type 'OperationContinuation<\(returnType), \(errorType)>'"
               )
+            )
+          )
+        }
+      }
+
+      if functionArg.operationalName == "path" && reservedNames.contains("path") {
+        guard let typeName = functionArg.type.as(IdentifierTypeSyntax.self) else { continue }
+        if typeName.name.text != "OperationPath" {
+          context.diagnose(
+            Diagnostic(
+              node: functionArg,
+              message: MacroExpansionErrorMessage("'path' argument must be of type 'OperationPath'")
             )
           )
         }

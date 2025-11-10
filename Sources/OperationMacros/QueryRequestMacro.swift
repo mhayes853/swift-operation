@@ -2,7 +2,7 @@ import SwiftSyntax
 import SwiftSyntaxMacros
 
 public enum QueryRequestMacro: PeerMacro {
-  private static let reservedArgumentNames = Set(["isolation", "context", "continuation"])
+  private static let reservedArgumentNames = Set(["isolation", "context", "continuation", "path"])
 
   public static func expansion(
     of node: AttributeSyntax,

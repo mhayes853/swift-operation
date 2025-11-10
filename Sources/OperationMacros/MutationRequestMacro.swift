@@ -3,7 +3,7 @@ import SwiftSyntaxMacros
 
 public enum MutationRequestMacro: PeerMacro {
   private static let reservedArgumentNames = Set([
-    "isolation", "context", "continuation", "arguments"
+    "isolation", "context", "continuation", "arguments", "path"
   ])
 
   public static func expansion(

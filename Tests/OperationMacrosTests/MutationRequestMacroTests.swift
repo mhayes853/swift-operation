@@ -1724,5 +1724,64 @@ extension BaseTestSuite {
         """
       }
     }
+
+    @Test("Mutation With Path Argument")
+    func mutationWithPathArgument() async {
+      assertMacro {
+        """
+        @MutationRequest
+        func something(path: OperationPath) -> Int {
+          42
+        }
+        """
+      } expansion: {
+        """
+        func something(path: OperationPath) -> Int {
+          42
+        }
+
+        nonisolated var $something: __macro_local_9somethingfMu_ {
+          __macro_local_9somethingfMu_()
+        }
+
+        nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable {
+          typealias Arguments = Void
+
+          var path: OperationCore.OperationPath {
+          OperationCore.OperationPath(self)
+          }
+          func mutate(
+            isolation: isolated (any Actor)?,
+            with arguments: Arguments,
+            in context: OperationCore.OperationContext,
+            with continuation: OperationCore.OperationContinuation<Int, Never>
+          ) async -> Int {
+            something(path: path)
+          }
+        }
+        """
+      }
+    }
+
+    @Test("Mutation With Invalid Path Argument")
+    func mutationWithInvalidPathArgument() async {
+      assertMacro {
+        """
+        @MutationRequest
+        func something(path: Int) -> Int {
+          42
+        }
+        """
+      } diagnostics: {
+        """
+        @MutationRequest
+        func something(path: Int) -> Int {
+                       ┬────────
+                       ╰─ 🛑 'path' argument must be of type 'OperationPath'
+          42
+        }
+        """
+      }
+    }
   }
 }
