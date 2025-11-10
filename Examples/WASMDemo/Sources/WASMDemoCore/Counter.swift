@@ -10,10 +10,10 @@ import SwiftNavigation
 @Observable
 public final class CounterModel: Identifiable {
   @ObservationIgnored
-  @SharedOperation<NumberFact.Query.State> public var fact: NumberFact?
+  @SharedOperation<QueryState<NumberFact, any Error>> public var fact: NumberFact?
 
   @ObservationIgnored
-  @SharedOperation<Int.NthPrimeQuery.State> public var nthPrime: Int??
+  @SharedOperation<QueryState<Int?, any Error>> public var nthPrime: Int??
 
   public private(set) var count: Int
 

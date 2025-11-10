@@ -38,7 +38,7 @@ extension Int {
   public static func nthPrimeQuery(for number: Int) -> some QueryRequest<Int?, Never> {
     // NB: Calculating the prime number doesn't need the network, but it still takes
     // significant time to complete for larger numbers.
-    NthPrimeQuery(number: number)
+    Self.$nthPrimeQuery(for: number)
       .completelyOffline()
       .disableApplicationActiveRerunning()
       .taskConfiguration {
@@ -53,15 +53,8 @@ extension Int {
       }
   }
 
-  public struct NthPrimeQuery: QueryRequest, Hashable {
-    let number: Int
-
-    public func fetch(
-      isolation: isolated (any Actor)?,
-      in context: OperationContext,
-      with continuation: OperationContinuation<Int?, Never>
-    ) async -> Int? {
-      nthPrime(for: self.number)
-    }
+  @QueryRequest
+  private static func nthPrimeQuery(for number: Int) -> Int? {
+    nthPrime(for: number)
   }
 }
