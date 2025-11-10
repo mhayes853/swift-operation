@@ -66,7 +66,7 @@ extension OperationClient {
   ///
   /// client.withStores(
   ///   matching: ["users"],
-  ///   of: User.Query.State.self
+  ///   of: QueryState<User?, any Error>.self
   /// ) { stores, createStore in
   ///   // ...
   ///   for user in users {

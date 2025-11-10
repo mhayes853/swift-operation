@@ -8,19 +8,16 @@
 /// }
 ///
 /// extension WorkflowResponse {
-///   static let operation = Operation()
-///     .retry(limit: 3)
-///     .deduplicated()
-///     .taskConfiguration { $0.name = "Workflow Run" }
+///   static var operation: some OperationRequest<WorkflowResponse, any Error> {
+///     Self.$operation
+///       .retry(limit: 3)
+///       .deduplicated()
+///       .taskConfiguration { $0.name = "Workflow Run" }
+///   }
 ///
-///   struct Operation: OperationRequest, Sendable {
-///     func run(
-///       isolation: isolated (any Actor)?,
-///       in context: OperationContext,
-///       with continuation: OperationContinuation<WorkflowResponse, any Error>
-///     ) async throws -> WorkflowResponse {
-///       try await runWorkflow()
-///     }
+///   @OperationRequest
+///   private static func operation() aysnc throws -> WorkflowResponse {
+///     // ...
 ///   }
 /// }
 /// ```
@@ -44,11 +41,12 @@
 /// such as retries, deduplication, and much more.
 ///
 /// ```swift
-/// struct MyOperation: OperationRequest {
+/// @OperationRequest
+/// func myOperation() async throws {
 ///   // ...
 /// }
 ///
-/// let operation = MyOperation()
+/// let operation = $myOperation
 ///   .retry(limit: 3)
 ///   .deduplicated()
 /// ```

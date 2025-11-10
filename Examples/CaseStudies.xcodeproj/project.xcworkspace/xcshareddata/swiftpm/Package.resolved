@@ -1,5 +1,5 @@
 {
-  "originHash" : "6655850c83294f39889e8f9adb14af82e8de362eba6ae0e68eceba8f75eaeb7d",
+  "originHash" : "b36bac8899c9f8538cb5da80d62be5d456ecc5639b44b517272f1d5170ba5672",
   "pins" : [
     {
       "identity" : "combine-schedulers",
@@ -101,15 +101,6 @@
       }
     },
     {
-      "identity" : "swift-operation",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/mhayes853/swift-operation",
-      "state" : {
-        "branch" : "main",
-        "revision" : "fb44d08b23f2d28fbb9d9a7a288903adc7a0bb69"
-      }
-    },
-    {
       "identity" : "swift-perception",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-perception",
@@ -123,8 +114,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-sharing",
       "state" : {
-        "revision" : "aaf605733bd93126d1a3658b4021146d95c94cb6",
-        "version" : "2.7.3"
+        "revision" : "3bfc408cc2d0bee2287c174da6b1c76768377818",
+        "version" : "2.7.4"
       }
     },
     {
@@ -132,8 +123,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swiftlang/swift-syntax",
       "state" : {
-        "revision" : "0687f71944021d616d34d922343dcef086855920",
-        "version" : "600.0.1"
+        "revision" : "f99ae8aa18f0cf0d53481901f88a0991dc3bd4a2",
+        "version" : "601.0.1"
       }
     },
     {

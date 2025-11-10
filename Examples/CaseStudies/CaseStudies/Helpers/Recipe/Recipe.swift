@@ -28,18 +28,11 @@ enum RecipeIDLoaderKey: DependencyKey {
 // MARK: - Query
 
 extension Recipe {
-  static let randomQuery = RandomQuery()
-
-  struct RandomQuery: QueryRequest, Hashable, Sendable {
-    func fetch(
-      isolation: isolated (any Actor)?,
-      in context: OperationContext,
-      with continuation: OperationContinuation<Recipe?, any Error>
-    ) async throws -> Recipe? {
-      @Dependency(\.withRandomNumberGenerator) var withRNG
-      @Dependency(RecipeIDLoaderKey.self) var loader
-      let id = withRNG { Int.random(in: 1...50, using: &$0) }
-      return try await loader.recipe(with: id)
-    }
+  @QueryRequest
+  static func randomQuery() async throws -> Recipe? {
+    @Dependency(\.withRandomNumberGenerator) var withRNG
+    @Dependency(RecipeIDLoaderKey.self) var loader
+    let id = withRNG { Int.random(in: 1...50, using: &$0) }
+    return try await loader.recipe(with: id)
   }
 }

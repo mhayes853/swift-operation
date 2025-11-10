@@ -104,27 +104,15 @@ extension NumericHealthSamples {
 // MARK: - Operation
 
 extension NumericHealthSamples {
+  @QueryRequest(
+    path: .custom { (request: Request, loader: any Loader) in
+      ["numeric-health-samples", request, loader.id]
+    }
+  )
   public static func query(
     for request: Request,
     using loader: any Loader
-  ) -> some QueryRequest<NumericHealthSamples, any Error> {
-    Query(loader: loader, request: request)
-  }
-
-  public struct Query: QueryRequest {
-    let loader: any Loader
-    let request: Request
-
-    public var path: OperationPath {
-      ["numeric-health-samples", self.request, self.loader.id]
-    }
-
-    public func fetch(
-      isolation: isolated (any Actor)?,
-      in context: OperationContext,
-      with continuation: OperationContinuation<NumericHealthSamples, any Error>
-    ) async throws -> NumericHealthSamples {
-      try await self.loader.samples(from: self.request)
-    }
+  ) async throws -> NumericHealthSamples {
+    try await loader.samples(from: request)
   }
 }

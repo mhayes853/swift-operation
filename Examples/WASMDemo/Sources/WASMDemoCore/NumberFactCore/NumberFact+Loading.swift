@@ -38,19 +38,12 @@ extension NumberFact {
 
 extension NumberFact {
   public static func query(for number: Int) -> some QueryRequest<Self, any Error> {
-    Query(number: number).taskConfiguration { $0.name = "Fetch number fact for \(number)" }
+    Self.$query(for: number).taskConfiguration { $0.name = "Fetch number fact for \(number)" }
   }
 
-  public struct Query: QueryRequest, Hashable {
-    let number: Int
-
-    public func fetch(
-      isolation: isolated (any Actor)?,
-      in context: OperationContext,
-      with continuation: OperationContinuation<NumberFact, any Error>
-    ) async throws -> NumberFact {
-      @Dependency(NumberFact.LoaderKey.self) var loader
-      return try await loader.fact(for: self.number)
-    }
+  @QueryRequest
+  private static func query(for number: Int) async throws -> NumberFact {
+    @Dependency(NumberFact.LoaderKey.self) var loader
+    return try await loader.fact(for: self.number)
   }
 }

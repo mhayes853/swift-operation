@@ -9,7 +9,7 @@ extension OperationRequest {
   ///
   /// ```swift
   /// // 🔵 Indicates that any store that uses query should never be evicted from the store cache.
-  /// let query = MyQuery().evictWhen(pressure: [])
+  /// let query = $myQuery.evictWhen(pressure: [])
   /// ```
   ///
   /// - Parameter pressure: The ``MemoryPressure`` at which this an operation store using this

@@ -6,7 +6,7 @@ extension OperationStore {
   ///
   /// ```swift
   /// class Observer {
-  ///   init(store: OperationStore<MyQuery.State>) {
+  ///   init(store: OperationStore<QueryState<Value, any Error>>) {
   ///     let task = Task {
   ///       for await element in store.states {
   ///         print("State", element.state, element.context)
@@ -58,7 +58,7 @@ extension OperationStore {
   ///
   /// ```swift
   /// class Observer {
-  ///   init(store: OperationStore<MyQuery.State>) {
+  ///   init(store: OperationStore<QueryState<Value, any Error>>) {
   ///     let task = Task {
   ///       for await element in store.states {
   ///         print("State", element.state, element.context)

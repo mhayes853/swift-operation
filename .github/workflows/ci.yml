@@ -24,7 +24,7 @@ jobs:
       - name: Select Xcode ${{ matrix.xcode }}
         run: sudo xcode-select -s /Applications/Xcode_${{ matrix.xcode }}.app
       - name: Run ${{ matrix.config }} tests
-        run: swift test -c ${{ matrix.config }} --enable-all-traits
+        run: swift test -c ${{ matrix.config }} --disable-experimental-prebuilts --enable-all-traits
 
   linux-61:
     name: Linux (Swift 6.1)
@@ -44,10 +44,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run tests
-        run: swift test --traits SwiftOperationLogging
+        run: swift test --traits SwiftOperationLogging --disable-experimental-prebuilts
 
   android:
     name: Android (Swift 6.2)
+    env:
+      CI_ANDROID: 1
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -56,7 +58,7 @@ jobs:
         uses: swift-android-sdk/swift-android-action@v2
         with:
           swift-version: 6.2
-          swift-build-flags: --traits SwiftOperationLogging
+          swift-build-flags: --traits SwiftOperationLogging --disable-experimental-prebuilts
           run-tests: false
 
   windows:

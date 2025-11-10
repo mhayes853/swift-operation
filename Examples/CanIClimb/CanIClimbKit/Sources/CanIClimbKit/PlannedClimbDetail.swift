@@ -9,13 +9,13 @@ import SwiftUINavigation
 @Observable
 public final class PlannedClimbDetailModel: HashableObject, Identifiable {
   @ObservationIgnored
-  @SharedOperation<Mountain.Query.State> public var mountain: Mountain??
+  @SharedOperation<QueryState<Mountain?, any Error>> public var mountain: Mountain??
 
   @ObservationIgnored
-  @SharedOperation(Mountain.achieveClimbMutation) public var achieveClimb: Void?
+  @SharedOperation(Mountain.$achieveClimbMutation) public var achieveClimb: Void?
 
   @ObservationIgnored
-  @SharedOperation(Mountain.unachieveClimbMutation) public var unachieveClimb: Void?
+  @SharedOperation(Mountain.$unachieveClimbMutation) public var unachieveClimb: Void?
 
   @ObservationIgnored
   @SharedOperation(Mountain.unplanClimbsMutation) public var unplanClimb: Void?
@@ -47,7 +47,7 @@ extension PlannedClimbDetailModel {
     case .confirmUnplanClimb:
       guard case let mountain?? = self.mountain else { return }
       try await self.$unplanClimb.mutate(
-        with: Mountain.UnplanClimbsMutation.Arguments(
+        with: Mountain.UnplanClimbsArguments(
           mountainId: mountain.id,
           ids: [self.plannedClimb.id]
         )
@@ -155,7 +155,7 @@ private struct DetailView: View {
           ) {
             Task {
               try await self.model.$unachieveClimb.mutate(
-                with: Mountain.UnachieveClimbMutation.Arguments(
+                with: Mountain.UnachieveClimbArguments(
                   id: self.model.plannedClimb.id,
                   mountainId: self.mountain.id
                 )
@@ -166,7 +166,7 @@ private struct DetailView: View {
           CTAButton("Mark Complete", systemImage: "medal.fill") {
             Task {
               try await self.model.$achieveClimb.mutate(
-                with: Mountain.AchieveClimbMutation.Arguments(
+                with: Mountain.AchieveClimbArguments(
                   id: self.model.plannedClimb.id,
                   mountainId: self.mountain.id
                 )

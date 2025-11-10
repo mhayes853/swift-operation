@@ -156,7 +156,10 @@ extension Mountain {
 
 extension OperationClient {
   fileprivate func updateDetailQueries(mountains: IdentifiedArrayOf<Mountain>) {
-    self.withStores(matching: .mountain, of: Mountain.Query.State.self) { stores, createStore in
+    self.withStores(
+      matching: .mountain,
+      of: QueryState<Mountain?, any Error>.self
+    ) { stores, createStore in
       for mountain in mountains {
         if let store = stores[.mountain(with: mountain.id)] {
           store.currentValue = mountain

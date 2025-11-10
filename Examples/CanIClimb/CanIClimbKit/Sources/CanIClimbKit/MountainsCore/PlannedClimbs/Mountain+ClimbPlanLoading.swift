@@ -43,28 +43,14 @@ extension Mountain {
 // MARK: - Query
 
 extension Mountain {
+  @QueryRequest(path: .custom { (id: Mountain.ID) in .mountainPlannedClimbs.appending(id) })
   public static func plannedClimbsQuery(
-    for id: Mountain.ID
-  ) -> some QueryRequest<IdentifiedArrayOf<PlannedClimb>, any Error> {
-    PlannedClimbsQuery(id: id)
-  }
-
-  public struct PlannedClimbsQuery: QueryRequest {
-    let id: Mountain.ID
-
-    public var path: OperationPath {
-      .mountainPlannedClimbs.appending(id)
-    }
-
-    public func fetch(
-      isolation: isolated (any Actor)?,
-      in context: OperationContext,
-      with continuation: OperationContinuation<IdentifiedArrayOf<PlannedClimb>, any Error>
-    ) async throws -> IdentifiedArrayOf<PlannedClimb> {
-      @Dependency(Mountain.PlannedClimbsLoaderKey.self) var loader
-      continuation.yield(try await loader.localPlannedClimbs(for: self.id))
-      return try await loader.plannedClimbs(for: self.id)
-    }
+    for id: Mountain.ID,
+    continuation: OperationContinuation<IdentifiedArrayOf<PlannedClimb>, any Error>
+  ) async throws -> IdentifiedArrayOf<PlannedClimb> {
+    @Dependency(Mountain.PlannedClimbsLoaderKey.self) var loader
+    continuation.yield(try await loader.localPlannedClimbs(for: id))
+    return try await loader.plannedClimbs(for: id)
   }
 }
 

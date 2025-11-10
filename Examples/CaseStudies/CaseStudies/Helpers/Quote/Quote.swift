@@ -38,16 +38,9 @@ extension Quote {
 // MARK: - Random Query
 
 extension Quote {
-  static let randomQuery = RandomQuery()
-
-  struct RandomQuery: QueryRequest, Hashable, Sendable {
-    func fetch(
-      isolation: isolated (any Actor)?,
-      in context: OperationContext,
-      with continuation: OperationContinuation<Quote, any Error>
-    ) async throws -> Quote {
-      @Dependency(QuoteRandomLoaderKey.self) var loader
-      return try await loader.randomQuote()
-    }
+  @QueryRequest
+  static func randomQuery() async throws -> Quote {
+    @Dependency(QuoteRandomLoaderKey.self) var loader
+    return try await loader.randomQuote()
   }
 }

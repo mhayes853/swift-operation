@@ -31,27 +31,17 @@ struct QueryData: Codable, Sendable {
 }
 
 extension QueryData {
+  @QueryRequest
   static func cacheableQuery(
-    for key: String
-  ) -> some QueryRequest<Self, any Error> {
-    CacheableQuery(key: key)
-  }
-
-  struct CacheableQuery: QueryRequest, Hashable {
-    let key: String
-
-    func fetch(
-      isolation: isolated (any Actor)?,
-      in context: OperationContext,
-      with continuation: OperationContinuation<QueryData, any Error>
-    ) async throws -> QueryData {
-      if let cachedData = Cache.shared[key] {
-        continuation.yield(cachedData)
-      }
-      let freshData = try await fetchFreshData()
-      Cache.shared[key] = freshData
-      return freshData
+    for key: String,
+    continuation: OperationContinuation<QueryData, any Error>
+  ) asycn throws -> QueryData {
+    if let cachedData = Cache.shared[key] {
+      continuation.yield(cachedData)
     }
+    let freshData = try await fetchFreshData()
+    Cache.shared[key] = freshData
+    return freshData
   }
 }
 ```
@@ -65,7 +55,7 @@ import SwiftUI
 import SharingOperation
 
 struct ContentView: View {
-  @SharedOperation(QueryData.cacheableQuery(for: "example")) var value
+  @SharedOperation(QueryData.$cacheableQuery(for: "example")) var value
 
   var body: some View {
     VStack {
@@ -86,29 +76,25 @@ struct ContentView: View {
 In addition to yielding values, you can also yield intermittent errors from your operation while still fetching data. For instance, you may persist data locally on disk to support offline mode in your app. Thus, loading the persisted data has a possibility of failing, and we can yield an error in the meantime whilst we fetch the fresh data from the network.
 
 ```swift
-struct DiskCacheableQuery: QueryRequest, Hashable {
-  let key: String
-
-  func fetch(
-    isolation: isolated (any Actor)?,
-    in context: OperationContext,
-    with continuation: OperationContinuation<QueryData, any Error>
-  ) async throws -> QueryData {
-    let path = URL.documentsDirectory.appending(path: "cache/\(key)")
-    do {
-      let rawData = try Data(contentsOf: path)
-      let queryData = try JSONDecoder().decode(
-        QueryData.self,
-        from: rawData
-      )
-      continuation.yield(queryData)
-    } catch {
-      continuation.yield(error: error)
-    }
-    let freshData = try await fetchFreshData()
-    try JSONEncoder().encode(freshData).write(to: path)
-    return freshData
+@QueryRequest
+func diskCacheableQuery(
+  key: String,
+  continuation: OperationContinuation<QueryData, any Error>
+) async throws -> QueryData {
+  let path = URL.documentsDirectory.appending(path: "cache/\(key)")
+  do {
+    let rawData = try Data(contentsOf: path)
+    let queryData = try JSONDecoder().decode(
+      QueryData.self,
+      from: rawData
+    )
+    continuation.yield(queryData)
+  } catch {
+    continuation.yield(error: error)
   }
+  let freshData = try await fetchFreshData()
+  try JSONEncoder().encode(freshData).write(to: path)
+  return freshData
 }
 ```
 
@@ -119,26 +105,22 @@ If we can't load data from the disk, we'll yield an error from the query. Howeve
 Another use case for `OperationContinuation` would be to yield data from a remote source as it comes in chunks.
 
 ```swift
-struct LinesQuery: QueryRequest, Hashable {
-  let url: URL
-
-  func fetch(
-    isolation: isolated (any Actor)?,
-    in context: OperationContext,
-    with continuation: OperationContinuation<[String], any Error>
-  ) async throws -> [String] {
-    // Apply a time freeze to the context so that
-    // valueLastUpdatedAt remains consistent when
-    // many chunks of data are yielded.
-    var context = context
-    context.operationClock = context.operationClock.frozen()
-    var lines = [String]()
-    for try await line in url.lines {
-      lines.append(line)
-      continuation.yield(lines, context)
-    }
-    return lines
+@QueryRequest
+func linesQuery(
+  url: URL,
+  continuation: OperationContinuation<[String], any Error>
+) async throws -> [String] {
+  // Apply a time freeze to the context so that
+  // valueLastUpdatedAt remains consistent when
+  // many chunks of data are yielded.
+  var context = context
+  context.operationClock = context.operationClock.frozen()
+  var lines = [String]()
+  for try await line in url.lines {
+    lines.append(line)
+    continuation.yield(lines, context)
   }
+  return lines
 }
 ```
 
@@ -169,43 +151,32 @@ struct EventsList: Sendable {
 }
 
 extension EventsList {
+  @QueryRequest(
+    path: .custom { (region: Region) in ["nearby-events", region] }
+  )
   static func nearbyQuery(
-    for region: Region
-  ) -> some QueryRequest<Self, any Error> {
-    NearbyEventsQuery(region: region)
-  }
-
-  struct NearbyEventsQuery: QueryRequest {
-    let region: Region
-
-    var path: OperationPath {
-      ["nearby-events", region]
-    }
-
-    func fetch(
-      isolation: isolated (any Actor)?,
-      in context: OperationContext,
-      with continuation: OperationContinuation<EventsList, any Error>
-    ) async throws -> EventsList {
-      guard let client = context.operationClient else {
-        return try await fetchActualEventList(region)
-      }
-      // Look for other EventLists we've fetched and use the data from
-      // any that are within the distance threshold.
-      let stores = client.stores(
-        matching: ["nearby-events"],
-        of: State.self
-      )
-      for store in stores {
-        let distance = store.currentValue.region.distance(to: region)
-        if distance < context.distanceThreshold {
-          continuation.yield(
-            EventsList(region: region, events: list.events)
-          )
-        }
-      }
+    for region: Region,
+    context: OperationContext,
+    continuation: OperationContinuation<EventsList, any Error>
+  ) async throws -> EventsList {
+    guard let client = context.operationClient else {
       return try await fetchActualEventList(region)
     }
+    // Look for other EventLists we've fetched and use the data from
+    // any that are within the distance threshold.
+    let stores = client.stores(
+      matching: ["nearby-events"],
+      of: State.self
+    )
+    for store in stores {
+      let distance = store.currentValue.region.distance(to: region)
+      if distance < context.distanceThreshold {
+        continuation.yield(
+          EventsList(region: region, events: list.events)
+        )
+      }
+    }
+    return try await fetchActualEventList(region)
   }
 }
 

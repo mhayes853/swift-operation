@@ -16,8 +16,8 @@ struct StateManagementTests {
       [Page(id: 0, value: [User(id: 10, relationship: .notFriends)])]
     )
 
-    let store2 = self.client.store(for: User.sendFriendRequestMutation)
-    try await store2.mutate(with: User.SendFriendRequestMutation.Arguments(userId: 10))
+    let store2 = self.client.store(for: User.$sendFriendRequest)
+    try await store2.mutate(with: User.SendFriendRequestArgs(userId: 10))
 
     expectNoDifference(
       store.currentValue,
@@ -75,34 +75,29 @@ extension User {
 }
 
 extension User {
-  static let sendFriendRequestMutation = SendFriendRequestMutation()
+  struct SendFriendRequestArgs: Sendable {
+    let userId: Int
+  }
 
-  struct SendFriendRequestMutation: MutationRequest, Hashable {
-    struct Arguments: Sendable {
-      let userId: Int
-    }
-
-    func mutate(
-      isolation: isolated (any Actor)?,
-      with arguments: Arguments,
-      in context: OperationContext,
-      with continuation: OperationContinuation<Void, any Error>
-    ) async throws {
-      guard let client = context.operationClient else { return }
-      for store in client.stores(matching: ["user-friends"], of: User.FriendsQuery.State.self) {
-        let pages = store.currentValue.map { page in
-          var page = page
-          page.value = page.value.map { user in
-            var user = user
-            if user.id == arguments.userId {
-              user.relationship = .friendRequestSent
-            }
-            return user
+  @MutationRequest
+  static func sendFriendRequest(
+    arguments: SendFriendRequestArgs,
+    context: OperationContext
+  ) async throws {
+    guard let client = context.operationClient else { return }
+    for store in client.stores(matching: ["user-friends"], of: User.FriendsQuery.State.self) {
+      let pages = store.currentValue.map { page in
+        var page = page
+        page.value = page.value.map { user in
+          var user = user
+          if user.id == arguments.userId {
+            user.relationship = .friendRequestSent
           }
-          return page
+          return user
         }
-        store.currentValue = Pages(uniqueElements: pages)
+        return page
       }
+      store.currentValue = Pages(uniqueElements: pages)
     }
   }
 }

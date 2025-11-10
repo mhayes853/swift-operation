@@ -32,12 +32,12 @@ struct OperationContextTests {
     expectNoDifference(context.description, "[]")
 
     context.test = _defaultValue + 200
-    expectNoDifference(context.description, "[OperationContext.TestKey = \(context.test)]")
+    expectNoDifference(context.description, "[OperationContext.__Key_test = \(context.test)]")
 
     context.test2 = "Vlov"
     let expected = Set([
-      "[OperationContext.TestKey = \(context.test), OperationContext.TestKey2 = Vlov]",
-      "[OperationContext.TestKey2 = Vlov, OperationContext.TestKey = \(context.test)]"
+      "[OperationContext.__Key_test = \(context.test), OperationContext.__Key_test2 = Vlov]",
+      "[OperationContext.__Key_test2 = Vlov, OperationContext.__Key_test = \(context.test)]"
     ])
     expectNoDifference(expected.contains(context.description), true)
   }
@@ -46,21 +46,6 @@ struct OperationContextTests {
 private let _defaultValue = 100
 
 extension OperationContext {
-  fileprivate var test: Int {
-    get { self[TestKey.self] }
-    set { self[TestKey.self] = newValue }
-  }
-
-  private struct TestKey: Key {
-    static var defaultValue: Int { _defaultValue }
-  }
-
-  fileprivate var test2: String {
-    get { self[TestKey2.self] }
-    set { self[TestKey2.self] = newValue }
-  }
-
-  private struct TestKey2: Key {
-    static var defaultValue: String { "Blob" }
-  }
+  @ContextEntry fileprivate var test = _defaultValue
+  @ContextEntry fileprivate var test2 = "Blob"
 }

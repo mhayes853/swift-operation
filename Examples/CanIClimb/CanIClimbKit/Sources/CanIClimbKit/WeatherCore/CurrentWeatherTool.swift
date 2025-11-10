@@ -8,7 +8,7 @@ public struct CurrentWeatherTool: Tool {
 
   @Generable
   public struct Arguments: Hashable, Sendable {
-    public let coordinate: LocationCoordinate2D.Generable
+    public let coordinate: LocationCoordinate2DGenerable
   }
 
   private let client: OperationClient
@@ -17,9 +17,9 @@ public struct CurrentWeatherTool: Tool {
     self.client = client
   }
 
-  public func call(arguments: Arguments) async throws -> WeatherReading.Generable {
+  public func call(arguments: Arguments) async throws -> WeatherReadingGenerable {
     let coordinate = LocationCoordinate2D(generable: arguments.coordinate)
-    let store = client.store(for: WeatherReading.currentQuery(for: coordinate))
-    return WeatherReading.Generable(reading: try await store.fetch())
+    let store = client.store(for: WeatherReading.$currentQuery(for: coordinate))
+    return WeatherReadingGenerable(reading: try await store.fetch())
   }
 }

@@ -145,6 +145,7 @@ struct StaleWhenRevalidateOperationTests {
   }
 
   @Test("Ors Stale Modifiers Together")
+  @available(*, deprecated)
   func orsStaleModifiersTogether() async throws {
     let clock = TestOperationClock(date: Date())
     let query = TestQuery().stale(after: 1000).staleWhen { state, _ in state.valueUpdateCount == 0 }

@@ -6,13 +6,8 @@
 /// does not conform to Hashable or Identifiable like so.
 ///
 /// ```swift
-/// struct UserByNameQuery: QueryRequest {
-///   let name: String
-///
-///   var path: OperationPath {
-///     ["user", name]
-///   }
-///
+/// @QueryRequest(path: .custom { (name: String) in ["user", name] })
+/// func userByNameQuery(name: String) async throws -> User? {
 ///   // ...
 /// }
 /// ```
@@ -25,7 +20,7 @@
 /// // in the app.
 /// let stores = client.stores(
 ///   matching: ["user"],
-///   as: UserByNameQuery.State.self
+///   as: QueryState<User?, any Error>.self
 /// )
 /// ```
 ///

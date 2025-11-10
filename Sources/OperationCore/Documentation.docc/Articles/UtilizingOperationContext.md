@@ -23,46 +23,28 @@ import SwiftUI
 // 🟢 SwiftUI
 
 extension EnvironmentValues {
-  var customProperty: String {
-    get { self[CustomPropertyKey.self] }
-    set { self[CustomPropertyKey.self] = newValue }
-  }
-
-  private enum CustomPropertyKey: EnvironmentKey {
-    static let defaultValue: String = "hello!"
-  }
+  @Entry var customProperty = "hello!"
 }
 
 // 🟢 OperationContext
 
 extension OperationContext {
-  var customProperty: String {
-    get { self[CustomPropertyKey.self] }
-    set { self[CustomPropertyKey.self] = newValue }
-  }
-
-  private enum CustomPropertyKey: Key {
-    static let defaultValue: String = "hello!"
-  }
+  @ContextEntry var customProperty = "hello!"
 }
 ```
 
 Now you can access your custom property inside of operations.
 
 ```swift
-struct PlayerQuery: QueryRequest, Hashable {
-  let id: Int
-
-  func fetch(
-    isolation: isolated (any Actor)?,
-    in context: OperationContext,
-    using continuation: OperationContinuation<Player, any Error>
-  ) async throws -> Player {
-    if context.customProperty == "hello!" {
-      // Fetch...
-    } else {
-      // Fetch Differently...
-    }
+@QueryRequest
+func playerQuery(
+  id: Int, 
+  context: OperationContext
+) async throws -> Player {
+  if context.customProperty == "hello!" {
+    // Fetch...
+  } else {
+    // Fetch Differently...
   }
 }
 ```

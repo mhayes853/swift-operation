@@ -11,11 +11,7 @@ let package = Package(
   ],
   dependencies: [
     .package(url: "https://github.com/pointfreeco/swift-tagged", from: "0.10.0"),
-    .package(
-      url: "https://github.com/mhayes853/swift-operation",
-      branch: "main",
-      traits: ["SwiftOperationLogging"]
-    ),
+    .package(path: "../../..", traits: ["SwiftOperationLogging"]),
     .package(
       url: "https://github.com/pointfreeco/swift-structured-queries",
       from: "0.20.0",

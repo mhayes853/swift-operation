@@ -34,34 +34,25 @@ struct Project: Sendable {
 }
 
 extension Project {
-  static let userProjectsQuery = UserProjectsQuery()
-
-  struct UserProjectsQuery: QueryRequest {
-    var path: OperationPath {
-      ["user-projects"]
+  @QueryRequest(path: .custom { ["user-projects"] })
+  static func userProjectsQuery(
+    context: OperationContext
+  ) async throws -> [Project] {
+    guard let client = context.operationClient else { return [] }
+    let store = client.store(for: User.currentQuery)
+    var user: User
+    if let u = store.currentValue {
+      user = u
+    } else {
+      user = try await store.fetch()
     }
+    return try await Self.fetchProjects(for: user.id)
+  }
 
-    func fetch(
-      isolation: isolated (any Actor)?,
-      in context: OperationContext,
-      with continuation: OperationContinuation<[Project], any Error>
-    ) async throws -> [Project] {
-      guard let client = context.operationClient else { return [] }
-      let store = client.store(for: User.currentQuery)
-      var user: User
-      if let u = store.currentValue {
-        user = u
-      } else {
-        user = try await store.fetch()
-      }
-      return try await self.fetchProjects(for: user.id)
-    }
-
-    private func fetchProjects(
-      for userId: UUID
-    ) async throws -> [Project] {
-      // ...
-    }
+  private static func fetchProjects(
+    for userId: UUID
+  ) async throws -> [Project] {
+    // ...
   }
 }
 ```
@@ -86,30 +77,26 @@ extension OperationContext {
 
 ```diff
 extension Project {
-  static let userProjectsQuery = UserProjectsQuery()
+  @QueryRequest(path: .custom { ["user-projects"] })
+  static func userProjectsQuery(
+    context: OperationContext
+  ) async throws -> [Project] {
+-    guard let client = context.operationClient else { return [] }
+-    let store = client.store(for: User.currentQuery)
+-    var user: User
+-    if let u = store.currentValue {
+-      user = u
+-    } else {
+-      user = try await store.fetch()
+-    }
++    let user = try await context.ensureCurrentUser()
+    return try await Self.fetchProjects(for: user.id)
+  }
 
-  struct UserProjectsQuery: QueryRequest {
-    func fetch(
-      in context: OperationContext,
-      with continuation: OperationContinuation<[Project], any Error>
-    ) async throws -> [Project] {
--      guard let client = context.operationClient else { return [] }
--      let store = client.store(for: User.currentQuery)
--      var user: User
--      if let u = store.currentValue {
--        user = u
--      } else {
--        user = try await store.fetch()
--      }
-+      let user = try await context.ensureCurrentUser()
-      return try await self.fetchProjects(for: user.id)
-    }
-
-    private func fetchProjects(
-      for userId: UUID
-    ) async throws -> [Project] {
-      // ...
-    }
+  private static func fetchProjects(
+    for userId: UUID
+  ) async throws -> [Project] {
+    // ...
   }
 }
 ```
@@ -125,25 +112,13 @@ import SharingOperation
 import Observation
 
 extension Project {
+  @QueryRequest(
+    path: .custom { (userId: UUID) in ["user-projects", self.userId] }
+  )
   static func userProjectsQuery(
     for userId: UUID
-  ) -> some QueryRequest<[Self], UserProjectsQuery.State> {
-    UserProjectsQuery(userId: userId)
-  }
-
-  struct UserProjectsQuery: QueryRequest {
-    let userId: UUID
-
-    var path: OperationPath {
-      ["user-projects", self.userId]
-    }
-
-    func fetch(
-      in context: OperationContext,
-      with continuation: OperationContinuation<[Project], any Error>
-    ) async throws -> [Project] {
-      // ...
-    }
+  ) async throws -> [Project] {
+    // ...
   }
 }
 
@@ -151,10 +126,10 @@ extension Project {
 @Observable
 final class UserProjectsModel {
   @ObservationIgnored
-  @SharedOperation(User.currentQuery) var user
+  @SharedOperation(User.$currentQuery) var user
 
   @ObservationIgnored
-  @SharedOperation<Project.UserProjectsQuery.State> var projects
+  @SharedOperation<QueryState<[Project], any Error>> var projects: [Project]?
 
   init() {
     self._projects = SharedOperation()
@@ -166,7 +141,7 @@ final class UserProjectsModel {
         guard let self else { return }
         if let user = element.state.currentValue {
           self.$projects = SharedOperation(
-            Project.userProjectsQuery(for: user.id)
+            Project.$userProjectsQuery(for: user.id)
           )
         } else {
           $self.projects = SharedOperation()
@@ -182,7 +157,7 @@ Here, we regain the ability to have the `userId` in the `OperationPath` of the p
 However, you can also rely on SwiftUI to rerender a child view with your dependent operation, and reconstruct the `@SharedOperation` every time the child view is recreated.
 ```swift
 struct UserProjectsView: View {
-  @SharedOperation(User.currentQuery) var user
+  @SharedOperation(User.$currentQuery) var user
 
   var body: some View {
     if let user {
@@ -192,11 +167,11 @@ struct UserProjectsView: View {
 }
 
 struct ProjectsListView: View {
-  @SharedOperation<Project.UserProjectsQuery.State> var projects
+  @SharedOperation<QueryState<[Project], any Error>> var projects: [Project]?
 
   init(userId: Int) {
     self._projects = SharedOperation(
-      Project.userProjectsQuery(for: user.id)
+      Project.$userProjectsQuery(for: user.id)
     )
   }
 
@@ -213,30 +188,20 @@ The last strategy is to merge the current user fetching and user projects fetchi
 
 ```swift
 extension Project {
-  static let userProjectsQuery = UserProjectsQuery()
+  @QueryRequest(path: .custom { ["user-projects"] })
+  static func userProjectsQuery() async throws -> [Project] {
+    let user = try await self.fetchCurrentUser()
+    return try await self.fetchProjects(for: user.id)
+  }
 
-  struct UserProjectsQuery: QueryRequest {
-    var path: OperationPath {
-      ["user-projects"]
-    }
+  private static func fetchCurrentUser() async throws -> User {
+    // ...
+  }
 
-    func fetch(
-      in context: OperationContext,
-      with continuation: OperationContinuation<[Project], any Error>
-    ) async throws -> [Project] {
-      let user = try await self.fetchCurrentUser()
-      return try await self.fetchProjects(for: user.id)
-    }
-
-    private func fetchCurrentUser() async throws -> User {
-      // ...
-    }
-
-    private func fetchProjects(
-      for userId: UUID
-    ) async throws -> [Project] {
-      // ...
-    }
+  private static func fetchProjects(
+    for userId: UUID
+  ) async throws -> [Project] {
+    // ...
   }
 }
 ```

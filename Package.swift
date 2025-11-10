@@ -1,6 +1,7 @@
 // swift-tools-version: 6.1
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
+import CompilerPluginSupport
 import PackageDescription
 
 let package = Package(
@@ -8,7 +9,8 @@ let package = Package(
   platforms: [.iOS(.v13), .macOS(.v10_15), .tvOS(.v13), .watchOS(.v6), .macCatalyst(.v13)],
   products: [
     .library(name: "SharingOperation", targets: ["SharingOperation"]),
-    .library(name: "Operation", targets: ["Operation"])
+    .library(name: "Operation", targets: ["Operation"]),
+    .library(name: "OperationCore", targets: ["OperationCore"])
   ],
   traits: [
     .trait(
@@ -53,7 +55,9 @@ let package = Package(
     .package(url: "https://github.com/pointfreeco/swift-navigation", from: "2.6.0"),
     .package(url: "https://github.com/apple/swift-log", from: "1.6.3"),
     .package(url: "https://github.com/apple/swift-atomics", from: "1.3.0"),
-    .package(url: "https://github.com/pointfreeco/swift-perception", from: "2.0.7")
+    .package(url: "https://github.com/pointfreeco/swift-perception", from: "2.0.7"),
+    .package(url: "https://github.com/pointfreeco/swift-macro-testing", from: "0.6.4"),
+    .package(url: "https://github.com/swiftlang/swift-syntax", "601.0.0"..<"603.0.0")
   ],
   targets: [
     .target(
@@ -85,7 +89,7 @@ let package = Package(
         )
       ]
     ),
-    .target(name: "Operation", dependencies: ["OperationCore"]),
+    .target(name: "Operation", dependencies: ["OperationCore", "OperationMacros"]),
     .target(
       name: "OperationCore",
       dependencies: [
@@ -108,6 +112,13 @@ let package = Package(
     .target(
       name: "OperationTestHelpers",
       dependencies: ["Operation", .product(name: "CustomDump", package: "swift-custom-dump")]
+    ),
+    .macro(
+      name: "OperationMacros",
+      dependencies: [
+        .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
+        .product(name: "SwiftSyntaxMacros", package: "swift-syntax")
+      ]
     )
   ],
   swiftLanguageModes: [.v6]
@@ -177,5 +188,17 @@ if Context.environment["TEST_WASM"] != "1" {
       ),
       .testTarget(name: "OperationTests", dependencies: operationTestsDependencies)
     ]
+  )
+}
+
+if Context.environment["CI_ANDROID"] != "1" {
+  package.targets.append(
+    .testTarget(
+      name: "OperationMacrosTests",
+      dependencies: [
+        "OperationMacros",
+        .product(name: "MacroTesting", package: "swift-macro-testing")
+      ]
+    )
   )
 }

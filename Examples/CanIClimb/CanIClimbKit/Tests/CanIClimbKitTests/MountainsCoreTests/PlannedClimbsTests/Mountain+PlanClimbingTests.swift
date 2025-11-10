@@ -39,12 +39,12 @@ extension DependenciesTestSuite {
       } operation: {
         @Dependency(\.defaultOperationClient) var client
 
-        let climbsStore = client.store(for: Mountain.plannedClimbsQuery(for: Mountain.mock1.id))
+        let climbsStore = client.store(for: Mountain.$plannedClimbsQuery(for: Mountain.mock1.id))
         try await climbsStore.fetch()
 
         let planStore = client.store(for: Mountain.planClimbMutation)
         try await planStore.mutate(
-          with: Mountain.PlanClimbMutation.Arguments(mountain: .mock1, create: .mock1)
+          with: Mountain.PlanClimbArguments(mountain: .mock1, create: .mock1)
         )
 
         expectNoDifference(climbsStore.currentValue, [c2, c3, c1])
@@ -61,12 +61,12 @@ extension DependenciesTestSuite {
         $0[Mountain.PlannedClimbsLoaderKey.self] = loader
       } operation: {
         @Dependency(\.defaultOperationClient) var client
-        let climbsStore = client.store(for: Mountain.plannedClimbsQuery(for: Mountain.mock1.id))
+        let climbsStore = client.store(for: Mountain.$plannedClimbsQuery(for: Mountain.mock1.id))
         try await climbsStore.fetch()
 
         let unplanStore = client.store(for: Mountain.unplanClimbsMutation)
         try await unplanStore.mutate(
-          with: Mountain.UnplanClimbsMutation.Arguments(
+          with: Mountain.UnplanClimbsArguments(
             mountainId: Mountain.mock1.id,
             ids: [Mountain.PlannedClimb.mock1.id]
           )
@@ -89,12 +89,12 @@ extension DependenciesTestSuite {
         $0[Mountain.PlannedClimbsLoaderKey.self] = loader
       } operation: {
         @Dependency(\.defaultOperationClient) var client
-        let climbsStore = client.store(for: Mountain.plannedClimbsQuery(for: Mountain.mock1.id))
+        let climbsStore = client.store(for: Mountain.$plannedClimbsQuery(for: Mountain.mock1.id))
         try await climbsStore.fetch()
 
         let unplanStore = client.store(for: Mountain.unplanClimbsMutation)
         _ = try? await unplanStore.mutate(
-          with: Mountain.UnplanClimbsMutation.Arguments(
+          with: Mountain.UnplanClimbsArguments(
             mountainId: Mountain.mock1.id,
             ids: [Mountain.PlannedClimb.mock1.id]
           )

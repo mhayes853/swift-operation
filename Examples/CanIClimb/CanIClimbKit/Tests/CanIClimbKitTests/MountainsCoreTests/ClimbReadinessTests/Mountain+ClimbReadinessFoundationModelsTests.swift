@@ -69,7 +69,7 @@ extension DependenciesTestSuite {
 
         try await database.write { try humanity.save(in: $0) }
 
-        let generator = Mountain.ClimbReadiness.FoundationModelsGenerator(
+        let generator = MountainClimbReadiness.FoundationModelsGenerator(
           database: database,
           client: client,
           vo2MaxLoader: NumericHealthSamples.SucceedingLoader(
@@ -88,7 +88,7 @@ extension DependenciesTestSuite {
 
         let generation = try await withCurrentLogger(logger) { @Sendable in
           let segments = generator.readiness(for: mountain)
-          var readiness: Mountain.ClimbReadiness?
+          var readiness: MountainClimbReadiness?
           for try await segment in segments {
             guard case .full(let r) = segment else { continue }
             readiness = r
@@ -103,7 +103,7 @@ extension DependenciesTestSuite {
   }
 
   private struct Generation: Sendable, Codable {
-    var readiness: Mountain.ClimbReadiness?
+    var readiness: MountainClimbReadiness?
     var messages: [ToolMessage]
   }
 }

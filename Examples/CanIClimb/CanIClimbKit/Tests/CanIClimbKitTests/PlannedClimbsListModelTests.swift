@@ -50,7 +50,7 @@ extension DependenciesTestSuite {
         let detailModel = try #require(model.destination?[case: \.plannedClimbDetail])
         try await detailModel.$mountain.load()
         try await detailModel.$achieveClimb.mutate(
-          with: Mountain.AchieveClimbMutation.Arguments(
+          with: Mountain.AchieveClimbArguments(
             id: Mountain.PlannedClimb.mock1.id,
             mountainId: Mountain.mock1.id
           )

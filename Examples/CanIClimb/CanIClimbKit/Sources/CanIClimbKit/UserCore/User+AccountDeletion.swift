@@ -36,25 +36,21 @@ extension User {
 // MARK: - Mutation
 
 extension User {
-  public static let deleteMutation = DeleteMutation()
-    .alerts(success: .deleteAccountSuccess, failure: .deleteAccountFailure)
+  public static var deleteMutation: some MutationRequest<Void, Void, any Error> {
+    Self.$deleteMutation
+      .alerts(success: .deleteAccountSuccess, failure: .deleteAccountFailure)
+  }
 
-  public struct DeleteMutation: MutationRequest, Hashable, Sendable {
-    public func mutate(
-      isolation: isolated (any Actor)?,
-      with arguments: Void,
-      in context: OperationContext,
-      with continuation: OperationContinuation<Void, any Error>
-    ) async throws {
-      @Dependency(\.defaultOperationClient) var client
-      @Dependency(User.AccountDeleterKey.self) var deleter
+  @MutationRequest
+  private static func deleteMutation() async throws {
+    @Dependency(\.defaultOperationClient) var client
+    @Dependency(User.AccountDeleterKey.self) var deleter
 
-      try await deleter.delete()
+    try await deleter.delete()
 
-      let userStore = client.store(for: User.currentStatusQuery)
-      userStore.resetState()
-      userStore.currentValue = .unauthorized
-    }
+    let userStore = client.store(for: User.$currentStatusQuery)
+    userStore.resetState()
+    userStore.currentValue = .unauthorized
   }
 }
 

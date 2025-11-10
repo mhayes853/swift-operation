@@ -48,7 +48,7 @@ private struct InnerView: View {
 // MARK: - Queries
 
 extension Recipe {
-  fileprivate static let randomRefetchOnLowPowerModeQuery = RandomQuery()
+  fileprivate static let randomRefetchOnLowPowerModeQuery = Recipe.$randomQuery
     .disableApplicationActiveRerunning()
     .rerunOnChange(of: IsInLowPowerModeRunSpecification())
 }

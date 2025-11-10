@@ -25,7 +25,7 @@ extension OperationRequest {
   /// ```swift
   /// // The operation retry limit is 5, and the second retry modifier
   /// // has no effect on `operation`.
-  /// let operation = MyOperation()
+  /// let operation = $myOperation
   ///   .retry(limit: 5)
   ///   .retry(limit: 3)
   /// ```

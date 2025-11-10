@@ -68,7 +68,7 @@ struct FormCaseStudy: CaseStudy {
 @Observable
 final class FormModel {
   @ObservationIgnored
-  @SharedOperation(FormName.updateMutation, animation: .bouncy) var update
+  @SharedOperation(FormName.$update, animation: .bouncy) var update
 
   var name = ""
   var alert: AlertState<AlertAction>?
@@ -95,7 +95,7 @@ extension FormModel {
 
 extension FormModel {
   func submit(name: FormName) async throws {
-    let result = try await self.$update.mutate(with: FormName.UpdateMutation.Arguments(name: name))
+    let result = try await self.$update.mutate(with: FormName.UpdateArguments(name: name))
     switch result {
     case .nameTaken:
       self.alert = .failure(name: name)
@@ -145,30 +145,25 @@ struct FormName: Hashable, RawRepresentable {
 private let takenNames = ["blob", "joe", "ashley", "maria", "sam", "james"]
 
 extension FormName {
-  static let updateMutation = UpdateMutation()
+  struct UpdateArguments: Sendable {
+    let name: FormName
+  }
 
   enum UpdateResult: Hashable, Sendable {
     case success
     case nameTaken
   }
-
-  struct UpdateMutation: MutationRequest, Hashable, Sendable {
-    struct Arguments: Sendable {
-      let name: FormName
-    }
-
-    func mutate(
-      isolation: isolated (any Actor)?,
-      with arguments: Arguments,
-      in context: OperationContext,
-      with continuation: OperationContinuation<UpdateResult, any Error>
-    ) async throws -> UpdateResult {
-      try await context.operationDelayer.delay(for: isTesting ? 0 : 0.5)
-      if takenNames.contains(where: { $0.lowercased() == arguments.name.rawValue.lowercased() }) {
-        return .nameTaken
-      } else {
-        return .success
-      }
+  
+  @MutationRequest
+  static func update(
+    arguments: UpdateArguments,
+    context: OperationContext
+  ) async throws -> UpdateResult {
+    try await context.operationDelayer.delay(for: isTesting ? .seconds(0) : .seconds(0.5))
+    if takenNames.contains(where: { $0.lowercased() == arguments.name.rawValue.lowercased() }) {
+      return .nameTaken
+    } else {
+      return .success
     }
   }
 }

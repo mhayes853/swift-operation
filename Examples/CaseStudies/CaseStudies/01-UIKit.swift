@@ -25,7 +25,7 @@ struct BasicUIKitCaseStudy: CaseStudy {
 // MARK: - BasicUIKitViewController
 
 final class BasicUIKitViewController: UIViewController {
-  @SharedOperation(Quote.randomQuery) private var quote
+  @SharedOperation(Quote.$randomQuery) private var quote
   
   private lazy var reloadButton = UIButton(
     type: .system,
@@ -82,7 +82,7 @@ extension BasicUIKitViewController {
 final class BasicUIKitQuoteStatusView: UIView {
   private let indicator = UIActivityIndicatorView(style: .medium)
 
-  func update(with state: Quote.RandomQuery.State) {
+  func update(with state: QueryState<Quote, any Error>) {
     self.subviews.forEach { $0.removeFromSuperview() }
     self.indicator.stopAnimating()
     switch state.status {

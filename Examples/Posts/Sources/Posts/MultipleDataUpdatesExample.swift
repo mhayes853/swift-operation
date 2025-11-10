@@ -4,29 +4,25 @@ import Operation
 // MARK: - CachedQuery
 
 extension Post {
-  struct CachedQuery: QueryRequest, Hashable {
-    let id: Int
-
-    func fetch(
-      isolation: isolated (any Actor)?,
-      in context: OperationContext,
-      with continuation: OperationContinuation<Post?, any Error>
-    ) async throws -> Post? {
-      async let post = self.fetchPost(for: self.id)
-      if let cached = try PostCache.shared.post(for: self.id) {
-        continuation.yield(cached)
-      }
-      return try await post
+  @QueryRequest
+  static func cachedQuery(
+    id: Int,
+    continuation: OperationContinuation<Post?, any Error>
+  ) async throws -> Post? {
+    async let post = Self.fetchPost(for: id)
+    if let cached = try PostCache.shared.post(for: id) {
+      continuation.yield(cached)
     }
+    return try await post
+  }
 
-    private func fetchPost(for id: Int) async throws -> Post? {
-      let url = URL(string: "https://dummyjson.com/posts/\(id)")!
-      let (data, resp) = try await URLSession.shared.data(from: url)
-      if (resp as? HTTPURLResponse)?.statusCode == 404 {
-        return nil
-      }
-      return try JSONDecoder().decode(Post.self, from: data)
+  private static func fetchPost(for id: Int) async throws -> Post? {
+    let url = URL(string: "https://dummyjson.com/posts/\(id)")!
+    let (data, resp) = try await URLSession.shared.data(from: url)
+    if (resp as? HTTPURLResponse)?.statusCode == 404 {
+      return nil
     }
+    return try JSONDecoder().decode(Post.self, from: data)
   }
 }
 

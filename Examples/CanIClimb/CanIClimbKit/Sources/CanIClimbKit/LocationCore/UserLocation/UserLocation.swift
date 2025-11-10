@@ -67,17 +67,13 @@ extension LocationReading {
 // MARK: - UserQuery
 
 extension LocationReading {
-  public static let userQuery = UserQuery().stale(after: TimeInterval(duration: .fiveMinutes))
-    .logDuration()
+  public static var userQuery: some QueryRequest<LocationReading, any Error> {
+    Self.$userQuery.stale(after: .fiveMinutes).logDuration()
+  }
 
-  public struct UserQuery: QueryRequest, Hashable, Sendable {
-    public func fetch(
-      isolation: isolated (any Actor)?,
-      in context: OperationContext,
-      with continuation: OperationContinuation<LocationReading, any Error>
-    ) async throws -> LocationReading {
-      @Dependency(UserLocationKey.self) var userLocation
-      return try await userLocation.read()
-    }
+  @QueryRequest
+  private static func userQuery() async throws -> LocationReading {
+    @Dependency(UserLocationKey.self) var userLocation
+    return try await userLocation.read()
   }
 }

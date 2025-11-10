@@ -50,21 +50,16 @@ extension User {
 // MARK: - Query
 
 extension User {
-  public static let currentStatusQuery = CurrentStatusQuery()
+  @QueryRequest
+  public static func currentStatusQuery(
+    continuation: OperationContinuation<CurrentStatus, any Error>
+  ) async throws -> CurrentStatus {
+    let loader = Dependency(User.CurrentLoaderKey.self).wrappedValue
 
-  public struct CurrentStatusQuery: QueryRequest, Hashable, Sendable {
-    public func fetch(
-      isolation: isolated (any Actor)?,
-      in context: OperationContext,
-      with continuation: OperationContinuation<CurrentStatus, any Error>
-    ) async throws -> CurrentStatus {
-      let loader = Dependency(User.CurrentLoaderKey.self).wrappedValue
-
-      async let status = loader.currentStatus()
-      if let localUser = try await loader.localUser() {
-        continuation.yield(.user(localUser))
-      }
-      return try await status
+    async let status = loader.currentStatus()
+    if let localUser = try await loader.localUser() {
+      continuation.yield(.user(localUser))
     }
+    return try await status
   }
 }

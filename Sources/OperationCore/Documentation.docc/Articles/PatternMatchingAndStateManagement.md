@@ -83,34 +83,26 @@ extension User {
 }
 
 extension User {
-  static let sendFriendRequestMutation = SendFriendRequestMutation()
-
-  struct SendFriendRequestMutation: MutationRequest, Hashable {
-    typealias Value = Void
-
-    struct Arguments: Sendable {
-      let userId: Int
-    }
-
-    func mutate(
-      isolation: isolated (any Actor)?,
-      with arguments: Arguments,
-      in context: OperationContext,
-      with continuation: OperationContinuation<Void, any Error>
-    ) async throws {
-      try await sendFriendRequest(userId: arguments.userId)
-    }
+  struct SendFriendRequestArguments: Sendable {
+    let userId: Int
+  }
+  
+  @MutationRequest
+  static func sendFriendRequestMutation(
+    arguments: SendFriendRequestArguments
+  ) async throws {
+    try await sendFriendRequest(userId: arguments.userId)
   }
 }
 ```
 
-The problem here is that when `User.SendFriendRequestMutation` runs successfully, all screens that utilize `User.FriendsQuery` are now displaying outdated data as we haven't explicitly updated the state of those screens to indicate that the friend request was sent.
+The problem here is that when friend request mutation runs successfully, all screens that utilize friends list query are now displaying outdated data as we haven't explicitly updated the state of those screens to indicate that the friend request was sent.
 
 Utilizing both ``OperationClient`` in conjunction with ``OperationPath`` will make managing this state straight forward.
 
 ## Marking Friend Requests As Sent
 
-To start, we'll want to define a reusable transformation on the value of `User.FriendsQuery` that transforms the appropriate user relationship inside the pages. When updating the state of the query directly, we'll call this reusable transform method.
+To start, we'll want to define a reusable transformation on the value of the friends list query that transforms the appropriate user relationship inside the pages. When updating the state of the query directly, we'll call this reusable transform method.
 
 ```swift
 extension Pages<Int, [User]> {
@@ -138,32 +130,26 @@ extension Pages<Int, [User]> {
 When a user sends a friend request to a user, we'll want to update the friends list query of the receiving user. The most basic approach for handling this is to reach into the ``OperationContext`` that's passed to the mutation, and then grab the `OperationClient` from it. From there, we can peak into the ``OperationStore`` for the corresponding friend list operation and update its state.
 
 ```swift
-struct SendFriendRequestMutation: MutationRequest, Hashable {
-  // ...
+@MutationRequest
+static func sendFriendRequestMutation(
+  arguments: SendFriendRequestArguments
+) async throws {
+  @Dependency(\.defaultOperationClient) var client
+  try await sendFriendRequest(userId: arguments.userId)
 
-  func mutate(
-    isolation: isolated (any Actor)?,
-    with arguments: Arguments,
-    in context: OperationContext,
-    with continuation: OperationContinuation<Void, any Error>
-  ) async throws {
-    @Dependency(\.defaultOperationClient) var client
-    try await sendFriendRequest(userId: arguments.userId)
-
-    // Friend request sent successfully, now update the friends list.
-    let query = UserFriendsQuery(userId: arguments.userId)
-    let store = client.store(for: query)
-    store.withExclusiveAccess { store in
-      store.currentValue = store.currentValue.updateRelationship(
-        for: arguments.userId,
-        to: .friendRequestSent
-      )
-    }
+  // Friend request sent successfully, now update the friends list.
+  let query = User.friendsQuery(userId: arguments.userId)
+  let store = client.store(for: query)
+  store.withExclusiveAccess { store in
+    store.currentValue = store.currentValue.updateRelationship(
+      for: arguments.userId,
+      to: .friendRequestSent
+    )
   }
 }
 ```
 
-This works, however it's considerably likely that we'll have multiple instances of `User.FriendsQuery` that need to display the relationship status between the current user and the receiving user. Unfortunately, taking stores off the `OperationClient` in a loop is quite inefficient, however the library provides better tools for managing this.
+This works, however it's considerably likely that we'll have multiple instances of the friends list query that need to display the relationship status between the current user and the receiving user. Unfortunately, taking stores off the `OperationClient` in a loop is quite inefficient, however the library provides better tools for managing this.
 
 ## OperationPath and Store Pattern Matching
 
@@ -207,44 +193,38 @@ The real power of splitting the path into an array of multiple components is tha
 ```swift
 client.stores(
   matching: ["user-friends"],
-  of: User.FriendsQuery.State.self
+  of: PaginatedState<[User], Int>.self
 )
 ```
 
-This will return back a `[OperationPath: OperationStore<User.FriendsQuery.State>]` that you can use to access the current state of all friends list queries in our app.
+This will return back a collection of `OperationStore<PaginatedState<[User], Int>>` that you can use to access the current state of all friends list queries in our app.
 
 Now that we have a basic understanding of `OperationPath`, we can explore how to use it effectively in our social app.
 
 ### Pattern Matching in SendFriendRequestMutation
 
-With a basic understanding of `OperationPath`, it is actually quite simple to update the state for all `User.FriendsQuery` instances in our app when sending a friend request succeeds.
+With a basic understanding of `OperationPath`, it is actually quite simple to update the state for all friends list queries instances in our app when sending a friend request succeeds.
 
 ```swift
-struct SendFriendRequestMutation: MutationRequest, Hashable {
-  // ...
+@MutationRequest
+static func sendFriendRequestMutation(
+  arguments: SendFriendRequestArguments
+) async throws {
+  @Dependency(\.defaultOperationClient) var client
+  try await sendFriendRequest(userId: arguments.userId)
 
-  func mutate(
-    isolation: isolated (any Actor)?,
-    with arguments: Arguments,
-    in context: OperationContext,
-    with continuation: OperationContinuation<Void, any Error>
-  ) async throws {
-    @Dependency(\.defaultOperationClient) var client
-    try await sendFriendRequest(userId: arguments.userId)
-
-    // Friend request succeeded, now optimistically update the 
-    // state of all friends list queries in the app.
-    let stores = client.stores(
-      matching: ["user-friends"],
-      of: User.FriendsQuery.State.self
-    )
-    for store in stores {
-      store.withExclusiveAccess { store in
-        store.currentValue = store.currentValue.updateRelationship(
-          for: arguments.userId,
-          to: .friendRequestSent
-        )
-      }
+  // Friend request succeeded, now optimistically update the 
+  // state of all friends list queries in the app.
+  let stores = client.stores(
+    matching: ["user-friends"],
+    of: PaginatedState<[User], Int>.self
+  )
+  for store in stores {
+    store.withExclusiveAccess { store in
+      store.currentValue = store.currentValue.updateRelationship(
+        for: arguments.userId,
+        to: .friendRequestSent
+      )
     }
   }
 }
@@ -257,80 +237,59 @@ Now, any screen in our app that displays a friends list will automatically updat
 In our above example, we only update all the friends lists after we've successfully managed to send a friend request through our API. However, we can also use a similar technique to apply optimistic UI updates, such that the result of the mutation is immediately visible in the UI, but if it fails then it gets reverted.
 
 ```swift
-struct SendFriendRequestMutation: MutationRequest, Hashable {
-  // ...
-
-  func mutate(
-    isolation: isolated (any Actor)?,
-    with arguments: Arguments,
-    in context: OperationContext,
-    with continuation: OperationContinuation<Void, any Error>
-  ) async throws {
-    // Optimistically update the user relationships, and reset them 
-    // to the default state if the mutation fails.
-    do {
-      updateRelationships(
-        for: arguments.userId,
-        to: .friendRequestSent,
-        in: context
-      )
-      try await sendFriendRequest(userId: arguments.userId)
-    } catch {
-      updateRelationships(
-        for: arguments.userId,
-        to: .notFriends,
-        in: context
-      )
-      throw error
-    }
+@MutationRequest
+static func sendFriendRequestMutation(
+  arguments: SendFriendRequestArguments
+) async throws {
+  // Optimistically update the user relationships, and reset them 
+  // to the default state if the mutation fails.
+  do {
+    updateRelationships(for: arguments.userId, to: .friendRequestSent)
+    try await sendFriendRequest(userId: arguments.userId)
+  } catch {
+    updateRelationships(for: arguments.userId, to: .notFriends)
+    throw error
   }
+}
 
-  private func updateRelationships(
-    to relationship: User.Relationship,
-    userId: Int,
-    in context: OperationContext
-  ) {
-    @Dependency(\.defaultOperationClient) var client
-    let stores = client.stores(
-      matching: ["user-friends"],
-      of: User.FriendsQuery.State.self
-    )
-    for store in stores {
-      store.withExclusiveAccess { store in
-        store.currentValue = store.currentValue.updateRelationship(
-          for: arguments.userId,
-          to: relationship
-        )
-      }
+private static func updateRelationships(
+  to relationship: User.Relationship,
+  userId: Int
+) {
+  @Dependency(\.defaultOperationClient) var client
+  let stores = client.stores(
+    matching: ["user-friends"],
+    of: PaginatedState<[User], Int>.self
+  )
+  for store in stores {
+    store.withExclusiveAccess { store in
+      store.currentValue = store.currentValue.updateRelationship(
+        for: arguments.userId,
+        to: relationship
+      )
     }
   }
 }
 ```
 
-## Refetching Operations
+## Rerunning Operations
 
 The above examples demonstrate how to directly update the state for operation during a mutation. However, sometimes it's for the best to just refetch the affected operations instead of updating the state directly. For instance, maybe the updated state cannot be determined solely based on the mutation data, and the only the server has the ability to determine the updated state. Regardless of reason, it's quite easy to perform refetching using the same pattern matching technique shown above.
 
 ```swift
-struct SendFriendRequestMutation: MutationRequest, Hashable {
-  // ...
+@MutationRequest
+static func sendFriendRequestMutation(
+  arguments: SendFriendRequestArguments
+) async throws {
+  @Dependency(\.defaultOperationClient) var client
+  try await sendFriendRequest(userId: arguments.userId)
 
-  func mutate(
-    isolation: isolated (any Actor)?,
-    with arguments: Arguments,
-    in context: OperationContext,
-    with continuation: OperationContinuation<Void, any Error>
-  ) async throws {
-    @Dependency(\.defaultOperationClient) var client
-    try await sendFriendRequest(userId: arguments.userId)
-
-    // Friend request sent successfully, now refetch all
-    // friends lists in the app.
-    Task {
-      try await withThrowingTaskGroup(of: Void.self) { group in
-        for store in client.stores(matching: ["user-friends"]) {
-          group.addTask { try await store.fetch() }
-        }
+  // Friend request sent successfully, now refetch all
+  // friends lists in the app.
+  Task {
+    try await withThrowingTaskGroup(of: Void.self) { group in
+      for store in client.stores(matching: ["user-friends"]) {
+        group.addTask { try await store.fetch() }
       }
     }
   }

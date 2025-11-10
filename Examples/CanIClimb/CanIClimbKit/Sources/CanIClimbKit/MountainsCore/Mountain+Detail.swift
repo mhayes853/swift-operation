@@ -42,30 +42,22 @@ extension Mountain {
 // MARK: - Query
 
 extension Mountain {
-  public static func query(id: Mountain.ID) -> some QueryRequest<Self?, any Error> {
-    Query(id: id).stale(after: TimeInterval(duration: .fiveMinutes))
+  public static func query(id: Mountain.ID) -> some QueryRequest<Mountain?, any Error> {
+    Self.$query(with: id).stale(after: .fiveMinutes)
   }
 
-  public struct Query: QueryRequest, Sendable {
-    let id: Mountain.ID
+  @QueryRequest(path: .custom { (id: Mountain.ID) in .mountain(with: id) })
+  private static func query(
+    with id: Mountain.ID,
+    continuation: OperationContinuation<Mountain?, any Error>
+  ) async throws -> Mountain? {
+    let loader = Dependency(Mountain.LoaderKey.self).wrappedValue
 
-    public var path: OperationPath {
-      .mountain(with: self.id)
+    async let mountain = loader.mountain(with: id)
+    if let localMountain = try await loader.localMountain(with: id) {
+      continuation.yield(localMountain)
     }
-
-    public func fetch(
-      isolation: isolated (any Actor)?,
-      in context: OperationContext,
-      with continuation: OperationContinuation<Mountain?, any Error>
-    ) async throws -> Mountain? {
-      let loader = Dependency(Mountain.LoaderKey.self).wrappedValue
-
-      async let mountain = loader.mountain(with: self.id)
-      if let localMountain = try await loader.localMountain(with: self.id) {
-        continuation.yield(localMountain)
-      }
-      return try await mountain
-    }
+    return try await mountain
   }
 }
 

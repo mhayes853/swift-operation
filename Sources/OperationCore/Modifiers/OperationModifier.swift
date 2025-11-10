@@ -44,7 +44,8 @@
 /// > can use our modifier whilst still being recognized as conformances to their respective base
 /// > operation type (eg. ``QueryRequest``) by the compiler.
 /// > ```swift
-/// > struct MyQuery: QueryRequest {
+/// > @QueryRequest
+/// > func myQuery() async throws -> Value {
 /// >   // ...
 /// > }
 /// >
@@ -58,7 +59,7 @@
 /// > }
 /// >
 /// > // ❌ QueryRequest conformance is lost due to opaque type.
-/// > let query = MyQuery().delay(for: 3)
+/// > let query = $myQuery.delay(for: 3)
 /// > ```
 public protocol OperationModifier<Value, Failure> {
   /// The underlying ``OperationRequest`` type.

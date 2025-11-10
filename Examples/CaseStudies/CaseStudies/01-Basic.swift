@@ -22,13 +22,13 @@ struct BasicSwiftUICaseStudy: CaseStudy {
 // MARK: - InnerView
 
 private struct InnerView: View {
-  @SharedOperation(Quote.randomQuery) private var quote
+  @SharedOperation(Quote.$randomQuery) private var quote
 
   var body: some View {
     VStack(alignment: .leading, spacing: 20) {
       Text("Random Quote").font(.headline)
-      BasicQueryStateView(state: self.$quote.state) {
-        QuoteView(quote: $0)
+      BasicQueryStateView(state: self.$quote.state) { quote in
+        QuoteView(quote: quote)
       }
 
       Button("Reload Quote") {

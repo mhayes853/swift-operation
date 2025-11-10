@@ -6,27 +6,22 @@
 /// updates while your operation is still running.
 ///
 /// ```swift
-/// struct CacheableQuery: QueryRequest, Hashable {
-///   let key: String
-///
-///   func fetch(
-///     isolation: isolated (any Actor)?,
-///     in context: OperationContext,
-///     with continuation: OperationContinuation<QueryData, any Error>
-///   ) async throws -> QueryData {
-///     if let cachedData = context.cache[key] {
-///       continuation.yield(cachedData)
-///     }
-///     let freshData = try await fetchFreshData()
-///     context.cache[key] = freshData
-///     return freshData
+/// @QueryRequest
+/// func cacheableQuery(
+///   key: String,
+///   context: OperationContext,
+///   continuation: OperationContinuation<QueryData, any Error>
+/// ) async throws -> QueryData {
+///   if let cachedData = context.cache[key] {
+///     continuation.yield(cachedData)
 ///   }
+///   let freshData = try await fetchFreshData()
+///   context.cache[key] = freshData
+///   return freshData
 /// }
 ///
 /// extension OperationContext {
-///   var cache: Cache {
-///     // ...
-///   }
+///   @ContextEntry var cache = Cache.shared
 /// }
 /// ```
 ///

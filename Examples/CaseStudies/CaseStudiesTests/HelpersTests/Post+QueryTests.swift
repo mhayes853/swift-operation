@@ -32,7 +32,7 @@ struct PostQueryTests {
     try await withDependencies {
       $0[PostsKey.self] = DummyJSONAPI(transport: transport)
     } operation: {
-      @SharedOperation(Post.query(for: 1)) var post
+      @SharedOperation(Post.$query(for: 1)) var post
       try await $post.load()
 
       let expectedPost = Post(
@@ -57,7 +57,7 @@ struct PostQueryTests {
     try await withDependencies {
       $0[PostsKey.self] = DummyJSONAPI(transport: transport)
     } operation: {
-      @SharedOperation(Post.query(for: 1)) var post
+      @SharedOperation(Post.$query(for: 1)) var post
       try await $post.load()
 
       expectNoDifference(post, .some(nil))
@@ -95,7 +95,7 @@ struct PostQueryTests {
     try await withDependencies {
       $0[PostSearcherKey.self] = DummyJSONAPI(transport: transport)
     } operation: {
-      @SharedOperation(Post.searchQuery(by: "blob")) var posts
+      @SharedOperation(Post.$searchQuery(by: "blob")) var posts
       try await $posts.load()
 
       let expectedPost = Post(

@@ -61,31 +61,26 @@ extension User {
 // MARK: - Mutation
 
 extension User {
-  public static let editMutation = EditMutation()
-    .alerts(success: .editProfileSuccess, failure: .editProfileFailure)
+  public struct EditArguments: Sendable {
+    let edit: User.Edit
 
-  public struct EditMutation: MutationRequest, Hashable, Sendable {
-    public struct Arguments: Sendable {
-      let edit: User.Edit
-
-      public init(edit: User.Edit) {
-        self.edit = edit
-      }
+    public init(edit: User.Edit) {
+      self.edit = edit
     }
+  }
 
-    public func mutate(
-      isolation: isolated (any Actor)?,
-      with arguments: Arguments,
-      in context: OperationContext,
-      with continuation: OperationContinuation<User, any Error>
-    ) async throws -> User {
-      @Dependency(\.defaultOperationClient) var client
-      @Dependency(User.EditorKey.self) var editor
+  public static var editMutation: some MutationRequest<EditArguments, User, any Error> {
+    Self.$editMutation.alerts(success: .editProfileSuccess, failure: .editProfileFailure)
+  }
 
-      let user = try await editor.edit(with: arguments.edit)
-      client.store(for: User.currentStatusQuery).currentValue = .user(user)
-      return user
-    }
+  @MutationRequest
+  private static func editMutation(arguments: EditArguments) async throws -> User {
+    @Dependency(\.defaultOperationClient) var client
+    @Dependency(User.EditorKey.self) var editor
+
+    let user = try await editor.edit(with: arguments.edit)
+    client.store(for: User.$currentStatusQuery).currentValue = .user(user)
+    return user
   }
 }
 

@@ -16,8 +16,7 @@ let package = Package(
       branch: "fix-wasm-build"
     ),
     .package(
-      url: "https://github.com/mhayes853/swift-operation",
-      branch: "main",
+      path: "../..",
       traits: ["SwiftOperationNavigation", "SwiftOperationLogging", "SwiftOperationWebBrowser"]
     ),
     .package(url: "https://github.com/swiftwasm/JavaScriptKit", from: "0.36.0")

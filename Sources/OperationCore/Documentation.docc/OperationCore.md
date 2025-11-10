@@ -7,7 +7,7 @@ Dealing with asynchronous work that interacts with external or remote resources 
 Swift Operation is a library that takes care of much of that complexity for you, and additionally allows you to configure that complexity on a per-operation basis.
 
 ## Overview
-First, we need to define a data type to operate on, and we’ll create an operation to fetch that data. We can create an operation that performs a simple data fetch by making a struct that conforms to the ``QueryRequest`` protocol.
+First, we need to define a data type to operate on, and we’ll create an operation to fetch that data. We can create an operation that performs a simple data fetch by using the `@QueryRequest` macro.
 ```swift
 import Foundation
 import Operation
@@ -20,32 +20,23 @@ struct Post: Hashable, Identifiable, Sendable, Codable {
 }
 
 extension Post {
-  static func query(for id: Int) -> some QueryRequest<Self?, any Error> {
+  static func query(for id: Int) -> some QueryRequest<Post?, any Error> {
     // The modifiers on the query are applied by default, they are
     // only being shown to demonstrate how to configure operations.
-    Query(id: id)
+    Self.$query(for: id)
       .retry(limit: 3)
       .deduplicated()
-      .rerunOnChange(
-        of: .connected(to: NWPathMonitorObserver.startingShared())
-      )
+      .rerunOnChange(of: .connected(to: NWPathMonitorObserver.startingShared()))
   }
 
-  struct Query: QueryRequest, Hashable {
-    let id: Int
-
-    func fetch(
-      isolation: isolated (any Actor)?,
-      in context: OperationContext,
-      with continuation: OperationContinuation<Post?, any Error>
-    ) async throws -> Post? {
-      let url = URL(string: "https://dummyjson.com/posts/\(id)")!
-      let (data, resp) = try await URLSession.shared.data(from: url)
-      if (resp as? HTTPURLResponse)?.statusCode == 404 {
-        return nil
-      }
-      return try JSONDecoder().decode(Post.self, from: data)
+  @QueryRequest
+  private static func query(for id: Int) async throws -> Post? {
+    let url = URL(string: "https://dummyjson.com/posts/\(id)")!
+    let (data, resp) = try await URLSession.shared.data(from: url)
+    if (resp as? HTTPURLResponse)?.statusCode == 404 {
+      return nil
     }
+    return try JSONDecoder().decode(Post.self, from: data)
   }
 }
 ```
@@ -56,7 +47,7 @@ import SharingOperation
 import SwiftUI
 
 struct PostView: View {
-  @SharedOperation<Post.Query.State> var post: Post??
+  @SharedOperation<QueryState<Post?, any Error>> var post: Post??
 
   init(id: Int) {
     // By default, this will begin fetching the post.
@@ -94,35 +85,24 @@ struct PostView: View {
 ### Mutations
 Mutations are best suited for operations that create, delete, or update data on remote or external sources they use. A good example of this would be HTTP non-GET requests such as POST, PATCH, PUT, DELETE, etc.
 
-We can create a mutation that creates a post by creating another struct that conforms to the ``MutationRequest`` protcol. A single mutation is designed to work with multiple sets of arguments, which requires us to specify the contents of the post as the mutation’s `Arguments` type.
+We can create a mutation that creates a post by using the `@MutationRequest` macro. A single mutation is designed to work with multiple sets of arguments, which requires us to specify the contents of the post as the mutation’s `Arguments` type.
 ```swift
 extension Post {
-  static let createMutation = CreateMutation()
+  struct CreateArguments: Codable, Sendable {
+    let userId: Int
+    let title: String
+    let body: String
+  }
 
-  struct CreateMutation: MutationRequest, Hashable, Sendable {
-    struct Arguments: Codable, Sendable {
-      let userId: Int
-      let title: String
-      let body: String
-    }
-
-    func mutate(
-      isolation: isolated (any Actor)?,
-      with arguments: Arguments,
-      in context: OperationContext,
-      with continuation: OperationContinuation<Post, any Error>
-    ) async throws -> Post {
-      let url = URL(string: "https://dummyjson.com/posts/add")!
-      var request = URLRequest(url: url)
-      request.httpMethod = "POST"
-      request.httpBody = try JSONEncoder().encode(arguments)
-      request.addValue(
-        "application/json",
-        forHTTPHeaderField: "Content-Type"
-      )
-      let (data, _) = try await URLSession.shared.data(for: request)
-      return try JSONDecoder().decode(Post.self, from: data)
-    }
+  @MutationRequest
+  static func createMutation(arguments: CreateArguments) async throws -> Post {
+    let url = URL(string: "https://dummyjson.com/posts/add")!
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.httpBody = try JSONEncoder().encode(arguments)
+    request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+    let (data, _) = try await URLSession.shared.data(for: request)
+    return try JSONDecoder().decode(Post.self, from: data)
   }
 }
 ```
@@ -137,7 +117,7 @@ struct CreatePostView: View {
   let userId: Int
   @State private var title = ""
   @State private var postBody = ""
-  @SharedOperation(Post.createMutation) private var create
+  @SharedOperation(Post.$createMutation) private var create
 
   var body: some View {
     Form {
@@ -146,7 +126,7 @@ struct CreatePostView: View {
 
       Button(self.$create.isLoading ? "Creating..." : "Create") {
         Task {
-          let args = Post.CreateMutation.Arguments(
+          let args = Post.CreateArguments(
             userId: self.userId,
             title: self.title,
             body: self.postBody
@@ -169,7 +149,7 @@ struct CreatePostView: View {
 The key difference between queries and mutations is that a single mutation instance can operate on multiple set or arguments, whereas a single query instance can only operate on the set of members it was constructed with. The `@SharedOperation` property wrapper, as well as the `OperationClient` will utilize this difference as we’ll see later.
 
 ### Pagination
-Paginated operations can be implemented through the ``PaginatedRequest`` protocol. Similarly to `QueryRequest` and `MutationRequest`, we’ll also create a struct that describes how to fetch a single page of data. In order to know what page needs to be fetched, there’s also a functional requirement that requires us to provide next `PageID` in the list of pages.
+Paginated operations can be implemented through the ``PaginatedRequest`` protocol. This time, we'll' create a struct that describes how to fetch a single page of data. In order to know what page needs to be fetched, there’s also a functional requirement that requires us to provide next `PageID` in the list of pages.
 
 Let’s create a paginated operation that provides pages for a feed of posts.
 ```swift
@@ -255,16 +235,12 @@ We can conform to the protocol create a modifier that adds artificial delay to a
 import Operation
 
 extension OperationRequest {
-  func delay(
-    for duration: OperationDuration
-  ) -> ModifiedOperation<Self, DelayModifer<Self>> {
+  func delay(for duration: OperationDuration) -> ModifiedOperation<Self, DelayModifer<Self>> {
     self.modifier(DelayModifer(duration: duration))
   }
 }
 
-struct DelayModifer<
-  Operation: OperationRequest
->: OperationModifier, Sendable {
+struct DelayModifer<Operation: OperationRequest>: OperationModifier, Sendable {
   let duration: OperationDuration
 
   func run(
@@ -274,17 +250,22 @@ struct DelayModifer<
     with continuation: OperationContinuation<Operation.Value, Operation.Failure>
   ) async throws(Operation.Failure) -> Operation.Value {
     try? await context.operationDelayer.delay(for: self.duration)
-    return try await operation.run(
-      isolation: isolation,
-      in: context,
-      with: continuation
-    )
+    return try await operation.run(isolation: isolation, in: context, with: continuation)
   }
 }
 
-let delayedPostQuery = Post.Query(id: 1).delay(for: .seconds(1))
-let delayedCreateMutation = Post.CreateMutation().delay(for: .seconds(1))
-let delayedFeedQuery = Post.FeedQuery().delay(for: .seconds(1))
+@QueryRequest
+func someQuery() {
+  // ...
+}
+
+@MutationRequest
+func someMutation() {
+  // ...
+}
+
+let delayedQuery = $someQuery.delay(for: .seconds(1))
+let delayedMutation = $someMutation.delay(for: .seconds(1))
 ```
 
 The modifier works regardless of the operation type because all operation types inherit from the ``OperationRequest`` protocol, which itself can apply modifiers.
@@ -293,23 +274,19 @@ The modifier works regardless of the operation type because all operation types 
 You can use the ``OperationContinuation`` instance passed to your operation to yield multiple data updates before returning. For example, you may want to temporarily yield cached data from disk while fetching the real live data from your server.
 ```swift
 extension Post {
-  struct CachedQuery: QueryRequest, Hashable {
-    let id: Int
-
-    func fetch(
-      isolation: isolated (any Actor)?,
-      in context: OperationContext,
-      with continuation: OperationContinuation<Post?, any Error>
-    ) async throws -> Post? {
-      async let post = self.fetchPost(for: self.id)
-      if let cached = try PostCache.shared.post(for: self.id) {
-        continuation.yield(cached)
-      }
-      return try await post
+  @QueryRequest
+  static func cachedQuery(
+    id: Int,
+    continuation: OperationContinuation<Post?, any Error>
+  ) async throws -> Post? {
+    async let post = Self.fetchPost(for: id)
+    if let cached = try PostCache.shared.post(for: id) {
+      continuation.yield(cached)
     }
-
-    // ...
+    return try await post
   }
+
+  // ...
 }
 ```
 > Note: To learn more about multiple data updates, checkout <doc:MultistageOperations>. Additionally, you can also find usage examples such as [file downloads](https://github.com/mhayes853/swift-operation/blob/main/Examples/CaseStudies/CaseStudies/02-Downloads.swift) and [FoundationModels streaming](https://github.com/mhayes853/swift-operation/blob/main/Examples/CanIClimb/CanIClimbKit/Sources/CanIClimbKit/MountainsCore/ClimbReadiness/Mountain%2BClimbReadinessGeneration.swift) in the demos.
@@ -348,31 +325,25 @@ The reason this works is because `@SharedOperation` uses the same ``OperationSto
 ```swift
 import SharingOperation
 
-struct SendFriendRequestMutation: MutationRequest, Hashable {
-  // ...
-
-  func mutate(
-    isolation: isolated (any Actor)?,
-    with arguments: Arguments,
-    in context: OperationContext,
-    with continuation: OperationContinuation<Void, any Error>
-  ) async throws {
-    @Dependency(\.defaultOperationClient) var client
-    try await sendFriendRequest(userId: arguments.userId)
-
-    // Friend request succeeded, now optimistically update the state
-    // of all friends list queries in the app.
-    let stores = client.stores(
-      matching: ["user-friends"],
-      of: User.FriendsQuery.State.self
-    )
-    for store in stores {
-      store.withExclusiveAccess { store in
-        store.currentValue = store.currentValue.updateRelationship(
-          for: arguments.userId,
-          to: .friendRequestSent
-        )
-      }
+@MutationRequest
+func sendFriendRequestMutation(
+  arguments: SendFriendRequestArguments
+) async throws {
+  @Dependency(\.defaultOperationClient) var client
+  try await sendFriendRequest(userId: arguments.userId)
+  
+  // Friend request succeeded, now optimistically update the state
+  // of all friends list queries in the app.
+  let stores = client.stores(
+    matching: ["user-friends"],
+    of: PaginatedState<[User], Int>.self
+  )
+  for store in stores {
+    store.withExclusiveAccess { store in
+      store.currentValue = store.currentValue.updateRelationship(
+        for: arguments.userId,
+        to: .friendRequestSent
+      )
     }
   }
 }

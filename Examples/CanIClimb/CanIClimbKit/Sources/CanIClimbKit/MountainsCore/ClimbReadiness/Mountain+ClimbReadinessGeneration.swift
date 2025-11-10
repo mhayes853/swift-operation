@@ -6,18 +6,18 @@ import SharingOperation
 
 // MARK: - GeneratedSegment
 
-extension Mountain.ClimbReadiness {
+extension MountainClimbReadiness {
   @CasePathable
   public enum GeneratedSegment: Hashable, Sendable {
     case empty
-    case partial(Mountain.ClimbReadiness.PartiallyGenerated)
-    case full(Mountain.ClimbReadiness)
+    case partial(MountainClimbReadiness.PartiallyGenerated)
+    case full(MountainClimbReadiness)
   }
 }
 
 // MARK: - Generator
 
-extension Mountain.ClimbReadiness {
+extension MountainClimbReadiness {
   public protocol Generator: Sendable {
     func readiness(for mountain: Mountain) -> any AsyncSequence<GeneratedSegment, any Error>
   }
@@ -39,7 +39,7 @@ extension Mountain.ClimbReadiness {
   }
 }
 
-extension Mountain.ClimbReadiness {
+extension MountainClimbReadiness {
   @MainActor
   public final class MockGenerator: Generator {
     public var segments = [GeneratedSegment]()
@@ -72,34 +72,31 @@ extension Mountain.ClimbReadiness {
 
 // MARK: - Query
 
-extension Mountain.ClimbReadiness {
+extension MountainClimbReadiness {
   public static func generationQuery(
     for mountain: Mountain
   ) -> some QueryRequest<GeneratedSegment, any Error> {
-    GenerationQuery(mountain: mountain)
+    Self.$generationQuery(for: mountain)
       .disableApplicationActiveRerunning()
       .satisfiedConnectionStatus(.disconnected)
   }
 
-  public struct GenerationQuery: QueryRequest, Hashable {
-    let mountain: Mountain
+  @QueryRequest
+  private static func generationQuery(
+    for mountain: Mountain,
+    context: OperationContext,
+    continuation: OperationContinuation<GeneratedSegment, any Error>
+  ) async throws -> GeneratedSegment {
+    @Dependency(MountainClimbReadiness.GeneratorKey.self) var generator: any Generator
 
-    public func fetch(
-      isolation: isolated (any Actor)?,
-      in context: OperationContext,
-      with continuation: OperationContinuation<GeneratedSegment, any Error>
-    ) async throws -> GeneratedSegment {
-      @Dependency(Mountain.ClimbReadiness.GeneratorKey.self) var generator: any Generator
+    var context = context
+    context.operationClock = context.operationClock.frozen()
 
-      var context = context
-      context.operationClock = context.operationClock.frozen()
-
-      var currentSegment = GeneratedSegment.empty
-      for try await segment in generator.readiness(for: self.mountain) {
-        currentSegment = segment
-        continuation.yield(currentSegment, using: context)
-      }
-      return currentSegment
+    var currentSegment = GeneratedSegment.empty
+    for try await segment in generator.readiness(for: mountain) {
+      currentSegment = segment
+      continuation.yield(currentSegment, using: context)
     }
+    return currentSegment
   }
 }
