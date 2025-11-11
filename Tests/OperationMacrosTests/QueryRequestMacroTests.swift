@@ -159,7 +159,7 @@ extension BaseTestSuite {
         }
 
         nonisolated func $something(arg: Int = 0) -> __macro_local_9somethingfMu_ {
-          __macro_local_9somethingfMu_(arg: _operationRequireHashable(_operationRequireSendable(arg)))
+          __macro_local_9somethingfMu_(arg: _operationRequireSendable(_operationRequireHashable(arg)))
         }
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable, Sendable {
@@ -492,7 +492,7 @@ extension BaseTestSuite {
           }
 
           static nonisolated func $something(arg: Int) -> __macro_local_9somethingfMu_ {
-            __macro_local_9somethingfMu_(arg: _operationRequireHashable(_operationRequireSendable(arg)), __macro_local_4typefMu_: _OperationHashableMetatype(type: Foo.self))
+            __macro_local_9somethingfMu_(arg: _operationRequireSendable(_operationRequireHashable(arg)), __macro_local_4typefMu_: _OperationHashableMetatype(type: Foo.self))
           }
 
           nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable, Sendable {
@@ -534,7 +534,7 @@ extension BaseTestSuite {
           }
 
           nonisolated func $something(arg: Int) -> __macro_local_9somethingfMu_ {
-            __macro_local_9somethingfMu_(arg: _operationRequireHashable(_operationRequireSendable(arg)), __macro_local_4typefMu_: self)
+            __macro_local_9somethingfMu_(arg: _operationRequireSendable(_operationRequireHashable(arg)), __macro_local_4typefMu_: self)
           }
 
           nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable, Sendable {
@@ -661,7 +661,7 @@ extension BaseTestSuite {
             }
 
             nonisolated func $something(arg: Int) -> __macro_local_9somethingfMu_ {
-              __macro_local_9somethingfMu_(arg: _operationRequireHashable(_operationRequireSendable(arg)), __macro_local_4typefMu_: self)
+              __macro_local_9somethingfMu_(arg: _operationRequireSendable(_operationRequireHashable(arg)), __macro_local_4typefMu_: self)
             }
 
             nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable, Sendable {
@@ -758,7 +758,7 @@ extension BaseTestSuite {
         }
 
         fileprivate nonisolated func $something(arg: Int) -> __macro_local_9somethingfMu_ {
-          __macro_local_9somethingfMu_(arg: _operationRequireHashable(_operationRequireSendable(arg)))
+          __macro_local_9somethingfMu_(arg: _operationRequireSendable(_operationRequireHashable(arg)))
         }
 
         fileprivate nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable, Sendable {
@@ -795,7 +795,7 @@ extension BaseTestSuite {
 
         @available(iOS 13.0, *)
         nonisolated func $something(arg: Int) -> __macro_local_9somethingfMu_ {
-          __macro_local_9somethingfMu_(arg: _operationRequireHashable(_operationRequireSendable(arg)))
+          __macro_local_9somethingfMu_(arg: _operationRequireSendable(_operationRequireHashable(arg)))
         }
 
         @available(iOS 13.0, *)

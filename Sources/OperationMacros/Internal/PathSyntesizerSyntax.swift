@@ -17,14 +17,14 @@ enum PathSyntesizerSyntax {
     }
   }
 
-  var requiredTypeChecks: Set<OperationFunctionSyntax.CreateOperationInvokeTypeCheck> {
-    var checks = Set<OperationFunctionSyntax.CreateOperationInvokeTypeCheck>()
+  var requiredTypeChecks: [OperationFunctionSyntax.CreateOperationInvokeTypeCheck] {
+    var checks = [OperationFunctionSyntax.CreateOperationInvokeTypeCheck]()
     switch self {
     case .inferredFromHashable:
-      checks.insert(.hashable)
-      checks.insert(.sendable)
+      checks.append(.hashable)
+      checks.append(.sendable)
     case .inferredFromIdentifiable:
-      checks.insert(.idHashableSendable)
+      checks.append(.idHashableSendable)
     case .custom:
       break
     }

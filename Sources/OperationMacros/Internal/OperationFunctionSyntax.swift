@@ -89,7 +89,7 @@ struct OperationFunctionSyntax {
     case sendable
   }
 
-  func createOperationTypeInvoke(typeChecks: Set<CreateOperationInvokeTypeCheck> = []) -> String {
+  func createOperationTypeInvoke(typeChecks: [CreateOperationInvokeTypeCheck] = []) -> String {
     var invoke = self.functionArgs
       .compactMap { functionArg -> String? in
         let name = functionArg.operationalName
@@ -142,7 +142,7 @@ struct OperationFunctionSyntax {
       """
   }
 
-  func accessorProperty(typeChecks: Set<CreateOperationInvokeTypeCheck> = []) -> String {
+  func accessorProperty(typeChecks: [CreateOperationInvokeTypeCheck] = []) -> String {
     let isFunction = self.hasNonReservedArgs || self.hasGenericArgs
     return """
       \(self.declaration.availability ?? "")
