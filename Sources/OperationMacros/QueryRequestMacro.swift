@@ -20,7 +20,7 @@ public enum QueryRequestMacro: PeerMacro {
     let typeConformance = pathSynthesizer.operationTypeConformance.map { ", \($0)" } ?? ""
     return [
       """
-      \(raw: syntax.accessorProperty)
+      \(raw: syntax.accessorProperty(typeChecks: pathSynthesizer.requiredTypeChecks))
       """,
       """
       \(raw: syntax.declaration.availability ?? "")

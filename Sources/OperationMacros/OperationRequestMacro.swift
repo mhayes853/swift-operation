@@ -21,7 +21,7 @@ public enum OperationRequestMacro: PeerMacro {
 
     return [
       """
-      \(raw: syntax.accessorProperty)
+      \(raw: syntax.accessorProperty())
       """,
       """
       \(raw: syntax.declaration.availability ?? "")

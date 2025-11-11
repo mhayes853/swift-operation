@@ -11,10 +11,24 @@ enum PathSyntesizerSyntax {
 
   var operationTypeConformance: String? {
     switch self {
-    case .inferredFromHashable: "Hashable"
+    case .inferredFromHashable: "Hashable, Sendable"
     case .inferredFromIdentifiable: "Identifiable"
     case .custom: nil
     }
+  }
+
+  var requiredTypeChecks: Set<OperationFunctionSyntax.CreateOperationInvokeTypeCheck> {
+    var checks = Set<OperationFunctionSyntax.CreateOperationInvokeTypeCheck>()
+    switch self {
+    case .inferredFromHashable:
+      checks.insert(.hashable)
+      checks.insert(.sendable)
+    case .inferredFromIdentifiable:
+      checks.insert(.idHashableSendable)
+    case .custom:
+      break
+    }
+    return checks
   }
 
   init(node: AttributeSyntax) {
@@ -45,11 +59,7 @@ enum PathSyntesizerSyntax {
     let accessModifier = function.isPrivate ? "" : function.accessModifier
     switch self {
     case .inferredFromHashable:
-      return """
-        \(accessModifier)var path: OperationCore.OperationPath {
-          OperationCore.OperationPath(self)
-        }
-        """
+      return ""  // NB: StatefulOperationRequest provides a default implementation.
     case .inferredFromIdentifiable:
       if !function.hasIDArgument {
         context.diagnose(
@@ -61,11 +71,7 @@ enum PathSyntesizerSyntax {
           )
         )
       }
-      return """
-        \(accessModifier)var path: OperationCore.OperationPath {
-          OperationCore.OperationPath(id)
-        }
-        """
+      return ""  // NB: StatefulOperationRequest provides a default implementation.
     case .custom(let syntax):
       if syntax.parameterInfo != function.pathClosureParamInfo {
         context.diagnose(

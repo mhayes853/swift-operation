@@ -83,12 +83,31 @@ struct OperationFunctionSyntax {
     return args.joined(separator: "\n")
   }
 
-  var createOperationTypeInvoke: String {
+  enum CreateOperationInvokeTypeCheck: Hashable, Sendable {
+    case hashable
+    case idHashableSendable
+    case sendable
+  }
+
+  func createOperationTypeInvoke(typeChecks: Set<CreateOperationInvokeTypeCheck> = []) -> String {
     var invoke = self.functionArgs
       .compactMap { functionArg -> String? in
         let name = functionArg.operationalName
         guard !self.reservedNames.contains(name) else { return nil }
-        return "\(name): \(name)"
+        var calledValue = name
+        for typeCheck in typeChecks {
+          switch typeCheck {
+          case .hashable:
+            calledValue = "_operationRequireHashable(\(calledValue))"
+          case .idHashableSendable:
+            guard name == "id" else { continue }
+            calledValue = "_operationRequireSendable(_operationRequireHashable(\(calledValue)))"
+          case .sendable:
+            calledValue = "_operationRequireSendable(\(calledValue))"
+          }
+
+        }
+        return "\(name): \(calledValue)"
       }
     if let parentTypeName {
       invoke.append(
@@ -123,7 +142,7 @@ struct OperationFunctionSyntax {
       """
   }
 
-  var accessorProperty: String {
+  func accessorProperty(typeChecks: Set<CreateOperationInvokeTypeCheck> = []) -> String {
     let isFunction = self.hasNonReservedArgs || self.hasGenericArgs
     return """
       \(self.declaration.availability ?? "")
@@ -133,7 +152,7 @@ struct OperationFunctionSyntax {
       \(self.declaration.genericParameterClause ?? "")\
       \(isFunction ? "(\(self.createOperationTypeFunctionArgs)) ->" : ":") \
       \(self.operationTypeName) {
-        \(self.operationTypeName)(\(self.createOperationTypeInvoke))
+        \(self.operationTypeName)(\(self.createOperationTypeInvoke(typeChecks: typeChecks)))
       }
       """
   }
