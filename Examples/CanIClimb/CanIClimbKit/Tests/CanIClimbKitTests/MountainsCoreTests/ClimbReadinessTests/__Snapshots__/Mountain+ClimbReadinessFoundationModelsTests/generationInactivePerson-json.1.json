@@ -1,26 +1,6 @@
 {
   "messages" : [
     {
-      "content" : "'userVO2Max' tool called.",
-      "metadata" : {
-        "call.arguments" : {
-          "string" : {
-            "_0" : "Arguments(query: \"last 6 weeks\")"
-          }
-        },
-        "call.duration" : {
-          "string" : {
-            "_0" : "0.001209042 seconds"
-          }
-        },
-        "call.result" : {
-          "string" : {
-            "_0" : "success(CanIClimbKit.NumericHealthSamples(kind: CanIClimbKit.NumericHealthSamples.Kind.vo2Max, elements: [CanIClimbKit.NumericHealthSamples.Element(timestamp: 2025-11-10 09:17:34 +0000, value: 33.4)]))"
-          }
-        }
-      }
-    },
-    {
       "content" : "'userLocation' tool called.",
       "metadata" : {
         "call.arguments" : {
@@ -30,7 +10,7 @@
         },
         "call.duration" : {
           "string" : {
-            "_0" : "0.001070375 seconds"
+            "_0" : "0.001222125 seconds"
           }
         },
         "call.result" : {
@@ -39,12 +19,32 @@
           }
         }
       }
+    },
+    {
+      "content" : "'userVO2Max' tool called.",
+      "metadata" : {
+        "call.arguments" : {
+          "string" : {
+            "_0" : "Arguments(query: \"last 6 weeks\")"
+          }
+        },
+        "call.duration" : {
+          "string" : {
+            "_0" : "0.001302916 seconds"
+          }
+        },
+        "call.result" : {
+          "string" : {
+            "_0" : "success(CanIClimbKit.NumericHealthSamples(kind: CanIClimbKit.NumericHealthSamples.Kind.vo2Max, elements: [CanIClimbKit.NumericHealthSamples.Element(timestamp: 2025-11-11 19:40:35 +0000, value: 33.4)]))"
+          }
+        }
+      }
     }
   ],
   "readiness" : {
-    "insight" : "Based on the VO2 Max reading of 33.4 ml\/kg\/min and your sedentary activity level, you are not currently ready to climb Freel Peak. Freel Peak is rated as a difficult climb with an elevation of 3,318.0528 meters. To prepare, you should gradually increase your cardiovascular fitness through regular aerobic exercise, such as hiking or running, and incorporate strength training to build muscle endurance. Aim for at least 3-4 days of exercise per week, and progressively increase the intensity and duration of your workouts as your fitness improves. Additionally, ensure proper nutrition to support your training and consider acclimatizing to high altitudes if possible before attempting the climb.",
+    "insight" : "Based on your current VO2 Max of 33.4 ml\/kg\/min, which indicates a sedentary fitness level, coupled with your sedentary activity level and no workout frequency, you are not yet fully prepared for climbing Freel Peak. This mountain is rated as difficult with an elevation of 3,318 meters. To improve your readiness, consider incorporating regular cardiovascular exercise, strength training, and gradually increasing your stamina through long-distance walking or running. Aim for at least 3-4 days of moderate exercise per week and gradually work up to more intense climbs. Additionally, ensure proper nutrition and stay hydrated, especially given the mountain's snowy conditions that may affect weather patterns.",
     "rating" : {
-      "notReady" : {
+      "partiallyReady" : {
 
       }
     }

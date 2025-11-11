@@ -30,7 +30,7 @@ public enum MutationRequestMacro: PeerMacro {
 
     return [
       """
-      \(raw: syntax.accessorProperty)
+      \(raw: syntax.accessorProperty(typeChecks: pathSynthesizer.requiredTypeChecks))
       """,
       """
       \(raw: syntax.declaration.availability ?? "")

@@ -58,14 +58,14 @@ public struct _OperationPathMacroSynthesizer: Sendable {
   ///
   /// Only use this if the arguments to your operation would syntesize a Hashable conformance.
   public static let inferredFromHashable = Self()
-  
+
   /// Synthesizes the `OperationPath` requirement of an operation to be the identity of the
   /// operation type.
   ///
   /// Only use this if one of the arguments to your operation is named `id` with a type that
   /// conforms to Hashable.
   public static let inferredFromIdentifiable = Self()
-  
+
   /// Synthesizes the `OperationPath` requirement of an operation to the result of a custom
   /// closure that you specify.
   ///
@@ -97,4 +97,16 @@ public struct _OperationHashableMetatype<T>: Hashable, Sendable {
   public func hash(into hasher: inout Hasher) {
     hasher.combine(ObjectIdentifier(self.type))
   }
+}
+
+// MARK: - Type Requirements
+
+@_transparent
+public func _operationRequireHashable<T: Hashable>(_ value: T) -> T {
+  value
+}
+
+@_transparent
+public func _operationRequireSendable<T: Sendable>(_ value: T) -> T {
+  value
 }
