@@ -26,6 +26,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable, Sendable {
 
+          var _debugTypeName: String {
+            "something"
+          }
 
           func mutate(
             isolation: isolated (any Actor)?,
@@ -61,6 +64,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable, Sendable {
 
+          var _debugTypeName: String {
+            "something"
+          }
 
           func mutate(
             isolation: isolated (any Actor)?,
@@ -105,6 +111,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable, Sendable {
 
+          var _debugTypeName: String {
+            "something"
+          }
 
           func mutate(
             isolation: isolated (any Actor)?,
@@ -141,6 +150,9 @@ extension BaseTestSuite {
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable, Sendable {
           let arg: Int
           let arg2: String
+          var _debugTypeName: String {
+            "something"
+          }
 
           func mutate(
             isolation: isolated (any Actor)?,
@@ -179,6 +191,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable, Sendable {
 
+          var _debugTypeName: String {
+            "something"
+          }
 
           func mutate(
             isolation: isolated (any Actor)?,
@@ -215,6 +230,9 @@ extension BaseTestSuite {
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable, Sendable {
           let arg: Int
           let arg2: String
+          var _debugTypeName: String {
+            "something"
+          }
 
           func mutate(
             isolation: isolated (any Actor)?,
@@ -250,6 +268,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable, Sendable {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
 
           func mutate(
             isolation: isolated (any Actor)?,
@@ -333,6 +354,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable, Sendable {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
 
           func mutate(
             isolation: isolated (any Actor)?,
@@ -376,6 +400,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable, Sendable {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
 
           func mutate(
             isolation: isolated (any Actor)?,
@@ -421,6 +448,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable, Sendable {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
 
           func mutate(
             isolation: isolated (any Actor)?,
@@ -464,6 +494,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable, Sendable {
 
+          var _debugTypeName: String {
+            "something"
+          }
 
           func mutate(
             isolation: isolated (any Actor)?,
@@ -503,6 +536,9 @@ extension BaseTestSuite {
           nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable, Sendable {
             let arg: Int
             let __macro_local_4typefMu_: _OperationHashableMetatype<Foo>
+            var _debugTypeName: String {
+              "Foo.something"
+            }
 
             func mutate(
               isolation: isolated (any Actor)?,
@@ -545,6 +581,9 @@ extension BaseTestSuite {
 
           nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable, Sendable {
             let __macro_local_4typefMu_: _OperationHashableMetatype<Foo>
+            var _debugTypeName: String {
+              "Foo.something"
+            }
 
             func mutate(
               isolation: isolated (any Actor)?,
@@ -591,6 +630,9 @@ extension BaseTestSuite {
           nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable, Sendable {
             let arg: Int
             let __macro_local_4typefMu_: _OperationHashableMetatype<Foo>
+            var _debugTypeName: String {
+              "Foo.something"
+            }
 
             func mutate(
               isolation: isolated (any Actor)?,
@@ -634,6 +676,9 @@ extension BaseTestSuite {
           nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable, Sendable {
             let arg: Int
             let __macro_local_4typefMu_: Foo
+            var _debugTypeName: String {
+              "Foo.something"
+            }
 
             func mutate(
               isolation: isolated (any Actor)?,
@@ -682,6 +727,9 @@ extension BaseTestSuite {
           nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable, Sendable {
             let arg: Int
             let __macro_local_4typefMu_: Foo
+            var _debugTypeName: String {
+              "Foo.something"
+            }
 
             func mutate(
               isolation: isolated (any Actor)?,
@@ -721,6 +769,9 @@ extension BaseTestSuite {
 
           nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable, Sendable {
             let arg: Int
+            var _debugTypeName: String {
+              "something"
+            }
 
             func mutate(
               isolation: isolated (any Actor)?,
@@ -764,6 +815,9 @@ extension BaseTestSuite {
             nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable, Sendable {
               let arg: Int
               let __macro_local_4typefMu_: Foo
+              var _debugTypeName: String {
+                "Foo.something"
+              }
 
               func mutate(
                 isolation: isolated (any Actor)?,
@@ -801,6 +855,9 @@ extension BaseTestSuite {
 
         public nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable, Sendable {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
 
           public func mutate(
             isolation: isolated (any Actor)?,
@@ -832,6 +889,9 @@ extension BaseTestSuite {
 
         private nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable, Sendable {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
 
           func mutate(
             isolation: isolated (any Actor)?,
@@ -863,6 +923,9 @@ extension BaseTestSuite {
 
         fileprivate nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable, Sendable {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
 
           fileprivate func mutate(
             isolation: isolated (any Actor)?,
@@ -902,6 +965,9 @@ extension BaseTestSuite {
         @available(iOS 13.0, *)
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable, Sendable {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
 
           func mutate(
             isolation: isolated (any Actor)?,
@@ -942,6 +1008,9 @@ extension BaseTestSuite {
         @available(tvOS 13.0, *)
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable, Sendable {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
 
           func mutate(
             isolation: isolated (any Actor)?,
@@ -989,6 +1058,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable, Sendable {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
 
           func mutate(
             isolation: isolated (any Actor)?,
@@ -1039,6 +1111,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable, Sendable {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
 
           func mutate(
             isolation: isolated (any Actor)?,
@@ -1086,6 +1161,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable, Sendable {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
 
           func mutate(
             isolation: isolated (any Actor)?,
@@ -1136,6 +1214,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable, Sendable {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
 
           func mutate(
             isolation: isolated (any Actor)?,
@@ -1171,6 +1252,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_<T: Creatable>: OperationCore.MutationRequest, Hashable, Sendable {
 
+          var _debugTypeName: String {
+            "something"
+          }
 
           func mutate(
             isolation: isolated (any Actor)?,
@@ -1202,6 +1286,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_<T: Creatable>: OperationCore.MutationRequest, Hashable, Sendable {
 
+          var _debugTypeName: String {
+            "something"
+          }
 
           func mutate(
             isolation: isolated (any Actor)?,
@@ -1318,6 +1405,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Identifiable {
           let id: Int
+          var _debugTypeName: String {
+            "something"
+          }
 
           func mutate(
             isolation: isolated (any Actor)?,
@@ -1373,6 +1463,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest {
 
+          var _debugTypeName: String {
+            "something"
+          }
           var path: OperationCore.OperationPath {
           makePath()
           }
@@ -1413,6 +1506,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest {
 
+          var _debugTypeName: String {
+            "something"
+          }
           var path: OperationCore.OperationPath {
           makePath()
           }
@@ -1450,6 +1546,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
           var path: OperationCore.OperationPath {
           makePath(arg: arg)
           }
@@ -1486,6 +1585,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
           var path: OperationCore.OperationPath {
           makePath(arg: arg)
           }
@@ -1525,6 +1627,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
           var path: OperationCore.OperationPath {
           makePath(arg: arg)
           }
@@ -1562,6 +1667,9 @@ extension BaseTestSuite {
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest {
           let arg: Int
           let arg2: String
+          var _debugTypeName: String {
+            "something"
+          }
           var path: OperationCore.OperationPath {
           makePath(arg: arg, arg2: arg2)
           }
@@ -1691,6 +1799,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable, Sendable {
 
+          var _debugTypeName: String {
+            "something"
+          }
 
           func mutate(
             isolation: isolated (any Actor)?,
