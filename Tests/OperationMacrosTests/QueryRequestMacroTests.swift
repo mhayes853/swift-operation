@@ -26,6 +26,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable, Sendable {
 
+          var _debugTypeName: String {
+            "something"
+          }
 
           func fetch(
             isolation: isolated (any Actor)?,
@@ -60,6 +63,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable, Sendable {
 
+          var _debugTypeName: String {
+            "something"
+          }
 
           func fetch(
             isolation: isolated (any Actor)?,
@@ -95,6 +101,9 @@ extension BaseTestSuite {
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable, Sendable {
           let arg: Int
           let arg2: String
+          var _debugTypeName: String {
+            "something"
+          }
 
           func fetch(
             isolation: isolated (any Actor)?,
@@ -130,6 +139,9 @@ extension BaseTestSuite {
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable, Sendable {
           let arg: Int
           let arg2: String
+          var _debugTypeName: String {
+            "something"
+          }
 
           func fetch(
             isolation: isolated (any Actor)?,
@@ -164,6 +176,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable, Sendable {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
 
           func fetch(
             isolation: isolated (any Actor)?,
@@ -246,6 +261,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable, Sendable {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
 
           func fetch(
             isolation: isolated (any Actor)?,
@@ -288,6 +306,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable, Sendable {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
 
           func fetch(
             isolation: isolated (any Actor)?,
@@ -332,6 +353,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable, Sendable {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
 
           func fetch(
             isolation: isolated (any Actor)?,
@@ -374,6 +398,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable, Sendable {
 
+          var _debugTypeName: String {
+            "something"
+          }
 
           func fetch(
             isolation: isolated (any Actor)?,
@@ -412,6 +439,9 @@ extension BaseTestSuite {
           nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable, Sendable {
             let arg: Int
             let __macro_local_4typefMu_: _OperationHashableMetatype<Foo>
+            var _debugTypeName: String {
+              "Foo.something"
+            }
 
             func fetch(
               isolation: isolated (any Actor)?,
@@ -453,6 +483,9 @@ extension BaseTestSuite {
 
           nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable, Sendable {
             let __macro_local_4typefMu_: _OperationHashableMetatype<Foo>
+            var _debugTypeName: String {
+              "Foo.something"
+            }
 
             func fetch(
               isolation: isolated (any Actor)?,
@@ -498,6 +531,9 @@ extension BaseTestSuite {
           nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable, Sendable {
             let arg: Int
             let __macro_local_4typefMu_: _OperationHashableMetatype<Foo>
+            var _debugTypeName: String {
+              "Foo.something"
+            }
 
             func fetch(
               isolation: isolated (any Actor)?,
@@ -540,6 +576,9 @@ extension BaseTestSuite {
           nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable, Sendable {
             let arg: Int
             let __macro_local_4typefMu_: Foo
+            var _debugTypeName: String {
+              "Foo.something"
+            }
 
             func fetch(
               isolation: isolated (any Actor)?,
@@ -587,6 +626,9 @@ extension BaseTestSuite {
           nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable, Sendable {
             let arg: Int
             let __macro_local_4typefMu_: Foo
+            var _debugTypeName: String {
+              "Foo.something"
+            }
 
             func fetch(
               isolation: isolated (any Actor)?,
@@ -625,6 +667,9 @@ extension BaseTestSuite {
 
           nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable, Sendable {
             let arg: Int
+            var _debugTypeName: String {
+              "something"
+            }
 
             func fetch(
               isolation: isolated (any Actor)?,
@@ -667,6 +712,9 @@ extension BaseTestSuite {
             nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable, Sendable {
               let arg: Int
               let __macro_local_4typefMu_: Foo
+              var _debugTypeName: String {
+                "Foo.something"
+              }
 
               func fetch(
                 isolation: isolated (any Actor)?,
@@ -703,6 +751,9 @@ extension BaseTestSuite {
 
         public nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable, Sendable {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
 
           public func fetch(
             isolation: isolated (any Actor)?,
@@ -733,6 +784,9 @@ extension BaseTestSuite {
 
         private nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable, Sendable {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
 
           func fetch(
             isolation: isolated (any Actor)?,
@@ -763,6 +817,9 @@ extension BaseTestSuite {
 
         fileprivate nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable, Sendable {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
 
           fileprivate func fetch(
             isolation: isolated (any Actor)?,
@@ -801,6 +858,9 @@ extension BaseTestSuite {
         @available(iOS 13.0, *)
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable, Sendable {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
 
           func fetch(
             isolation: isolated (any Actor)?,
@@ -840,6 +900,9 @@ extension BaseTestSuite {
         @available(tvOS 13.0, *)
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable, Sendable {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
 
           func fetch(
             isolation: isolated (any Actor)?,
@@ -886,6 +949,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable, Sendable {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
 
           func fetch(
             isolation: isolated (any Actor)?,
@@ -931,6 +997,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable, Sendable {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
 
           func fetch(
             isolation: isolated (any Actor)?,
@@ -973,6 +1042,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable, Sendable {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
 
           func fetch(
             isolation: isolated (any Actor)?,
@@ -1018,6 +1090,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable, Sendable {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
 
           func fetch(
             isolation: isolated (any Actor)?,
@@ -1052,6 +1127,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_<T: Creatable>: OperationCore.QueryRequest, Hashable, Sendable {
 
+          var _debugTypeName: String {
+            "something"
+          }
 
           func fetch(
             isolation: isolated (any Actor)?,
@@ -1082,6 +1160,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_<T: Creatable>: OperationCore.QueryRequest, Hashable, Sendable {
 
+          var _debugTypeName: String {
+            "something"
+          }
 
           func fetch(
             isolation: isolated (any Actor)?,
@@ -1197,6 +1278,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Identifiable {
           let id: Int
+          var _debugTypeName: String {
+            "something"
+          }
 
           func fetch(
             isolation: isolated (any Actor)?,
@@ -1251,6 +1335,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest {
 
+          var _debugTypeName: String {
+            "something"
+          }
           var path: OperationCore.OperationPath {
           makePath()
           }
@@ -1290,6 +1377,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest {
 
+          var _debugTypeName: String {
+            "something"
+          }
           var path: OperationCore.OperationPath {
           makePath()
           }
@@ -1326,6 +1416,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
           var path: OperationCore.OperationPath {
           makePath(arg: arg)
           }
@@ -1361,6 +1454,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
           var path: OperationCore.OperationPath {
           makePath(arg: arg)
           }
@@ -1397,6 +1493,9 @@ extension BaseTestSuite {
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest {
           let arg: Int
           let arg2: String
+          var _debugTypeName: String {
+            "something"
+          }
           var path: OperationCore.OperationPath {
           makePath(arg: arg, arg2: arg2)
           }
@@ -1525,6 +1624,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.QueryRequest, Hashable, Sendable {
 
+          var _debugTypeName: String {
+            "something"
+          }
 
           func fetch(
             isolation: isolated (any Actor)?,
