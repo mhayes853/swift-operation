@@ -855,7 +855,7 @@ extension BaseTestSuite {
 
         public nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable, Sendable {
           let arg: Int
-          var _debugTypeName: String {
+          public var _debugTypeName: String {
             "something"
           }
 
@@ -923,7 +923,7 @@ extension BaseTestSuite {
 
         fileprivate nonisolated struct __macro_local_9somethingfMu_: OperationCore.MutationRequest, Hashable, Sendable {
           let arg: Int
-          var _debugTypeName: String {
+          fileprivate var _debugTypeName: String {
             "something"
           }
 

@@ -51,6 +51,10 @@ struct OperationFunctionSyntax {
     self.declaration.genericParameterClause != nil
   }
 
+  var requirementAccessModifier: String {
+    self.isPrivate ? "" : self.accessModifier
+  }
+
   var debugTypeNameProperty: String {
     let prefix =
       if let parentTypeName = self.parentTypeName {
@@ -59,7 +63,7 @@ struct OperationFunctionSyntax {
         ""
       }
     return """
-      var _debugTypeName: String {
+      \(self.requirementAccessModifier)var _debugTypeName: String {
           "\(prefix)\(self.declaration.name.trimmedDescription)"
       }
       """
