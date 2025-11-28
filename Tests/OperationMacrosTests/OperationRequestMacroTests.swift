@@ -26,6 +26,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
 
+          var _debugTypeName: String {
+            "something"
+          }
           func run(
             isolation: isolated (any Actor)?,
             in context: OperationCore.OperationContext,
@@ -59,6 +62,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
 
+          var _debugTypeName: String {
+            "something"
+          }
           func run(
             isolation: isolated (any Actor)?,
             in context: OperationCore.OperationContext,
@@ -93,6 +99,9 @@ extension BaseTestSuite {
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
           let arg: Int
           let arg2: String
+          var _debugTypeName: String {
+            "something"
+          }
           func run(
             isolation: isolated (any Actor)?,
             in context: OperationCore.OperationContext,
@@ -127,6 +136,9 @@ extension BaseTestSuite {
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
           let arg: Int
           let arg2: String
+          var _debugTypeName: String {
+            "something"
+          }
           func run(
             isolation: isolated (any Actor)?,
             in context: OperationCore.OperationContext,
@@ -160,6 +172,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
           func run(
             isolation: isolated (any Actor)?,
             in context: OperationCore.OperationContext,
@@ -237,6 +252,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
           func run(
             isolation: isolated (any Actor)?,
             in context: OperationCore.OperationContext,
@@ -278,6 +296,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
           func run(
             isolation: isolated (any Actor)?,
             in context: OperationCore.OperationContext,
@@ -321,6 +342,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
           func run(
             isolation: isolated (any Actor)?,
             in context: OperationCore.OperationContext,
@@ -362,6 +386,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
 
+          var _debugTypeName: String {
+            "something"
+          }
           func run(
             isolation: isolated (any Actor)?,
             in context: OperationCore.OperationContext,
@@ -399,6 +426,9 @@ extension BaseTestSuite {
           nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
             let arg: Int
             let __macro_local_4typefMu_: _OperationHashableMetatype<Foo>
+            var _debugTypeName: String {
+              "Foo.something"
+            }
             func run(
               isolation: isolated (any Actor)?,
               in context: OperationCore.OperationContext,
@@ -439,6 +469,9 @@ extension BaseTestSuite {
 
           nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
             let __macro_local_4typefMu_: _OperationHashableMetatype<Foo>
+            var _debugTypeName: String {
+              "Foo.something"
+            }
             func run(
               isolation: isolated (any Actor)?,
               in context: OperationCore.OperationContext,
@@ -483,6 +516,9 @@ extension BaseTestSuite {
           nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
             let arg: Int
             let __macro_local_4typefMu_: _OperationHashableMetatype<Foo>
+            var _debugTypeName: String {
+              "Foo.something"
+            }
             func run(
               isolation: isolated (any Actor)?,
               in context: OperationCore.OperationContext,
@@ -524,6 +560,9 @@ extension BaseTestSuite {
           nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
             let arg: Int
             let __macro_local_4typefMu_: Foo
+            var _debugTypeName: String {
+              "Foo.something"
+            }
             func run(
               isolation: isolated (any Actor)?,
               in context: OperationCore.OperationContext,
@@ -570,6 +609,9 @@ extension BaseTestSuite {
           nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
             let arg: Int
             let __macro_local_4typefMu_: Foo
+            var _debugTypeName: String {
+              "Foo.something"
+            }
             func run(
               isolation: isolated (any Actor)?,
               in context: OperationCore.OperationContext,
@@ -607,6 +649,9 @@ extension BaseTestSuite {
 
           nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
             let arg: Int
+            var _debugTypeName: String {
+              "something"
+            }
             func run(
               isolation: isolated (any Actor)?,
               in context: OperationCore.OperationContext,
@@ -648,6 +693,9 @@ extension BaseTestSuite {
             nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
               let arg: Int
               let __macro_local_4typefMu_: Foo
+              var _debugTypeName: String {
+                "Foo.something"
+              }
               func run(
                 isolation: isolated (any Actor)?,
                 in context: OperationCore.OperationContext,
@@ -683,6 +731,9 @@ extension BaseTestSuite {
 
         public nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
           let arg: Int
+          public var _debugTypeName: String {
+            "something"
+          }
           public func run(
             isolation: isolated (any Actor)?,
             in context: OperationCore.OperationContext,
@@ -712,6 +763,9 @@ extension BaseTestSuite {
 
         private nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
           func run(
             isolation: isolated (any Actor)?,
             in context: OperationCore.OperationContext,
@@ -741,6 +795,9 @@ extension BaseTestSuite {
 
         fileprivate nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
           let arg: Int
+          fileprivate var _debugTypeName: String {
+            "something"
+          }
           fileprivate func run(
             isolation: isolated (any Actor)?,
             in context: OperationCore.OperationContext,
@@ -778,6 +835,9 @@ extension BaseTestSuite {
         @available(iOS 13.0, *)
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
           func run(
             isolation: isolated (any Actor)?,
             in context: OperationCore.OperationContext,
@@ -816,6 +876,9 @@ extension BaseTestSuite {
         @available(tvOS 13.0, *)
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
           func run(
             isolation: isolated (any Actor)?,
             in context: OperationCore.OperationContext,
@@ -857,6 +920,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
           func run(
             isolation: isolated (any Actor)?,
             in context: OperationCore.OperationContext,
@@ -901,6 +967,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
           func run(
             isolation: isolated (any Actor)?,
             in context: OperationCore.OperationContext,
@@ -942,6 +1011,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
           func run(
             isolation: isolated (any Actor)?,
             in context: OperationCore.OperationContext,
@@ -987,6 +1059,9 @@ extension BaseTestSuite {
           nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
             let arg: Int
             let __macro_local_4typefMu_: _OperationHashableMetatype<Foo>
+            var _debugTypeName: String {
+              "Foo.something"
+            }
             func run(
               isolation: isolated (any Actor)?,
               in context: OperationCore.OperationContext,
@@ -1032,6 +1107,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
           let arg: Int
+          var _debugTypeName: String {
+            "something"
+          }
           func run(
             isolation: isolated (any Actor)?,
             in context: OperationCore.OperationContext,
@@ -1080,6 +1158,9 @@ extension BaseTestSuite {
 
           nonisolated struct __macro_local_9somethingfMu_: OperationCore.OperationRequest {
             let __macro_local_4typefMu_: _OperationHashableMetatype<Foo.Bar>
+            var _debugTypeName: String {
+              "Foo.Bar.something"
+            }
             func run(
               isolation: isolated (any Actor)?,
               in context: OperationCore.OperationContext,
@@ -1114,6 +1195,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_<T: Creatable>: OperationCore.OperationRequest {
 
+          var _debugTypeName: String {
+            "something"
+          }
           func run(
             isolation: isolated (any Actor)?,
             in context: OperationCore.OperationContext,
@@ -1143,6 +1227,9 @@ extension BaseTestSuite {
 
         nonisolated struct __macro_local_9somethingfMu_<T: Creatable>: OperationCore.OperationRequest {
 
+          var _debugTypeName: String {
+            "something"
+          }
           func run(
             isolation: isolated (any Actor)?,
             in context: OperationCore.OperationContext,
