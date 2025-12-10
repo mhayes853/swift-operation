@@ -10,9 +10,14 @@ struct OperationStateKey<
   State: OperationState & Sendable,
   Scheduler: SharedOperationStateScheduler & Sendable
 >: SharedKey {
-  private let store: OperationStore<State>
-  let id = OperationStateKeyID()
   private let scheduler: Scheduler
+  private let store: OperationStore<State>
+
+  struct ID: Hashable, Sendable {
+    private let inner = UUID()
+  }
+
+  let id = ID()
 
   init(store: OperationStore<State>, scheduler: Scheduler) {
     self.store = store
@@ -61,23 +66,6 @@ struct OperationStateKey<
       }
     )
     return SharedSubscription { subscription.cancel() }
-  }
-}
-
-// MARK: - OperationStateKeyID
-
-final class OperationStateKeyID: Sendable {
-}
-
-extension OperationStateKeyID: Equatable {
-  static func == (lhs: OperationStateKeyID, rhs: OperationStateKeyID) -> Bool {
-    lhs === rhs
-  }
-}
-
-extension OperationStateKeyID: Hashable {
-  func hash(into hasher: inout Hasher) {
-    hasher.combine(ObjectIdentifier(self))
   }
 }
 
