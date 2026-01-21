@@ -28,7 +28,8 @@ public enum OperationRequestMacro: PeerMacro {
       \(raw: syntax.accessModifier)nonisolated struct \(raw: syntax.operationTypeNameDeclaration): \
       OperationCore.OperationRequest {
         \(raw: syntax.operationTypeArgs)
-        \(raw: syntax.isPrivate ? "" : syntax.accessModifier)func run(
+        \(raw: syntax.debugTypeNameProperty)
+        \(raw: syntax.requirementAccessModifier)func run(
           isolation: isolated (any Actor)?,
           in context: OperationCore.OperationContext,
           with continuation: OperationCore.OperationContinuation<\(raw: syntax.returnTypeWithoutModifiers), \

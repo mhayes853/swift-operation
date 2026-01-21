@@ -27,8 +27,9 @@ public enum QueryRequestMacro: PeerMacro {
       \(raw: syntax.accessModifier)nonisolated struct \(raw: syntax.operationTypeNameDeclaration): \
       OperationCore.QueryRequest\(raw: typeConformance) {
         \(raw: syntax.operationTypeArgs)
+        \(raw: syntax.debugTypeNameProperty)
         \(raw: pathSynthesizer.operationPathAccessor(with: syntax, in: context))
-        \(raw: syntax.isPrivate ? "" : syntax.accessModifier)func fetch(
+        \(raw: syntax.requirementAccessModifier)func fetch(
           isolation: isolated (any Actor)?,
           in context: OperationCore.OperationContext,
           with continuation: OperationCore.OperationContinuation<\(raw: syntax.returnTypeWithoutModifiers), \

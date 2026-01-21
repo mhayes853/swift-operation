@@ -51,6 +51,24 @@ struct OperationFunctionSyntax {
     self.declaration.genericParameterClause != nil
   }
 
+  var requirementAccessModifier: String {
+    self.isPrivate ? "" : self.accessModifier
+  }
+
+  var debugTypeNameProperty: String {
+    let prefix =
+      if let parentTypeName = self.parentTypeName {
+        "\(parentTypeName)."
+      } else {
+        ""
+      }
+    return """
+      \(self.requirementAccessModifier)var _debugTypeName: String {
+          "\(prefix)\(self.declaration.name.trimmedDescription)"
+      }
+      """
+  }
+
   var operationTypeReturnSignature: String {
     let returnTypeClause = self.isVoid ? "" : "-> \(self.returnType)"
     let throwsClause =

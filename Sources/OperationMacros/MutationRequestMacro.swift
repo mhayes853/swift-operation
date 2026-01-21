@@ -37,8 +37,9 @@ public enum MutationRequestMacro: PeerMacro {
       \(raw: syntax.accessModifier)nonisolated struct \(raw: syntax.operationTypeNameDeclaration): \
       OperationCore.MutationRequest\(raw: typeConformance) {
         \(raw: syntax.operationTypeArgs)
+        \(raw: syntax.debugTypeNameProperty)
         \(raw: pathSynthesizer.operationPathAccessor(with: syntax, in: context))
-        \(raw: syntax.isPrivate ? "" : syntax.accessModifier)func mutate(
+        \(raw: syntax.requirementAccessModifier)func mutate(
           isolation: isolated (any Actor)?,
           with arguments: \(raw: argumentsTypeName),
           in context: OperationCore.OperationContext,
