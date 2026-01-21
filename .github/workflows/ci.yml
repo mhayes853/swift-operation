@@ -48,8 +48,6 @@ jobs:
 
   android:
     name: Android (Swift 6.2)
-    env:
-      CI_ANDROID: 1
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -60,6 +58,7 @@ jobs:
           swift-version: 6.2
           swift-build-flags: --traits SwiftOperationLogging --disable-experimental-prebuilts
           run-tests: false
+          build-tests: false
 
   windows:
     name: Windows (Swift 6.2)

@@ -186,19 +186,14 @@ if Context.environment["TEST_WASM"] != "1" {
           .product(name: "IssueReportingTestSupport", package: "xctest-dynamic-overlay")
         ]
       ),
-      .testTarget(name: "OperationTests", dependencies: operationTestsDependencies)
+      .testTarget(name: "OperationTests", dependencies: operationTestsDependencies),
+      .testTarget(
+        name: "OperationMacrosTests",
+        dependencies: [
+          "OperationMacros",
+          .product(name: "MacroTesting", package: "swift-macro-testing")
+        ]
+      )
     ]
-  )
-}
-
-if Context.environment["CI_ANDROID"] != "1" {
-  package.targets.append(
-    .testTarget(
-      name: "OperationMacrosTests",
-      dependencies: [
-        "OperationMacros",
-        .product(name: "MacroTesting", package: "swift-macro-testing")
-      ]
-    )
   )
 }

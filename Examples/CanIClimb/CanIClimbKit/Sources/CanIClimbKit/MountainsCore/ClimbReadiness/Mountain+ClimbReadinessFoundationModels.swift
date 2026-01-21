@@ -37,6 +37,7 @@ extension MountainClimbReadiness {
         let task = Task {
           do {
             let humanity = try await self.humanity()
+            print("\(Prompt.climbReadiness(for: mountain, humanity: humanity))")
             let stream = session.streamResponse(
               to: .climbReadiness(for: mountain, humanity: humanity),
               generating: MountainClimbReadiness.self
