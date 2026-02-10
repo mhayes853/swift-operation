@@ -357,6 +357,39 @@ func sendFriendRequestMutation(
 > [!NOTE]
 > To learn more about advanced state management practices including pattern matching using the `OperationPath` type, similar to [Tanstack Query’s query key](https://tanstack.com/query/latest/docs/framework/react/guides/query-keys) pattern matching, checkout [PatternMatchingAndStateManagement](https://swiftpackageindex.com/mhayes853/swift-operation/main/documentation/operationcore/patternmatchingandstatemanagement).
 
+### Stateless Operations
+
+If your operation does not need managed state, use `@OperationRequest` and run it directly with `#run`.
+
+```swift
+import Operation
+
+@OperationRequest
+func myOperation(
+  context: OperationContext,
+  continuation: OperationContinuation<Int, any Error>
+) async throws -> Int {
+  continuation.yield(someValue())
+  return someOtherValue()
+}
+
+let value = try await #run($myOperation)
+
+var context = OperationContext()
+let previewValue = try await #run($myOperation, context: context)
+
+let continuation = OperationContinuation<Int, any Error> { result, context in
+  // Handle intermittent results.
+}
+let streamedValue = try await #run(
+  $myOperation,
+  context: context,
+  continuation: continuation
+)
+```
+
+Queries, mutations, and paginated operations generally run through `OperationStore` because they manage state.
+
 ## Traits
 The library ships with a handful of package traits, which allow you to conditionally compile dependencies and features of the library. You can learn more about package traits from reading the official evolution [proposal](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0450-swiftpm-package-traits.md).
 - `SwiftOperationLogging` - Adds swift-log support to the library, including a `Logger` context property and the `logDuration` modifier.

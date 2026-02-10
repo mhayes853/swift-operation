@@ -1,15 +1,20 @@
 /// A simple runtime for an ``OperationRequest``.
 ///
+/// You will primarily use this runtime through the `#run` macro, which constructs an
+/// `OperationRunner` and invokes ``run(isolation:in:with:)`` for you.
+///
 /// ```swift
 /// @OperationRequest
 /// func myOperation() async throws -> Value {
 ///   // ...
 /// }
 ///
-/// let runner = OperationRunner(operation: $myOperation)
-/// let value = try await runner.run()
+/// let value = try await #run($myOperation)
 ///
-/// // ...
+/// // You can still construct a runner manually for advanced control.
+/// let runner = OperationRunner(operation: $myOperation)
+/// runner.context = OperationContext()
+/// let valueWithCustomContext = try await runner.run()
 /// ```
 ///
 /// The runner makes sure to invoke ``OperationRequest/setup(context:)-8y79v`` once during
