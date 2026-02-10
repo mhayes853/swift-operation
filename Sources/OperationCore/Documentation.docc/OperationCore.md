@@ -7,6 +7,15 @@ Dealing with asynchronous work that interacts with external or remote resources 
 Swift Operation is a library that takes care of much of that complexity for you, and additionally allows you to configure that complexity on a per-operation basis.
 
 ## Overview
+
+### Package Structure
+This package ships a few different targets:
+- `Operation`: The core library bundled with macros and platform-specific defaults.
+- `OperationCore`: The core library that provides the basic building blocks for operations.
+- `OperationWebBrowser`: Web browser default implementations for protocols in `OperationCore`.
+- `SharingOperation`: A [swift-sharing](https://github.com/pointfreeco/swift-sharing) wrapper built on top of `Operation` that provides the `@SharedOperation` property wrapper.
+
+### Queries
 First, we need to define a data type to operate on, and we’ll create an operation to fetch that data. We can create an operation that performs a simple data fetch by using the `@QueryRequest` macro.
 ```swift
 import Foundation
