@@ -12,7 +12,8 @@
         "ContextEntry": ContextEntryMacro.self,
         "OperationRequest": OperationRequestMacro.self,
         "QueryRequest": QueryRequestMacro.self,
-        "MutationRequest": MutationRequestMacro.self
+        "MutationRequest": MutationRequestMacro.self,
+        "run": RunMacro.self
       ],
       record: .failed
     )

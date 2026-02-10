@@ -50,6 +50,24 @@ public macro MutationRequest(
   path: _OperationPathMacroSynthesizer = .inferredFromHashable
 ) = #externalMacro(module: "OperationMacros", type: "MutationRequestMacro")
 
+/// Runs an operation by constructing an `OperationRunner` and invoking `run`.
+///
+/// ```swift
+/// @OperationRequest
+/// func myOperation() async throws -> Int {
+///   42
+/// }
+///
+/// let value = try await #run($myOperation)
+/// ```
+@freestanding(expression)
+public macro run<Operation: OperationRequest>(
+  _ operation: Operation,
+  context: OperationContext = OperationContext(),
+  continuation: OperationContinuation<Operation.Value, Operation.Failure> =
+    OperationContinuation { _, _ in }
+) -> Operation.Value = #externalMacro(module: "OperationMacros", type: "RunMacro")
+
 // MARK: - _OperationPathMacroSynthesizer
 
 public struct _OperationPathMacroSynthesizer: Sendable {

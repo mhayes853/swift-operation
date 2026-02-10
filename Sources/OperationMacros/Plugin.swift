@@ -7,6 +7,7 @@ struct OperationMacrosPlugin: CompilerPlugin {
     ContextEntryMacro.self,
     OperationRequestMacro.self,
     QueryRequestMacro.self,
-    MutationRequestMacro.self
+    MutationRequestMacro.self,
+    RunMacro.self
   ]
 }
