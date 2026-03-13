@@ -179,7 +179,7 @@ extension OperationClient {
     #elseif SwiftOperationWebBrowser && canImport(JavaScriptKit)
       NavigatorOnlineObserver.shared
     #else
-      nil
+      URLConnectionObserver.startingShared()
     #endif
   }
 
