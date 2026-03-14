@@ -172,14 +172,16 @@ extension URLSession {
   public static let operationConnectivity: URLSession = {
     let configuration = URLSessionConfiguration.default
     configuration.timeoutIntervalForRequest = 5
-    configuration.allowsCellularAccess = true
-    configuration.allowsConstrainedNetworkAccess = true
-    configuration.allowsExpensiveNetworkAccess = true
     configuration.httpCookieStorage = nil
     configuration.urlCache = nil
-    if #available(watchOS 11.4, macOS 15.4, *) {
-      configuration.usesClassicLoadingMode = false
-    }
+    configuration.allowsCellularAccess = true
+    #if canImport(Darwin)
+      configuration.allowsConstrainedNetworkAccess = true
+      configuration.allowsExpensiveNetworkAccess = true
+      if #available(watchOS 11.4, macOS 15.4, iOS 18, tvOS 18, *) {
+        configuration.usesClassicLoadingMode = false
+      }
+    #endif
     return URLSession(configuration: configuration)
   }()
 }
