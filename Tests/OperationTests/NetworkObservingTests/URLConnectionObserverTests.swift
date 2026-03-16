@@ -8,7 +8,7 @@ import Testing
   import FoundationNetworking
 #endif
 
-@Suite("URLConnectionObserver tests", .serialized)
+@Suite("URLConnectionObserver tests", .serialized, .timeLimit(.minutes(1)))
 struct URLConnectionObserverTests {
   @Test("Is Running Returns True After Init")
   @available(iOS 16, macOS 13, tvOS 16, watchOS 9, *)
@@ -60,7 +60,7 @@ struct URLConnectionObserverTests {
     MockURLProtocol.setHandler { _ in throw SomeError() }
     let observer = URLConnectionObserver(session: Self.makeSession(), clock: TestClock())
 
-    let status = try await self.nextStatus(from: observer, where: { $0 == .disconnected })
+    let status = await self.nextStatus(from: observer, where: { $0 == .disconnected })
 
     expectNoDifference(status, .disconnected)
     expectNoDifference(observer.currentStatus, .disconnected)
@@ -84,13 +84,13 @@ struct URLConnectionObserverTests {
       pingingEvery: .seconds(1)
     )
 
-    let disconnected = try await self.nextStatus(from: observer, where: { $0 == .disconnected })
+    let disconnected = await self.nextStatus(from: observer, where: { $0 == .disconnected })
     expectNoDifference(disconnected, .disconnected)
 
     await clock.advance(by: .zero)
     await clock.advance(by: .seconds(1))
 
-    let connected = try await self.nextStatus(from: observer, where: { $0 == .connected })
+    let connected = await self.nextStatus(from: observer, where: { $0 == .connected })
     expectNoDifference(connected, .connected)
     expectNoDifference(observer.currentStatus, .connected)
   }
@@ -114,17 +114,17 @@ struct URLConnectionObserverTests {
       pingingEvery: .seconds(1)
     )
 
-    let connected = try await self.nextStatus(from: observer, where: { $0 == .connected })
+    let connected = await self.nextStatus(from: observer, where: { $0 == .connected })
     expectNoDifference(connected, .connected)
 
     await clock.advance(by: .seconds(1))
 
-    let disconnected = try await self.nextStatus(from: observer, where: { $0 == .disconnected })
+    let disconnected = await self.nextStatus(from: observer, where: { $0 == .disconnected })
     expectNoDifference(disconnected, .disconnected)
 
     await clock.advance(by: .seconds(1))
 
-    let connectedAgain = try await self.nextStatus(from: observer, where: { $0 == .connected })
+    let connectedAgain = await self.nextStatus(from: observer, where: { $0 == .connected })
     expectNoDifference(connectedAgain, .connected)
     expectNoDifference(observer.currentStatus, .connected)
   }
@@ -148,17 +148,17 @@ struct URLConnectionObserverTests {
       pingingEvery: .seconds(1)
     )
 
-    let disconnected = try await self.nextStatus(from: observer, where: { $0 == .disconnected })
+    let disconnected = await self.nextStatus(from: observer, where: { $0 == .disconnected })
     expectNoDifference(disconnected, .disconnected)
 
     await clock.advance(by: .seconds(1))
 
-    let connected = try await self.nextStatus(from: observer, where: { $0 == .connected })
+    let connected = await self.nextStatus(from: observer, where: { $0 == .connected })
     expectNoDifference(connected, .connected)
 
     await clock.advance(by: .seconds(1))
 
-    let disconnectedAgain = try await self.nextStatus(
+    let disconnectedAgain = await self.nextStatus(
       from: observer,
       where: { $0 == .disconnected }
     )
@@ -197,36 +197,24 @@ struct URLConnectionObserverTests {
   private func nextStatus(
     from observer: URLConnectionObserver,
     where predicate: @escaping @Sendable (NetworkConnectionStatus) -> Bool
-  ) async throws -> NetworkConnectionStatus {
-    try await withThrowingTaskGroup(of: NetworkConnectionStatus.self) { group in
-      group.addTask {
-        let stream = AsyncThrowingStream<NetworkConnectionStatus, any Error> { continuation in
-          let subscription = observer.subscribe { status in
-            continuation.yield(status)
-          }
-          continuation.onTermination = { _ in
-            subscription.cancel()
-          }
-        }
-
-        for try await status in stream {
-          if predicate(status) {
-            return status
-          }
-        }
-
-        throw SomeError()
+  ) async -> NetworkConnectionStatus {
+    let stream = AsyncStream<NetworkConnectionStatus> { continuation in
+      let subscription = observer.subscribe { status in
+        continuation.yield(status)
       }
-
-      group.addTask {
-        try await Task.sleep(for: .seconds(1))
-        throw SomeError()
+      continuation.onTermination = { _ in
+        subscription.cancel()
       }
-
-      let status = try await group.next()!
-      group.cancelAll()
-      return status
     }
+
+    for await status in stream {
+      if predicate(status) {
+        return status
+      }
+    }
+
+    Issue.record("Expected connection status stream to produce a matching value.")
+    fatalError("Unreachable")
   }
 
   private static func makeSession() -> URLSession {
