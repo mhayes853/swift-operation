@@ -27,6 +27,13 @@ public final class URLConnectionObserver: NetworkObserver, Sendable {
     self.state.withLock { $0.task != nil }
   }
 
+  /// Creates an observer.
+  ///
+  /// - Parameters:
+  ///   - session: The `URLSession` to use for pinging.
+  ///   - url: The URL to ping.
+  ///   - clock: The `Clock` to use for timing.
+  ///   - interval: The interval between pings.
   public init<C: Clock>(
     session: URLSession = .operationConnectivity,
     url: URL = .operationURLConnectionObserverDefault,
@@ -128,9 +135,9 @@ extension URLConnectionObserver {
   /// Creates an observer and starts pinging the URL.
   ///
   /// - Parameters:
-  ///   - session: The URL session to use for pinging.
+  ///   - session: The `URLSession` to use for pinging.
   ///   - url: The URL to ping.
-  ///   - clock: The clock to use for timing.
+  ///   - clock: The `Clock` to use for timing.
   ///   - interval: The interval between pings.
   /// - Returns: A running `URLConnectionObserver`.
   public static func starting<C: Clock>(
