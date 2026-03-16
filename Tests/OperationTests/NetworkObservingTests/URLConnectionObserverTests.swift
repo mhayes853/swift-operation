@@ -57,7 +57,7 @@ struct URLConnectionObserverTests {
   @Test("Initial Failed Ping Becomes Disconnected")
   @available(iOS 16, macOS 13, tvOS 16, watchOS 9, *)
   func initialFailedPingBecomesDisconnected() async throws {
-    MockURLProtocol.setHandler { _ in throw SomeError() }
+    MockURLProtocol.setHandler { _ in throw URLError(.notConnectedToInternet) }
     let observer = URLConnectionObserver(session: Self.makeSession(), clock: TestClock())
 
     let status = await self.nextStatus(from: observer, where: { $0 == .disconnected })
@@ -73,7 +73,7 @@ struct URLConnectionObserverTests {
     let clock = TestClock()
     MockURLProtocol.setHandler { request in
       if attempts.increment() < 2 {
-        throw SomeError()
+        throw URLError(.networkConnectionLost)
       }
       return (Self.makeResponse(for: request.url!), Data())
     }
@@ -105,7 +105,7 @@ struct URLConnectionObserverTests {
       if attempt % 2 == 1 {
         return (Self.makeResponse(for: request.url!), Data())
       }
-      throw SomeError()
+      throw URLError(.timedOut)
     }
 
     let observer = URLConnectionObserver(
@@ -139,7 +139,7 @@ struct URLConnectionObserverTests {
       if attempt % 2 == 0 {
         return (Self.makeResponse(for: request.url!), Data())
       }
-      throw SomeError()
+      throw URLError(.dataNotAllowed)
     }
 
     let observer = URLConnectionObserver(
@@ -173,6 +173,30 @@ struct URLConnectionObserverTests {
     MockURLProtocol.setHandler { request in
       (Self.makeResponse(for: request.url!), Data())
     }
+
+    let observer = URLConnectionObserver(
+      session: Self.makeSession(),
+      clock: clock,
+      pingingEvery: .seconds(1)
+    )
+    let statuses = StatusBox()
+    let subscription = observer.subscribe { status in
+      statuses.append(status)
+    }
+    defer { subscription.cancel() }
+
+    await clock.advance(by: .zero)
+    await clock.advance(by: .seconds(1))
+
+    expectNoDifference(statuses.values, [.connected])
+    expectNoDifference(observer.currentStatus, .connected)
+  }
+
+  @Test("Non Connection Errors Stay Connected")
+  @available(iOS 16, macOS 13, tvOS 16, watchOS 9, *)
+  func nonConnectionErrorsStayConnected() async throws {
+    let clock = TestClock()
+    MockURLProtocol.setHandler { _ in throw SomeError() }
 
     let observer = URLConnectionObserver(
       session: Self.makeSession(),

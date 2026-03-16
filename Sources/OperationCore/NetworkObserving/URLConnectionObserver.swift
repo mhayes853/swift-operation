@@ -100,7 +100,23 @@ public final class URLConnectionObserver: NetworkObserver, Sendable {
       _ = try await session.data(for: request)
       return .connected
     } catch {
-      return .disconnected
+      return self.isProblematicConnectionError(error) ? .disconnected : .connected
+    }
+  }
+
+  private func isProblematicConnectionError(_ error: any Error) -> Bool {
+    guard let error = error as? URLError else { return false }
+
+    return switch error.code {
+    case .notConnectedToInternet,
+      .networkConnectionLost,
+      .timedOut,
+      .internationalRoamingOff,
+      .callIsActive,
+      .dataNotAllowed:
+      true
+    default:
+      false
     }
   }
 }
