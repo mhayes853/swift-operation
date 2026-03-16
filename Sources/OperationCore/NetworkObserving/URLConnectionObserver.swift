@@ -17,9 +17,9 @@ public final class URLConnectionObserver: NetworkObserver, Sendable {
     var task: Task<Void, Never>?
   }
 
-  private let observe: @Sendable (URLConnectionObserver) async -> Void
+  private let observe: @Sendable (WeakBox<URLConnectionObserver>) async -> Void
 
-  private let state = Lock(State())
+  private let state = RecursiveLock(State())
   private let subscriptions = OperationSubscriptions<@Sendable (NetworkConnectionStatus) -> Void>()
 
   /// True if the observer is actively pinging the URL.
@@ -34,8 +34,9 @@ public final class URLConnectionObserver: NetworkObserver, Sendable {
     pingingEvery interval: Duration = .seconds(120)
   ) where C.Duration == Duration {
     self.observe = { observer in
-      await observer.ping(to: url, using: session)
+      await observer.value?.ping(to: url, using: session)
       for await _ in _AsyncTimerSequence(interval: interval, clock: clock) {
+        guard let observer = observer.value else { return }
         await observer.ping(to: url, using: session)
       }
     }
@@ -46,8 +47,7 @@ public final class URLConnectionObserver: NetworkObserver, Sendable {
     self.state.withLock {
       $0.task?.cancel()
       $0.task = Task { [weak self] in
-        guard let self else { return }
-        await self.observe(self)
+        await self?.observe(WeakBox(value: self))
       }
     }
   }
