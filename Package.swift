@@ -43,6 +43,7 @@ let package = Package(
     )
   ],
   dependencies: [
+    .package(url: "https://github.com/pointfreeco/swift-clocks", from: "1.0.6"),
     .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.9.3"),
     .package(url: "https://github.com/pointfreeco/swift-sharing", from: "2.7.0"),
     .package(url: "https://github.com/pointfreeco/swift-custom-dump", from: "1.3.3"),
@@ -169,6 +170,7 @@ let package = Package(
 var operationTestsDependencies: [Target.Dependency] = [
   "Operation",
   "OperationTestHelpers",
+  .product(name: "Clocks", package: "swift-clocks"),
   .product(name: "CustomDump", package: "swift-custom-dump"),
   .product(name: "IssueReportingTestSupport", package: "xctest-dynamic-overlay")
 ]
