@@ -201,7 +201,7 @@ extension URLSession {
     #if canImport(Darwin)
       configuration.allowsConstrainedNetworkAccess = true
       configuration.allowsExpensiveNetworkAccess = true
-      if #available(watchOS 11.4, macOS 15.4, iOS 18, tvOS 18, *) {
+      if #available(watchOS 11.4, macOS 15.4, iOS 18.4, tvOS 18.4, visionOS 2.4, *) {
         configuration.usesClassicLoadingMode = false
       }
     #endif
