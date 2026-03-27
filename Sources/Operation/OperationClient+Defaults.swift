@@ -178,8 +178,10 @@ extension OperationClient {
       NWPathMonitorObserver.startingShared()
     #elseif SwiftOperationWebBrowser && canImport(JavaScriptKit)
       NavigatorOnlineObserver.shared
-    #else
+    #elseif !os(WASI)
       URLConnectionObserver.startingShared()
+    #else
+      nil
     #endif
   }
 
