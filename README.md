@@ -446,7 +446,7 @@ If you want to use Swift Operation in a [SwiftPM](https://swift.org/package-mana
 dependencies: [
   .package(
     url: "https://github.com/mhayes853/swift-operation",
-    from: "0.4.0",
+    from: "0.5.0",
     // To enable any traits.
     traits: ["SwiftOperationLogging"]
   ),
