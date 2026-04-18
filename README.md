@@ -438,7 +438,8 @@ Asynchronous state management around operations is a subset of asynchronous oper
 You can add Swift Operation to an Xcode project by adding it to your project as a package. Make sure to add the `SharingOperation` target to your package to get access to the `@SharedOperation` property wrapper.
 > https://github.com/mhayes853/swift-operation
 
-> ⚠️ At of the time of writing this, Xcode 26 does not seem to include a UI for enabling traits on swift packages through the Files > Add Package Dependencies menu. If you want to enable traits, you will have to install the library inside a local swift package that lives outside your Xcode project.
+> [!NOTE] 
+> Xcode 26.4 is required for using traits directly in Xcode projects.
 
 If you want to use Swift Operation in a [SwiftPM](https://swift.org/package-manager/) project, it's as simple as adding it to your `Package.swift`.
 ``` swift
