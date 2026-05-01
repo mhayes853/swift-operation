@@ -63,8 +63,25 @@ import IssueReporting
 /// <doc:OperationDefaults>.
 public final class OperationClient: Sendable {
   private struct State {
+    struct Subscription {
+      let handler: @Sendable (OpaqueSubscriptionChange) -> Void
+      let matchablePath: OperationPath
+    }
+
     var initialContext: OperationContext
     var operationTypes = [OperationPath: Any.Type]()
+    var subscriptions = OperationSubscriptions<Subscription>()
+
+    func sendSubscriptionChange(change: OpaqueSubscriptionChange) {
+      self.subscriptions.forEach { subscription in
+        let change = OpaqueSubscriptionChange(
+          storesAdded: change.storesAdded.collection(matching: subscription.matchablePath),
+          storesRemoved: change.storesRemoved.collection(matching: subscription.matchablePath)
+        )
+        guard !change.isEmpty else { return }
+        subscription.handler(change)
+      }
+    }
   }
 
   private let storeCreator: any StoreCreator & Sendable
@@ -224,7 +241,11 @@ extension OperationClient {
           return opaqueStore.base as! OperationStore<Operation.State>
         }
         let store = create(createStore, transfer)
-        stores.update(OpaqueOperationStore(erasing: store))
+        let opaqueStore = OpaqueOperationStore(erasing: store)
+        state.sendSubscriptionChange(
+          change: OpaqueSubscriptionChange(storesAdded: [opaqueStore])
+        )
+        stores.update(opaqueStore)
         return store
       }
     }
@@ -285,7 +306,14 @@ extension OperationClient {
   ///
   /// - Parameter path: The path of the stores.
   public func clearStores(matching path: OperationPath = OperationPath()) {
-    self.storeCache.withStores { $0.removeAll(matching: path) }
+    self.state.withLock { state in
+      let stores = self.storeCache.withStores {
+        let stores = $0.collection(matching: path)
+        $0.removeAll(matching: path)
+        return stores
+      }
+      state.sendSubscriptionChange(change: OpaqueSubscriptionChange(storesRemoved: stores))
+    }
   }
 
   /// Removes the store with the specified ``OperationPath``.
@@ -296,7 +324,15 @@ extension OperationClient {
   /// - Returns: The removed store as an ``OpaqueOperationStore``.
   @discardableResult
   public func clearStore(with path: OperationPath) -> OpaqueOperationStore? {
-    self.storeCache.withStores { $0.removeValue(forPath: path) }
+    self.state.withLock { state in
+      let store = self.storeCache.withStores { $0.removeValue(forPath: path) }
+      state.sendSubscriptionChange(
+        change: OpaqueSubscriptionChange(
+          storesRemoved: store.map { [$0] } ?? OperationPathableCollection()
+        )
+      )
+      return store
+    }
   }
 }
 
@@ -326,16 +362,20 @@ extension OperationClient {
         let beforeEntries = stores.collection(matching: path)
         var afterEntries = beforeEntries
         let value = try fn(&afterEntries, createStore)
+        var change = OpaqueSubscriptionChange()
         for store in afterEntries {
           if beforeEntries[store.path] == nil {
+            change.storesAdded.update(store)
             stores.update(store)
           }
         }
         for store in beforeEntries {
           if afterEntries[store.path] == nil {
+            change.storesRemoved.update(store)
             stores.removeValue(forPath: store.path)
           }
         }
+        state.sendSubscriptionChange(change: change)
         return value
       }
     }
@@ -368,18 +408,74 @@ extension OperationClient {
         )
         var afterEntries = beforeEntries
         let value = try fn(&afterEntries, createStore)
+        var change = OpaqueSubscriptionChange()
         for store in afterEntries {
           if beforeEntries[store.path] == nil {
-            stores.update(OpaqueOperationStore(erasing: store))
+            let store = OpaqueOperationStore(erasing: store)
+            change.storesAdded.update(store)
+            stores.update(store)
           }
         }
         for store in beforeEntries {
           if afterEntries[store.path] == nil {
+            change.storesRemoved.update(OpaqueOperationStore(erasing: store))
             stores.removeValue(forPath: store.path)
           }
         }
+        state.sendSubscriptionChange(change: change)
         return value
       }
+    }
+  }
+}
+
+// MARK: - Subscribe
+
+extension OperationClient {
+  public struct OpaqueSubscriptionChange: Sendable {
+    public fileprivate(set) var storesAdded = OperationPathableCollection<OpaqueOperationStore>()
+    public fileprivate(set) var storesRemoved = OperationPathableCollection<OpaqueOperationStore>()
+
+    fileprivate var isEmpty: Bool {
+      self.storesAdded.isEmpty && self.storesRemoved.isEmpty
+    }
+  }
+
+  public func subscribe(
+    matching path: OperationPath = OperationPath(),
+    onChange: @Sendable @escaping (OpaqueSubscriptionChange) -> Void
+  ) -> OperationSubscription {
+    self.state.withLock { state in
+      let subscription = State.Subscription(handler: onChange, matchablePath: path)
+      return state.subscriptions.add(handler: subscription).subscription
+    }
+  }
+
+  public struct SubscriptionChange<State: OperationState & Sendable>: Sendable {
+    public let storesAdded: OperationPathableCollection<OperationStore<State>>
+    public let storesRemoved: OperationPathableCollection<OperationStore<State>>
+
+    fileprivate var isEmpty: Bool {
+      self.storesAdded.isEmpty && self.storesRemoved.isEmpty
+    }
+  }
+
+  public func subscribe<State: OperationState>(
+    matching path: OperationPath = OperationPath(),
+    state: State.Type,
+    onChange: @Sendable @escaping (SubscriptionChange<State>) -> Void
+  ) -> OperationSubscription {
+    self.subscribe(matching: path) { change in
+      let change = SubscriptionChange(
+        storesAdded: OperationPathableCollection(
+          change.storesAdded.compactMap { $0.base as? OperationStore<State> }
+        ),
+        storesRemoved: OperationPathableCollection(
+          change.storesRemoved.compactMap { $0.base as? OperationStore<State> }
+        )
+      )
+      guard !change.isEmpty else { return }
+      onChange(change)
     }
   }
 }
