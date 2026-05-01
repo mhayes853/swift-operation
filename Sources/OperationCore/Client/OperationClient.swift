@@ -432,8 +432,12 @@ extension OperationClient {
 // MARK: - Subscribe
 
 extension OperationClient {
+  /// A description of stores added to and removed from an ``OperationClient`` subscription.
   public struct OpaqueSubscriptionChange: Sendable {
+    /// Stores added to the client during this change.
     public fileprivate(set) var storesAdded = OperationPathableCollection<OpaqueOperationStore>()
+
+    /// Stores removed from the client during this change.
     public fileprivate(set) var storesRemoved = OperationPathableCollection<OpaqueOperationStore>()
 
     fileprivate var isEmpty: Bool {
@@ -441,6 +445,25 @@ extension OperationClient {
     }
   }
 
+  /// Subscribes to stores being added to and removed from this client.
+  ///
+  /// The subscription is scoped to stores whose paths match the specified path prefix.
+  ///
+  /// ```swift
+  /// let subscription = client.subscribe(matching: ["users"]) { change in
+  ///   for store in change.storesAdded {
+  ///     print("Added store at path: \(store.path)")
+  ///   }
+  ///   for store in change.storesRemoved {
+  ///     print("Removed store at path: \(store.path)")
+  ///   }
+  /// }
+  /// ```
+  ///
+  /// - Parameters:
+  ///   - path: A path prefix used to filter which store changes are observed.
+  ///   - onChange: A closure invoked whenever matching stores are added or removed.
+  /// - Returns: An ``OperationSubscription``.
   public func subscribe(
     matching path: OperationPath = OperationPath(),
     onChange: @Sendable @escaping (OpaqueSubscriptionChange) -> Void
@@ -451,8 +474,12 @@ extension OperationClient {
     }
   }
 
+  /// A description of typed stores added to and removed from an ``OperationClient`` subscription.
   public struct SubscriptionChange<State: OperationState & Sendable>: Sendable {
+    /// Stores of the subscribed state type added to the client during this change.
     public let storesAdded: OperationPathableCollection<OperationStore<State>>
+
+    /// Stores of the subscribed state type removed from the client during this change.
     public let storesRemoved: OperationPathableCollection<OperationStore<State>>
 
     fileprivate var isEmpty: Bool {
@@ -460,6 +487,31 @@ extension OperationClient {
     }
   }
 
+  /// Subscribes to stores of a specific state type being added to and removed from this client.
+  ///
+  /// The subscription is scoped to stores whose paths match the specified path prefix, and only
+  /// stores of the requested state type are included in the emitted change.
+  ///
+  /// ```swift
+  /// let subscription = client.subscribe(
+  ///   matching: ["users"],
+  ///   state: QueryState<User, any Error>.self
+  /// ) { change in
+  ///   for store in change.storesAdded {
+  ///     print("Added user store at path: \(store.path)")
+  ///   }
+  ///   for store in change.storesRemoved {
+  ///     print("Removed user store at path: \(store.path)")
+  ///   }
+  /// }
+  /// ```
+  ///
+  /// - Parameters:
+  ///   - path: A path prefix used to filter which store changes are observed.
+  ///   - state: The state type of stores to observe.
+  ///   - onChange: A closure invoked whenever matching stores of the specified state type are added
+  ///     or removed.
+  /// - Returns: An ``OperationSubscription``.
   public func subscribe<State: OperationState>(
     matching path: OperationPath = OperationPath(),
     state: State.Type,
