@@ -308,6 +308,417 @@ struct OperationClientTests {
     }
     expectNoDifference(isEmpty, true)
   }
+
+  @Test("Subscribe On Added Fires When Store Is Created After Subscription")
+  func subscribeOnAddedFiresWhenStoreIsCreatedAfterSubscription() async throws {
+    let client = OperationClient()
+    let addedStores = RecursiveLock(OperationPathableCollection<OperationStore<TestQuery.State>>())
+    let subscription = client.subscribe(
+      state: TestQuery.State.self,
+      onChange: { change in
+        addedStores.withLock { stores in
+          for store in change.storesAdded {
+            stores.update(store)
+          }
+        }
+      }
+    )
+
+    let store = client.store(for: TestQuery())
+    let stores = addedStores.withLock { $0 }
+    expectNoDifference(stores.count, 1)
+    expectNoDifference(stores.first === store, true)
+    _ = subscription
+  }
+
+  @Test("Subscribe On Added Does Not Fire For Stores Created Before Subscription")
+  func subscribeOnAddedDoesNotFireForStoresCreatedBeforeSubscription() async throws {
+    let client = OperationClient()
+    _ = client.store(for: TestQuery())
+
+    let addedStores = RecursiveLock(OperationPathableCollection<OperationStore<TestQuery.State>>())
+    let subscription = client.subscribe(
+      state: TestQuery.State.self,
+      onChange: { change in
+        addedStores.withLock { stores in
+          for store in change.storesAdded {
+            stores.update(store)
+          }
+        }
+      }
+    )
+
+    let stores = addedStores.withLock { $0 }
+    expectNoDifference(stores.count, 0)
+    _ = subscription
+  }
+
+  @Test("Subscribe On Removed Fires When Store Is Cleared")
+  func subscribeOnRemovedFiresWhenStoreIsCleared() async throws {
+    let client = OperationClient()
+    let q1 = TaggedPathableQuery(value: 1, path: [1, 2])
+    let store = client.store(for: q1)
+
+    let removedStores = RecursiveLock(
+      OperationPathableCollection<OperationStore<TaggedPathableQuery<Int>.State>>()
+    )
+    let subscription = client.subscribe(
+      state: TaggedPathableQuery<Int>.State.self,
+      onChange: { change in
+        removedStores.withLock { stores in
+          for store in change.storesRemoved {
+            stores.update(store)
+          }
+        }
+      }
+    )
+
+    client.clearStore(with: q1.path)
+    let stores = removedStores.withLock { $0 }
+    expectNoDifference(stores.count, 1)
+    expectNoDifference(stores.first === store, true)
+    _ = subscription
+  }
+
+  @Test("Subscribe On Removed Fires When Stores Are Cleared Via Matching Path")
+  func subscribeOnRemovedFiresWhenStoresAreClearedViaMatchingPath() async throws {
+    let client = OperationClient()
+    let q1 = TaggedPathableQuery(value: 1, path: [1, 2])
+    let q2 = TaggedPathableQuery(value: 2, path: [1, 3])
+    let q3 = TaggedPathableQuery(value: 3, path: [2, 4])
+    _ = client.store(for: q1)
+    let store2 = client.store(for: q2)
+    _ = client.store(for: q3)
+
+    let removedStores = RecursiveLock(
+      OperationPathableCollection<OperationStore<TaggedPathableQuery<Int>.State>>()
+    )
+    let subscription = client.subscribe(
+      state: TaggedPathableQuery<Int>.State.self,
+      onChange: { change in
+        removedStores.withLock { stores in
+          for store in change.storesRemoved {
+            stores.update(store)
+          }
+        }
+      }
+    )
+
+    client.clearStores(matching: [1])
+    let stores = removedStores.withLock { $0 }
+    expectNoDifference(stores.count, 2)
+    expectNoDifference(stores.contains(where: { $0 === store2 }), true)
+    _ = subscription
+  }
+
+  @Test("Subscribe Matching Filters Added And Removed Stores By Path Prefix")
+  func subscribeMatchingFiltersAddedAndRemovedStoresByPathPrefix() async throws {
+    let client = OperationClient()
+    let matchingQuery = TaggedPathableQuery(value: 1, path: [1, 2])
+    let nonMatchingQuery = TaggedPathableQuery(value: 2, path: [2, 3])
+
+    let addedStores = RecursiveLock(
+      OperationPathableCollection<OperationStore<TaggedPathableQuery<Int>.State>>()
+    )
+    let removedStores = RecursiveLock(
+      OperationPathableCollection<OperationStore<TaggedPathableQuery<Int>.State>>()
+    )
+    let subscription = client.subscribe(
+      matching: [1],
+      state: TaggedPathableQuery<Int>.State.self,
+      onChange: { change in
+        addedStores.withLock { stores in
+          for store in change.storesAdded {
+            stores.update(store)
+          }
+        }
+        removedStores.withLock { stores in
+          for store in change.storesRemoved {
+            stores.update(store)
+          }
+        }
+      }
+    )
+
+    let matchingStore = client.store(for: matchingQuery)
+    let nonMatchingStore = client.store(for: nonMatchingQuery)
+    client.clearStore(with: matchingQuery.path)
+    client.clearStore(with: nonMatchingQuery.path)
+
+    let storesAdded = addedStores.withLock { $0 }
+    let storesRemoved = removedStores.withLock { $0 }
+    expectNoDifference(storesAdded.count, 1)
+    expectNoDifference(storesAdded.first === matchingStore, true)
+    expectNoDifference(storesAdded.contains(where: { $0 === nonMatchingStore }), false)
+    expectNoDifference(storesRemoved.count, 1)
+    expectNoDifference(storesRemoved.first === matchingStore, true)
+    expectNoDifference(storesRemoved.contains(where: { $0 === nonMatchingStore }), false)
+    _ = subscription
+  }
+
+  @Test("Subscribe Only Receives Stores Of Specified State Type")
+  func subscribeOnlyReceivesStoresOfSpecifiedStateType() async throws {
+    let client = OperationClient()
+    _ = client.store(for: TaggedPathableQuery(value: 1, path: [1, 2]))
+    _ = client.store(for: TaggedPathableQuery(value: 2, path: [2, 3]))
+
+    let intAdded = RecursiveLock(
+      OperationPathableCollection<OperationStore<TaggedPathableQuery<Int>.State>>()
+    )
+    let stringAdded = RecursiveLock(
+      OperationPathableCollection<OperationStore<TaggedPathableQuery<String>.State>>()
+    )
+    let intSubscription = client.subscribe(
+      state: TaggedPathableQuery<Int>.State.self,
+      onChange: { change in
+        intAdded.withLock { stores in
+          for store in change.storesAdded {
+            stores.update(store)
+          }
+        }
+      }
+    )
+    let stringSubscription = client.subscribe(
+      state: TaggedPathableQuery<String>.State.self,
+      onChange: { change in
+        stringAdded.withLock { stores in
+          for store in change.storesAdded {
+            stores.update(store)
+          }
+        }
+      }
+    )
+
+    expectNoDifference(intAdded.withLock { $0.count }, 0)
+    expectNoDifference(stringAdded.withLock { $0.count }, 0)
+
+    _ = client.store(for: TaggedPathableQuery(value: 3, path: [3, 4]))
+    expectNoDifference(intAdded.withLock { $0.count }, 1)
+    expectNoDifference(stringAdded.withLock { $0.count }, 0)
+
+    _ = client.store(for: TaggedPathableQuery(value: "foo", path: [3, 5]))
+    expectNoDifference(intAdded.withLock { $0.count }, 1)
+    expectNoDifference(stringAdded.withLock { $0.count }, 1)
+    _ = intSubscription
+    _ = stringSubscription
+  }
+
+  @Test("Typed Subscribe Wraps Opaque Subscribe Correctly")
+  func typedSubscribeWrapsOpaqueSubscribeCorrectly() async throws {
+    let client = OperationClient()
+    let q1 = PathableQuery(value: 1, path: [1, 2])
+
+    let opaqueAdded = RecursiveLock(OperationPathableCollection<OpaqueOperationStore>())
+    let typedAdded = RecursiveLock(OperationPathableCollection<OperationStore<QueryState<Int, any Error>>>())
+    let opaqueSubscription = client.subscribe { change in
+      opaqueAdded.withLock { stores in
+        for store in change.storesAdded {
+          stores.update(store)
+        }
+      }
+    }
+    let typedSubscription = client.subscribe(
+      state: QueryState<Int, any Error>.self,
+      onChange: { change in
+        typedAdded.withLock { stores in
+          for store in change.storesAdded {
+            stores.update(store)
+          }
+        }
+      }
+    )
+
+    let store = client.store(for: q1)
+
+    expectNoDifference(opaqueAdded.withLock { $0.count }, 1)
+    expectNoDifference(typedAdded.withLock { $0.count }, 1)
+    expectNoDifference(
+      opaqueAdded.withLock { $0.first?.base as? OperationStore<QueryState<Int, any Error>> } === store,
+      true
+    )
+    expectNoDifference(typedAdded.withLock { $0.first } === store, true)
+    _ = opaqueSubscription
+    _ = typedSubscription
+  }
+
+  @Test("Subscribe On Removed Fires When All Stores Are Cleared")
+  func subscribeOnRemovedFiresWhenAllStoresAreCleared() async throws {
+    let client = OperationClient()
+    let q1 = PathableQuery(value: 1, path: [1, 2])
+    let q2 = PathableQuery(value: 2, path: [2, 3])
+    _ = client.store(for: q1)
+    let store2 = client.store(for: q2)
+
+    let removedStores = RecursiveLock(OperationPathableCollection<OperationStore<QueryState<Int, any Error>>>())
+    let subscription = client.subscribe(
+      state: QueryState<Int, any Error>.self,
+      onChange: { change in
+        removedStores.withLock { stores in
+          for store in change.storesRemoved {
+            stores.update(store)
+          }
+        }
+      }
+    )
+
+    client.clearStores()
+    let stores = removedStores.withLock { $0 }
+    expectNoDifference(stores.count, 2)
+    expectNoDifference(stores.contains(where: { $0 === store2 }), true)
+    _ = subscription
+  }
+
+  @Test("Subscribe On Added Fires When Multiple Stores Created Via WithStores")
+  func subscribeOnAddedFiresWhenMultipleStoresCreatedViaWithStores() async throws {
+    let client = OperationClient()
+    let q1 = TaggedPathableQuery(value: 1, path: [1, 2])
+    let q2 = TaggedPathableQuery(value: 2, path: [1, 3])
+    let q3 = TaggedPathableQuery(value: 3, path: [2, 4])
+
+    let addedStores = RecursiveLock(
+      OperationPathableCollection<OperationStore<TaggedPathableQuery<Int>.State>>()
+    )
+    let subscription = client.subscribe(
+      state: TaggedPathableQuery<Int>.State.self,
+      onChange: { change in
+        addedStores.withLock { stores in
+          for store in change.storesAdded {
+            stores.update(store)
+          }
+        }
+      }
+    )
+
+    client.withStores(matching: []) { entries, createStore in
+      entries.update(OpaqueOperationStore(erasing: createStore(for: q1)))
+      entries.update(OpaqueOperationStore(erasing: createStore(for: q2)))
+      entries.update(OpaqueOperationStore(erasing: createStore(for: q3)))
+    }
+
+    let stores = addedStores.withLock { $0 }
+    expectNoDifference(stores.count, 3)
+    _ = subscription
+  }
+
+  @Test("Subscribe On Removed Fires When Multiple Stores Removed Via WithStores")
+  func subscribeOnRemovedFiresWhenMultipleStoresRemovedViaWithStores() async throws {
+    let client = OperationClient()
+    let q1 = TaggedPathableQuery(value: 1, path: [1, 2])
+    let q2 = TaggedPathableQuery(value: 2, path: [1, 3])
+    let q3 = TaggedPathableQuery(value: 3, path: [2, 4])
+    let q4 = TaggedPathableQuery(value: 4, path: [2, 5])
+    _ = client.store(for: q1)
+    _ = client.store(for: q2)
+    _ = client.store(for: q3)
+    let store4 = client.store(for: q4)
+
+    let removedStores = RecursiveLock(
+      OperationPathableCollection<OperationStore<TaggedPathableQuery<Int>.State>>()
+    )
+    let subscription = client.subscribe(
+      state: TaggedPathableQuery<Int>.State.self,
+      onChange: { change in
+        removedStores.withLock { stores in
+          for store in change.storesRemoved {
+            stores.update(store)
+          }
+        }
+      }
+    )
+
+    client.withStores(matching: [1]) { entries, _ in
+      entries.removeValue(forPath: q1.path)
+      entries.removeValue(forPath: q2.path)
+    }
+
+    let stores = removedStores.withLock { $0 }
+    expectNoDifference(stores.count, 2)
+    expectNoDifference(stores.contains(where: { $0 === store4 }), false)
+    _ = subscription
+  }
+
+  @Test("Subscribe On Added Fires Through Typed WithStores")
+  func subscribeOnAddedFiresThroughTypedWithStores() async throws {
+    let client = OperationClient()
+    let q1 = TaggedPathableQuery(value: 1, path: [1, 2])
+    let q2 = TaggedPathableQuery(value: 2, path: [1, 3])
+
+    let addedStores = RecursiveLock(
+      OperationPathableCollection<OperationStore<TaggedPathableQuery<Int>.State>>()
+    )
+    let subscription = client.subscribe(
+      state: TaggedPathableQuery<Int>.State.self,
+      onChange: { change in
+        addedStores.withLock { stores in
+          for store in change.storesAdded {
+            stores.update(store)
+          }
+        }
+      }
+    )
+
+    client.withStores(matching: [], of: TaggedPathableQuery<Int>.State.self) { entries, createStore in
+      entries.update(createStore(for: q1))
+      entries.update(createStore(for: q2))
+    }
+
+    let stores = addedStores.withLock { $0 }
+    expectNoDifference(stores.count, 2)
+    _ = subscription
+  }
+
+  @Test("Subscribe On Change Does Not Fire When WithStores Makes No Changes")
+  func subscribeOnChangeDoesNotFireWhenWithStoresMakesNoChanges() async throws {
+    let client = OperationClient()
+    _ = client.store(for: TaggedPathableQuery(value: 1, path: [1, 2]))
+
+    let changeCount = RecursiveLock(0)
+    let subscription = client.subscribe(
+      state: TaggedPathableQuery<Int>.State.self,
+      onChange: { _ in
+        changeCount.withLock { $0 += 1 }
+      }
+    )
+
+    client.withStores(matching: [1], of: TaggedPathableQuery<Int>.State.self) { stores, _ in
+      expectNoDifference(stores.count, 1)
+    }
+
+    changeCount.withLock { expectNoDifference($0, 0) }
+    _ = subscription
+  }
+
+  @Test("Subscribe On Removed Fires Through Typed WithStores")
+  func subscribeOnRemovedFiresThroughTypedWithStores() async throws {
+    let client = OperationClient()
+    let q1 = TaggedPathableQuery(value: 1, path: [1, 2])
+    let q2 = TaggedPathableQuery(value: 2, path: [1, 3])
+    _ = client.store(for: q1)
+    let store2 = client.store(for: q2)
+
+    let removedStores = RecursiveLock(
+      OperationPathableCollection<OperationStore<TaggedPathableQuery<Int>.State>>()
+    )
+    let subscription = client.subscribe(
+      state: TaggedPathableQuery<Int>.State.self,
+      onChange: { change in
+        removedStores.withLock { stores in
+          for store in change.storesRemoved {
+            stores.update(store)
+          }
+        }
+      }
+    )
+
+    _ = client.withStores(matching: [], of: TaggedPathableQuery<Int>.State.self) { entries, _ in
+      entries.removeValue(forPath: q2.path)
+    }
+
+    let stores = removedStores.withLock { $0 }
+    expectNoDifference(stores.count, 1)
+    expectNoDifference(stores.first === store2, true)
+    _ = subscription
+  }
 }
 
 private final class CountingController<State: OperationState>: OperationController, Sendable
