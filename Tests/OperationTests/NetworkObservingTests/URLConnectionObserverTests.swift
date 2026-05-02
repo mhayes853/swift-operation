@@ -2,26 +2,23 @@ import Clocks
 import CustomDump
 import Foundation
 import Operation
-import Testing
+import XCTest
 
 #if canImport(FoundationNetworking)
   import FoundationNetworking
 #endif
 
-@Suite("URLConnectionObserver tests", .serialized, .timeLimit(.minutes(1)))
-struct URLConnectionObserverTests {
-  @Test("Is Running Returns True After Init")
+final class URLConnectionObserverTests: XCTestCase {
   @available(iOS 16, macOS 13, tvOS 16, watchOS 9, *)
-  func isRunningReturnsTrueAfterInit() async throws {
+  func testIsRunningReturnsTrueAfterInit() async throws {
     MockURLProtocol.setHandler { _ in throw SomeError() }
     let observer = URLConnectionObserver(session: Self.makeSession(), clock: TestClock())
 
     expectNoDifference(observer.isRunning, false)
   }
 
-  @Test("Is Running Returns False After Stop")
   @available(iOS 16, macOS 13, tvOS 16, watchOS 9, *)
-  func isRunningReturnsFalseAfterStop() async throws {
+  func testIsRunningReturnsFalseAfterStop() async throws {
     MockURLProtocol.setHandler { _ in throw SomeError() }
     let observer = URLConnectionObserver.starting(session: Self.makeSession(), clock: TestClock())
 
@@ -30,9 +27,8 @@ struct URLConnectionObserverTests {
     expectNoDifference(observer.isRunning, false)
   }
 
-  @Test("Starting Factory Creates Running Observer")
   @available(iOS 16, macOS 13, tvOS 16, watchOS 9, *)
-  func startingFactoryCreatesRunningObserver() async throws {
+  func testStartingFactoryCreatesRunningObserver() async throws {
     MockURLProtocol.setHandler { _ in throw SomeError() }
     let observer = URLConnectionObserver.starting(
       session: Self.makeSession(),
@@ -44,31 +40,30 @@ struct URLConnectionObserverTests {
     observer.stop()
   }
 
-  @Test("Starting Shared Works Correctly")
   @available(iOS 16, macOS 13, tvOS 16, watchOS 9, *)
-  func startingSharedWorksCorrectly() async throws {
+  func testStartingSharedWorksCorrectly() async throws {
     MockURLProtocol.setHandler { _ in throw SomeError() }
 
     let observer = URLConnectionObserver.startingShared()
 
     expectNoDifference(observer.isRunning, true)
+    observer.stop()
   }
 
-  @Test("Initial Failed Ping Becomes Disconnected")
   @available(iOS 16, macOS 13, tvOS 16, watchOS 9, *)
-  func initialFailedPingBecomesDisconnected() async throws {
+  func testInitialFailedPingBecomesDisconnected() async throws {
     MockURLProtocol.setHandler { _ in throw URLError(.notConnectedToInternet) }
     let observer = URLConnectionObserver(session: Self.makeSession(), clock: TestClock())
+    defer { observer.stop() }
 
-    let status = await self.nextStatus(from: observer, where: { $0 == .disconnected })
+    let status = await self.waitForStatus(from: observer, where: { $0 == .disconnected })
 
     expectNoDifference(status, .disconnected)
     expectNoDifference(observer.currentStatus, .disconnected)
   }
 
-  @Test("Later Successful Ping Becomes Connected")
   @available(iOS 16, macOS 13, tvOS 16, watchOS 9, *)
-  func laterSuccessfulPingBecomesConnected() async throws {
+  func testLaterSuccessfulPingBecomesConnected() async throws {
     let attempts = Counter()
     let clock = TestClock()
     MockURLProtocol.setHandler { request in
@@ -83,21 +78,21 @@ struct URLConnectionObserverTests {
       clock: clock,
       pingingEvery: .seconds(1)
     )
+    defer { observer.stop() }
 
-    let disconnected = await self.nextStatus(from: observer, where: { $0 == .disconnected })
+    let disconnected = await self.waitForStatus(from: observer, where: { $0 == .disconnected })
     expectNoDifference(disconnected, .disconnected)
 
     await clock.advance(by: .zero)
     await clock.advance(by: .seconds(1))
 
-    let connected = await self.nextStatus(from: observer, where: { $0 == .connected })
+    let connected = await self.waitForStatus(from: observer, where: { $0 == .connected })
     expectNoDifference(connected, .connected)
     expectNoDifference(observer.currentStatus, .connected)
   }
 
-  @Test("Connected -> Disconnected -> Connected")
   @available(iOS 16, macOS 13, tvOS 16, watchOS 9, *)
-  func connectedToDisconnectedToConnected() async throws {
+  func testConnectedToDisconnectedToConnected() async throws {
     let attempts = Counter()
     let clock = TestClock()
     MockURLProtocol.setHandler { request in
@@ -113,25 +108,31 @@ struct URLConnectionObserverTests {
       clock: clock,
       pingingEvery: .seconds(1)
     )
+    defer { observer.stop() }
 
-    let connected = await self.nextStatus(from: observer, where: { $0 == .connected })
-    expectNoDifference(connected, .connected)
+    let statuses = StatusBox()
+    let expectation = self.expectation(description: "Receives connected, disconnected, connected")
+    let subscription = observer.subscribe { status in
+      statuses.append(status)
+      if statuses.values.suffix(3) == [.connected, .disconnected, .connected] {
+        expectation.fulfill()
+      }
+    }
+    defer { subscription.cancel() }
+
+    await Task.megaYield()
+    await clock.advance(by: .seconds(1))
 
     await clock.advance(by: .seconds(1))
 
-    let disconnected = await self.nextStatus(from: observer, where: { $0 == .disconnected })
-    expectNoDifference(disconnected, .disconnected)
+    await self.fulfillment(of: [expectation], timeout: 1)
 
-    await clock.advance(by: .seconds(1))
-
-    let connectedAgain = await self.nextStatus(from: observer, where: { $0 == .connected })
-    expectNoDifference(connectedAgain, .connected)
+    expectNoDifference(statuses.values.suffix(3), [.connected, .disconnected, .connected])
     expectNoDifference(observer.currentStatus, .connected)
   }
 
-  @Test("Disconnected -> Connected -> Disconnected")
   @available(iOS 16, macOS 13, tvOS 16, watchOS 9, *)
-  func disconnectedToConnectedToDisconnected() async throws {
+  func testDisconnectedToConnectedToDisconnected() async throws {
     let attempts = Counter()
     let clock = TestClock()
     MockURLProtocol.setHandler { request in
@@ -147,28 +148,32 @@ struct URLConnectionObserverTests {
       clock: clock,
       pingingEvery: .seconds(1)
     )
+    defer { observer.stop() }
 
-    let disconnected = await self.nextStatus(from: observer, where: { $0 == .disconnected })
-    expectNoDifference(disconnected, .disconnected)
-
-    await clock.advance(by: .seconds(1))
-
-    let connected = await self.nextStatus(from: observer, where: { $0 == .connected })
-    expectNoDifference(connected, .connected)
-
-    await clock.advance(by: .seconds(1))
-
-    let disconnectedAgain = await self.nextStatus(
-      from: observer,
-      where: { $0 == .disconnected }
+    let statuses = StatusBox()
+    let expectation = self.expectation(
+      description: "Receives disconnected, connected, disconnected"
     )
-    expectNoDifference(disconnectedAgain, .disconnected)
+    let subscription = observer.subscribe { status in
+      statuses.append(status)
+      if statuses.values.suffix(3) == [.disconnected, .connected, .disconnected] {
+        expectation.fulfill()
+      }
+    }
+    defer { subscription.cancel() }
+
+    await clock.advance(by: .seconds(1))
+
+    await clock.advance(by: .seconds(1))
+
+    await self.fulfillment(of: [expectation], timeout: 1)
+
+    expectNoDifference(statuses.values.suffix(3), [.disconnected, .connected, .disconnected])
     expectNoDifference(observer.currentStatus, .disconnected)
   }
 
-  @Test("Duplicate Statuses Do Not Notify Subscribers")
   @available(iOS 16, macOS 13, tvOS 16, watchOS 9, *)
-  func duplicateStatusesDoNotNotifySubscribers() async throws {
+  func testDuplicateStatusesDoNotNotifySubscribers() async throws {
     let clock = TestClock()
     MockURLProtocol.setHandler { request in
       (Self.makeResponse(for: request.url!), Data())
@@ -179,22 +184,22 @@ struct URLConnectionObserverTests {
       clock: clock,
       pingingEvery: .seconds(1)
     )
+    defer { observer.stop() }
     let statuses = StatusBox()
     let subscription = observer.subscribe { status in
       statuses.append(status)
     }
     defer { subscription.cancel() }
 
-    await clock.advance(by: .zero)
+    await Task.megaYield()
     await clock.advance(by: .seconds(1))
 
     expectNoDifference(statuses.values, [.connected])
     expectNoDifference(observer.currentStatus, .connected)
   }
 
-  @Test("Non Connection Errors Stay Connected")
   @available(iOS 16, macOS 13, tvOS 16, watchOS 9, *)
-  func nonConnectionErrorsStayConnected() async throws {
+  func testNonConnectionErrorsStayConnected() async throws {
     let clock = TestClock()
     MockURLProtocol.setHandler { _ in throw SomeError() }
 
@@ -203,6 +208,7 @@ struct URLConnectionObserverTests {
       clock: clock,
       pingingEvery: .seconds(1)
     )
+    defer { observer.stop() }
     let statuses = StatusBox()
     let subscription = observer.subscribe { status in
       statuses.append(status)
@@ -218,27 +224,28 @@ struct URLConnectionObserverTests {
 
   private struct SomeError: Error {}
 
-  private func nextStatus(
+  private func waitForStatus(
     from observer: URLConnectionObserver,
     where predicate: @escaping @Sendable (NetworkConnectionStatus) -> Bool
   ) async -> NetworkConnectionStatus {
-    let stream = AsyncStream<NetworkConnectionStatus> { continuation in
-      let subscription = observer.subscribe { status in
-        continuation.yield(status)
+    let statusBox = Lock<NetworkConnectionStatus?>(nil)
+    let expectation = self.expectation(description: "Produces matching connection status")
+    let subscription = observer.subscribe { status in
+      guard predicate(status) else { return }
+      let shouldFulfill = statusBox.withLock { storedStatus in
+        guard storedStatus == nil else { return false }
+        storedStatus = status
+        return true
       }
-      continuation.onTermination = { _ in
-        subscription.cancel()
+      if shouldFulfill {
+        expectation.fulfill()
       }
     }
+    defer { subscription.cancel() }
 
-    for await status in stream {
-      if predicate(status) {
-        return status
-      }
-    }
+    await self.fulfillment(of: [expectation], timeout: 1)
 
-    Issue.record("Expected connection status stream to produce a matching value.")
-    fatalError("Unreachable")
+    return statusBox.withLock { $0! }
   }
 
   private static func makeSession() -> URLSession {
