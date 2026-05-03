@@ -95,6 +95,7 @@ final class URLConnectionObserverTests: XCTestCase {
   func testConnectedToDisconnectedToConnected() async throws {
     let attempts = Counter()
     let clock = TestClock()
+    let initialPingStarted = self.expectation(description: "Initial ping started")
     MockURLProtocol.setHandler { request in
       let attempt = attempts.increment()
       if attempt % 2 == 1 {
@@ -102,8 +103,9 @@ final class URLConnectionObserverTests: XCTestCase {
       }
       throw URLError(.timedOut)
     }
+    MockURLProtocol.startupExpectation = initialPingStarted
 
-    let observer = URLConnectionObserver(
+    let observer = URLConnectionObserver.starting(
       session: Self.makeSession(),
       clock: clock,
       pingingEvery: .seconds(1)
@@ -111,21 +113,23 @@ final class URLConnectionObserverTests: XCTestCase {
     defer { observer.stop() }
 
     let statuses = StatusBox()
-    let expectation = self.expectation(description: "Receives connected, disconnected, connected")
     let subscription = observer.subscribe { status in
       statuses.append(status)
-      if statuses.values.suffix(3) == [.connected, .disconnected, .connected] {
-        expectation.fulfill()
-      }
     }
     defer { subscription.cancel() }
 
-    await Task.megaYield()
-    await clock.advance(by: .seconds(1))
+    await self.fulfillment(of: [initialPingStarted], timeout: 1)
+
+    let connected = await self.waitForStatus(from: observer, where: { $0 == .connected })
+    expectNoDifference(connected, .connected)
 
     await clock.advance(by: .seconds(1))
+    let disconnected = await self.waitForStatus(from: observer, where: { $0 == .disconnected })
+    expectNoDifference(disconnected, .disconnected)
 
-    await self.fulfillment(of: [expectation], timeout: 1)
+    await clock.advance(by: .seconds(1))
+    let connectedAgain = await self.waitForStatus(from: observer, where: { $0 == .connected })
+    expectNoDifference(connectedAgain, .connected)
 
     expectNoDifference(statuses.values.suffix(3), [.connected, .disconnected, .connected])
     expectNoDifference(observer.currentStatus, .connected)
@@ -135,6 +139,7 @@ final class URLConnectionObserverTests: XCTestCase {
   func testDisconnectedToConnectedToDisconnected() async throws {
     let attempts = Counter()
     let clock = TestClock()
+    let initialPingStarted = self.expectation(description: "Initial ping started")
     MockURLProtocol.setHandler { request in
       let attempt = attempts.increment()
       if attempt % 2 == 0 {
@@ -142,8 +147,9 @@ final class URLConnectionObserverTests: XCTestCase {
       }
       throw URLError(.dataNotAllowed)
     }
+    MockURLProtocol.startupExpectation = initialPingStarted
 
-    let observer = URLConnectionObserver(
+    let observer = URLConnectionObserver.starting(
       session: Self.makeSession(),
       clock: clock,
       pingingEvery: .seconds(1)
@@ -151,22 +157,23 @@ final class URLConnectionObserverTests: XCTestCase {
     defer { observer.stop() }
 
     let statuses = StatusBox()
-    let expectation = self.expectation(
-      description: "Receives disconnected, connected, disconnected"
-    )
     let subscription = observer.subscribe { status in
       statuses.append(status)
-      if statuses.values.suffix(3) == [.disconnected, .connected, .disconnected] {
-        expectation.fulfill()
-      }
     }
     defer { subscription.cancel() }
 
-    await clock.advance(by: .seconds(1))
+    await self.fulfillment(of: [initialPingStarted], timeout: 1)
+
+    let disconnected = await self.waitForStatus(from: observer, where: { $0 == .disconnected })
+    expectNoDifference(disconnected, .disconnected)
 
     await clock.advance(by: .seconds(1))
+    let connected = await self.waitForStatus(from: observer, where: { $0 == .connected })
+    expectNoDifference(connected, .connected)
 
-    await self.fulfillment(of: [expectation], timeout: 1)
+    await clock.advance(by: .seconds(1))
+    let disconnectedAgain = await self.waitForStatus(from: observer, where: { $0 == .disconnected })
+    expectNoDifference(disconnectedAgain, .disconnected)
 
     expectNoDifference(statuses.values.suffix(3), [.disconnected, .connected, .disconnected])
     expectNoDifference(observer.currentStatus, .disconnected)
@@ -175,11 +182,13 @@ final class URLConnectionObserverTests: XCTestCase {
   @available(iOS 16, macOS 13, tvOS 16, watchOS 9, *)
   func testDuplicateStatusesDoNotNotifySubscribers() async throws {
     let clock = TestClock()
+    let initialPingStarted = self.expectation(description: "Initial ping started")
     MockURLProtocol.setHandler { request in
       (Self.makeResponse(for: request.url!), Data())
     }
+    MockURLProtocol.startupExpectation = initialPingStarted
 
-    let observer = URLConnectionObserver(
+    let observer = URLConnectionObserver.starting(
       session: Self.makeSession(),
       clock: clock,
       pingingEvery: .seconds(1)
@@ -191,7 +200,7 @@ final class URLConnectionObserverTests: XCTestCase {
     }
     defer { subscription.cancel() }
 
-    await Task.megaYield()
+    await self.fulfillment(of: [initialPingStarted], timeout: 1)
     await clock.advance(by: .seconds(1))
 
     expectNoDifference(statuses.values, [.connected])
@@ -283,6 +292,7 @@ private final class StatusBox: Sendable {
 }
 
 private final class MockURLProtocol: URLProtocol, @unchecked Sendable {
+  nonisolated(unsafe) static var startupExpectation: XCTestExpectation?
   nonisolated(unsafe) private static var handler:
     @Sendable (URLRequest) throws -> (
       HTTPURLResponse,
@@ -294,6 +304,7 @@ private final class MockURLProtocol: URLProtocol, @unchecked Sendable {
   static func setHandler(
     _ handler: @escaping @Sendable (URLRequest) throws -> (HTTPURLResponse, Data)
   ) {
+    Self.startupExpectation = nil
     Self.handler = handler
   }
 
@@ -306,6 +317,8 @@ private final class MockURLProtocol: URLProtocol, @unchecked Sendable {
   }
 
   override func startLoading() {
+    Self.startupExpectation?.fulfill()
+    Self.startupExpectation = nil
     do {
       let (response, data) = try Self.handler(self.request)
       self.client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
