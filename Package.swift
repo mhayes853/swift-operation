@@ -129,12 +129,12 @@ let package = Package(
 )
 
 // NB: Versions before 0.50.0 fail to build on Swift 6.3 and up, where `@_extern` can no longer
-// be applied to non-global declarations, but 0.50.1 and later require Swift tools 6.2. Pin the
-// last 6.1-compatible release when building with an older toolchain.
+// be applied to non-global declarations, but 0.50.1 and later require Swift tools 6.2. 0.50.0 is
+// the only release both toolchains can use, so older toolchains pin it exactly.
 #if compiler(>=6.2)
   let javaScriptKit = Package.Dependency.package(
     url: "https://github.com/swiftwasm/JavaScriptKit",
-    from: "0.58.0"
+    from: "0.50.0"
   )
 #else
   let javaScriptKit = Package.Dependency.package(
