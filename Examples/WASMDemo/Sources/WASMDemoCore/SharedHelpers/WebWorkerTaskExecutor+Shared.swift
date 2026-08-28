@@ -6,9 +6,11 @@ import JavaScriptKit
 
 extension WebWorkerTaskExecutor {
   @MainActor
-  public static func sharedInstance() async throws -> WebWorkerTaskExecutor {
+  public static func sharedInstance(
+    timeout: Duration = .seconds(30)
+  ) async throws -> WebWorkerTaskExecutor {
     let concurrency = Int(window.navigator.hardwareConcurrency.number!)
-    return try await WebWorkerTaskExecutor(numberOfThreads: concurrency)
+    return try await WebWorkerTaskExecutor(numberOfThreads: concurrency, timeout: timeout)
   }
 }
 

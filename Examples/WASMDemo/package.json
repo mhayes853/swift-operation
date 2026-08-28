@@ -1,0 +1,11 @@
+{
+  "name": "wasm-demo",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@bjorn3/browser_wasi_shim": "^0.4.1"
+  },
+  "devDependencies": {
+    "playwright": "^1.62.1"
+  }
+}
