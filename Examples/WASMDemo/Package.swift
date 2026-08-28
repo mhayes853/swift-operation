@@ -7,10 +7,6 @@ let package = Package(
   name: "WASMDemo",
   platforms: [.macOS(.v15)],
   dependencies: [
-    // NB: SwiftPM derives a path dependency's identity from the directory name, which is not
-    // "swift-operation" when the repository is cloned under its GitHub name or checked out as a
-    // git worktree. Name the dependency explicitly so the `package: "swift-operation"` references
-    // below resolve wherever the checkout happens to live.
     .package(
       name: "swift-operation",
       path: "../..",
