@@ -130,7 +130,9 @@ let package = Package(
 
 #if !os(Windows)
   package.dependencies.append(
-    .package(url: "https://github.com/swiftwasm/JavaScriptKit", from: "0.35.0"),
+    // NB: Versions before 0.58.0 fail to build on Swift 6.3 and up, where `@_extern` can no
+    // longer be applied to non-global declarations.
+    .package(url: "https://github.com/swiftwasm/JavaScriptKit", from: "0.58.0"),
   )
   package.targets.append(
     contentsOf: [

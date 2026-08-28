@@ -19,7 +19,7 @@ let package = Package(
       path: "../..",
       traits: ["SwiftOperationNavigation", "SwiftOperationLogging", "SwiftOperationWebBrowser"]
     ),
-    .package(url: "https://github.com/swiftwasm/JavaScriptKit", from: "0.36.0")
+    .package(url: "https://github.com/swiftwasm/JavaScriptKit", from: "0.58.0")
   ],
   targets: [
     .executableTarget(name: "WASMDemo", dependencies: ["WASMDemoCore"]),

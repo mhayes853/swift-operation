@@ -1,5 +1,5 @@
 {
-  "originHash" : "1c5de38b0f555aa983fe1b3e7622ec990803676a7cc3f9e6463daa7041dce8ff",
+  "originHash" : "8ce3c1cd1eca5102d724cabf42ea8d060e0118dfeb40f91ffe19378441da4c85",
   "pins" : [
     {
       "identity" : "combine-schedulers",
@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swiftwasm/JavaScriptKit",
       "state" : {
-        "revision" : "a069e3af73ab950220d054d2488120b8f54585cf",
-        "version" : "0.36.0"
+        "revision" : "cadafdcf9a1946ed60dfd22407e7e8dd189920e8",
+        "version" : "0.58.0"
       }
     },
     {
@@ -92,6 +92,15 @@
       }
     },
     {
+      "identity" : "swift-issue-reporting",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/pointfreeco/swift-issue-reporting",
+      "state" : {
+        "revision" : "71c7c9a761d1ca6ed4ccb6ced040fe1c1a39e8e7",
+        "version" : "2.1.0"
+      }
+    },
+    {
       "identity" : "swift-log",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-log",
@@ -141,8 +150,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/xctest-dynamic-overlay",
       "state" : {
-        "revision" : "b2ed9eabefe56202ee4939dd9fc46b6241c88317",
-        "version" : "1.6.1"
+        "revision" : "d9308ad679143c26a30dec52daefe82f54af2b82",
+        "version" : "1.13.1"
       }
     }
   ],
