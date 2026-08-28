@@ -2,7 +2,6 @@ import Dependencies
 import IdentifiedCollections
 import JavaScriptKit
 import Observation
-import SwiftNavigation
 
 // MARK: - AppModel
 

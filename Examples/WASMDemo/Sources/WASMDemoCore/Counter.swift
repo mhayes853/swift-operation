@@ -2,7 +2,6 @@ import Foundation
 import JavaScriptKit
 import Observation
 import SharingOperation
-import SwiftNavigation
 
 // MARK: - CounterModel
 
@@ -13,7 +12,7 @@ public final class CounterModel: Identifiable {
   @SharedOperation<QueryState<NumberFact, any Error>> public var fact: NumberFact?
 
   @ObservationIgnored
-  @SharedOperation<QueryState<Int?, any Error>> public var nthPrime: Int??
+  @SharedOperation<QueryState<Int?, Never>> public var nthPrime: Int??
 
   public private(set) var count: Int
 

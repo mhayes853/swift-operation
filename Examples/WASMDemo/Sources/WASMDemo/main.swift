@@ -3,26 +3,27 @@ import JavaScriptEventLoop
 import JavaScriptKit
 import WASMDemoCore
 
-@main
-struct WASMDemo {
-  static func main() async throws {
-    JavaScriptEventLoop.installGlobalExecutor()
+JavaScriptEventLoop.installGlobalExecutor()
 
-    #if canImport(wasi_pthread) && _runtime(_multithreaded)
-      let executor = try await WebWorkerTaskExecutor.sharedInstance()
-      prepareDependencies {
-        $0[WebWorkerTaskExecutorKey.self] = executor
-      }
-    #endif
+var appModel: AppModel?
 
-    let model = AppModel()
-    let container = document.getElementById!("app")
-    renderApp(model: model, in: container.object!)
-
-    // NB: This is needed when running with WebWorkerTaskExecutor to prevent the program from
-    // exiting. Otherwise, the UI becomes unresponsive.
-    try await Task.never()
+#if canImport(wasi_pthread) && _runtime(_multithreaded)
+  Task {
+    if let executor = try? await WebWorkerTaskExecutor.sharedInstance() {
+      prepareDependencies { $0[WebWorkerTaskExecutorKey.self] = executor }
+    }
+    startApp()
   }
+#else
+  startApp()
+#endif
+
+@MainActor
+func startApp() {
+  let model = AppModel()
+  appModel = model
+  let container = document.getElementById!("app")
+  renderApp(model: model, in: container.object!)
 }
 
 #if canImport(wasi_pthread)

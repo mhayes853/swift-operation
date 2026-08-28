@@ -1,6 +1,5 @@
 import JavaScriptKit
 import SharingOperation
-import SwiftNavigation
 
 @MainActor
 private var tokens = Set<ObserveToken>()
