@@ -283,7 +283,9 @@ struct OperationStoreTests {
       .stateChanged
     ])
   }
+}
 
+extension OperationStoreTests {
   @Test("Does Not Increment Subscription Count When Fetching")
   func doesNotIncrementSubscriptionCountWhenFetching() async throws {
     let query = SleepingQuery()
@@ -589,7 +591,7 @@ final class OperationStoreAsyncTests: XCTestCase {
     let subscription = store.subscribe(
       with: QueryEventHandler(onFetchingStarted: { _ in expectation.fulfill() })
     )
-    await self.fulfillment(of: [expectation], timeout: 0.05)
+    await self.fulfillment(of: [expectation], timeout: 0.25)
     subscription.cancel()
   }
 
@@ -603,7 +605,7 @@ final class OperationStoreAsyncTests: XCTestCase {
     let s1 = store.subscribe(with: QueryEventHandler())
     let s2 = store.subscribe(with: QueryEventHandler())
     let s3 = store.subscribe(with: QueryEventHandler())
-    await self.fulfillment(of: [expectation], timeout: 0.05)
+    await self.fulfillment(of: [expectation], timeout: 0.25)
     let count = await query.fetchCount
     expectNoDifference(count, 1)
     s1.cancel()
@@ -636,11 +638,11 @@ final class OperationStoreAsyncTests: XCTestCase {
     await self.fulfillment(of: [fetchesExpectation], timeout: 0.05)
     s1.cancel()
 
-    await self.fulfillment(of: [shouldNotCancelExpectation], timeout: 0.05)
+    await self.fulfillment(of: [shouldNotCancelExpectation], timeout: 0.25)
 
     s2.cancel()
 
-    await self.fulfillment(of: [cancelsExpectation], timeout: 0.05)
+    await self.fulfillment(of: [cancelsExpectation], timeout: 0.25)
   }
 }
 

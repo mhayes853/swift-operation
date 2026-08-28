@@ -12,12 +12,12 @@ concurrency:
 
 jobs:
   macos:
-    name: macOS (Swift 6.2)
+    name: macOS (Swift 6.3)
     runs-on: macos-26
     timeout-minutes: 15
     strategy:
       matrix:
-        xcode: ["26.0"]
+        xcode: ["26.4"]
         config: ["debug", "release"]
     steps:
       - uses: actions/checkout@v4
@@ -26,28 +26,35 @@ jobs:
       - name: Run ${{ matrix.config }} tests
         run: swift test -c ${{ matrix.config }} --disable-experimental-prebuilts --enable-all-traits
 
-  linux-61:
-    name: Linux (Swift 6.1)
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    container: swift:6.1
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run tests
-        run: swift test --traits SwiftOperationLogging
-
   linux:
-    name: Linux (Swift 6.2)
+    name: Linux (Swift ${{ matrix.swift }})
     runs-on: ubuntu-latest
-    timeout-minutes: 5
-    container: swift:6.2
+    timeout-minutes: 10
+    container: ${{ matrix.container }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - swift: "6.1"
+            container: "swift:6.1"
+            flags: ""
+          - swift: "6.2"
+            container: "swift:6.2"
+            flags: "--disable-experimental-prebuilts"
+          - swift: "6.3"
+            container: "swift:6.3"
+            flags: "--disable-experimental-prebuilts"
+          # NB: 6.4 has no release image yet, so track the release branch nightly.
+          - swift: "6.4"
+            container: "swiftlang/swift:nightly-6.4.x-jammy"
+            flags: "--disable-experimental-prebuilts"
     steps:
       - uses: actions/checkout@v4
       - name: Run tests
-        run: swift test --traits SwiftOperationLogging --disable-experimental-prebuilts
+        run: swift test --traits SwiftOperationLogging ${{ matrix.flags }}
 
   android:
-    name: Android (Swift 6.2)
+    name: Android (Swift 6.3)
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -55,13 +62,13 @@ jobs:
       - name: "Build Swift Package on Android"
         uses: swift-android-sdk/swift-android-action@v2
         with:
-          swift-version: 6.2
+          swift-version: 6.3
           swift-build-flags: --traits SwiftOperationLogging --disable-experimental-prebuilts
           run-tests: false
           build-tests: false
 
   windows:
-    name: Windows (Swift 6.2)
+    name: Windows (Swift 6.3)
     runs-on: windows-latest
     timeout-minutes: 10
     steps:
@@ -69,13 +76,13 @@ jobs:
       - name: "Setup Swift on Windows"
         uses: compnerd/gha-setup-swift@main
         with:
-          branch: swift-6.2-release
-          tag: 6.2-RELEASE
+          branch: swift-6.3-release
+          tag: 6.3-RELEASE
       - name: "Build Swift Package on Windows"
         run: swift build --target Operation --traits SwiftOperationLogging
 
   wasm:
-    name: WASM (Swift 6.1)
+    name: WASM (Swift 6.3)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -87,9 +94,9 @@ jobs:
         run: |
           PREFIX=/opt/swift
           set -ex
-          curl -f -o /tmp/swift.tar.gz "https://download.swift.org/swift-6.1-release/ubuntu2204/swift-6.1-RELEASE/swift-6.1-RELEASE-ubuntu22.04.tar.gz"
+          curl -f -o /tmp/swift.tar.gz "https://download.swift.org/swift-6.3.2-release/ubuntu2204/swift-6.3.2-RELEASE/swift-6.3.2-RELEASE-ubuntu22.04.tar.gz"
           sudo mkdir -p $PREFIX; sudo tar -xzf /tmp/swift.tar.gz -C $PREFIX --strip-component 1
-          $PREFIX/usr/bin/swift sdk install https://github.com/swiftwasm/swift/releases/download/swift-wasm-6.1-RELEASE/swift-wasm-6.1-RELEASE-wasm32-unknown-wasi.artifactbundle.zip --checksum 7550b4c77a55f4b637c376f5d192f297fe185607003a6212ad608276928db992
+          $PREFIX/usr/bin/swift sdk install https://download.swift.org/swift-6.3.2-release/wasm-sdk/swift-6.3.2-RELEASE/swift-6.3.2-RELEASE_wasm.artifactbundle.tar.gz --checksum a61f0584c93283589f8b2f42db05c1f9a182b506c2957271402992655591dd7c
           echo "$PREFIX/usr/bin" >> $GITHUB_PATH
       - name: Install Playwright
         run: npm install playwright && npx playwright install chromium
