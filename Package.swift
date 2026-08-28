@@ -45,13 +45,16 @@ let package = Package(
   dependencies: [
     .package(url: "https://github.com/pointfreeco/swift-clocks", from: "1.0.6"),
     .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.9.3"),
-    .package(url: "https://github.com/pointfreeco/swift-sharing", from: "2.7.0"),
+    .package(url: "https://github.com/pointfreeco/swift-sharing", from: "2.9.1"),
     .package(url: "https://github.com/pointfreeco/swift-custom-dump", from: "1.3.3"),
     .package(
       url: "https://github.com/pointfreeco/swift-identified-collections",
       .upToNextMajor(from: "1.1.0")
     ),
-    .package(url: "https://github.com/pointfreeco/xctest-dynamic-overlay", from: "1.4.3"),
+    // NB: 1.13.1 forwards to swift-issue-reporting 2.x on Swift 6.4 and up, and vendors the
+    // equivalent sources below it. Depending on swift-issue-reporting directly conflicts with
+    // the products our other Point-Free dependencies pull in through this package.
+    .package(url: "https://github.com/pointfreeco/xctest-dynamic-overlay", from: "1.13.1"),
     .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.4.3"),
     .package(url: "https://github.com/pointfreeco/swift-navigation", from: "2.6.0"),
     .package(url: "https://github.com/apple/swift-log", from: "1.6.3"),

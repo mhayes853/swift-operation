@@ -260,10 +260,6 @@ final class URLConnectionObserverTests: XCTestCase {
     }
     defer { subscription.cancel() }
 
-    if let status = statusBox.withLock({ $0 }) {
-      return status
-    }
-
     await self.fulfillment(of: [expectation], timeout: 1)
     return try XCTUnwrap(statusBox.withLock { $0 })
   }
