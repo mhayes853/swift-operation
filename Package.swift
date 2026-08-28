@@ -128,12 +128,23 @@ let package = Package(
   swiftLanguageModes: [.v6]
 )
 
-#if !os(Windows)
-  package.dependencies.append(
-    // NB: Versions before 0.58.0 fail to build on Swift 6.3 and up, where `@_extern` can no
-    // longer be applied to non-global declarations.
-    .package(url: "https://github.com/swiftwasm/JavaScriptKit", from: "0.58.0"),
+// NB: Versions before 0.50.0 fail to build on Swift 6.3 and up, where `@_extern` can no longer
+// be applied to non-global declarations, but 0.50.1 and later require Swift tools 6.2. Pin the
+// last 6.1-compatible release when building with an older toolchain.
+#if compiler(>=6.2)
+  let javaScriptKit = Package.Dependency.package(
+    url: "https://github.com/swiftwasm/JavaScriptKit",
+    from: "0.58.0"
   )
+#else
+  let javaScriptKit = Package.Dependency.package(
+    url: "https://github.com/swiftwasm/JavaScriptKit",
+    "0.50.0"..<"0.50.1"
+  )
+#endif
+
+#if !os(Windows)
+  package.dependencies.append(javaScriptKit)
   package.targets.append(
     contentsOf: [
       .target(
