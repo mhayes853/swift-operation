@@ -128,15 +128,24 @@ let package = Package(
   swiftLanguageModes: [.v6]
 )
 
-// NB: JavaScriptKit 0.50.1 and later require Swift tools 6.2, and releases old enough for Swift
-// 6.1 fail to build on Swift 6.3 and up, where `@_extern` can no longer be applied to non-global
-// declarations. Rather than freeze every toolchain on the single release that satisfies both, the
-// web browser integration is omitted under Swift 6.1. The rest of the library still supports it,
-// and `SwiftOperationWebBrowser` has no effect there.
-#if !os(Windows) && compiler(>=6.2)
-  package.dependencies.append(
-    .package(url: "https://github.com/swiftwasm/JavaScriptKit", from: "0.58.0")
+// NB: JavaScriptKit 0.50.1 and later require Swift tools 6.2, so Swift 6.1 stays on 0.50.0, the
+// last release it can load. Package.resolved has to pin that older release, because SwiftPM loads
+// a pinned version's manifest before applying the requirement below, so pinning a 6.2-only release
+// fails outright on 6.1. Newer toolchains resolve past the pin to the latest release.
+#if compiler(>=6.2)
+  let javaScriptKit = Package.Dependency.package(
+    url: "https://github.com/swiftwasm/JavaScriptKit",
+    from: "0.58.0"
   )
+#else
+  let javaScriptKit = Package.Dependency.package(
+    url: "https://github.com/swiftwasm/JavaScriptKit",
+    "0.50.0"..<"0.50.1"
+  )
+#endif
+
+#if !os(Windows)
+  package.dependencies.append(javaScriptKit)
   package.targets.append(
     contentsOf: [
       .target(
