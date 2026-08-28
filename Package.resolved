@@ -1,5 +1,5 @@
 {
-  "originHash" : "6cc2d432f2acf96d61d67b2c92f75ef71a5da6ed50b6830f8603e5936e0d8b3f",
+  "originHash" : "a74c9212c4b043806c1dfa17e9eb2fee66ca6d1da8d7a439d442a6878c711ae4",
   "pins" : [
     {
       "identity" : "combine-schedulers",
@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swiftwasm/JavaScriptKit",
       "state" : {
-        "revision" : "df32a66879cd5e1bbd12308d2fc248cf84fef5d3",
-        "version" : "0.50.0"
+        "revision" : "cadafdcf9a1946ed60dfd22407e7e8dd189920e8",
+        "version" : "0.58.0"
       }
     },
     {
@@ -98,6 +98,15 @@
       "state" : {
         "revision" : "322d9ffeeba85c9f7c4984b39422ec7cc3c56597",
         "version" : "1.1.1"
+      }
+    },
+    {
+      "identity" : "swift-issue-reporting",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/pointfreeco/swift-issue-reporting",
+      "state" : {
+        "revision" : "71c7c9a761d1ca6ed4ccb6ced040fe1c1a39e8e7",
+        "version" : "2.1.0"
       }
     },
     {
