@@ -102,3 +102,35 @@ jobs:
         run: npm install playwright && npx playwright install chromium
       - name: Run tests
         run: ./test-wasm.sh
+
+  wasm-demo:
+    name: WASM Demo (Swift 6.3)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: Examples/WASMDemo
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - name: Install Swift and the multithreaded Swift SDK for WebAssembly
+        run: |
+          PREFIX=/opt/swift
+          set -ex
+          curl -f -o /tmp/swift.tar.gz "https://download.swift.org/swift-6.3.2-release/ubuntu2204/swift-6.3.2-RELEASE/swift-6.3.2-RELEASE-ubuntu22.04.tar.gz"
+          sudo mkdir -p $PREFIX; sudo tar -xzf /tmp/swift.tar.gz -C $PREFIX --strip-component 1
+          # NB: The demo uses WebWorkerTaskExecutor, which needs a wasip1-threads SDK. swift.org
+          # only publishes single threaded ones, so use swiftwasm's bundle, which is built from the
+          # same swift-6.3.2-RELEASE tag as the toolchain above.
+          $PREFIX/usr/bin/swift sdk install https://github.com/swiftwasm/swift/releases/download/swift-wasm-6.3-SNAPSHOT-2026-08-14-a/swift-wasm-6.3-SNAPSHOT-2026-08-14-a-wasm32-unknown-wasip1-threads.artifactbundle.zip --checksum 8329ea9b7a35a59df46515c518d9f7c669e5f8c5be91f7ec260e2cef6f3352ab
+          echo "$PREFIX/usr/bin" >> $GITHUB_PATH
+      - name: Install JS dependencies
+        run: npm install && npx playwright install chromium
+      # NB: The test target does not depend on the WASMDemo executable, so build the app as well to
+      # keep the entry point and its multithreading setup covered.
+      - name: Build the app
+        run: ./build.sh
+      - name: Run tests
+        run: ./test.sh
