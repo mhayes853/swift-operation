@@ -56,7 +56,7 @@ final class URLConnectionObserverTests: XCTestCase {
     let observer = URLConnectionObserver(session: Self.makeSession(), clock: TestClock())
     defer { observer.stop() }
 
-    let status = await self.waitForStatus(from: observer, where: { $0 == .disconnected })
+    let status = try await self.waitForStatus(from: observer, where: { $0 == .disconnected })
 
     expectNoDifference(status, .disconnected)
     expectNoDifference(observer.currentStatus, .disconnected)
@@ -80,13 +80,13 @@ final class URLConnectionObserverTests: XCTestCase {
     )
     defer { observer.stop() }
 
-    let disconnected = await self.waitForStatus(from: observer, where: { $0 == .disconnected })
+    let disconnected = try await self.waitForStatus(from: observer, where: { $0 == .disconnected })
     expectNoDifference(disconnected, .disconnected)
 
     await clock.advance(by: .zero)
     await clock.advance(by: .seconds(1))
 
-    let connected = await self.waitForStatus(from: observer, where: { $0 == .connected })
+    let connected = try await self.waitForStatus(from: observer, where: { $0 == .connected })
     expectNoDifference(connected, .connected)
     expectNoDifference(observer.currentStatus, .connected)
   }
@@ -120,15 +120,17 @@ final class URLConnectionObserverTests: XCTestCase {
 
     await self.fulfillment(of: [initialPingStarted], timeout: 1)
 
-    let connected = await self.waitForStatus(from: observer, where: { $0 == .connected })
+    let connected = try await self.waitForStatus(from: observer, where: { $0 == .connected })
     expectNoDifference(connected, .connected)
 
+    await clock.advance(by: .zero)
     await clock.advance(by: .seconds(1))
-    let disconnected = await self.waitForStatus(from: observer, where: { $0 == .disconnected })
+    let disconnected = try await self.waitForStatus(from: observer, where: { $0 == .disconnected })
     expectNoDifference(disconnected, .disconnected)
 
+    await clock.advance(by: .zero)
     await clock.advance(by: .seconds(1))
-    let connectedAgain = await self.waitForStatus(from: observer, where: { $0 == .connected })
+    let connectedAgain = try await self.waitForStatus(from: observer, where: { $0 == .connected })
     expectNoDifference(connectedAgain, .connected)
 
     expectNoDifference(statuses.values.suffix(3), [.connected, .disconnected, .connected])
@@ -164,15 +166,20 @@ final class URLConnectionObserverTests: XCTestCase {
 
     await self.fulfillment(of: [initialPingStarted], timeout: 1)
 
-    let disconnected = await self.waitForStatus(from: observer, where: { $0 == .disconnected })
+    let disconnected = try await self.waitForStatus(from: observer, where: { $0 == .disconnected })
     expectNoDifference(disconnected, .disconnected)
 
+    await clock.advance(by: .zero)
     await clock.advance(by: .seconds(1))
-    let connected = await self.waitForStatus(from: observer, where: { $0 == .connected })
+    let connected = try await self.waitForStatus(from: observer, where: { $0 == .connected })
     expectNoDifference(connected, .connected)
 
+    await clock.advance(by: .zero)
     await clock.advance(by: .seconds(1))
-    let disconnectedAgain = await self.waitForStatus(from: observer, where: { $0 == .disconnected })
+    let disconnectedAgain = try await self.waitForStatus(
+      from: observer,
+      where: { $0 == .disconnected }
+    )
     expectNoDifference(disconnectedAgain, .disconnected)
 
     expectNoDifference(statuses.values.suffix(3), [.disconnected, .connected, .disconnected])
@@ -201,6 +208,7 @@ final class URLConnectionObserverTests: XCTestCase {
     defer { subscription.cancel() }
 
     await self.fulfillment(of: [initialPingStarted], timeout: 1)
+    await clock.advance(by: .zero)
     await clock.advance(by: .seconds(1))
 
     expectNoDifference(statuses.values, [.connected])
@@ -236,7 +244,7 @@ final class URLConnectionObserverTests: XCTestCase {
   private func waitForStatus(
     from observer: URLConnectionObserver,
     where predicate: @escaping @Sendable (NetworkConnectionStatus) -> Bool
-  ) async -> NetworkConnectionStatus {
+  ) async throws -> NetworkConnectionStatus {
     let statusBox = Lock<NetworkConnectionStatus?>(nil)
     let expectation = self.expectation(description: "Produces matching connection status")
     let subscription = observer.subscribe { status in
@@ -252,9 +260,12 @@ final class URLConnectionObserverTests: XCTestCase {
     }
     defer { subscription.cancel() }
 
-    await self.fulfillment(of: [expectation], timeout: 1)
+    if let status = statusBox.withLock({ $0 }) {
+      return status
+    }
 
-    return statusBox.withLock { $0! }
+    await self.fulfillment(of: [expectation], timeout: 1)
+    return try XCTUnwrap(statusBox.withLock { $0 })
   }
 
   private static func makeSession() -> URLSession {
@@ -292,20 +303,27 @@ private final class StatusBox: Sendable {
 }
 
 private final class MockURLProtocol: URLProtocol, @unchecked Sendable {
-  nonisolated(unsafe) static var startupExpectation: XCTestExpectation?
-  nonisolated(unsafe) private static var handler:
-    @Sendable (URLRequest) throws -> (
-      HTTPURLResponse,
-      Data
-    ) = { _ in
+  private struct State: Sendable {
+    var startupExpectation: XCTestExpectation?
+    var handler: @Sendable (URLRequest) throws -> (HTTPURLResponse, Data) = { _ in
       fatalError("Unhandled request.")
     }
+  }
+
+  private static let state = Lock(State())
+
+  static var startupExpectation: XCTestExpectation? {
+    get { Self.state.withLock { $0.startupExpectation } }
+    set { Self.state.withLock { $0.startupExpectation = newValue } }
+  }
 
   static func setHandler(
     _ handler: @escaping @Sendable (URLRequest) throws -> (HTTPURLResponse, Data)
   ) {
-    Self.startupExpectation = nil
-    Self.handler = handler
+    Self.state.withLock {
+      $0.startupExpectation = nil
+      $0.handler = handler
+    }
   }
 
   override class func canInit(with request: URLRequest) -> Bool {
@@ -317,10 +335,14 @@ private final class MockURLProtocol: URLProtocol, @unchecked Sendable {
   }
 
   override func startLoading() {
-    Self.startupExpectation?.fulfill()
-    Self.startupExpectation = nil
+    let (startupExpectation, handler) = Self.state.withLock { state in
+      let startupExpectation = state.startupExpectation
+      state.startupExpectation = nil
+      return (startupExpectation, state.handler)
+    }
+    startupExpectation?.fulfill()
     do {
-      let (response, data) = try Self.handler(self.request)
+      let (response, data) = try handler(self.request)
       self.client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
       self.client?.urlProtocol(self, didLoad: data)
       self.client?.urlProtocolDidFinishLoading(self)
