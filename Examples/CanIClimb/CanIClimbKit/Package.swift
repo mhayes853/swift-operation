@@ -11,15 +11,19 @@ let package = Package(
   ],
   dependencies: [
     .package(url: "https://github.com/pointfreeco/swift-tagged", from: "0.10.0"),
-    .package(path: "../../..", traits: ["SwiftOperationLogging"]),
+    .package(
+      name: "swift-operation",
+      path: "../../..",
+      traits: ["SwiftOperationLogging"]
+    ),
     .package(
       url: "https://github.com/pointfreeco/swift-structured-queries",
-      from: "0.20.0",
+      exact: "0.38.1",
       traits: ["StructuredQueriesTagged"]
     ),
     .package(
       url: "https://github.com/pointfreeco/sqlite-data",
-      from: "1.0.0",
+      exact: "1.11.2",
       traits: ["SQLiteDataTagged"]
     ),
     .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.9.2"),
@@ -27,7 +31,7 @@ let package = Package(
     .package(url: "https://github.com/evgenyneu/keychain-swift", from: "24.0.0"),
     .package(
       url: "https://github.com/mhayes853/swift-uuidv7",
-      from: "0.3.0",
+      exact: "0.6.2",
       traits: ["SwiftUUIDV7SQLiteData", "SwiftUUIDV7Tagged", "SwiftUUIDV7Dependencies"]
     ),
     .package(url: "https://github.com/apple/swift-collections", from: "1.2.1"),

@@ -2,13 +2,13 @@ import ConcurrencyExtras
 import FoundationModels
 import Logging
 
-extension Tool {
+extension Tool where Arguments: Sendable {
   public func withLogging() -> some Tool<Arguments, Output> {
     LoggingTool(base: self)
   }
 }
 
-private struct LoggingTool<Base: Tool>: Tool {
+private struct LoggingTool<Base: Tool>: Tool where Base.Arguments: Sendable {
   let base: Base
 
   var name: String { self.base.name }
@@ -17,19 +17,18 @@ private struct LoggingTool<Base: Tool>: Tool {
   var parameters: GenerationSchema { self.base.parameters }
 
   func call(arguments: Base.Arguments) async throws -> Base.Output {
-    var result: Result<Base.Output, any Error>?
     let clock = ContinuousClock()
-    let time = await clock.measure {
-      result = await Result { try await self.base.call(arguments: arguments) }
-    }
+    let start = clock.now
+    let argumentsDescription = "\(arguments)"
+    let result = await Result { try await self.base.call(arguments: arguments) }
     currentLogger.debug(
       "'\(self.name)' tool called.",
       metadata: [
-        "call.arguments": "\(arguments)",
-        "call.result": "\(result!)",
-        "call.duration": "\(time)"
+        "call.arguments": "\(argumentsDescription)",
+        "call.result": "\(result)",
+        "call.duration": "\(start.duration(to: clock.now))"
       ]
     )
-    return try result!.get()
+    return try result.get()
   }
 }
