@@ -95,15 +95,13 @@ final class URLConnectionObserverTests: XCTestCase {
   func testConnectedToDisconnectedToConnected() async throws {
     let attempts = Counter()
     let clock = TestClock()
-    let initialPingStarted = self.expectation(description: "Initial ping started")
     MockURLProtocol.setHandler { request in
       let attempt = attempts.increment()
-      if attempt % 2 == 1 {
+      if attempt % 2 == 0 {
         return (Self.makeResponse(for: request.url!), Data())
       }
       throw URLError(.timedOut)
     }
-    MockURLProtocol.startupExpectation = initialPingStarted
 
     let observer = URLConnectionObserver.starting(
       session: Self.makeSession(),
@@ -118,10 +116,19 @@ final class URLConnectionObserverTests: XCTestCase {
     }
     defer { subscription.cancel() }
 
-    await self.fulfillment(of: [initialPingStarted], timeout: 1)
+    let initiallyDisconnected = try await self.waitForStatus(
+      from: observer,
+      where: { $0 == .disconnected }
+    )
+    expectNoDifference(initiallyDisconnected, .disconnected)
 
-    let connected = try await self.waitForStatus(from: observer, where: { $0 == .connected })
-    expectNoDifference(connected, .connected)
+    await clock.advance(by: .zero)
+    await clock.advance(by: .seconds(1))
+    let initiallyConnected = try await self.waitForStatus(
+      from: observer,
+      where: { $0 == .connected }
+    )
+    expectNoDifference(initiallyConnected, .connected)
 
     await clock.advance(by: .zero)
     await clock.advance(by: .seconds(1))
