@@ -26,6 +26,23 @@ jobs:
       - name: Run ${{ matrix.config }} tests
         run: swift test -c ${{ matrix.config }} --disable-experimental-prebuilts --enable-all-traits
 
+  can-i-climb:
+    name: CanIClimbKit (Swift 6.3)
+    runs-on: macos-26
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: Examples/CanIClimb/CanIClimbKit
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode 26.4
+        run: sudo xcode-select -s /Applications/Xcode_26.4.app
+      - name: Run tests
+        run: >-
+          swift test
+          --disable-experimental-prebuilts
+          --skip MountainClimbReadinessFoundationModelsTests
+
   linux:
     name: Linux (Swift ${{ matrix.swift }})
     runs-on: ubuntu-latest
