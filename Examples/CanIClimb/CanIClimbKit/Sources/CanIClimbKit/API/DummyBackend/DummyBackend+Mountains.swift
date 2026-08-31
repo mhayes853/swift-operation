@@ -6,7 +6,20 @@ import Logging
 
 extension DummyBackend {
   final actor Mountains {
+    private let load: @Sendable () async throws -> [Mountain]
     private var mountains: [Mountain]?
+
+    init() {
+      self.load = {
+        let (data, _) = try await URLSession.shared.data(from: .mountains)
+        return try JSONDecoder().decode([Mountain].self, from: data)
+      }
+    }
+
+    init(mountains: [Mountain]) {
+      self.load = { mountains }
+      self.mountains = mountains
+    }
 
     func mountains(
       for request: Mountain.SearchRequest,
@@ -39,8 +52,7 @@ extension DummyBackend {
       if let mountains {
         return mountains
       }
-      let (data, _) = try await URLSession.shared.data(from: .mountains)
-      self.mountains = try JSONDecoder().decode([Mountain].self, from: data)
+      self.mountains = try await self.load()
       currentLogger.info("Downloaded \(self.mountains!.count) mountains!")
       return self.mountains!
     }

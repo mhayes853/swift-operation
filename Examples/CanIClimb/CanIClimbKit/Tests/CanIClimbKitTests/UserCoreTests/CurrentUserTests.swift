@@ -13,13 +13,7 @@ struct CurrentUserTests {
   @Test("Caches Current User When Loaded")
   func cachesCurrentUserWhenLoaded() async throws {
     let api = CanIClimbAPI.testInstance(
-      transport: .mock { request, _ in
-        switch request {
-        case .signIn: successfulSignInResponse()
-        case .currentUser: (200, .json(User.mock1))
-        default: (400, .empty)
-        }
-      }
+      transport: DummyBackend(scenario: DummyBackend.Scenario())
     )
     let currentUser = CurrentUser(database: self.database, api: api)
     try await currentUser.signIn(with: .mock1)
@@ -33,14 +27,7 @@ struct CurrentUserTests {
   @Test("Removes Current Local User From Cache When Account Deletion Successful")
   func removesCurrentUserFromCacheWhenAccountDeletionSuccessful() async throws {
     let api = CanIClimbAPI.testInstance(
-      transport: .mock { request, _ in
-        switch request {
-        case .signIn: successfulSignInResponse()
-        case .currentUser: (200, .json(User.mock1))
-        case .deleteCurrentUser: (204, .empty)
-        default: (400, .empty)
-        }
-      }
+      transport: DummyBackend(scenario: DummyBackend.Scenario())
     )
 
     let currentUser = CurrentUser(database: database, api: api)
@@ -55,14 +42,7 @@ struct CurrentUserTests {
   @Test("Removes Current Local User From Cache When Sign Out Successful")
   func setsCurrentUserToNilWhenSignOutSuccessful() async throws {
     let api = CanIClimbAPI.testInstance(
-      transport: .mock { request, _ in
-        switch request {
-        case .signIn: successfulSignInResponse()
-        case .currentUser: (200, .json(User.mock1))
-        case .signOut: (204, .empty)
-        default: (400, .empty)
-        }
-      }
+      transport: DummyBackend(scenario: DummyBackend.Scenario())
     )
 
     let currentUser = CurrentUser(database: database, api: api)
@@ -77,14 +57,13 @@ struct CurrentUserTests {
   @Test("Editing Current User Updates Cached User")
   func editUser() async throws {
     let api = CanIClimbAPI.testInstance(
-      transport: .mock { request, _ in
-        switch request {
-        case .signIn: successfulSignInResponse()
-        case .currentUser: (200, .json(User.mock1))
-        case .editCurrentUser: (200, .json(User.mock2))
-        default: (400, .empty)
+      transport: DummyBackend(
+        scenario: DummyBackend.Scenario(),
+        responseOverride: { request in
+          guard request.url?.path() == "/user", request.httpMethod == "PATCH" else { return nil }
+          return DummyBackend.Response.json(User.mock2)
         }
-      }
+      )
     )
 
     let currentUser = CurrentUser(database: database, api: api)
@@ -102,12 +81,15 @@ struct CurrentUserTests {
   @Test("Current Status Is Unauthorized When API 401s")
   func currentStatusIsUnauthorizedWhenAPI401s() async throws {
     let api = CanIClimbAPI.testInstance(
-      transport: .mock { request, _ in
-        switch request {
-        case .signIn: successfulSignInResponse()
-        default: (401, .empty)
+      transport: DummyBackend(
+        scenario: DummyBackend.Scenario(),
+        responseOverride: { request in
+          switch request.url?.path() {
+          case "/user", "/auth/refresh": DummyBackend.Response(statusCode: 401)
+          default: nil
+          }
         }
-      }
+      )
     )
     let currentUser = CurrentUser(database: database, api: api)
     try await currentUser.signIn(with: .mock1)
@@ -119,7 +101,7 @@ struct CurrentUserTests {
   func doesntAttemptAPIRequestForCurrentStatusWhenUserNeverSignedIn() async throws {
     let callCount = Mutex(0)
     let api = CanIClimbAPI.testInstance(
-      transport: .mock { _, _ in
+      transport: MockHTTPDataTransport { _ in
         callCount.withLock { $0 += 1 }
         return (401, .empty)
       }
@@ -129,11 +111,4 @@ struct CurrentUserTests {
     expectNoDifference(status, .unauthorized)
     callCount.withLock { expectNoDifference($0, 0) }
   }
-}
-
-private func successfulSignInResponse() -> (Int, MockHTTPDataTransport.ResponseBody) {
-  (
-    200,
-    .json(CanIClimbAPI.Tokens.Response(accessToken: "access", refreshToken: "refresh"))
-  )
 }

@@ -1,3 +1,4 @@
+import Dependencies
 import Foundation
 import IdentifiedCollections
 import OrderedCollections
@@ -12,11 +13,31 @@ extension DummyBackend {
   }
 }
 
+extension DummyBackend.UserData {
+  init(scenario: DummyBackend.Scenario) {
+    self.init(
+      activeUserId: scenario.currentUserId,
+      profiles: IdentifiedArray(uniqueElements: scenario.users),
+      plannedClimbs: IdentifiedArray(uniqueElements: scenario.plannedClimbs)
+    )
+  }
+}
+
 // MARK: - Storage
 
 extension DummyBackend.UserData {
   final actor Storage {
     private var data: DummyBackend.UserData?
+    private let persistenceURL: URL?
+
+    init() {
+      self.persistenceURL = .dummyBackendUserData
+    }
+
+    init(data: DummyBackend.UserData) {
+      self.data = data
+      self.persistenceURL = nil
+    }
 
     var currentUser: User? {
       try? self.access { data in
@@ -95,8 +116,9 @@ extension DummyBackend.UserData {
     func achieveClimb(
       with id: Mountain.PlannedClimb.ID
     ) throws -> CanIClimbAPI.PlannedClimbResponse? {
-      try self.access {
-        $0.plannedClimbs[id: id]?.achievedDate = Date()
+      @Dependency(\.date.now) var now
+      return try self.access {
+        $0.plannedClimbs[id: id]?.achievedDate = now
         return $0.plannedClimbs[id: id]
       }
     }
@@ -104,17 +126,24 @@ extension DummyBackend.UserData {
     func unachieveClimb(
       with id: Mountain.PlannedClimb.ID
     ) throws -> CanIClimbAPI.PlannedClimbResponse? {
-      try self.access { $0.plannedClimbs.remove(id: id) }
+      try self.access {
+        $0.plannedClimbs[id: id]?.achievedDate = nil
+        return $0.plannedClimbs[id: id]
+      }
     }
 
     private func access<T>(_ fn: (inout DummyBackend.UserData) throws -> T) throws -> T {
       if self.data == nil {
-        let savedData = try? JSONDecoder()
-          .decode(DummyBackend.UserData.self, from: Data(contentsOf: .dummyBackendUserData))
+        let savedData = self.persistenceURL.flatMap { url in
+          try? JSONDecoder()
+            .decode(DummyBackend.UserData.self, from: Data(contentsOf: url))
+        }
         self.data = savedData ?? DummyBackend.UserData()
       }
       let value = try fn(&self.data!)
-      try JSONEncoder().encode(self.data!).write(to: .dummyBackendUserData)
+      if let persistenceURL = self.persistenceURL {
+        try JSONEncoder().encode(self.data!).write(to: persistenceURL)
+      }
       return value
     }
   }
