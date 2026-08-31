@@ -764,9 +764,9 @@ private struct OnboardingOptionView: View {
     $0.defaultDatabase = try! canIClimbDatabase()
     $0.defaultOperationClient = OperationClient(storeCreator: .canIClimb)
 
-    let authenticator = User.MockAuthenticator()
-    authenticator.requiredCredentials = .mock1
-    $0[User.AuthenticatorKey.self] = authenticator
+    let users = User.MockCurrentUser()
+    users.requiredCredentials = .mock1
+    $0[User.CurrentUserKey.self] = users
 
     let location = MockUserLocation()
     location.isAuthorized = false

@@ -2,26 +2,12 @@ import Dependencies
 import Operation
 import WeatherKit
 
-// MARK: - Loader
-
-extension WeatherAttribution {
-  public protocol Loader: Sendable {
-    var attribution: WeatherAttribution { get async throws }
-  }
-
-  public enum LoaderKey: DependencyKey {
-    public static let liveValue: any Loader = WeatherService.shared
-  }
-}
-
-extension WeatherService: WeatherAttribution.Loader {}
-
 // MARK: - Query
 
 extension WeatherAttribution {
   @QueryRequest
   public static func currentQuery() async throws -> WeatherAttribution {
-    @Dependency(WeatherAttribution.LoaderKey.self) var loader
-    return try await loader.attribution
+    @Dependency(WeatherForecasterKey.self) var weather
+    return try await weather.attribution
   }
 }

@@ -83,12 +83,11 @@ extension EnvironmentValues {
 
 #Preview {
   let _ = prepareDependencies {
-    let authenticator = User.MockAuthenticator()
-    authenticator.requiredCredentials = .mock1
+    let users = User.MockCurrentUser(currentStatusResult: .success(.user(.mock1)))
+    users.requiredCredentials = .mock1
     $0.defaultDatabase = try! canIClimbDatabase()
     $0.defaultOperationClient = OperationClient(storeCreator: .canIClimb)
-    $0[User.AuthenticatorKey.self] = authenticator
-    $0[User.CurrentLoaderKey.self] = User.MockCurrentLoader(result: .success(.user(.mock1)))
+    $0[User.CurrentUserKey.self] = users
   }
 
   SignInButton(label: .continue, model: SignInModel())

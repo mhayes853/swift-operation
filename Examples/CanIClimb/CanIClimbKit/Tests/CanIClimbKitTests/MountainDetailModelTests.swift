@@ -173,27 +173,27 @@ private func withModelsDerivationTest(
   let mountainLocation = LocationReading.mock(coordinate: Mountain.mock1.location.coordinate)
   try await withDependencies {
     $0[UserLocationKey.self] = MockUserLocation()
-    $0[Mountain.LoaderKey.self] = Mountain.MockLoader(result: .success(.mock1))
+    $0[Mountain.CatalogKey.self] = Mountain.MockCatalog(mountainResult: .success(.mock1))
 
-    let weather = WeatherReading.MockCurrentReader()
-    weather.results[Mountain.mock1.location.coordinate] = .success(
+    let weather = MockWeatherForecaster()
+    weather.readingResults[Mountain.mock1.location.coordinate] = .success(
       .mock(location: mountainLocation)
     )
-    weather.results[userLocation.coordinate] = .success(.mock(location: userLocation))
-    $0[WeatherReading.CurrentReaderKey.self] = weather
+    weather.readingResults[userLocation.coordinate] = .success(.mock(location: userLocation))
+    $0[WeatherForecasterKey.self] = weather
 
-    let loader = TravelEstimate.MockLoader()
+    let maps = MockMapsClient()
     for type in TravelType.allCases {
       let expectedRequest = TravelEstimate.Request(
         travelType: type,
         origin: userLocation.coordinate,
         destination: Mountain.mock1.location.coordinate
       )
-      loader.results[expectedRequest] = .success(.mock(for: type))
+      maps.estimateResults[expectedRequest] = .success(.mock(for: type))
     }
-    $0[TravelEstimate.LoaderKey.self] = loader
+    $0[MapsClientKey.self] = maps
 
-    $0[Mountain.PlannedClimbsLoaderKey.self] = Mountain.MockPlannedClimbsLoader()
+    $0[Mountain.ClimbsKey.self] = Mountain.MockClimbs()
     $0[MountainClimbReadiness.GeneratorKey.self] = MountainClimbReadiness.MockGenerator(
       segments: [.full(.mock)]
     )

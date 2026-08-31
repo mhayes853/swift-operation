@@ -22,8 +22,8 @@ struct CanIClimbPreviewApp: App {
       $0[UserLocationKey.self] = CLUserLocation()
       $0[DeviceInfo.self] = DeviceInfo.current
 
-      let searcher = Mountain.MockSearcher()
-      let plannedClimbs = Mountain.MockPlannedClimbsLoader()
+      let catalog = Mountain.MockCatalog()
+      let climbRepository = Mountain.MockClimbs()
       for i in 0..<10 {
         var mountains = IdentifiedArrayOf<Mountain>()
         for j in 0..<10 {
@@ -54,23 +54,27 @@ struct CanIClimbPreviewApp: App {
             )
             climbs.append(climb)
           }
-          plannedClimbs.results[mountain.id] = .success(climbs)
+          climbRepository.plannedClimbsResults[mountain.id] = .success(climbs)
         }
-        searcher.results[.recommended(page: i)] = .success(
+        catalog.searchResults[.recommended(page: i)] = .success(
           Mountain.SearchResult(mountains: mountains, hasNextPage: i < 9)
         )
       }
-      $0[Mountain.SearcherKey.self] = searcher
+      $0[Mountain.CatalogKey.self] = catalog
 
       $0[CKAccountStatus.LoaderKey.self] = CKAccountStatus.MockLoader { .available }
 
-      $0[User.CurrentLoaderKey.self] = User.MockCurrentLoader(result: .success(.user(.mock1)))
+      $0[User.CurrentUserKey.self] = User.MockCurrentUser(
+        currentStatusResult: .success(.user(.mock1))
+      )
 
-      $0[Mountain.PlanClimberKey.self] = Mountain.SucceedingClimbPlanner()
-      $0[Mountain.PlannedClimbsLoaderKey.self] = plannedClimbs
+      climbRepository.succeedsUnconfiguredPlans = true
+      $0[Mountain.ClimbsKey.self] = climbRepository
 
-      $0[WeatherReading.CurrentReaderKey.self] = WeatherReading.SucceedingCurrentReader()
-      
+      let weather = MockWeatherForecaster()
+      weather.defaultReading = .mock()
+      $0[WeatherForecasterKey.self] = weather
+
       let location = MockUserLocation()
       location.currentReading = .success(.mock(coordinate: .alcatraz))
       $0[UserLocationKey.self] = location

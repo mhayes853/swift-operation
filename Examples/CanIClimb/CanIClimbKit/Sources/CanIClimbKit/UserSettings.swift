@@ -243,9 +243,7 @@ private struct ManageAccountSectionView: View {
     $0.defaultDatabase = try! canIClimbDatabase()
     $0.defaultOperationClient = OperationClient(storeCreator: .canIClimb)
 
-    $0[User.AuthenticatorKey.self] = User.MockAuthenticator()
-    $0[User.AccountDeleterKey.self] = User.MockAccountDeleter()
-    $0[User.EditorKey.self] = User.PassthroughEditor()
+    $0[User.CurrentUserKey.self] = User.MockCurrentUser()
   }
 
   Button("Present Settings") {

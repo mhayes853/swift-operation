@@ -10,7 +10,7 @@ extension DependenciesTestSuite {
     "CanIClimbModel tests",
     .dependencies {
       $0.continuousClock = ImmediateClock()
-      $0[Mountain.SearcherKey.self] = Mountain.MockSearcher()
+      $0[Mountain.CatalogKey.self] = Mountain.MockCatalog()
     }
   )
   struct CanIClimbModelTests {

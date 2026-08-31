@@ -15,16 +15,16 @@ extension DependenciesTestSuite {
       try await withDependencies {
         $0[UserLocationKey.self] = MockUserLocation()
 
-        let loader = TravelEstimate.MockLoader()
+        let maps = MockMapsClient()
         for type in TravelType.allCases {
           let expectedRequest = TravelEstimate.Request(
             travelType: type,
             origin: .everest,
             destination: Mountain.mock1.location.coordinate
           )
-          loader.results[expectedRequest] = .success(.mock(for: type))
+          maps.estimateResults[expectedRequest] = .success(.mock(for: type))
         }
-        $0[TravelEstimate.LoaderKey.self] = loader
+        $0[MapsClientKey.self] = maps
       } operation: {
         let reading = LocationReading(
           coordinate: .everest,

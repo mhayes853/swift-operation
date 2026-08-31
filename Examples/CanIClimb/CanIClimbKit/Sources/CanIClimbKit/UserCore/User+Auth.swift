@@ -50,47 +50,6 @@ extension User {
   }
 }
 
-// MARK: - Authenticator
-
-extension User {
-  public protocol Authenticator: Sendable {
-    func signIn(with credentials: SignInCredentials) async throws
-    func signOut() async throws
-  }
-
-  public enum AuthenticatorKey: DependencyKey {
-    public static var liveValue: any User.Authenticator {
-      CurrentUser.shared
-    }
-  }
-}
-
-extension User {
-  @MainActor
-  public final class MockAuthenticator: User.Authenticator {
-    public var requiredCredentials: User.SignInCredentials?
-    public var signOutError: (any Error)?
-    public private(set) var signOutCount = 0
-
-    public init() {}
-
-    public func signIn(with credentials: User.SignInCredentials) async throws {
-      if credentials != self.requiredCredentials {
-        throw InvalidCredentialsError()
-      }
-    }
-
-    public func signOut() async throws {
-      if let error = self.signOutError {
-        throw error
-      }
-      self.signOutCount += 1
-    }
-
-    private struct InvalidCredentialsError: Error {}
-  }
-}
-
 // MARK: - Mutations
 
 extension User {
@@ -108,10 +67,10 @@ extension User {
 
   @MutationRequest
   private static func signInMutation(arguments: SignInArguments) async throws {
-    @Dependency(User.AuthenticatorKey.self) var authenticator
+    @Dependency(User.CurrentUserKey.self) var users
     @Dependency(\.defaultOperationClient) var client
 
-    try await authenticator.signIn(with: arguments.credentials)
+    try await users.signIn(with: arguments.credentials)
 
     let userStore = client.store(for: User.$currentStatusQuery)
     // NB: Prevent deduplication against tasks in the process of being cancelled.
@@ -127,10 +86,10 @@ extension User {
 
   @MutationRequest
   private static func signOutMutation() async throws {
-    @Dependency(User.AuthenticatorKey.self) var authenticator
+    @Dependency(User.CurrentUserKey.self) var users
     @Dependency(\.defaultOperationClient) var client
 
-    try await authenticator.signOut()
+    try await users.signOut()
 
     let userStore = client.store(for: User.$currentStatusQuery)
     userStore.resetState()

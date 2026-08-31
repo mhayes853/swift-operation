@@ -27,9 +27,9 @@ extension PlannedMountainClimbs {
   }()
 }
 
-// MARK: - PlanClimber
+// MARK: - Climbs
 
-extension PlannedMountainClimbs: Mountain.PlanClimber {
+extension PlannedMountainClimbs: Mountain.Climbs {
   public func plan(create: Mountain.ClimbPlanCreate) async throws -> Mountain.PlannedClimb {
     let climbRecord = try await self.api.planClimb(CanIClimbAPI.PlanClimbRequest(create: create))
     var alarm = create.alarm?.newScheduleableAlarm()
@@ -65,11 +65,7 @@ extension PlannedMountainClimbs: Mountain.PlanClimber {
         .execute(db)
     }
   }
-}
 
-// MARK: - ClimbAchiever
-
-extension PlannedMountainClimbs: Mountain.ClimbAchiever {
   public func achieveClimb(id: Mountain.PlannedClimb.ID) async throws {
     let response = try await self.api.achieveClimb(for: id)
     try await self.database.write { db in
@@ -85,11 +81,7 @@ extension PlannedMountainClimbs: Mountain.ClimbAchiever {
         .execute(db)
     }
   }
-}
 
-// MARK: - PlannedClimbsLoader
-
-extension PlannedMountainClimbs: Mountain.PlannedClimbsLoader {
   public func plannedClimbs(
     for id: Mountain.ID
   ) async throws -> IdentifiedArrayOf<Mountain.PlannedClimb> {

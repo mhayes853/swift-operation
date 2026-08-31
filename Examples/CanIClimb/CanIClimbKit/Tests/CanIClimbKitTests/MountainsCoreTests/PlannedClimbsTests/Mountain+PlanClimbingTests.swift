@@ -29,13 +29,10 @@ extension DependenciesTestSuite {
       )
 
       try await withDependencies {
-        let planner = Mountain.MockClimbPlanner()
-        planner.setResult(for: .mock1, result: .success(c3))
-        $0[Mountain.PlanClimberKey.self] = planner
-
-        let loader = Mountain.MockPlannedClimbsLoader()
-        loader.results[Mountain.mock1.id] = .success([c2, c1])
-        $0[Mountain.PlannedClimbsLoaderKey.self] = loader
+        let climbs = Mountain.MockClimbs()
+        climbs.setPlanResult(for: .mock1, result: .success(c3))
+        climbs.plannedClimbsResults[Mountain.mock1.id] = .success([c2, c1])
+        $0[Mountain.ClimbsKey.self] = climbs
       } operation: {
         @Dependency(\.defaultOperationClient) var client
 
@@ -54,11 +51,9 @@ extension DependenciesTestSuite {
     @Test("Unplan Optimistically Updates Planned List")
     func unplanOptimisticallyUpdatesPlannedList() async throws {
       try await withDependencies {
-        let loader = Mountain.MockPlannedClimbsLoader()
-        loader.results[Mountain.mock1.id] = .success([.mock1])
-
-        $0[Mountain.PlanClimberKey.self] = Mountain.MockClimbPlanner()
-        $0[Mountain.PlannedClimbsLoaderKey.self] = loader
+        let climbs = Mountain.MockClimbs()
+        climbs.plannedClimbsResults[Mountain.mock1.id] = .success([.mock1])
+        $0[Mountain.ClimbsKey.self] = climbs
       } operation: {
         @Dependency(\.defaultOperationClient) var client
         let climbsStore = client.store(for: Mountain.$plannedClimbsQuery(for: Mountain.mock1.id))
@@ -79,14 +74,10 @@ extension DependenciesTestSuite {
     @Test("Unplan Failure Rollsback Planned List Update")
     func unplanFailureRollsbackPlannedListUpdate() async throws {
       try await withDependencies {
-        let loader = Mountain.MockPlannedClimbsLoader()
-        loader.results[Mountain.mock1.id] = .success([.mock1])
-
-        let planner = Mountain.MockClimbPlanner()
-        planner.shouldFailUnplan = true
-
-        $0[Mountain.PlanClimberKey.self] = planner
-        $0[Mountain.PlannedClimbsLoaderKey.self] = loader
+        let climbs = Mountain.MockClimbs()
+        climbs.plannedClimbsResults[Mountain.mock1.id] = .success([.mock1])
+        climbs.shouldFailUnplan = true
+        $0[Mountain.ClimbsKey.self] = climbs
       } operation: {
         @Dependency(\.defaultOperationClient) var client
         let climbsStore = client.store(for: Mountain.$plannedClimbsQuery(for: Mountain.mock1.id))

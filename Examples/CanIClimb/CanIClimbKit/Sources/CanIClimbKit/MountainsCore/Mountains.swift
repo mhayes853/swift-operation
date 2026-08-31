@@ -24,9 +24,9 @@ extension Mountains {
   }()
 }
 
-// MARK: - Searcher
+// MARK: - Catalog
 
-extension Mountains: Mountain.Searcher {
+extension Mountains: Mountain.Catalog {
   public func localSearchMountains(
     by search: Mountain.Search
   ) async throws -> IdentifiedArrayOf<Mountain> {
@@ -59,11 +59,7 @@ extension Mountains: Mountain.Searcher {
     try await self.save(searchResult.mountains)
     return searchResult
   }
-}
 
-// MARK: - Loader
-
-extension Mountains: Mountain.Loader {
   public func localMountain(with id: Mountain.ID) async throws -> Mountain? {
     try await self.database.read { db in
       try CachedMountainRecord.find(#bind(id))

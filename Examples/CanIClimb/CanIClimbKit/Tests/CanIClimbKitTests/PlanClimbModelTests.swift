@@ -15,7 +15,7 @@ extension DependenciesTestSuite {
 
       try await withDependencies {
         $0[ScheduleableAlarm.AuthorizerKey.self] = authorizer
-        $0[Mountain.LoaderKey.self] = Mountain.MockLoader(result: .success(.mock1))
+        $0[Mountain.CatalogKey.self] = Mountain.MockCatalog(mountainResult: .success(.mock1))
       } operation: {
         let model = PlanClimbModel(mountainId: Mountain.mock1.id)
 
@@ -32,7 +32,7 @@ extension DependenciesTestSuite {
 
       try await withDependencies {
         $0[ScheduleableAlarm.AuthorizerKey.self] = authorizer
-        $0[Mountain.LoaderKey.self] = Mountain.MockLoader(result: .success(.mock1))
+        $0[Mountain.CatalogKey.self] = Mountain.MockCatalog(mountainResult: .success(.mock1))
       } operation: {
         let model = PlanClimbModel(mountainId: Mountain.mock1.id)
 
@@ -50,7 +50,7 @@ extension DependenciesTestSuite {
 
       try await withDependencies {
         $0[ScheduleableAlarm.AuthorizerKey.self] = authorizer
-        $0[Mountain.LoaderKey.self] = Mountain.MockLoader(result: .success(.mock1))
+        $0[Mountain.CatalogKey.self] = Mountain.MockCatalog(mountainResult: .success(.mock1))
       } operation: {
         let model = PlanClimbModel(mountainId: Mountain.mock1.id)
 
@@ -68,7 +68,7 @@ extension DependenciesTestSuite {
 
       try await withDependencies {
         $0[ScheduleableAlarm.AuthorizerKey.self] = authorizer
-        $0[Mountain.LoaderKey.self] = Mountain.MockLoader(result: .success(.mock1))
+        $0[Mountain.CatalogKey.self] = Mountain.MockCatalog(mountainResult: .success(.mock1))
       } operation: {
         let model = PlanClimbModel(mountainId: Mountain.mock1.id)
 
@@ -86,11 +86,11 @@ extension DependenciesTestSuite {
       )
       try await withDependencies {
         $0[ScheduleableAlarm.AuthorizerKey.self] = ScheduleableAlarm.MockAuthorizer()
-        $0[Mountain.LoaderKey.self] = Mountain.MockLoader(result: .success(.mock1))
+        $0[Mountain.CatalogKey.self] = Mountain.MockCatalog(mountainResult: .success(.mock1))
 
-        let planner = Mountain.MockClimbPlanner()
-        planner.setResult(for: expectedCreate, result: .success(.mock1))
-        $0[Mountain.PlanClimberKey.self] = planner
+        let climbs = Mountain.MockClimbs()
+        climbs.setPlanResult(for: expectedCreate, result: .success(.mock1))
+        $0[Mountain.ClimbsKey.self] = climbs
       } operation: {
         let model = PlanClimbModel(mountainId: Mountain.mock1.id)
         try await model.$mountain.load()
@@ -121,11 +121,11 @@ extension DependenciesTestSuite {
       )
       try await withDependencies {
         $0[ScheduleableAlarm.AuthorizerKey.self] = authorizer
-        $0[Mountain.LoaderKey.self] = Mountain.MockLoader(result: .success(.mock1))
+        $0[Mountain.CatalogKey.self] = Mountain.MockCatalog(mountainResult: .success(.mock1))
 
-        let planner = Mountain.MockClimbPlanner()
-        planner.setResult(for: expectedCreate, result: .success(.mock1))
-        $0[Mountain.PlanClimberKey.self] = planner
+        let climbs = Mountain.MockClimbs()
+        climbs.setPlanResult(for: expectedCreate, result: .success(.mock1))
+        $0[Mountain.ClimbsKey.self] = climbs
       } operation: {
         let model = PlanClimbModel(mountainId: Mountain.mock1.id)
         try await model.$mountain.load()
@@ -148,7 +148,7 @@ extension DependenciesTestSuite {
     func automaticallyAdjustsAlarmDateUntilChangedManually() async throws {
       withDependencies {
         $0[ScheduleableAlarm.AuthorizerKey.self] = ScheduleableAlarm.MockAuthorizer()
-        $0[Mountain.LoaderKey.self] = Mountain.MockLoader(result: .success(.mock1))
+        $0[Mountain.CatalogKey.self] = Mountain.MockCatalog(mountainResult: .success(.mock1))
       } operation: {
         let model = PlanClimbModel(mountainId: Mountain.mock1.id)
 

@@ -462,10 +462,8 @@ private struct SocialsSectionView: View {
       requester: requester
     )
 
-    let loader = User.MockCurrentLoader(result: .success(.user(.mock1)))
-    $0[User.CurrentLoaderKey.self] = loader
-    $0[User.AuthenticatorKey.self] = User.MockAuthenticator()
-    $0[User.EditorKey.self] = User.PassthroughEditor()
+    let users = User.MockCurrentUser(currentStatusResult: .success(.user(.mock1)))
+    $0[User.CurrentUserKey.self] = users
   }
 
   Button("Present Settings") {

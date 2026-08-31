@@ -24,9 +24,9 @@ extension CurrentUser {
   }()
 }
 
-// MARK: - Authenticator
+// MARK: - User.CurrentUser
 
-extension CurrentUser: User.Authenticator {
+extension CurrentUser: User.CurrentUser {
   public func signIn(with credentials: CachedUserRecord.SignInCredentials) async throws {
     try await self.api.signIn(with: credentials)
     try await self.database.write { db in
@@ -38,11 +38,7 @@ extension CurrentUser: User.Authenticator {
     try await self.api.signOut()
     try await self.removeLocalUser()
   }
-}
 
-// MARK: - CurrentLoader
-
-extension CurrentUser: User.CurrentLoader {
   public func localUser() async throws -> User? {
     try await self.database.read { db in
       let id = LocalInternalMetricsRecord.find(in: db).currentUserId
@@ -63,21 +59,13 @@ extension CurrentUser: User.CurrentLoader {
       return .unauthorized
     }
   }
-}
 
-// MARK: - Editor
-
-extension CurrentUser: User.Editor {
   public func edit(with edit: User.Edit) async throws -> User {
     let user = try await self.api.editUser(with: edit)
     try await self.saveLocalUser(user)
     return user
   }
-}
 
-// MARK: - AccountDeleter
-
-extension CurrentUser: User.AccountDeleter {
   public func delete() async throws {
     try await self.api.deleteUser()
     try await self.removeLocalUser()

@@ -54,76 +54,6 @@ extension Mountain.ClimbPlanCreate {
   )
 }
 
-// MARK: - ClimbPlanner
-
-extension Mountain {
-  public protocol PlanClimber: Sendable {
-    func plan(create: ClimbPlanCreate) async throws -> PlannedClimb
-    func unplanClimbs(ids: OrderedSet<PlannedClimb.ID>) async throws
-  }
-
-  public enum PlanClimberKey: DependencyKey {
-    public static var liveValue: any PlanClimber {
-      PlannedMountainClimbs.shared
-    }
-  }
-}
-
-extension Mountain {
-  @MainActor
-  public final class MockClimbPlanner: PlanClimber {
-    private var results = [(ClimbPlanCreate, Result<PlannedClimb, any Error>)]()
-    public var shouldFailUnplan = false
-    public private(set) var unplannedIdSets = [OrderedSet<Mountain.PlannedClimb.ID>]()
-
-    public nonisolated init() {}
-
-    public func setResult(for create: ClimbPlanCreate, result: Result<PlannedClimb, any Error>) {
-      if let index = self.results.firstIndex(where: { $0.0 == create }) {
-        self.results[index] = (create, result)
-      } else {
-        self.results.append((create, result))
-      }
-    }
-
-    public func plan(create: ClimbPlanCreate) async throws -> PlannedClimb {
-      guard let (_, result) = self.results.first(where: { $0.0 == create }) else {
-        throw SomeError()
-      }
-      return try result.get()
-    }
-
-    public func unplanClimbs(ids: OrderedSet<Mountain.PlannedClimb.ID>) async throws {
-      if self.shouldFailUnplan {
-        throw SomeError()
-      }
-      self.unplannedIdSets.append(ids)
-    }
-
-    private struct SomeError: Error {}
-  }
-}
-
-extension Mountain {
-  @MainActor
-  public final class SucceedingClimbPlanner: PlanClimber {
-    public init() {}
-
-    public func plan(create: ClimbPlanCreate) async throws -> PlannedClimb {
-      PlannedClimb(
-        id: Mountain.PlannedClimb.ID(),
-        mountainId: create.mountainId,
-        targetDate: create.targetDate,
-        achievedDate: nil,
-        alarm: create.alarm?.newScheduleableAlarm()
-      )
-    }
-
-    public func unplanClimbs(ids: OrderedSet<Mountain.PlannedClimb.ID>) async throws {
-    }
-  }
-}
-
 // MARK: - Mutations
 
 extension Mountain {
@@ -153,10 +83,10 @@ extension Mountain {
   private static func planClimbMutation(
     arguments: PlanClimbArguments
   ) async throws -> (Mountain, PlannedClimb) {
-    @Dependency(Mountain.PlanClimberKey.self) var planner
+    @Dependency(Mountain.ClimbsKey.self) var climbs
     @Dependency(\.defaultOperationClient) var client
 
-    let plannedClimb = try await planner.plan(create: arguments.create)
+    let plannedClimb = try await climbs.plan(create: arguments.create)
 
     let climbsStore = client.store(for: Mountain.$plannedClimbsQuery(for: arguments.mountain.id))
     climbsStore.withExclusiveAccess {
@@ -196,7 +126,7 @@ extension Mountain {
   private static func unplanClimbsMutation(
     arguments: UnplanClimbsArguments
   ) async throws(UnplanClimbsError) {
-    @Dependency(Mountain.PlanClimberKey.self) var planner
+    @Dependency(Mountain.ClimbsKey.self) var climbs
     @Dependency(\.defaultOperationClient) var client
 
     let climbsStore = client.store(for: Mountain.$plannedClimbsQuery(for: arguments.mountainId))
@@ -209,7 +139,7 @@ extension Mountain {
         $0.currentValue?.removeAll(where: { arguments.ids.contains($0.id) })
         lastUpdatedAt = $0.valueLastUpdatedAt
       }
-      try await planner.unplanClimbs(ids: arguments.ids)
+      try await climbs.unplanClimbs(ids: arguments.ids)
     } catch {
       climbsStore.withExclusiveAccess {
         guard $0.valueLastUpdatedAt == lastUpdatedAt else { return }

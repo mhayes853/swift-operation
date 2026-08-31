@@ -2,42 +2,43 @@ import Dependencies
 import Operation
 import WeatherKit
 
-// MARK: - CurrentReader
+// MARK: - WeatherForecaster
 
-extension WeatherReading {
-  public protocol CurrentReader: Sendable {
-    func reading(for coordinate: LocationCoordinate2D) async throws -> WeatherReading
-  }
+public protocol WeatherForecaster: Sendable {
+  func reading(for coordinate: LocationCoordinate2D) async throws -> WeatherReading
+  var attribution: WeatherAttribution { get async throws }
+}
 
-  public enum CurrentReaderKey: DependencyKey {
-    public static let liveValue: any CurrentReader = WeatherService.shared
+public enum WeatherForecasterKey: DependencyKey {
+  public static var liveValue: any WeatherForecaster {
+    WeatherService.shared
   }
 }
 
-extension WeatherReading {
-  @MainActor
-  public final class MockCurrentReader: CurrentReader {
-    public var results = [LocationCoordinate2D: Result<WeatherReading, Error>]()
+@MainActor
+public final class MockWeatherForecaster: WeatherForecaster {
+  public var readingResults = [LocationCoordinate2D: Result<WeatherReading, any Error>]()
+  public var defaultReading: WeatherReading?
+  public var attributionResult: Result<WeatherAttribution, any Error>?
 
-    public init() {}
+  public init() {}
 
-    public func reading(for coordinate: LocationCoordinate2D) async throws -> WeatherReading {
-      guard let result = self.results[coordinate] else { throw NoReadingError() }
+  public func reading(for coordinate: LocationCoordinate2D) async throws -> WeatherReading {
+    if let result = self.readingResults[coordinate] {
       return try result.get()
     }
-
-    private struct NoReadingError: Error {}
+    guard let defaultReading = self.defaultReading else { throw MissingResultError() }
+    return defaultReading
   }
-}
 
-extension WeatherReading {
-  public struct SucceedingCurrentReader: CurrentReader {
-    public init() {}
-
-    public func reading(for coordinate: LocationCoordinate2D) async throws -> WeatherReading {
-      .mock()
+  public var attribution: WeatherAttribution {
+    get async throws {
+      guard let result = self.attributionResult else { throw MissingResultError() }
+      return try result.get()
     }
   }
+
+  private struct MissingResultError: Error {}
 }
 
 // MARK: - Query
@@ -47,7 +48,7 @@ extension WeatherReading {
   public static func currentQuery(
     for coordinate: LocationCoordinate2D
   ) async throws -> WeatherReading {
-    @Dependency(WeatherReading.CurrentReaderKey.self) var reader
-    return try await reader.reading(for: coordinate)
+    @Dependency(WeatherForecasterKey.self) var weather
+    return try await weather.reading(for: coordinate)
   }
 }

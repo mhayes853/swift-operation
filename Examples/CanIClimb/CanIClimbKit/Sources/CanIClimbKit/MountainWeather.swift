@@ -425,12 +425,12 @@ private struct WeatherInfoLabel<Content: View>: View {
       try SettingsRecord.update(in: db) { $0.temperaturePreference = .celsius }
     }
 
-    let weather = WeatherReading.MockCurrentReader()
-    weather.results[userLocation.coordinate] = .success(.mock(location: userLocation))
-    weather.results[Mountain.mock1.location.coordinate] = .success(
+    let weather = MockWeatherForecaster()
+    weather.readingResults[userLocation.coordinate] = .success(.mock(location: userLocation))
+    weather.readingResults[Mountain.mock1.location.coordinate] = .success(
       .mock(location: .mock(coordinate: Mountain.mock1.location.coordinate))
     )
-    $0[WeatherReading.CurrentReaderKey.self] = weather
+    $0[WeatherForecasterKey.self] = weather
   }
 
   let model = MountainWeatherModel(mountain: Mountain.mock1)

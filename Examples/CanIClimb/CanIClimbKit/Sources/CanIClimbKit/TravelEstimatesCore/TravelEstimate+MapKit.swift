@@ -1,21 +1,26 @@
 import MapKit
 
-// MARK: - MapKitLoader
+// MARK: - MapKitClient
 
-extension TravelEstimate {
-  public final class MapKitLoader: Loader {
-    public init() {}
+public final class MapKitClient: MapsClient {
+  public static let shared = MapKitClient()
 
-    public func estimate(for request: TravelEstimate.Request) async throws -> TravelEstimate {
-      let request = MKDirections.Request(from: request)
-      let eta = try await MKDirections(request: request).calculateETA()
-      return TravelEstimate(response: eta)
-    }
+  public init() {}
+
+  public func estimate(for request: TravelEstimate.Request) async throws -> TravelEstimate {
+    let request = MKDirections.Request(from: request)
+    let eta = try await MKDirections(request: request).calculateETA()
+    return TravelEstimate(response: eta)
   }
-}
 
-extension TravelEstimate.MapKitLoader {
-  public static let shared = TravelEstimate.MapKitLoader()
+  public func openDirections(
+    to location: Mountain.Location,
+    for travelType: TravelType
+  ) async -> Bool {
+    let mapItem = MKMapItem(location: location)
+    let options = [MKLaunchOptionsDirectionsModeKey: travelType.mkLaunchOptionsDirectionMode]
+    return await mapItem.openInMaps(launchOptions: options as [String: Any])
+  }
 }
 
 // MARK: - DirectionsRequest

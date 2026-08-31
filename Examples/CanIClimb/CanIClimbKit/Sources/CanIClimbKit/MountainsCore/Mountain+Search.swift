@@ -61,46 +61,6 @@ extension Mountain {
   }
 }
 
-// MARK: - Searcher
-
-extension Mountain {
-  public protocol Searcher: Sendable {
-    func localSearchMountains(by request: Search) async throws -> IdentifiedArrayOf<Mountain>
-    func searchMountains(by request: SearchRequest) async throws -> SearchResult
-  }
-
-  public enum SearcherKey: DependencyKey {
-    public static var liveValue: any Mountain.Searcher {
-      Mountains.shared
-    }
-  }
-}
-
-extension Mountain {
-  @MainActor
-  public final class MockSearcher: Searcher {
-    public var results = [SearchRequest: Result<SearchResult, any Error>]()
-    public var localResults = IdentifiedArrayOf<Mountain>()
-
-    public nonisolated init() {}
-
-    public func localSearchMountains(
-      by request: Mountain.Search
-    ) async throws -> IdentifiedArrayOf<Mountain> {
-      self.localResults
-    }
-
-    public func searchMountains(
-      by request: SearchRequest
-    ) async throws -> SearchResult {
-      guard let result = self.results[request] else { throw NoResultError() }
-      return try result.get()
-    }
-
-    private struct NoResultError: Error {}
-  }
-}
-
 // MARK: - Query
 
 extension Mountain {
@@ -132,17 +92,17 @@ extension Mountain {
       in context: OperationContext,
       with continuation: OperationContinuation<PageValue, any Error>
     ) async throws -> PageValue {
-      @Dependency(Mountain.SearcherKey.self) var searcher
+      @Dependency(Mountain.CatalogKey.self) var catalog
       @Dependency(\.defaultOperationClient) var client
 
       do {
         let request = Mountain.SearchRequest(search: self.search, page: paging.pageId)
-        let searchResult = try await searcher.searchMountains(by: request)
+        let searchResult = try await catalog.searchMountains(by: request)
         client.updateDetailQueries(mountains: searchResult.mountains)
         return searchResult
       } catch {
         guard paging.pageId == self.initialPageId && context.isLastRunAttempt else { throw error }
-        let mountains = try await searcher.localSearchMountains(by: self.search)
+        let mountains = try await catalog.localSearchMountains(by: self.search)
         let searchResult = Mountain.SearchResult(
           mountains: IdentifiedArray(uniqueElements: mountains),
           hasNextPage: true

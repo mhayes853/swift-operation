@@ -286,14 +286,14 @@ private struct MountainsListSearchFieldView: View {
   let _ = prepareDependencies {
     $0.defaultDatabase = try! canIClimbDatabase()
 
-    let searcher = Mountain.MockSearcher()
-    searcher.results[.recommended(page: 0)] = .success(
+    let catalog = Mountain.MockCatalog()
+    catalog.searchResults[.recommended(page: 0)] = .success(
       Mountain.SearchResult(mountains: [.mock1], hasNextPage: false)
     )
-    searcher.results[.planned(page: 0)] = .success(
+    catalog.searchResults[.planned(page: 0)] = .success(
       Mountain.SearchResult(mountains: [.mock2], hasNextPage: false)
     )
-    $0[Mountain.SearcherKey.self] = searcher
+    $0[Mountain.CatalogKey.self] = catalog
   }
 
   let model = MountainsListModel()
