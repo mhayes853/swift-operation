@@ -3,30 +3,6 @@ import SharingOperation
 import Tagged
 import UUIDV7
 
-// MARK: - ClimbAchiever
-
-extension Mountain {
-  public protocol ClimbAchiever: Sendable {
-    func achieveClimb(id: PlannedClimb.ID) async throws
-    func unachieveClimb(id: PlannedClimb.ID) async throws
-  }
-
-  public enum ClimbAchieverKey: DependencyKey {
-    public static var liveValue: any ClimbAchiever {
-      PlannedMountainClimbs.shared
-    }
-  }
-}
-
-extension Mountain {
-  public struct NoopClimbAchiever: ClimbAchiever {
-    public init() {}
-
-    public func achieveClimb(id: PlannedClimb.ID) async throws {}
-    public func unachieveClimb(id: PlannedClimb.ID) async throws {}
-  }
-}
-
 // MARK: - Mutations
 
 extension Mountain {
@@ -45,7 +21,7 @@ extension Mountain {
     arguments: AchieveClimbArguments,
     context: OperationContext
   ) async throws {
-    @Dependency(Mountain.ClimbAchieverKey.self) var achiever
+    @Dependency(Mountain.ClimbsKey.self) var climbs
     @Dependency(\.defaultOperationClient) var client
     @Dependency(\.date) var now
 
@@ -54,7 +30,7 @@ extension Mountain {
       climbsStore.currentValue?[id: arguments.id]?.achievedDate = now()
     }
 
-    try await achiever.achieveClimb(id: arguments.id)
+    try await climbs.achieveClimb(id: arguments.id)
   }
 }
 
@@ -74,7 +50,7 @@ extension Mountain {
     arguments: UnachieveClimbArguments,
     context: OperationContext
   ) async throws {
-    @Dependency(Mountain.ClimbAchieverKey.self) var achiever
+    @Dependency(Mountain.ClimbsKey.self) var climbs
     @Dependency(\.defaultOperationClient) var client
 
     let climbsStore = client.store(for: Mountain.$plannedClimbsQuery(for: arguments.mountainId))
@@ -82,6 +58,6 @@ extension Mountain {
       climbsStore.currentValue?[id: arguments.id]?.achievedDate = nil
     }
 
-    try await achiever.unachieveClimb(id: arguments.id)
+    try await climbs.unachieveClimb(id: arguments.id)
   }
 }

@@ -30,7 +30,7 @@ extension DependenciesTestSuite {
     @Test("Full Successful Sign Out Flow, Pops Back")
     func fullSuccessfulSignOutFlow() async throws {
       try await withDependencies {
-        $0[User.AuthenticatorKey.self] = User.MockAuthenticator()
+        $0[User.CurrentUserKey.self] = User.MockCurrentUser()
       } operation: {
         let model = SettingsModel()
         model.path.append(.userSettings(UserSettingsModel(user: .mock1)))

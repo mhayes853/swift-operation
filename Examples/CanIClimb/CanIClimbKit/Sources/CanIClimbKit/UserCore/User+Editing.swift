@@ -17,47 +17,6 @@ extension User {
   }
 }
 
-// MARK: - Editor
-
-extension User {
-  public protocol Editor: Sendable {
-    func edit(with edit: Edit) async throws -> User
-  }
-
-  public enum EditorKey: DependencyKey {
-    public static var liveValue: any User.Editor {
-      CurrentUser.shared
-    }
-  }
-}
-
-extension User {
-  @MainActor
-  public final class MockEditor: Editor {
-    public private(set) var edits = [Edit]()
-    public var result: Result<User, any Error>
-
-    public init(result: Result<User, any Error>) {
-      self.result = result
-    }
-
-    public func edit(with edit: User.Edit) async throws -> User {
-      self.edits.append(edit)
-      return try self.result.get()
-    }
-  }
-}
-
-extension User {
-  public struct PassthroughEditor: Editor {
-    public init() {}
-
-    public func edit(with edit: User.Edit) async throws -> User {
-      User(id: User.mock1.id, name: edit.name, subtitle: edit.subtitle)
-    }
-  }
-}
-
 // MARK: - Mutation
 
 extension User {
@@ -76,9 +35,9 @@ extension User {
   @MutationRequest
   private static func editMutation(arguments: EditArguments) async throws -> User {
     @Dependency(\.defaultOperationClient) var client
-    @Dependency(User.EditorKey.self) var editor
+    @Dependency(User.CurrentUserKey.self) var users
 
-    let user = try await editor.edit(with: arguments.edit)
+    let user = try await users.edit(with: arguments.edit)
     client.store(for: User.$currentStatusQuery).currentValue = .user(user)
     return user
   }

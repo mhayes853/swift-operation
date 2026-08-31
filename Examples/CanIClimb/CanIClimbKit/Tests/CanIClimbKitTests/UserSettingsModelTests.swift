@@ -59,7 +59,7 @@ extension DependenciesTestSuite {
     @Test("Successful Delete Account Flow")
     func successfulDeleteAccountFlow() async throws {
       try await withDependencies {
-        $0[User.AccountDeleterKey.self] = User.MockAccountDeleter()
+        $0[User.CurrentUserKey.self] = User.MockCurrentUser()
       } operation: {
         let model = UserSettingsModel(user: .mock1)
         var signOutCount = 0
@@ -78,9 +78,9 @@ extension DependenciesTestSuite {
     func unsuccessfulDeleteAccountFlow() async throws {
       await withDependencies {
         struct SomeError: Error {}
-        let deleter = User.MockAccountDeleter()
-        deleter.error = SomeError()
-        $0[User.AccountDeleterKey.self] = deleter
+        let users = User.MockCurrentUser()
+        users.deleteError = SomeError()
+        $0[User.CurrentUserKey.self] = users
       } operation: {
         let model = UserSettingsModel(user: .mock1)
         var signOutCount = 0
@@ -98,7 +98,7 @@ extension DependenciesTestSuite {
     @Test("Loading Type Is AccountDeletion When Deleting Account")
     func loadingTypeIsAccountDeletionWhenDeletingAccount() async throws {
       try await withDependencies {
-        $0[User.AccountDeleterKey.self] = User.MockAccountDeleter()
+        $0[User.CurrentUserKey.self] = User.MockCurrentUser()
       } operation: {
         let model = UserSettingsModel(user: .mock1)
 
@@ -117,7 +117,7 @@ extension DependenciesTestSuite {
     @Test("Successful Sign Out Flow")
     func successfulSignOutFlow() async throws {
       try await withDependencies {
-        $0[User.AuthenticatorKey.self] = User.MockAuthenticator()
+        $0[User.CurrentUserKey.self] = User.MockCurrentUser()
       } operation: {
         let model = UserSettingsModel(user: .mock1)
         var signOutCount = 0
@@ -132,9 +132,9 @@ extension DependenciesTestSuite {
     func unsuccessfulSignOutFlow() async throws {
       await withDependencies {
         struct SomeError: Error {}
-        let authenticator = User.MockAuthenticator()
-        authenticator.signOutError = SomeError()
-        $0[User.AuthenticatorKey.self] = authenticator
+        let users = User.MockCurrentUser()
+        users.signOutError = SomeError()
+        $0[User.CurrentUserKey.self] = users
       } operation: {
         let model = UserSettingsModel(user: .mock1)
         var signOutCount = 0
@@ -148,7 +148,7 @@ extension DependenciesTestSuite {
     @Test("Loading Type Is SignOut When Signing Out")
     func loadingTypeIsSignOutWhenSigningOut() async throws {
       try await withDependencies {
-        $0[User.AuthenticatorKey.self] = User.MockAuthenticator()
+        $0[User.CurrentUserKey.self] = User.MockCurrentUser()
       } operation: {
         let model = UserSettingsModel(user: .mock1)
         var loadingType: UserSettingsModel.LoadingType?
@@ -172,9 +172,9 @@ private func withDefaultEdit(
   try await withDependencies {
     struct SomeError: Error {}
     if let result = result {
-      $0[User.EditorKey.self] = User.MockEditor(result: result)
+      $0[User.CurrentUserKey.self] = User.MockCurrentUser(editResult: result)
     } else {
-      $0[User.EditorKey.self] = User.MockEditor(result: .success(editedUser))
+      $0[User.CurrentUserKey.self] = User.MockCurrentUser(editResult: .success(editedUser))
     }
   } operation: {
     let model = UserSettingsModel(user: .mock1)

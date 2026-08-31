@@ -19,10 +19,10 @@ extension DependenciesTestSuite {
       let recommendedResult = Mountain.SearchResult(mountains: [.mock1], hasNextPage: false)
       let plannedResult = Mountain.SearchResult(mountains: [.mock2], hasNextPage: false)
       try await withDependencies {
-        let searcher = Mountain.MockSearcher()
-        searcher.results[.recommended(page: 0)] = .success(recommendedResult)
-        searcher.results[.planned(page: 0)] = .success(plannedResult)
-        $0[Mountain.SearcherKey.self] = searcher
+        let catalog = Mountain.MockCatalog()
+        catalog.searchResults[.recommended(page: 0)] = .success(recommendedResult)
+        catalog.searchResults[.planned(page: 0)] = .success(plannedResult)
+        $0[Mountain.CatalogKey.self] = catalog
       } operation: {
         let model = MountainsListModel()
 
@@ -43,10 +43,10 @@ extension DependenciesTestSuite {
       let clock = TestClock()
       let debounceDuration = Duration.seconds(1)
       try await withDependencies {
-        let searcher = Mountain.MockSearcher()
-        searcher.results[.recommended(page: 0)] = .success(noTextResult)
-        searcher.results[.recommended(page: 0, text: "blob")] = .success(textResult)
-        $0[Mountain.SearcherKey.self] = searcher
+        let catalog = Mountain.MockCatalog()
+        catalog.searchResults[.recommended(page: 0)] = .success(noTextResult)
+        catalog.searchResults[.recommended(page: 0, text: "blob")] = .success(textResult)
+        $0[Mountain.CatalogKey.self] = catalog
         $0.continuousClock = clock
       } operation: {
         let model = MountainsListModel(searchDebounceDuration: debounceDuration)
@@ -72,11 +72,11 @@ extension DependenciesTestSuite {
       let clock = TestClock()
       let debounceDuration = Duration.seconds(1)
       try await withDependencies {
-        let searcher = Mountain.MockSearcher()
-        searcher.results[.recommended(page: 0)] = .success(noTextResult)
-        searcher.results[.recommended(page: 0, text: "blob")] = .success(textResult)
-        searcher.results[.planned(page: 0, text: "blob")] = .success(plannedResult)
-        $0[Mountain.SearcherKey.self] = searcher
+        let catalog = Mountain.MockCatalog()
+        catalog.searchResults[.recommended(page: 0)] = .success(noTextResult)
+        catalog.searchResults[.recommended(page: 0, text: "blob")] = .success(textResult)
+        catalog.searchResults[.planned(page: 0, text: "blob")] = .success(plannedResult)
+        $0[Mountain.CatalogKey.self] = catalog
         $0.continuousClock = clock
       } operation: {
         let model = MountainsListModel(searchDebounceDuration: debounceDuration)

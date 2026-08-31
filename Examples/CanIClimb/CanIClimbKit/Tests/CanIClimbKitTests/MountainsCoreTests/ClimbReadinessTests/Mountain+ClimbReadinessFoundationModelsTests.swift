@@ -59,10 +59,10 @@ extension DependenciesTestSuite {
         userLocation.currentReading = .success(location)
         $0[UserLocationKey.self] = userLocation
 
-        let weather = WeatherReading.MockCurrentReader()
-        weather.results[location.coordinate] = .success(.mock(location: location))
-        weather.results[mountain.location.coordinate] = .success(.freelPeak)
-        $0[WeatherReading.CurrentReaderKey.self] = weather
+        let weather = MockWeatherForecaster()
+        weather.readingResults[location.coordinate] = .success(.mock(location: location))
+        weather.readingResults[mountain.location.coordinate] = .success(.freelPeak)
+        $0[WeatherForecasterKey.self] = weather
       } operation: {
         @Dependency(\.defaultDatabase) var database
         @Dependency(\.defaultOperationClient) var client

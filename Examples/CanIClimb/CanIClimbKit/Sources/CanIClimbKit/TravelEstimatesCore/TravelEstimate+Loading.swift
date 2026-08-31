@@ -28,32 +28,37 @@ extension TravelEstimate.Request {
   }
 }
 
-// MARK: - Loader
+// MARK: - MapsClient
 
-extension TravelEstimate {
-  public protocol Loader: Sendable {
-    func estimate(for request: Request) async throws -> TravelEstimate
-  }
-
-  public enum LoaderKey: DependencyKey {
-    public static let liveValue: any Loader = MapKitLoader.shared
-  }
+public protocol MapsClient: Sendable {
+  func estimate(for request: TravelEstimate.Request) async throws -> TravelEstimate
+  func openDirections(to location: Mountain.Location, for travelType: TravelType) async -> Bool
 }
 
-extension TravelEstimate {
-  @MainActor
-  public final class MockLoader: Loader {
-    public var results = [Request: Result<TravelEstimate, any Error>]()
+public enum MapsClientKey: DependencyKey {
+  public static let liveValue: any MapsClient = MapKitClient.shared
+}
 
-    public init() {}
+@MainActor
+public final class MockMapsClient: MapsClient {
+  public var estimateResults = [TravelEstimate.Request: Result<TravelEstimate, any Error>]()
+  public var openDirectionsResult = true
 
-    public func estimate(for request: Request) async throws -> TravelEstimate {
-      guard let result = self.results[request] else { throw SomeError() }
-      return try result.get()
-    }
+  public init() {}
 
-    private struct SomeError: Error {}
+  public func estimate(for request: TravelEstimate.Request) async throws -> TravelEstimate {
+    guard let result = self.estimateResults[request] else { throw MissingResultError() }
+    return try result.get()
   }
+
+  public func openDirections(
+    to location: Mountain.Location,
+    for travelType: TravelType
+  ) async -> Bool {
+    self.openDirectionsResult
+  }
+
+  private struct MissingResultError: Error {}
 }
 
 // MARK: - Query
@@ -61,7 +66,7 @@ extension TravelEstimate {
 extension TravelEstimate {
   @QueryRequest
   public static func query(for request: Request) async throws -> TravelEstimate {
-    @Dependency(TravelEstimate.LoaderKey.self) var loader
-    return try await loader.estimate(for: request)
+    @Dependency(MapsClientKey.self) var maps
+    return try await maps.estimate(for: request)
   }
 }

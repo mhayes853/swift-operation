@@ -100,12 +100,11 @@ extension DependenciesTestSuite {
 
     @Test("Onboarding Flow With Sign In, Finishes Properly")
     func onboardingFlowWithSignIn() async throws {
-      let authenticator = User.MockAuthenticator()
-      authenticator.requiredCredentials = .mock1
+      let users = User.MockCurrentUser(currentStatusResult: .success(.user(.mock1)))
+      users.requiredCredentials = .mock1
 
       try await withDependencies {
-        $0[User.AuthenticatorKey.self] = authenticator
-        $0[User.CurrentLoaderKey.self] = User.MockCurrentLoader(result: .success(.user(.mock1)))
+        $0[User.CurrentUserKey.self] = users
       } operation: {
         @Dependency(\.defaultOperationClient) var client
 

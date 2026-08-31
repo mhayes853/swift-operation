@@ -2,37 +2,6 @@ import Dependencies
 import Operation
 import SwiftNavigation
 
-// MARK: - AccountDeletor
-
-extension User {
-  public protocol AccountDeleter: Sendable {
-    func delete() async throws
-  }
-
-  public enum AccountDeleterKey: DependencyKey {
-    public static var liveValue: any User.AccountDeleter {
-      CurrentUser.shared
-    }
-  }
-}
-
-extension User {
-  @MainActor
-  public final class MockAccountDeleter: AccountDeleter {
-    public private(set) var deleteCount = 0
-    public var error: (any Error)?
-
-    public init() {}
-
-    public func delete() async throws {
-      if let error = error {
-        throw error
-      }
-      self.deleteCount += 1
-    }
-  }
-}
-
 // MARK: - Mutation
 
 extension User {
@@ -44,9 +13,9 @@ extension User {
   @MutationRequest
   private static func deleteMutation() async throws {
     @Dependency(\.defaultOperationClient) var client
-    @Dependency(User.AccountDeleterKey.self) var deleter
+    @Dependency(User.CurrentUserKey.self) var users
 
-    try await deleter.delete()
+    try await users.delete()
 
     let userStore = client.store(for: User.$currentStatusQuery)
     userStore.resetState()

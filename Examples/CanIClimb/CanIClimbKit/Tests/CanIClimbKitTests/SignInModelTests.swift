@@ -17,12 +17,11 @@ extension DependenciesTestSuite {
   struct SignInModelTests {
     @Test("Successful Sign In")
     func successfulSignIn() async throws {
-      let authenticator = User.MockAuthenticator()
-      authenticator.requiredCredentials = .mock1
+      let users = User.MockCurrentUser(currentStatusResult: .success(.user(.mock1)))
+      users.requiredCredentials = .mock1
 
       try await withDependencies {
-        $0[User.AuthenticatorKey.self] = authenticator
-        $0[User.CurrentLoaderKey.self] = User.MockCurrentLoader(result: .success(.user(.mock1)))
+        $0[User.CurrentUserKey.self] = users
       } operation: {
         let model = SignInModel()
         let onSuccessCount = Mutex(0)
@@ -36,7 +35,7 @@ extension DependenciesTestSuite {
     @Test("Unsuccessful Sign In, Nil Credentials")
     func unsuccessfulSignInNilCredentials() async throws {
       try await withDependencies {
-        $0[User.AuthenticatorKey.self] = User.MockAuthenticator()
+        $0[User.CurrentUserKey.self] = User.MockCurrentUser()
       } operation: {
         let model = SignInModel()
 
@@ -48,7 +47,7 @@ extension DependenciesTestSuite {
     @Test("Unsuccessful Sign In, Error Credentials")
     func unsuccessfulSignInErrorCredentials() async throws {
       try await withDependencies {
-        $0[User.AuthenticatorKey.self] = User.MockAuthenticator()
+        $0[User.CurrentUserKey.self] = User.MockCurrentUser()
       } operation: {
         struct SomeError: Error {}
         let model = SignInModel()
@@ -60,12 +59,11 @@ extension DependenciesTestSuite {
 
     @Test("Unsuccessful Sign In, Doesn't Call On Success")
     func unsuccessfulSignInDoesntCallOnSuccess() async throws {
-      let authenticator = User.MockAuthenticator()
-      authenticator.requiredCredentials = .mock1
+      let users = User.MockCurrentUser(currentStatusResult: .success(.user(.mock1)))
+      users.requiredCredentials = .mock1
 
       await withDependencies {
-        $0[User.AuthenticatorKey.self] = authenticator
-        $0[User.CurrentLoaderKey.self] = User.MockCurrentLoader(result: .success(.user(.mock1)))
+        $0[User.CurrentUserKey.self] = users
       } operation: {
         let model = SignInModel()
         let onSuccessCount = Mutex(0)

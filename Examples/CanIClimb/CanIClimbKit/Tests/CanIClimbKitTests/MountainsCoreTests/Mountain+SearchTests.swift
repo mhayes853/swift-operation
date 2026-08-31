@@ -11,11 +11,11 @@ extension DependenciesTestSuite {
     @Test("Seeds Query Client With Detail Results After Page Fetch")
     func seedsOperationClientWithDetailResults() async throws {
       try await withDependencies {
-        let searcher = Mountain.MockSearcher()
-        searcher.results[.recommended(page: 0)] = .success(
+        let catalog = Mountain.MockCatalog()
+        catalog.searchResults[.recommended(page: 0)] = .success(
           Mountain.SearchResult(mountains: [.mock1], hasNextPage: false)
         )
-        $0[Mountain.SearcherKey.self] = searcher
+        $0[Mountain.CatalogKey.self] = catalog
       } operation: {
         @Dependency(\.defaultOperationClient) var client
         let searchStore = client.store(for: Mountain.searchQuery(.recommended))
@@ -30,11 +30,11 @@ extension DependenciesTestSuite {
     @Test("Seeds Query Client With Prexisting Detail Results After Page Fetch")
     func seedsOperationClientWithPreExistingDetailResults() async throws {
       try await withDependencies {
-        let searcher = Mountain.MockSearcher()
-        searcher.results[.recommended(page: 0)] = .success(
+        let catalog = Mountain.MockCatalog()
+        catalog.searchResults[.recommended(page: 0)] = .success(
           Mountain.SearchResult(mountains: [.mock1], hasNextPage: false)
         )
-        $0[Mountain.SearcherKey.self] = searcher
+        $0[Mountain.CatalogKey.self] = catalog
       } operation: {
         @Dependency(\.defaultOperationClient) var client
         let searchStore = client.store(for: Mountain.searchQuery(.recommended))
@@ -57,10 +57,10 @@ extension DependenciesTestSuite {
       let request = Mountain.SearchRequest.recommended(page: 0, text: "te")
 
       await withDependencies {
-        let searcher = Mountain.MockSearcher()
-        searcher.localResults = [mountain]
-        searcher.results[request] = .failure(SomeError())
-        $0[Mountain.SearcherKey.self] = searcher
+        let catalog = Mountain.MockCatalog()
+        catalog.localSearchResults = [mountain]
+        catalog.searchResults[request] = .failure(SomeError())
+        $0[Mountain.CatalogKey.self] = catalog
       } operation: {
         @Dependency(\.defaultOperationClient) var client
 
@@ -99,13 +99,13 @@ extension DependenciesTestSuite {
       mountain2.name = "Mt Test"
 
       try await withDependencies {
-        let searcher = Mountain.MockSearcher()
-        searcher.localResults = [mountain2]
-        searcher.results[.recommended(page: 0)] = .success(
+        let catalog = Mountain.MockCatalog()
+        catalog.localSearchResults = [mountain2]
+        catalog.searchResults[.recommended(page: 0)] = .success(
           Mountain.SearchResult(mountains: [mountain1], hasNextPage: true)
         )
-        searcher.results[.recommended(page: 1)] = .failure(SomeError())
-        $0[Mountain.SearcherKey.self] = searcher
+        catalog.searchResults[.recommended(page: 1)] = .failure(SomeError())
+        $0[Mountain.CatalogKey.self] = catalog
       } operation: {
         @Dependency(\.defaultOperationClient) var client
         let searchStore = client.store(for: Mountain.searchQuery(.recommended))

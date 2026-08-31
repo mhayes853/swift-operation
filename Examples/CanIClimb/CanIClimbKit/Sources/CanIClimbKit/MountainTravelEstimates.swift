@@ -19,7 +19,7 @@ public final class MountainTravelEstimatesModel {
   public private(set) var userLocation: Result<LocationReading, any Error>?
 
   @ObservationIgnored
-  @Dependency(Mountain.Location.MapsOpenerKey.self) private var opener
+  @Dependency(MapsClientKey.self) private var maps
 
   public init(mountain: Mountain) {
     self.mountain = mountain
@@ -43,7 +43,7 @@ public final class MountainTravelEstimatesModel {
   }
 
   public func travelRouteInvoked(for travelType: TravelType) async {
-    if !(await self.opener.openDirections(to: self.mountain.location, for: travelType)) {
+    if !(await self.maps.openDirections(to: self.mountain.location, for: travelType)) {
       self.destination = .alert(.failedToOpenDirections)
     }
   }
@@ -225,17 +225,12 @@ extension TravelType {
 
 #Preview {
   let _ = prepareDependencies {
-    struct PreviewEstimater: TravelEstimate.Loader {
-      func estimate(for request: TravelEstimate.Request) async throws -> TravelEstimate {
-        .mock(for: request.travelType)
-      }
+    let maps = MockMapsClient()
+    for travelType in TravelType.allCases {
+      maps.estimateResults[.mock(for: travelType)] = .success(.mock(for: travelType))
     }
-
-    $0[TravelEstimate.LoaderKey.self] = PreviewEstimater()
-
-    let opener = Mountain.Location.MockMapsOpener()
-    opener.result = false
-    $0[Mountain.Location.MapsOpenerKey.self] = opener
+    maps.openDirectionsResult = false
+    $0[MapsClientKey.self] = maps
 
     let userLocation = MockUserLocation()
     userLocation.currentReading = .success(

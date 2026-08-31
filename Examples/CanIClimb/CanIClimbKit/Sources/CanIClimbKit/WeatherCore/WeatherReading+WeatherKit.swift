@@ -52,7 +52,7 @@ extension WeatherReading.Pressure {
 
 // MARK: - CurrentReader
 
-extension WeatherService: WeatherReading.CurrentReader {
+extension WeatherService: WeatherForecaster {
   public func reading(for coordinate: LocationCoordinate2D) async throws -> WeatherReading {
     let location = CLLocation(coordinate: coordinate)
     let weather = try await self.weather(for: location, including: .current)
