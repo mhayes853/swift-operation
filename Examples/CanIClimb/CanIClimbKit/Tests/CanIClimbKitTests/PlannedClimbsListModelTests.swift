@@ -11,17 +11,15 @@ extension DependenciesTestSuite {
     func plansClimbDismissesClimbSheetWhenFinished() async throws {
       try await withDependencies {
         $0[ScheduleableAlarm.AuthorizerKey.self] = ScheduleableAlarm.MockAuthorizer()
-        $0[Mountain.CatalogKey.self] = Mountain.MockCatalog(mountainResult: .success(.mock1))
 
         let climbs = Mountain.MockClimbs()
         climbs.setPlanResult(for: .mock1, result: .success(.mock1))
         $0[Mountain.ClimbsKey.self] = climbs
       } operation: {
         let model = PlannedClimbsListModel(mountainId: Mountain.mock1.id)
-        model.planClimbInvoked()
+        model.planClimbInvoked(mountain: .mock1)
 
         let planModel = try #require(model.destination?[case: \.planClimb])
-        try await planModel.$mountain.load()
         planModel.targetDate = Mountain.ClimbPlanCreate.mock1.targetDate
 
         try await planModel.submitted()
@@ -32,8 +30,6 @@ extension DependenciesTestSuite {
     @Test("Achieves Climb, Updates Detail Model")
     func achievesClimbUpdatesDetailModel() async throws {
       try await withDependencies {
-        $0[Mountain.CatalogKey.self] = Mountain.MockCatalog(mountainResult: .success(.mock1))
-
         let climbs = Mountain.MockClimbs()
         climbs.plannedClimbsResults[Mountain.mock1.id] = .success([.mock1])
         $0[Mountain.ClimbsKey.self] = climbs
@@ -42,10 +38,12 @@ extension DependenciesTestSuite {
         let model = PlannedClimbsListModel(mountainId: Mountain.mock1.id)
         try await model.$plannedClimbs.load()
 
-        model.plannedClimbDetailInvoked(id: Mountain.PlannedClimb.mock1.id)
+        model.plannedClimbDetailInvoked(
+          id: Mountain.PlannedClimb.mock1.id,
+          mountain: .mock1
+        )
 
         let detailModel = try #require(model.destination?[case: \.plannedClimbDetail])
-        try await detailModel.$mountain.load()
         try await detailModel.$achieveClimb.mutate(
           with: Mountain.AchieveClimbArguments(
             id: Mountain.PlannedClimb.mock1.id,
@@ -63,8 +61,6 @@ extension DependenciesTestSuite {
     @Test("Cancels Climb, Dismisses Detail Model")
     func cancelsClimbDismissesDetailModel() async throws {
       try await withDependencies {
-        $0[Mountain.CatalogKey.self] = Mountain.MockCatalog(mountainResult: .success(.mock1))
-
         let climbs = Mountain.MockClimbs()
         climbs.plannedClimbsResults[Mountain.mock1.id] = .success([.mock1])
         $0[Mountain.ClimbsKey.self] = climbs
@@ -72,10 +68,12 @@ extension DependenciesTestSuite {
         let model = PlannedClimbsListModel(mountainId: Mountain.mock1.id)
         try await model.$plannedClimbs.load()
 
-        model.plannedClimbDetailInvoked(id: Mountain.PlannedClimb.mock1.id)
+        model.plannedClimbDetailInvoked(
+          id: Mountain.PlannedClimb.mock1.id,
+          mountain: .mock1
+        )
 
         let detailModel = try #require(model.destination?[case: \.plannedClimbDetail])
-        try await detailModel.$mountain.load()
         detailModel.cancelInvoked()
         try await detailModel.alert(action: .confirmUnplanClimb)
         expectNoDifference(model.destination, nil)
