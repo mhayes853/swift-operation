@@ -10,8 +10,7 @@ import SwiftUINavigation
 @MainActor
 @Observable
 public final class PlanClimbModel: HashableObject, Identifiable {
-  @ObservationIgnored
-  @SharedOperation<QueryState<Mountain?, any Error>> public var mountain: Mountain??
+  public let mountain: Mountain
 
   @ObservationIgnored
   @SharedReader(.alarmsAuthorization) public var alarmsAuthorization
@@ -37,8 +36,8 @@ public final class PlanClimbModel: HashableObject, Identifiable {
 
   @ObservationIgnored public var onPlanned: ((Mountain.PlannedClimb) -> Void)?
 
-  public init(mountainId: Mountain.ID) {
-    self._mountain = SharedOperation(Mountain.query(id: mountainId), animation: .bouncy)
+  public init(mountain: Mountain) {
+    self.mountain = mountain
   }
 }
 
@@ -70,16 +69,18 @@ extension PlanClimbModel {
 
 extension PlanClimbModel {
   public func submitted() async throws {
-    guard case let mountain?? = self.mountain else { return }
-    var create = Mountain.ClimbPlanCreate(mountainId: mountain.id, targetDate: self.targetDate)
+    var create = Mountain.ClimbPlanCreate(
+      mountainId: self.mountain.id,
+      targetDate: self.targetDate
+    )
     if self.shouldAddAlarm {
       create.alarm = Mountain.ClimbPlanCreate.Alarm(
-        mountainName: mountain.name,
+        mountainName: self.mountain.name,
         date: self.alarmDate
       )
     }
     let (_, plannedClimb) = try await self.$planClimb.mutate(
-      with: Mountain.PlanClimbArguments(mountain: mountain, create: create)
+      with: Mountain.PlanClimbArguments(mountain: self.mountain, create: create)
     )
     self.onPlanned?(plannedClimb)
   }
@@ -95,13 +96,7 @@ public struct PlanClimbView: View {
   }
 
   public var body: some View {
-    RemoteOperationStateView(self.model.$mountain) { mountain in
-      if let mountain = mountain {
-        PlanClimbFormView(mountain: mountain, model: self.model)
-      } else {
-        ContentUnavailableView("Mountain not Found", image: "mountain.2.fill")
-      }
-    }
+    PlanClimbFormView(mountain: self.model.mountain, model: self.model)
   }
 }
 

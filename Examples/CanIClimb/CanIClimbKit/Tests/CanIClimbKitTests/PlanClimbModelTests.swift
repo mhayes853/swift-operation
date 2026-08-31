@@ -1,7 +1,6 @@
 import CanIClimbKit
 import CustomDump
 import Dependencies
-import SharingOperation
 import Testing
 
 extension DependenciesTestSuite {
@@ -15,9 +14,8 @@ extension DependenciesTestSuite {
 
       try await withDependencies {
         $0[ScheduleableAlarm.AuthorizerKey.self] = authorizer
-        $0[Mountain.CatalogKey.self] = Mountain.MockCatalog(mountainResult: .success(.mock1))
       } operation: {
-        let model = PlanClimbModel(mountainId: Mountain.mock1.id)
+        let model = PlanClimbModel(mountain: .mock1)
 
         expectNoDifference(model.shouldAddAlarm, false)
         try await model.alarmToggled()
@@ -32,9 +30,8 @@ extension DependenciesTestSuite {
 
       try await withDependencies {
         $0[ScheduleableAlarm.AuthorizerKey.self] = authorizer
-        $0[Mountain.CatalogKey.self] = Mountain.MockCatalog(mountainResult: .success(.mock1))
       } operation: {
-        let model = PlanClimbModel(mountainId: Mountain.mock1.id)
+        let model = PlanClimbModel(mountain: .mock1)
 
         try await model.alarmToggled()
         try await model.alarmToggled()
@@ -50,9 +47,8 @@ extension DependenciesTestSuite {
 
       try await withDependencies {
         $0[ScheduleableAlarm.AuthorizerKey.self] = authorizer
-        $0[Mountain.CatalogKey.self] = Mountain.MockCatalog(mountainResult: .success(.mock1))
       } operation: {
-        let model = PlanClimbModel(mountainId: Mountain.mock1.id)
+        let model = PlanClimbModel(mountain: .mock1)
 
         try await model.alarmToggled()
         expectNoDifference(model.alarmsAuthorization, .authorized)
@@ -68,9 +64,8 @@ extension DependenciesTestSuite {
 
       try await withDependencies {
         $0[ScheduleableAlarm.AuthorizerKey.self] = authorizer
-        $0[Mountain.CatalogKey.self] = Mountain.MockCatalog(mountainResult: .success(.mock1))
       } operation: {
-        let model = PlanClimbModel(mountainId: Mountain.mock1.id)
+        let model = PlanClimbModel(mountain: .mock1)
 
         try await model.alarmToggled()
         expectNoDifference(model.alarmsAuthorization, .unauthorized)
@@ -86,14 +81,12 @@ extension DependenciesTestSuite {
       )
       try await withDependencies {
         $0[ScheduleableAlarm.AuthorizerKey.self] = ScheduleableAlarm.MockAuthorizer()
-        $0[Mountain.CatalogKey.self] = Mountain.MockCatalog(mountainResult: .success(.mock1))
 
         let climbs = Mountain.MockClimbs()
         climbs.setPlanResult(for: expectedCreate, result: .success(.mock1))
         $0[Mountain.ClimbsKey.self] = climbs
       } operation: {
-        let model = PlanClimbModel(mountainId: Mountain.mock1.id)
-        try await model.$mountain.load()
+        let model = PlanClimbModel(mountain: .mock1)
         model.targetDate = expectedCreate.targetDate
 
         try await confirmation { confirm in
@@ -121,14 +114,12 @@ extension DependenciesTestSuite {
       )
       try await withDependencies {
         $0[ScheduleableAlarm.AuthorizerKey.self] = authorizer
-        $0[Mountain.CatalogKey.self] = Mountain.MockCatalog(mountainResult: .success(.mock1))
 
         let climbs = Mountain.MockClimbs()
         climbs.setPlanResult(for: expectedCreate, result: .success(.mock1))
         $0[Mountain.ClimbsKey.self] = climbs
       } operation: {
-        let model = PlanClimbModel(mountainId: Mountain.mock1.id)
-        try await model.$mountain.load()
+        let model = PlanClimbModel(mountain: .mock1)
         model.targetDate = expectedCreate.targetDate
 
         try await model.alarmToggled()
@@ -148,9 +139,8 @@ extension DependenciesTestSuite {
     func automaticallyAdjustsAlarmDateUntilChangedManually() async throws {
       withDependencies {
         $0[ScheduleableAlarm.AuthorizerKey.self] = ScheduleableAlarm.MockAuthorizer()
-        $0[Mountain.CatalogKey.self] = Mountain.MockCatalog(mountainResult: .success(.mock1))
       } operation: {
-        let model = PlanClimbModel(mountainId: Mountain.mock1.id)
+        let model = PlanClimbModel(mountain: .mock1)
 
         model.targetDate = .distantFuture
         expectNoDifference(model.alarmDate, .distantFuture)

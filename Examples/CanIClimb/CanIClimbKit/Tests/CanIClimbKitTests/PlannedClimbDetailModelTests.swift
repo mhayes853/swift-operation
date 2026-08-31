@@ -11,11 +11,12 @@ extension DependenciesTestSuite {
     @Test("Unplanning")
     func unplanning() async throws {
       try await withDependencies {
-        $0[Mountain.CatalogKey.self] = Mountain.MockCatalog(mountainResult: .success(.mock1))
         $0[Mountain.ClimbsKey.self] = Mountain.MockClimbs()
       } operation: {
-        let model = PlannedClimbDetailModel(plannedClimb: SharedReader(value: .mock1))
-        try await model.$mountain.load()
+        let model = PlannedClimbDetailModel(
+          mountain: .mock1,
+          plannedClimb: SharedReader(value: .mock1)
+        )
 
         expectNoDifference(model.destination, nil)
         model.cancelInvoked()

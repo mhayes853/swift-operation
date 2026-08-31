@@ -1,4 +1,3 @@
-import AsyncAlgorithms
 import Observation
 import SharingOperation
 import SwiftUI
@@ -16,60 +15,13 @@ public final class MountainDetailModel: HashableObject, Identifiable {
   @ObservationIgnored
   @SharedOperation<QueryState<Mountain?, any Error>> public var mountain: Mountain??
 
-  @ObservationIgnored
-  @SharedOperation(LocationReading.userQuery) public var userLocation
-
-  @ObservationIgnored
-  @SharedOperation<QueryState<MountainClimbReadiness.GeneratedSegment, any Error>>
-  public var readiness: MountainClimbReadiness.GeneratedSegment?
-
   public let plannedClimbs: PlannedClimbsListModel
 
   public var selectedTab = Tab.mountain
 
-  public private(set) var weather: MountainWeatherModel?
-  public private(set) var travelEstimates: MountainTravelEstimatesModel?
-
   public init(id: Mountain.ID) {
     self._mountain = SharedOperation(Mountain.query(id: id), animation: .bouncy)
-    self._readiness = SharedOperation()
     self.plannedClimbs = PlannedClimbsListModel(mountainId: id)
-  }
-
-  public func appeared() async {
-    for await (e1, e2) in combineLatest(self.$mountain.states, self.$userLocation.states) {
-      self.detailsUpdated(mountainStatus: e1.state.status, userLocationStatus: e2.state.status)
-    }
-  }
-
-  public func detailsUpdated(
-    mountainStatus: OperationStatus<Mountain?, any Error>,
-    userLocationStatus: OperationStatus<LocationReading, any Error>
-  ) {
-    switch mountainStatus {
-    case .result(.success(let mountain?)):
-      if self.weather?.mountain != mountain {
-        self.weather = MountainWeatherModel(mountain: mountain)
-      }
-      if self.travelEstimates?.mountain != mountain {
-        self.travelEstimates = MountainTravelEstimatesModel(mountain: mountain)
-      }
-      self.$readiness = SharedOperation(
-        MountainClimbReadiness.generationQuery(for: mountain),
-        animation: .default
-      )
-    case .result(.failure), .result(.success(nil)):
-      self.weather = nil
-      self.travelEstimates = nil
-      self.$readiness = SharedOperation()
-    default:
-      break
-    }
-
-    if case .result(let locationResult) = userLocationStatus {
-      self.weather?.userLocationUpdated(reading: locationResult)
-      self.travelEstimates?.userLocationUpdated(reading: locationResult)
-    }
   }
 }
 
@@ -97,7 +49,6 @@ public struct MountainDetailView: View {
         ContentUnavailableView("Mountain not found", systemImage: "mountain.2.fill")
       }
     }
-    .task { await self.model.appeared() }
   }
 }
 
@@ -124,9 +75,10 @@ private struct MountainDetailScrollView: View {
 
         switch self.model.selectedTab {
         case .mountain:
-          MountainDetailsView(model: self.model, mountain: self.mountain)
+          MountainDetailsView(mountain: self.mountain)
+            .id(self.mountain)
         case .plannedClimbs:
-          PlannedClimbsListView(model: self.model.plannedClimbs)
+          PlannedClimbsListView(model: self.model.plannedClimbs, mountain: self.mountain)
         }
       }
       .padding()
@@ -151,7 +103,7 @@ private struct MountainDetailScrollView: View {
     .safeAreaInset(edge: .bottom) {
       if self.model.selectedTab == .plannedClimbs {
         CTAButton("Plan New Climb", systemImage: "plus") {
-          self.model.plannedClimbs.planClimbInvoked()
+          self.model.plannedClimbs.planClimbInvoked(mountain: self.mountain)
         }
         .padding()
       }
@@ -264,7 +216,6 @@ private struct MountainImageLabel: View {
 private struct MountainDetailsView: View {
   @Environment(\.systemLanguageModelAvailability) var appleIntelligenceAvailability
 
-  let model: MountainDetailModel
   let mountain: Mountain
 
   @ScaledMetric private var travelEstimatesSize = CGFloat(450)
@@ -281,21 +232,17 @@ private struct MountainDetailsView: View {
 
       if self.appleIntelligenceAvailability == .available {
         MountainDetailSectionView(title: "Climb Readiness") {
-          MountainClimbReadinessView(model: self.model)
+          MountainClimbReadinessView(mountain: self.mountain)
         }
       }
 
-      if let weatherModel = self.model.weather {
-        MountainDetailSectionView(title: "Weather Comparison") {
-          MountainWeatherView(model: weatherModel)
-        }
+      MountainDetailSectionView(title: "Weather Comparison") {
+        MountainWeatherView(mountain: self.mountain)
       }
 
-      if let travelEstimatesModel = self.model.travelEstimates {
-        MountainDetailSectionView(title: "Directions") {
-          MountainTravelEstimatesView(model: travelEstimatesModel)
-            .frame(height: self.travelEstimatesSize)
-        }
+      MountainDetailSectionView(title: "Directions") {
+        MountainTravelEstimatesView(mountain: self.mountain)
+          .frame(height: self.travelEstimatesSize)
       }
     }
   }
@@ -304,11 +251,19 @@ private struct MountainDetailsView: View {
 // MARK: - MountainClimbReadinessView
 
 private struct MountainClimbReadinessView: View {
-  let model: MountainDetailModel
+  @SharedOperation<QueryState<MountainClimbReadiness.GeneratedSegment, any Error>>
+  private var readiness: MountainClimbReadiness.GeneratedSegment?
+
+  init(mountain: Mountain) {
+    self._readiness = SharedOperation(
+      MountainClimbReadiness.generationQuery(for: mountain),
+      animation: .default
+    )
+  }
 
   var body: some View {
     VStack(alignment: .leading, spacing: 10) {
-      switch self.model.readiness {
+      switch self.readiness {
       case .full(let full):
         Text(full.rating.title).font(.title.bold())
         HStack {
@@ -329,7 +284,7 @@ private struct MountainClimbReadinessView: View {
         EmptyView()
       }
 
-      if !self.model.readiness.is(\.full) {
+      if !self.readiness.is(\.full) {
         HStack {
           Spacer()
           SpinnerView()
@@ -337,7 +292,7 @@ private struct MountainClimbReadinessView: View {
         }
       }
 
-      if let lastUpdatedAt = self.model.$readiness.valueLastUpdatedAt {
+      if let lastUpdatedAt = self.$readiness.valueLastUpdatedAt {
         Text("Generated on: \(lastUpdatedAt.formatted())")
           .font(.footnote)
           .foregroundStyle(.secondary)

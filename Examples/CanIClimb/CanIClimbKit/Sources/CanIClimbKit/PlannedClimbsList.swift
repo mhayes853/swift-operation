@@ -38,13 +38,20 @@ extension PlannedClimbsListModel {
     case plannedClimbDetail(PlannedClimbDetailModel)
   }
 
-  public func planClimbInvoked() {
-    self.destination = .planClimb(PlanClimbModel(mountainId: self.mountainId))
+  public func planClimbInvoked(mountain: Mountain) {
+    self.destination = .planClimb(PlanClimbModel(mountain: mountain))
   }
 
-  public func plannedClimbDetailInvoked(id: Mountain.PlannedClimb.ID) {
+  public func plannedClimbDetailInvoked(
+    id: Mountain.PlannedClimb.ID,
+    mountain: Mountain
+  ) {
     self.destination = SharedReader(self.$plannedClimbs.sharedReader.read { $0?[id: id] })
-      .map { .plannedClimbDetail(PlannedClimbDetailModel(plannedClimb: $0)) }
+      .map {
+        .plannedClimbDetail(
+          PlannedClimbDetailModel(mountain: mountain, plannedClimb: $0)
+        )
+      }
   }
 
   private func bind() {
@@ -63,15 +70,17 @@ extension PlannedClimbsListModel {
 
 public struct PlannedClimbsListView: View {
   @Bindable private var model: PlannedClimbsListModel
+  private let mountain: Mountain
 
-  public init(model: PlannedClimbsListModel) {
+  public init(model: PlannedClimbsListModel, mountain: Mountain) {
     self.model = model
+    self.mountain = mountain
   }
 
   public var body: some View {
     LazyVStack(spacing: 10) {
       RemoteOperationStateView(self.model.$plannedClimbs) { climbs in
-        ListView(model: model, climbs: climbs)
+        ListView(model: self.model, mountain: self.mountain, climbs: climbs)
       }
     }
     .sheet(item: self.$model.destination.planClimb) { model in
@@ -97,6 +106,7 @@ public struct PlannedClimbsListView: View {
 
 private struct ListView: View {
   let model: PlannedClimbsListModel
+  let mountain: Mountain
   let climbs: IdentifiedArrayOf<Mountain.PlannedClimb>
 
   public var body: some View {
@@ -109,7 +119,7 @@ private struct ListView: View {
     } else {
       ForEach(self.climbs) { climb in
         Button {
-          self.model.plannedClimbDetailInvoked(id: climb.id)
+          self.model.plannedClimbDetailInvoked(id: climb.id, mountain: self.mountain)
         } label: {
           PlannedMountainClimbCardView(plannedClimb: climb)
         }

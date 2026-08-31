@@ -1,133 +1,68 @@
 import Dependencies
-import Observation
 import SQLiteData
 import SharingOperation
 import SwiftUI
 import SwiftUINavigation
 
-// MARK: - MountainWeatherModel
-
-@MainActor
-@Observable
-public final class MountainWeatherModel {
-  @ObservationIgnored
-  @SharedOperation<QueryState<WeatherReading, any Error>>
-  private var mountainWeather: WeatherReading?
-
-  public var destination: Destination?
-  public let mountain: Mountain
-
-  @ObservationIgnored
-  @SharedOperation<QueryState<WeatherReading, any Error>>
-  private var userWeather: WeatherReading?
-
-  private var userLocation: Result<LocationReading, any Error>?
-
-  public init(mountain: Mountain) {
-    self.mountain = mountain
-    self._mountainWeather = SharedOperation(
-      WeatherReading.$currentQuery(for: mountain.location.coordinate),
-      animation: .bouncy
-    )
-    self._userWeather = SharedOperation()
+private struct WeatherDetail: Identifiable, Sendable {
+  enum ID: Hashable, Sendable {
+    case user
+    case mountain(Mountain.ID)
   }
 
-  public func userLocationUpdated(reading: Result<LocationReading, any Error>) {
-    self.userLocation = reading
-    switch reading {
-    case .success(let location):
-      self.$userWeather = SharedOperation(
-        WeatherReading.$currentQuery(for: location.coordinate),
-        animation: .bouncy
-      )
-    case .failure:
-      self.$userWeather = SharedOperation()
-    }
-  }
-}
-
-extension MountainWeatherModel {
-  public struct Detail: Equatable, Sendable, Identifiable {
-    public enum ID: Hashable, Sendable {
-      case user
-      case mountain(Mountain.ID)
-    }
-
-    public let id: ID
-    public let systemImageName: String
-    public let locationName: LocalizedStringResource
-    public let unauthorizedText: LocalizedStringResource?
-    @SharedOperation<QueryState<WeatherReading, any Error>> public var reading: WeatherReading?
-  }
-
-  public var userWeatherDetail: Detail {
-    let isAuthorized =
-      switch self.userLocation {
-      case .failure(let error): !(error is UserLocationUnauthorizedError)
-      default: true
-      }
-    return Detail(
-      id: .user,
-      systemImageName: "location.fill",
-      locationName: "Your Location",
-      unauthorizedText: isAuthorized ? nil : "Your location access has been denied.",
-      reading: self.$userWeather
-    )
-  }
-
-  public var mountainWeatherDetail: Detail {
-    Detail(
-      id: .mountain(self.mountain.id),
-      systemImageName: "mappin.and.ellipse",
-      locationName: self.mountain.location.name.localizedStringResource,
-      unauthorizedText: nil,
-      reading: self.$mountainWeather
-    )
-  }
-}
-
-extension MountainWeatherModel {
-  @CasePathable
-  public enum Destination: Equatable, Sendable {
-    case detail(Detail)
-  }
-
-  public func detailInvoked(_ detail: Detail) {
-    self.destination = .detail(detail)
-  }
+  let id: ID
+  let systemImageName: String
+  let locationName: LocalizedStringResource
+  let unauthorizedText: LocalizedStringResource?
+  @SharedOperation<QueryState<WeatherReading, any Error>> var reading: WeatherReading?
 }
 
 // MARK: - MountainWeatherView
 
 public struct MountainWeatherView: View {
   @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-  @Bindable private var model: MountainWeatherModel
+  @SharedOperation(LocationReading.userQuery) private var userLocation
+  @State private var destination: WeatherDetail?
 
-  public init(model: MountainWeatherModel) {
-    self.model = model
+  private let mountain: Mountain
+
+  public init(mountain: Mountain) {
+    self.mountain = mountain
   }
 
   public var body: some View {
     Group {
       if self.dynamicTypeSize.isAccessibilitySize {
         VStack(alignment: .leading) {
-          WeatherSnippetView(model: model, detail: model.userWeatherDetail)
+          WeatherSnippetView(
+            detail: self.userWeatherDetail,
+            destination: self.$destination
+          )
           Divider()
-          WeatherSnippetView(model: model, detail: model.mountainWeatherDetail)
+          WeatherSnippetView(
+            detail: self.mountainWeatherDetail,
+            destination: self.$destination
+          )
           WeatherAttributionView()
         }
       } else {
         VStack {
           HStack {
             VStack {
-              WeatherSnippetView(model: model, detail: model.userWeatherDetail)
+              WeatherSnippetView(
+                detail: self.userWeatherDetail,
+                destination: self.$destination
+              )
               Spacer()
             }
             .frame(maxWidth: .infinity)
             Divider()
               .padding(.horizontal)
             VStack {
-              WeatherSnippetView(model: model, detail: model.mountainWeatherDetail)
+              WeatherSnippetView(
+                detail: self.mountainWeatherDetail,
+                destination: self.$destination
+              )
               Spacer()
             }
             .frame(maxWidth: .infinity)
@@ -140,12 +75,72 @@ public struct MountainWeatherView: View {
         }
       }
     }
-    .sheet(item: self.$model.destination.detail) { detail in
+    .sheet(item: self.$destination) { detail in
       NavigationStack {
         WeatherDetailView(detail: detail)
           .dismissable()
       }
     }
+  }
+
+  private var userWeatherDetail: WeatherDetail {
+    switch self.$userLocation.status {
+    case .result(.success(let location)):
+      self.userWeatherDetail(location: location)
+    case .result(.failure(let error)):
+      WeatherDetail(
+        id: .user,
+        systemImageName: "location.fill",
+        locationName: "Your Location",
+        unauthorizedText: error is UserLocationUnauthorizedError
+          ? "Your location access has been denied."
+          : nil,
+        reading: SharedOperation()
+      )
+    case .loading:
+      self.userLocation.map { self.userWeatherDetail(location: $0) }
+        ?? WeatherDetail.user
+    default:
+      WeatherDetail.user
+    }
+  }
+
+  private func userWeatherDetail(location: LocationReading) -> WeatherDetail {
+    WeatherDetail(
+      id: .user,
+      systemImageName: "location.fill",
+      locationName: "Your Location",
+      unauthorizedText: nil,
+      reading: SharedOperation(
+        WeatherReading.$currentQuery(for: location.coordinate),
+        animation: .bouncy
+      )
+    )
+  }
+
+  private var mountainWeatherDetail: WeatherDetail {
+    WeatherDetail(
+      id: .mountain(self.mountain.id),
+      systemImageName: "mappin.and.ellipse",
+      locationName: self.mountain.location.name.localizedStringResource,
+      unauthorizedText: nil,
+      reading: SharedOperation(
+        WeatherReading.$currentQuery(for: self.mountain.location.coordinate),
+        animation: .bouncy
+      )
+    )
+  }
+}
+
+extension WeatherDetail {
+  fileprivate static var user: Self {
+    Self(
+      id: .user,
+      systemImageName: "location.fill",
+      locationName: "Your Location",
+      unauthorizedText: nil,
+      reading: SharedOperation()
+    )
   }
 }
 
@@ -156,8 +151,8 @@ private struct WeatherSnippetView: View {
 
   @SingleRow(SettingsRecord.self) private var settings
 
-  let model: MountainWeatherModel
-  let detail: MountainWeatherModel.Detail
+  let detail: WeatherDetail
+  @Binding var destination: WeatherDetail?
 
   @ScaledMetric private var locationSize = CGFloat(40)
 
@@ -206,7 +201,7 @@ private struct WeatherSnippetView: View {
     }
 
     Button {
-      self.model.detailInvoked(self.detail)
+      self.destination = self.detail
     } label: {
       if self.dynamicTypeSize.isAccessibilitySize {
         HStack(alignment: .center) {
@@ -225,7 +220,7 @@ private struct WeatherSnippetView: View {
 // MARK: - WeatherDetailView
 
 private struct WeatherDetailView: View {
-  let detail: MountainWeatherModel.Detail
+  let detail: WeatherDetail
 
   @SingleRow(SettingsRecord.self) var settings
 
@@ -433,8 +428,5 @@ private struct WeatherInfoLabel<Content: View>: View {
     $0[WeatherForecasterKey.self] = weather
   }
 
-  let model = MountainWeatherModel(mountain: Mountain.mock1)
-  let _ = model.userLocationUpdated(reading: .success(userLocation))
-
-  MountainWeatherView(model: model)
+  MountainWeatherView(mountain: Mountain.mock1)
 }

@@ -8,8 +8,7 @@ import SwiftUINavigation
 @MainActor
 @Observable
 public final class PlannedClimbDetailModel: HashableObject, Identifiable {
-  @ObservationIgnored
-  @SharedOperation<QueryState<Mountain?, any Error>> public var mountain: Mountain??
+  public let mountain: Mountain
 
   @ObservationIgnored
   @SharedOperation(Mountain.$achieveClimbMutation) public var achieveClimb: Void?
@@ -27,12 +26,9 @@ public final class PlannedClimbDetailModel: HashableObject, Identifiable {
 
   public var destination: Destination?
 
-  public init(plannedClimb: SharedReader<Mountain.PlannedClimb>) {
+  public init(mountain: Mountain, plannedClimb: SharedReader<Mountain.PlannedClimb>) {
+    self.mountain = mountain
     self._plannedClimb = plannedClimb
-    self._mountain = SharedOperation(
-      Mountain.query(id: plannedClimb.wrappedValue.mountainId),
-      animation: .bouncy
-    )
   }
 }
 
@@ -45,10 +41,9 @@ extension PlannedClimbDetailModel {
   public func alert(action: AlertAction?) async throws {
     switch action {
     case .confirmUnplanClimb:
-      guard case let mountain?? = self.mountain else { return }
       try await self.$unplanClimb.mutate(
         with: Mountain.UnplanClimbsArguments(
-          mountainId: mountain.id,
+          mountainId: self.mountain.id,
           ids: [self.plannedClimb.id]
         )
       )
@@ -59,9 +54,11 @@ extension PlannedClimbDetailModel {
   }
 
   public func cancelInvoked() {
-    guard case let mountain?? = self.mountain else { return }
     self.destination = .alert(
-      .confirmUnplanClimb(targetDate: self.plannedClimb.targetDate, mountainName: mountain.name)
+      .confirmUnplanClimb(
+        targetDate: self.plannedClimb.targetDate,
+        mountainName: self.mountain.name
+      )
     )
   }
 }
@@ -107,16 +104,10 @@ public struct PlannedClimbDetailView: View {
   }
 
   public var body: some View {
-    RemoteOperationStateView(self.model.$mountain) { mountain in
-      if let mountain {
-        DetailView(model: self.model, mountain: mountain)
-      } else {
-        Text("Mountain not found")
+    DetailView(model: self.model, mountain: self.model.mountain)
+      .alert(self.$model.destination.alert) { action in
+        Task { try await self.model.alert(action: action) }
       }
-    }
-    .alert(self.$model.destination.alert) { action in
-      Task { try await self.model.alert(action: action) }
-    }
   }
 }
 

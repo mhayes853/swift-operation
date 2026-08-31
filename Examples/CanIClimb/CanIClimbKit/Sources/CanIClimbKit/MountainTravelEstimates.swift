@@ -1,4 +1,3 @@
-import Combine
 import Dependencies
 import MapKit
 import Observation
@@ -12,34 +11,13 @@ import SwiftUINavigation
 @Observable
 public final class MountainTravelEstimatesModel {
   public let mountain: Mountain
-  public private(set) var estimates = [
-    TravelType: SharedOperation<QueryState<TravelEstimate, any Error>>
-  ]()
   public var destination: Destination?
-  public private(set) var userLocation: Result<LocationReading, any Error>?
 
   @ObservationIgnored
   @Dependency(MapsClientKey.self) private var maps
 
   public init(mountain: Mountain) {
     self.mountain = mountain
-  }
-
-  public func userLocationUpdated(reading: Result<LocationReading, any Error>) {
-    self.userLocation = reading
-    switch reading {
-    case .success(let location):
-      for type in TravelType.allCases {
-        let request = TravelEstimate.Request(
-          travelType: type,
-          origin: location.coordinate,
-          destination: mountain.location.coordinate
-        )
-        self.estimates[type] = SharedOperation(TravelEstimate.$query(for: request))
-      }
-    case .failure:
-      self.estimates.removeAll()
-    }
   }
 
   public func travelRouteInvoked(for travelType: TravelType) async {
@@ -84,11 +62,11 @@ extension AlertState where Action == MountainTravelEstimatesModel.AlertAction {
 // MARK: - MountainTravelEstimatesView
 
 public struct MountainTravelEstimatesView: View {
+  @SharedOperation(LocationReading.userQuery) private var userLocation
   @Bindable private var model: MountainTravelEstimatesModel
-  @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
-  public init(model: MountainTravelEstimatesModel) {
-    self.model = model
+  public init(mountain: Mountain) {
+    self.model = MountainTravelEstimatesModel(mountain: mountain)
   }
 
   public var body: some View {
@@ -98,11 +76,22 @@ public struct MountainTravelEstimatesView: View {
         .bold()
         .onTapGesture { self.model.mapInvoked() }
       MapView(model: self.model)
-      TravelEstimatesView(model: self.model)
+      TravelEstimatesView(model: self.model, userLocation: self.currentUserLocation)
         .padding(.top)
     }
     .mapItemDetailSheet(item: self.$model.destination.mapItem)
     .alert(self.$model.destination.alert) { _ in }
+  }
+
+  private var currentUserLocation: LocationReading? {
+    switch self.$userLocation.status {
+    case .result(.success(let location)):
+      location
+    case .loading:
+      self.userLocation
+    default:
+      nil
+    }
   }
 }
 
@@ -135,11 +124,24 @@ private struct MapView: View {
 
 private struct TravelEstimatesView: View {
   let model: MountainTravelEstimatesModel
+  let userLocation: LocationReading?
 
   var body: some View {
     VStack(alignment: .leading, spacing: 10) {
-      ForEach(TravelType.allCases, id: \.self) { travelType in
-        TravelEstimateView(model: self.model, travelType: travelType)
+      if let userLocation = self.userLocation {
+        ForEach(TravelType.allCases, id: \.self) { travelType in
+          let request = TravelEstimate.Request(
+            travelType: travelType,
+            origin: userLocation.coordinate,
+            destination: self.model.mountain.location.coordinate
+          )
+          TravelEstimateView(model: self.model, request: request)
+            .id(request)
+        }
+      } else {
+        ForEach(TravelType.allCases, id: \.self) { travelType in
+          TravelEstimateView(model: self.model, travelType: travelType)
+        }
       }
     }
   }
@@ -148,10 +150,24 @@ private struct TravelEstimatesView: View {
 // MARK: - TravelEstimateView
 
 private struct TravelEstimateView: View {
+  @SharedOperation<QueryState<TravelEstimate, any Error>> private var estimate: TravelEstimate?
+
   let model: MountainTravelEstimatesModel
   let travelType: TravelType
 
   @ScaledMetric private var iconSize = CGFloat(40)
+
+  init(model: MountainTravelEstimatesModel, request: TravelEstimate.Request) {
+    self.model = model
+    self.travelType = request.travelType
+    self._estimate = SharedOperation(TravelEstimate.$query(for: request))
+  }
+
+  init(model: MountainTravelEstimatesModel, travelType: TravelType) {
+    self.model = model
+    self.travelType = travelType
+    self._estimate = SharedOperation()
+  }
 
   var body: some View {
     Button {
@@ -162,8 +178,7 @@ private struct TravelEstimateView: View {
           .frame(width: self.iconSize, height: self.iconSize)
           .clipShape(RoundedRectangle(cornerRadius: 20))
 
-        let estimate = self.model.estimates[self.travelType]
-        if let estimate = estimate?.wrappedValue {
+        if let estimate = self.estimate {
           VStack(alignment: .leading) {
             let formatter = DateComponentsFormatter.travelEstimate(for: estimate.duration)
             Text(formatter.string(from: estimate.duration) ?? "--")
@@ -173,7 +188,7 @@ private struct TravelEstimateView: View {
               .foregroundStyle(.secondary)
           }
 
-        } else if estimate?.isLoading == true {
+        } else if self.$estimate.isLoading {
           SpinnerView()
         } else {
           Text("--")
@@ -242,9 +257,7 @@ extension TravelType {
     $0[UserLocationKey.self] = userLocation
   }
 
-  let model = MountainTravelEstimatesModel(mountain: .mock1)
-
-  MountainTravelEstimatesView(model: model)
+  MountainTravelEstimatesView(mountain: .mock1)
     .frame(height: 500)
     .padding()
 }
