@@ -72,7 +72,8 @@ extension DummyJSONAPI: Posts {
 
 extension DummyJSONAPI: Post.Searcher {
   func search(by text: String) async throws -> IdentifiedArrayOf<Post> {
-    let url = URL(string: "https://dummyjson.com/posts/search?q=\(text)")!
+    var url = URL(string: "https://dummyjson.com/posts/search")!
+    url.append(queryItems: [URLQueryItem(name: "q", value: text)])
     let (data, _) = try await self.data(for: URLRequest(url: url))
     let posts = try JSONDecoder().decode(DummyJSONPosts.self, from: data)
     return IdentifiedArray(uniqueElements: posts.posts.map(Post.init(dummy:)))
@@ -81,9 +82,14 @@ extension DummyJSONAPI: Post.Searcher {
 
 extension DummyJSONAPI: Post.ListByTagLoader {
   func posts(with tag: String, for page: Post.ListPage.ID) async throws -> Post.ListPage {
-    let url = URL(
-      string: "https://dummyjson.com/posts/tag/\(tag)?limit=\(page.limit)&skip=\(page.skip)"
-    )!
+    var url = URL(string: "https://dummyjson.com/posts/tag")!
+    url.append(path: tag)
+    url.append(
+      queryItems: [
+        URLQueryItem(name: "limit", value: "\(page.limit)"),
+        URLQueryItem(name: "skip", value: "\(page.skip)")
+      ]
+    )
     let (data, _) = try await self.data(for: URLRequest(url: url))
     let posts = try JSONDecoder().decode(DummyJSONPosts.self, from: data)
     return Post.ListPage(

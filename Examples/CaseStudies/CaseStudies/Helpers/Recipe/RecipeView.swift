@@ -9,16 +9,16 @@ struct RecipeView: View {
 
       VStack(alignment: .leading) {
         Text("Ingredients").font(.headline)
-        ForEach(self.recipe.ingredients, id: \.self) {
-          Text($0)
-        }
+        Text(self.recipe.ingredients.map { "• \($0)" }.joined(separator: "\n"))
       }
 
       VStack(alignment: .leading) {
         Text("Instructions").font(.headline)
-        ForEach(self.recipe.instructions, id: \.self) {
-          Text($0)
-        }
+        Text(
+          self.recipe.instructions.enumerated()
+            .map { "\($0.offset + 1). \($0.element)" }
+            .joined(separator: "\n")
+        )
       }
 
       VStack(alignment: .leading) {

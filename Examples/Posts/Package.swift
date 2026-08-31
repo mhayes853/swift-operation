@@ -10,12 +10,26 @@ let package = Package(
     .library(name: "Posts", targets: ["Posts"])
   ],
   dependencies: [
-    .package(path: "../..")
+    .package(name: "swift-operation", path: "../.."),
+    .package(url: "https://github.com/pointfreeco/swift-custom-dump", from: "1.3.3"),
+    .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.9.3")
   ],
   targets: [
     .target(
       name: "Posts",
-      dependencies: [.product(name: "SharingOperation", package: "swift-operation")]
+      dependencies: [
+        .product(name: "Dependencies", package: "swift-dependencies"),
+        .product(name: "SharingOperation", package: "swift-operation")
+      ]
+    ),
+    .testTarget(
+      name: "PostsTests",
+      dependencies: [
+        "Posts",
+        .product(name: "CustomDump", package: "swift-custom-dump"),
+        .product(name: "Dependencies", package: "swift-dependencies"),
+        .product(name: "SharingOperation", package: "swift-operation")
+      ]
     )
   ]
 )

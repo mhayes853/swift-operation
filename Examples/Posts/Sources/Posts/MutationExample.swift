@@ -1,3 +1,4 @@
+import Dependencies
 import Foundation
 import SharingOperation
 import SwiftUI
@@ -5,7 +6,7 @@ import SwiftUI
 // MARK: - CreateMutation
 
 extension Post {
-  struct CreateArguments: Codable, Sendable {
+  struct CreateArguments: Codable, Hashable, Sendable {
     let userId: Int
     let title: String
     let body: String
@@ -13,12 +14,13 @@ extension Post {
 
   @MutationRequest
   static func createMutation(arguments: CreateArguments) async throws -> Post {
+    @Dependency(HTTPDataTransportKey.self) var transport
     let url = URL(string: "https://dummyjson.com/posts/add")!
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
     request.httpBody = try JSONEncoder().encode(arguments)
     request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-    let (data, _) = try await URLSession.shared.data(for: request)
+    let (data, _) = try await transport.data(for: request)
     return try JSONDecoder().decode(Post.self, from: data)
   }
 }
@@ -44,8 +46,12 @@ struct CreatePostView: View {
             title: self.title,
             body: self.postBody
           )
-          try await self.$create.mutate(with: args)
-          self.dismiss()
+          do {
+            try await self.$create.mutate(with: args)
+            self.dismiss()
+          } catch {
+            // The operation's error is rendered below the button.
+          }
         }
       }
       .disabled(self.$create.isLoading)

@@ -20,7 +20,7 @@ struct OptimisticUpdatesCaseStudy: CaseStudy {
 
     While the optimistic update logic could be placed inside `OptimisticUpdatesModel`, doing so would only \
     constrain the update to the local model. By performing the update inside the mutation, we \
-    ensure that the opmtimism is bound to the mutation, which could be used in many parts of your \
+    ensure that the optimism is bound to the mutation, which could be used in many parts of your \
     app. Additionally, _all_ screens that display the post in your app will get the optimistic \
     update.
     """
@@ -32,8 +32,11 @@ struct OptimisticUpdatesCaseStudy: CaseStudy {
 
     BasicQueryStateView(state: self.model.$post.state) { post in
       if let post {
-        PostView(post: post) {
-          Task { await self.model.likeInvoked() }
+        VStack(alignment: .leading, spacing: 12) {
+          PostView(post: post)
+          PostLikeButton(post: post) {
+            Task { await self.model.likeInvoked() }
+          }
         }
       } else {
         Text("Post not found.")

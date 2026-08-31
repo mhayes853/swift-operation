@@ -1,12 +1,12 @@
 import Operation
 
 extension OperationRequest {
-  func delay(for duration: OperationDuration) -> ModifiedOperation<Self, DelayModifer<Self>> {
-    self.modifier(DelayModifer(duration: duration))
+  func delay(for duration: OperationDuration) -> ModifiedOperation<Self, DelayModifier<Self>> {
+    self.modifier(DelayModifier(duration: duration))
   }
 }
 
-struct DelayModifer<Operation: OperationRequest>: OperationModifier, Sendable {
+struct DelayModifier<Operation: OperationRequest>: OperationModifier, Sendable {
   let duration: OperationDuration
 
   func run(

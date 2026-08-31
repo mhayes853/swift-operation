@@ -1,3 +1,4 @@
+import Dependencies
 import Foundation
 import SharingOperation
 import SwiftUI
@@ -15,9 +16,10 @@ extension Post {
   }
 
   @QueryRequest
-  private static func query(for id: Int) async throws -> Post? {
+  static func query(for id: Int) async throws -> Post? {
+    @Dependency(HTTPDataTransportKey.self) var transport
     let url = URL(string: "https://dummyjson.com/posts/\(id)")!
-    let (data, resp) = try await URLSession.shared.data(from: url)
+    let (data, resp) = try await transport.data(for: URLRequest(url: url))
     if (resp as? HTTPURLResponse)?.statusCode == 404 {
       return nil
     }
@@ -53,8 +55,9 @@ struct PostView: View {
           EmptyView()
         }
         Button("Reload") {
-          Task { try await self.$post.fetch() }
+          Task { try? await self.$post.fetch() }
         }
+        .disabled(self.$post.isLoading)
       }
     }
     .frame(maxWidth: .infinity, alignment: .leading)

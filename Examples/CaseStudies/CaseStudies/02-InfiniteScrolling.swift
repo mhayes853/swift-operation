@@ -8,7 +8,7 @@ struct InfiniteScrollingCaseStudy: CaseStudy {
   let description: LocalizedStringKey = """
     Infinite scrolling allows users to easily navigate paginated data in your application. We'll \
     use the `PaginatedRequest` to power the list for each tag. When the user reaches the \
-    bottom of the list. We'll call `fetchNextPage` on the pagindated request to get the next page in \
+    bottom of the list. We'll call `fetchNextPage` on the paginated request to get the next page in \
     the list.
 
     You can also pull to refresh the list, which is done through the `refreshable` view modifier. \
@@ -18,7 +18,7 @@ struct InfiniteScrollingCaseStudy: CaseStudy {
 
     Additionally, the like button will update the post in the list by writing directly to the \
     `@SharedOperation` property that observes the state of the paginated request. This will update \
-    the state of the paginated request in the underyling `OperationStore` backing \
+    the state of the paginated request in the underlying `OperationStore` backing \
     `@SharedOperation`, and so other parts of the app will be able to see the update.
     """
 
@@ -67,12 +67,21 @@ private struct PostsListView: View {
 
         ForEach(pages) { page in
           ForEach(page.value.posts) { post in
-            PostView(post: post) {
-              self.$list.withLock { $0.updateLike(for: post.id, on: page.id) }
-            }
-            .frame(height: 200)
-            .onTapGesture {
-              self.displayedPost = DisplayedPost(pageId: page.id, id: post.id)
+            VStack(alignment: .leading, spacing: 12) {
+              Button {
+                self.displayedPost = DisplayedPost(pageId: page.id, id: post.id)
+              } label: {
+                PostView(post: post)
+                  .frame(maxWidth: .infinity, alignment: .leading)
+                  .contentShape(.rect)
+              }
+              .buttonStyle(.plain)
+              .accessibilityLabel(post.title)
+              .accessibilityHint("Shows the full post")
+
+              PostLikeButton(post: post) {
+                self.$list.withLock { $0.updateLike(for: post.id, on: page.id) }
+              }
             }
           }
         }
@@ -84,7 +93,7 @@ private struct PostsListView: View {
         } else {
           ProgressView()
             .onAppear {
-              Task { try await self.$list.fetchNextPage() }
+              Task { try? await self.$list.fetchNextPage() }
             }
         }
       }
@@ -93,11 +102,18 @@ private struct PostsListView: View {
     .refreshable { try? await self.$list.load() }
     .sheet(item: self.$displayedPost) { displayedPost in
       if let post = self.list[id: displayedPost.pageId]?.value.posts[id: displayedPost.id] {
-        PostView(post: post) {
-          self.$list.withLock { $0.updateLike(for: displayedPost.id, on: displayedPost.pageId) }
+        VStack(alignment: .leading, spacing: 12) {
+          PostView(post: post)
+          PostLikeButton(post: post) {
+            self.$list.withLock {
+              $0.updateLike(for: displayedPost.id, on: displayedPost.pageId)
+            }
+          }
         }
         .padding()
         .presentationDetents([.medium])
+      } else {
+        ContentUnavailableView("Post Unavailable", systemImage: "doc")
       }
     }
   }

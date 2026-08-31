@@ -6,7 +6,7 @@ import Synchronization
 // MARK: - DownloadsCaseStudy
 
 struct DownloadsCaseStudy: CaseStudy {
-  let title: LocalizedStringKey = "Dowloads"
+  let title: LocalizedStringKey = "Downloads"
   let description: LocalizedStringKey = """
     If your app needs to download a file, you can still do so while reporting on its progress \
     using a query. We'll use the `OperationContinuation` handed to the download query to report the \
@@ -42,16 +42,12 @@ struct DownloadsCaseStudy: CaseStudy {
         }
       } header: {
         Text("Download")
-      } footer: {
-        if let error = self.$download.error {
-          Text(error.localizedDescription).foregroundStyle(.red)
-        }
       }
     }
 
     Section {
       Button {
-        Task { try await self.$download.fetch() }
+        Task { try? await self.$download.fetch() }
       } label: {
         HStack {
           if self.$download.isLoading {
@@ -70,14 +66,29 @@ struct DownloadsCaseStudy: CaseStudy {
         }
       }
     } footer: {
-      Text("The file will automatically be deleted when it finishes downloading.")
+      VStack(alignment: .leading) {
+        Text("The file will automatically be deleted when you leave this case study.")
+        if let error = self.$download.error {
+          Text(error.localizedDescription).foregroundStyle(.red)
+        }
+      }
     }
+    .onDisappear {
+      self.removeDownloadedFile()
+    }
+  }
+
+  private func removeDownloadedFile() {
+    if let url = self.download?.url {
+      try? FileManager.default.removeItem(at: url)
+    }
+    self.$download.resetState()
   }
 }
 
 extension URL {
   fileprivate static let hugeFile = Self(
-    string: "http://ipv4.download.thinkbroadband.com/1GB.zip"
+    string: "https://download.thinkbroadband.com/1GB.zip"
   )!
 }
 
@@ -156,11 +167,15 @@ extension URLSessionDownloader {
       downloadTask: URLSessionDownloadTask,
       didFinishDownloadingTo location: URL
     ) {
-      self.continuation.withLock {
-        $0?.yield(Download(progress: 1, url: location))
-        $0?.finish()
+      do {
+        let destination = try self.moveDownloadedFile(at: location)
+        self.continuation.withLock {
+          $0?.yield(Download(progress: 1, url: destination))
+          $0?.finish()
+        }
+      } catch {
+        self.continuation.withLock { $0?.finish(throwing: error) }
       }
-      try? FileManager.default.removeItem(at: location)
     }
 
     func urlSession(
@@ -181,6 +196,20 @@ extension URLSessionDownloader {
       self.continuation.withLock {
         _ = $0?.yield(Download(progress: downloadTask.progress.fractionCompleted, url: nil))
       }
+    }
+
+    private func moveDownloadedFile(at location: URL) throws -> URL {
+      let directory = URL.temporaryDirectory.appending(
+        path: "DownloadsCaseStudy",
+        directoryHint: .isDirectory
+      )
+      try FileManager.default.createDirectory(
+        at: directory,
+        withIntermediateDirectories: true
+      )
+      let destination = directory.appending(path: UUID().uuidString)
+      try FileManager.default.moveItem(at: location, to: destination)
+      return destination
     }
   }
 }
