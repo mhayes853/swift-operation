@@ -1,6 +1,6 @@
 import Foundation
 
-@testable import Posts
+import Posts
 
 struct MockHTTPDataTransport: HTTPDataTransport {
   let handler: @Sendable (URLRequest) async throws -> (Data, URLResponse)

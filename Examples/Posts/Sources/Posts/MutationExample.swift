@@ -6,14 +6,20 @@ import SwiftUI
 // MARK: - CreateMutation
 
 extension Post {
-  struct CreateArguments: Codable, Hashable, Sendable {
-    let userId: Int
-    let title: String
-    let body: String
+  package struct CreateArguments: Codable, Hashable, Sendable {
+    package let userId: Int
+    package let title: String
+    package let body: String
+
+    package init(userId: Int, title: String, body: String) {
+      self.userId = userId
+      self.title = title
+      self.body = body
+    }
   }
 
   @MutationRequest
-  static func createMutation(arguments: CreateArguments) async throws -> Post {
+  package static func createMutation(arguments: CreateArguments) async throws -> Post {
     @Dependency(HTTPDataTransportKey.self) var transport
     let url = URL(string: "https://dummyjson.com/posts/add")!
     var request = URLRequest(url: url)
