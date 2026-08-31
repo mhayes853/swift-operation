@@ -268,7 +268,7 @@
 			packageReferences = (
 				16AE2F122E09E8ED006D0EEF /* XCRemoteSwiftPackageReference "swift-dependencies" */,
 				16A0E92B2E0A57E0003BE8A3 /* XCRemoteSwiftPackageReference "swift-navigation" */,
-				16B3F2682EC1B8B400B51750 /* XCLocalSwiftPackageReference "../../swift-operation" */,
+				16B3F2682EC1B8B400B51750 /* XCLocalSwiftPackageReference ".." */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 16AE2EBF2E09E4A0006D0EEF /* Products */;
@@ -637,9 +637,9 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		16B3F2682EC1B8B400B51750 /* XCLocalSwiftPackageReference "../../swift-operation" */ = {
+		16B3F2682EC1B8B400B51750 /* XCLocalSwiftPackageReference ".." */ = {
 			isa = XCLocalSwiftPackageReference;
-			relativePath = "../../swift-operation";
+			relativePath = ..;
 		};
 /* End XCLocalSwiftPackageReference section */
 

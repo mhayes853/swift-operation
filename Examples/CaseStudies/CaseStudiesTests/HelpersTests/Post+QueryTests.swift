@@ -91,11 +91,20 @@ struct PostQueryTests {
         "limit": 30
       }
       """
-    let transport = MockHTTPDataTransport { _ in (200, .data(Data(postJSON.utf8))) }
+    let transport = MockHTTPDataTransport { request in
+      let queryItems = request.url.flatMap {
+        URLComponents(url: $0, resolvingAgainstBaseURL: false)?.queryItems
+      }
+      expectNoDifference(
+        queryItems,
+        [URLQueryItem(name: "q", value: "blob & swift")]
+      )
+      return (200, .data(Data(postJSON.utf8)))
+    }
     try await withDependencies {
       $0[PostSearcherKey.self] = DummyJSONAPI(transport: transport)
     } operation: {
-      @SharedOperation(Post.$searchQuery(by: "blob")) var posts
+      @SharedOperation(Post.$searchQuery(by: "blob & swift")) var posts
       try await $posts.load()
 
       let expectedPost = Post(

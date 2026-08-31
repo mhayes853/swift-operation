@@ -82,15 +82,16 @@ final class ExpensiveLocalComputationModel {
 // MARK: - Nth Prime
 
 extension Int {
-  static func nthPrimeQuery(for n: Int) -> some QueryRequest<Int?, Never> {
+  static func nthPrimeQuery(for n: Int) -> some QueryRequest<Int?, any Error> {
     Self.$nthPrime(n: n)
       .completelyOffline()
       .disableApplicationActiveRerunning()
   }
   
   @QueryRequest
-  static func nthPrime(n: Int) -> Int? {
+  static func nthPrime(n: Int) throws -> Int? {
     guard n > 0 else { return nil }
+    try Task.checkCancellation()
 
     let upperBound = n < 6 ? 15 : Int(Double(n) * log(Double(n)) + Double(n) * log(log(Double(n))))
 
@@ -98,16 +99,25 @@ extension Int {
     isPrime[0] = false
     isPrime[1] = false
 
+    var iterationsUntilCancellationCheck = 2048
     for i in 2...Int(Double(upperBound).squareRoot()) {
       if isPrime[i] {
         for multiple in stride(from: i * i, through: upperBound, by: i) {
           isPrime[multiple] = false
+          iterationsUntilCancellationCheck -= 1
+          if iterationsUntilCancellationCheck == 0 {
+            try Task.checkCancellation()
+            iterationsUntilCancellationCheck = 2048
+          }
         }
       }
     }
 
     var count = 0
     for (index, isPrime) in isPrime.enumerated() {
+      if index.isMultiple(of: 2048) {
+        try Task.checkCancellation()
+      }
       guard isPrime else { continue }
       count += 1
       if count == n {

@@ -30,7 +30,7 @@ final class BasicUIKitViewController: UIViewController {
   private lazy var reloadButton = UIButton(
     type: .system,
     primaryAction: UIAction(title: "Reload Quote") { [weak self] _ in
-      Task { @MainActor in try await self?.$quote.fetch() }
+      Task { @MainActor in try? await self?.$quote.fetch() }
     }
   )
 
@@ -119,6 +119,8 @@ final class BasicUIKitQuoteStatusView: UIView {
     self.addSubview(stack)
 
     NSLayoutConstraint.activate([
+      stack.topAnchor.constraint(equalTo: self.topAnchor),
+      stack.bottomAnchor.constraint(equalTo: self.bottomAnchor),
       stack.leadingAnchor.constraint(equalTo: self.leadingAnchor),
       stack.trailingAnchor.constraint(equalTo: self.trailingAnchor)
     ])
@@ -133,14 +135,21 @@ final class BasicUIKitQuoteStatusView: UIView {
     self.addSubview(label)
 
     NSLayoutConstraint.activate([
+      label.topAnchor.constraint(equalTo: self.topAnchor),
+      label.bottomAnchor.constraint(equalTo: self.bottomAnchor),
       label.leadingAnchor.constraint(equalTo: self.leadingAnchor),
       label.trailingAnchor.constraint(equalTo: self.trailingAnchor)
     ])
   }
 
   private func addLoadingIndicator() {
+    self.indicator.translatesAutoresizingMaskIntoConstraints = false
     self.indicator.startAnimating()
     self.addSubview(self.indicator)
+    NSLayoutConstraint.activate([
+      self.indicator.centerXAnchor.constraint(equalTo: self.centerXAnchor),
+      self.indicator.centerYAnchor.constraint(equalTo: self.centerYAnchor)
+    ])
   }
 }
 

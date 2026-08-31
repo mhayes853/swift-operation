@@ -1,3 +1,4 @@
+import Dependencies
 import Foundation
 import Operation
 
@@ -9,16 +10,21 @@ extension Post {
     id: Int,
     continuation: OperationContinuation<Post?, any Error>
   ) async throws -> Post? {
-    async let post = Self.fetchPost(for: id)
-    if let cached = try PostCache.shared.post(for: id) {
+    async let fetchedPost = Self.fetchPost(for: id)
+    if let cached = try? PostCache.shared.post(for: id) {
       continuation.yield(cached)
     }
-    return try await post
+    let post = try await fetchedPost
+    if let post {
+      try? PostCache.shared.save(post: post, for: id)
+    }
+    return post
   }
 
   private static func fetchPost(for id: Int) async throws -> Post? {
+    @Dependency(HTTPDataTransportKey.self) var transport
     let url = URL(string: "https://dummyjson.com/posts/\(id)")!
-    let (data, resp) = try await URLSession.shared.data(from: url)
+    let (data, resp) = try await transport.data(for: URLRequest(url: url))
     if (resp as? HTTPURLResponse)?.statusCode == 404 {
       return nil
     }
@@ -37,10 +43,15 @@ final class PostCache: Sendable {
   }
 
   func save(post: Post, for id: Int) throws {
-    try JSONEncoder().encode(post).write(to: self.url(for: id))
+    let url = self.url(for: id)
+    try FileManager.default.createDirectory(
+      at: url.deletingLastPathComponent(),
+      withIntermediateDirectories: true
+    )
+    try JSONEncoder().encode(post).write(to: url, options: .atomic)
   }
 
   private func url(for postId: Int) -> URL {
-    .applicationDirectory.appending(path: "posts-cache/post-\(postId).json")
+    URL.cachesDirectory.appending(path: "posts-cache/post-\(postId).json")
   }
 }

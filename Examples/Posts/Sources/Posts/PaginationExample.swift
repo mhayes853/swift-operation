@@ -1,3 +1,4 @@
+import Dependencies
 import Foundation
 import SharingOperation
 import SwiftUI
@@ -5,7 +6,7 @@ import SwiftUI
 // MARK: - FeedPage
 
 extension Post {
-  struct FeedPage: Codable, Sendable {
+  struct FeedPage: Codable, Hashable, Sendable {
     let posts: [Post]
     let total: Int
     let skip: Int
@@ -28,7 +29,7 @@ extension Post {
       in context: OperationContext
     ) -> Int? {
       // Nil means there's no more pages to fetch.
-      page.value.skip < page.value.total ? page.id + 1 : nil
+      page.value.skip + page.value.posts.count < page.value.total ? page.id + 1 : nil
     }
 
     func fetchPage(
@@ -37,6 +38,7 @@ extension Post {
       in context: OperationContext,
       with continuation: OperationContinuation<FeedPage, any Error>
     ) async throws -> FeedPage {
+      @Dependency(HTTPDataTransportKey.self) var transport
       var url = URL(string: "https://dummyjson.com/posts")!
       url.append(
         queryItems: [
@@ -44,7 +46,7 @@ extension Post {
           URLQueryItem(name: "skip", value: "\(paging.pageId * Self.limit)")
         ]
       )
-      let (data, _) = try await URLSession.shared.data(from: url)
+      let (data, _) = try await transport.data(for: URLRequest(url: url))
       return try JSONDecoder().decode(FeedPage.self, from: data)
     }
   }
@@ -68,8 +70,9 @@ struct PostsFeedView: View {
           Text("Error: \(error.localizedDescription)")
         }
         Button(self.$feed.isLoading ? "Loading..." : "Load More") {
-          Task { try await self.$feed.fetchNextPage() }
+          Task { try? await self.$feed.fetchNextPage() }
         }
+        .disabled(self.$feed.isLoading || !self.$feed.hasNextPage)
       }
     }
   }

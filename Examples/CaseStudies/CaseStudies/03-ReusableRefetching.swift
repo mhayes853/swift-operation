@@ -82,7 +82,7 @@ struct RefetchOnNotificationController<State: OperationState>: OperationControll
       queue: nil
     ) { _ in
       let task = controls.yieldRerunTask()
-      Task { try await task?.runIfNeeded() }
+      Task { try? await task?.runIfNeeded() }
     }
     return OperationSubscription { self.center.removeObserver(observer) }
   }

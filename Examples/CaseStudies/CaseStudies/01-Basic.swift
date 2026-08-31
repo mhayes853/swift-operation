@@ -32,7 +32,7 @@ private struct InnerView: View {
       }
 
       Button("Reload Quote") {
-        Task { try await self.$quote.fetch() }
+        Task { try? await self.$quote.fetch() }
       }
       .disabled(self.$quote.isLoading)
     }

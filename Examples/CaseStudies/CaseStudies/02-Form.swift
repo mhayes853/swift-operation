@@ -14,7 +14,7 @@ struct FormCaseStudy: CaseStudy {
     input.
 
     This example simulates a user updating their name through a form. The form uses the history of \
-    every subsmission on its mutation to detect whether or not a previously entered name is known \
+    every submission on its mutation to detect whether or not a previously entered name is known \
     to be taken. If so, it doesn't allow the user to resubmit that name.
     """
 
@@ -36,7 +36,7 @@ struct FormCaseStudy: CaseStudy {
         Button {
           Task {
             guard let name = self.model.submissionStatus[case: \.submittable] else { return }
-            try await self.model.submit(name: name)
+            try? await self.model.submit(name: name)
           }
         } label: {
           HStack {
@@ -50,12 +50,17 @@ struct FormCaseStudy: CaseStudy {
         }
         .disabled(!self.model.submissionStatus.is(\.submittable) || self.model.$update.isLoading)
       } footer: {
-        Text(
-          """
-          Enter any of these names to trigger an error when submitting: \
-          \(takenNames.formatted(.list(type: .or))).
-          """
-        )
+        VStack(alignment: .leading) {
+          Text(
+            """
+            Enter any of these names to trigger an error when submitting: \
+            \(takenNames.formatted(.list(type: .or))).
+            """
+          )
+          if let error = self.model.$update.error {
+            Text(error.localizedDescription).foregroundStyle(.red)
+          }
+        }
       }
     }
     .alert(self.$model.alert) { _ in }
@@ -131,7 +136,7 @@ extension AlertState where Action == FormModel.AlertAction {
 
 // MARK: - Name
 
-struct FormName: Hashable, RawRepresentable {
+struct FormName: Hashable, RawRepresentable, Sendable {
   var rawValue: String
 
   init?(rawValue: String) {
@@ -145,7 +150,7 @@ struct FormName: Hashable, RawRepresentable {
 private let takenNames = ["blob", "joe", "ashley", "maria", "sam", "james"]
 
 extension FormName {
-  struct UpdateArguments: Sendable {
+  struct UpdateArguments: Hashable, Sendable {
     let name: FormName
   }
 

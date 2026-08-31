@@ -37,7 +37,7 @@ struct DebouncingCaseStudy: CaseStudy {
         )
       } else {
         ForEach(posts) {
-          PostView(post: $0, onLikeTapped: nil)
+          PostView(post: $0)
         }
       }
     }
