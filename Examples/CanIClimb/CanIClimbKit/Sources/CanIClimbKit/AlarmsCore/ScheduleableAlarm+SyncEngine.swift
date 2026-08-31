@@ -54,7 +54,7 @@ extension ScheduleableAlarm.SyncEngine {
   private func removeCancelledAlarmsFromDatabase() async throws {
     let ids = try await self.store.all()
     try await self.database.write { db in
-      try ScheduleableAlarmRecord.update { $0.status = .finished }
+      try ScheduleableAlarmRecord.update { $0.status = #bind(.finished) }
         .where { $0.id.in(ids.map { #bind($0) }).not().and($0.status.eq(#bind(.scheduled))) }
         .execute(db)
     }
@@ -76,8 +76,9 @@ extension ScheduleableAlarm.SyncEngine {
   ) async throws {
     try await self.database.write { db in
       for (alarm, error) in results {
+        let status: ScheduleableAlarmRecord.Status = error == nil ? .scheduled : .pending
         try ScheduleableAlarmRecord.find(#bind(alarm.id))
-          .update { $0.status = error == nil ? .scheduled : .pending }
+          .update { $0.status = #bind(status) }
           .execute(db)
       }
     }
