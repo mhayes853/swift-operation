@@ -1,6 +1,5 @@
 import CustomDump
 import Dependencies
-import DependenciesTestSupport
 import Foundation
 import SharingOperation
 import Testing
@@ -9,10 +8,7 @@ import Testing
 
 @Suite("Recipe+Query tests")
 struct RecipeQueryTests {
-  @Test(
-    "Loads Random Recipe From Dummy JSON",
-    .dependency(\.withRandomNumberGenerator, WithRandomNumberGenerator(OneGenerator()))
-  )
+  @Test("Loads Random Recipe From Dummy JSON")
   func loadsRandomRecipeFromDummyJSON() async throws {
     let json = """
       {
@@ -59,6 +55,7 @@ struct RecipeQueryTests {
       return (200, .data(Data(json.utf8)))
     }
     try await withDependencies {
+      $0.withRandomNumberGenerator = WithRandomNumberGenerator(OneGenerator())
       $0[RecipeIDLoaderKey.self] = DummyJSONAPI(transport: transport)
     } operation: {
       @SharedOperation(Recipe.$randomQuery) var recipe
@@ -91,13 +88,11 @@ struct RecipeQueryTests {
     }
   }
 
-  @Test(
-    "Returns Nil When Random Not Found From Dummy JSON",
-    .dependency(\.withRandomNumberGenerator, WithRandomNumberGenerator(OneGenerator()))
-  )
+  @Test("Returns Nil When Random Not Found From Dummy JSON")
   func returnsNilWhenRandomNotFoundFromDummyJSON() async throws {
     let transport = MockHTTPDataTransport { _ in (404, .data(Data())) }
     try await withDependencies {
+      $0.withRandomNumberGenerator = WithRandomNumberGenerator(OneGenerator())
       $0[RecipeIDLoaderKey.self] = DummyJSONAPI(transport: transport)
     } operation: {
       @SharedOperation(Recipe.$randomQuery) var recipe
