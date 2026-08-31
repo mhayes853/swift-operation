@@ -1,6 +1,7 @@
 import CanIClimbKit
 import CustomDump
 import Foundation
+import GRDB
 import IdentifiedCollections
 import Synchronization
 import Testing
@@ -12,14 +13,9 @@ struct MountainsTests {
   @Test("Caches Mountain After Fetching")
   func cachesMountainAfterFetching() async throws {
     let api = CanIClimbAPI.testInstance(
-      transport: .mock { request, _ in
-        switch request {
-        case .mountain(Mountain.mock1.id):
-          (200, .json(Mountain.mock1))
-        default:
-          (404, .data(Data()))
-        }
-      }
+      transport: DummyBackend(
+        scenario: DummyBackend.Scenario(mountains: [Mountain.mock1])
+      )
     )
 
     let mountains = Mountains(database: self.database, api: api)
@@ -34,21 +30,16 @@ struct MountainsTests {
   func deletesCachedMountainWhenNilReturned() async throws {
     let mountainFetchCount = Mutex(0)
     let api = CanIClimbAPI.testInstance(
-      transport: .mock { request, _ in
-        switch request {
-        case .mountain(Mountain.mock1.id):
+      transport: DummyBackend(
+        scenario: DummyBackend.Scenario(mountains: [Mountain.mock1]),
+        responseOverride: { request in
+          guard request.url?.path() == "/mountain/\(Mountain.mock1.id)" else { return nil }
           return mountainFetchCount.withLock { count in
             defer { count += 1 }
-            if count == 0 {
-              return (200, .json(Mountain.mock1))
-            } else {
-              return (404, .data(Data()))
-            }
+            return count == 0 ? nil : DummyBackend.Response(statusCode: 404)
           }
-        default:
-          return (400, .data(Data()))
         }
-      }
+      )
     )
 
     let mountains = Mountains(database: self.database, api: api)
@@ -62,14 +53,9 @@ struct MountainsTests {
   @Test("Caches Individual Mountains From Search")
   func cachesIndividualMountainsFromSearch() async throws {
     let api = CanIClimbAPI.testInstance(
-      transport: .mock { request, _ in
-        switch request {
-        case .searchMountains:
-          (200, .json(Mountain.SearchResult(mountains: [.mock1], hasNextPage: false)))
-        default:
-          (404, .data(Data()))
-        }
-      }
+      transport: DummyBackend(
+        scenario: DummyBackend.Scenario(mountains: [Mountain.mock1])
+      )
     )
 
     let mountains = Mountains(database: self.database, api: api)
@@ -93,23 +79,21 @@ struct MountainsTests {
     ]
   )
   func localSearchMountains(by search: Mountain.Search, searchMocksIndicies: [Int]) async throws {
+    let plannedClimb = CanIClimbAPI.PlannedClimbResponse.searchMocks[0]
     let api = CanIClimbAPI.testInstance(
-      transport: .mock { request, _ in
-        switch request {
-        case .planClimb:
-          (201, .json(CanIClimbAPI.PlannedClimbResponse.searchMocks[0]))
-        case .searchMountains:
-          (200, .json(Mountain.SearchResult(mountains: Mountain.searchMocks, hasNextPage: false)))
-        default:
-          (404, .data(Data()))
-        }
-      }
+      transport: DummyBackend(
+        scenario: DummyBackend.Scenario(
+          mountains: Array(Mountain.searchMocks),
+          plannedClimbs: [plannedClimb]
+        )
+      ),
+      isAuthenticated: true
     )
 
     let mountains = Mountains(database: self.database, api: api)
     let plannedClimbs = PlannedMountainClimbs(database: self.database, api: api)
 
-    _ = try await plannedClimbs.plan(create: .mock1)
+    _ = try await plannedClimbs.plannedClimbs(for: plannedClimb.mountainId)
     _ = try await mountains.searchMountains(by: .recommended(page: 0))
 
     let localMountains = try await mountains.localSearchMountains(by: search)
@@ -126,24 +110,19 @@ struct MountainsTests {
     )
     planned2.mountainId = Mountain.searchMocks[1].id
     planned1.mountainId = planned2.mountainId
+    let responses = [
+      CanIClimbAPI.PlannedClimbResponse(plannedClimb: planned1),
+      CanIClimbAPI.PlannedClimbResponse(plannedClimb: planned2)
+    ]
 
     let api = CanIClimbAPI.testInstance(
-      transport: .mock { [planned1, planned2] request, _ in
-        switch request {
-        case .plannedClimbs:
-          (
-            200,
-            .json([
-              CanIClimbAPI.PlannedClimbResponse(plannedClimb: planned1),
-              CanIClimbAPI.PlannedClimbResponse(plannedClimb: planned2)
-            ])
-          )
-        case .searchMountains:
-          (200, .json(Mountain.SearchResult(mountains: Mountain.searchMocks, hasNextPage: false)))
-        default:
-          (404, .data(Data()))
-        }
-      }
+      transport: DummyBackend(
+        scenario: DummyBackend.Scenario(
+          mountains: Array(Mountain.searchMocks),
+          plannedClimbs: responses
+        )
+      ),
+      isAuthenticated: true
     )
 
     let mountains = Mountains(database: self.database, api: api)

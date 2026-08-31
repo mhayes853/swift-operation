@@ -1,11 +1,69 @@
 import Foundation
-import Synchronization
 
 // MARK: - HTTPDataTransport
 
 public protocol HTTPDataTransport: Sendable {
   func data(for request: URLRequest) async throws -> (Data, URLResponse)
 }
+
+public struct HTTPDataResponse: Sendable {
+  public typealias StatusCode = Int
+
+  public var statusCode: StatusCode
+  public var body: Body
+  public var headerFields: [String: String]
+
+  public init(
+    statusCode: StatusCode,
+    body: Body = .empty,
+    headerFields: [String: String] = [String: String]()
+  ) {
+    self.statusCode = statusCode
+    self.body = body
+    self.headerFields = headerFields
+  }
+
+  public static func json(
+    _ value: some Encodable & Sendable,
+    statusCode: StatusCode = 200,
+    encoder: JSONEncoder = JSONEncoder()
+  ) -> Self {
+    Self(statusCode: statusCode, body: .json(value, encoder))
+  }
+
+  func result(for request: URLRequest) throws -> (Data, URLResponse) {
+    guard let url = request.url else { throw MissingURLError() }
+    return (
+      try self.body.data(),
+      HTTPURLResponse(
+        url: url,
+        statusCode: self.statusCode,
+        httpVersion: nil,
+        headerFields: self.headerFields
+      )!
+    )
+  }
+
+  public enum Body: Sendable {
+    case data(Data)
+    case json(any Encodable & Sendable, JSONEncoder)
+
+    public static let empty = Self.data(Data())
+
+    public static func json(_ encodable: any Encodable & Sendable) -> Self {
+      .json(encodable, JSONEncoder())
+    }
+
+    public func data() throws -> Data {
+      switch self {
+      case .data(let data): data
+      case .json(let encodable, let encoder): try encoder.encode(encodable)
+      }
+    }
+  }
+}
+
+private struct MissingURLError: Error {}
 
 // MARK: - URLSession Conformance
 
@@ -31,48 +89,24 @@ extension HTTPDataTransport where Self == MockHTTPDataTransport {
   }
 }
 
-public final class MockHTTPDataTransport: HTTPDataTransport {
-  public typealias StatusCode = Int
+public struct MockHTTPDataTransport: HTTPDataTransport {
+  public typealias StatusCode = HTTPDataResponse.StatusCode
+  public typealias ResponseBody = HTTPDataResponse.Body
 
-  public let handler: Mutex<@Sendable (URLRequest) async throws -> (StatusCode, ResponseBody)?>
+  private let handler: @Sendable (URLRequest) async throws -> (StatusCode, ResponseBody)?
 
   public init(
     handler: @escaping @Sendable (URLRequest) async throws -> (StatusCode, ResponseBody)?
   ) {
-    self.handler = Mutex(handler)
+    self.handler = handler
   }
 
   public func data(for request: URLRequest) async throws -> (Data, URLResponse) {
-    let handler = self.handler.withLock { $0 }
-    guard let (status, body) = try await handler(request) else {
+    guard let (status, body) = try await self.handler(request) else {
       throw SomeError()
     }
-    let data = try body.data()
-    return (
-      data,
-      HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: nil)!
-    )
+    return try HTTPDataResponse(statusCode: status, body: body).result(for: request)
   }
 
   private struct SomeError: Error {}
-}
-
-extension MockHTTPDataTransport {
-  public enum ResponseBody: Sendable {
-    case data(Data)
-    case json(any Encodable & Sendable, JSONEncoder)
-
-    public static let empty = Self.data(Data())
-
-    public static func json(_ encodable: any Encodable & Sendable) -> Self {
-      .json(encodable, JSONEncoder())
-    }
-
-    public func data() throws -> Data {
-      switch self {
-      case .data(let data): data
-      case .json(let encodable, let encoder): try encoder.encode(encodable)
-      }
-    }
-  }
 }

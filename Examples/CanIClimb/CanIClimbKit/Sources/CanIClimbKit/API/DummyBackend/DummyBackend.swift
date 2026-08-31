@@ -1,127 +1,303 @@
 import Foundation
 import Logging
+import OrderedCollections
+import Tagged
+import UUIDV7
 
 // MARK: - DummyBackend
 
-public final class DummyBackend: CanIClimbAPI.DataTransport {
-  private let mountains = Mountains()
-  private let storage = UserData.Storage()
+public final class DummyBackend: HTTPDataTransport {
+  public typealias Response = HTTPDataResponse
+  public typealias ResponseOverride =
+    @Sendable (URLRequest) async throws -> Response?
 
-  public init() {}
+  private let mountains: Mountains
+  private let storage: UserData.Storage
+  private let delay: @Sendable () async throws -> Void
+  private let responseOverride: ResponseOverride
 
-  public func send(
-    request: CanIClimbAPI.Request,
-    in context: CanIClimbAPI.Request.Context
-  ) async throws -> (Data, HTTPURLResponse) {
-    try await self.randomDelay()
+  private init(
+    mountains: Mountains,
+    storage: UserData.Storage,
+    delay: @escaping @Sendable () async throws -> Void,
+    responseOverride: @escaping ResponseOverride
+  ) {
+    self.mountains = mountains
+    self.storage = storage
+    self.delay = delay
+    self.responseOverride = responseOverride
+  }
+
+  public convenience init() {
+    self.init(
+      mountains: Mountains(),
+      storage: UserData.Storage(),
+      delay: {
+        try await Task.sleep(for: .seconds(Double.random(in: 0.1...3)))
+      },
+      responseOverride: { _ in nil }
+    )
+  }
+
+  public convenience init(
+    scenario: Scenario,
+    responseOverride: @escaping ResponseOverride = { _ in nil }
+  ) {
+    self.init(
+      mountains: Mountains(mountains: scenario.mountains),
+      storage: UserData.Storage(data: UserData(scenario: scenario)),
+      delay: {},
+      responseOverride: responseOverride
+    )
+  }
+
+  public func data(for request: URLRequest) async throws -> (Data, URLResponse) {
+    try await self.delay()
+    let response = try await self.response(for: request)
+    return try response.result(for: request)
+  }
+
+  private func response(for request: URLRequest) async throws -> Response {
+    if let response = try await self.responseOverride(request) {
+      return response
+    }
     return try await withCurrentLogger(Logger(label: "dummy.backend")) {
-      try await self.handle(request: request, in: context)
+      guard let route = try Route(request: request) else {
+        return Response(statusCode: 404)
+      }
+      return try await self.handle(route: route, request: request)
     }
   }
 
-  private func handle(
-    request: CanIClimbAPI.Request,
-    in context: CanIClimbAPI.Request.Context
-  ) async throws -> (Data, HTTPURLResponse) {
-    switch request {
+  private func handle(route: Route, request: URLRequest) async throws -> Response {
+    switch route {
     case .achieveClimb(let id):
-      guard context.isAuthenticated else { return self.unauthorizedResponse(in: context) }
+      guard request.isAuthenticated else { return Self.unauthorizedResponse }
       let climb = try await self.storage.achieveClimb(with: id)
-      return (
-        try JSONEncoder().encode(climb),
-        HTTPURLResponse(context: context, statusCode: climb != nil ? 200 : 404)
-      )
+      return Response.json(climb, statusCode: climb != nil ? 200 : 404)
 
     case .unachieveClimb(let id):
-      guard context.isAuthenticated else { return self.unauthorizedResponse(in: context) }
+      guard request.isAuthenticated else { return Self.unauthorizedResponse }
       let climb = try await self.storage.unachieveClimb(with: id)
-      return (
-        try JSONEncoder().encode(climb),
-        HTTPURLResponse(context: context, statusCode: climb != nil ? 200 : 404)
-      )
+      return Response.json(climb, statusCode: climb != nil ? 200 : 404)
 
     case .currentUser:
-      guard context.isAuthenticated, let user = await self.storage.currentUser else {
-        return self.unauthorizedResponse(in: context)
+      guard request.isAuthenticated, let user = await self.storage.currentUser else {
+        return Self.unauthorizedResponse
       }
-      return (try JSONEncoder().encode(user), HTTPURLResponse(context: context, statusCode: 200))
+      return Response.json(user)
 
     case .deleteCurrentUser:
-      guard context.isAuthenticated else { return self.unauthorizedResponse(in: context) }
+      guard request.isAuthenticated else { return Self.unauthorizedResponse }
       try await self.storage.deleteCurrentUser()
-      return (Data(), HTTPURLResponse(context: context, statusCode: 204))
+      return Response(statusCode: 204)
 
     case .editCurrentUser(let edit):
-      guard context.isAuthenticated, let user = try await self.storage.editCurrentUser(with: edit)
-      else { return self.unauthorizedResponse(in: context) }
-      return (try JSONEncoder().encode(user), HTTPURLResponse(context: context, statusCode: 200))
+      guard request.isAuthenticated, let user = try await self.storage.editCurrentUser(with: edit)
+      else { return Self.unauthorizedResponse }
+      return Response.json(user)
 
     case .mountain(let id):
       guard let mountain = try await self.mountains.mountain(for: id) else {
-        return (Data(), HTTPURLResponse(context: context, statusCode: 404))
+        return Response(statusCode: 404)
       }
-      return (
-        try JSONEncoder().encode(mountain), HTTPURLResponse(context: context, statusCode: 200)
-      )
+      return Response.json(mountain)
 
     case .searchMountains(let query):
       let plannedIds = await self.storage.plannedMountainIds
       let result = try await self.mountains.mountains(for: query, plannedIds: plannedIds)
-      return (try JSONEncoder().encode(result), HTTPURLResponse(context: context, statusCode: 200))
+      return Response.json(result)
 
-    case .planClimb(let request):
-      guard context.isAuthenticated else { return self.unauthorizedResponse(in: context) }
-      let climb = try await self.storage.planClimb(with: request)
-      return (try JSONEncoder().encode(climb), HTTPURLResponse(context: context, statusCode: 201))
+    case .planClimb(let plan):
+      guard request.isAuthenticated else { return Self.unauthorizedResponse }
+      let climb = try await self.storage.planClimb(with: plan)
+      return Response.json(climb, statusCode: 201)
 
     case .unplanClimbs(let ids):
-      guard context.isAuthenticated else { return self.unauthorizedResponse(in: context) }
+      guard request.isAuthenticated else { return Self.unauthorizedResponse }
       try await self.storage.unplanClimbs(with: ids)
-      return (Data(), HTTPURLResponse(context: context, statusCode: 204))
+      return Response(statusCode: 204)
 
     case .plannedClimbs(let mountainId):
-      guard context.isAuthenticated else { return self.unauthorizedResponse(in: context) }
+      guard request.isAuthenticated else { return Self.unauthorizedResponse }
       let climbs = try await self.storage.plannedClimbs(for: mountainId)
-      return (try JSONEncoder().encode(climbs), HTTPURLResponse(context: context, statusCode: 200))
+      return Response.json(climbs)
 
     case .refreshAccessToken:
-      guard context.refreshToken != nil else { return self.unauthorizedResponse(in: context) }
-      let tokens = CanIClimbAPI.Tokens.Response(accessToken: "access", refreshToken: nil)
-      return (try JSONEncoder().encode(tokens), HTTPURLResponse(context: context, statusCode: 200))
+      guard request.isAuthenticated else { return Self.unauthorizedResponse }
+      return Response.json(
+        CanIClimbAPI.Tokens.Response(accessToken: "access", refreshToken: nil)
+      )
 
     case .signIn(let credentials):
       try await self.storage.signInUser(with: credentials)
-      let tokens = CanIClimbAPI.Tokens.Response(accessToken: "access", refreshToken: "refresh")
-      return (try JSONEncoder().encode(tokens), HTTPURLResponse(context: context, statusCode: 200))
+      return Response.json(
+        CanIClimbAPI.Tokens.Response(accessToken: "access", refreshToken: "refresh")
+      )
 
     case .signOut:
-      guard context.isAuthenticated else { return self.unauthorizedResponse(in: context) }
+      guard request.isAuthenticated else { return Self.unauthorizedResponse }
       try await self.storage.signOutCurrentUser()
-      return (Data(), HTTPURLResponse(context: context, statusCode: 204))
+      return Response(statusCode: 204)
     }
   }
 
-  private func unauthorizedResponse(
-    in context: CanIClimbAPI.Request.Context
-  ) -> (Data, HTTPURLResponse) {
-    (Data("{\"error\":\"Unauthorized\"}".utf8), HTTPURLResponse(context: context, statusCode: 401))
-  }
-
-  private func randomDelay() async throws {
-    try await Task.sleep(for: .seconds(Double.random(in: 0.1...3.0)))
+  private static var unauthorizedResponse: Response {
+    Response(statusCode: 401, body: .data(Data("{\"error\":\"Unauthorized\"}".utf8)))
   }
 }
 
-// MARK: - Helpers
+// MARK: - Scenario
 
-extension HTTPURLResponse {
-  fileprivate convenience init(context: CanIClimbAPI.Request.Context, statusCode: Int) {
-    self.init(url: context.baseURL, statusCode: statusCode, httpVersion: nil, headerFields: nil)!
+extension DummyBackend {
+  public struct Scenario: Hashable, Sendable {
+    public var mountains: [Mountain]
+    public var users: [User]
+    public var currentUserId: User.ID?
+    public var plannedClimbs: [CanIClimbAPI.PlannedClimbResponse]
+
+    public init(
+      mountains: [Mountain] = [Mountain](),
+      users: [User] = [User](),
+      currentUserId: User.ID? = nil,
+      plannedClimbs: [CanIClimbAPI.PlannedClimbResponse] = [CanIClimbAPI.PlannedClimbResponse]()
+    ) {
+      self.mountains = mountains
+      self.users = users
+      self.currentUserId = currentUserId
+      self.plannedClimbs = plannedClimbs
+    }
   }
 }
 
-extension CanIClimbAPI.Request.Context {
+// MARK: - Route
+
+extension DummyBackend {
+  private enum Route {
+    case refreshAccessToken
+    case signIn(User.SignInCredentials)
+    case signOut
+    case currentUser
+    case editCurrentUser(User.Edit)
+    case deleteCurrentUser
+    case searchMountains(Mountain.SearchRequest)
+    case mountain(Mountain.ID)
+    case plannedClimbs(Mountain.ID)
+    case planClimb(CanIClimbAPI.PlanClimbRequest)
+    case unplanClimbs(OrderedSet<Mountain.PlannedClimb.ID>)
+    case achieveClimb(Mountain.PlannedClimb.ID)
+    case unachieveClimb(Mountain.PlannedClimb.ID)
+
+    init?(request: URLRequest) throws {
+      let method = request.httpMethod ?? "GET"
+      let path = request.url?.path() ?? ""
+
+      switch (method, path) {
+      case ("POST", "/auth/refresh"):
+        self = .refreshAccessToken
+      case ("POST", "/auth/sign-in"):
+        self = .signIn(try request.decodeBody(as: User.SignInCredentials.self))
+      case ("POST", "/auth/sign-out"):
+        self = .signOut
+      case ("GET", "/user"):
+        self = .currentUser
+      case ("PATCH", "/user"):
+        self = .editCurrentUser(try request.decodeBody(as: User.Edit.self))
+      case ("DELETE", "/user"):
+        self = .deleteCurrentUser
+      case ("GET", "/mountains"):
+        self = .searchMountains(try request.mountainSearchRequest())
+      case ("DELETE", "/mountain/climbs"):
+        self = .unplanClimbs(try request.plannedClimbIds())
+      default:
+        guard let route = try Self.dynamicRoute(method: method, path: path, request: request)
+        else { return nil }
+        self = route
+      }
+    }
+
+    private static func dynamicRoute(
+      method: String,
+      path: String,
+      request: URLRequest
+    ) throws -> Self? {
+      let components = path.split(separator: "/").map(String.init)
+
+      if components.count == 2,
+        components[0] == "mountain",
+        method == "GET",
+        let id = Mountain.ID(uuidString: components[1])
+      {
+        return .mountain(id)
+      }
+      if components.count == 3,
+        components[0] == "mountain",
+        components[2] == "climbs",
+        let id = Mountain.ID(uuidString: components[1])
+      {
+        switch method {
+        case "GET": return .plannedClimbs(id)
+        case "POST":
+          return .planClimb(try request.decodeBody(as: CanIClimbAPI.PlanClimbRequest.self))
+        default: return nil
+        }
+      }
+      if components.count == 4,
+        components[0] == "mountain",
+        components[1] == "climbs",
+        method == "POST",
+        let id = Mountain.PlannedClimb.ID(uuidString: components[2])
+      {
+        switch components[3] {
+        case "achieve": return .achieveClimb(id)
+        case "unachieve": return .unachieveClimb(id)
+        default: return nil
+        }
+      }
+      return nil
+    }
+  }
+}
+
+// MARK: - Request Helpers
+
+extension URLRequest {
   fileprivate var isAuthenticated: Bool {
-    self.accessToken != nil
+    self.value(forHTTPHeaderField: "Authorization")?.hasPrefix("Bearer ") == true
+  }
+
+  fileprivate func decodeBody<Value: Decodable>(as type: Value.Type) throws -> Value {
+    try JSONDecoder().decode(type, from: self.httpBody ?? Data())
+  }
+
+  fileprivate func mountainSearchRequest() throws -> Mountain.SearchRequest {
+    guard let url = self.url else { throw InvalidRequestError() }
+    let queryItems = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
+    let values = Dictionary(uniqueKeysWithValues: queryItems.map { ($0.name, $0.value ?? "") })
+    guard let page = values["page"].flatMap(Int.init) else { throw InvalidRequestError() }
+    let category: Mountain.Search.Category =
+      switch values["category"] {
+      case "recommended": .recommended
+      case "planned": .planned
+      default: throw InvalidRequestError()
+      }
+    return Mountain.SearchRequest(
+      search: Mountain.Search(text: values["text"] ?? "", category: category),
+      page: page
+    )
+  }
+
+  fileprivate func plannedClimbIds() throws -> OrderedSet<Mountain.PlannedClimb.ID> {
+    guard let url = self.url else { throw InvalidRequestError() }
+    let queryItems = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
+    guard let value = queryItems.first(where: { $0.name == "ids" })?.value else {
+      throw InvalidRequestError()
+    }
+    let components = value.split(separator: ",")
+    let ids = components.compactMap { Mountain.PlannedClimb.ID(uuidString: String($0)) }
+    guard ids.count == components.count else { throw InvalidRequestError() }
+    return OrderedSet(ids)
   }
 }
+
+private struct InvalidRequestError: Error {}

@@ -59,11 +59,10 @@ struct CanIClimbAPITests {
     self.storage[key] = Data("refresh_token_from_previous_app_install".utf8)
 
     let api = CanIClimbAPI(
-      transport: .mock { request, _ in
-        switch request {
-        case .signIn: (200, .json(resp))
-        default: (400, .empty)
-        }
+      transport: MockHTTPDataTransport { request in
+        request.url?.path() == "/auth/sign-in"
+          ? (200, .json(resp))
+          : (400, .empty)
       },
       tokens: CanIClimbAPI.Tokens(
         client: OperationClient(),
@@ -134,11 +133,11 @@ struct CanIClimbAPITests {
   @Test("Throws UnauthorizedError When Refreshing Access Token Fails")
   func unauthorizedErrorWhenRefreshingAccessTokenFails() async throws {
     let refreshCount = Mutex(0)
+    self.storage["canIClimbAPI_RefreshToken"] = Data("refresh".utf8)
     let api = CanIClimbAPI(
-      transport: CanIClimbAPI.MockDataTransport { request, context in
-        switch request {
-        case .refreshAccessToken: refreshCount.withLock { $0 += 1 }
-        default: break
+      transport: MockHTTPDataTransport { request in
+        if request.url?.path() == "/auth/refresh" {
+          refreshCount.withLock { $0 += 1 }
         }
         return (401, .data(Data()))
       },

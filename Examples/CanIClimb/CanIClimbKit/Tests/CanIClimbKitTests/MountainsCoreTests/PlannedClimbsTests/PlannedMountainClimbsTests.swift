@@ -1,8 +1,8 @@
 import CanIClimbKit
 import CustomDump
+import Dependencies
 import Foundation
 import GRDB
-import Operation
 import Testing
 
 @Suite("PlannedMountainClimbs tests")
@@ -15,14 +15,7 @@ struct PlannedMountainClimbsTests {
     create.alarm = Mountain.ClimbPlanCreate.Alarm(name: "Test", date: .distantFuture)
     let plannedClimbs = PlannedMountainClimbs(
       database: self.database,
-      api: self.api(
-        transport: .mock { [create] request, _ in
-          if request == .planClimb(CanIClimbAPI.PlanClimbRequest(create: create)) {
-            return (200, .json(CanIClimbAPI.PlannedClimbResponse(plannedClimb: .mock1)))
-          }
-          return (400, .data(Data()))
-        }
-      )
+      api: self.api()
     )
 
     let climb = try await plannedClimbs.plan(create: create)
@@ -38,14 +31,7 @@ struct PlannedMountainClimbsTests {
     create.alarm = Mountain.ClimbPlanCreate.Alarm(mountainName: "Test", date: .distantFuture)
     let plannedClimbs = PlannedMountainClimbs(
       database: self.database,
-      api: self.api(
-        transport: .mock { [create] request, _ in
-          if request == .planClimb(CanIClimbAPI.PlanClimbRequest(create: create)) {
-            return (200, .json(CanIClimbAPI.PlannedClimbResponse(plannedClimb: .mock1)))
-          }
-          return (400, .data(Data()))
-        }
-      )
+      api: self.api()
     )
 
     let climb = try await plannedClimbs.plan(create: create)
@@ -59,14 +45,9 @@ struct PlannedMountainClimbsTests {
     let plannedClimbs = PlannedMountainClimbs(
       database: self.database,
       api: self.api(
-        transport: .mock { request, _ in
-          switch request {
-          case .plannedClimbs:
-            (200, .json([CanIClimbAPI.PlannedClimbResponse(plannedClimb: .mock1)]))
-          default:
-            (400, .data(Data()))
-          }
-        }
+        scenario: DummyBackend.Scenario(
+          plannedClimbs: [CanIClimbAPI.PlannedClimbResponse(plannedClimb: .mock1)]
+        )
       )
     )
 
@@ -81,18 +62,7 @@ struct PlannedMountainClimbsTests {
   func keepsAlarmInfoForRemotelyLoadedPlannedClimbs() async throws {
     let plannedClimbs = PlannedMountainClimbs(
       database: self.database,
-      api: self.api(
-        transport: .mock { request, _ in
-          switch request {
-          case .planClimb:
-            (201, .json(CanIClimbAPI.PlannedClimbResponse(plannedClimb: .mock1)))
-          case .plannedClimbs:
-            (200, .json([CanIClimbAPI.PlannedClimbResponse(plannedClimb: .mock1)]))
-          default:
-            (400, .data(Data()))
-          }
-        }
-      )
+      api: self.api()
     )
 
     var create = Mountain.ClimbPlanCreate.mock1
@@ -111,15 +81,10 @@ struct PlannedMountainClimbsTests {
     let plannedClimbs = PlannedMountainClimbs(
       database: self.database,
       api: self.api(
-        transport: .mock { request, _ in
-          switch request {
-          case .planClimb:
-            (200, .json(CanIClimbAPI.PlannedClimbResponse(plannedClimb: .mock1)))
-          case .plannedClimbs:
-            (200, .json([CanIClimbAPI.PlannedClimbResponse]()))
-          default:
-            (400, .data(Data()))
-          }
+        responseOverride: { request in
+          guard request.httpMethod == "GET", request.url?.path().hasSuffix("/climbs") == true
+          else { return nil }
+          return DummyBackend.Response.json([CanIClimbAPI.PlannedClimbResponse]())
         }
       )
     )
@@ -135,18 +100,7 @@ struct PlannedMountainClimbsTests {
   func removesLocallyCachedPlannedClimbWhenUnplanned() async throws {
     let plannedClimbs = PlannedMountainClimbs(
       database: self.database,
-      api: self.api(
-        transport: .mock { request, _ in
-          switch request {
-          case .planClimb:
-            (200, .json(CanIClimbAPI.PlannedClimbResponse(plannedClimb: .mock1)))
-          case .unplanClimbs([Mountain.PlannedClimb.mock1.id]):
-            (204, .data(Data()))
-          default:
-            (400, .data(Data()))
-          }
-        }
-      )
+      api: self.api()
     )
 
     let climb = try await plannedClimbs.plan(create: .mock1)
@@ -158,55 +112,33 @@ struct PlannedMountainClimbsTests {
 
   @Test("Updates Locally Cached Climb When Achieved")
   func updatesLocallyCachedClimbWhenAchieved() async throws {
-    var achievedClimbResponse = CanIClimbAPI.PlannedClimbResponse(plannedClimb: .mock1)
-    achievedClimbResponse.achievedDate = Date(
-      timeIntervalSince1970: TimeInterval(Int(Date.now.timeIntervalSince1970))
-    )
-
+    let now = Date(timeIntervalSince1970: 1_234_567_890)
     let plannedClimbs = PlannedMountainClimbs(
       database: self.database,
-      api: self.api(
-        transport: .mock { [achievedClimbResponse] request, _ in
-          switch request {
-          case .planClimb:
-            (200, .json(CanIClimbAPI.PlannedClimbResponse(plannedClimb: .mock1)))
-          case .achieveClimb(Mountain.PlannedClimb.mock1.id):
-            (200, .json(achievedClimbResponse))
-          default:
-            (400, .data(Data()))
-          }
-        }
-      )
+      api: self.api()
     )
 
-    let climb = try await plannedClimbs.plan(create: .mock1)
-    try await plannedClimbs.achieveClimb(id: climb.id)
-    let localClimbs = try await plannedClimbs.localPlannedClimbs(for: Mountain.mock1.id)
+    try await withDependencies {
+      $0.date.now = now
+    } operation: {
+      var expectedClimb = try await plannedClimbs.plan(create: .mock1)
+      try await plannedClimbs.achieveClimb(id: expectedClimb.id)
+      let localClimbs = try await plannedClimbs.localPlannedClimbs(for: Mountain.mock1.id)
 
-    let expectedClimb = Mountain.PlannedClimb(cached: achievedClimbResponse, alarm: nil)
-    expectNoDifference(localClimbs, [expectedClimb])
+      expectedClimb.achievedDate = now
+      expectNoDifference(localClimbs, [expectedClimb])
+    }
   }
 
   @Test("Updates Locally Cached Climb When Unachieved")
   func updatesLocallyCachedClimbWhenUnachieved() async throws {
     var achievedClimbResponse = CanIClimbAPI.PlannedClimbResponse(plannedClimb: .mock1)
-    achievedClimbResponse.achievedDate = Date(
-      timeIntervalSince1970: TimeInterval(Int(Date.now.timeIntervalSince1970))
-    )
+    achievedClimbResponse.achievedDate = Date(timeIntervalSince1970: 1_234_567_890)
 
     let plannedClimbs = PlannedMountainClimbs(
       database: self.database,
       api: self.api(
-        transport: .mock { [achievedClimbResponse] request, _ in
-          switch request {
-          case .plannedClimbs:
-            (200, .json([achievedClimbResponse]))
-          case .unachieveClimb(Mountain.PlannedClimb.mock1.id):
-            (200, .json(CanIClimbAPI.PlannedClimbResponse(plannedClimb: .mock1)))
-          default:
-            (400, .data(Data()))
-          }
-        }
+        scenario: DummyBackend.Scenario(plannedClimbs: [achievedClimbResponse])
       )
     )
 
@@ -218,11 +150,12 @@ struct PlannedMountainClimbsTests {
   }
 
   private func api(
-    transport: any CanIClimbAPI.DataTransport
+    scenario: DummyBackend.Scenario = DummyBackend.Scenario(),
+    responseOverride: @escaping DummyBackend.ResponseOverride = { _ in nil }
   ) -> CanIClimbAPI {
-    CanIClimbAPI(
-      transport: transport,
-      tokens: CanIClimbAPI.Tokens(client: OperationClient(), secureStorage: InMemorySecureStorage())
+    CanIClimbAPI.testInstance(
+      transport: DummyBackend(scenario: scenario, responseOverride: responseOverride),
+      isAuthenticated: true
     )
   }
 }
