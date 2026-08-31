@@ -16,7 +16,7 @@ extension Post {
   }
 
   @QueryRequest
-  static func query(for id: Int) async throws -> Post? {
+  package static func query(for id: Int) async throws -> Post? {
     @Dependency(HTTPDataTransportKey.self) var transport
     let url = URL(string: "https://dummyjson.com/posts/\(id)")!
     let (data, resp) = try await transport.data(for: URLRequest(url: url))

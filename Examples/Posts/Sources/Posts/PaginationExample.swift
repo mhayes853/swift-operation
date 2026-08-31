@@ -6,24 +6,30 @@ import SwiftUI
 // MARK: - FeedPage
 
 extension Post {
-  struct FeedPage: Codable, Hashable, Sendable {
-    let posts: [Post]
-    let total: Int
-    let skip: Int
+  package struct FeedPage: Codable, Hashable, Sendable {
+    package let posts: [Post]
+    package let total: Int
+    package let skip: Int
+
+    package init(posts: [Post], total: Int, skip: Int) {
+      self.posts = posts
+      self.total = total
+      self.skip = skip
+    }
   }
 }
 
 // MARK: - FeedQuery
 
 extension Post {
-  static let feedQuery = FeedQuery()
+  package static let feedQuery = FeedQuery()
 
-  struct FeedQuery: PaginatedRequest, Hashable, Sendable {
+  package struct FeedQuery: PaginatedRequest, Hashable, Sendable {
     private static let limit = 10
 
-    let initialPageId = 0
+    package let initialPageId = 0
 
-    func pageId(
+    package func pageId(
       after page: Page<Int, FeedPage>,
       using paging: Paging<Int, FeedPage>,
       in context: OperationContext
@@ -32,7 +38,7 @@ extension Post {
       page.value.skip + page.value.posts.count < page.value.total ? page.id + 1 : nil
     }
 
-    func fetchPage(
+    package func fetchPage(
       isolation: isolated (any Actor)?,
       using paging: Paging<Int, FeedPage>,
       in context: OperationContext,

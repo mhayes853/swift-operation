@@ -4,7 +4,7 @@ import Foundation
 import SharingOperation
 import Testing
 
-@testable import Posts
+import Posts
 
 @Suite
 struct `Feed query tests` {
