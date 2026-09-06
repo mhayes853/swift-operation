@@ -380,13 +380,6 @@ extension OperationDuration {
       + Self.randomOffset(upTo: range.upperBound - range.lowerBound, using: &generator)
   }
 
-  /// A uniformly distributed duration in the range `.zero..<span`.
-  ///
-  /// The components are drawn separately rather than from a single attosecond count, because the
-  /// attoseconds of a span longer than about 9.2 seconds overflow `Int64`, and `Int128` is only
-  /// available on some of the platforms this type supports. A draw that overshoots `span` within
-  /// its final second is rejected and retaken, which can only happen on the one second out of
-  /// `span` that is partially covered.
   private static func randomOffset(
     upTo span: Self,
     using generator: inout some RandomNumberGenerator
@@ -394,19 +387,14 @@ extension OperationDuration {
     let (seconds, attoseconds) = span.components
     guard seconds > 0 else {
       guard attoseconds > 0 else { return .zero }
-      return Self(
-        secondsComponent: 0,
-        attosecondsComponent: Int64.random(in: 0..<attoseconds, using: &generator)
-      )
+      let attoseconds = Int64.random(in: 0..<attoseconds, using: &generator)
+      return Self(secondsComponent: 0, attosecondsComponent: attoseconds)
     }
     while true {
       let offsetSeconds = Int64.random(in: 0...seconds, using: &generator)
       let offsetAttoseconds = Int64.random(in: 0..<attosecondsPerSecond, using: &generator)
       if offsetSeconds < seconds || offsetAttoseconds < attoseconds {
-        return Self(
-          secondsComponent: offsetSeconds,
-          attosecondsComponent: offsetAttoseconds
-        )
+        return Self(secondsComponent: offsetSeconds, attosecondsComponent: offsetAttoseconds)
       }
     }
   }
