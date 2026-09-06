@@ -98,12 +98,12 @@ public enum OperationTransformBehavior: Hashable, Sendable {
 ///   let mux = try await #run($launchMux(project))
 ///
 ///   try await withOperationTransform(LoggingTransform()) {
-///     // And this operation is logged as well
+///     // This operation is logged alongside having retries
 ///     let endpoint = try await #run($bindEndpoint(mux.port))
 ///   }
 ///
 ///   try await withOperationTransform(LoggingTransform(), behavior: .override) {
-///     // Whilst this operation is only logged
+///     // This operation is only logged
 ///     let status = try await #run($muxStatus(mux.port))
 ///   }
 /// }

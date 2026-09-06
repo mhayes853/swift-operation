@@ -65,25 +65,12 @@ public struct OperationRunner<Operation: OperationRequest> {
     let context = context ?? self.context
     let transforms = operationTransforms
     guard !transforms.isEmpty else {
-      return try await self.operation.run(
-        isolation: isolation,
-        in: context,
-        with: continuation
-      )
+      return try await self.operation.run(isolation: isolation, in: context, with: continuation)
     }
-    // Transforms are applied here rather than in `init`, because they add modifiers that need
-    // setting up, and a modifier may carry per-instance identity that would differ between two
-    // applications. `_RetryModifier` does: applying a transform once to set up and again to run
-    // would leave the context holding a retryer id that no longer matches any modifier, and
-    // retrying would silently stop happening.
     let transformed = transforms.applied(to: self.operation)
-    var transformedContext = context
-    transformed.setup(context: &transformedContext)
-    return try await transformed.run(
-      isolation: isolation,
-      in: transformedContext,
-      with: continuation
-    )
+    var runContext = context
+    transformed.setup(context: &runContext)
+    return try await transformed.run(isolation: isolation, in: runContext, with: continuation)
   }
 }
 
