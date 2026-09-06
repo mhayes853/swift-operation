@@ -115,12 +115,12 @@ public enum OperationTransformBehavior: Hashable, Sendable {
 ///   - isolation: The current actor-isolation.
 ///   - operation: The body to apply the transform to.
 /// - Returns: Whatever `operation` returns.
-public func withOperationTransform<T>(
+public func withOperationTransform<T, Failure: Error>(
   _ transform: some OperationTransform,
   behavior: OperationTransformBehavior = .append,
   isolation: isolated (any Actor)? = #isolation,
-  operation: () async throws -> T
-) async rethrows -> T {
+  operation: () async throws(Failure) -> T
+) async throws(Failure) -> T {
   try await withOperationTransforms(
     [transform],
     behavior: behavior,
@@ -155,20 +155,24 @@ public func withOperationTransform<T>(
 ///   - isolation: The current actor-isolation.
 ///   - operation: The body to apply the transforms to.
 /// - Returns: Whatever `operation` returns.
-public func withOperationTransforms<T>(
+public func withOperationTransforms<T, Failure: Error>(
   _ transforms: some Sequence<any OperationTransform>,
   behavior: OperationTransformBehavior = .override,
   isolation: isolated (any Actor)? = #isolation,
-  operation: () async throws -> T
-) async rethrows -> T {
+  operation: () async throws(Failure) -> T
+) async throws(Failure) -> T {
   let applied =
     switch behavior {
     case .append: operationTransforms + Array(transforms)
     case .override: Array(transforms)
     }
-  return try await CurrentOperationTransforms.$value.withValue(
-    applied,
-    operation: operation,
-    isolation: isolation
-  )
+  do {
+    return try await CurrentOperationTransforms.$value.withValue(
+      applied,
+      operation: operation,
+      isolation: isolation
+    )
+  } catch {
+    throw error as! Failure
+  }
 }
