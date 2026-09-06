@@ -149,11 +149,36 @@ struct OperationTransformTests {
     expectNoDifference(recorder.tags, ["outer", "first", "second"])
   }
 
+  @Test("Hands A Single Transform The Operation's Own Type")
+  func handsASingleTransformTheOperationsOwnType() async {
+    let recorder = TagRecorder()
+    await withOperationTransform(OperandNamingTransform(recorder: recorder)) {
+      _ = await #run(ConstantOperation(value: 1))
+    }
+    expectNoDifference(recorder.tags.count, 1)
+    expectNoDifference(recorder.tags[0].contains("AnyOperation"), false)
+    expectNoDifference(recorder.tags[0].contains("ConstantOperation"), true)
+  }
+
+  @Test("Hands The Innermost Of Several Transforms The Operation's Own Type")
+  func handsTheInnermostOfSeveralTransformsTheOperationsOwnType() async {
+    let recorder = TagRecorder()
+    let transforms: [any OperationTransform] = [
+      TaggingTransform(tag: "outer", recorder: recorder),
+      OperandNamingTransform(recorder: recorder)
+    ]
+    await withOperationTransforms(transforms) {
+      _ = await #run(ConstantOperation(value: 1))
+    }
+    expectNoDifference(recorder.tags.last?.contains("AnyOperation"), false)
+    expectNoDifference(recorder.tags.last?.contains("ConstantOperation"), true)
+  }
+
   @Test("Applies Nothing When Given An Empty Sequence")
   func appliesNothingWhenGivenAnEmptySequence() async {
     let counter = RunCounter()
     await withOperationTransform(RetryingTransform(limit: 3)) {
-      await withOperationTransforms([]) {
+      _ = await withOperationTransforms([]) {
         await #expect(throws: SomeError.self) {
           try await #run(FailingOperation(counter: counter))
         }
@@ -232,6 +257,31 @@ private struct TaggingTransform: OperationTransform {
     to operation: Operation
   ) -> any OperationRequest<Operation.Value, Operation.Failure> {
     operation.modifier(TaggingModifier(tag: self.tag, recorder: self.recorder))
+  }
+}
+
+/// Records the type name of the operation it wraps, so that erasure of the operand is observable.
+private struct OperandNamingTransform: OperationTransform {
+  let recorder: TagRecorder
+
+  func apply<Operation: OperationRequest>(
+    to operation: Operation
+  ) -> any OperationRequest<Operation.Value, Operation.Failure> {
+    operation.modifier(OperandNamingModifier(recorder: self.recorder))
+  }
+}
+
+private struct OperandNamingModifier<Operation: OperationRequest>: OperationModifier, Sendable {
+  let recorder: TagRecorder
+
+  func run(
+    isolation: isolated (any Actor)?,
+    in context: OperationContext,
+    using operation: Operation,
+    with continuation: OperationContinuation<Operation.Value, Operation.Failure>
+  ) async throws(Operation.Failure) -> Operation.Value {
+    self.recorder.append(operation._debugTypeName)
+    return try await operation.run(isolation: isolation, in: context, with: continuation)
   }
 }
 

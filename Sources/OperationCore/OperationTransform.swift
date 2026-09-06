@@ -31,11 +31,21 @@ public protocol OperationTransform: Sendable {
 // MARK: - Applying
 
 extension [any OperationTransform] {
+  /// `operation` with each of these transforms applied, the last of them closest to `operation`.
+  ///
+  /// The transform nearest the operation receives it as its own concrete type, so an operation
+  /// run under a single transform is never boxed. Only the transforms above that one need an
+  /// `AnyOperation` to fold through, because an `any OperationRequest` does not open implicitly
+  /// when passed back into ``OperationTransform/apply(to:)``.
   func applied<Operation: OperationRequest>(
     to operation: Operation
   ) -> any OperationRequest<Operation.Value, Operation.Failure> {
-    self.reversed()
-      .reduce(AnyOperation(operation)) { transformed, transform in
+    guard let innermost = self.last else { return operation }
+    let applied = innermost.apply(to: operation)
+    guard self.count > 1 else { return applied }
+    return self.dropLast()
+      .reversed()
+      .reduce(AnyOperation(applied)) { transformed, transform in
         AnyOperation(transform.apply(to: transformed))
       }
   }
