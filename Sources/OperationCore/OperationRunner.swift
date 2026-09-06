@@ -44,6 +44,11 @@ public struct OperationRunner<Operation: OperationRequest> {
 
   /// Runs the underlying operation of this runner.
   ///
+  /// Any ``OperationTransform``s in scope for the current task have their modifiers applied to
+  /// the operation for this run, and ``OperationRequest/setup(context:)-8y79v`` is invoked on the
+  /// result. Setup therefore reaches the underlying operation a second time in that case, on a
+  /// context that already reflects it.
+  ///
   /// - Parameters:
   ///   - isolation: The current actor-isolation of this operation run.
   ///   - context: The ``OperationContext`` to pass to the operation run. (Defaults to the
@@ -57,11 +62,15 @@ public struct OperationRunner<Operation: OperationRequest> {
     with continuation: OperationContinuation<Operation.Value, Operation.Failure> =
       OperationContinuation { _, _ in }
   ) async throws(Operation.Failure) -> Operation.Value {
-    try await self.operation.run(
-      isolation: isolation,
-      in: context ?? self.context,
-      with: continuation
-    )
+    let context = context ?? self.context
+    let transforms = operationTransforms
+    guard !transforms.isEmpty else {
+      return try await self.operation.run(isolation: isolation, in: context, with: continuation)
+    }
+    let transformed = transforms.applied(to: self.operation)
+    var runContext = context
+    transformed.setup(context: &runContext)
+    return try await transformed.run(isolation: isolation, in: runContext, with: continuation)
   }
 }
 
