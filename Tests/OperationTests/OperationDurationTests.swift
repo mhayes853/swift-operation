@@ -280,6 +280,50 @@ struct OperationDurationTests {
   }
 
   @Test(
+    "Random Stays In Range When The Bounds Share A Seconds Component",
+    arguments: [
+      OperationDuration.zero..<(.milliseconds(25)),
+      .zero..<(.nanoseconds(1)),
+      .milliseconds(500)..<(.milliseconds(900)),
+      .seconds(3)..<(.seconds(3.25)),
+      (-.seconds(1))..<(-.milliseconds(500))
+    ]
+  )
+  func randomStaysInSubSecondRange(r: Range<OperationDuration>) {
+    for _ in 0..<10_000 {
+      expectNoDifference(r.contains(OperationDuration.random(in: r)), true)
+    }
+  }
+
+  @Test(
+    "Random Stays In Range When The Lower Bound Has The Larger Attoseconds Component",
+    arguments: [
+      OperationDuration.milliseconds(500)..<(.seconds(2)),
+      .seconds(0.9)..<(.seconds(1.1)),
+      (-.seconds(0.5))..<(.seconds(0.5))
+    ]
+  )
+  func randomStaysInRangeWithUnorderedAttoseconds(r: Range<OperationDuration>) {
+    for _ in 0..<10_000 {
+      expectNoDifference(r.contains(OperationDuration.random(in: r)), true)
+    }
+  }
+
+  @Test("Random Returns The Lower Bound Of An Empty Range")
+  func randomReturnsLowerBoundOfEmptyRange() {
+    let r = (OperationDuration.milliseconds(25)..<(.milliseconds(25)))
+    expectNoDifference(OperationDuration.random(in: r), .milliseconds(25))
+  }
+
+  @Test("Random Spreads Sub Second Values Across The Range")
+  func randomSpreadsSubSecondValues() {
+    let r = (OperationDuration.zero..<(.milliseconds(25)))
+    let durations = Set((0..<1000).map { _ in OperationDuration.random(in: r) })
+    expectNoDifference(durations.count > 1, true)
+    expectNoDifference(durations.contains { $0 > .milliseconds(12) }, true)
+  }
+
+  @Test(
     "Creates From Seconds And Attoseconds Components",
     arguments: [
       (

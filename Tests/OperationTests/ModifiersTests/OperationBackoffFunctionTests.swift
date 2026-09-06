@@ -29,6 +29,20 @@ struct OperationBackoffFunctionTests {
     expectNoDifference(function(n), .milliseconds(e))
   }
 
+  @Test(
+    "Jittered Stays Below The Unjittered Backoff For Sub Second Durations",
+    arguments: [1, 2, 3, 4, 5]
+  )
+  func jitteredSubSecondStaysBelowUnjittered(n: Int) {
+    let function = OperationBackoffFunction.exponential(.milliseconds(25))
+    let jittered = function.jittered()
+    for _ in 0..<1000 {
+      let duration = jittered(n)
+      expectNoDifference(duration >= .zero, true)
+      expectNoDifference(duration < function(n), true)
+    }
+  }
+
   @Test("Jittered Selects Random Value Based On Generator")
   func jitterUsesDifferentValuesForExponential() {
     let function = OperationBackoffFunction.exponential(.milliseconds(1000))
