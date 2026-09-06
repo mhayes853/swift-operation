@@ -40,7 +40,7 @@ public struct _AlertStateModifier<Operation: OperationRequest>: OperationModifie
       }
       return value
     } catch {
-      if context.isLastRunAttempt, let failureAlert = self.failureAlert(error) {
+      if context.isKnownLastRunAttempt, let failureAlert = self.failureAlert(error) {
         await center.post(OperationAlertMessage(alert: failureAlert))
       }
       throw error
