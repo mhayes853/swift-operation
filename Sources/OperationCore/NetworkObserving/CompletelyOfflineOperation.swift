@@ -13,7 +13,8 @@ extension OperationRequest {
   ///
   /// Attaching this modifier to your operation guarantees.
   /// - That ``OperationContext/satisfiedConnectionStatus`` is set to ``NetworkConnectionStatus/disconnected``.
-  /// - That ``OperationContext/operationMaxRetries`` is set to 0.
+  /// - That ``OperationContext/operationRetryCondition`` permits no retries, and that
+  ///   ``OperationContext/operationMaxRetries`` is therefore set to 0.
   /// - That ``OperationContext/operationBackoffFunction`` is set to ``OperationBackoffFunction/noBackoff``.
   ///
   /// - Parameter isOffline: Whether the query is completely offline. Defaults to `true`. If

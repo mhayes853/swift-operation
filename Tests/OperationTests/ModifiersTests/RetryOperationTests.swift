@@ -192,6 +192,308 @@ struct RetryOperationTests {
     let indicies = await query.retryIndicies
     expectNoDifference(indicies, [nil, 0, 1, 2, 3, 4])
   }
+
+  @Test("Predicate Returning False Stops Retrying Before The Limit Is Reached")
+  func predicateReturningFalseStopsRetryingBeforeTheLimitIsReached() async {
+    let query = CountingQuery()
+    await query.ensureFails()
+    let store = OperationStore.detached(
+      query: query.backoff(.noBackoff)
+        .delayer(.noDelay)
+        .retry(limit: 5) { _, context in (context.operationRetryIndex ?? -1) < 1 },
+      initialValue: nil
+    )
+    _ = try? await store.fetch()
+    let count = await query.fetchCount
+    expectNoDifference(count, 3)
+  }
+
+  @Test("Does Not Delay When The Predicate Declines A Retry")
+  func doesNotDelayWhenThePredicateDeclinesARetry() async {
+    let delayer = TestDelayer()
+    let query = FailingQuery()
+      .delayer(delayer)
+      .backoff(.linear(.milliseconds(1000)))
+      .retry(limit: 5) { _, _ in false }
+    let store = OperationStore.detached(query: query, initialValue: nil)
+    _ = try? await store.fetch()
+    expectNoDifference(
+      delayer.delays,
+      [],
+      "The backoff should not be awaited for an error that does not warrant a retry."
+    )
+  }
+
+  @Test("Passes The Thrown Error To The Predicate")
+  func passesTheThrownErrorToThePredicate() async {
+    let errors = ErrorRecorder()
+    let query = FailingQuery()
+      .backoff(.noBackoff)
+      .delayer(.noDelay)
+      .retry(limit: 2) { error, _ in
+        await errors.record(error)
+        return true
+      }
+    let store = OperationStore.detached(query: query, initialValue: nil)
+    _ = try? await store.fetch()
+    let recorded = await errors.errors
+    expectNoDifference(recorded.count, 2)
+    expectNoDifference(recorded.allSatisfy { $0 is FailingQuery.SomeError }, true)
+  }
+
+  @Test("Awaits The Predicate Once Per Failed Attempt That Is Not The Last")
+  func awaitsThePredicateOncePerFailedAttemptThatIsNotTheLast() async {
+    let counter = Counter()
+    let query = FailingQuery()
+      .backoff(.noBackoff)
+      .delayer(.noDelay)
+      .retry(limit: 3) { _, _ in
+        await counter.increment()
+        return true
+      }
+    let store = OperationStore.detached(query: query, initialValue: nil)
+    _ = try? await store.fetch()
+    let count = await counter.count
+    expectNoDifference(
+      count,
+      3,
+      "The predicate should not be evaluated on the final attempt, since the limit already rules out a retry."
+    )
+  }
+
+  @Test("Bare Predicate Modifier Retries Without An Upper Bound")
+  func barePredicateModifierRetriesWithoutAnUpperBound() async {
+    let query = CountingQuery()
+    await query.ensureFails()
+    let store = OperationStore.detached(
+      query: query.backoff(.noBackoff)
+        .delayer(.noDelay)
+        .retry(when: { _, context in (context.operationRetryIndex ?? -1) < 8 }),
+      initialValue: nil
+    )
+    expectNoDifference(store.context.operationMaxRetries, Int.max)
+    _ = try? await store.fetch()
+    let count = await query.fetchCount
+    expectNoDifference(count, 10)
+  }
+
+  @Test("Is Not A Known Last Run Attempt When The Retry Condition Is Unbounded")
+  func isNotAKnownLastRunAttemptWhenTheRetryConditionIsUnbounded() async {
+    let query = LastRunAttemptReadingQuery()
+    let store = OperationStore.detached(
+      query: query.backoff(.noBackoff)
+        .delayer(.noDelay)
+        .retry(when: { _, context in (context.operationRetryIndex ?? -1) < 2 }),
+      initialValue: nil
+    )
+    _ = try? await store.fetch()
+    let flags = await query.flags
+    expectNoDifference(flags, [false, false, false, false])
+  }
+
+  @Test("Is A Known Last Run Attempt On The Final Attempt Of A Bounded Condition")
+  func isAKnownLastRunAttemptOnTheFinalAttemptOfABoundedCondition() async {
+    let query = LastRunAttemptReadingQuery()
+    let store = OperationStore.detached(
+      query: query.backoff(.noBackoff).delayer(.noDelay).retry(limit: 3),
+      initialValue: nil
+    )
+    _ = try? await store.fetch()
+    let flags = await query.flags
+    expectNoDifference(flags, [false, false, false, true])
+  }
+
+  @Test("Combining Conditions Uses The Smaller Retry Bound")
+  func combiningConditionsUsesTheSmallerRetryBound() async {
+    let query = CountingQuery()
+    await query.ensureFails()
+    let store = OperationStore.detached(
+      query: query.backoff(.noBackoff)
+        .delayer(.noDelay)
+        .retry(.maxRetries(10) && .maxRetries(3)),
+      initialValue: nil
+    )
+    expectNoDifference(store.context.operationMaxRetries, 3)
+    _ = try? await store.fetch()
+    let count = await query.fetchCount
+    expectNoDifference(count, 4)
+  }
+
+  @Test("Combining An Unbounded Condition With A Bounded One Keeps The Bound")
+  func combiningAnUnboundedConditionWithABoundedOneKeepsTheBound() async {
+    let query = FailingQuery()
+      .backoff(.noBackoff)
+      .delayer(.noDelay)
+      .retry(.maxRetries(4) && OperationRetryCondition { _, _ in true })
+    let store = OperationStore.detached(query: query, initialValue: nil)
+    expectNoDifference(store.context.operationMaxRetries, 4)
+  }
+
+  @Test("Never Condition Does Not Perform Any Retries")
+  func neverConditionDoesNotPerformAnyRetries() async {
+    let query = CountingQuery()
+    await query.ensureFails()
+    let store = OperationStore.detached(
+      query: query.backoff(.noBackoff).delayer(.noDelay).retry(.never),
+      initialValue: nil
+    )
+    _ = try? await store.fetch()
+    let count = await query.fetchCount
+    expectNoDifference(count, 1)
+  }
+
+  @Test("Stops Retrying When The Underlying Task Is Cancelled")
+  func stopsRetryingWhenTheUnderlyingTaskIsCancelled() async {
+    let query = CountingQuery()
+    await query.ensureFails()
+    let store = OperationStore.detached(
+      query: query.backoff(.noBackoff).delayer(.noDelay).retry(limit: 5),
+      initialValue: nil
+    )
+    let task = store.fetchTask()
+    task.cancel()
+    _ = try? await task.runIfNeeded()
+    let count = await query.fetchCount
+    expectNoDifference(
+      count,
+      1,
+      "A cancelled task should not burn through every remaining retry attempt."
+    )
+  }
+
+  @Test("Combining Conditions With Or Uses The Larger Retry Bound")
+  func combiningConditionsWithOrUsesTheLargerRetryBound() async {
+    let query = CountingQuery()
+    await query.ensureFails()
+    let store = OperationStore.detached(
+      query: query.backoff(.noBackoff)
+        .delayer(.noDelay)
+        .retry(.maxRetries(2) || .maxRetries(5)),
+      initialValue: nil
+    )
+    expectNoDifference(store.context.operationRetryCondition.maxRetries, 5)
+    _ = try? await store.fetch()
+    let count = await query.fetchCount
+    expectNoDifference(count, 6)
+  }
+
+  @Test("Or Combines The Predicates Of Both Operands")
+  func orCombinesThePredicatesOfBothOperands() async {
+    let query = CountingQuery()
+    await query.ensureFails()
+    let store = OperationStore.detached(
+      query: query.backoff(.noBackoff)
+        .delayer(.noDelay)
+        .retry(
+          .maxRetries(5)
+            && (OperationRetryCondition { _, context in (context.operationRetryIndex ?? -1) < 0 }
+              || OperationRetryCondition { _, context in (context.operationRetryIndex ?? -1) < 2 })
+        ),
+      initialValue: nil
+    )
+    _ = try? await store.fetch()
+    let count = await query.fetchCount
+    expectNoDifference(
+      count,
+      4,
+      "Retries should continue for as long as either predicate permits one, up to the bound."
+    )
+  }
+
+  @Test("Or Does Not Evaluate The Right Hand Predicate When The Left One Permits A Retry")
+  func orDoesNotEvaluateTheRightHandPredicateWhenTheLeftOnePermitsARetry() async {
+    let counter = Counter()
+    let query = FailingQuery()
+      .backoff(.noBackoff)
+      .delayer(.noDelay)
+      .retry(
+        .maxRetries(3)
+          && (OperationRetryCondition { _, _ in true }
+            || OperationRetryCondition { _, _ in
+              await counter.increment()
+              return true
+            })
+      )
+    let store = OperationStore.detached(query: query, initialValue: nil)
+    _ = try? await store.fetch()
+    let count = await counter.count
+    expectNoDifference(count, 0)
+  }
+
+  @Test("Or With A Max Retries Operand Always Permits A Retry")
+  func orWithAMaxRetriesOperandAlwaysPermitsARetry() async {
+    let query = CountingQuery()
+    await query.ensureFails()
+    let store = OperationStore.detached(
+      query: query.backoff(.noBackoff)
+        .delayer(.noDelay)
+        .retry(.maxRetries(3) && (.maxRetries(1) || OperationRetryCondition { _, _ in false })),
+      initialValue: nil
+    )
+    _ = try? await store.fetch()
+    let count = await query.fetchCount
+    expectNoDifference(
+      count,
+      4,
+      "`maxRetries` carries an always-true predicate, so using it as an `||` operand makes the combined predicate always permit a retry, leaving only the outer bound of 3 to stop it."
+    )
+  }
+
+  @Test("Or With Never Falls Back To The Other Operand")
+  func orWithNeverFallsBackToTheOtherOperand() async {
+    let query = CountingQuery()
+    await query.ensureFails()
+    let store = OperationStore.detached(
+      query: query.backoff(.noBackoff)
+        .delayer(.noDelay)
+        .retry(.never || .maxRetries(3)),
+      initialValue: nil
+    )
+    expectNoDifference(store.context.operationRetryCondition.maxRetries, 3)
+    _ = try? await store.fetch()
+    let count = await query.fetchCount
+    expectNoDifference(count, 4)
+  }
+
+  @Test("Exposes The Retry Bound Of A Condition")
+  func exposesTheRetryBoundOfACondition() {
+    expectNoDifference(OperationRetryCondition.maxRetries(4).maxRetries, 4)
+    expectNoDifference(OperationRetryCondition.never.maxRetries, 0)
+    expectNoDifference(OperationRetryCondition { _, _ in true }.maxRetries, nil)
+    expectNoDifference((OperationRetryCondition.maxRetries(4) && .maxRetries(9)).maxRetries, 4)
+    expectNoDifference((OperationRetryCondition.maxRetries(4) || .maxRetries(9)).maxRetries, 9)
+  }
+}
+
+private actor Counter {
+  private(set) var count = 0
+
+  func increment() {
+    self.count += 1
+  }
+}
+
+private actor ErrorRecorder {
+  private(set) var errors = [any Error]()
+
+  func record(_ error: any Error) {
+    self.errors.append(error)
+  }
+}
+
+private actor LastRunAttemptReadingQuery: QueryRequest, Identifiable {
+  private(set) var flags = [Bool]()
+
+  func fetch(
+    isolation: isolated (any Actor)?,
+    in context: OperationContext,
+    with continuation: OperationContinuation<Int, any Error>
+  ) async throws -> Int {
+    await isolate(self) { @Sendable in $0.flags.append(context.isKnownLastRunAttempt) }
+    throw SomeError()
+  }
+
+  private struct SomeError: Error {}
 }
 
 private actor RetryIndexReadingQuery: QueryRequest, Identifiable {
