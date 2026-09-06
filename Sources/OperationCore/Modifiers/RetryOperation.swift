@@ -26,28 +26,14 @@ public struct OperationRetryCondition: Sendable {
 
   private let predicate: @Sendable (any Error, OperationContext) async -> Bool
 
-  /// Creates an unbounded retry condition from a predicate you specify.
-  ///
-  /// An operation using the resulting condition is retried for as long as `predicate` returns true.
-  /// Combine it with ``maxRetries(_:)`` using ``&&(_:_:)`` in order to impose a bound.
-  ///
-  /// - Parameter predicate: A predicate that decides whether or not the thrown error warrants a
-  ///   retry.
-  public init(
-    _ predicate: @escaping @Sendable (any Error, OperationContext) async -> Bool
-  ) {
-    self.maxRetries = nil
-    self.predicate = predicate
-  }
-
   /// Creates a bounded retry condition from a predicate you specify.
   ///
   /// - Parameters:
   ///   - maxRetries: The maximum number of retry attempts for this predicate.
   ///   - predicate: A predicate that decides whether or not the thrown error warrants a retry.
   public init(
-    maxRetries: Int,
-    predicate: @escaping @Sendable (any Error, OperationContext) async -> Bool
+    maxRetries: Int? = nil,
+    _ predicate: @escaping @Sendable (any Error, OperationContext) async -> Bool
   ) {
     self.maxRetries = maxRetries
     self.predicate = predicate
