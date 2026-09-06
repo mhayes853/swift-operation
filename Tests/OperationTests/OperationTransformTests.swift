@@ -118,6 +118,37 @@ struct OperationTransformTests {
     expectNoDifference(recorder.tags, ["only"])
   }
 
+  @Test("Overrides The Transforms In Scope With A Single Transform")
+  func overridesTheTransformsInScopeWithASingleTransform() async {
+    let recorder = TagRecorder()
+    await withOperationTransform(TaggingTransform(tag: "outer", recorder: recorder)) {
+      await withOperationTransform(
+        TaggingTransform(tag: "only", recorder: recorder),
+        behavior: .override
+      ) {
+        _ = await #run(ConstantOperation(value: 1))
+      }
+    }
+    expectNoDifference(recorder.tags, ["only"])
+  }
+
+  @Test("Appends A Sequence To The Transforms In Scope")
+  func appendsASequenceToTheTransformsInScope() async {
+    let recorder = TagRecorder()
+    await withOperationTransform(TaggingTransform(tag: "outer", recorder: recorder)) {
+      await withOperationTransforms(
+        [
+          TaggingTransform(tag: "first", recorder: recorder),
+          TaggingTransform(tag: "second", recorder: recorder)
+        ],
+        behavior: .append
+      ) {
+        _ = await #run(ConstantOperation(value: 1))
+      }
+    }
+    expectNoDifference(recorder.tags, ["outer", "first", "second"])
+  }
+
   @Test("Applies Nothing When Given An Empty Sequence")
   func appliesNothingWhenGivenAnEmptySequence() async {
     let counter = RunCounter()

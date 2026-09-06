@@ -64,8 +64,20 @@ public var operationTransforms: [any OperationTransform] {
   CurrentOperationTransforms.value
 }
 
-/// Applies an ``OperationTransform`` to every operation run within `operation`, in addition to
-/// those already in scope.
+// MARK: - Behavior
+
+/// How a scope's ``OperationTransform``s combine with the ones already in scope.
+public enum OperationTransformBehavior: Hashable, Sendable {
+  /// Adds to the transforms already in scope.
+  case append
+
+  /// Replaces the transforms already in scope.
+  case override
+}
+
+// MARK: - Scoping
+
+/// Applies an ``OperationTransform`` to every operation run within `operation`.
 ///
 /// ```swift
 /// struct SupervisionTransform: OperationTransform {
@@ -85,33 +97,48 @@ public var operationTransforms: [any OperationTransform] {
 ///     // And this operation is logged as well
 ///     let endpoint = try await #run($bindEndpoint(mux.port))
 ///   }
+///
+///   try await withOperationTransform(LoggingTransform(), behavior: .override) {
+///     // Whilst this operation is only logged
+///     let status = try await #run($muxStatus(mux.port))
+///   }
 /// }
 /// ```
 ///
 /// - Parameters:
 ///   - transform: The ``OperationTransform`` to apply.
+///   - behavior: Whether `transform` adds to the transforms in scope, or replaces them.
 ///   - isolation: The current actor-isolation.
 ///   - operation: The body to apply the transform to.
 /// - Returns: Whatever `operation` returns.
 public func withOperationTransform<T>(
   _ transform: some OperationTransform,
+  behavior: OperationTransformBehavior = .append,
   isolation: isolated (any Actor)? = #isolation,
   operation: () async throws -> T
 ) async rethrows -> T {
   try await withOperationTransforms(
-    operationTransforms + [transform],
+    [transform],
+    behavior: behavior,
     isolation: isolation,
     operation: operation
   )
 }
 
-/// Applies exactly the specified ``OperationTransform``s to every operation run within
-/// `operation`, replacing any already in scope.
+/// Applies ``OperationTransform``s to every operation run within `operation`.
 ///
 /// Transforms are applied innermost last, so the final element of `transforms` ends up closest to
 /// the operation.
 ///
 /// ```swift
+/// // The transforms in scope do not cross this boundary on their own.
+/// let transforms = operationTransforms
+/// Task.detached {
+///   try await withOperationTransforms(transforms) {
+///     try await #run($launchMux(project))
+///   }
+/// }
+///
 /// // Nothing in scope is applied within the body.
 /// try await withOperationTransforms([]) {
 ///   let mux = try await #run($launchMux(project))
@@ -120,16 +147,23 @@ public func withOperationTransform<T>(
 ///
 /// - Parameters:
 ///   - transforms: The ``OperationTransform``s to apply.
+///   - behavior: Whether `transforms` add to the transforms in scope, or replace them.
 ///   - isolation: The current actor-isolation.
 ///   - operation: The body to apply the transforms to.
 /// - Returns: Whatever `operation` returns.
 public func withOperationTransforms<T>(
   _ transforms: some Sequence<any OperationTransform>,
+  behavior: OperationTransformBehavior = .override,
   isolation: isolated (any Actor)? = #isolation,
   operation: () async throws -> T
 ) async rethrows -> T {
-  try await CurrentOperationTransforms.$value.withValue(
-    Array(transforms),
+  let applied =
+    switch behavior {
+    case .append: operationTransforms + Array(transforms)
+    case .override: Array(transforms)
+    }
+  return try await CurrentOperationTransforms.$value.withValue(
+    applied,
     operation: operation,
     isolation: isolation
   )
