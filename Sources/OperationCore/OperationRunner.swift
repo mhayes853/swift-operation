@@ -44,7 +44,7 @@ public struct OperationRunner<Operation: OperationRequest> {
 
   /// Runs the underlying operation of this runner.
   ///
-  /// If an ``OperationTransform`` is in scope for the current task, its modifiers are applied to
+  /// Any ``OperationTransform``s in scope for the current task have their modifiers applied to
   /// the operation for this run, and ``OperationRequest/setup(context:)-8y79v`` is invoked on the
   /// result. Setup therefore reaches the underlying operation a second time in that case, on a
   /// context that already reflects it.
@@ -63,19 +63,20 @@ public struct OperationRunner<Operation: OperationRequest> {
       OperationContinuation { _, _ in }
   ) async throws(Operation.Failure) -> Operation.Value {
     let context = context ?? self.context
-    guard let transform = currentOperationTransform else {
+    let transforms = operationTransforms
+    guard !transforms.isEmpty else {
       return try await self.operation.run(
         isolation: isolation,
         in: context,
         with: continuation
       )
     }
-    // The transform is applied here rather than in `init`, because it adds modifiers that need
+    // Transforms are applied here rather than in `init`, because they add modifiers that need
     // setting up, and a modifier may carry per-instance identity that would differ between two
     // applications. `_RetryModifier` does: applying a transform once to set up and again to run
     // would leave the context holding a retryer id that no longer matches any modifier, and
     // retrying would silently stop happening.
-    let transformed = transform.apply(to: self.operation)
+    let transformed = transforms.applied(to: self.operation)
     var transformedContext = context
     transformed.setup(context: &transformedContext)
     return try await transformed.run(
