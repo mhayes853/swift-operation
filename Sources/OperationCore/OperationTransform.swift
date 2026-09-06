@@ -2,9 +2,6 @@
 
 /// A set of modifiers applied to every operation run within a scope.
 ///
-/// Operations that share behavior usually restate it at every call site. A transform states it
-/// once, and ``withOperationTransform(_:isolation:operation:)`` decides where it applies.
-///
 /// ```swift
 /// struct SupervisionTransform: OperationTransform {
 ///   func apply<Operation: OperationRequest>(
@@ -16,26 +13,13 @@
 /// }
 ///
 /// try await withOperationTransform(SupervisionTransform()) {
+///   // Each operation has 3 retries and exponential backoff with jitter
 ///   let mux = try await #run($launchMux(project))
 ///   let endpoint = try await #run($bindEndpoint(mux.port))
 /// }
 /// ```
-///
-/// This is a protocol rather than a closure because a closure cannot be generic over the operation
-/// it is applied to, and the result has to preserve that operation's `Value` and `Failure`.
-/// ``OperationClient/StoreCreator`` takes the same shape for the same reason.
-///
-/// A transform's modifiers wrap the operation's own. Any modifier that defines what happens when
-/// it is applied twice therefore decides which one wins: an operation carrying
-/// ``OperationRequest/retry(limit:)`` keeps its own limit rather than the transform's, in the same
-/// way that an operation overrides the retry behavior an ``OperationClient`` applies by default.
 public protocol OperationTransform: Sendable {
   /// Applies this transform's modifiers to an operation.
-  ///
-  /// This method is called once per run, and must be free of side effects. Modifiers are allowed
-  /// to carry per-instance identity — ``OperationRequest/retry(limit:)`` does, to detect being
-  /// applied twice — so applying a transform is not something the library can safely do more than
-  /// once for the same run.
   ///
   /// - Parameter operation: The operation being run.
   /// - Returns: `operation` with this transform's modifiers applied.
@@ -77,12 +61,22 @@ public var currentOperationTransform: (any OperationTransform)? {
 
 /// Applies an ``OperationTransform`` to every operation run within `operation`.
 ///
-/// The transform reaches every operation run in the body, including ones run by child tasks,
-/// without being threaded through the code between. Operations run outside the body are
-/// unaffected.
+/// ```swift
+/// struct SupervisionTransform: OperationTransform {
+///   func apply<Operation: OperationRequest>(
+///     to operation: Operation
+///   ) -> any OperationRequest<Operation.Value, Operation.Failure> {
+///     operation.retry(limit: 3)
+///       .backoff(.exponential(.milliseconds(50)).jittered())
+///   }
+/// }
 ///
-/// A nested call replaces the transform for its own body rather than composing with it. Read
-/// ``currentOperationTransform`` to compose deliberately.
+/// try await withOperationTransform(SupervisionTransform()) {
+///   // Each operation has 3 retries and exponential backoff with jitter
+///   let mux = try await #run($launchMux(project))
+///   let endpoint = try await #run($bindEndpoint(mux.port))
+/// }
+/// ```
 ///
 /// - Parameters:
 ///   - transform: The ``OperationTransform`` to apply.
