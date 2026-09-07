@@ -74,7 +74,6 @@ public struct OperationRunner<Operation: OperationRequest> {
     var runContext = context
     runContext.modifierSetupScope = .operationRun
     transformed.setup(context: &runContext)
-    runContext.modifierSetupScope = .runtimeInitialSetup
     return try await transformed.run(isolation: isolation, in: runContext, with: continuation)
   }
 }

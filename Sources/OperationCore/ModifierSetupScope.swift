@@ -39,6 +39,9 @@ extension OperationContext {
     /// This pass stops at the operation itself, which was already set up during
     /// ``runtimeInitialSetup``. A transform's configuration therefore lands on top of the
     /// operation's own, and wins.
+    ///
+    /// The context keeps this value for the duration of that run, so an operation can also read it
+    /// to tell whether transforms are in scope.
     case operationRun
   }
 }
