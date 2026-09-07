@@ -45,9 +45,12 @@ public struct OperationRunner<Operation: OperationRequest> {
   /// Runs the underlying operation of this runner.
   ///
   /// Any ``OperationTransform``s in scope for the current task have their modifiers applied to
-  /// the operation for this run, and ``OperationRequest/setup(context:)-8y79v`` is invoked on the
-  /// result. Setup therefore reaches the underlying operation a second time in that case, on a
-  /// context that already reflects it.
+  /// the operation for this run, and ``OperationRequest/setup(context:)-8y79v`` is invoked on
+  /// those modifiers with ``OperationContext/modifierSetupScope`` set to
+  /// ``OperationContext/ModifierSetupScope/operationRun``. That pass stops at the underlying
+  /// operation, which is only ever set up once, in ``init(operation:initialContext:)``. A
+  /// transform's configuration is therefore written on top of the operation's own, and takes
+  /// precedence over it.
   ///
   /// - Parameters:
   ///   - isolation: The current actor-isolation of this operation run.
@@ -67,9 +70,11 @@ public struct OperationRunner<Operation: OperationRequest> {
     guard !transforms.isEmpty else {
       return try await self.operation.run(isolation: isolation, in: context, with: continuation)
     }
-    let transformed = transforms.applied(to: self.operation)
+    let transformed = self.operation.applying(transforms)
     var runContext = context
+    runContext.modifierSetupScope = .operationRun
     transformed.setup(context: &runContext)
+    runContext.modifierSetupScope = .runtimeInitialSetup
     return try await transformed.run(isolation: isolation, in: runContext, with: continuation)
   }
 }

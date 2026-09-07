@@ -18,6 +18,27 @@
 ///   let endpoint = try await #run($bindEndpoint(mux.port))
 /// }
 /// ```
+///
+/// A transform is applied at the point of a run, which makes it the most local description of how
+/// that run should behave. Its modifiers therefore win over the ones the operation was built with,
+/// including the defaults an `OperationClient` applies to every store it creates.
+///
+/// ```swift
+/// let library = client.store(for: $syncLibrary)
+///
+/// // Retries twice with the client's backoff.
+/// try await library.fetch()
+///
+/// try await withOperationTransform(BackgroundSyncTransform(limit: 20)) {
+///   // Retries 20 times with the transform's backoff. Same store, same operation.
+///   try await library.fetch()
+/// }
+/// ```
+///
+/// > Note: A transform's modifiers are set up once per run, rather than once per operation, so a
+/// > modifier that allocates state during setup gets fresh state every time. Applying
+/// > ``OperationRequest/deduplicated()`` from a transform deduplicates nothing, as each run builds
+/// > its own storage. Apply stateful modifiers when building the operation instead.
 public protocol OperationTransform: Sendable {
   /// Applies this transform's modifiers to an operation.
   ///
@@ -30,18 +51,45 @@ public protocol OperationTransform: Sendable {
 
 // MARK: - Applying
 
-extension [any OperationTransform] {
-  func applied<Operation: OperationRequest>(
-    to operation: Operation
-  ) -> any OperationRequest<Operation.Value, Operation.Failure> {
-    guard let innermost = self.last else { return operation }
-    let applied = innermost.apply(to: operation)
-    guard self.count > 1 else { return applied }
-    return self.dropLast()
+extension OperationRequest {
+  func applying(
+    _ transforms: [any OperationTransform]
+  ) -> any OperationRequest<Value, Failure> {
+    guard let innermost = transforms.last else { return self }
+
+    // NB: The boundary stops a scoped setup pass from descending into this operation, which the
+    // runtime has already set up. See `_OperationChainBoundary` for why that matters.
+    let applied = innermost.apply(to: self.modifier(_OperationChainBoundary()))
+    guard transforms.count > 1 else { return applied }
+    return transforms.dropLast()
       .reversed()
       .reduce(AnyOperation(applied)) { transformed, transform in
         AnyOperation(transform.apply(to: transformed))
       }
+  }
+}
+
+// MARK: - OperationChainBoundary
+
+/// A modifier marking the point where an operation's own modifiers begin, and the modifiers
+/// applied to it by the ``OperationTransform``s in scope end.
+struct _OperationChainBoundary<Operation: OperationRequest>: OperationModifier, Sendable {
+  func setup(context: inout OperationContext, using operation: Operation) {
+    // NB: An `OperationRunner` sets its operation up a single time, so setting it up again on
+    // every run would mint a second deduplication storage, re-append its operation controllers,
+    // and re-add its stale-when-revalidate predicates. Descending would also overwrite the
+    // configuration that the transforms in scope just wrote on the way back down the chain.
+    guard context.modifierSetupScope != .operationRun else { return }
+    operation.setup(context: &context)
+  }
+
+  func run(
+    isolation: isolated (any Actor)?,
+    in context: OperationContext,
+    using operation: Operation,
+    with continuation: OperationContinuation<Operation.Value, Operation.Failure>
+  ) async throws(Operation.Failure) -> Operation.Value {
+    try await operation.run(isolation: isolation, in: context, with: continuation)
   }
 }
 
