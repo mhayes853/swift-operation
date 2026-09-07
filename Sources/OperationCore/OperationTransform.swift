@@ -57,8 +57,6 @@ extension OperationRequest {
   ) -> any OperationRequest<Value, Failure> {
     guard let innermost = transforms.last else { return self }
 
-    // NB: The boundary stops a scoped setup pass from descending into this operation, which the
-    // runtime has already set up. See `_OperationChainBoundary` for why that matters.
     let applied = innermost.apply(to: self.modifier(_OperationChainBoundary()))
     guard transforms.count > 1 else { return applied }
     return transforms.dropLast()
@@ -71,14 +69,8 @@ extension OperationRequest {
 
 // MARK: - OperationChainBoundary
 
-/// A modifier marking the point where an operation's own modifiers begin, and the modifiers
-/// applied to it by the ``OperationTransform``s in scope end.
 struct _OperationChainBoundary<Operation: OperationRequest>: OperationModifier, Sendable {
   func setup(context: inout OperationContext, using operation: Operation) {
-    // NB: An `OperationRunner` sets its operation up a single time, so setting it up again on
-    // every run would mint a second deduplication storage, re-append its operation controllers,
-    // and re-add its stale-when-revalidate predicates. Descending would also overwrite the
-    // configuration that the transforms in scope just wrote on the way back down the chain.
     guard context.modifierSetupScope != .operationRun else { return }
     operation.setup(context: &context)
   }

@@ -63,8 +63,6 @@ extension OperationRetryCondition {
   /// - Parameter limit: The maximum number of retries.
   /// - Returns: A retry condition.
   public static func maxRetries(_ limit: Int) -> Self {
-    // NB: The bound is enforced by `evaluate(error:in:)` rather than by this predicate, so that
-    // `maxRetries` stays the single source of truth for it even when mutated at runtime.
     Self(maxRetries: limit) { _, _ in true }
   }
 
@@ -171,14 +169,24 @@ extension OperationRequest {
   /// work. The transform states the limit, and its predicate is OR'd with the operation's own.
   ///
   /// ```swift
-  /// let library = client.store(for: $syncLibrary)
+  /// struct BackgroundSyncTransform: OperationTransform {
+  ///   let limit: Int
   ///
-  /// // Retries twice. Someone is watching a spinner, so give up quickly.
-  /// try await library.fetch()
+  ///   func apply<Operation: OperationRequest>(
+  ///     to operation: Operation
+  ///   ) -> any OperationRequest<Operation.Value, Operation.Failure> {
+  ///     operation.retry(limit: self.limit)
+  ///   }
+  /// }
+  ///
+  /// let store = client.store(for: $syncLibrary)
+  ///
+  /// // Uses default retry limit applied by the client.
+  /// try await store.fetch()
   ///
   /// try await withOperationTransform(BackgroundSyncTransform(limit: 20)) {
-  ///   // Retries 20 times. Nobody is waiting, so be as persistent as it takes.
-  ///   try await library.fetch()
+  ///   // Uses 20 for the retry limit
+  ///   try await store.fetch()
   /// }
   /// ```
   ///
@@ -281,18 +289,13 @@ public struct _RetryModifier<Operation: OperationRequest>: OperationModifier, Se
       context.operationRetryCondition = self.condition
       context[RetryerIDKey.self] = self.retryerId
     case .operationRun:
-      // NB: The transform is the most local description of how this run should behave, so it states
-      // the limit outright. Its predicate only widens the operation's own, as a transform raising
-      // the limit shouldn't also start retrying errors the operation declared unretryable.
       var condition = self.condition || context.operationRetryCondition
       condition.maxRetries = self.condition.maxRetries
       context.operationRetryCondition = condition
 
-      // NB: A transform's retryer sits outside the operation's own modifiers, so taking the loop
-      // from a retryer the operation already has would relocate it outside of modifiers such as
-      // `deduplicated()`, making every retry re-enter them. Steer the existing loop through the
-      // condition instead, and only claim the loop when there is none to steer.
-      if context[RetryerIDKey.self] == nil { context[RetryerIDKey.self] = self.retryerId }
+      if context[RetryerIDKey.self] == nil {
+        context[RetryerIDKey.self] = self.retryerId
+      }
     }
     operation.setup(context: &context)
   }
@@ -355,7 +358,6 @@ extension OperationContext {
     static let defaultValue: Int? = nil
   }
 
-  /// The number of retries that have been performed for the current operation run.
   var performedRetries: Int {
     self.operationRetryIndex.map { $0 + 1 } ?? 0
   }
