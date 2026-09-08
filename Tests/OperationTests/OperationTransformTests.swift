@@ -8,7 +8,7 @@ struct OperationTransformTests {
   func doesNotApplyATransformWhenNoneIsInScope() async {
     let counter = RunCounter()
     await #expect(throws: SomeError.self) {
-      try await #run(FailingOperation(counter: counter))
+      try await #run($transformFailingOperation(counter: counter))
     }
     expectNoDifference(counter.count, 1)
   }
@@ -18,7 +18,7 @@ struct OperationTransformTests {
     let counter = RunCounter()
     await withOperationTransform(RetryingTransform(limit: 3)) {
       await #expect(throws: SomeError.self) {
-        try await #run(FailingOperation(counter: counter))
+        try await #run($transformFailingOperation(counter: counter))
       }
     }
     expectNoDifference(counter.count, 4)
@@ -29,7 +29,7 @@ struct OperationTransformTests {
     let counter = RunCounter()
     await withOperationTransform(RetryingTransform(limit: 3)) {}
     await #expect(throws: SomeError.self) {
-      try await #run(FailingOperation(counter: counter))
+      try await #run($transformFailingOperation(counter: counter))
     }
     expectNoDifference(counter.count, 1)
   }
@@ -37,8 +37,8 @@ struct OperationTransformTests {
   @Test("Applies The Transform To Operations Of Differing Value And Failure Types")
   func appliesTheTransformToOperationsOfDifferingValueAndFailureTypes() async {
     await withOperationTransform(RetryingTransform(limit: 1)) {
-      let number = await #run(ConstantOperation(value: 1))
-      let text = await #run(ConstantOperation(value: "blob"))
+      let number = await #run($transformConstantNumber)
+      let text = await #run($transformConstantText)
       expectNoDifference(number, 1)
       expectNoDifference(text, "blob")
     }
@@ -49,25 +49,97 @@ struct OperationTransformTests {
     // `retry(limit:)` writes its limit into the context during setup, so the operation can only
     // read back 4 if the transform's modifiers were set up.
     let limit = await withOperationTransform(RetryingTransform(limit: 4)) {
-      await #run(MaxRetriesOperation())
+      await #run($transformMaxRetries)
     }
     expectNoDifference(limit, 4)
   }
 
-  @Test("An Operation's Own Retry Limit Takes Precedence Over The Transform's")
-  func anOperationsOwnRetryLimitTakesPrecedenceOverTheTransforms() async {
+  @Test("A Transform's Retry Limit Takes Precedence Over The Operation's Own")
+  func aTransformsRetryLimitTakesPrecedenceOverTheOperationsOwn() async {
     let counter = RunCounter()
     await withOperationTransform(RetryingTransform(limit: 10)) {
       await #expect(throws: SomeError.self) {
         try await #run(
-          FailingOperation(counter: counter)
+          $transformFailingOperation(counter: counter)
             .retry(limit: 1)
             .backoff(.noBackoff)
             .delayer(.noDelay)
         )
       }
     }
-    expectNoDifference(counter.count, 2)
+    expectNoDifference(counter.count, 11)
+  }
+
+  @Test("Reports The Setup Scope Of The Run To The Operation")
+  func reportsTheSetupScopeOfTheRunToTheOperation() async {
+    // The scope stays set for the duration of the run, so an operation can tell whether any
+    // transforms were in scope for it.
+    let outside = await #run($transformSetupScope)
+    let inside = await withOperationTransform(NoOpTransform()) {
+      await #run($transformSetupScope)
+    }
+    expectNoDifference(outside, .runtimeInitialSetup)
+    expectNoDifference(inside, .operationRun)
+  }
+
+  // MARK: - Operation Stores
+
+  @Test("Applies A Transform's Retry Limit To A Store Created By An Operation Client")
+  func appliesATransformsRetryLimitToAStoreCreatedByAnOperationClient() async {
+    // The client applies its own `retry(limit:)` to every operation it creates a store for, which
+    // sits closer to the operation than the transform's does.
+    let counter = RunCounter()
+    let store = OperationClient().store(for: $transformFailingQuery(counter: counter))
+    await withOperationTransform(RetryingTransform(limit: 10)) {
+      _ = try? await store.fetch()
+    }
+    expectNoDifference(counter.count, 11)
+  }
+
+  @Test("Applies A Transform's Backoff Function To A Store Created By An Operation Client")
+  func appliesATransformsBackoffFunctionToAStoreCreatedByAnOperationClient() async throws {
+    let store = OperationClient().store(for: $transformBackoffQuery)
+    let backoff = try await withOperationTransform(ConstantBackoffTransform(seconds: 99)) {
+      try await store.fetch()
+    }
+    expectNoDifference(backoff, .seconds(99))
+  }
+
+  @Test("Does Not Break Deduplication When A Transform Is In Scope")
+  func doesNotBreakDeduplicationWhenATransformIsInScope() async {
+    // A store's modifiers are only ever set up once. Setting them up again on each run would mint
+    // a second deduplication storage, leaving concurrent runs unable to see each other.
+    let counter = RunCounter()
+    let store = OperationClient().store(for: $transformSlowQuery(counter: counter))
+    await withOperationTransform(NoOpTransform()) {
+      async let first: Void = { _ = try? await store.fetch() }()
+      async let second: Void = { _ = try? await store.fetch() }()
+      _ = await (first, second)
+    }
+    expectNoDifference(counter.count, 1)
+  }
+
+  @Test("Retries Within Deduplication When A Transform Raises The Retry Limit")
+  func retriesWithinDeduplicationWhenATransformRaisesTheRetryLimit() async {
+    // The transform steers the store's retryer rather than taking the loop, so the loop stays
+    // inside `deduplicated()` and both callers share a single run's worth of attempts.
+    let counter = RunCounter()
+    let store = OperationClient().store(for: $transformSlowFailingQuery(counter: counter))
+    await withOperationTransform(RetryingTransform(limit: 2)) {
+      async let first: Void = { _ = try? await store.fetch() }()
+      async let second: Void = { _ = try? await store.fetch() }()
+      _ = await (first, second)
+    }
+    expectNoDifference(counter.count, 3)
+  }
+
+  @Test("Does Not Duplicate Operation Controllers When A Transform Is In Scope")
+  func doesNotDuplicateOperationControllersWhenATransformIsInScope() async throws {
+    let store = OperationClient()
+      .store(for: $transformControllerQuery.controlled(by: NoOpController()))
+    let outside = try await store.fetch()
+    let inside = try await withOperationTransform(NoOpTransform()) { try await store.fetch() }
+    expectNoDifference(inside, outside)
   }
 
   @Test("A Nested Transform Composes With The One Around It")
@@ -75,7 +147,7 @@ struct OperationTransformTests {
     let recorder = TagRecorder()
     await withOperationTransform(TaggingTransform(tag: "outer", recorder: recorder)) {
       await withOperationTransform(TaggingTransform(tag: "inner", recorder: recorder)) {
-        _ = await #run(ConstantOperation(value: 1))
+        _ = await #run($transformConstantNumber)
       }
     }
     expectNoDifference(recorder.tags, ["outer", "inner"])
@@ -88,7 +160,7 @@ struct OperationTransformTests {
       TaggingTransform(tag: "first", recorder: recorder),
       TaggingTransform(tag: "second", recorder: recorder)
     ]) {
-      _ = await #run(ConstantOperation(value: 1))
+      _ = await #run($transformConstantNumber)
     }
     // Modifiers run outermost first, so the last transform given is the one nearest the operation.
     expectNoDifference(recorder.tags, ["first", "second"])
@@ -112,7 +184,7 @@ struct OperationTransformTests {
     let recorder = TagRecorder()
     await withOperationTransform(TaggingTransform(tag: "outer", recorder: recorder)) {
       await withOperationTransforms([TaggingTransform(tag: "only", recorder: recorder)]) {
-        _ = await #run(ConstantOperation(value: 1))
+        _ = await #run($transformConstantNumber)
       }
     }
     expectNoDifference(recorder.tags, ["only"])
@@ -126,7 +198,7 @@ struct OperationTransformTests {
         TaggingTransform(tag: "only", recorder: recorder),
         behavior: .override
       ) {
-        _ = await #run(ConstantOperation(value: 1))
+        _ = await #run($transformConstantNumber)
       }
     }
     expectNoDifference(recorder.tags, ["only"])
@@ -143,7 +215,7 @@ struct OperationTransformTests {
         ],
         behavior: .append
       ) {
-        _ = await #run(ConstantOperation(value: 1))
+        _ = await #run($transformConstantNumber)
       }
     }
     expectNoDifference(recorder.tags, ["outer", "first", "second"])
@@ -153,11 +225,11 @@ struct OperationTransformTests {
   func handsASingleTransformTheOperationsOwnType() async {
     let recorder = TagRecorder()
     await withOperationTransform(OperandNamingTransform(recorder: recorder)) {
-      _ = await #run(ConstantOperation(value: 1))
+      _ = await #run($transformConstantNumber)
     }
     expectNoDifference(recorder.tags.count, 1)
     expectNoDifference(recorder.tags[0].contains("AnyOperation"), false)
-    expectNoDifference(recorder.tags[0].contains("ConstantOperation"), true)
+    expectNoDifference(recorder.tags[0].contains("transformConstantNumber"), true)
   }
 
   @Test("Hands The Innermost Of Several Transforms The Operation's Own Type")
@@ -168,10 +240,10 @@ struct OperationTransformTests {
       OperandNamingTransform(recorder: recorder)
     ]
     await withOperationTransforms(transforms) {
-      _ = await #run(ConstantOperation(value: 1))
+      _ = await #run($transformConstantNumber)
     }
     expectNoDifference(recorder.tags.last?.contains("AnyOperation"), false)
-    expectNoDifference(recorder.tags.last?.contains("ConstantOperation"), true)
+    expectNoDifference(recorder.tags.last?.contains("transformConstantNumber"), true)
   }
 
   @Test("Applies Nothing When Given An Empty Sequence")
@@ -180,7 +252,7 @@ struct OperationTransformTests {
     await withOperationTransform(RetryingTransform(limit: 3)) {
       _ = await withOperationTransforms([]) {
         await #expect(throws: SomeError.self) {
-          try await #run(FailingOperation(counter: counter))
+          try await #run($transformFailingOperation(counter: counter))
         }
       }
     }
@@ -195,7 +267,7 @@ struct OperationTransformTests {
     }
     await Task.detached {
       await withOperationTransforms(carried) {
-        _ = try? await #run(FailingOperation(counter: counter))
+        _ = try? await #run($transformFailingOperation(counter: counter))
       }
     }
     .value
@@ -208,7 +280,7 @@ struct OperationTransformTests {
     await withOperationTransform(RetryingTransform(limit: 3)) {
       await withTaskGroup(of: Void.self) { group in
         group.addTask {
-          _ = try? await #run(FailingOperation(counter: counter))
+          _ = try? await #run($transformFailingOperation(counter: counter))
         }
         await group.waitForAll()
       }
@@ -221,7 +293,7 @@ struct OperationTransformTests {
     let yielded = RecursiveLock([Int]())
     let value = await withOperationTransform(RetryingTransform(limit: 1)) {
       await #run(
-        YieldingOperation(),
+        $transformYieldingOperation,
         context: OperationContext(),
         continuation: OperationContinuation { result, _ in
           guard case .success(let next) = result else { return }
@@ -235,6 +307,30 @@ struct OperationTransformTests {
 }
 
 // MARK: - Helpers
+
+private struct NoOpTransform: OperationTransform {
+  func apply<Operation: OperationRequest>(
+    to operation: Operation
+  ) -> any OperationRequest<Operation.Value, Operation.Failure> {
+    operation
+  }
+}
+
+private struct ConstantBackoffTransform: OperationTransform {
+  let seconds: Int
+
+  func apply<Operation: OperationRequest>(
+    to operation: Operation
+  ) -> any OperationRequest<Operation.Value, Operation.Failure> {
+    operation.backoff(.constant(.seconds(self.seconds)))
+  }
+}
+
+private struct NoOpController: OperationController {
+  typealias State = QueryState<Int, Never>
+
+  func control(with controls: OperationControls<State>) -> OperationSubscription { .empty }
+}
 
 private struct SomeError: Equatable, Error {}
 
@@ -312,7 +408,7 @@ private final class TagRecorder: Sendable {
   }
 }
 
-private final class RunCounter: Sendable {
+private final class RunCounter: Hashable, Sendable {
   private let _count = RecursiveLock(0)
 
   var count: Int {
@@ -322,50 +418,80 @@ private final class RunCounter: Sendable {
   func increment() {
     self._count.withLock { $0 += 1 }
   }
-}
 
-private struct FailingOperation: OperationRequest, Sendable {
-  let counter: RunCounter
+  static func == (lhs: RunCounter, rhs: RunCounter) -> Bool {
+    lhs === rhs
+  }
 
-  func run(
-    isolation: isolated (any Actor)?,
-    in context: OperationContext,
-    with continuation: OperationContinuation<Int, any Error>
-  ) async throws -> Int {
-    self.counter.increment()
-    throw SomeError()
+  func hash(into hasher: inout Hasher) {
+    hasher.combine(ObjectIdentifier(self))
   }
 }
 
-private struct ConstantOperation<Value: Sendable>: OperationRequest, Sendable {
-  let value: Value
+// MARK: - Operations
 
-  func run(
-    isolation: isolated (any Actor)?,
-    in context: OperationContext,
-    with continuation: OperationContinuation<Value, Never>
-  ) async throws(Never) -> Value {
-    self.value
-  }
+@OperationRequest
+private func transformFailingOperation(counter: RunCounter) throws -> Int {
+  counter.increment()
+  throw SomeError()
 }
 
-private struct MaxRetriesOperation: OperationRequest, Sendable {
-  func run(
-    isolation: isolated (any Actor)?,
-    in context: OperationContext,
-    with continuation: OperationContinuation<Int, Never>
-  ) async throws(Never) -> Int {
-    context.operationMaxRetries
-  }
+@OperationRequest
+private func transformSetupScope(
+  context: OperationContext
+) -> OperationContext.ModifierSetupScope {
+  context.modifierSetupScope
 }
 
-private struct YieldingOperation: OperationRequest, Sendable {
-  func run(
-    isolation: isolated (any Actor)?,
-    in context: OperationContext,
-    with continuation: OperationContinuation<Int, Never>
-  ) async throws(Never) -> Int {
-    continuation.yield(1)
-    return 2
-  }
+@OperationRequest
+private func transformConstantNumber() -> Int {
+  1
+}
+
+@OperationRequest
+private func transformConstantText() -> String {
+  "blob"
+}
+
+@OperationRequest
+private func transformMaxRetries(context: OperationContext) -> Int {
+  context.operationMaxRetries
+}
+
+@OperationRequest
+private func transformYieldingOperation(continuation: OperationContinuation<Int, Never>) -> Int {
+  continuation.yield(1)
+  return 2
+}
+
+// MARK: - Queries
+
+@QueryRequest
+private func transformFailingQuery(counter: RunCounter) throws -> Int {
+  counter.increment()
+  throw SomeError()
+}
+
+@QueryRequest
+private func transformSlowQuery(counter: RunCounter) async throws -> Int {
+  counter.increment()
+  try await Task.sleep(for: .milliseconds(100))
+  return 1
+}
+
+@QueryRequest
+private func transformSlowFailingQuery(counter: RunCounter) async throws -> Int {
+  counter.increment()
+  try await Task.sleep(for: .milliseconds(50))
+  throw SomeError()
+}
+
+@QueryRequest
+private func transformBackoffQuery(context: OperationContext) -> OperationDuration {
+  context.operationBackoffFunction(1)
+}
+
+@QueryRequest
+private func transformControllerQuery(context: OperationContext) -> Int {
+  context.operationControllers.count
 }

@@ -63,8 +63,6 @@ extension OperationRetryCondition {
   /// - Parameter limit: The maximum number of retries.
   /// - Returns: A retry condition.
   public static func maxRetries(_ limit: Int) -> Self {
-    // NB: The bound is enforced by `evaluate(error:in:)` rather than by this predicate, so that
-    // `maxRetries` stays the single source of truth for it even when mutated at runtime.
     Self(maxRetries: limit) { _, _ in true }
   }
 
@@ -166,6 +164,32 @@ extension OperationRequest {
   ///   .retry(limit: 3)
   /// ```
   ///
+  /// A retry modifier applied by an ``OperationTransform`` in scope for a run is the exception to
+  /// that rule, which lets you dial an operation's persistence up or down for a particular piece of
+  /// work. The transform states the limit, and its predicate is OR'd with the operation's own.
+  ///
+  /// ```swift
+  /// struct BackgroundSyncTransform: OperationTransform {
+  ///   let limit: Int
+  ///
+  ///   func apply<Operation: OperationRequest>(
+  ///     to operation: Operation
+  ///   ) -> any OperationRequest<Operation.Value, Operation.Failure> {
+  ///     operation.retry(limit: self.limit)
+  ///   }
+  /// }
+  ///
+  /// let store = client.store(for: $syncLibrary)
+  ///
+  /// // Uses default retry limit applied by the client.
+  /// try await store.fetch()
+  ///
+  /// try await withOperationTransform(BackgroundSyncTransform(limit: 20)) {
+  ///   // Uses 20 for the retry limit
+  ///   try await store.fetch()
+  /// }
+  /// ```
+  ///
   /// - Parameters:
   ///   - limit: The maximum number of retries.
   /// - Returns: A ``ModifiedOperation``.
@@ -260,8 +284,19 @@ public struct _RetryModifier<Operation: OperationRequest>: OperationModifier, Se
   }
 
   public func setup(context: inout OperationContext, using operation: Operation) {
-    context.operationRetryCondition = self.condition
-    context[RetryerIDKey.self] = self.retryerId
+    switch context.modifierSetupScope {
+    case .runtimeInitialSetup:
+      context.operationRetryCondition = self.condition
+      context[RetryerIDKey.self] = self.retryerId
+    case .operationRun:
+      var condition = self.condition || context.operationRetryCondition
+      condition.maxRetries = self.condition.maxRetries
+      context.operationRetryCondition = condition
+
+      if context[RetryerIDKey.self] == nil {
+        context[RetryerIDKey.self] = self.retryerId
+      }
+    }
     operation.setup(context: &context)
   }
 
@@ -323,7 +358,6 @@ extension OperationContext {
     static let defaultValue: Int? = nil
   }
 
-  /// The number of retries that have been performed for the current operation run.
   var performedRetries: Int {
     self.operationRetryIndex.map { $0 + 1 } ?? 0
   }
@@ -332,6 +366,10 @@ extension OperationContext {
   ///
   /// The default value of this context property permits no retries. Applying any of the
   /// `retry` modifiers will set this value to the condition that modifier was built from.
+  ///
+  /// The retry loop reads this property on each attempt, and is always the innermost one in the
+  /// operation. A retry modifier applied by an ``OperationTransform`` steers that loop rather than
+  /// adding one of its own.
   public var operationRetryCondition: OperationRetryCondition {
     get { self[RetryConditionKey.self] }
     set { self[RetryConditionKey.self] = newValue }
