@@ -3,8 +3,8 @@
 /// A protocol for defining reusable and composable logic for operations.
 ///
 /// The library comes with many built-in modifiers that you can use to customize the logic and
-/// behavior of an operation. For instance, ``OperationRequest/retry(limit:)`` adds retry logic
-/// with backoff to any operation regardless of whether or not its a ``QueryRequest``,
+/// behavior of an operation. For instance, ``OperationRequest/retry(limit:merging:)`` adds retry
+/// logic with backoff to any operation regardless of whether or not its a ``QueryRequest``,
 /// ``MutationRequest``, or ``PaginatedRequest``.
 ///
 /// To create your own modifier, create a data type that conforms to this protocol. We'll create a

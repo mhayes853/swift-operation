@@ -31,7 +31,8 @@ extension OperationContext {
     ///
     /// Modifiers write their configuration before setting up the operation they're attached to,
     /// so the ones applied closest to the operation win. This is why an operation's own
-    /// ``OperationRequest/retry(limit:)`` beats the one `OperationClient` applies by default.
+    /// ``OperationRequest/retry(limit:merging:)`` beats the one `OperationClient` applies by
+    /// default.
     case runtimeInitialSetup
 
     /// The setup of the modifiers that the ``OperationTransform``s in scope apply to a single run.

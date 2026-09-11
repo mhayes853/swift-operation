@@ -473,11 +473,12 @@ The library ships with a handful of package traits, which allow you to condition
 - ``ModifiedOperation``
 - ``OperationRequest/backoff(_:)``
 - ``OperationRequest/clock(_:)``
-- ``OperationRequest/retry(limit:)``
-- ``OperationRequest/retry(limit:when:)``
-- ``OperationRequest/retry(when:)``
-- ``OperationRequest/retry(_:)``
+- ``OperationRequest/retry(limit:merging:)``
+- ``OperationRequest/retry(limit:merging:when:)``
+- ``OperationRequest/retry(merging:when:)``
+- ``OperationRequest/retry(_:merging:)``
 - ``OperationRetryCondition``
+- ``OperationRetryCondition/Merge``
 - ``OperationRequest/taskConfiguration(_:)-((OperationTaskConfiguration)->Void)``
 - ``OperationRequest/deduplicated()``
 - ``OperationRequest/modifier(_:)``
