@@ -19,7 +19,7 @@
 ///   && OperationRetryCondition { error, _ in !(error is AuthenticationError) }
 /// ```
 public struct OperationRetryCondition: Sendable {
-  fileprivate typealias Predicate = @Sendable (any Error, OperationContext) async -> Bool
+  private typealias Predicate = @Sendable (any Error, OperationContext) async -> Bool
 
   /// The upper bound this condition places on the number of retries, if it places one.
   ///
@@ -395,18 +395,14 @@ public struct _RetryModifier<Operation: OperationRequest>: OperationModifier, Se
       self.condition,
       with: context.operationRetryCondition
     )
-
-    // NB: The innermost retry modifier runs the loop. Within a setup pass, that's the last one
-    // set up. A transform's modifiers are always outside the operation's own, which were set up in
-    // an earlier pass, so a claim from an earlier pass is never taken over.
-    let claim = context[RetryerClaimKey.self]
-    if claim == nil || claim?.scope == context.modifierSetupScope {
-      context[RetryerClaimKey.self] = RetryerClaim(
-        id: self.retryerId,
-        scope: context.modifierSetupScope
-      )
-    }
     operation.setup(context: &context)
+
+    // NB: Setup unwinds from the innermost modifier outwards, so the innermost retry modifier
+    // claims the loop first. A transform's modifiers are outside the operation's own, so they never
+    // take over its claim.
+    if context[RetryerIDKey.self] == nil {
+      context[RetryerIDKey.self] = self.retryerId
+    }
   }
 
   public func run(
@@ -415,11 +411,14 @@ public struct _RetryModifier<Operation: OperationRequest>: OperationModifier, Se
     using operation: Operation,
     with continuation: OperationContinuation<Operation.Value, Operation.Failure>
   ) async throws(Operation.Failure) -> Operation.Value {
-    guard context[RetryerClaimKey.self]?.id === self.retryerId else {
+    guard context[RetryerIDKey.self] === self.retryerId else {
       return try await operation.run(isolation: isolation, in: context, with: continuation)
     }
 
     var context = context
+    // NB: Nothing inside this modifier runs a retry loop, and clearing the claim keeps it from
+    // stopping an operation run with this context from claiming its own.
+    context[RetryerIDKey.self] = nil
     var retryIndex: Int?
     while true {
       context.operationRetryIndex = retryIndex
@@ -442,17 +441,12 @@ public struct _RetryModifier<Operation: OperationRequest>: OperationModifier, Se
   }
 }
 
-// MARK: - RetryerClaim
+// MARK: - RetryerID
 
 private final class RetryerID: Sendable {}
 
-private struct RetryerClaim: Sendable {
-  let id: RetryerID
-  let scope: OperationContext.ModifierSetupScope
-}
-
-private enum RetryerClaimKey: OperationContext.Key {
-  static var defaultValue: RetryerClaim? { nil }
+private enum RetryerIDKey: OperationContext.Key {
+  static var defaultValue: RetryerID? { nil }
 }
 
 // MARK: - OperationContext

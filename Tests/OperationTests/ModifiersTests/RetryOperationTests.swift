@@ -572,6 +572,41 @@ struct RetryOperationTests {
     let count = await query.fetchCount
     expectNoDifference(count, 4)
   }
+
+  @Test("Retries An Operation Run With The Context Of A Retrying Operation")
+  func retriesAnOperationRunWithTheContextOfARetryingOperation() async {
+    let counter = Counter()
+    await #expect(throws: FailingQuery.SomeError.self) {
+      try await #run(
+        $nestedRetryingOperation(counter: counter)
+          .retry(limit: 1)
+          .backoff(.noBackoff)
+          .delayer(.noDelay)
+      )
+    }
+    let count = await counter.count
+    expectNoDifference(count, 6, "The nested operation should retry twice on each of 2 attempts.")
+  }
+}
+
+@OperationRequest
+private func nestedRetryingOperation(
+  counter: Counter,
+  context: OperationContext
+) async throws -> Int {
+  try await #run(
+    $countingFailingOperation(counter: counter)
+      .retry(limit: 2)
+      .backoff(.noBackoff)
+      .delayer(.noDelay),
+    context: context
+  )
+}
+
+@OperationRequest
+private func countingFailingOperation(counter: Counter) async throws -> Int {
+  await counter.increment()
+  throw FailingQuery.SomeError()
 }
 
 private actor Counter {
