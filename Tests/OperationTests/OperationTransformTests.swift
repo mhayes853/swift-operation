@@ -70,6 +70,70 @@ struct OperationTransformTests {
     expectNoDifference(counter.count, 11)
   }
 
+  @Test("Honors A Transform's Retry Predicate When The Operation Has No Retry Modifier")
+  func honorsATransformsRetryPredicateWhenTheOperationHasNoRetryModifier() async {
+    let counter = RunCounter()
+    let transform = ConditionRetryingTransform(
+      condition: .maxRetries(5) && OperationRetryCondition { _, _ in false }
+    )
+    await withOperationTransform(transform) {
+      await #expect(throws: SomeError.self) {
+        try await #run($transformFailingOperation(counter: counter))
+      }
+    }
+    expectNoDifference(counter.count, 1)
+  }
+
+  @Test("A Transform's Retry Condition Replaces The Operation's Own By Default")
+  func aTransformsRetryConditionReplacesTheOperationsOwnByDefault() async {
+    let counter = RunCounter()
+    await withOperationTransform(RetryingTransform(limit: 2)) {
+      await #expect(throws: SomeError.self) {
+        try await #run(
+          $transformFailingOperation(counter: counter)
+            .retry(limit: 5) { _, _ in false }
+            .backoff(.noBackoff)
+            .delayer(.noDelay)
+        )
+      }
+    }
+    expectNoDifference(counter.count, 3)
+  }
+
+  @Test("A Transform Lowers The Operation's Retry Limit With An And Merge")
+  func aTransformLowersTheOperationsRetryLimitWithAnAndMerge() async {
+    let counter = RunCounter()
+    let transform = ConditionRetryingTransform(condition: .maxRetries(1), merge: .and)
+    await withOperationTransform(transform) {
+      await #expect(throws: SomeError.self) {
+        try await #run(
+          $transformFailingOperation(counter: counter)
+            .retry(limit: 5)
+            .backoff(.noBackoff)
+            .delayer(.noDelay)
+        )
+      }
+    }
+    expectNoDifference(counter.count, 2)
+  }
+
+  @Test("A Transform Raises The Retry Limit And Keeps The Operation's Predicate With An Or Merge")
+  func aTransformRaisesTheRetryLimitAndKeepsTheOperationsPredicateWithAnOrMerge() async {
+    let counter = RunCounter()
+    let transform = ConditionRetryingTransform(condition: .maxRetries(10), merge: .or)
+    await withOperationTransform(transform) {
+      await #expect(throws: SomeError.self) {
+        try await #run(
+          $transformFailingOperation(counter: counter)
+            .retry(limit: 1) { _, context in (context.operationRetryIndex ?? -1) < 3 }
+            .backoff(.noBackoff)
+            .delayer(.noDelay)
+        )
+      }
+    }
+    expectNoDifference(counter.count, 5)
+  }
+
   @Test("Reports The Setup Scope Of The Run To The Operation")
   func reportsTheSetupScopeOfTheRunToTheOperation() async {
     // The scope stays set for the duration of the run, so an operation can tell whether any
@@ -341,6 +405,19 @@ private struct RetryingTransform: OperationTransform {
     to operation: Operation
   ) -> any OperationRequest<Operation.Value, Operation.Failure> {
     operation.retry(limit: self.limit).backoff(.noBackoff).delayer(.noDelay)
+  }
+}
+
+private struct ConditionRetryingTransform: OperationTransform {
+  let condition: OperationRetryCondition
+  var merge = OperationRetryCondition.Merge.override
+
+  func apply<Operation: OperationRequest>(
+    to operation: Operation
+  ) -> any OperationRequest<Operation.Value, Operation.Failure> {
+    operation.retry(self.condition, merging: self.merge)
+      .backoff(.noBackoff)
+      .delayer(.noDelay)
   }
 }
 

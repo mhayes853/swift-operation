@@ -420,8 +420,8 @@ struct RetryOperationTests {
     expectNoDifference(count, 0)
   }
 
-  @Test("Or With A Max Retries Operand Always Permits A Retry")
-  func orWithAMaxRetriesOperandAlwaysPermitsARetry() async {
+  @Test("Or With A Max Retries Operand Keeps The Other Operand's Predicate")
+  func orWithAMaxRetriesOperandKeepsTheOtherOperandsPredicate() async {
     let query = CountingQuery()
     await query.ensureFails()
     let store = OperationStore.detached(
@@ -434,9 +434,27 @@ struct RetryOperationTests {
     let count = await query.fetchCount
     expectNoDifference(
       count,
-      4,
-      "`maxRetries` carries an always-true predicate, so using it as an `||` operand makes the combined predicate always permit a retry, leaving only the outer bound of 3 to stop it."
+      1,
+      "`maxRetries` has no predicate, so using it as an `||` operand only affects the bound."
     )
+  }
+
+  @Test("And With A Max Retries Operand Keeps The Other Operand's Predicate")
+  func andWithAMaxRetriesOperandKeepsTheOtherOperandsPredicate() async {
+    let query = CountingQuery()
+    await query.ensureFails()
+    let store = OperationStore.detached(
+      query: query.backoff(.noBackoff)
+        .delayer(.noDelay)
+        .retry(
+          .maxRetries(5)
+            && OperationRetryCondition { _, context in (context.operationRetryIndex ?? -1) < 1 }
+        ),
+      initialValue: nil
+    )
+    _ = try? await store.fetch()
+    let count = await query.fetchCount
+    expectNoDifference(count, 3)
   }
 
   @Test("Or With Never Falls Back To The Other Operand")
@@ -463,6 +481,132 @@ struct RetryOperationTests {
     expectNoDifference((OperationRetryCondition.maxRetries(4) && .maxRetries(9)).maxRetries, 4)
     expectNoDifference((OperationRetryCondition.maxRetries(4) || .maxRetries(9)).maxRetries, 9)
   }
+
+  // MARK: - Merge
+
+  @Test("Overrides The Condition Of The Retry Modifiers Applied Around It By Default")
+  func overridesTheConditionOfTheRetryModifiersAppliedAroundItByDefault() async {
+    let query = CountingQuery()
+    await query.ensureFails()
+    let store = OperationStore.detached(
+      query: query.backoff(.noBackoff)
+        .delayer(.noDelay)
+        .retry(limit: 1)
+        .retry(limit: 3) { _, _ in false },
+      initialValue: nil
+    )
+    expectNoDifference(store.context.operationMaxRetries, 1)
+    _ = try? await store.fetch()
+    let count = await query.fetchCount
+    expectNoDifference(count, 2)
+  }
+
+  @Test("Or Merge Combines With The Condition Of The Retry Modifiers Applied Around It")
+  func orMergeCombinesWithTheConditionOfTheRetryModifiersAppliedAroundIt() async {
+    let query = CountingQuery()
+    await query.ensureFails()
+    let store = OperationStore.detached(
+      query: query.backoff(.noBackoff)
+        .delayer(.noDelay)
+        .retry(limit: 1, merging: .or)
+        .retry(limit: 3),
+      initialValue: nil
+    )
+    expectNoDifference(store.context.operationMaxRetries, 3)
+    _ = try? await store.fetch()
+    let count = await query.fetchCount
+    expectNoDifference(count, 4)
+  }
+
+  @Test("And Merge Narrows The Condition Of The Retry Modifiers Applied Around It")
+  func andMergeNarrowsTheConditionOfTheRetryModifiersAppliedAroundIt() async {
+    let query = CountingQuery()
+    await query.ensureFails()
+    let store = OperationStore.detached(
+      query: query.backoff(.noBackoff)
+        .delayer(.noDelay)
+        .retry(merging: .and) { _, context in (context.operationRetryIndex ?? -1) < 1 }
+        .retry(limit: 5),
+      initialValue: nil
+    )
+    expectNoDifference(store.context.operationMaxRetries, 5)
+    _ = try? await store.fetch()
+    let count = await query.fetchCount
+    expectNoDifference(count, 3)
+  }
+
+  @Test("And Merge Permits No Retries Without A Retry Modifier Applied Around It")
+  func andMergePermitsNoRetriesWithoutARetryModifierAppliedAroundIt() async {
+    let query = CountingQuery()
+    await query.ensureFails()
+    let store = OperationStore.detached(
+      query: query.backoff(.noBackoff)
+        .delayer(.noDelay)
+        .retry(limit: 5, merging: .and),
+      initialValue: nil
+    )
+    expectNoDifference(store.context.operationMaxRetries, 0)
+    _ = try? await store.fetch()
+    let count = await query.fetchCount
+    expectNoDifference(count, 1)
+  }
+
+  @Test("Custom Merge Receives The Modifier's Condition And The Existing One")
+  func customMergeReceivesTheModifiersConditionAndTheExistingOne() async {
+    let merge = OperationRetryCondition.Merge { condition, existing in
+      var merged = condition
+      merged.maxRetries = (condition.maxRetries ?? 0) + (existing.maxRetries ?? 0)
+      return merged
+    }
+    let query = CountingQuery()
+    await query.ensureFails()
+    let store = OperationStore.detached(
+      query: query.backoff(.noBackoff)
+        .delayer(.noDelay)
+        .retry(limit: 1, merging: merge)
+        .retry(limit: 2),
+      initialValue: nil
+    )
+    expectNoDifference(store.context.operationMaxRetries, 3)
+    _ = try? await store.fetch()
+    let count = await query.fetchCount
+    expectNoDifference(count, 4)
+  }
+
+  @Test("Retries An Operation Run With The Context Of A Retrying Operation")
+  func retriesAnOperationRunWithTheContextOfARetryingOperation() async {
+    let counter = Counter()
+    await #expect(throws: FailingQuery.SomeError.self) {
+      try await #run(
+        $nestedRetryingOperation(counter: counter)
+          .retry(limit: 1)
+          .backoff(.noBackoff)
+          .delayer(.noDelay)
+      )
+    }
+    let count = await counter.count
+    expectNoDifference(count, 6, "The nested operation should retry twice on each of 2 attempts.")
+  }
+}
+
+@OperationRequest
+private func nestedRetryingOperation(
+  counter: Counter,
+  context: OperationContext
+) async throws -> Int {
+  try await #run(
+    $countingFailingOperation(counter: counter)
+      .retry(limit: 2)
+      .backoff(.noBackoff)
+      .delayer(.noDelay),
+    context: context
+  )
+}
+
+@OperationRequest
+private func countingFailingOperation(counter: Counter) async throws -> Int {
+  await counter.increment()
+  throw FailingQuery.SomeError()
 }
 
 private actor Counter {

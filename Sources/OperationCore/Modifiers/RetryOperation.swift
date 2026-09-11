@@ -3,8 +3,9 @@
 /// A condition that determines whether or not an operation is retried after it throws an error.
 ///
 /// A retry condition pairs an optional upper bound on the number of retries, which is published to
-/// ``OperationContext/operationMaxRetries``, with a predicate that inspects the thrown error. Both
-/// must permit a retry in order for one to occur.
+/// ``OperationContext/operationMaxRetries``, with an optional predicate that inspects the thrown
+/// error. A retry occurs when the bound has not been reached, and the predicate permits one. A
+/// condition without a predicate, such as ``maxRetries(_:)``, only places a bound.
 ///
 /// The bound is kept separate from the predicate rather than being folded into it because it must
 /// be known _before_ an attempt runs in order to power ``OperationContext/isKnownLastRunAttempt``.
@@ -18,13 +19,15 @@
 ///   && OperationRetryCondition { error, _ in !(error is AuthenticationError) }
 /// ```
 public struct OperationRetryCondition: Sendable {
+  private typealias Predicate = @Sendable (any Error, OperationContext) async -> Bool
+
   /// The upper bound this condition places on the number of retries, if it places one.
   ///
   /// A nil value indicates that this condition is unbounded, and permits retries for as long as its
   /// predicate does.
   public var maxRetries: Int?
 
-  private let predicate: @Sendable (any Error, OperationContext) async -> Bool
+  private let predicate: Predicate?
 
   /// Creates a bounded retry condition from a predicate you specify.
   ///
@@ -35,6 +38,10 @@ public struct OperationRetryCondition: Sendable {
     maxRetries: Int? = nil,
     _ predicate: @escaping @Sendable (any Error, OperationContext) async -> Bool
   ) {
+    self.init(maxRetries: maxRetries, predicate: predicate)
+  }
+
+  private init(maxRetries: Int?, predicate: Predicate?) {
     self.maxRetries = maxRetries
     self.predicate = predicate
   }
@@ -42,8 +49,8 @@ public struct OperationRetryCondition: Sendable {
   /// Evaluates this condition with the specified `error` and `context`.
   ///
   /// A retry is permitted only when the retries performed so far are within ``maxRetries``, and
-  /// this condition's predicate permits one. The predicate is not evaluated when the bound has
-  /// already been reached.
+  /// this condition's predicate, if it has one, permits one. The predicate is not evaluated when
+  /// the bound has already been reached.
   ///
   /// - Parameters:
   ///   - error: The error thrown by an operation attempt.
@@ -51,7 +58,7 @@ public struct OperationRetryCondition: Sendable {
   /// - Returns: Whether or not to perform another retry.
   public func evaluate(error: some Error, in context: OperationContext) async -> Bool {
     guard context.performedRetries < self.maxRetries ?? .max else { return false }
-    return await self.predicate(error, context)
+    return await self.predicate?(error, context) ?? true
   }
 }
 
@@ -60,14 +67,19 @@ public struct OperationRetryCondition: Sendable {
 extension OperationRetryCondition {
   /// A condition that permits at most `limit` retries, regardless of the error thrown.
   ///
+  /// This condition has no predicate, so combining it with another condition only affects the
+  /// bound of the result.
+  ///
   /// - Parameter limit: The maximum number of retries.
   /// - Returns: A retry condition.
   public static func maxRetries(_ limit: Int) -> Self {
-    Self(maxRetries: limit) { _, _ in true }
+    Self(maxRetries: limit, predicate: nil)
   }
 
   /// A condition that never permits a retry.
-  public static let never = Self(maxRetries: 0) { _, _ in false }
+  ///
+  /// Like ``maxRetries(_:)``, this condition has no predicate, and only places a bound of 0.
+  public static let never = Self.maxRetries(0)
 }
 
 // MARK: - Combining
@@ -77,19 +89,17 @@ extension OperationRetryCondition {
   ///
   /// The resulting condition is bounded by the smaller of the 2 bounds, and its predicate is the
   /// boolean AND of both predicates. `rhs`'s predicate is not evaluated when `lhs`'s predicate
-  /// returns false.
+  /// returns false. An operand without a predicate leaves the other operand's predicate as is.
   ///
   /// - Parameters:
   ///   - lhs: A retry condition.
   ///   - rhs: A retry condition.
   /// - Returns: A retry condition permitting a retry only when both `lhs` and `rhs` permit one.
   public static func && (lhs: Self, rhs: Self) -> Self {
-    var condition = Self { error, context in
-      guard await lhs.predicate(error, context) else { return false }
-      return await rhs.predicate(error, context)
-    }
-    condition.maxRetries = lhs.combinedMaxRetries(with: rhs)
-    return condition
+    Self(
+      maxRetries: lhs.combinedMaxRetries(with: rhs),
+      predicate: Self.predicate(lhs.predicate, rhs.predicate, shortCircuitingOn: false)
+    )
   }
 
   /// Combines 2 retry conditions such that either one permitting a retry is enough for one to
@@ -97,31 +107,37 @@ extension OperationRetryCondition {
   ///
   /// The resulting condition is bounded by the larger of the 2 bounds, and is unbounded if either
   /// operand is unbounded. `rhs`'s predicate is not evaluated when `lhs`'s predicate returns true.
-  ///
-  /// > Note: Since ``maxRetries(_:)`` carries a predicate that always permits a retry, using it as
-  /// > an operand here makes the combined predicate always permit one too. Impose bounds with
-  /// > ``&&(_:_:)`` on the outside instead.
+  /// An operand without a predicate leaves the other operand's predicate as is.
   ///
   /// - Parameters:
   ///   - lhs: A retry condition.
   ///   - rhs: A retry condition.
   /// - Returns: A retry condition permitting a retry when either `lhs` or `rhs` permits one.
   public static func || (lhs: Self, rhs: Self) -> Self {
-    var condition = Self { error, context in
-      guard await lhs.predicate(error, context) else {
-        return await rhs.predicate(error, context)
-      }
-      return true
+    Self(
+      maxRetries: lhs.unionMaxRetries(with: rhs),
+      predicate: Self.predicate(lhs.predicate, rhs.predicate, shortCircuitingOn: true)
+    )
+  }
+
+  private static func predicate(
+    _ lhs: Predicate?,
+    _ rhs: Predicate?,
+    shortCircuitingOn value: Bool
+  ) -> Predicate? {
+    guard let lhs else { return rhs }
+    guard let rhs else { return lhs }
+    return { error, context in
+      guard await lhs(error, context) != value else { return value }
+      return await rhs(error, context)
     }
-    condition.maxRetries = lhs.unionMaxRetries(with: rhs)
-    return condition
   }
 
   private func combinedMaxRetries(with other: Self) -> Int? {
     switch (self.maxRetries, other.maxRetries) {
-    case let (lhs?, rhs?): min(lhs, rhs)
-    case let (lhs?, nil): lhs
-    case let (nil, rhs?): rhs
+    case (let lhs?, let rhs?): min(lhs, rhs)
+    case (let lhs?, nil): lhs
+    case (nil, let rhs?): rhs
     case (nil, nil): nil
     }
   }
@@ -130,6 +146,71 @@ extension OperationRetryCondition {
     guard let lhs = self.maxRetries, let rhs = other.maxRetries else { return nil }
     return max(lhs, rhs)
   }
+}
+
+// MARK: - Merge
+
+extension OperationRetryCondition {
+  /// How a retry modifier merges its condition with the one already in the context.
+  ///
+  /// Every retry modifier merges its condition with
+  /// ``OperationContext/operationRetryCondition`` during setup, regardless of whether it was
+  /// applied when building the operation, or by an ``OperationTransform``. Modifiers are set up
+  /// outermost first, so the condition a modifier merges with is the one established by the
+  /// modifiers applied after it, or by the transforms around it. Before any retry modifier has been
+  /// set up, that condition permits no retries, and has no predicate.
+  ///
+  /// ```swift
+  /// // The client applies `retry(limit: 3)` around every operation it creates a store for. This
+  /// // narrows that condition to authentication-safe errors, rather than replacing it.
+  /// let operation = $myOperation.retry(merging: .and) { error, _ in
+  ///   !(error is AuthenticationError)
+  /// }
+  /// ```
+  public struct Merge: Sendable {
+    private let merge:
+      @Sendable (OperationRetryCondition, OperationRetryCondition) -> OperationRetryCondition
+
+    /// Creates a merge from a closure you specify.
+    ///
+    /// - Parameter merge: A closure that takes the condition of the modifier being set up, and
+    ///   the condition already in the context, and returns the condition to place in the context.
+    public init(
+      _ merge:
+        @escaping @Sendable (
+          _ condition: OperationRetryCondition,
+          _ existing: OperationRetryCondition
+        ) -> OperationRetryCondition
+    ) {
+      self.merge = merge
+    }
+
+    /// Merges a modifier's `condition` with the `existing` condition in the context.
+    ///
+    /// - Parameters:
+    ///   - condition: The condition of the modifier being set up.
+    ///   - existing: The condition already in the context.
+    /// - Returns: The condition to place in the context.
+    public func merge(
+      _ condition: OperationRetryCondition,
+      with existing: OperationRetryCondition
+    ) -> OperationRetryCondition {
+      self.merge(condition, existing)
+    }
+  }
+}
+
+extension OperationRetryCondition.Merge {
+  /// A merge that replaces the existing condition with the modifier's own.
+  public static let override = Self { condition, _ in condition }
+
+  /// A merge that combines the modifier's condition with the existing one using
+  /// ``OperationRetryCondition/||(_:_:)``.
+  public static let or = Self { condition, existing in condition || existing }
+
+  /// A merge that combines the modifier's condition with the existing one using
+  /// ``OperationRetryCondition/&&(_:_:)``.
+  public static let and = Self { condition, existing in condition && existing }
 }
 
 // MARK: - RetryModifier
@@ -152,9 +233,11 @@ extension OperationRequest {
   /// supports cooperative cancellation, and avoid doing any irreversible synchronous work before
   /// reaching a suspension point in this operation.
   ///
-  /// When multiple retry modifiers are applied to an operation, only the first one applied will
-  /// have any effect. This is to allow you to override the default retry behavior applied by the
-  /// default initializer of ``OperationClient``.
+  /// When multiple retry modifiers are applied to an operation, each one merges its condition with
+  /// the one established by the modifiers around it using `merge`. The default merge of
+  /// ``OperationRetryCondition/Merge/override`` means that only the first one
+  /// applied has any effect. This is to allow you to override the default retry behavior applied
+  /// by the default initializer of ``OperationClient``.
   ///
   /// ```swift
   /// // The operation retry limit is 5, and the second retry modifier
@@ -162,11 +245,17 @@ extension OperationRequest {
   /// let operation = $myOperation
   ///   .retry(limit: 5)
   ///   .retry(limit: 3)
+  ///
+  /// // The operation retry limit is 10, as the first retry modifier
+  /// // takes the larger of the 2 limits.
+  /// let widenedOperation = $myOperation
+  ///   .retry(limit: 5, merging: .or)
+  ///   .retry(limit: 10)
   /// ```
   ///
-  /// A retry modifier applied by an ``OperationTransform`` in scope for a run is the exception to
-  /// that rule, which lets you dial an operation's persistence up or down for a particular piece of
-  /// work. The transform states the limit, and its predicate is OR'd with the operation's own.
+  /// A retry modifier applied by an ``OperationTransform`` in scope for a run is merged with the
+  /// operation's own condition in the same manner, which lets you dial an operation's
+  /// persistence up or down for a particular piece of work.
   ///
   /// ```swift
   /// struct BackgroundSyncTransform: OperationTransform {
@@ -190,11 +279,20 @@ extension OperationRequest {
   /// }
   /// ```
   ///
+  /// However many retry modifiers are applied, only the innermost one runs a retry loop, and the
+  /// others steer that loop through ``OperationContext/operationRetryCondition``. An operation's
+  /// own retry modifiers are always inside the ones applied by a transform, so the loop remains
+  /// inside modifiers such as ``OperationRequest/deduplicated()``.
+  ///
   /// - Parameters:
   ///   - limit: The maximum number of retries.
+  ///   - merge: How this modifier's condition is merged with the existing one.
   /// - Returns: A ``ModifiedOperation``.
-  public func retry(limit: Int) -> ModifiedOperation<Self, _RetryModifier<Self>> {
-    self.retry(.maxRetries(limit))
+  public func retry(
+    limit: Int,
+    merging merge: OperationRetryCondition.Merge = .override
+  ) -> ModifiedOperation<Self, _RetryModifier<Self>> {
+    self.retry(.maxRetries(limit), merging: merge)
   }
 
   /// Applies a retrying to this operation that is limited both by a maximum number of retries, and
@@ -205,7 +303,6 @@ extension OperationRequest {
   /// any backoff is applied, so an error that does not warrant a retry fails the operation
   /// immediately rather than after a delay.
   ///
-  ///
   /// ```swift
   /// // Retries up to 3 times, but never burns a retry on an authentication failure.
   /// let operation = $myOperation.retry(limit: 3) { error, _ in
@@ -213,18 +310,20 @@ extension OperationRequest {
   /// }
   /// ```
   ///
-  /// See ``OperationRequest/retry(limit:)`` for details on backoff, cancellation, and the behavior
-  /// of applying multiple retry modifiers to a single operation.
+  /// See ``OperationRequest/retry(limit:merging:)`` for details on backoff, cancellation, and
+  /// the behavior of applying multiple retry modifiers to a single operation.
   ///
   /// - Parameters:
   ///   - limit: The maximum number of retries.
+  ///   - merge: How this modifier's condition is merged with the existing one.
   ///   - predicate: A predicate that decides whether or not the thrown error warrants a retry.
   /// - Returns: A ``ModifiedOperation``.
   public func retry(
     limit: Int,
+    merging merge: OperationRetryCondition.Merge = .override,
     when predicate: @escaping @Sendable (Failure, OperationContext) async -> Bool
   ) -> ModifiedOperation<Self, _RetryModifier<Self>> {
-    self.retry(.maxRetries(limit) && self.retryCondition(from: predicate))
+    self.retry(.maxRetries(limit) && self.retryCondition(from: predicate), merging: merge)
   }
 
   /// Applies an unbounded retrying to this operation that is limited only by a predicate on the
@@ -236,33 +335,39 @@ extension OperationRequest {
   ///
   /// > Important: This modifier places no upper bound on the number of retries. An operation that
   /// > repeatedly throws errors for which `predicate` returns true will be retried indefinitely.
-  /// > Use ``OperationRequest/retry(limit:when:)`` if you want to impose a bound. Without one,
-  /// > ``OperationContext/operationMaxRetries`` reads as `Int.max` and
+  /// > Use ``OperationRequest/retry(limit:merging:when:)`` if you want to impose a bound, or
+  /// > merge with ``OperationRetryCondition/Merge/and`` to keep the existing one. Without
+  /// > one, ``OperationContext/operationMaxRetries`` reads as `Int.max` and
   /// > ``OperationContext/isKnownLastRunAttempt`` is always false.
   ///
-  /// See ``OperationRequest/retry(limit:)`` for details on backoff, cancellation, and the behavior
-  /// of applying multiple retry modifiers to a single operation.
+  /// See ``OperationRequest/retry(limit:merging:)`` for details on backoff, cancellation, and
+  /// the behavior of applying multiple retry modifiers to a single operation.
   ///
-  /// - Parameter predicate: A predicate that decides whether or not the thrown error warrants a
-  ///   retry.
+  /// - Parameters:
+  ///   - merge: How this modifier's condition is merged with the existing one.
+  ///   - predicate: A predicate that decides whether or not the thrown error warrants a retry.
   /// - Returns: A ``ModifiedOperation``.
   public func retry(
+    merging merge: OperationRetryCondition.Merge = .override,
     when predicate: @escaping @Sendable (Failure, OperationContext) async -> Bool
   ) -> ModifiedOperation<Self, _RetryModifier<Self>> {
-    self.retry(self.retryCondition(from: predicate))
+    self.retry(self.retryCondition(from: predicate), merging: merge)
   }
 
   /// Applies a retrying to this operation using an ``OperationRetryCondition``.
   ///
-  /// See ``OperationRequest/retry(limit:)`` for details on backoff, cancellation, and the behavior
-  /// of applying multiple retry modifiers to a single operation.
+  /// See ``OperationRequest/retry(limit:merging:)`` for details on backoff, cancellation, and
+  /// the behavior of applying multiple retry modifiers to a single operation.
   ///
-  /// - Parameter condition: The condition under which this operation is retried.
+  /// - Parameters:
+  ///   - condition: The condition under which this operation is retried.
+  ///   - merge: How `condition` is merged with the existing one.
   /// - Returns: A ``ModifiedOperation``.
   public func retry(
-    _ condition: OperationRetryCondition
+    _ condition: OperationRetryCondition,
+    merging merge: OperationRetryCondition.Merge = .override
   ) -> ModifiedOperation<Self, _RetryModifier<Self>> {
-    self.modifier(_RetryModifier(condition: condition))
+    self.modifier(_RetryModifier(condition: condition, merge: merge))
   }
 
   private func retryCondition(
@@ -277,27 +382,27 @@ extension OperationRequest {
 
 public struct _RetryModifier<Operation: OperationRequest>: OperationModifier, Sendable {
   let condition: OperationRetryCondition
+  let merge: OperationRetryCondition.Merge
   private let retryerId = RetryerID()
 
-  init(condition: OperationRetryCondition) {
+  init(condition: OperationRetryCondition, merge: OperationRetryCondition.Merge) {
     self.condition = condition
+    self.merge = merge
   }
 
   public func setup(context: inout OperationContext, using operation: Operation) {
-    switch context.modifierSetupScope {
-    case .runtimeInitialSetup:
-      context.operationRetryCondition = self.condition
-      context[RetryerIDKey.self] = self.retryerId
-    case .operationRun:
-      var condition = self.condition || context.operationRetryCondition
-      condition.maxRetries = self.condition.maxRetries
-      context.operationRetryCondition = condition
-
-      if context[RetryerIDKey.self] == nil {
-        context[RetryerIDKey.self] = self.retryerId
-      }
-    }
+    context.operationRetryCondition = self.merge.merge(
+      self.condition,
+      with: context.operationRetryCondition
+    )
     operation.setup(context: &context)
+
+    // NB: Setup unwinds from the innermost modifier outwards, so the innermost retry modifier
+    // claims the loop first. A transform's modifiers are outside the operation's own, so they never
+    // take over its claim.
+    if context[RetryerIDKey.self] == nil {
+      context[RetryerIDKey.self] = self.retryerId
+    }
   }
 
   public func run(
@@ -311,6 +416,9 @@ public struct _RetryModifier<Operation: OperationRequest>: OperationModifier, Se
     }
 
     var context = context
+    // NB: Nothing inside this modifier runs a retry loop, and clearing the claim keeps it from
+    // stopping an operation run with this context from claiming its own.
+    context[RetryerIDKey.self] = nil
     var retryIndex: Int?
     while true {
       context.operationRetryIndex = retryIndex
@@ -346,9 +454,10 @@ private enum RetryerIDKey: OperationContext.Key {
 extension OperationContext {
   /// The current retry attempt for the current operation run.
   ///
-  /// This value starts at 0, but increments every time the ``OperationRequest/retry(limit:)``
-  /// modifier retries an operation run. An index value of nil indicates that the operation run is
-  /// currently on its first attempt, and has not been retried yet.
+  /// This value starts at 0, but increments every time the
+  /// ``OperationRequest/retry(limit:merging:)`` modifier retries an operation run. An index value
+  /// of nil indicates that the operation run is currently on its first attempt, and has not been
+  /// retried yet.
   public var operationRetryIndex: Int? {
     get { self[RetryIndexKey.self] }
     set { self[RetryIndexKey.self] = newValue }
@@ -364,8 +473,9 @@ extension OperationContext {
 
   /// The ``OperationRetryCondition`` for an operation run.
   ///
-  /// The default value of this context property permits no retries. Applying any of the
-  /// `retry` modifiers will set this value to the condition that modifier was built from.
+  /// The default value of this context property permits no retries, and has no predicate. Applying
+  /// any of the `retry` modifiers merges the condition that modifier was built from with this value
+  /// using an ``OperationRetryCondition/Merge``, and sets this value to the result.
   ///
   /// The retry loop reads this property on each attempt, and is always the innermost one in the
   /// operation. A retry modifier applied by an ``OperationTransform`` steers that loop rather than
@@ -376,14 +486,15 @@ extension OperationContext {
   }
 
   private enum RetryConditionKey: Key {
-    static var defaultValue: OperationRetryCondition { .maxRetries(0) }
+    static var defaultValue: OperationRetryCondition { .never }
   }
 
   /// The maximum number of retries for an operation run.
   ///
   /// This value is the upper bound imposed by ``operationRetryCondition``, and defaults to 0. Using
-  /// ``OperationRequest/retry(limit:)`` sets it to the `limit` parameter. A condition need not
-  /// impose a bound at all, such as the one created by ``OperationRequest/retry(when:)``, in which
+  /// ``OperationRequest/retry(limit:merging:)`` sets it to the `limit` parameter. A condition need
+  /// not impose a bound at all, such as the one created by
+  /// ``OperationRequest/retry(merging:when:)``, in which
   /// case this property reads as `Int.max`.
   public var operationMaxRetries: Int {
     get { self.operationRetryCondition.maxRetries ?? .max }
