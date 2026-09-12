@@ -435,6 +435,7 @@ public struct _RetryModifier<Operation: OperationRequest>: OperationModifier, Se
         let performedRetries = context.performedRetries
         try? await context.operationDelayer
           .delay(for: context.operationBackoffFunction(performedRetries + 1))
+        guard !Task.isCancelled else { throw error }
         retryIndex = performedRetries
       }
     }
