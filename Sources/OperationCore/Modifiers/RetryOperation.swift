@@ -204,6 +204,19 @@ extension OperationRetryCondition.Merge {
   /// A merge that replaces the existing condition with the modifier's own.
   public static let override = Self { condition, _ in condition }
 
+  /// A merge that replaces the existing condition's predicate while preserving its retry bound.
+  ///
+  /// This is useful for an ``OperationTransform`` that decides which errors warrant retrying
+  /// without changing the operation's configured retry count.
+  ///
+  /// The bound of the modifier's condition is ignored. If the existing condition is unbounded, the
+  /// resulting condition is also unbounded.
+  public static let replacingPredicate = Self { condition, existing in
+    var replacement = condition
+    replacement.maxRetries = existing.maxRetries
+    return replacement
+  }
+
   /// A merge that combines the modifier's condition with the existing one using
   /// ``OperationRetryCondition/||(_:_:)``.
   public static let or = Self { condition, existing in condition || existing }

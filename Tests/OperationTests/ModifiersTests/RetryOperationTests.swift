@@ -501,6 +501,25 @@ struct RetryOperationTests {
     expectNoDifference(count, 2)
   }
 
+  @Test("Replacing Predicate Preserves The Existing Retry Bound")
+  func replacingPredicatePreservesTheExistingRetryBound() async {
+    let query = CountingQuery()
+    await query.ensureFails()
+    let store = OperationStore.detached(
+      query: query.backoff(.noBackoff)
+        .delayer(.noDelay)
+        .retry(merging: .replacingPredicate) { _, context in
+          (context.operationRetryIndex ?? -1) < 1
+        }
+        .retry(limit: 5) { _, _ in false },
+      initialValue: nil
+    )
+    expectNoDifference(store.context.operationMaxRetries, 5)
+    _ = try? await store.fetch()
+    let count = await query.fetchCount
+    expectNoDifference(count, 3)
+  }
+
   @Test("Or Merge Combines With The Condition Of The Retry Modifiers Applied Around It")
   func orMergeCombinesWithTheConditionOfTheRetryModifiersAppliedAroundIt() async {
     let query = CountingQuery()
