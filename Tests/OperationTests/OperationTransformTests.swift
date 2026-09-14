@@ -100,6 +100,28 @@ struct OperationTransformTests {
     expectNoDifference(counter.count, 3)
   }
 
+  @Test("A Transform Can Replace The Operation's Retry Predicate")
+  func aTransformCanReplaceTheOperationsRetryPredicate() async {
+    let counter = RunCounter()
+    let transform = ConditionRetryingTransform(
+      condition: OperationRetryCondition { _, context in
+        (context.operationRetryIndex ?? -1) < 1
+      },
+      merge: .replacingPredicate
+    )
+    await withOperationTransform(transform) {
+      await #expect(throws: SomeError.self) {
+        try await #run(
+          $transformFailingOperation(counter: counter)
+            .retry(limit: 5) { _, _ in false }
+            .backoff(.noBackoff)
+            .delayer(.noDelay)
+        )
+      }
+    }
+    expectNoDifference(counter.count, 3)
+  }
+
   @Test("A Transform Lowers The Operation's Retry Limit With An And Merge")
   func aTransformLowersTheOperationsRetryLimitWithAnAndMerge() async {
     let counter = RunCounter()
