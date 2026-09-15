@@ -178,6 +178,6 @@ extension OperationState {
   private var hasMostRecentValueUpdate: Bool {
     guard let valueLastUpdatedAt else { return self.errorLastUpdatedAt == nil }
     guard let errorLastUpdatedAt else { return true }
-    return valueLastUpdatedAt > errorLastUpdatedAt
+    return valueLastUpdatedAt >= errorLastUpdatedAt
   }
 }

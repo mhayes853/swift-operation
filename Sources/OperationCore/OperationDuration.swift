@@ -84,7 +84,12 @@ extension OperationDuration {
   ///
   /// - Returns: A duration representing a given number of nanoseconds.
   public static func nanoseconds(_ value: some BinaryInteger) -> Self {
-    let secs = Int64(value) / 1_000_000_000
+    if let value = Int64(exactly: value) {
+      let secs = value / 1_000_000_000
+      let attos = value % 1_000_000_000 * attosecondsPerNanosecond
+      return Self(_secondsComponent: secs, _attosecondsComponent: attos)
+    }
+    let secs = Int64(value / 1_000_000_000)
     let attos = Int64(value % 1_000_000_000) * attosecondsPerNanosecond
     return Self(_secondsComponent: secs, _attosecondsComponent: attos)
   }
@@ -108,7 +113,12 @@ extension OperationDuration {
   ///
   /// - Returns: A duration representing a given number of microseconds.
   public static func microseconds(_ value: some BinaryInteger) -> Self {
-    let secs = Int64(value) / 1_000_000
+    if let value = Int64(exactly: value) {
+      let secs = value / 1_000_000
+      let attos = value % 1_000_000 * attosecondsPerMicrosecond
+      return Self(_secondsComponent: secs, _attosecondsComponent: attos)
+    }
+    let secs = Int64(value / 1_000_000)
     let attos = Int64(value % 1_000_000) * attosecondsPerMicrosecond
     return Self(_secondsComponent: secs, _attosecondsComponent: attos)
   }
@@ -132,8 +142,13 @@ extension OperationDuration {
   ///
   /// - Returns: A duration representing a given number of milliseconds.
   public static func milliseconds(_ value: some BinaryInteger) -> Self {
-    let secs = Int64(value) / 1000
-    let attos = Int64(value) % 1000 * attosecondsPerMillisecond
+    if let value = Int64(exactly: value) {
+      let secs = value / 1000
+      let attos = value % 1000 * attosecondsPerMillisecond
+      return Self(_secondsComponent: secs, _attosecondsComponent: attos)
+    }
+    let secs = Int64(value / 1000)
+    let attos = Int64(value % 1000) * attosecondsPerMillisecond
     return Self(_secondsComponent: secs, _attosecondsComponent: attos)
   }
 
@@ -236,8 +251,22 @@ extension OperationDuration {
 // MARK: - Multiplication
 
 extension OperationDuration {
+  /// Multiplies a duration by an integer without losing attosecond precision.
+  ///
+  /// The result must fit within the duration's seconds and attoseconds components.
   public static func * (lhs: Self, rhs: Int) -> Self {
-    .seconds(lhs.secondsDouble * Double(rhs))
+    let multiplier = Int64(rhs)
+    let attosecondsProduct = lhs.attosecondsComponent.multipliedFullWidth(by: multiplier)
+    let attosecondsDivision = attosecondsPerSecond.dividingFullWidth(attosecondsProduct)
+    let secondsProduct = lhs.secondsComponent.multipliedFullWidth(by: multiplier)
+    let seconds = Self.adding(
+      attosecondsDivision.quotient,
+      toFullWidth: secondsProduct
+    )
+    return Self(
+      _secondsComponent: Self.int64(exactly: seconds),
+      _attosecondsComponent: attosecondsDivision.remainder
+    )
   }
 
   public static func *= (lhs: inout Self, rhs: Int) {
@@ -252,12 +281,44 @@ extension OperationDuration {
     lhs.secondsDouble / rhs.secondsDouble
   }
 
+  /// Divides a duration by an integer, truncating fractions of an attosecond toward zero.
+  ///
+  /// The divisor must be nonzero, and the result must fit within the duration's components.
   public static func / (lhs: Self, rhs: Int) -> Self {
-    .seconds(lhs.secondsDouble / Double(rhs))
+    let divisor = Int64(rhs)
+    let seconds = lhs.secondsComponent / divisor
+    let secondsRemainder = lhs.secondsComponent % divisor
+    let remainderProduct = secondsRemainder.multipliedFullWidth(by: attosecondsPerSecond)
+    let numerator = Self.adding(lhs.attosecondsComponent, toFullWidth: remainderProduct)
+    let attoseconds = divisor.dividingFullWidth(numerator).quotient
+    return Self(_secondsComponent: seconds, _attosecondsComponent: attoseconds)
   }
 
   public static func /= (lhs: inout Self, rhs: Int) {
     lhs = lhs / rhs
+  }
+}
+
+// MARK: - Full Width Arithmetic
+
+extension OperationDuration {
+  private static func adding(
+    _ value: Int64,
+    toFullWidth fullWidth: (high: Int64, low: UInt64)
+  ) -> (high: Int64, low: UInt64) {
+    let (low, carry) = fullWidth.low.addingReportingOverflow(UInt64(bitPattern: value))
+    let signExtension = value < 0 ? Int64(-1) : 0
+    let high = fullWidth.high &+ signExtension &+ (carry ? 1 : 0)
+    return (high, low)
+  }
+
+  private static func int64(exactly fullWidth: (high: Int64, low: UInt64)) -> Int64 {
+    let value = Int64(bitPattern: fullWidth.low)
+    precondition(
+      fullWidth.high == (value < 0 ? -1 : 0),
+      "OperationDuration arithmetic overflow"
+    )
+    return value
   }
 }
 
@@ -292,7 +353,19 @@ extension OperationDuration: Decodable {
     var container = try decoder.unkeyedContainer()
     let secs = try container.decode(Int64.self)
     let attos = try container.decode(Int64.self)
-    self.init(_secondsComponent: secs, _attosecondsComponent: attos)
+    let (normalizedSeconds, overflow) = secs.addingReportingOverflow(
+      attos / attosecondsPerSecond
+    )
+    guard !overflow else {
+      throw DecodingError.dataCorruptedError(
+        in: container,
+        debugDescription: "The duration components exceed the representable range."
+      )
+    }
+    self = Self.normalize(
+      secs: normalizedSeconds,
+      attos: attos % attosecondsPerSecond
+    )
   }
 }
 

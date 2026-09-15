@@ -4,6 +4,33 @@ import Testing
 
 @Suite("OperationPath tests")
 struct OperationPathTests {
+  @Test("Single Element Does Not Equal A Longer Path")
+  func singleElementDoesNotEqualALongerPath() {
+    let single = OperationPath("users")
+    let longer = OperationPath(["users", "current"])
+
+    expectNoDifference(single == longer, false)
+    expectNoDifference(longer == single, false)
+    expectNoDifference(Set([single, OperationPath(["users"]), longer]).count, 2)
+  }
+
+  @Test("Replacement Preserves Every Element", arguments: [OperationPath(), OperationPath("original"), OperationPath(["original"])])
+  func replacementPreservesEveryElement(original: OperationPath) {
+    let replacement = [OperationPath.Element("first"), OperationPath.Element("second")]
+    for lowerBound in original.startIndex...original.endIndex {
+      for upperBound in lowerBound...original.endIndex {
+        var path = original
+        var expected = Array(original)
+        let range = lowerBound..<upperBound
+
+        path.replaceSubrange(range, with: replacement)
+        expected.replaceSubrange(range, with: replacement)
+
+        expectNoDifference(Array(path), expected)
+      }
+    }
+  }
+
   @Test(
     "Prefix Matches",
     arguments: [

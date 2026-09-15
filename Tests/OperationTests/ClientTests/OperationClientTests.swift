@@ -188,6 +188,19 @@ struct OperationClientTests {
     expectNoDifference(client === contextClient, true)
   }
 
+  @Test("Adds Current OperationClient Instance To A Replaced Default Context")
+  func addsCurrentOperationClientInstanceToAReplacedDefaultContext() async throws {
+    let client = OperationClient()
+    client.defaultContext = OperationContext()
+    let query = ContextReadingQuery()
+    let store = client.store(for: query)
+    try await store.fetch()
+
+    let context = await query.latestContext
+    let contextClient = try #require(context?.operationClient)
+    expectNoDifference(client === contextClient, true)
+  }
+
   @Test("Sets Custom OperationClient Instance To The OperationContext")
   func setCustomOperationClientInContext() async throws {
     let client = OperationClient()

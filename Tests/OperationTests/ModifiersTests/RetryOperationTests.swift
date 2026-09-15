@@ -400,6 +400,22 @@ struct RetryOperationTests {
     )
   }
 
+  @Test("Or Combines Bounds Independently Of Predicates")
+  func orCombinesBoundsIndependentlyOfPredicates() async {
+    let query = CountingQuery()
+    await query.ensureFails()
+    let condition = OperationRetryCondition(maxRetries: 1) { _, _ in true }
+      || OperationRetryCondition(maxRetries: 3) { _, _ in false }
+    let store = OperationStore.detached(
+      query: query.backoff(.noBackoff).delayer(.noDelay).retry(condition),
+      initialValue: nil
+    )
+
+    _ = try? await store.fetch()
+    let count = await query.fetchCount
+    expectNoDifference(count, 4)
+  }
+
   @Test("Or Does Not Evaluate The Right Hand Predicate When The Left One Permits A Retry")
   func orDoesNotEvaluateTheRightHandPredicateWhenTheLeftOnePermitsARetry() async {
     let counter = Counter()

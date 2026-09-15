@@ -1,4 +1,5 @@
 import CustomDump
+import Foundation
 import Operation
 import OperationTestHelpers
 import Testing
@@ -62,6 +63,70 @@ struct OperationSubscriptionTests {
 
     count.withLock { expectNoDifference($0, 3) }
   }
+
+  #if swift(>=6.2) && (os(Linux) || os(macOS) || os(Windows))
+    @Test("Subscriber Can Read The Subscriber Count From A Callback")
+    func subscriberCanReadSubscriberCountFromCallback() async {
+      await #expect(processExitsWith: .success) {
+        let watchdog = Task {
+          try await Task.sleep(nanoseconds: 1_000_000_000)
+          exit(42)
+        }
+        defer { watchdog.cancel() }
+        let observer = MockNetworkObserver(initialStatus: .connected)
+        let subscription = observer.subscribe { status in
+          guard status == .disconnected else { return }
+          _ = observer.subscriberCount
+        }
+        observer.send(status: .disconnected)
+        _ = subscription
+      }
+    }
+
+    @Test("Subscriber Can Cancel Itself From A Callback")
+    func subscriberCanCancelItselfFromCallback() async {
+      await #expect(processExitsWith: .success) {
+        let watchdog = Task {
+          try await Task.sleep(nanoseconds: 1_000_000_000)
+          exit(42)
+        }
+        defer { watchdog.cancel() }
+        let callbackCount = RecursiveLock(0)
+        let holder = RecursiveLock<OperationSubscription?>(nil)
+        let observer = MockNetworkObserver(initialStatus: .connected)
+        let subscription = observer.subscribe { status in
+          guard status == .disconnected else { return }
+          callbackCount.withLock { $0 += 1 }
+          holder.withLock { $0?.cancel() }
+        }
+        holder.withLock { $0 = subscription }
+        observer.send(status: .disconnected)
+        observer.send(status: .disconnected)
+        callbackCount.withLock { expectNoDifference($0, 1) }
+        expectNoDifference(observer.subscriberCount, 0)
+      }
+    }
+
+    @Test("Subscription Can Cancel Itself From Its Cancellation Handler")
+    func subscriptionCanCancelItselfFromCancellationHandler() async {
+      await #expect(processExitsWith: .success) {
+        let watchdog = Task {
+          try await Task.sleep(nanoseconds: 1_000_000_000)
+          exit(42)
+        }
+        defer { watchdog.cancel() }
+        let cancellationCount = RecursiveLock(0)
+        let holder = RecursiveLock<OperationSubscription?>(nil)
+        let subscription = OperationSubscription {
+          cancellationCount.withLock { $0 += 1 }
+          holder.withLock { $0?.cancel() }
+        }
+        holder.withLock { $0 = subscription }
+        subscription.cancel()
+        cancellationCount.withLock { expectNoDifference($0, 1) }
+      }
+    }
+  #endif
 
   @Test(
     "Equality",

@@ -216,18 +216,22 @@ extension OperationSubscription {
 
 extension OperationSubscription {
   private final class Box: Sendable {
-    private let onCancel: Lock<(@Sendable () -> Void)?>
+    private let onCancel: RecursiveLock<(@Sendable () -> Void)?>
 
     init(onCancel: @escaping @Sendable () -> Void) {
-      self.onCancel = Lock(onCancel)
+      self.onCancel = RecursiveLock(onCancel)
     }
 
     deinit { self.cancel() }
 
     func cancel() {
-      self.onCancel.withLock { cancel in
-        defer { cancel = nil }
-        cancel?()
+      self.onCancel.withLock {
+        let onCancel = self.onCancel.withLock { onCancel in
+          let callback = onCancel
+          onCancel = nil
+          return callback
+        }
+        onCancel?()
       }
     }
   }

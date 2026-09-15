@@ -15,7 +15,10 @@ package struct Lock<Value: ~Copyable>: ~Copyable {
     self.value.initialize(to: value)
   }
 
-  deinit { self.value.deallocate() }
+  deinit {
+    self.value.deinitialize(count: 1)
+    self.value.deallocate()
+  }
 }
 
 // MARK: - WithLock
@@ -53,12 +56,27 @@ package struct RecursiveLock<Value: ~Copyable>: ~Copyable {
     self.value.initialize(to: value)
   }
 
-  deinit { self.value.deallocate() }
+  deinit {
+    self.value.deinitialize(count: 1)
+    self.value.deallocate()
+  }
 }
 
 // MARK: - WithLock
 
 extension RecursiveLock {
+  /// Calls the specified closure with the lock acquired without accessing the underlying value.
+  ///
+  /// - Parameter body: A closure to invoke while holding the lock.
+  /// - Returns: Whatever `body` returns.
+  package borrowing func withLock<Result: ~Copyable, E: Error>(
+    _ body: () throws(E) -> sending Result
+  ) throws(E) -> sending Result {
+    self.lock.lock()
+    defer { self.lock.unlock() }
+    return try body()
+  }
+
   /// Calls the specified closure with the lock acquired and gives up ownership of the value.
   ///
   /// - Parameter body: A closure with mutable access to the underlying value.

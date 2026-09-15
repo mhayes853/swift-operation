@@ -179,9 +179,9 @@ extension OperationPath {
       case (.single(let e1), .single(let e2)):
         e1 == e2
       case (.single(let e1), .array(let e2)):
-        e1 == e2.first
+        e2.count == 1 && e1 == e2.first
       case (.array(let e1), .single(let e2)):
-        e1.first == e2
+        e1.count == 1 && e1.first == e2
       case (.array(let e1), .array(let e2)):
         e1 == e2
       default:
@@ -321,25 +321,19 @@ extension OperationPath: RangeReplaceableCollection {
 
     switch (self.storage, kind) {
     case (.single, .access):
-      if let first = newElements.first {
-        self.storage = .single(first)
-      } else {
-        self.storage = .empty
-      }
+      self.storage = .array(Array(newElements))
     case (.single(let element), .insertion):
-      guard let first = newElements.first else { break }
+      guard !newElements.isEmpty else { break }
       if subrange.startIndex == self.startIndex {
-        self.storage = .array([first, element])
+        self.storage = .array(Array(newElements) + [element])
       } else {
-        self.storage = .array([element, first])
+        self.storage = .array([element] + Array(newElements))
       }
     case (.array(var elements), _):
       elements.replaceSubrange(subrange, with: newElements)
       self.storage = .array(elements)
     case (.empty, .insertion):
-      if let first = newElements.first {
-        self.storage = .single(first)
-      }
+      self.storage = .array(Array(newElements))
     case (.empty, .access):
       break  // NB: Unreachable due to checkIndexPrecondition.
     }

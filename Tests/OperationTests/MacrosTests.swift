@@ -11,6 +11,15 @@ struct MacrosTests {
     expectNoDifference(value, 42)
   }
 
+  @Test("Supports Qualified Optional Context Entry")
+  func supportsQualifiedOptionalContextEntry() {
+    var context = OperationContext()
+    expectNoDifference(context.optionalValue, nil)
+
+    context.optionalValue = 42
+    expectNoDifference(context.optionalValue, 42)
+  }
+
   @Test("Runs Container Query")
   func runsContainerQuery() async {
     let container = Container(value: 42)
@@ -66,4 +75,8 @@ private struct Container: Hashable {
   func query() -> Int {
     self.value
   }
+}
+
+extension OperationContext {
+  @ContextEntry fileprivate var optionalValue: Swift.Optional<Int>
 }

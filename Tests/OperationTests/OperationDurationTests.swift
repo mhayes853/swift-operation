@@ -221,6 +221,24 @@ struct OperationDurationTests {
     expectNoDifference(d1 * d2, multiplied)
   }
 
+  @Test("Integer Multiplication Preserves Precision")
+  func integerMultiplicationPreservesPrecision() {
+    let duration = OperationDuration(secondsComponent: 1_000_000_000, attosecondsComponent: 1)
+
+    expectNoDifference(duration * 1, duration)
+    expectNoDifference(duration * -1, -duration)
+  }
+
+  @Test("Integer Multiplication Carries Exact Attoseconds")
+  func integerMultiplicationCarriesExactAttoseconds() {
+    let duration = OperationDuration(secondsComponent: 2, attosecondsComponent: 750_000_000_000_000_001)
+
+    expectNoDifference(
+      duration * 4,
+      OperationDuration(secondsComponent: 11, attosecondsComponent: 4)
+    )
+  }
+
   @Test(
     "Integer Division",
     arguments: [
@@ -228,7 +246,8 @@ struct OperationDurationTests {
       (.zero, 10, .zero),
       (.seconds(1), 10, .milliseconds(100)),
       (.seconds(5), 10, .milliseconds(500)),
-      (.milliseconds(5500), 10, .seconds(0.55)),
+      // NB: .seconds(0.55) includes floating-point rounding; this expectation must be exact.
+      (.milliseconds(5500), 10, .milliseconds(550)),
       (.nanoseconds(5123), 1, .nanoseconds(5123)),
       (.nanoseconds(5000), 100, .nanoseconds(50)),
       (.nanoseconds(-5000), 100, .nanoseconds(-50)),
@@ -238,6 +257,88 @@ struct OperationDurationTests {
   )
   func integerDivision(d1: OperationDuration, d2: Int, divided: OperationDuration) {
     expectNoDifference(d1 / d2, divided)
+  }
+
+  @Test("Integer Arithmetic Preserves Component Boundaries")
+  func integerArithmeticPreservesComponentBoundaries() {
+    let maximum = OperationDuration(
+      secondsComponent: Int64.max,
+      attosecondsComponent: 999_999_999_999_999_999
+    )
+    let minimum = OperationDuration(secondsComponent: Int64.min, attosecondsComponent: 0)
+
+    expectNoDifference(maximum * 1, maximum)
+    expectNoDifference(minimum * 1, minimum)
+    expectNoDifference(maximum / 1, maximum)
+    expectNoDifference(minimum / 1, minimum)
+    expectNoDifference(OperationDuration.seconds(1) * Int.max, .seconds(Int.max))
+    expectNoDifference(OperationDuration.milliseconds(500) * Int.min, .seconds(Int.min / 2))
+    expectNoDifference(OperationDuration.seconds(Int.min) / Int.min, .seconds(1))
+    expectNoDifference(
+      maximum / 2,
+      OperationDuration(
+        secondsComponent: 4_611_686_018_427_387_903,
+        attosecondsComponent: 999_999_999_999_999_999
+      )
+    )
+  }
+
+  @Test("Integer Division Preserves Precision")
+  func integerDivisionPreservesPrecision() {
+    let duration = OperationDuration(secondsComponent: 1_000_000_000, attosecondsComponent: 1)
+
+    expectNoDifference(duration / 1, duration)
+    expectNoDifference(duration / -1, -duration)
+  }
+
+  @Test(
+    "Integer Division Uses Exact Component Remainders",
+    arguments: [
+      (OperationDuration(secondsComponent: 5, attosecondsComponent: 1), 2,
+        OperationDuration(secondsComponent: 2, attosecondsComponent: 500_000_000_000_000_000)),
+      (OperationDuration(secondsComponent: -5, attosecondsComponent: -1), 2,
+        OperationDuration(secondsComponent: -2, attosecondsComponent: -500_000_000_000_000_000)),
+      (OperationDuration(secondsComponent: 5, attosecondsComponent: 1), -2,
+        OperationDuration(secondsComponent: -2, attosecondsComponent: -500_000_000_000_000_000))
+    ]
+  )
+  func integerDivisionUsesExactComponentRemainders(
+    duration: OperationDuration,
+    divisor: Int,
+    expected: OperationDuration
+  ) {
+    expectNoDifference(duration / divisor, expected)
+  }
+
+  @Test("Integer Subsecond Factories Accept Wide Inputs")
+  func integerSubsecondFactoriesAcceptWideInputs() {
+    let value = UInt64.max
+
+    expectNoDifference(
+      OperationDuration.nanoseconds(value),
+      OperationDuration(secondsComponent: 18_446_744_073, attosecondsComponent: 709_551_615_000_000_000)
+    )
+    expectNoDifference(
+      OperationDuration.microseconds(value),
+      OperationDuration(
+        secondsComponent: 18_446_744_073_709,
+        attosecondsComponent: 551_615_000_000_000_000
+      )
+    )
+    expectNoDifference(
+      OperationDuration.milliseconds(value),
+      OperationDuration(
+        secondsComponent: 18_446_744_073_709_551,
+        attosecondsComponent: 615_000_000_000_000_000
+      )
+    )
+  }
+
+  @Test("Integer Subsecond Factories Accept Narrow Inputs")
+  func integerSubsecondFactoriesAcceptNarrowInputs() {
+    expectNoDifference(OperationDuration.nanoseconds(Int8.max), .nanoseconds(127))
+    expectNoDifference(OperationDuration.microseconds(UInt8.max), .microseconds(255))
+    expectNoDifference(OperationDuration.milliseconds(Int8.min), .milliseconds(-128))
   }
 
   @Test(
@@ -370,5 +471,24 @@ struct OperationDurationTests {
   func codable(d: OperationDuration) throws {
     let data = try JSONEncoder().encode(d)
     expectNoDifference(try JSONDecoder().decode(OperationDuration.self, from: data), d)
+  }
+
+  @Test("Decoding Normalizes Components")
+  func decodingNormalizesComponents() throws {
+    let data = Data("[1,-500000000000000000]".utf8)
+    let duration = try JSONDecoder().decode(OperationDuration.self, from: data)
+
+    expectNoDifference(duration, .milliseconds(500))
+    expectNoDifference(duration.components.seconds, 0)
+    expectNoDifference(duration.components.attoseconds, 500_000_000_000_000_000)
+  }
+
+  @Test("Decoding Rejects Components That Overflow")
+  func decodingRejectsComponentsThatOverflow() throws {
+    let data = Data("[9223372036854775807,1000000000000000000]".utf8)
+
+    #expect(throws: DecodingError.self) {
+      try JSONDecoder().decode(OperationDuration.self, from: data)
+    }
   }
 }

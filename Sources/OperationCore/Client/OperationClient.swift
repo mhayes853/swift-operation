@@ -115,7 +115,12 @@ extension OperationClient {
   /// instances.
   public var defaultContext: OperationContext {
     get { self.state.withLock { $0.initialContext } }
-    set { self.state.withLock { $0.initialContext = newValue } }
+    set {
+      self.state.withLock {
+        $0.initialContext = newValue
+        $0.initialContext.setWeakOperationClient(self)
+      }
+    }
   }
 }
 

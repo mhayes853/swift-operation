@@ -34,7 +34,7 @@
         let last = self.last ?? now
         let next = last.advanced(by: self.interval)
         if next < now {
-          return last.advanced(
+          return next.advanced(
             by: self.interval * Int(((next.duration(to: now)) / self.interval).rounded(.up))
           )
         } else {
