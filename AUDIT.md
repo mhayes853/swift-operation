@@ -14,15 +14,16 @@ Validated on Linux with Swift 6.3.3:
 swift test --disable-experimental-prebuilts --traits SwiftOperationLogging
 ```
 
-Result after review: 578 Swift Testing tests passed with 25 pre-existing known issues;
-26 XCTest tests passed without failures. All five audit known-issue reproductions now pass
+Result after review: 572 Swift Testing tests passed with 25 pre-existing known issues;
+27 XCTest tests passed without failures. All five audit known-issue reproductions now pass
 as ordinary regressions following the decisions below.
 Macro expansion and consumer tests ran on this host. Apple-only and browser/WASM runtime
 behavior was not exercised.
 
-Swift 6.1.3 also passed 574 Swift Testing tests (25 pre-existing known issues) and 26
-XCTest tests in an isolated copy. Exit-test availability accounts for part of the count
-difference. Its run used JavaScriptKit 0.50.0, now pinned in `Package.resolved` as required
+Swift 6.1.3 also passed its full suite in an isolated copy before the final test consolidation.
+After consolidation, the affected suites passed 59 Swift Testing tests and 11 XCTest tests.
+Exit tests require Swift 6.2 or newer. The Swift 6.1 run used JavaScriptKit 0.50.0,
+now pinned in `Package.resolved` as required
 by the manifest's Swift 6.1 compatibility branch. Newer toolchains resolve a newer release.
 An independent arithmetic check also matched 10,062 generated integer scaling results
 against `Int128` reference calculations.
@@ -61,6 +62,8 @@ subsequent notifications; the current notification uses its captured subscriber 
 Regressions now live in [OperationSubscriptionTests](Tests/OperationTests/OperationSubscriptionTests.swift),
 including subscriber count reads, recursive cancellation, and cancellation during notification.
 Bounded child processes are used on Swift 6.2 and newer to catch future deadlocks.
+Their watchdogs use `Task` and `Task.sleep`; all three were verified to exit after one second
+with the original deadlocking implementations and to pass with the fixes restored.
 
 ### Success wins timestamp ties — `42a2ebb`
 
@@ -83,8 +86,11 @@ Floating-point factories and duration-to-duration ratios retain their existing b
 
 The timer regression now exercises public `URLConnectionObserver` behavior with a controlled
 clock, without `@testable`. Path, pagination, status, subscription, and duration regressions
-were merged into their existing suites. Lock lifetime tests are top-level tests. Audit tests
-use Swift 6.1-compatible `@Test("Display Name")` attributes with ordinary function identifiers.
+were merged into their existing suites. The direct lock lifetime test file was removed.
+The late-ping regression is in the existing connection observer XCTest suite. Swift Testing
+regressions use Swift 6.1-compatible `@Test("Display Name")` attributes with ordinary function
+identifiers. Existing pagination tests now accept both default and fresh contexts instead of
+duplicating their setup and assertions; the distinct custom task-name regression remains.
 
 ### Swift 6.1 test execution — `e0345a0`, `11f63eb`
 

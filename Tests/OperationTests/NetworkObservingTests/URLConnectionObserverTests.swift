@@ -2,7 +2,6 @@ import Clocks
 import CustomDump
 import Foundation
 import Operation
-import Testing
 import XCTest
 
 #if canImport(FoundationNetworking)
@@ -272,39 +271,40 @@ final class URLConnectionObserverTests: XCTestCase {
     return try XCTUnwrap(statusBox.withLock { $0 })
   }
 
-  fileprivate static func makeSession() -> URLSession {
+  @available(iOS 16, macOS 13, tvOS 16, watchOS 9, *)
+  func testLatePingSchedulesTheNextDueInterval() async throws {
+    let clock = RecordingClock()
+    var deadlines = clock.deadlines.makeAsyncIterator()
+    MockURLProtocol.setHandler { request in
+      (Self.makeResponse(for: request.url!), Data())
+    }
+    let observer = URLConnectionObserver.starting(
+      session: Self.makeSession(),
+      clock: clock,
+      pingingEvery: .seconds(10)
+    )
+    defer { observer.stop() }
+
+    let first = await deadlines.next()
+    let firstDeadline = try XCTUnwrap(first)
+    expectNoDifference(clock.start.duration(to: firstDeadline), .seconds(10))
+
+    clock.advance(to: clock.start.advanced(by: .seconds(25)))
+
+    let second = await deadlines.next()
+    let secondDeadline = try XCTUnwrap(second)
+    expectNoDifference(clock.start.duration(to: secondDeadline), .seconds(30))
+  }
+
+  private static func makeSession() -> URLSession {
     let configuration = URLSessionConfiguration.ephemeral
     configuration.protocolClasses = [MockURLProtocol.self]
     return URLSession(configuration: configuration)
   }
 
-  fileprivate static func makeResponse(for url: URL) -> HTTPURLResponse {
+  private static func makeResponse(for url: URL) -> HTTPURLResponse {
     HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: nil)!
   }
-}
-
-@Test("Late Ping Schedules The Next Due Interval")
-@available(iOS 16, macOS 13, tvOS 16, watchOS 9, *)
-func latePingSchedulesTheNextDueInterval() async throws {
-  let clock = RecordingClock()
-  var deadlines = clock.deadlines.makeAsyncIterator()
-  MockURLProtocol.setHandler { request in
-    (URLConnectionObserverTests.makeResponse(for: request.url!), Data())
-  }
-  let observer = URLConnectionObserver.starting(
-    session: URLConnectionObserverTests.makeSession(),
-    clock: clock,
-    pingingEvery: .seconds(10)
-  )
-  defer { observer.stop() }
-
-  let firstDeadline = try #require(await deadlines.next())
-  expectNoDifference(clock.start.duration(to: firstDeadline), .seconds(10))
-
-  clock.advance(to: clock.start.advanced(by: .seconds(25)))
-
-  let secondDeadline = try #require(await deadlines.next())
-  expectNoDifference(clock.start.duration(to: secondDeadline), .seconds(30))
 }
 
 @available(iOS 16, macOS 13, tvOS 16, watchOS 9, *)
@@ -361,7 +361,6 @@ private final class RecordingClock: Clock, Sendable {
     }
     continuations.forEach { $0.finish() }
   }
-
 }
 
 private final class Counter: Sendable {

@@ -68,9 +68,11 @@ struct OperationSubscriptionTests {
     @Test("Subscriber Can Read The Subscriber Count From A Callback")
     func subscriberCanReadSubscriberCountFromCallback() async {
       await #expect(processExitsWith: .success) {
-        DispatchQueue.global().asyncAfter(deadline: .now() + 1) {
+        let watchdog = Task {
+          try await Task.sleep(nanoseconds: 1_000_000_000)
           exit(42)
         }
+        defer { watchdog.cancel() }
         let observer = MockNetworkObserver(initialStatus: .connected)
         let subscription = observer.subscribe { status in
           guard status == .disconnected else { return }
@@ -84,9 +86,11 @@ struct OperationSubscriptionTests {
     @Test("Subscriber Can Cancel Itself From A Callback")
     func subscriberCanCancelItselfFromCallback() async {
       await #expect(processExitsWith: .success) {
-        DispatchQueue.global().asyncAfter(deadline: .now() + 1) {
+        let watchdog = Task {
+          try await Task.sleep(nanoseconds: 1_000_000_000)
           exit(42)
         }
+        defer { watchdog.cancel() }
         let callbackCount = RecursiveLock(0)
         let holder = RecursiveLock<OperationSubscription?>(nil)
         let observer = MockNetworkObserver(initialStatus: .connected)
@@ -106,9 +110,11 @@ struct OperationSubscriptionTests {
     @Test("Subscription Can Cancel Itself From Its Cancellation Handler")
     func subscriptionCanCancelItselfFromCancellationHandler() async {
       await #expect(processExitsWith: .success) {
-        DispatchQueue.global().asyncAfter(deadline: .now() + 1) {
+        let watchdog = Task {
+          try await Task.sleep(nanoseconds: 1_000_000_000)
           exit(42)
         }
+        defer { watchdog.cancel() }
         let cancellationCount = RecursiveLock(0)
         let holder = RecursiveLock<OperationSubscription?>(nil)
         let subscription = OperationSubscription {

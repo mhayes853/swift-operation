@@ -246,6 +246,7 @@ struct OperationDurationTests {
       (.zero, 10, .zero),
       (.seconds(1), 10, .milliseconds(100)),
       (.seconds(5), 10, .milliseconds(500)),
+      // NB: .seconds(0.55) includes floating-point rounding; this expectation must be exact.
       (.milliseconds(5500), 10, .milliseconds(550)),
       (.nanoseconds(5123), 1, .nanoseconds(5123)),
       (.nanoseconds(5000), 100, .nanoseconds(50)),
