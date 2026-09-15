@@ -15,7 +15,10 @@ package struct Lock<Value: ~Copyable>: ~Copyable {
     self.value.initialize(to: value)
   }
 
-  deinit { self.value.deallocate() }
+  deinit {
+    self.value.deinitialize(count: 1)
+    self.value.deallocate()
+  }
 }
 
 // MARK: - WithLock
@@ -53,7 +56,10 @@ package struct RecursiveLock<Value: ~Copyable>: ~Copyable {
     self.value.initialize(to: value)
   }
 
-  deinit { self.value.deallocate() }
+  deinit {
+    self.value.deinitialize(count: 1)
+    self.value.deallocate()
+  }
 }
 
 // MARK: - WithLock
