@@ -348,6 +348,72 @@
           """
         }
       }
+
+      @Test
+      func `Non-Optional Closure With Optional Argument Requires Default Value`() {
+        assertMacro {
+          """
+          extension OperationContext {
+            @ContextEntry var property: (Int?) -> String
+          }
+          """
+        } diagnostics: {
+          """
+          extension OperationContext {
+            @ContextEntry var property: (Int?) -> String
+            ┬────────────
+            ╰─ 🛑 @ContextEntry requires a default value for a non-optional type.
+          }
+          """
+        }
+      }
+
+      @Test
+      func `Collection With Optional Element Requires Default Value`() {
+        assertMacro {
+          """
+          extension OperationContext {
+            @ContextEntry var property: [Int?]
+          }
+          """
+        } diagnostics: {
+          """
+          extension OperationContext {
+            @ContextEntry var property: [Int?]
+            ┬────────────
+            ╰─ 🛑 @ContextEntry requires a default value for a non-optional type.
+          }
+          """
+        }
+      }
+
+      @Test
+      func `Qualified Optional Context Property`() {
+        assertMacro {
+          """
+          extension OperationContext {
+            @ContextEntry var property: Swift.Optional<Int>
+          }
+          """
+        } expansion: {
+          """
+          extension OperationContext {
+            var property: Swift.Optional<Int> {
+              get {
+                self[__Key_property.self]
+              }
+              set {
+                self[__Key_property.self] = newValue
+              }
+            }
+
+            private struct __Key_property: OperationCore.OperationContext.Key {
+              static let defaultValue: Swift.Optional<Int> = nil
+            }
+          }
+          """
+        }
+      }
     }
   }
 #endif

@@ -93,8 +93,8 @@ public enum ContextEntryMacro: PeerMacro, AccessorMacro {
 
 extension TypeSyntax {
   fileprivate var valueTypeName: String {
-    if self.description.contains("!") {
-      self.description.dropLast() + "?"
+    if let optional = self.as(ImplicitlyUnwrappedOptionalTypeSyntax.self) {
+      optional.wrappedType.description + "?"
     } else {
       self.description
     }
