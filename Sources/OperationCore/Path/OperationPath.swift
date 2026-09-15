@@ -179,9 +179,9 @@ extension OperationPath {
       case (.single(let e1), .single(let e2)):
         e1 == e2
       case (.single(let e1), .array(let e2)):
-        e1 == e2.first
+        e2.count == 1 && e1 == e2.first
       case (.array(let e1), .single(let e2)):
-        e1.first == e2
+        e1.count == 1 && e1.first == e2
       case (.array(let e1), .array(let e2)):
         e1 == e2
       default:
