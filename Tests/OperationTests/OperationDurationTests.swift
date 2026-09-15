@@ -371,4 +371,23 @@ struct OperationDurationTests {
     let data = try JSONEncoder().encode(d)
     expectNoDifference(try JSONDecoder().decode(OperationDuration.self, from: data), d)
   }
+
+  @Test
+  func `Decoding Normalizes Components`() throws {
+    let data = Data("[1,-500000000000000000]".utf8)
+    let duration = try JSONDecoder().decode(OperationDuration.self, from: data)
+
+    expectNoDifference(duration, .milliseconds(500))
+    expectNoDifference(duration.components.seconds, 0)
+    expectNoDifference(duration.components.attoseconds, 500_000_000_000_000_000)
+  }
+
+  @Test
+  func `Decoding Rejects Components That Overflow`() throws {
+    let data = Data("[9223372036854775807,1000000000000000000]".utf8)
+
+    #expect(throws: DecodingError.self) {
+      try JSONDecoder().decode(OperationDuration.self, from: data)
+    }
+  }
 }

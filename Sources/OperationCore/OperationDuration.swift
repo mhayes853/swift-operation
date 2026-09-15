@@ -292,7 +292,19 @@ extension OperationDuration: Decodable {
     var container = try decoder.unkeyedContainer()
     let secs = try container.decode(Int64.self)
     let attos = try container.decode(Int64.self)
-    self.init(_secondsComponent: secs, _attosecondsComponent: attos)
+    let (normalizedSeconds, overflow) = secs.addingReportingOverflow(
+      attos / attosecondsPerSecond
+    )
+    guard !overflow else {
+      throw DecodingError.dataCorruptedError(
+        in: container,
+        debugDescription: "The duration components exceed the representable range."
+      )
+    }
+    self = Self.normalize(
+      secs: normalizedSeconds,
+      attos: attos % attosecondsPerSecond
+    )
   }
 }
 
