@@ -6,6 +6,34 @@ import Testing
 
 @Suite("OperationStatus tests")
 struct OperationStatusTests {
+  @Test("Successful Update Wins When Error Has The Same Timestamp")
+  func successfulUpdateWinsWhenErrorHasTheSameTimestamp() {
+    struct SomeError: Error {}
+
+    let date = Date()
+    var context = OperationContext()
+    context.operationClock = CustomOperationClock { date }
+    var state = QueryState<Int, SomeError>(initialValue: nil)
+    state.update(with: .failure(SomeError()), using: context)
+    state.update(with: .success(42), using: context)
+
+    expectNoDifference(state.status.resultValue, 42)
+  }
+
+  @Test("Success Takes Priority When A Later Error Has The Same Timestamp")
+  func successTakesPriorityWhenALaterErrorHasTheSameTimestamp() {
+    struct SomeError: Error {}
+
+    let date = Date()
+    var context = OperationContext()
+    context.operationClock = CustomOperationClock { date }
+    var state = QueryState<Int, SomeError>(initialValue: nil)
+    state.update(with: .success(42), using: context)
+    state.update(with: .failure(SomeError()), using: context)
+
+    expectNoDifference(state.status.resultValue, 42)
+  }
+
   @Test("QueryState Produces Idle Status When Initialized")
   func queryStateProducesIdleStatusWhenInitialized() {
     let store = OperationStore.detached(query: TestQuery(), initialValue: TestQuery.value)
