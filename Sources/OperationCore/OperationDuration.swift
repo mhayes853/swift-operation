@@ -84,7 +84,12 @@ extension OperationDuration {
   ///
   /// - Returns: A duration representing a given number of nanoseconds.
   public static func nanoseconds(_ value: some BinaryInteger) -> Self {
-    let secs = Int64(value) / 1_000_000_000
+    if let value = Int64(exactly: value) {
+      let secs = value / 1_000_000_000
+      let attos = value % 1_000_000_000 * attosecondsPerNanosecond
+      return Self(_secondsComponent: secs, _attosecondsComponent: attos)
+    }
+    let secs = Int64(value / 1_000_000_000)
     let attos = Int64(value % 1_000_000_000) * attosecondsPerNanosecond
     return Self(_secondsComponent: secs, _attosecondsComponent: attos)
   }
@@ -108,7 +113,12 @@ extension OperationDuration {
   ///
   /// - Returns: A duration representing a given number of microseconds.
   public static func microseconds(_ value: some BinaryInteger) -> Self {
-    let secs = Int64(value) / 1_000_000
+    if let value = Int64(exactly: value) {
+      let secs = value / 1_000_000
+      let attos = value % 1_000_000 * attosecondsPerMicrosecond
+      return Self(_secondsComponent: secs, _attosecondsComponent: attos)
+    }
+    let secs = Int64(value / 1_000_000)
     let attos = Int64(value % 1_000_000) * attosecondsPerMicrosecond
     return Self(_secondsComponent: secs, _attosecondsComponent: attos)
   }
@@ -132,8 +142,13 @@ extension OperationDuration {
   ///
   /// - Returns: A duration representing a given number of milliseconds.
   public static func milliseconds(_ value: some BinaryInteger) -> Self {
-    let secs = Int64(value) / 1000
-    let attos = Int64(value) % 1000 * attosecondsPerMillisecond
+    if let value = Int64(exactly: value) {
+      let secs = value / 1000
+      let attos = value % 1000 * attosecondsPerMillisecond
+      return Self(_secondsComponent: secs, _attosecondsComponent: attos)
+    }
+    let secs = Int64(value / 1000)
+    let attos = Int64(value % 1000) * attosecondsPerMillisecond
     return Self(_secondsComponent: secs, _attosecondsComponent: attos)
   }
 
