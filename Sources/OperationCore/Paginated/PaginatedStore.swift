@@ -346,7 +346,9 @@ extension OperationStore where State: _PaginatedStateProtocol {
   private func ensuredContext(from context: OperationContext?) -> OperationContext {
     let values = self.context.ensureInfiniteValues()
     var context = context ?? self.context
-    context.infiniteValues?.requestSubscriptions = values.requestSubscriptions
+    var contextValues = context.ensureInfiniteValues()
+    contextValues.requestSubscriptions = values.requestSubscriptions
+    context.infiniteValues = contextValues
     return context
   }
 }
