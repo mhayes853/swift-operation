@@ -14,10 +14,18 @@ Validated on Linux with Swift 6.3.3:
 swift test --disable-experimental-prebuilts --traits SwiftOperationLogging
 ```
 
-Result: 574 Swift Testing tests passed with 30 known issues; 26 XCTest tests passed without
-failures. Five known issues were added by this audit to demonstrate the deferred bugs below.
+Result after review: 578 Swift Testing tests passed with 25 pre-existing known issues;
+26 XCTest tests passed without failures. All five audit known-issue reproductions now pass
+as ordinary regressions following the decisions below.
 Macro expansion and consumer tests ran on this host. Apple-only and browser/WASM runtime
 behavior was not exercised.
+
+Swift 6.1.3 also passed 574 Swift Testing tests (25 pre-existing known issues) and 26
+XCTest tests in an isolated copy. Exit-test availability accounts for part of the count
+difference. Its run used JavaScriptKit 0.50.0, now pinned in `Package.resolved` as required
+by the manifest's Swift 6.1 compatibility branch. Newer toolchains resolve a newer release.
+An independent arithmetic check also matched 10,062 generated integer scaling results
+against `Int128` reference calculations.
 
 Regressions were observed before fixing path equality/replacement, lock lifetimes, client
 context replacement, pagination context/task naming, timer scheduling, optional macro
@@ -40,42 +48,50 @@ rejection was added alongside normalization.
 | `d0b9692` | Decoded duration components could violate normalization invariants. Decoding normalizes components and throws on overflow. |
 | `739da9c` | Integer subsecond duration factories narrowed wide values too early and performed modulo with divisors unrepresentable by narrow types. They now support both narrow and wide representable inputs. |
 
-## Confirmed bugs requiring discussion
+## Follow-up decisions implemented
 
-These remain unfixed, with `withKnownIssue` regressions. Unexpectedly fixing one makes its
-known-issue expectation fail, so the tests must be updated when its production fix lands.
+### Recursive callback locking — `1134814`
 
-### Callback reentrancy deadlocks
+Both subscription paths now use recursive locks, as requested. Callback delivery stays
+serialized. Short nested state accesses snapshot subscribers or clear the cancellation handler
+before invoking callbacks, so recursive calls do not overlap an `inout` access. Cancellation
+still invokes its handler exactly once. Subscription changes during a notification affect
+subsequent notifications; the current notification uses its captured subscriber snapshot.
 
-- `OperationSubscriptions.forEach` invokes subscribers under a nonrecursive lock. A callback
-  reading `MockNetworkObserver.subscriberCount` deadlocks. Adding/removing subscribers can
-  encounter the same lock.
-- `OperationSubscription` invokes its cancellation handler under a nonrecursive lock. A
-  handler cancelling the same subscription deadlocks.
-- Evidence: [OperationSubscriptionDeadlockTests](Tests/OperationTests/OperationSubscriptionDeadlockTests.swift).
-  Child processes exit after a one-second watchdog instead of hanging the suite.
-- Discussion: detach cancellation work from the lock, and decide notification semantics when
-  subscribers are added or removed during delivery before moving delivery outside the lock.
+Regressions now live in [OperationSubscriptionTests](Tests/OperationTests/OperationSubscriptionTests.swift),
+including subscriber count reads, recursive cancellation, and cancellation during notification.
+Bounded child processes are used on Swift 6.2 and newer to catch future deadlocks.
 
-### Equal timestamps lose the latest successful status
+### Success wins timestamp ties — `42a2ebb`
 
-An error followed by a successful update at the same clock time does not produce a successful
-status. The comparison of update dates cannot distinguish their order; the error has been
-cleared, so the successful state can appear idle.
+The status calculation prioritizes a successful value whenever value and error timestamps
+are equal, regardless of arrival order. Both arrival orders are tested in the existing
+[OperationStatusTests](Tests/OperationTests/OperationStatusTests.swift) suite.
 
-- Evidence: [OperationStatusTimestampTests](Tests/OperationTests/OperationStatusTimestampTests.swift).
-- Discussion: define update ordering independently of wall-clock timestamps, including what
-  custom `OperationState` conformances must provide.
+### Exact integer duration arithmetic — `25aef56`
 
-### Duration arithmetic loses precision
+Integer multiplication and division now operate on seconds and attoseconds with signed
+full-width integer arithmetic. Division truncates fractions of an attosecond toward zero.
+Division by zero and unrepresentable results still trap. This avoids an unconditional
+`Int128` dependency on older Apple deployment targets.
 
-Multiplying or dividing a duration by integer one loses its attosecond component because the
-implementation converts through `Double`.
+Precision, carry, sign, remainder, and component-boundary tests are in the existing
+[OperationDurationTests](Tests/OperationTests/OperationDurationTests.swift) suite.
+Floating-point factories and duration-to-duration ratios retain their existing behavior.
 
-- Evidence: [OperationDurationPrecisionTests](Tests/OperationTests/OperationDurationPrecisionTests.swift).
-- Discussion: implement exact component arithmetic and choose an overflow policy. Wide
-  floating-point factory inputs also need careful treatment; simply dividing before narrowing
-  can introduce whole-second rounding errors. Floating factories were left unchanged.
+### Test organization — `c7b6238`, `0535a71`
+
+The timer regression now exercises public `URLConnectionObserver` behavior with a controlled
+clock, without `@testable`. Path, pagination, status, subscription, and duration regressions
+were merged into their existing suites. Lock lifetime tests are top-level tests. Audit tests
+use Swift 6.1-compatible `@Test("Display Name")` attributes with ordinary function identifiers.
+
+### Swift 6.1 test execution — `e0345a0`, `11f63eb`
+
+The timeout fixtures used `Task.sleep(nanoseconds: .max)`, which returns immediately on
+Swift 6.1.3 on Linux. They now use the existing cancellation-aware `Task.never()` helper.
+The JavaScriptKit pin was corrected to 0.50.0 so Swift 6.1 can load the dependency manifest;
+the prior 0.58.0 pin required Swift tools 6.2 before version constraints could be applied.
 
 ## Retry semantics
 
