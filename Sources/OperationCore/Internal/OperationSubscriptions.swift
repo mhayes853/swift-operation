@@ -4,7 +4,7 @@ package final class OperationSubscriptions<QueryHandler: Sendable>: Sendable {
   private typealias Handler = (isTemporary: Bool, handler: QueryHandler)
   private typealias State = (currentId: Int, handlers: [Int: Handler])
 
-  private let state = Lock<State>((currentId: 0, handlers: [:]))
+  private let state = RecursiveLock<State>((currentId: 0, handlers: [:]))
 
   package init() {}
 }
@@ -46,8 +46,11 @@ extension OperationSubscriptions {
   package func forEach(
     _ body: (QueryHandler) throws -> Void
   ) rethrows {
-    try self.state.withLock { state in
-      try state.handlers.forEach { try body($0.value.handler) }
+    try self.state.withLock {
+      let handlers = self.state.withLock { state in
+        state.handlers.values.map(\.handler)
+      }
+      try handlers.forEach(body)
     }
   }
 }
