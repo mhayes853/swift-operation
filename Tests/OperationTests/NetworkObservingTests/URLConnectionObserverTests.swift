@@ -2,6 +2,7 @@ import Clocks
 import CustomDump
 import Foundation
 import Operation
+import Testing
 import XCTest
 
 #if canImport(FoundationNetworking)
@@ -271,15 +272,96 @@ final class URLConnectionObserverTests: XCTestCase {
     return try XCTUnwrap(statusBox.withLock { $0 })
   }
 
-  private static func makeSession() -> URLSession {
+  fileprivate static func makeSession() -> URLSession {
     let configuration = URLSessionConfiguration.ephemeral
     configuration.protocolClasses = [MockURLProtocol.self]
     return URLSession(configuration: configuration)
   }
 
-  private static func makeResponse(for url: URL) -> HTTPURLResponse {
+  fileprivate static func makeResponse(for url: URL) -> HTTPURLResponse {
     HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: nil)!
   }
+}
+
+@Test("Late Ping Schedules The Next Due Interval")
+@available(iOS 16, macOS 13, tvOS 16, watchOS 9, *)
+func latePingSchedulesTheNextDueInterval() async throws {
+  let clock = RecordingClock()
+  var deadlines = clock.deadlines.makeAsyncIterator()
+  MockURLProtocol.setHandler { request in
+    (URLConnectionObserverTests.makeResponse(for: request.url!), Data())
+  }
+  let observer = URLConnectionObserver.starting(
+    session: URLConnectionObserverTests.makeSession(),
+    clock: clock,
+    pingingEvery: .seconds(10)
+  )
+  defer { observer.stop() }
+
+  let firstDeadline = try #require(await deadlines.next())
+  expectNoDifference(clock.start.duration(to: firstDeadline), .seconds(10))
+
+  clock.advance(to: clock.start.advanced(by: .seconds(25)))
+
+  let secondDeadline = try #require(await deadlines.next())
+  expectNoDifference(clock.start.duration(to: secondDeadline), .seconds(30))
+}
+
+@available(iOS 16, macOS 13, tvOS 16, watchOS 9, *)
+private final class RecordingClock: Clock, Sendable {
+  typealias Instant = TestClock<Duration>.Instant
+
+  private struct Suspension: Sendable {
+    let deadline: Instant
+    let continuation: AsyncThrowingStream<Never, any Error>.Continuation
+  }
+
+  private struct State: Sendable {
+    var currentInstant = Instant()
+    var suspensions = [UUID: Suspension]()
+  }
+
+  private let state = RecursiveLock(State())
+  private let deadlineContinuation: AsyncStream<Instant>.Continuation
+
+  let deadlines: AsyncStream<Instant>
+  let minimumResolution = Duration.zero
+  let start = Instant()
+
+  init() {
+    (self.deadlines, self.deadlineContinuation) = AsyncStream.makeStream(of: Instant.self)
+  }
+
+  var now: Instant {
+    self.state.withLock { $0.currentInstant }
+  }
+
+  func sleep(until deadline: Instant, tolerance: Duration?) async throws {
+    try Task.checkCancellation()
+    let id = UUID()
+    let stream = AsyncThrowingStream<Never, any Error> { continuation in
+      self.state.withLock {
+        $0.suspensions[id] = Suspension(deadline: deadline, continuation: continuation)
+      }
+    }
+    self.deadlineContinuation.yield(deadline)
+    defer {
+      self.state.withLock { $0.suspensions[id] = nil }
+    }
+    for try await _ in stream {}
+    try Task.checkCancellation()
+  }
+
+  func advance(to instant: Instant) {
+    let continuations = self.state.withLock { state in
+      state.currentInstant = instant
+      let due = state.suspensions.filter { $0.value.deadline <= instant }
+      state.suspensions = state.suspensions.filter { $0.value.deadline > instant }
+      return due.map(\.value.continuation)
+    }
+    continuations.forEach { $0.finish() }
+  }
+
 }
 
 private final class Counter: Sendable {
