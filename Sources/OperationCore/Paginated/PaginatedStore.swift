@@ -114,7 +114,8 @@ extension OperationStore where State: _PaginatedStateProtocol {
   ) -> OperationContext {
     var context = self.ensuredContext(from: context)
     context.infiniteValues?.fetchType = .allPages
-    context.operationTaskConfiguration.name = self.fetchAllPagesTaskName
+    context.operationTaskConfiguration.name =
+      context.operationTaskConfiguration.name ?? self.fetchAllPagesTaskName
     return context
   }
 
