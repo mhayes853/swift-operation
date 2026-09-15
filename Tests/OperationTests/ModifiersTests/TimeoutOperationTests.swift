@@ -198,8 +198,7 @@ private func endlessTimeoutOperation(
   startContinuation: AsyncStream<Void>.Continuation
 ) async throws -> Int {
   startContinuation.yield()
-  try await Task.sleep(nanoseconds: .max)
-  return 42
+  return try await Task.never()
 }
 
 @OperationRequest
@@ -208,8 +207,7 @@ private func typedEndlessTimeoutOperation(
 ) async throws(TestFailure) -> Int {
   startContinuation.yield()
   do {
-    try await Task.sleep(nanoseconds: .max)
-    return 42
+    return try await Task.never()
   } catch {
     throw TestFailure.cancelled
   }
@@ -246,8 +244,7 @@ private func retryEndlessTimeoutOperation(
   let attempt = await recorder.recordInvocation()
   attemptContinuation.yield(attempt)
   do {
-    try await Task.sleep(nanoseconds: .max)
-    return 42
+    return try await Task.never()
   } catch {
     throw TestFailure.cancelled
   }
