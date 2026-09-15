@@ -349,8 +349,8 @@
         }
       }
 
-      @Test
-      func `Non-Optional Closure With Optional Argument Requires Default Value`() {
+      @Test("Non-Optional Closure With Optional Argument Requires Default Value")
+      func nonOptionalClosureWithOptionalArgumentRequiresDefaultValue() {
         assertMacro {
           """
           extension OperationContext {
@@ -368,8 +368,8 @@
         }
       }
 
-      @Test
-      func `Collection With Optional Element Requires Default Value`() {
+      @Test("Collection With Optional Element Requires Default Value")
+      func collectionWithOptionalElementRequiresDefaultValue() {
         assertMacro {
           """
           extension OperationContext {
@@ -387,8 +387,8 @@
         }
       }
 
-      @Test
-      func `Qualified Optional Context Property`() {
+      @Test("Qualified Optional Context Property")
+      func qualifiedOptionalContextProperty() {
         assertMacro {
           """
           extension OperationContext {

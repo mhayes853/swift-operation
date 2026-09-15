@@ -6,6 +6,66 @@ import Testing
 
 @Suite("PaginatedStoreTests tests")
 struct PaginatedStoreTests {
+  @Test("Fetches The Next Page Using A Custom Context")
+  func fetchesTheNextPageUsingACustomContext() async throws {
+    let query = TestPaginated()
+    query.state.withLock { $0 = [0: "blob", 1: "blob jr"] }
+    let store = OperationClient().store(for: query)
+    try await store.fetchNextPage()
+
+    let page = try await store.fetchNextPage(using: OperationContext())
+
+    expectNoDifference(page, Page(id: 1, value: "blob jr"))
+    expectNoDifference(
+      store.currentValue,
+      [Page(id: 0, value: "blob"), Page(id: 1, value: "blob jr")]
+    )
+  }
+
+  @Test("Fetches The Previous Page Using A Custom Context")
+  func fetchesThePreviousPageUsingACustomContext() async throws {
+    let query = TestPaginated()
+    query.state.withLock { $0 = [-1: "blob sr", 0: "blob"] }
+    let store = OperationClient().store(for: query)
+    try await store.fetchNextPage()
+
+    let page = try await store.fetchPreviousPage(using: OperationContext())
+
+    expectNoDifference(page, Page(id: -1, value: "blob sr"))
+    expectNoDifference(
+      store.currentValue,
+      [Page(id: -1, value: "blob sr"), Page(id: 0, value: "blob")]
+    )
+  }
+
+  @Test("Refetches All Pages Using A Custom Context")
+  func refetchesAllPagesUsingACustomContext() async throws {
+    let query = TestPaginated()
+    query.state.withLock { $0 = [0: "blob", 1: "blob jr"] }
+    let store = OperationClient().store(for: query)
+    try await store.fetchNextPage()
+    try await store.fetchNextPage()
+    query.state.withLock { $0 = [0: "blob sr", 1: "blob III"] }
+
+    let pages = try await store.refetchAllPages(using: OperationContext())
+
+    expectNoDifference(
+      pages,
+      [Page(id: 0, value: "blob sr"), Page(id: 1, value: "blob III")]
+    )
+  }
+
+  @Test("Preserves A Custom Refetch All Pages Task Name")
+  func preservesACustomRefetchAllPagesTaskName() {
+    let store = OperationClient().store(for: TestPaginated())
+    var context = OperationContext()
+    context.operationTaskConfiguration.name = "Custom Task"
+
+    let task = store.refetchAllPagesTask(using: context)
+
+    expectNoDifference(task.configuration.name, "Custom Task")
+  }
+
   private let client = OperationClient()
 
   @Test("Is Loading All Pages When Fetching All Pages")

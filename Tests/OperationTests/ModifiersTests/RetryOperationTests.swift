@@ -400,8 +400,8 @@ struct RetryOperationTests {
     )
   }
 
-  @Test
-  func `Or Combines Bounds Independently Of Predicates`() async {
+  @Test("Or Combines Bounds Independently Of Predicates")
+  func orCombinesBoundsIndependentlyOfPredicates() async {
     let query = CountingQuery()
     await query.ensureFails()
     let condition = OperationRetryCondition(maxRetries: 1) { _, _ in true }

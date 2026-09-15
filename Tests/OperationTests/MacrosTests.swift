@@ -11,8 +11,8 @@ struct MacrosTests {
     expectNoDifference(value, 42)
   }
 
-  @Test
-  func `Supports Qualified Optional Context Entry`() {
+  @Test("Supports Qualified Optional Context Entry")
+  func supportsQualifiedOptionalContextEntry() {
     var context = OperationContext()
     expectNoDifference(context.optionalValue, nil)
 

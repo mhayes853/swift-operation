@@ -188,8 +188,8 @@ struct OperationClientTests {
     expectNoDifference(client === contextClient, true)
   }
 
-  @Test
-  func `Adds Current OperationClient Instance To A Replaced Default Context`() async throws {
+  @Test("Adds Current OperationClient Instance To A Replaced Default Context")
+  func addsCurrentOperationClientInstanceToAReplacedDefaultContext() async throws {
     let client = OperationClient()
     client.defaultContext = OperationContext()
     let query = ContextReadingQuery()
